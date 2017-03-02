@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"os/user"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"unicode"
 
@@ -127,23 +130,32 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 	return nil
 }
 
+var allcapsRE = regexp.MustCompile(`^[A-Z_]+$`)
+
 func (h *Handler) Query(w io.Writer, sqlstr string) error {
+	// run query
 	q, err := h.db.Query(sqlstr)
 	if err != nil {
 		return err
 	}
 	defer q.Close()
 
-	// load column information
+	// get column names
 	cols, err := q.Columns()
 	if err != nil {
 		return err
 	}
 
+	// fix display column names
 	for i, s := range cols {
 		s = strings.TrimSpace(s)
 		if len(s) == 0 {
 			cols[i] = fmt.Sprintf("col%d", i)
+		}
+
+		// fix case on oracle column names
+		if h.u.Driver == "ora" && allcapsRE.MatchString(cols[i]) {
+			cols[i] = strings.ToLower(cols[i])
 		}
 	}
 
@@ -186,7 +198,12 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 
 // HistoryFile returns the name of the history file.
 func (h *Handler) HistoryFile() string {
-	return ".usql_history"
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	return filepath.Join(u.HomeDir, ".usql_history")
 }
 
 // DisplayHelp displays the help message.
