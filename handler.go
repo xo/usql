@@ -60,7 +60,7 @@ func (h *Handler) Open(urlstr string) error {
 		if h.u.Driver == "ora" {
 			return ErrOracleDriverNotAvailable
 		}
-		return fmt.Errorf("driver '%s' is not available for '%s'\n", h.u.Driver, h.u.Scheme)
+		return fmt.Errorf("driver '%s' is not available for '%s'", h.u.Driver, h.u.Scheme)
 	}
 
 	// connect
