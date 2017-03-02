@@ -70,15 +70,15 @@ func (h *Handler) Open(urlstr string) error {
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Execute executes a sql query against the connected database.
 func (h *Handler) Execute(w io.Writer, sqlstr string) error {
+	if h.db == nil {
+		return ErrNotConnected
+	}
+
 	if h.u.Driver == "ora" {
 		sqlstr = strings.TrimSuffix(sqlstr, ";")
 	}
@@ -165,11 +165,12 @@ func (h *Handler) HistoryFile() string {
 	return ".usql_history"
 }
 
-// DisplayHelp
+// DisplayHelp displays the help message.
 func (h *Handler) DisplayHelp(w io.Writer) {
 	io.WriteString(w, helpDesc)
 }
 
+// Close closes the database connection if it is open.
 func (h *Handler) Close() error {
 	if h.db != nil {
 		err := h.db.Close()
@@ -217,8 +218,14 @@ func (h *Handler) Run() error {
 	var stmt []string
 	for {
 		line, err := l.Readline()
-		if err != nil {
-			break
+		switch {
+		case err == readline.ErrInterrupt:
+			stmt = stmt[:0]
+			multi = false
+			continue
+
+		case err != nil:
+			return nil
 		}
 
 		z := strings.TrimSpace(line)
@@ -273,6 +280,4 @@ func (h *Handler) Run() error {
 		stmt = stmt[:0]
 		multi = false
 	}
-
-	return nil
 }

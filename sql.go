@@ -11,12 +11,14 @@ import (
 )
 
 var (
-	// ErrOracleDriverNotAvailable is the error for when oracle driver is not
-	// available.
+	// ErrOracleDriverNotAvailable is the oracle driver not available error.
 	ErrOracleDriverNotAvailable = errors.New("oracle driver not available")
+
+	// ErrNotConnected is the not connected error.
+	ErrNotConnected = errors.New("not connected")
 )
 
-// drivers is the list of available sql drivers.
+// drivers is the available sql drivers.
 var drivers = map[string]bool{
 	"mssql":    true, // github.com/denisenkom/go-mssqldb
 	"mysql":    true, // github.com/go-sql-driver/mysql

@@ -10,7 +10,7 @@ Type:
 `
 )
 
-// args are the command line arguments.
+// Args are the command line arguments.
 type Args struct {
 	DisablePretty     bool     `arg:"--disable-pretty,-p,help:disable pretty formatting"`
 	HistoryFile       string   `arg:"--history-file,env:USQL_HISTFILE,help:history file"`
