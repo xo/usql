@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/alexflint/go-arg"
-	isatty "github.com/mattn/go-isatty"
+	"github.com/mattn/go-isatty"
 )
 
 func main() {
@@ -15,13 +15,13 @@ func main() {
 	}
 	arg.MustParse(args)
 
-	var err error
-	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
-	if interactive {
-		err = runInteractive(args)
-	} else {
-
+	h := &Handler{
+		args:        args,
+		interactive: isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd()),
 	}
+
+	// run
+	err := h.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
@@ -32,18 +32,4 @@ func main() {
 
 		os.Exit(1)
 	}
-}
-
-func runInteractive(args *Args) error {
-	h := &Handler{args: args}
-	if args.DSN != "" {
-		err := h.Open(args.DSN)
-		if err != nil {
-			return err
-		}
-	}
-	defer h.Close()
-
-	// run
-	return h.Run()
 }

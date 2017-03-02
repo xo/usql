@@ -17,10 +17,11 @@ const (
 
 // Handler is a cli input handler.
 type Handler struct {
-	args *Args
-	u    *dburl.URL
-	db   *sql.DB
-	l    *readline.Instance
+	args        *Args
+	interactive bool
+
+	u  *dburl.URL
+	db *sql.DB
 }
 
 // Prompt returns the base input prompt.
@@ -47,6 +48,10 @@ func (h *Handler) Cont() string {
 
 // Open handles opening a specified database URL.
 func (h *Handler) Open(urlstr string) error {
+	if urlstr == "" {
+		return nil
+	}
+
 	var err error
 
 	// parse dsn
@@ -66,17 +71,6 @@ func (h *Handler) Open(urlstr string) error {
 	// connect
 	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Close closes the existing database connection
-func (h *Handler) Close() error {
-	if h.db != nil {
-		err := h.db.Close()
-		h.db = nil
 		return err
 	}
 
@@ -173,12 +167,31 @@ func (h *Handler) HistoryFile() string {
 
 // DisplayHelp
 func (h *Handler) DisplayHelp(w io.Writer) {
-	io.WriteString(w, "help\n")
+	io.WriteString(w, helpDesc)
+}
+
+func (h *Handler) Close() error {
+	if h.db != nil {
+		err := h.db.Close()
+
+		h.db = nil
+		h.u = nil
+
+		return err
+	}
+
+	return nil
 }
 
 // Run handles stuff
 func (h *Handler) Run() error {
 	var err error
+
+	// open
+	err = h.Open(h.args.DSN)
+	if err != nil {
+		return err
+	}
 
 	// create readline instance
 	l, err := readline.NewEx(&readline.Config{
@@ -200,6 +213,7 @@ func (h *Handler) Run() error {
 	defer l.Close()
 
 	// process input
+	var multi bool
 	var stmt []string
 	for {
 		line, err := l.Readline()
@@ -208,13 +222,41 @@ func (h *Handler) Run() error {
 		}
 
 		z := strings.TrimSpace(line)
+
 		if len(stmt) == 0 && z == "help" {
 			h.DisplayHelp(l.Stdout())
 			continue
 		}
 
+		if !multi {
+			switch {
+			case line == `\q`:
+				return nil
+
+			case strings.HasPrefix(line, `\c `):
+				err = h.Close()
+				if err != nil {
+					return err
+				}
+
+				urlstr := strings.TrimSpace(line[2:])
+				err = h.Open(urlstr)
+				if err != nil {
+					fmt.Fprintf(l.Stderr(), "error: could not connect to `%s`: %v\n", urlstr, err)
+				}
+
+				l.SetPrompt(h.Prompt())
+				continue
+			}
+		}
+
 		stmt = append(stmt, line)
+
+		if len(z) == 0 {
+			continue
+		}
 		if !strings.HasSuffix(z, ";") {
+			multi = true
 			l.SetPrompt(h.Cont())
 			continue
 		}
@@ -229,6 +271,7 @@ func (h *Handler) Run() error {
 		}
 
 		stmt = stmt[:0]
+		multi = false
 	}
 
 	return nil

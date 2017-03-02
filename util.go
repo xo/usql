@@ -4,11 +4,9 @@ const (
 	cliDesc = `usql is a universal command-line interface for SQL databases.`
 
 	helpDesc = `You are using usql, the universal command-line interface for SQL databases.
-Type: 	
-	\h for help with SQL commands
-	\? for help with usql commands
-	\g to terminate with semicolon to execute query
-	\q to quit
+Type:
+	\c <url> 	connect to url
+	\q 			quit
 `
 )
 
