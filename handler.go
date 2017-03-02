@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/chzyer/readline"
@@ -171,8 +172,7 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 		for q.Next() {
 			r := make([]interface{}, clen)
 			for i := range r {
-				var b []byte
-				r[i] = &b
+				r[i] = new(interface{})
 			}
 
 			err = q.Scan(r...)
@@ -182,8 +182,25 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 
 			row := make([]string, clen)
 			for n, z := range r {
-				j := z.(*[]byte)
-				row[n] = string(*j)
+				j := z.(*interface{})
+
+				switch x := (*j).(type) {
+				case []byte:
+					row[n] = string(x)
+
+				case string:
+					row[n] = x
+
+				case time.Time:
+					row[n] = x.Format(time.RFC3339Nano)
+
+				case fmt.Stringer:
+					row[n] = x.String()
+
+				default:
+					row[n] = fmt.Sprintf("%v", *j)
+				}
+
 			}
 			t.Append(row)
 			rows++
