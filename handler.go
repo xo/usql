@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode"
 
 	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
@@ -83,79 +84,86 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 		sqlstr = strings.TrimSuffix(sqlstr, ";")
 	}
 
-	//log.Printf("EXECUTING(%s): `%s`", h.u.Driver, sqlstr)
-
-	if s := strings.TrimSpace(sqlstr); len(s) >= 6 && strings.ToLower(s[:6]) == "select" {
-		q, err := h.db.Query(sqlstr)
-		if err != nil {
-			return err
-		}
-		defer q.Close()
-
-		// load column information
-		cols, err := q.Columns()
-		if err != nil {
-			return err
-		}
-
-		for i, s := range cols {
-			s = strings.TrimSpace(s)
-			if len(s) == 0 {
-				cols[i] = fmt.Sprintf("col%d", i)
-			}
-		}
-
-		// create output table
-		t := tablewriter.NewWriter(w)
-		t.SetAutoFormatHeaders(false)
-		t.SetBorder(false)
-		t.SetHeader(cols)
-
-		clen := len(cols)
-		var rows int
-		if clen != 0 {
-			for q.Next() {
-				r := make([]interface{}, clen)
-				for i := range r {
-					var b []byte
-					r[i] = &b
-				}
-
-				err = q.Scan(r...)
-				if err != nil {
-					return err
-				}
-
-				row := make([]string, clen)
-				for n, z := range r {
-					j := z.(*[]byte)
-					row[n] = string(*j)
-				}
-				t.Append(row)
-				rows++
-			}
-		}
-
-		t.Render()
-		fmt.Fprintf(w, "(%d rows)\n\n", rows)
-	} else {
-		res, err := h.db.Exec(sqlstr)
-		if err != nil {
-			return err
-		}
-
-		count, err := res.RowsAffected()
-		if err != nil {
-			return err
-		}
-
-		fmt.Fprint(w, strings.ToUpper(sqlstr[:strings.Index(sqlstr, " ")]))
-		if count > 0 {
-			fmt.Fprintf(w, " %d", count)
-		}
-
-		fmt.Fprint(w, "\n")
+	// select
+	if s := strings.TrimLeftFunc(sqlstr, unicode.IsSpace); len(s) >= 6 && strings.ToUpper(s[:6]) == "SELECT" {
+		return h.Query(w, sqlstr)
 	}
+
+	// exec
+	res, err := h.db.Exec(sqlstr)
+	if err != nil {
+		return err
+	}
+
+	// get count
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprint(w, strings.ToUpper(sqlstr[:strings.Index(sqlstr, " ")]))
+	if count > 0 {
+		fmt.Fprintf(w, " %d", count)
+	}
+
+	fmt.Fprint(w, "\n")
+
+	return nil
+}
+
+func (h *Handler) Query(w io.Writer, sqlstr string) error {
+	q, err := h.db.Query(sqlstr)
+	if err != nil {
+		return err
+	}
+	defer q.Close()
+
+	// load column information
+	cols, err := q.Columns()
+	if err != nil {
+		return err
+	}
+
+	for i, s := range cols {
+		s = strings.TrimSpace(s)
+		if len(s) == 0 {
+			cols[i] = fmt.Sprintf("col%d", i)
+		}
+	}
+
+	// create output table
+	t := tablewriter.NewWriter(w)
+	t.SetAutoFormatHeaders(false)
+	t.SetBorder(false)
+	t.SetHeader(cols)
+
+	clen := len(cols)
+	var rows int
+	if clen != 0 {
+		for q.Next() {
+			r := make([]interface{}, clen)
+			for i := range r {
+				var b []byte
+				r[i] = &b
+			}
+
+			err = q.Scan(r...)
+			if err != nil {
+				return err
+			}
+
+			row := make([]string, clen)
+			for n, z := range r {
+				j := z.(*[]byte)
+				row[n] = string(*j)
+			}
+			t.Append(row)
+			rows++
+		}
+	}
+
+	t.Render()
+	fmt.Fprintf(w, "(%d rows)\n\n", rows)
 
 	return nil
 }
