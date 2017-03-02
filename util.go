@@ -5,8 +5,8 @@ const (
 
 	helpDesc = `You are using usql, the universal command-line interface for SQL databases.
 Type:
-	\c <url> 	connect to url
-	\q 			quit
+	\c <url>  connect to url
+	\q        quit
 `
 )
 

@@ -85,8 +85,17 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 	}
 
 	// select
-	if s := strings.TrimLeftFunc(sqlstr, unicode.IsSpace); len(s) >= 6 && strings.ToUpper(s[:6]) == "SELECT" {
-		return h.Query(w, sqlstr)
+	if s := strings.TrimLeftFunc(sqlstr, unicode.IsSpace); len(s) >= 5 {
+		i := strings.IndexFunc(s, unicode.IsSpace)
+		if i == -1 {
+			i = len(s)
+		}
+
+		z := strings.ToUpper(s[:i])
+		if z == "SELECT" ||
+			(h.u.Driver == "sqlite3" && z == "PRAGMA" && !strings.ContainsRune(s[i:], '=')) {
+			return h.Query(w, sqlstr)
+		}
 	}
 
 	// exec
@@ -101,7 +110,14 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 		return err
 	}
 
-	fmt.Fprint(w, strings.ToUpper(sqlstr[:strings.Index(sqlstr, " ")]))
+	// print name
+	name := "EXEC"
+	if i := strings.Index(sqlstr, " "); i >= 0 {
+		name = strings.ToUpper(sqlstr[:i])
+	}
+	fmt.Fprint(w, name)
+
+	// print count
 	if count > 0 {
 		fmt.Fprintf(w, " %d", count)
 	}
@@ -230,6 +246,7 @@ func (h *Handler) Run() error {
 		case err == readline.ErrInterrupt:
 			stmt = stmt[:0]
 			multi = false
+			l.SetPrompt(h.Prompt())
 			continue
 
 		case err != nil:
@@ -237,18 +254,19 @@ func (h *Handler) Run() error {
 		}
 
 		z := strings.TrimSpace(line)
-
-		if len(stmt) == 0 && z == "help" {
-			h.DisplayHelp(l.Stdout())
-			continue
-		}
-
 		if !multi {
 			switch {
-			case line == `\q`:
+			case z == "help":
+				h.DisplayHelp(l.Stdout())
+				continue
+
+			case z == `\q`:
+				l.SaveHistory(line)
 				return nil
 
 			case strings.HasPrefix(line, `\c `):
+				l.SaveHistory(line)
+
 				err = h.Close()
 				if err != nil {
 					return err
