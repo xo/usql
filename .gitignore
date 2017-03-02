@@ -1,0 +1,4 @@
+/usql
+/c/
+.usql_history*
+*.sqlite3
