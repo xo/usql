@@ -17,7 +17,7 @@ type Args struct {
 	HistoryFile       string   `arg:"--history-file,env:USQL_HISTFILE,help:history file"`
 	UserHistoryPrefix string   `arg:"--user-history-prefix,env:USQL_USERHISTPREFIX,help:user history prefix to use"`
 	Commands          []string `arg:"-c,--command,help:run only single command (SQL or internal) and exit"`
-	NoRC              bool     `arg:"-X,--,help:do not read start up file"`
+	NoRC              bool     `arg:"-X,--disable-rc,help:do not read start up file"`
 	DSN               string   `arg:"positional,help:database url"`
 }
 

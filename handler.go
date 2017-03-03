@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
+	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -31,6 +33,10 @@ type Handler struct {
 
 // Prompt returns the base input prompt.
 func (h *Handler) Prompt() string {
+	if !h.interactive {
+		return ""
+	}
+
 	s := notConnected
 
 	if h.db != nil {
@@ -42,6 +48,10 @@ func (h *Handler) Prompt() string {
 
 // Cont returns the continuation prompt.
 func (h *Handler) Cont() string {
+	if !h.interactive {
+		return ""
+	}
+
 	s := notConnected
 
 	if h.db != nil {
@@ -252,6 +262,13 @@ func (h *Handler) Run() error {
 		return err
 	}
 
+	log.Printf(">>> commands: %v", h.args.Commands)
+
+	// short circuit if commands provided
+	if len(h.args.Commands) > 0 {
+		return h.RunCommands()
+	}
+
 	// create readline instance
 	l, err := readline.NewEx(&readline.Config{
 		Prompt:                 h.Prompt(),
@@ -271,7 +288,9 @@ func (h *Handler) Run() error {
 	}
 	defer l.Close()
 
-	fmt.Fprint(l.Stdout(), cliDesc)
+	if h.interactive {
+		fmt.Fprint(l.Stdout(), cliDesc)
+	}
 
 	// process input
 	var multi bool
@@ -342,4 +361,17 @@ func (h *Handler) Run() error {
 		stmt = stmt[:0]
 		multi = false
 	}
+}
+
+// RunCommands runs the argument commands.
+func (h *Handler) RunCommands() error {
+	var err error
+	for _, c := range h.args.Commands {
+		err = h.Execute(os.Stdout, c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
