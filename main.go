@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alexflint/go-arg"
+	"github.com/kenshaw/go-arg"
 	"github.com/mattn/go-isatty"
 )
 
