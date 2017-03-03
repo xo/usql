@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -262,7 +261,7 @@ func (h *Handler) Run() error {
 		return err
 	}
 
-	log.Printf(">>> commands: %v", h.args.Commands)
+	//log.Printf(">>> commands: %v", h.args.Commands)
 
 	// short circuit if commands provided
 	if len(h.args.Commands) > 0 {
@@ -331,6 +330,17 @@ func (h *Handler) Run() error {
 				err = h.Open(urlstr)
 				if err != nil {
 					fmt.Fprintf(l.Stderr(), "error: could not connect to `%s`: %v\n", urlstr, err)
+				}
+
+				l.SetPrompt(h.Prompt())
+				continue
+
+			case z == `\Z`:
+				l.SaveHistory(line)
+
+				err = h.Close()
+				if err != nil {
+					return err
 				}
 
 				l.SetPrompt(h.Prompt())
