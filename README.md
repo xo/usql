@@ -37,9 +37,9 @@ $ usql file:dbname.sqlite3
 ## Example Output
 
 The following is an example of connecting to [xo's booktest](https://github.com/knq/xo)
-example Oracle, performing a query, and then connecting to the PostgreSQL,
-MySQL, Microsoft SQL Server, and SQLite3 databases and performing the same
-query.
+example Oracle database, performing a query, and then connecting to the
+PostgreSQL, MySQL, Microsoft SQL Server, and SQLite3 databases and executing
+various queries.
 
 <p align="center">
   <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" target="_blank">
