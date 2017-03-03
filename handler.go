@@ -271,6 +271,8 @@ func (h *Handler) Run() error {
 	}
 	defer l.Close()
 
+	fmt.Fprint(l.Stdout(), cliDesc)
+
 	// process input
 	var multi bool
 	var stmt []string
