@@ -14,7 +14,7 @@ Type: \c <url>  connect to url
 // Args are the command line arguments.
 type Args struct {
 	DSN               string   `arg:"positional,help:database url"`
-	Commands          []string `arg:"-c,--command,single,help:run only single command (SQL or internal) and exit"`
+	Commands          []string `arg:"-c,--command,separate,help:run only single command (SQL or internal) and exit"`
 	DisablePretty     bool     `arg:"-p,--disable-pretty,help:disable pretty formatting"`
 	NoRC              bool     `arg:"-X,--disable-rc,help:do not read start up file"`
 	HistoryFile       string   `arg:"--history-file,env:USQL_HISTFILE,help:history file"`
