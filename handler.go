@@ -75,7 +75,7 @@ func (h *Handler) Open(urlstr string) error {
 		if fi, err := os.Stat(urlstr); err == nil {
 			// TODO: add support for postgres unix domain sockets
 			switch {
-			case fi.Mode()|os.ModeNamedPipe != 0:
+			case fi.Mode()&os.ModeSocket != 0:
 				return h.Open("mysql+unix:" + urlstr)
 
 			default:
@@ -392,7 +392,7 @@ func (h *Handler) Run() error {
 				urlstr := strings.TrimSpace(line[2:])
 				err = h.Open(urlstr)
 				if err != nil {
-					fmt.Fprintf(l.Stderr(), "error: could not connect to `%s`: %v\n", urlstr, err)
+					fmt.Fprintf(l.Stderr(), "error: could not connect to database: %v\n", err)
 				}
 
 				l.SetPrompt(h.Prompt())
@@ -428,7 +428,17 @@ func (h *Handler) Run() error {
 
 		err = h.Execute(l.Stdout(), s)
 		if err != nil {
-			fmt.Fprintf(l.Stderr(), "error: %v\n", err)
+			// attempt to clean up and standardize errors
+			s := strings.TrimSpace(err.Error())
+			prefix := h.u.Driver
+			if h.u.Driver == "postgres" {
+				prefix = "pq"
+			}
+			if !strings.HasPrefix(s, prefix+":") {
+				s = h.u.Driver + ": " + s
+			}
+
+			fmt.Fprintf(l.Stderr(), "error: "+s+"\n")
 		}
 
 		stmt = stmt[:0]
