@@ -29,9 +29,27 @@ $ usql --help
 
 # connect to a postgres database
 $ usql pg://user:pass@localhost/dbname
+$ usql pgsql://user:pass@localhost/dbname
+$ usql postgres://user:pass@localhost:port/dbname
+
+# connect to a mysql database
+$ usql my://user:pass@localhost/dbname
+$ usql mysql://user:pass@localhost:port/dbname
+$ usql /var/run/mysqld/mysqld.sock
+
+# connect to a mssql (Microsoft SQL) database
+$ usql ms://user:pass@localhost/dbname
+$ usql mssql://user:pass@localhost:port/dbname
+
+# connect to a oracle database
+$ usql or://user:pass@localhost/dbname
+$ usql oracle://user:pass@localhost:port/dbname
 
 # connect to a sqlite file
-$ usql file:dbname.sqlite3
+$ usql dbname.sqlite3
+$ usql sq://path/to/dbname.sqlite3
+$ usql sqlite3://path/to/dbname.sqlite3
+$ usql file:/path/to/dbname.sqlite3
 ```
 
 ## Example Output
