@@ -3,15 +3,26 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/user"
 
 	"github.com/kenshaw/go-arg"
 	"github.com/mattn/go-isatty"
 )
 
 func main() {
+	var err error
+
+	// load current user
+	cur, err := user.Current()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
 	// parse args
 	args := &Args{
 		UserHistoryPrefix: ".usql_history_",
+		Username:          cur.Username,
 	}
 	arg.MustParse(args)
 
@@ -21,7 +32,7 @@ func main() {
 	}
 
 	// run
-	err := h.Run()
+	err = h.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 

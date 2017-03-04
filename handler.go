@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -67,15 +68,21 @@ func (h *Handler) Open(urlstr string) error {
 		return nil
 	}
 
-	var err error
-
 	// parse dsn
+	var err error
 	h.u, err = dburl.Parse(urlstr)
 	switch {
 	case err == dburl.ErrInvalidDatabaseScheme:
-		if _, err = os.Stat(urlstr); err == nil {
-			// it is a file, so reattempt to open it with sqlite3
-			return h.Open("sqlite3:" + urlstr)
+		if fi, err := os.Stat(urlstr); err == nil {
+			// TODO: add support for postgres unix domain sockets
+			switch {
+			case fi.Mode()|os.ModeNamedPipe != 0:
+				return h.Open("mysql+unix:" + urlstr)
+
+			default:
+				// it is a file, so reattempt to open it with sqlite3
+				return h.Open("sqlite3:" + urlstr)
+			}
 		}
 
 	case err != nil:
@@ -96,7 +103,7 @@ func (h *Handler) Open(urlstr string) error {
 	dsn = h.addQueryParam(dsn, "mysql", "loc", "Local")
 	dsn = h.addQueryParam(dsn, "sqlite3", "loc", "auto")
 
-	//log.Printf(">>> dsn: %s", dsn)
+	log.Printf(">>> dsn: %s", dsn)
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, dsn)
