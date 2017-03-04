@@ -2,6 +2,10 @@
 
 package main
 
+// this is an unfinished piece of code that originally was going to be used to
+// parse the postgres docs to extract the "query prefixes" for the various
+// types, it is left here in case this approach is followed in the future.
+
 import (
 	"io/ioutil"
 	"log"

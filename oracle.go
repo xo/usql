@@ -7,5 +7,5 @@ import (
 )
 
 func init() {
-	drivers["ora"] = true
+	drivers["ora"] = "oracle"
 }

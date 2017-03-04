@@ -90,9 +90,8 @@ A list of planned / in progress work:
 * \encoding and environment/command line options to set encoding of input (to convert to utf-8 before feeding to SQL driver)
 
 ### Command Processing + `psql` compatibility
-* proper command processing (WIP)
-  * variable support / interpolation + \prompt, \set, \unset
-* PAGER + EDITOR support
+* PAGER + EDITOR support (WIP)
+* variable support / interpolation + \prompt, \set, \unset
 * the \j* commands (WIP)
 * \watch
 * \errverbose
