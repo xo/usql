@@ -364,7 +364,10 @@ func (h *Handler) Run() error {
 	// set stdin if not set
 	var r io.Reader = stdin
 	if stdin == nil {
-		r = readline.NewCancelableStdin(os.Stdin)
+		c := readline.NewCancelableStdin(os.Stdin)
+		defer c.Close()
+
+		r = c
 	}
 
 	return h.Process(r, stdout, stderr)
