@@ -17,6 +17,7 @@ type Args struct {
 	Commands          []string `arg:"-c,--command,separate,help:run only single command (SQL or internal) and exit"`
 	DisablePretty     bool     `arg:"-p,--disable-pretty,help:disable pretty formatting"`
 	NoRC              bool     `arg:"-X,--disable-rc,help:do not read start up file"`
+	File              string   `arg:"-f,--file,help:execute commands from file then exit"`
 	HistoryFile       string   `arg:"--history-file,env:USQL_HISTFILE,help:history file"`
 	UserHistoryPrefix string   `arg:"--user-history-prefix,env:USQL_USERHISTPREFIX,help:user history prefix to use"`
 }

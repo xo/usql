@@ -14,6 +14,7 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
+	"github.com/knq/xoutil"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -82,9 +83,34 @@ func (h *Handler) Open(urlstr string) error {
 		return fmt.Errorf("driver '%s' is not available for '%s'", h.u.Driver, h.u.Scheme)
 	}
 
+	// add connection parameters for databases
+	dsn := h.u.DSN
+	dsn = h.addQueryParam(dsn, "mysql", "parseTime", "true")
+	dsn = h.addQueryParam(dsn, "mysql", "loc", "Local")
+	dsn = h.addQueryParam(dsn, "sqlite3", "loc", "auto")
+
+	//log.Printf(">>> dsn: %s", dsn)
+
 	// connect
-	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
+	h.db, err = sql.Open(h.u.Driver, dsn)
 	return err
+}
+
+// addQueryParam conditionally adds a ?name=val style query parameter to the
+// end of a DSN if the connected database driver matches the supplied driver
+// name.
+func (h *Handler) addQueryParam(dsn, driver, name, val string) string {
+	if h.u.Driver == driver {
+		if !strings.Contains(dsn, name+"=") {
+			s := "?"
+			if strings.Contains(dsn, "?") {
+				s = "&"
+			}
+			return dsn + s + name + "=" + val
+		}
+	}
+
+	return dsn
 }
 
 // Execute executes a sql query against the connected database.
@@ -142,6 +168,7 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 
 var allcapsRE = regexp.MustCompile(`^[A-Z_]+$`)
 
+// Query executes a query against the database.
 func (h *Handler) Query(w io.Writer, sqlstr string) error {
 	// run query
 	q, err := h.db.Query(sqlstr)
@@ -193,9 +220,15 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 			for n, z := range r {
 				j := z.(*interface{})
 
+				//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
+
 				switch x := (*j).(type) {
 				case []byte:
-					row[n] = string(x)
+					if h.u.Driver == "sqlite3" {
+						row[n] = h.sqlite3Parse(x)
+					} else {
+						row[n] = string(x)
+					}
 
 				case string:
 					row[n] = x
@@ -220,6 +253,23 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 	fmt.Fprintf(w, "(%d rows)\n\n", rows)
 
 	return nil
+}
+
+// sqlite3Parse will convert buf matching a time format to a time, and will
+// format it according to the handler time settings.
+//
+// TODO: only do this if the type of the column is a timestamp type.
+func (h *Handler) sqlite3Parse(buf []byte) string {
+	s := string(buf)
+	if s != "" && strings.TrimSpace(s) != "" {
+		t := &xoutil.SqTime{}
+		err := t.Scan(buf)
+		if err == nil {
+			return t.Format(time.RFC3339Nano)
+		}
+	}
+
+	return s
 }
 
 // HistoryFile returns the name of the history file.
