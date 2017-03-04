@@ -146,7 +146,12 @@ func (h *Handler) Execute(w io.Writer, sqlstr string) error {
 		z := strings.ToUpper(s[:i])
 		if z == "SELECT" ||
 			(h.u.Driver == "sqlite3" && z == "PRAGMA" && !strings.ContainsRune(s[i:], '=')) {
-			return h.Query(w, sqlstr)
+			err := h.Query(w, sqlstr)
+			if err != nil {
+				return h.wrapError(err)
+			}
+
+			return nil
 		}
 	}
 
@@ -428,17 +433,7 @@ func (h *Handler) Run() error {
 
 		err = h.Execute(l.Stdout(), s)
 		if err != nil {
-			// attempt to clean up and standardize errors
-			s := strings.TrimSpace(err.Error())
-			prefix := h.u.Driver
-			if h.u.Driver == "postgres" {
-				prefix = "pq"
-			}
-			if !strings.HasPrefix(s, prefix+":") {
-				s = h.u.Driver + ": " + s
-			}
-
-			fmt.Fprintf(l.Stderr(), "error: "+s+"\n")
+			fmt.Fprintf(l.Stderr(), "error: %v\n", h.wrapError(err))
 		}
 
 		stmt = stmt[:0]
@@ -457,4 +452,36 @@ func (h *Handler) RunCommands() error {
 	}
 
 	return nil
+}
+
+// driverError is a wrapper to standardize errors.
+type driverError struct {
+	driver string
+	err    error
+}
+
+// Error satisfies the error interface.
+func (e *driverError) Error() string {
+	if e.driver != "" {
+		s := e.err.Error()
+		return e.driver + ": " + strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), e.driver+":"), unicode.IsSpace)
+	}
+
+	return e.err.Error()
+}
+
+// wrapError conditionally wraps an error if the error occurs while connected
+// to a database.
+func (h *Handler) wrapError(err error) error {
+	if h.db != nil {
+		// attempt to clean up and standardize errors
+		driver := h.u.Driver
+		if driver == "postgres" {
+			driver = "pq"
+		}
+
+		return &driverError{driver, err}
+	}
+
+	return err
 }
