@@ -10,6 +10,18 @@ import (
 )
 
 func main() {
+	// circumvent all logic to just determine if usql was built with oracle
+	// support
+	if len(os.Args) == 2 && os.Args[1] == "--has-oracle-support" {
+		var out int
+		if _, ok := drivers["ora"]; ok {
+			out = 1
+		}
+
+		fmt.Fprintf(os.Stdout, "%d", out)
+		return
+	}
+
 	var err error
 
 	// load current user
