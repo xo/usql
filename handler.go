@@ -403,7 +403,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 	defer l.Close()
 
 	if h.interactive {
-		fmt.Fprint(l.Stdout(), cliDesc)
+		fmt.Fprint(l.Stdout(), welcomeDesc)
 	}
 
 	// process input
