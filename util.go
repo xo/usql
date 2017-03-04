@@ -1,13 +1,16 @@
 package main
 
 const (
-	cliDesc = `Type "help" for help.
+	aboutDesc = `usql is the universal command-line interface for SQL databases.
+`
+
+	welcomeDesc = `Type "help" for help.
 
 `
 
 	helpDesc = `You are using usql, the universal command-line interface for SQL databases.
-Type: \c <url>  connect to url
-	  \q        quit
+Type: \c[onnect] <url>  connect to url
+      \q                quit
 `
 )
 
@@ -26,5 +29,5 @@ type Args struct {
 
 // Description provides the go-arg description.
 func (a *Args) Description() string {
-	return cliDesc + "\n"
+	return aboutDesc
 }
