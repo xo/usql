@@ -74,15 +74,15 @@ func (h *Handler) Open(urlstr string) error {
 	case err == dburl.ErrInvalidDatabaseScheme:
 		if fi, err := os.Stat(urlstr); err == nil {
 			// TODO: add support for postgres unix domain sockets
-			switch {
-			case fi.Mode()&os.ModeSocket != 0:
+			if fi.Mode()&os.ModeSocket != 0 {
 				return h.Open("mysql+unix:" + urlstr)
-
-			default:
-				// it is a file, so reattempt to open it with sqlite3
-				return h.Open("sqlite3:" + urlstr)
 			}
+
+			// it is a file, so reattempt to open it with sqlite3
+			return h.Open("sqlite3:" + urlstr)
 		}
+
+		return err
 
 	case err != nil:
 		return err
@@ -319,7 +319,8 @@ func (h *Handler) Close() error {
 	return nil
 }
 
-// Run handles stuff
+// Run processes h.args, running either the Commands if non-empty, or File if
+// specified, or the input from stdin.
 func (h *Handler) Run() error {
 	var err error
 
@@ -329,12 +330,49 @@ func (h *Handler) Run() error {
 		return err
 	}
 
-	//log.Printf(">>> commands: %v", h.args.Commands)
-
 	// short circuit if commands provided
 	if len(h.args.Commands) > 0 {
 		return h.RunCommands()
 	}
+
+	// configure input
+	var stdin *os.File
+	stdout, stderr := os.Stdout, os.Stderr
+
+	// set file as stdin
+	if h.args.File != "" {
+		stdin, err = os.OpenFile(h.args.File, os.O_RDONLY, 0)
+		if err != nil {
+			return err
+		}
+		defer stdin.Close()
+
+		h.interactive = false
+	}
+
+	// set out as stdout
+	if h.args.Out != "" {
+		stdout, err = os.OpenFile(h.args.Out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+		defer stdout.Close()
+
+		h.interactive = false
+	}
+
+	// set stdin if not set
+	var r io.Reader = stdin
+	if stdin == nil {
+		r = readline.NewCancelableStdin(os.Stdin)
+	}
+
+	return h.Process(r, stdout, stderr)
+}
+
+// Run handles stuff
+func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
+	var err error
 
 	// create readline instance
 	l, err := readline.NewEx(&readline.Config{
@@ -343,6 +381,12 @@ func (h *Handler) Run() error {
 		DisableAutoSaveHistory: true,
 		InterruptPrompt:        "^C",
 		HistorySearchFold:      true,
+		Stdin:                  stdin,
+		Stdout:                 stdout,
+		Stderr:                 stderr,
+		FuncIsTerminal: func() bool {
+			return h.interactive
+		},
 		FuncFilterInputRune: func(r rune) (rune, bool) {
 			if r == readline.CharCtrlZ {
 				return r, false
@@ -376,6 +420,10 @@ func (h *Handler) Run() error {
 		}
 
 		z := strings.TrimSpace(line)
+		if len(z) == 0 {
+			continue
+		}
+
 		if !multi {
 			switch {
 			case z == "help":
@@ -383,18 +431,18 @@ func (h *Handler) Run() error {
 				continue
 
 			case z == `\q`:
-				l.SaveHistory(line)
+				h.SaveHistory(l, line)
 				return nil
 
-			case strings.HasPrefix(line, `\c `):
-				l.SaveHistory(line)
+			case strings.HasPrefix(line, `\c `) || strings.HasPrefix(line, `\connect `):
+				h.SaveHistory(l, line)
 
 				err = h.Close()
 				if err != nil {
 					return err
 				}
 
-				urlstr := strings.TrimSpace(line[2:])
+				urlstr := strings.TrimSpace(line[strings.IndexRune(line, ' '):])
 				err = h.Open(urlstr)
 				if err != nil {
 					fmt.Fprintf(l.Stderr(), "error: could not connect to database: %v\n", err)
@@ -404,7 +452,7 @@ func (h *Handler) Run() error {
 				continue
 
 			case z == `\Z`:
-				l.SaveHistory(line)
+				h.SaveHistory(l, line)
 
 				err = h.Close()
 				if err != nil {
@@ -418,9 +466,6 @@ func (h *Handler) Run() error {
 
 		stmt = append(stmt, line)
 
-		if len(z) == 0 {
-			continue
-		}
 		if !strings.HasSuffix(z, ";") {
 			multi = true
 			l.SetPrompt(h.Cont())
@@ -428,7 +473,7 @@ func (h *Handler) Run() error {
 		}
 
 		s := strings.Join(stmt, "\n")
-		l.SaveHistory(s)
+		h.SaveHistory(l, s)
 		l.SetPrompt(h.Prompt())
 
 		err = h.Execute(l.Stdout(), s)
@@ -441,11 +486,23 @@ func (h *Handler) Run() error {
 	}
 }
 
+// SaveHistory conditionally saves a line to the history if the session is
+// interactive.
+func (h *Handler) SaveHistory(l *readline.Instance, line string) error {
+	if h.interactive {
+		return l.SaveHistory(line)
+	}
+
+	return nil
+}
+
 // RunCommands runs the argument commands.
 func (h *Handler) RunCommands() error {
+	h.interactive = false
+
 	var err error
 	for _, c := range h.args.Commands {
-		err = h.Execute(os.Stdout, c)
+		err = h.Process(strings.NewReader(c), os.Stdout, os.Stderr)
 		if err != nil {
 			return err
 		}
