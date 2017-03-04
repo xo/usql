@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 
 	"github.com/kenshaw/go-arg"
 	"github.com/mattn/go-isatty"
@@ -33,8 +34,8 @@ func main() {
 
 	// parse args
 	args := &Args{
-		UserHistoryPrefix: ".usql_history_",
-		Username:          cur.Username,
+		Username:    cur.Username,
+		HistoryFile: filepath.Join(cur.HomeDir, ".usql_history"),
 	}
 	arg.MustParse(args)
 

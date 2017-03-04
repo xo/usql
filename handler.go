@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/user"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -290,16 +288,6 @@ func (h *Handler) sqlite3Parse(buf []byte) string {
 	return s
 }
 
-// HistoryFile returns the name of the history file.
-func (h *Handler) HistoryFile() string {
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-
-	return filepath.Join(u.HomeDir, ".usql_history")
-}
-
 // DisplayHelp displays the help message.
 func (h *Handler) DisplayHelp(w io.Writer) {
 	io.WriteString(w, helpDesc)
@@ -380,7 +368,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 	// create readline instance
 	l, err := readline.NewEx(&readline.Config{
 		Prompt:                 h.Prompt(),
-		HistoryFile:            h.HistoryFile(),
+		HistoryFile:            h.args.HistoryFile,
 		DisableAutoSaveHistory: true,
 		InterruptPrompt:        "^C",
 		HistorySearchFold:      true,
