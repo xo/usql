@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -103,7 +102,7 @@ func (h *Handler) Open(urlstr string) error {
 	dsn = h.addQueryParam(dsn, "mysql", "loc", "Local")
 	dsn = h.addQueryParam(dsn, "sqlite3", "loc", "auto")
 
-	log.Printf(">>> dsn: %s", dsn)
+	//log.Printf(">>> dsn: %s", dsn)
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, dsn)
