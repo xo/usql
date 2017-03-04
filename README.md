@@ -48,6 +48,6 @@ various queries.
 </p>
 
 # TODO
-* Fix --command/-c execution
+* Better handling of local files (such as unix domain sockets) for Handler.Open
 * All the various \\d* commands from `psql`
 * SQL completion

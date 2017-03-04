@@ -71,7 +71,14 @@ func (h *Handler) Open(urlstr string) error {
 
 	// parse dsn
 	h.u, err = dburl.Parse(urlstr)
-	if err != nil {
+	switch {
+	case err == dburl.ErrInvalidDatabaseScheme:
+		if _, err = os.Stat(urlstr); err == nil {
+			// it is a file, so reattempt to open it with sqlite3
+			return h.Open("sqlite3:" + urlstr)
+		}
+
+	case err != nil:
 		return err
 	}
 
