@@ -65,6 +65,45 @@ various queries.
   </a>
 </p>
 
-# TODO
-* All the various \\d* commands from `psql`
-* SQL completion
+## TODO
+
+A list of planned / in progress work:
+
+### General
+* fix mysql "Error 1049:" messages, and other database error messages
+* fix issue with readline on windows
+* proper command processing (WIP)
+* remaining `psql` cli parameters
+* the "j" commands (WIP)
+* SQL completion (WIP)
+* syntax highlighting (WIP)
+* all \\d* commands from `psql` -- need to finish work extracting introspection code from `xo`
+
+### Releases
+
+Need to write scripts for packaging and build binaries for:
+
+* Debian/Ubuntu (deb)
+* MacOS X (.pkg)
+* Windows (.msi)
+* CentOS/RHEL (.rpm)
+
+Additional:
+* Submit upstream to Debian unstable (WIP)
+
+### Testing
+
+* full test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
+
+### Future Database Support
+
+Notes / thoughts / comments on adding support for various "databases":
+
+* Google Spanner
+* CockroachDB (uses lib/pq wire protocol)
+* ODBC (cross platform issues, similar to oracle with build support)
+* Cassandra
+* VoltDB
+* MemSQL (uses mysql wire protocol)
+* SAP HANA (cannot seem to run installer)
+* Atlassian JIRA JQL (why not? lol)

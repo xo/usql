@@ -1,4 +1,6 @@
 /usql
-/c/
+
 .usql_history*
+
 *.sqlite3
+*.sqlite3-journal
