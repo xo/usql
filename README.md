@@ -2,7 +2,7 @@
 
 usql is a universal command-line interface for working with SQL databases.
 
-usql provides a universal command line interface for the following databases:
+usql provides a universal command-line interface for the following databases:
 PostgreSQL, MySQL, Oracle, SQLite, and Microsoft SQL Server.
 
 The goal is to eventually have usql be a drop in replacement for PostgreSQL's
@@ -107,3 +107,8 @@ Notes / thoughts / comments on adding support for various "databases":
 * VoltDB
 * MemSQL (uses mysql wire protocol)
 * Atlassian JIRA JQL (why not? lol)
+
+## Related Projects
+
+* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
+* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
