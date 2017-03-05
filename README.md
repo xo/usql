@@ -100,10 +100,10 @@ Additional:
 Notes / thoughts / comments on adding support for various "databases":
 
 * Google Spanner
+* SAP HANA (cannot seem to run installer/get it running, support is already in usql, but not tested)
 * CockroachDB (uses lib/pq wire protocol)
 * ODBC (cross platform issues, similar to oracle with build support)
 * Cassandra
 * VoltDB
 * MemSQL (uses mysql wire protocol)
-* SAP HANA (cannot seem to run installer)
 * Atlassian JIRA JQL (why not? lol)
