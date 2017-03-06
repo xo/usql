@@ -60,13 +60,13 @@ fi
 
 go build -ldflags="-X main.name=$NAME -X main.version=$VER" -o $BIN
 
-if [ "$PLATFORM" != "mingw64" ]; then
+if [ "$PLATFORM" == "linux" ]; then
   echo "stripping $BIN"
   strip $BIN
-fi
 
-echo "packing $BIN"
-upx -q -q $BIN
+  echo "packing $BIN"
+  upx -q -q $BIN
+fi
 
 echo "compressing $OUT"
 case $EXT in
