@@ -65,25 +65,42 @@ various queries.
   </a>
 </p>
 
+## Related Projects
+
+* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
+* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
+
 ## TODO
 
 A list of planned / in progress work:
 
 ### General
-* fix mysql "Error 1049:" messages, and other database error messages
+* fix mysql "Error 1049:" messages, and better standardize other database error messages
 * fix issue with readline on windows
-* proper command processing (WIP)
-* remaining `psql` cli parameters
-* the "j" commands (WIP)
+* fix table output
+* add support for requesting user enter their password when Open fails with respective driver's authentication error
+* add support for managing multiple database connections simultaneously (@conn
+  syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not needed,
+  if variable support works "as expected"?)
 * SQL completion (WIP)
 * syntax highlighting (WIP)
-* all \\d* commands from `psql` -- need to finish work extracting introspection code from `xo`
+
+### Command Processing + `psql` compatibility
+* proper command processing (WIP)
+  * variable support / interpolation + \prompt, \set, \unset
+* PAGER + EDITOR support
+* the \j* commands (WIP)
+* \watch
+* \errverbose
+* formatting settings (\pset, \a, etc)
+* all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
+* remaining `psql` cli parameters
 
 ### Releases
 
 Need to write scripts for packaging and build binaries for:
 
-* Debian/Ubuntu (deb)
+* Debian/Ubuntu (.deb)
 * MacOS X (.pkg)
 * Windows (.msi)
 * CentOS/RHEL (.rpm)
@@ -107,8 +124,3 @@ Notes / thoughts / comments on adding support for various "databases":
 * VoltDB
 * MemSQL (uses mysql wire protocol)
 * Atlassian JIRA JQL (why not? lol)
-
-## Related Projects
-
-* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
-* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
