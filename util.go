@@ -37,6 +37,16 @@ func (a *Args) Description() string {
 	return aboutDesc
 }
 
+var (
+	name    = "usql"
+	version = "0.0.0-dev"
+)
+
+// Version returns the version string for the app.
+func (a *Args) Version() string {
+	return name + " " + version
+}
+
 // startsWith checks that s begins with the specified prefix and is followed by
 // at least one space, returning the remaining string trimmed of spaces.
 //
