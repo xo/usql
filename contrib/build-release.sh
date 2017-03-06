@@ -28,7 +28,7 @@ if [ -z "$BUILD" ]; then
   fi
 fi
 
-EXT=tar
+EXT=zip
 if [ "$PLATFORM" == "mingw64" ]; then
   EXT=zip
 fi

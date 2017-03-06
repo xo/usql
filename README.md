@@ -9,6 +9,8 @@ The goal is to eventually have usql be a drop in replacement for PostgreSQL's
 `psql` command, with all the bells/whistles, but with the added benefit of
 working with more than one database.
 
+#### [Releases](https://github.com/knq/usql/releases)
+
 ## Installing
 
 Install in the usual Go way:
@@ -20,6 +22,8 @@ $ go get -u github.com/knq/usql
 # install with oracle support
 $ go get -u -tags oracle github.com/knq/usql
 ```
+
+Alternatively, you can download a binary release for your platform from the [GitHub releases page](https://github.com/knq/usql/releases).
 
 ## Using
 
