@@ -29,6 +29,7 @@ type Args struct {
 	Username      string   `arg:"-U,--username,help:database user name"`
 	DisablePretty bool     `arg:"-p,--disable-pretty,help:disable pretty formatting"`
 	NoRC          bool     `arg:"-X,--disable-rc,help:do not read start up file"`
+	Verbose       bool     `arg:"-v,--verbose,help:toggle verbose"`
 }
 
 // Description provides the go-arg description.
