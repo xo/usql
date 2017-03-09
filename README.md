@@ -88,6 +88,7 @@ A list of planned / in progress work:
   if variable support works "as expected"?)
 * SQL completion (WIP)
 * syntax highlighting (WIP)
+* \encoding and environment/command line options to set encoding of input (to convert to utf-8 before feeding to SQL driver)
 
 ### Command Processing + `psql` compatibility
 * proper command processing (WIP)
