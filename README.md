@@ -80,7 +80,6 @@ A list of planned / in progress work:
 
 ### General
 * fix mysql "Error 1049:" messages, and better standardize other database error messages
-* fix issue with readline on windows
 * fix table output
 * add support for requesting user enter their password when Open fails with respective driver's authentication error
 * add support for managing multiple database connections simultaneously (@conn
