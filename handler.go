@@ -325,7 +325,7 @@ func (h *Handler) Run() error {
 
 	// configure input
 	var stdin *os.File
-	stdout, stderr := os.Stdout, os.Stderr
+	stdout, stderr := readline.Stdout, readline.Stderr
 
 	// set file as stdin
 	if h.args.File != "" {
@@ -350,9 +350,9 @@ func (h *Handler) Run() error {
 	}
 
 	// set stdin if not set
-	var r io.Reader = stdin
+	var r io.ReadCloser = stdin
 	if stdin == nil {
-		c := readline.NewCancelableStdin(os.Stdin)
+		c := readline.NewCancelableStdin(readline.Stdin)
 		defer c.Close()
 
 		r = c
