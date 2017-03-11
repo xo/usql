@@ -39,11 +39,12 @@ func main() {
 	}
 	arg.MustParse(args)
 
-	interactive := (isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())) ||
-		(isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd()))
+	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
+	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	h := &Handler{
 		args:        args,
-		interactive: interactive,
+		cygwin:      cygwin,
+		interactive: interactive || cygwin,
 	}
 
 	// run

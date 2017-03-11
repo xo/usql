@@ -22,7 +22,9 @@ const (
 
 // Handler is a cli input handler.
 type Handler struct {
-	args        *Args
+	args *Args
+
+	cygwin      bool
 	interactive bool
 
 	u  *dburl.URL
@@ -326,6 +328,9 @@ func (h *Handler) Run() error {
 	// configure input
 	var stdin *os.File
 	stdout, stderr := readline.Stdout, readline.Stderr
+	if h.cygwin {
+		stdout, stderr = os.Stdout, os.Stderr
+	}
 
 	// set file as stdin
 	if h.args.File != "" {
@@ -352,7 +357,12 @@ func (h *Handler) Run() error {
 	// set stdin if not set
 	var r io.ReadCloser = stdin
 	if stdin == nil {
-		c := readline.NewCancelableStdin(readline.Stdin)
+		var c *readline.CancelableStdin
+		if h.cygwin {
+			c = readline.NewCancelableStdin(os.Stdin)
+		} else {
+			c = readline.NewCancelableStdin(readline.Stdin)
+		}
 		defer c.Close()
 
 		r = c
