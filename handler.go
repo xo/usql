@@ -328,9 +328,6 @@ func (h *Handler) Run() error {
 	// configure input
 	var stdin *os.File
 	stdout, stderr := readline.Stdout, readline.Stderr
-	if h.cygwin {
-		stdout, stderr = os.Stdout, os.Stderr
-	}
 
 	// set file as stdin
 	if h.args.File != "" {
