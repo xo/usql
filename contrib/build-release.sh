@@ -14,33 +14,35 @@ TAG=v$VER
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 NAME=$(basename $SRC)
 
-PLAT=$PLATFORM
-case $PLAT in
+case $PLATFORM in
   mingw64)
-    PLAT=windows
+    PLATFORM=windows
+  ;;
+  msys)
+    PLATFORM=windows
   ;;
 esac
 
 if [ -z "$BUILD" ]; then
   BUILD=$SRC/build
-  if [ "$PLATFORM" == "mingw64" ]; then
+  if [ "$PLATFORM" == "windows" ]; then
     BUILD=$HOME/$NAME
   fi
 fi
 
-EXT=zip
-if [ "$PLATFORM" == "mingw64" ]; then
+EXT=tar
+if [ "$PLATFORM" == "windows" ]; then
   EXT=zip
 fi
 
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
-OUT=$DIR/usql-$VER-$PLAT-amd64.$EXT
+OUT=$DIR/usql-$VER-$PLATFORM-amd64.$EXT
 
 rm -rf $DIR
 mkdir -p $DIR
 
-if [ "$PLATFORM" == "mingw64" ]; then
+if [ "$PLATFORM" == "windows" ]; then
     BIN=$BIN.exe
 fi
 
@@ -53,10 +55,6 @@ echo "OUT: $OUT"
 set -e
 
 pushd $SRC &> /dev/null
-
-if [ "$PLATFORM" != "mingw64" ]; then
-  git checkout $TAG
-fi
 
 go build -ldflags="-X main.name=$NAME -X main.version=$VER" -o $BIN
 
@@ -77,9 +75,5 @@ case $EXT in
     tar -C $DIR -cjvf $OUT.bz2 $(basename $BIN)
   ;;
 esac
-
-if [ "$PLATFORM" == "mingw64" ]; then
-  cp $OUT 'f:\'
-fi
 
 popd &> /dev/null
