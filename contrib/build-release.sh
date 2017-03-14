@@ -2,7 +2,6 @@
 
 VER=$1
 BUILD=$2
-EXT=tar.bz2
 
 if [ -z "$VER" ]; then
   echo "usage: $0 <VER>"
@@ -10,10 +9,10 @@ if [ -z "$VER" ]; then
 fi
 
 PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]')
-
 TAG=v$VER
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 NAME=$(basename $SRC)
+EXT=tar.bz2
 
 if [ -z "$BUILD" ]; then
   BUILD=$SRC/build
@@ -21,20 +20,16 @@ fi
 
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
-OUT=$DIR/usql-$VER-$PLATFORM-amd64.$EXT
 
 case $PLATFORM in
-  mingw64)
-    PLATFORM=windows
-    EXT=zip
-    BIN=$BIN.exe
-  ;;
-  msys)
+  mingw64|msys)
     PLATFORM=windows
     EXT=zip
     BIN=$BIN.exe
   ;;
 esac
+
+OUT=$DIR/usql-$VER-$PLATFORM-amd64.$EXT
 
 echo "PLATFORM: $PLATFORM"
 echo "VER: $VER"
@@ -42,14 +37,14 @@ echo "DIR: $DIR"
 echo "BIN: $BIN"
 echo "OUT: $OUT"
 
+set -e
+
 if [ -d $DIR ]; then
-  echo "removing existing $DIR"
+  echo "removing $DIR"
   rm -rf $DIR
 fi
 
 mkdir -p $DIR
-
-set -e
 
 pushd $SRC &> /dev/null
 
@@ -58,18 +53,20 @@ go build -ldflags="-X main.name=$NAME -X main.version=$VER" -o $BIN
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)
 if [ "$BUILT_VER" != "usql $VER" ]; then
-  echo -e "\n\nexpected --version to be 'usql $VER', got: '$BUILT_VER'"
+  echo -e "\n\nerror: expected usql --version to report 'usql $VER', got: '$BUILT_VER'"
   exit 1
 fi
 echo "$BUILT_VER"
 
-if [ "$PLATFORM" == "linux" ]; then
-  echo "stripping $BIN"
-  strip $BIN
+case $PLATFORM in
+  linux)
+    echo "stripping $BIN"
+    strip $BIN
 
-  echo "packing $BIN"
-  upx -q -q $BIN
-fi
+    echo "packing $BIN"
+    upx -q -q $BIN
+  ;;
+esac
 
 echo "compressing $OUT"
 case $EXT in
