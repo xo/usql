@@ -1,4 +1,6 @@
 /usql
+/usql.exe
+
 /build
 
 .usql_history*
