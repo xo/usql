@@ -494,12 +494,14 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		// fix i
 		i = min(i, rlen)
 
+		// determine appending to buf
 		empty := isEmptyLine(r, 0, i)
 		appendLine := h.q || !empty
 		if cmd != "" && empty {
 			appendLine = false
 		}
 		if appendLine {
+			// skip leading space when empty
 			st := 0
 			if h.buf.Len == 0 {
 				st, _ = findNonSpace(r, 0, i)

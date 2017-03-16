@@ -1,5 +1,7 @@
 package main
 
+//go:generate ./gen-license.sh
+
 import (
 	"fmt"
 	"io"

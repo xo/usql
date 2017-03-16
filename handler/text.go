@@ -19,7 +19,7 @@ const (
 
 	extraArgumentIgnored = "\\%s: extra argument \"%s\" ignored\n"
 
-	copyright = "usql, the universal command-line interface for SQL databases.\n\n%s\n"
+	copyright = "usql, the universal command-line interface for SQL databases.\n\n" + license + "\n"
 
 	missingRequiredArg = "missing required argument"
 
