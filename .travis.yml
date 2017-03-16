@@ -9,5 +9,5 @@ services:
 before_install:
   - go get github.com/mattn/goveralls
 script:
-  - go test -v -coverprofile=coverage.out
-  - goveralls -service=travis-ci -coverprofile=coverage.out
+  - go test -v ./...
+    #- goveralls -service=travis-ci -coverprofile=coverage.out
