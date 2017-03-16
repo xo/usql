@@ -1,8 +1,8 @@
 language: go
 go:
-  - 1.7
   - 1.8
   - tip
+  #- 1.7
 services:
   - mysql
   - postgresql
