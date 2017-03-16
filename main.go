@@ -67,7 +67,7 @@ func main() {
 	arg.MustParse(args)
 
 	// run
-	err = run(args)
+	err = run(args, cur.HomeDir)
 	if err != nil && err != io.EOF {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
@@ -80,7 +80,7 @@ func main() {
 
 // run processes args, processing args.Commands if non-empty, or args.File if
 // specified, otherwise launch an interactive readline from stdin.
-func run(args *Args) error {
+func run(args *Args, homedir string) error {
 	var err error
 
 	// get working directory
@@ -94,7 +94,7 @@ func run(args *Args) error {
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 
 	// create handler
-	h, err := handler.New(args.HistoryFile, wd, interactive || cygwin, cygwin)
+	h, err := handler.New(args.HistoryFile, homedir, wd, interactive || cygwin, cygwin)
 	if err != nil {
 		return err
 	}

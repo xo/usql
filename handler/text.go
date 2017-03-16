@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/chzyer/readline"
 )
@@ -25,6 +26,8 @@ const (
 
 	missingRequiredArg = "missing required argument"
 
+	noEditorDefined = `USQL_EDITOR, EDITOR, or VISUAL not defined`
+
 	helpDesc = `You are using ` + tag + `
 Type: \copyright        distribution terms
       \c[onnect] <url>  connect to url
@@ -36,4 +39,16 @@ Type: \copyright        distribution terms
 // cmdErr is a util func to simply write a "\cmd: msg" style error.
 func cmdErr(l *readline.Instance, cmd, msg string) (int, error) {
 	return fmt.Fprintf(l.Stderr(), "\\%s: %s\n", cmd, msg)
+}
+
+// writeErr writes an error to stderr when err is not nil.
+func writeErr(l *readline.Instance, err error, prefixes ...string) {
+	if err != nil {
+		fmt.Fprintf(l.Stderr(), "error: %s%v\n", strings.Join(prefixes, ""), err)
+	}
+}
+
+// notImpl is a simple helper for not yet implemented commands.
+func notImpl(l *readline.Instance, cmd string) {
+	fmt.Fprintf(l.Stderr(), "COMMAND `\\%s` IS NOT YET IMPLEMENTED.\n", cmd)
 }

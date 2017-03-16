@@ -4,7 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -19,9 +23,11 @@ import (
 
 // Handler is a input process handler.
 type Handler struct {
-	histfile            string
-	root, wd            string
-	interactive, cygwin bool
+	histfile    string
+	homedir     string
+	wd          string
+	interactive bool
+	cygwin      bool
 
 	u  *dburl.URL
 	db *sql.DB
@@ -46,11 +52,11 @@ type Handler struct {
 }
 
 // New creates a new input handler.
-func New(histfile, root string, interactive, cygwin bool) (*Handler, error) {
+func New(histfile, homedir, wd string, interactive, cygwin bool) (*Handler, error) {
 	return &Handler{
 		histfile:    histfile,
-		root:        root,
-		wd:          root,
+		homedir:     homedir,
+		wd:          wd,
 		interactive: interactive,
 		cygwin:      cygwin,
 		buf:         new(buf.Buf),
@@ -520,37 +526,51 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		if cmd != "" {
 			var quit bool
 			switch cmd {
-			case "q":
+			case "q", "quit":
 				quit = true
 
 			case "c", "connect":
 				if len(params) == 0 {
 					cmdErr(l, cmd, missingRequiredArg)
 				} else {
-					err := h.Open(params[0])
-					if err != nil {
-						fmt.Fprintf(l.Stderr(), "error: %v\n", err)
-					}
+					writeErr(l, h.Open(params[0]))
 					params = params[1:]
 				}
 
-			case "Z":
-				err := h.Close()
-				if err != nil {
-					fmt.Fprint(l.Stderr(), "error: %v\n", err)
-				}
+			case "Z", "disconnect":
+				writeErr(l, h.Close())
 
 			case "copyright":
 				fmt.Fprintf(l.Stdout(), copyright)
 
 			case "errverbose":
+				notImpl(l, cmd)
 
-			case "g", "gexec", "gset":
+			case "g":
 				execute = true
-			/*case "crosstabview": // not likely to ever implement this*/
+
+			case "gexec", "gset":
+				notImpl(l, cmd)
 
 			case "?", "h":
-			case "e", "edit", "ef", "ev":
+				notImpl(l, cmd)
+
+			case "e", "edit":
+				var path, line string
+				params, path = pop(params, "")
+				params, line = pop(params, "")
+
+				n, err := h.LaunchEditor(path, line, stmt)
+				if err != nil {
+					writeErr(l, err)
+					break
+				}
+
+				h.Reset()
+				r, rlen, i = n, len(n), 0
+
+			case "ef":
+				notImpl(l, cmd)
 
 			case "p", "print":
 				// build
@@ -569,12 +589,60 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				h.Reset()
 				fmt.Fprintf(l.Stdout(), queryBufferReset)
 
+			case "echo":
+				// this could be done to echo the actual input (by using pos
+				// above), but the implementation here remains faithful to the
+				// psql implementation
+				fmt.Fprintln(l.Stdout(), strings.Join(params, " "))
+				params = nil
+
 			case "w", "write":
+				if len(params) == 0 {
+					cmdErr(l, cmd, missingRequiredArg)
+				} else {
+					s := stmt
+					if h.buf.Len != 0 {
+						s = h.buf.String()
+					}
+					writeErr(l, ioutil.WriteFile(params[0], []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644))
+					params = params[1:]
+				}
 
 			case "o", "out":
 
 			case "i", "include", "ir", "include_relative":
-				fmt.Fprintf(l.Stdout(), "include %v\n", params)
+				if len(params) == 0 {
+					cmdErr(l, cmd, missingRequiredArg)
+				} else {
+					relative := cmd == "ir" || cmd == "include_relative"
+					writeErr(l, h.IncludeFile(params[i], relative), params[i]+": ")
+					params = params[1:]
+				}
+
+			case "!":
+				if len(params) == 0 {
+					cmdErr(l, cmd, missingRequiredArg)
+				} else {
+
+				}
+
+			case "cd":
+				var path string
+				params, path = pop(params, h.homedir)
+				if strings.HasPrefix(path, "~/") {
+					path = filepath.Join(h.homedir, strings.TrimPrefix(path, "~/"))
+				}
+				writeErr(l, os.Chdir(path))
+
+			case "setenv":
+				if len(params) == 0 {
+					cmdErr(l, cmd, missingRequiredArg)
+				} else {
+					var key, val string
+					params, key = pop(params, "")
+					params, val = pop(params, "")
+					writeErr(l, os.Setenv(key, val))
+				}
 
 			// invalid command
 			default:
@@ -604,16 +672,44 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			//log.Printf("executing: `%s`", stmt)
 			if stmt != "" && stmt != ";" {
-				err = h.Execute(l.Stdout(), stmt, false, false)
-				if err != nil {
-					fmt.Fprintf(l.Stderr(), "error: %v\n", err)
-				}
+				writeErr(l, h.Execute(l.Stdout(), stmt, false, false))
 			}
 
 			// clear
 			execute = false
 		}
 	}
+}
+
+// IncludeFile includes the specified path.
+func (h *Handler) IncludeFile(path string, relative bool) error {
+	var err error
+
+	if relative && !filepath.IsAbs(path) {
+		path = filepath.Join(h.wd, path)
+	}
+
+	path, err = filepath.EvalSymlinks(path)
+	switch {
+	case err != nil && os.IsNotExist(err):
+		return ErrNoSuchFileOrDirectory
+	case err != nil:
+		return err
+	}
+
+	fi, err := os.Stat(path)
+	switch {
+	case err != nil && os.IsNotExist(err):
+		return ErrNoSuchFileOrDirectory
+	case err != nil:
+		return err
+	case fi.IsDir():
+		return ErrCannotIncludeDirectories
+	}
+
+	log.Printf(">>>> path: %s", path)
+
+	return nil
 }
 
 // WrapError conditionally wraps an error if the error occurs while connected
@@ -630,6 +726,64 @@ func (h *Handler) WrapError(err error) error {
 	}
 
 	return err
+}
+
+// LaunchEditor launches an editor using the current query buffer.
+func (h *Handler) LaunchEditor(path, line, stmt string) ([]rune, error) {
+	var err error
+
+	ed := getenv("USQL_EDITOR", "EDITOR", "VISUAL")
+	if ed == "" {
+		return nil, ErrNoEditorDefined
+	}
+
+	if path == "" {
+		f, err := ioutil.TempFile("", "usql")
+		if err != nil {
+			return nil, err
+		}
+
+		err = f.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		if h.buf.Len != 0 {
+			stmt = h.buf.String()
+		}
+
+		path = f.Name()
+		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(stmt, "\n")+"\n"), 0644)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// setup args
+	args := []string{path}
+	if line != "" {
+		args = append(args, "+"+line)
+	}
+
+	// create command
+	c := exec.Command(ed, args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+
+	// run
+	err = c.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	// read
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return []rune(strings.TrimSuffix(string(buf), "\n")), nil
 }
 
 // RunCommands processes command line arguments.

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -15,6 +16,15 @@ var (
 
 	// ErrNotConnected is the not connected error.
 	ErrNotConnected = errors.New("not connected")
+
+	// ErrNoSuchFileOrDirectory is the no such file or directory error.
+	ErrNoSuchFileOrDirectory = errors.New("no such file or directory")
+
+	// ErrCannotIncludeDirectories is the cannot include directories error.
+	ErrCannotIncludeDirectories = errors.New("cannot include directories")
+
+	// ErrNoEditorDefined is the no editor defined error.
+	ErrNoEditorDefined = errors.New("no editor defined")
 )
 
 // Error is a wrapper to standardize errors.
@@ -90,4 +100,24 @@ var drivers map[string]string
 // SetAvailableDrivers sets the known available drivers.
 func SetAvailableDrivers(m map[string]string) {
 	drivers = m
+}
+
+// pop pops the top item off of a if it is present, returning the value and the
+// new slice. if a is empty, then v will be the returned value.
+func pop(a []string, v string) ([]string, string) {
+	if len(a) != 0 {
+		return a[1:], a[0]
+	}
+	return a, v
+}
+
+// getenv tries retrieving successive keys from os environment variables.
+func getenv(keys ...string) string {
+	for _, key := range keys {
+		if s := os.Getenv(key); s != "" {
+			return s
+		}
+	}
+
+	return ""
 }
