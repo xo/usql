@@ -330,7 +330,7 @@ func (h *Handler) Close() error {
 
 // Reset resets the line parser state.
 func (h *Handler) Reset() {
-	h.buf = new(buf.Buf)
+	h.buf.Reset()
 
 	// quote state
 	h.q = false
@@ -486,14 +486,16 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			// execute
 			case c == ';':
+				// set execute and skip trailing whitespace
 				execute = true
-				i++
+				i, _ = findNonSpace(r, i+1, rlen)
+
 				break parse
 			}
 		}
 
 		// fix i
-		i := min(i, rlen)
+		i = min(i, rlen)
 
 		empty := isEmptyLine(r, 0, i)
 		appendLine := h.q || !empty
@@ -501,8 +503,13 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 			appendLine = false
 		}
 		if appendLine {
-			//log.Printf(">> appending: `%s`", string(r[:i]))
-			h.buf.Append(r[:i], lineend)
+			st := 0
+			if h.buf.Len == 0 {
+				st, _ = findNonSpace(r, 0, i)
+			}
+
+			//log.Printf(">> appending: `%s`", string(r[st:i]))
+			h.buf.Append(r[st:i], lineend)
 		}
 
 		// reset r
@@ -590,15 +597,18 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		}
 
 		if execute {
-			// clear buffer out
+			// clear
 			if h.buf.Len != 0 {
-				stmt, h.buf = h.buf.String(), new(buf.Buf)
+				stmt = h.buf.String()
+				h.buf.Reset()
 			}
 
 			//log.Printf("executing: `%s`", stmt)
-			err = h.Execute(l.Stdout(), stmt, false, false)
-			if err != nil {
-				fmt.Fprintf(l.Stderr(), "error: %v\n", err)
+			if stmt != "" && stmt != ";" {
+				err = h.Execute(l.Stdout(), stmt, false, false)
+				if err != nil {
+					fmt.Fprintf(l.Stderr(), "error: %v\n", err)
+				}
 			}
 
 			// clear
