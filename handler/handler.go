@@ -385,17 +385,13 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 	var stmt string
 	for {
 		if rlen == 0 {
-			// reset the prompt
+			// reset prompt and grab input
 			h.SetPrompt(l)
-
-			// read next line
 			r, err = l.Operation.Runes()
 			switch {
 			case err == readline.ErrInterrupt:
-				// dump current buffer
 				h.Reset()
 				continue
-
 			case err != nil:
 				return err
 			}
@@ -403,8 +399,9 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 			rlen, i = len(r), 0
 
 			// special intercept for "help"
-			if h.interactive && rlen >= 4 && startsWithHelp(r, 0, rlen) {
+			if h.interactive && h.buf.Len == 0 && rlen >= 4 && startsWithHelp(r, 0, rlen) {
 				h.DisplayHelp(l.Stdout())
+				r, rlen = r[:rlen], 0
 				continue
 			}
 
