@@ -58,14 +58,14 @@ if [ "$BUILT_VER" != "usql $VER" ]; then
 fi
 echo "$BUILT_VER"
 
-case $PLATORM in
+case $PLATFORM in
   linux|windows|darwin)
     echo "stripping $BIN"
     strip $BIN
   ;;
 esac
 
-case $PLATORM in
+case $PLATFORM in
   linux|windows)
     echo "packing $BIN"
     upx -q -q $BIN
