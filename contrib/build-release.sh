@@ -48,7 +48,14 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-go build -ldflags="-X main.name=$NAME -X main.version=$VER" -o $BIN
+TAGS=
+case $PLATFORM in
+  windows)
+    TAGS=-tags adodb
+  ;;
+esac
+
+go build -ldflags="-X main.name=$NAME -X main.version=$VER" $TAGS -o $BIN
 
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)
