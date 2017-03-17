@@ -5,5 +5,8 @@
 
 .usql_history*
 
+*.ini
+*.csv
+
 *.sqlite3
 *.sqlite3-journal
