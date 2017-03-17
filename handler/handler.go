@@ -203,9 +203,12 @@ func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) erro
 	}
 
 	// get count
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
+	var count int64
+	if h.u.Driver != "adodb" {
+		count, err = res.RowsAffected()
+		if err != nil {
+			return err
+		}
 	}
 
 	// print name
