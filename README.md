@@ -3,7 +3,8 @@
 usql is a universal command-line interface for working with SQL databases.
 
 usql provides a universal command-line interface for the following databases:
-PostgreSQL, MySQL, Oracle, SQLite, and Microsoft SQL Server.
+PostgreSQL, MySQL, Oracle, SQLite, and Microsoft SQL Server, Microsoft ADODB
+(Windows only).
 
 The goal is to eventually have usql be a drop in replacement for PostgreSQL's
 `psql` command, with all the bells/whistles, but with the added benefit of
@@ -54,6 +55,10 @@ $ usql dbname.sqlite3
 $ usql sq://path/to/dbname.sqlite3
 $ usql sqlite3://path/to/dbname.sqlite3
 $ usql file:/path/to/dbname.sqlite3
+
+# connect to a adodb ole resource (windows only)
+$ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
+$ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
 ```
 
 ## Example Output
