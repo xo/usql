@@ -51,7 +51,7 @@ pushd $SRC &> /dev/null
 TAGS=
 case $PLATFORM in
   windows)
-    TAGS=-tags adodb
+    TAGS="-tags adodb"
   ;;
 esac
 
