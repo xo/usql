@@ -58,11 +58,19 @@ if [ "$BUILT_VER" != "usql $VER" ]; then
 fi
 echo "$BUILT_VER"
 
-echo "stripping $BIN"
-strip $BIN
+case $PLATORM in
+  linux|windows|darwin)
+    echo "stripping $BIN"
+    strip $BIN
+  ;;
+esac
 
-echo "packing $BIN"
-upx -q -q $BIN
+case $PLATORM in
+  linux|windows)
+    echo "packing $BIN"
+    upx -q -q $BIN
+  ;;
+esac
 
 echo "compressing $OUT"
 case $EXT in
