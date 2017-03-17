@@ -58,15 +58,11 @@ if [ "$BUILT_VER" != "usql $VER" ]; then
 fi
 echo "$BUILT_VER"
 
-case $PLATFORM in
-  linux)
-    echo "stripping $BIN"
-    strip $BIN
+echo "stripping $BIN"
+strip $BIN
 
-    echo "packing $BIN"
-    upx -q -q $BIN
-  ;;
-esac
+echo "packing $BIN"
+upx -q -q $BIN
 
 echo "compressing $OUT"
 case $EXT in
