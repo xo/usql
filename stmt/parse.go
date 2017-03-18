@@ -41,7 +41,7 @@ func isEmptyLine(r []rune, i, end int) bool {
 	return !ok
 }
 
-// startsWith determines if r starts with s, ignoring case, and skipping
+// StartsWith determines if r starts with s, ignoring case, and skipping
 // initial whitespace and returning -1 if r does not start with s.
 //
 // Note: assumes s contains at least one non space.

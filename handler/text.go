@@ -26,8 +26,6 @@ const (
 
 	missingRequiredArg = "missing required argument"
 
-	noEditorDefined = `USQL_EDITOR, EDITOR, or VISUAL not defined`
-
 	helpPrefix = "help"
 
 	helpDesc = `You are using ` + tag + `

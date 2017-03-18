@@ -116,11 +116,7 @@ func (h *Handler) Open(urlstr string) error {
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, dsn)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Execute executes a sql query against the connected database.
@@ -186,15 +182,8 @@ func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) erro
 
 var allcapsRE = regexp.MustCompile(`^[A-Z_]+$`)
 
-// Query executes a query against the database.
-func (h *Handler) Query(w io.Writer, sqlstr string) error {
-	// run query
-	q, err := h.db.Query(sqlstr)
-	if err != nil {
-		return err
-	}
-	defer q.Close()
-
+// OutputRows outputs the supplied SQL rows to the supplied writer.
+func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 	// get column names
 	cols, err := q.Columns()
 	if err != nil {
@@ -270,6 +259,34 @@ func (h *Handler) Query(w io.Writer, sqlstr string) error {
 
 	t.Render()
 	fmt.Fprintf(w, "(%d rows)\n\n", rows)
+
+	return nil
+}
+
+// Query executes a query against the database.
+func (h *Handler) Query(w io.Writer, sqlstr string) error {
+	var err error
+
+	// run query
+	q, err := h.db.Query(sqlstr)
+	if err != nil {
+		return err
+	}
+	defer q.Close()
+
+	// output rows
+	err = h.OutputRows(w, q)
+	if err != nil {
+		return err
+	}
+
+	// check for additional result sets ...
+	for q.NextResultSet() {
+		err = h.OutputRows(w, q)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
