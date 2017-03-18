@@ -63,24 +63,6 @@ func sqlite3Parse(buf []byte) string {
 	return s
 }
 
-// max returns the maximum of a, b.
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
-// min returns the maximum of a, b.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-
-	return b
-}
-
 // addQueryParam conditionally adds a ?name=val style query parameter to the
 // end of urlstr if a == b, when urlstr does not already contain name=.
 func addQueryParam(a, b, urlstr, name, val string) string {

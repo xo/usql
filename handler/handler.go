@@ -16,9 +16,8 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
+	"github.com/knq/usql/stmt"
 	"github.com/olekukonko/tablewriter"
-
-	"github.com/knq/usql/handler/buf"
 )
 
 // Handler is a input process handler.
@@ -31,24 +30,6 @@ type Handler struct {
 
 	u  *dburl.URL
 	db *sql.DB
-
-	// parse settings
-	allowdollar, allowmc bool
-
-	// accumulated buffer
-	buf *buf.Buf
-
-	// quoted string state
-	q       bool
-	qdbl    bool
-	qdollar bool
-	qid     string
-
-	// multicomment state
-	mc bool
-
-	// balanced paren count
-	b int
 }
 
 // New creates a new input handler.
@@ -59,7 +40,6 @@ func New(histfile, homedir, wd string, interactive, cygwin bool) (*Handler, erro
 		wd:          wd,
 		interactive: interactive,
 		cygwin:      cygwin,
-		buf:         new(buf.Buf),
 	}, nil
 }
 
@@ -74,7 +54,7 @@ func (h *Handler) HistoryFile() string {
 }
 
 // SetPrompt sets the prompt on a readline instance.
-func (h *Handler) SetPrompt(l *readline.Instance) {
+func (h *Handler) SetPrompt(l *readline.Instance, state string) {
 	if !h.interactive {
 		return
 	}
@@ -83,27 +63,6 @@ func (h *Handler) SetPrompt(l *readline.Instance) {
 
 	if h.db != nil {
 		s = h.u.Short()
-	}
-
-	state := "="
-	switch {
-	case h.q && h.qdollar:
-		state = "$"
-
-	case h.q && h.qdbl:
-		state = `"`
-
-	case h.q:
-		state = "'"
-
-	case h.mc:
-		state = "*"
-
-	case h.b != 0:
-		state = "("
-
-	case h.buf.Len != 0:
-		state = "-"
 	}
 
 	l.SetPrompt(s + state + "> ")
@@ -161,9 +120,6 @@ func (h *Handler) Open(urlstr string) error {
 		return err
 	}
 
-	isPG := h.u.Driver == "postgres"
-	h.allowdollar, h.allowmc = isPG, isPG
-
 	return nil
 }
 
@@ -199,7 +155,7 @@ func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) erro
 	// exec
 	res, err := h.db.Exec(sqlstr)
 	if err != nil {
-		return err
+		return h.WrapError(err)
 	}
 
 	// get count
@@ -207,7 +163,7 @@ func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) erro
 	if h.u.Driver != "adodb" {
 		count, err = res.RowsAffected()
 		if err != nil {
-			return err
+			return h.WrapError(err)
 		}
 	}
 
@@ -326,35 +282,11 @@ func (h *Handler) DisplayHelp(w io.Writer) {
 // Close closes the database connection if it is open.
 func (h *Handler) Close() error {
 	if h.db != nil {
-		err := h.db.Close()
-
-		h.allowdollar, h.allowmc = false, false
-		h.db, h.u = nil, nil
-
-		return err
+		return h.db.Close()
 	}
 
 	return nil
 }
-
-// Reset resets the line parser state.
-func (h *Handler) Reset() {
-	h.buf.Reset()
-
-	// quote state
-	h.q = false
-	h.qdbl = false
-	h.qdollar = false
-	h.qid = ""
-
-	// multicomment state
-	h.mc = false
-
-	// balance state
-	h.b = 0
-}
-
-var lineend = []rune{'\n'}
 
 // Process reads line commands from stdin, writing output to stdout and stderr.
 func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
@@ -389,148 +321,64 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		fmt.Fprint(l.Stdout(), welcomeDesc)
 	}
 
-	var r []rune
-	var rlen, i int
-	var stmt string
-	for {
-		if rlen == 0 {
-			// reset prompt and grab input
-			h.SetPrompt(l)
-			r, err = l.Operation.Runes()
-			switch {
-			case err == readline.ErrInterrupt:
-				h.Reset()
-				continue
-			case err != nil:
-				return err
+	// set help intercept
+	f := l.Operation.Runes
+	if h.interactive {
+		f = func() ([]rune, error) {
+			// next line
+			r, err := l.Operation.Runes()
+			if err != nil {
+				return nil, err
 			}
 
-			rlen, i = len(r), 0
-
-			// special intercept for "help"
-			if h.interactive && h.buf.Len == 0 && rlen >= 4 && startsWithHelp(r, 0, rlen) {
+			// check if line starts with help
+			rlen := len(r)
+			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, helpPrefix) {
 				h.DisplayHelp(l.Stdout())
-				r, rlen = r[:rlen], 0
-				continue
+				return nil, nil
 			}
 
 			// save history
-			if h.interactive {
-				l.SaveHistory(string(r))
-			}
+			l.SaveHistory(string(r))
+
+			return r, nil
+		}
+	}
+
+	// create stmt
+	var opts []stmt.Option
+	if h.db != nil && h.u.Driver == "postgres" {
+		opts = append(opts,
+			stmt.AllowDollar(true),
+			stmt.AllowMultilineComments(true),
+		)
+	}
+
+	// statement buffers
+	buf, last := stmt.New(f, opts...), ""
+	for {
+		// set prompt
+		h.SetPrompt(l, buf.State())
+
+		// get next
+		cmd, params, err := buf.Next()
+		switch {
+		case err == readline.ErrInterrupt:
+			buf.Reset()
+			continue
+
+		case err != nil:
+			return err
 		}
 
-		var execute bool
-		var cmd string
-		var params []string
-
-		// process
-	parse:
-		for ; i < rlen; i++ {
-			// grab c, next
-			c, next := r[i], grab(r, i+1, rlen)
-			switch {
-			// find end of string quote
-			case h.q:
-				pos, ok := readString(r, i, rlen, h)
-				i = pos
-				if ok {
-					h.q, h.qdbl, h.qdollar, h.qid = false, false, false, ""
-				}
-
-			// find end of multiline comment
-			case h.mc:
-				pos, ok := readMultilineComment(r, i, rlen)
-				i, h.mc = pos, !ok
-
-			// start of single quoted string
-			case c == '\'':
-				h.q = true
-
-			// start of double quoted string
-			case c == '"':
-				h.q, h.qdbl = true, true
-
-			// start of dollar quoted string literal (postgres)
-			case h.allowdollar && c == '$':
-				id, pos, ok := readDollarAndTag(r, i, rlen)
-				if ok {
-					h.q, h.qdollar, h.qid = true, true, id
-				}
-				i = pos
-
-			// start of sql comment, skip to end of line
-			case c == '-' && next == '-':
-				i = rlen
-
-			// start of multiline comment (postgres)
-			case h.allowmc && c == '/' && next == '*':
-				h.mc = true
-				i++
-
-			// unbalance
-			case c == '(':
-				h.b++
-
-			// balance
-			case c == ')':
-				h.b = max(0, h.b-1)
-
-			// continue processing
-			case h.q || h.mc || h.b != 0:
-				continue
-
-			// start of command
-			case c == '\\':
-				// extract command from r
-				var pos int
-				cmd, params, pos = readCommand(r, i, rlen)
-				r = append(r[:i], r[pos:]...)
-				rlen = len(r)
-
-				break parse
-
-			// execute
-			case c == ';':
-				// set execute and skip trailing whitespace
-				execute = true
-				i, _ = findNonSpace(r, i+1, rlen)
-
-				break parse
-			}
-		}
-
-		// fix i
-		i = min(i, rlen)
-
-		// determine appending to buf
-		empty := isEmptyLine(r, 0, i)
-		appendLine := h.q || !empty
-		if cmd != "" && empty {
-			appendLine = false
-		}
-		if appendLine {
-			// skip leading space when empty
-			st := 0
-			if h.buf.Len == 0 {
-				st, _ = findNonSpace(r, 0, i)
-			}
-
-			//log.Printf(">> appending: `%s`", string(r[st:i]))
-			h.buf.Append(r[st:i], lineend)
-		}
-
-		// reset r
-		r = r[i:]
-		rlen = len(r)
-		i = 0
+		// grab ready state
+		execute := buf.Ready()
 
 		// process command
 		if cmd != "" {
-			var quit bool
 			switch cmd {
 			case "q", "quit":
-				quit = true
+				return nil
 
 			case "c", "connect":
 				if len(params) == 0 {
@@ -563,23 +411,28 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				params, path = pop(params, "")
 				params, line = pop(params, "")
 
-				n, err := h.LaunchEditor(path, line, stmt)
+				s := last
+				if buf.Len != 0 {
+					s = buf.String()
+				}
+
+				n, err := h.LaunchEditor(path, line, s)
 				if err != nil {
 					writeErr(l, err)
 					break
 				}
 
-				h.Reset()
-				r, rlen, i = n, len(n), 0
+				buf.Reset()
+				buf.Feed(n)
 
 			case "ef":
 				notImpl(l, cmd)
 
 			case "p", "print":
 				// build
-				s := stmt
-				if h.buf.Len != 0 {
-					s = h.buf.String()
+				s := last
+				if buf.Len != 0 {
+					s = buf.String()
 				}
 				if s == "" {
 					s = queryBufferEmpty
@@ -589,7 +442,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				fmt.Fprintf(l.Stdout(), "%s\n", s)
 
 			case "r", "reset":
-				h.Reset()
+				buf.Reset()
 				fmt.Fprintf(l.Stdout(), queryBufferReset)
 
 			case "echo":
@@ -603,9 +456,9 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				if len(params) == 0 {
 					cmdErr(l, cmd, missingRequiredArg)
 				} else {
-					s := stmt
-					if h.buf.Len != 0 {
-						s = h.buf.String()
+					s := last
+					if buf.Len != 0 {
+						s = buf.String()
 					}
 					writeErr(l, ioutil.WriteFile(params[0], []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644))
 					params = params[1:]
@@ -617,9 +470,10 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				if len(params) == 0 {
 					cmdErr(l, cmd, missingRequiredArg)
 				} else {
+					var fname string
+					params, fname = pop(params, "")
 					relative := cmd == "ir" || cmd == "include_relative"
-					writeErr(l, h.IncludeFile(params[i], relative), params[i]+": ")
-					params = params[1:]
+					writeErr(l, h.IncludeFile(fname, relative), fname+": ")
 				}
 
 			case "!":
@@ -657,29 +511,19 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 			for _, p := range params {
 				fmt.Fprintf(l.Stdout(), extraArgumentIgnored, cmd, p)
 			}
-
-			if quit {
-				return nil
-			}
-
-			// clear
-			cmd, params = "", nil
 		}
 
 		if execute {
 			// clear
-			if h.buf.Len != 0 {
-				stmt = h.buf.String()
-				h.buf.Reset()
+			if buf.Len != 0 {
+				last = buf.String()
+				buf.Reset()
 			}
 
 			//log.Printf("executing: `%s`", stmt)
-			if stmt != "" && stmt != ";" {
-				writeErr(l, h.Execute(l.Stdout(), stmt, false, false))
+			if last != "" && last != ";" {
+				writeErr(l, h.Execute(l.Stdout(), last, false, false))
 			}
-
-			// clear
-			execute = false
 		}
 	}
 }
@@ -732,7 +576,7 @@ func (h *Handler) WrapError(err error) error {
 }
 
 // LaunchEditor launches an editor using the current query buffer.
-func (h *Handler) LaunchEditor(path, line, stmt string) ([]rune, error) {
+func (h *Handler) LaunchEditor(path, line, s string) ([]rune, error) {
 	var err error
 
 	ed := getenv("USQL_EDITOR", "EDITOR", "VISUAL")
@@ -751,12 +595,8 @@ func (h *Handler) LaunchEditor(path, line, stmt string) ([]rune, error) {
 			return nil, err
 		}
 
-		if h.buf.Len != 0 {
-			stmt = h.buf.String()
-		}
-
 		path = f.Name()
-		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(stmt, "\n")+"\n"), 0644)
+		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
 		if err != nil {
 			return nil, err
 		}

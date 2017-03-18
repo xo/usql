@@ -1,4 +1,4 @@
-package handler
+package stmt
 
 import (
 	"regexp"
@@ -41,18 +41,22 @@ func isEmptyLine(r []rune, i, end int) bool {
 	return !ok
 }
 
-// startsWithHelp determines if r starts with "help", skipping initial
-// whitespace and returning -1 if r does not start with "help".
-func startsWithHelp(r []rune, i, end int) bool {
+// startsWith determines if r starts with s, ignoring case, and skipping
+// initial whitespace and returning -1 if r does not start with s.
+//
+// Note: assumes s contains at least one non space.
+func StartsWith(r []rune, i, end int, s string) bool {
+	slen := len(s)
+
 	// find start
 	var found bool
 	i, found = findNonSpace(r, i, end)
-	if found && i+4 > end {
+	if !found || i+slen > end {
 		return false
 	}
 
 	// check
-	if strings.ToLower(string(r[i:i+4])) == "help" {
+	if strings.ToLower(string(r[i:i+slen])) == s {
 		return true
 	}
 
@@ -106,25 +110,25 @@ func readDollarAndTag(r []rune, i, end int) (string, int, bool) {
 	return id, i, true
 }
 
-// readString seeks to the end of a string (depending on the state of h)
+// readString seeks to the end of a string (depending on the state of b)
 // returning the position and whether or not the string's end was found.
 //
 // If the string's terminator was not found, then the result will be the passed
 // end.
-func readString(r []rune, i, end int, h *Handler) (int, bool) {
+func readString(r []rune, i, end int, b *Stmt) (int, bool) {
 	var prev, c rune
 	for ; i < end; i++ {
 		c = r[i]
 		switch {
-		case h.allowdollar && h.qdollar && c == '$':
-			if id, pos, ok := readDollarAndTag(r, i, end); ok && h.qid == id {
+		case b.allowDollar && b.qdollar && c == '$':
+			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.qid == id {
 				return pos, true
 			}
 
-		case h.qdbl && c == '"':
+		case b.qdbl && c == '"':
 			return i, true
 
-		case !h.qdbl && !h.qdollar && c == '\'' && prev != '\'':
+		case !b.qdbl && !b.qdollar && c == '\'' && prev != '\'':
 			return i, true
 		}
 		prev = r[i]

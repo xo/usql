@@ -28,6 +28,8 @@ const (
 
 	noEditorDefined = `USQL_EDITOR, EDITOR, or VISUAL not defined`
 
+	helpPrefix = "help"
+
 	helpDesc = `You are using ` + tag + `
 Type: \copyright        distribution terms
       \c[onnect] <url>  connect to url

@@ -1,4 +1,4 @@
-package handler
+package stmt
 
 import (
 	"reflect"
@@ -121,7 +121,7 @@ func TestIsEmptyLine(t *testing.T) {
 	}
 }
 
-func TestStartsWithHelp(t *testing.T) {
+func TestStartsWith(t *testing.T) {
 	tests := []struct {
 		s   string
 		i   int
@@ -137,7 +137,7 @@ func TestStartsWithHelp(t *testing.T) {
 
 	for i, test := range tests {
 		z := []rune(test.s)
-		b := startsWithHelp(z, test.i, len(z))
+		b := StartsWith(z, test.i, len(z), "help")
 		if b != test.exp {
 			t.Errorf("test %d expected %t, got: %t", i, test.exp, b)
 		}
@@ -221,7 +221,7 @@ func TestReadCommand(t *testing.T) {
 
 		cmd, params, pos := readCommand(z, test.i, len(z))
 		if cmd != a[0] {
-			t.Errorf("test %d expected command to be `%s`, got: `%s`", a[0], cmd)
+			t.Errorf("test %d expected command to be `%s`, got: `%s`", i, a[0], cmd)
 		}
 		if !reflect.DeepEqual(params, a[1:]) {
 			t.Errorf("test %d expected %v, got: %v", i, a[1:], params)
