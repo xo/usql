@@ -808,11 +808,8 @@ func (h *Handler) RunCommands(cmds []string) error {
 func (h *Handler) RunReadline(in, out string) error {
 	var err error
 
-	// configure input
-	var stdin *os.File
-	stdout, stderr := readline.Stdout, readline.Stderr
-
-	// set file as stdin
+	// configure stdin
+	var stdin io.ReadCloser
 	if in != "" {
 		stdin, err = os.OpenFile(in, os.O_RDONLY, 0)
 		if err != nil {
@@ -821,9 +818,14 @@ func (h *Handler) RunReadline(in, out string) error {
 		defer stdin.Close()
 
 		h.interactive = false
+	} else if h.cygwin {
+		stdin = os.Stdin
+	} else if h.interactive {
+		stdin = readline.Stdin
 	}
 
-	// set out as stdout
+	// configure stdout
+	var stdout io.WriteCloser
 	if out != "" {
 		stdout, err = os.OpenFile(out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
@@ -832,21 +834,17 @@ func (h *Handler) RunReadline(in, out string) error {
 		defer stdout.Close()
 
 		h.interactive = false
+	} else if h.cygwin {
+		stdout = os.Stdout
+	} else if h.interactive {
+		stdin = readline.Stdin
 	}
 
-	// set stdin if not set
-	var r io.ReadCloser = stdin
-	if stdin == nil {
-		// fix issues with cygwin interactive terminals
-		in := readline.Stdin
-		if h.cygwin {
-			in = os.Stdin
-		}
-
-		c := readline.NewCancelableStdin(in)
-		defer c.Close()
-		r = c
+	// configure stderr
+	var stderr io.Writer = os.Stderr
+	if !h.cygwin {
+		stderr = readline.Stderr
 	}
 
-	return h.Process(r, stdout, stderr)
+	return h.Process(stdin, stdout, stderr)
 }
