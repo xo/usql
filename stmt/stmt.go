@@ -20,6 +20,9 @@ type Stmt struct {
 	// Len is the current len of any statement in Buf.
 	Len int
 
+	// Prefix is the detected prefix of the statement.
+	Prefix string
+
 	// r is the unprocessed runes.
 	r []rune
 
@@ -71,7 +74,7 @@ func (b *Stmt) Ready() bool {
 // Reset resets the statement buffer.
 func (b *Stmt) Reset() {
 	// reset buf
-	b.Buf, b.Len = nil, 0
+	b.Buf, b.Len, b.Prefix = nil, 0, ""
 
 	// quote state
 	b.q, b.qdbl, b.qdollar, b.qid = false, false, false, ""
@@ -241,6 +244,9 @@ parse:
 		//log.Printf(">> appending: `%s`", string(r[st:i]))
 		b.Append(b.r[st:i], lineend)
 	}
+
+	// set prefix
+	b.Prefix = findPrefix(b.Buf, 0, b.Len, 4)
 
 	// reset r
 	b.r = b.r[i:]

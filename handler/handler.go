@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
@@ -119,8 +118,17 @@ func (h *Handler) Open(urlstr string) error {
 	return err
 }
 
+// Close closes the database connection if it is open.
+func (h *Handler) Close() error {
+	if h.db != nil {
+		return h.db.Close()
+	}
+
+	return nil
+}
+
 // Execute executes a sql query against the connected database.
-func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) error {
+func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	if h.db == nil {
 		return ErrNotConnected
 	}
@@ -129,53 +137,46 @@ func (h *Handler) Execute(w io.Writer, sqlstr string, auto, forceExec bool) erro
 		sqlstr = strings.TrimSuffix(sqlstr, ";")
 	}
 
-	// select
-	if s := strings.TrimLeftFunc(sqlstr, unicode.IsSpace); len(s) >= 5 {
-		i := strings.IndexFunc(s, unicode.IsSpace)
-		if i == -1 {
-			i = len(s)
-		}
-
-		z := strings.ToUpper(s[:i])
-		if z == "SELECT" ||
-			(h.u.Driver == "sqlite3" && z == "PRAGMA" && !strings.ContainsRune(s[i:], '=')) {
-			err := h.Query(w, sqlstr)
-			if err != nil {
-				return h.WrapError(err)
-			}
-
-			return nil
-		}
+	// determine if query or exec
+	q, typ := h.ProcessPrefix(prefix, sqlstr)
+	f := h.Exec
+	if q {
+		f = h.Query
 	}
 
 	// exec
-	res, err := h.db.Exec(sqlstr)
+	err := f(w, sqlstr, typ)
 	if err != nil {
 		return h.WrapError(err)
 	}
 
-	// get count
-	var count int64
-	if h.u.Driver != "adodb" {
-		count, err = res.RowsAffected()
+	return nil
+}
+
+// Query executes a query against the database.
+func (h *Handler) Query(w io.Writer, sqlstr, typ string) error {
+	var err error
+
+	// run query
+	q, err := h.db.Query(sqlstr)
+	if err != nil {
+		return err
+	}
+	defer q.Close()
+
+	// output rows
+	err = h.OutputRows(w, q)
+	if err != nil {
+		return err
+	}
+
+	// check for additional result sets ...
+	for q.NextResultSet() {
+		err = h.OutputRows(w, q)
 		if err != nil {
-			return h.WrapError(err)
+			return err
 		}
 	}
-
-	// print name
-	name := "EXEC"
-	if i := strings.Index(sqlstr, " "); i >= 0 {
-		name = strings.ToUpper(sqlstr[:i])
-	}
-	fmt.Fprint(w, name)
-
-	// print count
-	if count > 0 {
-		fmt.Fprintf(w, " %d", count)
-	}
-
-	fmt.Fprint(w, "\n")
 
 	return nil
 }
@@ -263,46 +264,49 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 	return nil
 }
 
-// Query executes a query against the database.
-func (h *Handler) Query(w io.Writer, sqlstr string) error {
-	var err error
-
-	// run query
-	q, err := h.db.Query(sqlstr)
-	if err != nil {
-		return err
-	}
-	defer q.Close()
-
-	// output rows
-	err = h.OutputRows(w, q)
+// Exec does a database exec.
+func (h *Handler) Exec(w io.Writer, sqlstr, typ string) error {
+	res, err := h.db.Exec(sqlstr)
 	if err != nil {
 		return err
 	}
 
-	// check for additional result sets ...
-	for q.NextResultSet() {
-		err = h.OutputRows(w, q)
+	// get count
+	var count int64
+	if h.u.Driver != "adodb" {
+		count, err = res.RowsAffected()
 		if err != nil {
 			return err
 		}
 	}
 
-	return nil
-}
+	// print name
+	fmt.Fprint(w, typ)
 
-// DisplayHelp displays the help message.
-func (h *Handler) DisplayHelp(w io.Writer) {
-	io.WriteString(w, helpDesc)
-}
-
-// Close closes the database connection if it is open.
-func (h *Handler) Close() error {
-	if h.db != nil {
-		return h.db.Close()
+	// print count
+	if count > 0 {
+		fmt.Fprintf(w, " %d", count)
 	}
 
+	fmt.Fprint(w, "\n")
+
 	return nil
+}
+
+// WrapError conditionally wraps an error if the error occurs while connected
+// to a database.
+func (h *Handler) WrapError(err error) error {
+	if h.db != nil {
+		// attempt to clean up and standardize errors
+		driver := h.u.Driver
+		if s, ok := drivers[driver]; ok {
+			driver = s
+		}
+
+		return &Error{driver, err}
+	}
+
+	return err
 }
 
 // Process reads line commands from stdin, writing output to stdout and stderr.
@@ -371,8 +375,9 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		)
 	}
 
-	// statement buffers
-	buf, last := stmt.New(f, opts...), ""
+	// statement buf
+	var lastPrefix, last string
+	buf := stmt.New(f, opts...)
 	for {
 		// set prompt
 		h.SetPrompt(l, buf.State())
@@ -533,16 +538,48 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		if execute {
 			// clear
 			if buf.Len != 0 {
-				last = buf.String()
+				lastPrefix, last = buf.Prefix, buf.String()
 				buf.Reset()
 			}
 
 			//log.Printf("executing: `%s`", stmt)
 			if last != "" && last != ";" {
-				writeErr(l, h.Execute(l.Stdout(), last, false, false))
+				writeErr(l, h.Execute(l.Stdout(), lastPrefix, last))
 			}
 		}
 	}
+}
+
+// ProcessPrefix processes a prefix.
+func (h *Handler) ProcessPrefix(prefix, sqlstr string) (bool, string) {
+	if prefix == "" {
+		return false, ""
+	}
+
+	s := strings.Split(prefix, " ")
+	if len(s) > 0 {
+		// check query map
+		if _, ok := queryMap[s[0]]; ok {
+			typ := s[0]
+			switch {
+			case typ == "SELECT" && len(s) >= 2 && s[1] == "INTO":
+				return false, "SELECT INTO"
+			case typ == "PRAGMA":
+				return !strings.ContainsRune(sqlstr, '='), typ
+			}
+			return true, typ
+		}
+
+		// find longest match
+		for i := len(s); i > 0; i-- {
+			typ := strings.Join(s[:i], " ")
+			if _, ok := execMap[typ]; ok {
+				return false, typ
+			}
+		}
+	}
+
+	return false, "EXEC"
 }
 
 // IncludeFile includes the specified path.
@@ -574,22 +611,6 @@ func (h *Handler) IncludeFile(path string, relative bool) error {
 	log.Printf(">>>> path: %s", path)
 
 	return nil
-}
-
-// WrapError conditionally wraps an error if the error occurs while connected
-// to a database.
-func (h *Handler) WrapError(err error) error {
-	if h.db != nil {
-		// attempt to clean up and standardize errors
-		driver := h.u.Driver
-		if s, ok := drivers[driver]; ok {
-			driver = s
-		}
-
-		return &Error{driver, err}
-	}
-
-	return err
 }
 
 // LaunchEditor launches an editor using the current query buffer.
@@ -709,4 +730,9 @@ func (h *Handler) RunReadline(in, out string) error {
 	}
 
 	return h.Process(stdin, stdout, stderr)
+}
+
+// DisplayHelp displays the help message.
+func (h *Handler) DisplayHelp(w io.Writer) {
+	io.WriteString(w, helpDesc)
 }

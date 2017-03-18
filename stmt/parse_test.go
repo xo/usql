@@ -233,3 +233,66 @@ func TestReadCommand(t *testing.T) {
 		}
 	}
 }
+
+func TestFindWords(t *testing.T) {
+	tests := []struct {
+		s   string
+		i   int
+		w   int
+		exp string
+		c   int
+	}{
+		{"", 0, 4, "", 0},
+		{"  ", 0, 4, "", 0},
+		{"  ", 0, 4, "", 0},
+		{" select ", 0, 4, " select", 1},
+		{" select to ", 0, 4, " select to", 2},
+		{" select to ", 1, 4, "select to", 2}, // 5
+		{" select   to   ", 0, 4, " select   to", 2},
+		{"select into from", 0, 2, "select into", 2},
+		{"select into * from", 0, 4, "select into * from", 4},
+		{" select  into  *   from  ", 0, 4, " select  into  *   from", 4},
+		{"  select\n\n\tb\t\tzfrom j\n\n  ", 1, 2, " select\n\n\tb", 2}, // 10
+	}
+	for i, test := range tests {
+		z := []rune(test.s)
+
+		end, c := findEndOfWords(z, test.i, len(z), test.w)
+		s := string(z[test.i:end])
+		if s != test.exp {
+			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, s)
+		}
+
+		if c != test.c {
+			t.Errorf("test %d expected word count %d, got: %d", test.c, c)
+		}
+	}
+}
+
+func TestFindPrefix(t *testing.T) {
+	tests := []struct {
+		s   string
+		i   int
+		w   int
+		exp string
+	}{
+		{"", 0, 4, ""},
+		{"  ", 0, 4, ""},
+		{"  ", 0, 4, ""},
+		{" select ", 0, 4, "SELECT"},
+		{" select to ", 0, 4, "SELECT TO"},
+		{" select to ", 1, 4, "SELECT TO"}, // 5
+		{" select   to   ", 0, 4, "SELECT TO"},
+		{"select into from", 0, 2, "SELECT INTO"},
+		{"select into * from", 0, 4, "SELECT INTO"},
+		{" select  into  *   from  ", 0, 4, "SELECT INTO"},
+		{"  select\n\n\tb\t\tzfrom j\n\n  ", 1, 2, "SELECT B"}, // 10
+	}
+	for i, test := range tests {
+		z := []rune(test.s)
+		p := findPrefix(z, test.i, len(z), test.w)
+		if p != test.exp {
+			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, p)
+		}
+	}
+}

@@ -176,3 +176,35 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 
 	return a[0], a[1:], i
 }
+
+// findEndOfWords finds the end of the first n words in r, and returns the
+// end place and count of the words found.
+func findEndOfWords(r []rune, i, end, n int) (int, int) {
+	w := 0
+	for ; w < n; w++ {
+		z, ok := findNonSpace(r, i, end)
+		if !ok {
+			break
+		}
+		i, _ = findSpace(r, z, end)
+	}
+	return i, w
+}
+
+var spaceRE = regexp.MustCompile(`\s+`)
+
+// findPrefix finds the prefix in r up to n words.
+func findPrefix(r []rune, i, end, n int) string {
+	plen, w := findEndOfWords(r, i, end, n)
+	if w != 0 {
+		st, _ := findNonSpace(r, i, plen)
+		for i = st; i < plen; i++ {
+			if !unicode.IsSpace(r[i]) && !unicode.IsLetter(r[i]) {
+				break
+			}
+		}
+		return strings.ToUpper(spaceRE.ReplaceAllString(strings.TrimSpace(string(r[st:i])), " "))
+	}
+
+	return ""
+}

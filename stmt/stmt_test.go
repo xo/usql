@@ -222,6 +222,9 @@ func TestNextResetState(t *testing.T) {
 		if b.Len != 0 {
 			t.Fatalf("test %d after reset should have len %d, got: %d", i, 0, b.Len)
 		}
+		if b.Prefix != "" {
+			t.Fatalf("test %d after reset should have empty prefix, got: %s", i, b.Prefix)
+		}
 		if b.q || b.qdbl || b.qdollar || b.qid != "" || b.mc || b.b != 0 {
 			t.Fatalf("test %d after reset should have a cleared parse state", i)
 		}
