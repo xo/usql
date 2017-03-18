@@ -837,7 +837,13 @@ func (h *Handler) RunReadline(in, out string) error {
 	// set stdin if not set
 	var r io.ReadCloser = stdin
 	if stdin == nil {
-		c := readline.NewCancelableStdin(readline.Stdin)
+		// fix issues with cygwin interactive terminals
+		in := readline.Stdin
+		if h.cygwin {
+			in = os.Stdin
+		}
+
+		c := readline.NewCancelableStdin(in)
 		defer c.Close()
 		r = c
 	}
