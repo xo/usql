@@ -846,5 +846,10 @@ func (h *Handler) RunReadline(in, out string) error {
 		stderr = readline.Stderr
 	}
 
+	// wrap it with cancelable stdin
+	if h.interactive {
+		stdin = readline.NewCancelableStdin(stdin)
+	}
+
 	return h.Process(stdin, stdout, stderr)
 }
