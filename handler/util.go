@@ -41,6 +41,16 @@ func (e *Error) Error() string {
 	if e.Driver != "" {
 		n = e.Driver
 		s = strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), e.Driver+":"), unicode.IsSpace)
+
+		switch e.Driver {
+		case "ora", "oracle":
+			if i := strings.Index(s, "ORA-"); i != -1 {
+				s = s[i:]
+			}
+
+		case "mysql":
+			s = strings.TrimSpace(strings.TrimPrefix(s, "Error "))
+		}
 	}
 
 	return n + ": " + s
