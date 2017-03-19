@@ -252,6 +252,9 @@ parse:
 	b.r = b.r[i:]
 	b.rlen = len(b.r)
 
+	//log.Printf("returning from NEXT: `%s`", string(b.Buf))
+	//log.Printf(">>>>>>>>>>>>>> NEXT: `%s`", string(b.r))
+
 	return cmd, params, nil
 }
 

@@ -146,6 +146,8 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 		f = h.Query
 	}
 
+	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
+
 	// exec
 	err := f(w, sqlstr, typ)
 	if err != nil {
@@ -381,12 +383,18 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 	var lastPrefix, last string
 	buf := stmt.New(f, opts...)
 	for {
+		var execute bool
+		var exitWithErr error
+
 		// set prompt
 		h.SetPrompt(l, buf.State())
 
 		// get next
 		cmd, params, err := buf.Next()
 		switch {
+		case !h.interactive && err == io.EOF:
+			execute, exitWithErr = true, io.EOF
+
 		case err == readline.ErrInterrupt:
 			buf.Reset()
 			continue
@@ -396,7 +404,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		}
 
 		// grab ready state
-		execute := buf.Ready()
+		execute = execute || buf.Ready()
 
 		// process command
 		if cmd != "" {
@@ -489,6 +497,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				}
 
 			case "o", "out":
+				notImpl(l, cmd)
 
 			case "i", "include", "ir", "include_relative":
 				if len(params) == 0 {
@@ -538,16 +547,21 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 		}
 
 		if execute {
-			// clear
 			if buf.Len != 0 {
 				lastPrefix, last = buf.Prefix, buf.String()
 				buf.Reset()
 			}
 
-			//log.Printf("executing: `%s`", stmt)
+			//log.Printf(">> PROCESS EXECUTE: `%s`", last)
 			if last != "" && last != ";" {
 				writeErr(l, h.Execute(l.Stdout(), lastPrefix, last))
 			}
+
+			execute = false
+		}
+
+		if exitWithErr != nil {
+			return exitWithErr
 		}
 	}
 }
