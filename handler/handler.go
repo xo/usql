@@ -121,7 +121,9 @@ func (h *Handler) Open(urlstr string) error {
 // Close closes the database connection if it is open.
 func (h *Handler) Close() error {
 	if h.db != nil {
-		return h.db.Close()
+		err := h.db.Close()
+		h.db, h.u = nil, nil
+		return err
 	}
 
 	return nil
