@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/mattn/go-isatty"
@@ -27,22 +28,55 @@ var (
 	version = "0.0.0-dev"
 )
 
-// drivers are the available sql drivers.
+// drivers are the default sql drivers.
 var drivers = map[string]string{
-	"mssql":    "mssql",   // github.com/denisenkom/go-mssqldb
-	"mysql":    "mysql",   // github.com/go-sql-driver/mysql
-	"postgres": "pq",      // github.com/lib/pq
-	"sqlite3":  "sqlite3", // github.com/mattn/go-sqlite3
+	"cockroachdb": "cockroachdb", // github.com/lib/pq
+	"memsql":      "memsql",      // github.com/go-sql-driver/mysql
+	"mssql":       "mssql",       // github.com/denisenkom/go-mssqldb
+	"mysql":       "mysql",       // github.com/go-sql-driver/mysql
+	"postgres":    "pq",          // github.com/lib/pq
+	"sqlite3":     "sqlite3",     // github.com/mattn/go-sqlite3
+	"tidb":        "tidb",        // github.com/go-sql-driver/mysql
+	"vitess":      "vitess",      // github.com/go-sql-driver/mysql
+}
+
+// allKnownDrivers is the map of all known drivers.
+var allKnownDrivers = map[string]string{
+	"adodb":       "adodb",       // github.com/mattn/go-adodb
+	"avatica":     "avatica",     // github.com/Boostport/avatica
+	"clickhouse":  "clickhouse",  // github.com/kshvakov/clickhouse
+	"cockroachdb": "cockroachdb", // github.com/lib/pq
+	"couchbase":   "n1ql",        // github.com/couchbase/go_n1ql
+	"memsql":      "memsql",      // github.com/go-sql-driver/mysql
+	"mssql":       "mssql",       // github.com/denisenkom/go-mssqldb
+	"mysql":       "mysql",       // github.com/go-sql-driver/mysql
+	"odbc":        "odbc",        // github.com/alexbrainman/odbc
+	"oleodbc":     "oleodbc",     // github.com/mattn/go-adodb
+	"oracle":      "ora",         // gopkg.in/rana/ora.v4
+	"postgres":    "postgres",    // github.com/lib/pq
+	"ql":          "ql",          // github.com/cznic/ql/driver
+	"saphana":     "hdb",         // github.com/SAP/go-hdb/driver
+	"sqlite3":     "sqlite3",     // github.com/mattn/go-sqlite3
+	"tidb":        "tidb",        // github.com/go-sql-driver/mysql
+	"vitess":      "vitess",      // github.com/go-sql-driver/mysql
+	"voltdb":      "voltdb",      // github.com/VoltDB/voltdb-client-go/voltdbclient
 }
 
 func main() {
-	// circumvent all logic to determine if usql was built with oracle support
-	if len(os.Args) == 2 && os.Args[1] == "--has-oracle-support" {
-		var out int
-		if _, ok := drivers["ora"]; ok {
-			out = 1
+	// circumvent all logic to determine if usql was built with support for a specific driver
+	if len(os.Args) == 2 &&
+		strings.HasPrefix(os.Args[1], "--has-") &&
+		strings.HasSuffix(os.Args[1], "-support") {
+
+		n := os.Args[1][6 : len(os.Args[1])-8]
+		if v, ok := allKnownDrivers[n]; ok {
+			n = v
 		}
 
+		var out int
+		if _, ok := drivers[n]; ok {
+			out = 1
+		}
 		fmt.Fprintf(os.Stdout, "%d", out)
 		return
 	}

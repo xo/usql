@@ -33,6 +33,7 @@ Type: \copyright        distribution terms
       \c[onnect] <url>  connect to url
       \q                quit
       \Z                disconnect
+	  \buildinfo        display information about which databases usql supports, depending on build
 `
 )
 

@@ -8,4 +8,5 @@ import (
 
 func init() {
 	drivers["adodb"] = "adodb"
+	drivers["oleodbc"] = "oleodbc"
 }

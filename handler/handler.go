@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -79,16 +80,19 @@ func (h *Handler) Open(urlstr string) error {
 	switch {
 	case err == dburl.ErrInvalidDatabaseScheme:
 		fi, err := os.Stat(urlstr)
-		switch {
-		case os.IsNotExist(err):
-			return nil
-		case err != nil:
+		if err != nil {
 			return err
 		}
 
-		// TODO: add support for postgres unix domain sockets
+		// unix domain socket, determine actual protocol
 		if fi.Mode()&os.ModeSocket != 0 {
-			return h.Open("mysql+unix:" + urlstr)
+			proto := "mysql"
+			/*proto, err := h.DetermineProto(urlstr)
+			if err != nil {
+				return err
+			}*/
+
+			return h.Open(proto + "+unix:" + urlstr)
 		}
 
 		// it is a file, so reattempt to open it with sqlite3
@@ -106,12 +110,13 @@ func (h *Handler) Open(urlstr string) error {
 		}
 	}
 
-	// add connection parameters for databases
+	// force connection parameters for drivers
 	dsn := h.u.DSN
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "parseTime", "true")
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "loc", "Local")
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "sql_mode", "ansi")
 	dsn = addQueryParam(h.u.Driver, "sqlite3", dsn, "loc", "auto")
+	dsn = addQueryParam(h.u.Scheme, "cockroachdb", dsn, "sslmode", "disable")
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, dsn)
@@ -140,7 +145,7 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	}
 
 	// determine if query or exec
-	q, typ := h.ProcessPrefix(prefix, sqlstr)
+	typ, q := h.ProcessPrefix(prefix, sqlstr)
 	f := h.Exec
 	if q {
 		f = h.Query
@@ -149,7 +154,7 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
 
 	// exec
-	err := f(w, sqlstr, typ)
+	err := f(w, typ, sqlstr)
 	if err != nil {
 		return h.WrapError(err)
 	}
@@ -158,7 +163,7 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 }
 
 // Query executes a query against the database.
-func (h *Handler) Query(w io.Writer, sqlstr, typ string) error {
+func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
 	var err error
 
 	// run query
@@ -269,7 +274,7 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 }
 
 // Exec does a database exec.
-func (h *Handler) Exec(w io.Writer, sqlstr, typ string) error {
+func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
 	res, err := h.db.Exec(sqlstr)
 	if err != nil {
 		return err
@@ -300,6 +305,14 @@ func (h *Handler) Exec(w io.Writer, sqlstr, typ string) error {
 // WrapError conditionally wraps an error if the error occurs while connected
 // to a database.
 func (h *Handler) WrapError(err error) error {
+	/*log.Printf(">>> errr: %+v", err)
+	log.Printf(">>> errr: %s", reflect.TypeOf(err))
+
+	switch e := err.(type) {
+	case *pq.Error:
+		log.Printf(">>> %#v", e)
+	}*/
+
 	if h.db != nil {
 		// attempt to clean up and standardize errors
 		driver := h.u.Driver
@@ -426,6 +439,32 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 			case "copyright":
 				fmt.Fprintf(l.Stdout(), copyright)
 
+			case "buildinfo":
+				names := make([]string, len(drivers))
+				var z int
+				for k := range drivers {
+					names[z] = k
+					z++
+				}
+				sort.Strings(names)
+
+				fmt.Fprintf(l.Stdout(), "Supported drivers:\n")
+				for _, n := range names {
+					s := "  " + n
+
+					driver, aliases := dburl.SchemeDriverAndAliases(n)
+					if driver != n {
+						s += " (" + driver + ")"
+					}
+					if len(aliases) > 0 {
+						if len(aliases) > 0 {
+							s += " [" + strings.Join(aliases, ", ") + "]"
+						}
+					}
+					fmt.Fprintf(l.Stdout(), s+"\n")
+				}
+				fmt.Fprintln(l.Stdout())
+
 			case "errverbose":
 				notImpl(l, cmd)
 
@@ -457,7 +496,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				buf.Reset()
 				buf.Feed(n)
 
-			case "ef":
+			case "ef", "ev":
 				notImpl(l, cmd)
 
 			case "p", "print":
@@ -567,9 +606,9 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 }
 
 // ProcessPrefix processes a prefix.
-func (h *Handler) ProcessPrefix(prefix, sqlstr string) (bool, string) {
+func (h *Handler) ProcessPrefix(prefix, sqlstr string) (string, bool) {
 	if prefix == "" {
-		return false, ""
+		return "EXEC", false
 	}
 
 	s := strings.Split(prefix, " ")
@@ -579,23 +618,23 @@ func (h *Handler) ProcessPrefix(prefix, sqlstr string) (bool, string) {
 			typ := s[0]
 			switch {
 			case typ == "SELECT" && len(s) >= 2 && s[1] == "INTO":
-				return false, "SELECT INTO"
+				return "SELECT INTO", false
 			case typ == "PRAGMA":
-				return !strings.ContainsRune(sqlstr, '='), typ
+				return typ, !strings.ContainsRune(sqlstr, '=')
 			}
-			return true, typ
+			return typ, true
 		}
 
 		// find longest match
 		for i := len(s); i > 0; i-- {
 			typ := strings.Join(s[:i], " ")
 			if _, ok := execMap[typ]; ok {
-				return false, typ
+				return typ, false
 			}
 		}
 	}
 
-	return false, "EXEC"
+	return "EXEC", false
 }
 
 // IncludeFile includes the specified path.

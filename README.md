@@ -3,12 +3,12 @@
 usql is a universal command-line interface for working with SQL databases.
 
 usql provides a universal command-line interface for the following databases:
-PostgreSQL, MySQL, Oracle, SQLite, and Microsoft SQL Server, Microsoft ADODB
-(Windows only).
+PostgreSQL, MySQL, Oracle, SQLite, Microsoft SQL Server, Microsoft ADODB
+(Windows only), and others.
 
 The goal is to eventually have usql be a drop in replacement for PostgreSQL's
 `psql` command, with all the bells/whistles, but with the added benefit of
-working with more than one database.
+working with multiple databases.
 
 #### [Releases](https://github.com/knq/usql/releases)
 
@@ -22,11 +22,19 @@ $ go get -u github.com/knq/usql
 
 # install with oracle support
 $ go get -u -tags oracle github.com/knq/usql
+
+# install with oracle + adodb support (windows only)
+$ go get -u -tags 'oracle adodb' github.com/knq/usql
 ```
 
-Alternatively, you can download a binary release for your platform from the [GitHub releases page](https://github.com/knq/usql/releases).
+Alternatively, you can download a binary release for your platform from the
+[GitHub releases page](https://github.com/knq/usql/releases).
 
 ## Using
+
+`usql` makes use of the [`dburl`](https://github.com/knq/dburl) package for
+opening URLs. Almost every database recognized by `dburl` can be opened by
+`usql`.  Some example ways to connect to a database:
 
 ```sh
 # display command line arguments
@@ -46,12 +54,21 @@ $ usql /var/run/mysqld/mysqld.sock
 $ usql ms://user:pass@localhost/dbname
 $ usql mssql://user:pass@localhost:port/dbname
 
+# connect using Windows domain authentication to a mssql (Microsoft SQL)
+# database
+$ runas /user:ACME\wiley /netonly "usql mssql://host/dbname/"
+
 # connect to a oracle database
 $ usql or://user:pass@localhost/dbname
 $ usql oracle://user:pass@localhost:port/dbname
 
 # connect to a sqlite file
 $ usql dbname.sqlite3
+
+# note: when not using a "<scheme>://" or "<scheme>:" prefix, the file must already
+# exist; if it doesn't, please prefix with file:, sq:, sqlite3: or any other
+# scheme alias recognized by the dburl package for sqlite databases, and sqlite
+# will create a new database, like the following:
 $ usql sq://path/to/dbname.sqlite3
 $ usql sqlite3://path/to/dbname.sqlite3
 $ usql file:/path/to/dbname.sqlite3
@@ -84,15 +101,30 @@ various queries.
 A list of planned / in progress work:
 
 ### General
-* fix mysql "Error 1049:" messages, and better standardize other database error messages
-* fix table output
-* add support for requesting user enter their password when Open fails with respective driver's authentication error
-* add support for managing multiple database connections simultaneously (@conn
-  syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not needed,
-  if variable support works "as expected"?)
-* SQL completion (WIP)
-* syntax highlighting (WIP)
-* \encoding and environment/command line options to set encoding of input (to convert to utf-8 before feeding to SQL driver)
+0. Show remote server version on connect
+1. finish refactoring SQL specific code out of handler, rename handler to something more appropriate? cmd handler? metacmd?
+2. Transaction wrapping / starts/commits / "-1" one transaction stuff
+3. Fix include \i, \ir stuff
+4. unix domain sockets for postgresql + detecting pg vs mysql
+5. pager support
+6. password prompts, -W cli option
+7. .usqlpass file (same as .psqlpass)
+8. SQL variables + environment
+9. Proper table formatting + \pset
+10. .usqlrc
+11. More command line options
+12. Fix meta command parsing when passed a quoted string ie, \echo "   foo    bar  " should have all whitespace included in the parameter
+13. Encoding support
+14. fix table output
+15. add support for managing multiple database connections simultaneously
+    (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
+    needed, if variable support works "as expected"?)
+16. SQL completion (WIP)
+17. syntax highlighting (WIP)
+18. \encoding and environment/command line options to set encoding of input (to convert to utf-8 before feeding to SQL driver)
+
+#### Not important / "Nice to haves":
+1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
 
 ### Command Processing + `psql` compatibility
 * PAGER + EDITOR support (WIP)
@@ -125,10 +157,5 @@ Additional:
 Notes / thoughts / comments on adding support for various "databases":
 
 * Google Spanner
-* SAP HANA (cannot seem to run installer/get it running, support is already in usql, but not tested)
-* CockroachDB (uses lib/pq wire protocol)
-* ODBC (cross platform issues, similar to oracle with build support)
 * Cassandra
-* VoltDB
-* MemSQL (uses mysql wire protocol)
 * Atlassian JIRA JQL (why not? lol)
