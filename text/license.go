@@ -1,6 +1,6 @@
-package handler
+package text
 
-const license = `The MIT License (MIT)
+var License = `The MIT License (MIT)
 
 Copyright (c) 2016-2017 Kenneth Shaw
 

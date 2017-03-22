@@ -16,8 +16,10 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
-	"github.com/knq/usql/stmt"
 	"github.com/olekukonko/tablewriter"
+
+	"github.com/knq/usql/stmt"
+	"github.com/knq/usql/text"
 )
 
 // Handler is a input process handler.
@@ -59,7 +61,7 @@ func (h *Handler) SetPrompt(l *readline.Instance, state string) {
 		return
 	}
 
-	s := notConnected
+	s := text.NotConnected
 
 	if h.db != nil {
 		s = h.u.Short()
@@ -110,13 +112,22 @@ func (h *Handler) Open(urlstr string) error {
 		}
 	}
 
-	// force connection parameters for drivers
+	// force connection parameters for drivers that are "url" style DSNs
 	dsn := h.u.DSN
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "parseTime", "true")
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "loc", "Local")
 	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "sql_mode", "ansi")
 	dsn = addQueryParam(h.u.Driver, "sqlite3", dsn, "loc", "auto")
 	dsn = addQueryParam(h.u.Scheme, "cockroachdb", dsn, "sslmode", "disable")
+
+	// force connection parameter for mymysql
+	if h.u.Driver == "mymysql" {
+		q := h.u.Query()
+		q.Set("sql_mode", "ansi")
+		h.u.RawQuery = q.Encode()
+		h.u.DSN, _ = dburl.GenMyMySQL(h.u)
+		dsn = h.u.DSN
+	}
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, dsn)
@@ -134,14 +145,12 @@ func (h *Handler) Close() error {
 	return nil
 }
 
+var beginTransactionRE = regexp.MustCompile(`(?i)^BEGIN\s*TRANSACTION;?$`)
+
 // Execute executes a sql query against the connected database.
 func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	if h.db == nil {
 		return ErrNotConnected
-	}
-
-	if h.u.Driver == "ora" {
-		sqlstr = strings.TrimSuffix(sqlstr, ";")
 	}
 
 	// determine if query or exec
@@ -149,6 +158,25 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	f := h.Exec
 	if q {
 		f = h.Query
+	}
+
+	//var tx *sql.Tx
+
+	switch h.u.Driver {
+	case "ora":
+		sqlstr = strings.TrimSuffix(sqlstr, ";")
+
+	case "ql":
+		if typ == "BEGIN" && beginTransactionRE.MatchString(sqlstr) {
+			log.Printf("GOT BEGIN TRANSACTION")
+			//tx, err := h.db.Begin()
+			/*if err != nil {
+				return err
+			}*/
+		}
+		if typ == "COMMIT" {
+
+		}
 	}
 
 	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
@@ -268,7 +296,10 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 	}
 
 	t.Render()
-	fmt.Fprintf(w, "(%d rows)\n\n", rows)
+
+	// row count
+	fmt.Fprintf(w, text.RowCount, rows)
+	fmt.Fprintln(w, "\n")
 
 	return nil
 }
@@ -294,10 +325,10 @@ func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
 
 	// print count
 	if count > 0 {
-		fmt.Fprintf(w, " %d", count)
+		fmt.Fprint(w, " ", count)
 	}
 
-	fmt.Fprint(w, "\n")
+	fmt.Fprintln(w)
 
 	return nil
 }
@@ -356,7 +387,8 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 	// display welcome info
 	if h.interactive {
-		fmt.Fprint(l.Stdout(), welcomeDesc)
+		fmt.Fprintln(l.Stdout(), text.WelcomeDesc)
+		fmt.Fprintln(l.Stdout())
 	}
 
 	// set help intercept
@@ -371,7 +403,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			// check if line starts with help
 			rlen := len(r)
-			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, helpPrefix) {
+			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
 				h.DisplayHelp(l.Stdout())
 				return nil, nil
 			}
@@ -427,7 +459,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			case "c", "connect":
 				if len(params) == 0 {
-					cmdErr(l, cmd, missingRequiredArg)
+					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 					writeErr(l, h.Open(params[0]))
 					params = params[1:]
@@ -437,9 +469,20 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				writeErr(l, h.Close())
 
 			case "copyright":
-				fmt.Fprintf(l.Stdout(), copyright)
+				fmt.Fprintln(l.Stdout(), text.Copyright)
 
-			case "buildinfo":
+			case "conninfo":
+				if h.u != nil {
+					fmt.Fprintf(l.Stdout(), text.ConnInfo, h.u.Driver, h.u.DSN)
+					fmt.Fprintln(l.Stdout())
+				}
+
+			case "dsn":
+				if h.u != nil {
+					fmt.Fprintln(l.Stdout(), h.u.Driver, "("+h.u.DSN+")")
+				}
+
+			case "drivers":
 				names := make([]string, len(drivers))
 				var z int
 				for k := range drivers {
@@ -448,7 +491,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				}
 				sort.Strings(names)
 
-				fmt.Fprintf(l.Stdout(), "Supported drivers:\n")
+				fmt.Fprintln(l.Stdout(), text.AvailableDrivers)
 				for _, n := range names {
 					s := "  " + n
 
@@ -461,9 +504,8 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 							s += " [" + strings.Join(aliases, ", ") + "]"
 						}
 					}
-					fmt.Fprintf(l.Stdout(), s+"\n")
+					fmt.Fprintln(l.Stdout(), s)
 				}
-				fmt.Fprintln(l.Stdout())
 
 			case "errverbose":
 				notImpl(l, cmd)
@@ -506,15 +548,15 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 					s = buf.String()
 				}
 				if s == "" {
-					s = queryBufferEmpty
+					s = text.QueryBufferEmpty
 				}
 
 				// print
-				fmt.Fprintf(l.Stdout(), "%s\n", s)
+				fmt.Fprintln(l.Stdout(), s)
 
 			case "r", "reset":
 				buf.Reset()
-				fmt.Fprintf(l.Stdout(), queryBufferReset)
+				fmt.Fprintln(l.Stdout(), text.QueryBufferReset)
 
 			case "echo":
 				// this could be done to echo the actual input (by using pos
@@ -525,7 +567,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			case "w", "write":
 				if len(params) == 0 {
-					cmdErr(l, cmd, missingRequiredArg)
+					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 					s := last
 					if buf.Len != 0 {
@@ -540,7 +582,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			case "i", "include", "ir", "include_relative":
 				if len(params) == 0 {
-					cmdErr(l, cmd, missingRequiredArg)
+					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 					var fname string
 					params, fname = pop(params, "")
@@ -550,7 +592,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			case "!":
 				if len(params) == 0 {
-					cmdErr(l, cmd, missingRequiredArg)
+					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 
 				}
@@ -565,7 +607,7 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			case "setenv":
 				if len(params) == 0 {
-					cmdErr(l, cmd, missingRequiredArg)
+					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 					var key, val string
 					params, key = pop(params, "")
@@ -575,13 +617,15 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 
 			// invalid command
 			default:
-				fmt.Fprintf(l.Stderr(), invalidCommand, cmd)
+				fmt.Fprintf(l.Stderr(), text.InvalidCommand, cmd)
+				fmt.Fprintln(l.Stderr())
 				params = nil
 			}
 
 			// print unused command parameters
 			for _, p := range params {
-				fmt.Fprintf(l.Stdout(), extraArgumentIgnored, cmd, p)
+				fmt.Fprintf(l.Stdout(), text.ExtraArgumentIgnored, cmd, p)
+				fmt.Fprintln(l.Stdout())
 			}
 		}
 
@@ -789,5 +833,5 @@ func (h *Handler) RunReadline(in, out string) error {
 
 // DisplayHelp displays the help message.
 func (h *Handler) DisplayHelp(w io.Writer) {
-	io.WriteString(w, helpDesc)
+	io.WriteString(w, text.HelpDesc)
 }

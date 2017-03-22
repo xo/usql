@@ -1,11 +1,11 @@
 // +build yql
 
-package main
+package drivers
 
 import (
 	_ "github.com/mattn/go-yql"
 )
 
 func init() {
-	drivers["yql"] = "yql"
+	Drivers["yql"] = "yql"
 }

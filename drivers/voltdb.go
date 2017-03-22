@@ -1,11 +1,11 @@
 // +build voltdb
 
-package main
+package drivers
 
 import (
 	_ "github.com/VoltDB/voltdb-client-go/voltdbclient"
 )
 
 func init() {
-	drivers["voltdb"] = "voltdb"
+	Drivers["voltdb"] = "voltdb"
 }

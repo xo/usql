@@ -1,11 +1,11 @@
 // +build clickhouse
 
-package main
+package drivers
 
 import (
 	_ "github.com/kshvakov/clickhouse"
 )
 
 func init() {
-	drivers["clickhouse"] = "clickhouse"
+	Drivers["clickhouse"] = "clickhouse"
 }

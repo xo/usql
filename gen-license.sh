@@ -3,10 +3,10 @@
 LICENSE=$(cat LICENSE)
 
 DATA=$(cat << ENDSTR
-package handler
+package text
 
-const license = \`$LICENSE\`
+var License = \`$LICENSE\`
 ENDSTR
 )
 
-echo "$DATA" > handler/license.go
+echo "$DATA" > text/license.go

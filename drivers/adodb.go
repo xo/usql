@@ -1,12 +1,12 @@
 // +build adodb
 
-package main
+package drivers
 
 import (
 	_ "github.com/mattn/go-adodb"
 )
 
 func init() {
-	drivers["adodb"] = "adodb"
-	drivers["oleodbc"] = "oleodbc"
+	Drivers["adodb"] = "adodb"
+	Drivers["oleodbc"] = "oleodbc"
 }

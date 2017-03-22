@@ -1,11 +1,11 @@
 // +build couchbase
 
-package main
+package drivers
 
 import (
 	_ "github.com/couchbase/go_n1ql"
 )
 
 func init() {
-	drivers["n1ql"] = "couchbase"
+	Drivers["n1ql"] = "couchbase"
 }

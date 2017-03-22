@@ -55,7 +55,7 @@ case $PLATFORM in
   ;;
 esac
 
-go build -ldflags="-X main.name=$NAME -X main.version=$VER" $TAGS -o $BIN
+go build -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" $TAGS -o $BIN
 
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)

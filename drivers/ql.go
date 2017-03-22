@@ -1,11 +1,11 @@
 // +build ql
 
-package main
+package drivers
 
 import (
 	_ "github.com/cznic/ql/driver"
 )
 
 func init() {
-	drivers["ql"] = "ql"
+	Drivers["ql"] = "ql"
 }

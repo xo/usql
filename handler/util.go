@@ -2,12 +2,16 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
 	"unicode"
 
+	"github.com/chzyer/readline"
 	"github.com/knq/xoutil"
+
+	"github.com/knq/usql/text"
 )
 
 var (
@@ -35,7 +39,8 @@ type Error struct {
 
 // Error satisfies the error interface.
 func (e *Error) Error() string {
-	n := "usql"
+	n := text.CommandName
+
 	s := e.Err.Error()
 
 	if e.Driver != "" {
@@ -112,4 +117,21 @@ func getenv(keys ...string) string {
 	}
 
 	return ""
+}
+
+// cmdErr is a util func to simply write a "\cmd: msg" style error.
+func cmdErr(l *readline.Instance, cmd, msg string) (int, error) {
+	return fmt.Fprintf(l.Stderr(), "\\%s: %s\n", cmd, msg)
+}
+
+// writeErr writes an error to stderr when err is not nil.
+func writeErr(l *readline.Instance, err error, prefixes ...string) {
+	if err != nil {
+		fmt.Fprintf(l.Stderr(), "error: %s%v\n", strings.Join(prefixes, ""), err)
+	}
+}
+
+// notImpl is a simple helper for not yet implemented commands.
+func notImpl(l *readline.Instance, cmd string) {
+	fmt.Fprintf(l.Stderr(), "COMMAND `\\%s` IS NOT YET IMPLEMENTED.\n", cmd)
 }

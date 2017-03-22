@@ -1,11 +1,11 @@
 // +build oracle
 
-package main
+package drivers
 
 import (
 	_ "gopkg.in/rana/ora.v4"
 )
 
 func init() {
-	drivers["ora"] = "oracle"
+	Drivers["ora"] = "oracle"
 }

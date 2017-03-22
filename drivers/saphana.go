@@ -1,11 +1,11 @@
 // +build saphana
 
-package main
+package drivers
 
 import (
 	_ "github.com/SAP/go-hdb/driver"
 )
 
 func init() {
-	drivers["hdb"] = "saphana"
+	Drivers["hdb"] = "saphana"
 }

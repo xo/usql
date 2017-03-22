@@ -1,11 +1,11 @@
 // +build avatica
 
-package main
+package drivers
 
 import (
 	_ "github.com/Boostport/avatica"
 )
 
 func init() {
-	drivers["avatica"] = "avatica"
+	Drivers["avatica"] = "avatica"
 }

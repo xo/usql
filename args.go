@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/knq/usql/text"
+)
+
 // Args are the command line arguments.
 type Args struct {
 	DSN           string   `arg:"positional,help:database url"`
@@ -13,17 +17,12 @@ type Args struct {
 	Verbose       bool     `arg:"-v,--verbose,help:toggle verbose"`
 }
 
-const (
-	aboutDesc = `usql is the universal command-line interface for SQL databases.
-`
-)
-
 // Description provides the go-arg description.
 func (a *Args) Description() string {
-	return aboutDesc
+	return text.Banner + ".\n"
 }
 
 // Version returns the version string for the app.
 func (a *Args) Version() string {
-	return name + " " + version
+	return text.CommandName + " " + text.CommandVersion
 }
