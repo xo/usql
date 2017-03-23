@@ -37,7 +37,7 @@ case $PLATFORM in
   ;;
 
   darwin)
-    ICU=icu-i18n-mingw64
+    ICU=icu-i18n
     CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
     CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
   ;;
