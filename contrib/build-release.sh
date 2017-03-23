@@ -59,8 +59,12 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-CGO_CFLAGS=$CGO_CFLAGS CGO_LDFLAGS=$CGO_LDFLAGS \
-  go build -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" $TAGS -o $BIN
+CGO_CFLAGS=$CGO_CFLAGS \
+CGO_LDFLAGS=$CGO_LDFLAGS \
+  go build \
+    -tags "$DATABASES $EXTRA" \
+    -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" \
+    -o $BIN
 
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)
