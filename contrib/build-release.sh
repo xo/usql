@@ -24,15 +24,22 @@ BIN=$DIR/$NAME
 DATABASES="avatica clickhouse couchbase firebird mymysql pgx ql saphana voltdb yql"
 EXTRA="icu fts5 vtable json1"
 
-CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags icu-uc)"
-CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L icu-uc)"
-
 case $PLATFORM in
   mingw64|msys)
     PLATFORM=windows
     EXT=zip
     BIN=$BIN.exe
     DATABASES="$DATABASES adodb"
+
+    ICU=icu-i18n-mingw64
+    CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
+    CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
+  ;;
+
+  darwin)
+    ICU=icu-i18n-mingw64
+    CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
+    CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
   ;;
 esac
 

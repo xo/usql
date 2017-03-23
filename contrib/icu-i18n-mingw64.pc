@@ -1,0 +1,10 @@
+mingw64_prefix=C:\msys64\mingw64
+
+includedir="${mingw64_prefix}\include"
+libdir="${mingw64_prefix}\lib"
+
+Name: icu-i18n-mingw64
+Version: dev
+Description: icu-i18n
+Cflags: -I${includedir}
+Libs: -L${libdir}
