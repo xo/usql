@@ -21,11 +21,18 @@ fi
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
+DATABASES="avatica clickhouse couchbase firebird mymysql pgx ql saphana voltdb yql"
+EXTRA="icu fts5 vtable json1"
+
+CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags icu-uc)"
+CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L icu-uc)"
+
 case $PLATFORM in
   mingw64|msys)
     PLATFORM=windows
     EXT=zip
     BIN=$BIN.exe
+    DATABASES="$DATABASES adodb"
   ;;
 esac
 
@@ -36,6 +43,10 @@ echo "VER: $VER"
 echo "DIR: $DIR"
 echo "BIN: $BIN"
 echo "OUT: $OUT"
+echo "DATABASES: $DATABASES"
+echo "EXTRA: $EXTRA"
+echo "CGO_CFLAGS: $CGO_CFLAGS"
+echo "CGO_LDFLAGS: $CGO_LDFLAGS"
 
 set -e
 
@@ -48,14 +59,8 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-TAGS=
-case $PLATFORM in
-  windows)
-    TAGS="-tags adodb"
-  ;;
-esac
-
-go build -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" $TAGS -o $BIN
+CGO_CFLAGS=$CGO_CFLAGS CGO_LDFLAGS=$CGO_LDFLAGS \
+  go build -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" $TAGS -o $BIN
 
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)
