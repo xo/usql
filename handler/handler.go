@@ -65,40 +65,56 @@ func (h *Handler) SetPrompt(l *readline.Instance, state string) {
 
 	if h.db != nil {
 		s = h.u.Short()
+		if s == "" {
+			s = "(" + h.u.Driver + ")"
+		}
 	}
 
 	l.SetPrompt(s + state + "> ")
 }
 
 // Open handles opening a specified database URL.
-func (h *Handler) Open(urlstr string) error {
-	if urlstr == "" {
+func (h *Handler) Open(params ...string) error {
+	if len(params) == 0 {
 		return nil
 	}
 
-	// parse dsn
 	var err error
-	h.u, err = dburl.Parse(urlstr)
-	switch {
-	case err == dburl.ErrInvalidDatabaseScheme:
-		fi, err := os.Stat(urlstr)
-		if err != nil {
+	if len(params) < 2 {
+		urlstr := params[0]
+		if urlstr == "" {
+			return nil
+		}
+
+		// parse dsn
+		h.u, err = dburl.Parse(urlstr)
+		switch {
+		case err == dburl.ErrInvalidDatabaseScheme:
+			var fi os.FileInfo
+			fi, err = os.Stat(urlstr)
+			if err != nil {
+				return err
+			}
+
+			switch {
+			case fi.IsDir():
+				return h.Open("postgres+unix:" + urlstr)
+
+			case fi.Mode()&os.ModeSocket != 0:
+				return h.Open("mysql+unix:" + urlstr)
+			}
+
+			// it is a file, so reattempt to open it with sqlite3
+			return h.Open("sqlite3:" + urlstr)
+
+		case err != nil:
 			return err
 		}
-
-		switch {
-		case fi.IsDir():
-			return h.Open("postgres+unix:" + urlstr)
-
-		case fi.Mode()&os.ModeSocket != 0:
-			return h.Open("mysql+unix:" + urlstr)
+	} else {
+		h.u = &dburl.URL{
+			Driver: params[0],
+			DSN:    strings.Join(params[1:], " "),
 		}
-
-		// it is a file, so reattempt to open it with sqlite3
-		return h.Open("sqlite3:" + urlstr)
-
-	case err != nil:
-		return err
 	}
 
 	// check driver
@@ -453,11 +469,23 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				return nil
 
 			case "c", "connect":
-				if len(params) == 0 {
+				writeErr(l, h.Close())
+
+				if len(params) < 1 {
 					cmdErr(l, cmd, text.MissingRequiredArg)
 				} else {
 					writeErr(l, h.Open(params[0]))
 					params = params[1:]
+				}
+
+			case "cdsn", "connect_dsn":
+				writeErr(l, h.Close())
+
+				if len(params) < 2 {
+					cmdErr(l, cmd, text.MissingRequiredArg)
+				} else {
+					writeErr(l, h.Open(params...))
+					params = nil
 				}
 
 			case "Z", "disconnect":
