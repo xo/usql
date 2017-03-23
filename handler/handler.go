@@ -86,15 +86,12 @@ func (h *Handler) Open(urlstr string) error {
 			return err
 		}
 
-		// unix domain socket, determine actual protocol
-		if fi.Mode()&os.ModeSocket != 0 {
-			proto := "mysql"
-			/*proto, err := h.DetermineProto(urlstr)
-			if err != nil {
-				return err
-			}*/
+		switch {
+		case fi.IsDir():
+			return h.Open("postgres+unix:" + urlstr)
 
-			return h.Open(proto + "+unix:" + urlstr)
+		case fi.Mode()&os.ModeSocket != 0:
+			return h.Open("mysql+unix:" + urlstr)
 		}
 
 		// it is a file, so reattempt to open it with sqlite3
@@ -113,12 +110,11 @@ func (h *Handler) Open(urlstr string) error {
 	}
 
 	// force connection parameters for drivers that are "url" style DSNs
-	dsn := h.u.DSN
-	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "parseTime", "true")
-	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "loc", "Local")
-	dsn = addQueryParam(h.u.Driver, "mysql", dsn, "sql_mode", "ansi")
-	dsn = addQueryParam(h.u.Driver, "sqlite3", dsn, "loc", "auto")
-	dsn = addQueryParam(h.u.Scheme, "cockroachdb", dsn, "sslmode", "disable")
+	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "parseTime", "true")
+	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "loc", "Local")
+	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "sql_mode", "ansi")
+	h.u.DSN = addQueryParam(h.u.Driver, "sqlite3", h.u.DSN, "loc", "auto")
+	h.u.DSN = addQueryParam(h.u.Scheme, "cockroachdb", h.u.DSN, "sslmode", "disable")
 
 	// force connection parameter for mymysql
 	if h.u.Driver == "mymysql" {
@@ -126,11 +122,10 @@ func (h *Handler) Open(urlstr string) error {
 		q.Set("sql_mode", "ansi")
 		h.u.RawQuery = q.Encode()
 		h.u.DSN, _ = dburl.GenMyMySQL(h.u)
-		dsn = h.u.DSN
 	}
 
 	// connect
-	h.db, err = sql.Open(h.u.Driver, dsn)
+	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
 	return err
 }
 
