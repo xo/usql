@@ -22,7 +22,7 @@ DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
 DATABASES="avatica clickhouse couchbase firebird mymysql pgx ql saphana voltdb yql"
-EXTRA="icu fts5 vtable json1"
+EXTRA="fts5 vtable json1"
 
 case $PLATFORM in
   mingw64|msys)
@@ -31,15 +31,15 @@ case $PLATFORM in
     BIN=$BIN.exe
     DATABASES="$DATABASES adodb"
 
-    ICU=icu-i18n-mingw64
-    CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
-    CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
+    #ICU=icu-i18n-mingw64
+    #CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
+    #CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
   ;;
 
   darwin)
-    ICU=icu-i18n
-    CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
-    CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
+    #ICU=icu-i18n
+    #CGO_CFLAGS="$(go env CGO_CFLAGS) $(pkg-config --cflags $ICU)"
+    #CGO_LDFLAGS="$(go env CGO_LDFLAGS) $(pkg-config --libs-only-L $ICU)"
   ;;
 esac
 
@@ -52,8 +52,8 @@ echo "BIN: $BIN"
 echo "OUT: $OUT"
 echo "DATABASES: $DATABASES"
 echo "EXTRA: $EXTRA"
-echo "CGO_CFLAGS: $CGO_CFLAGS"
-echo "CGO_LDFLAGS: $CGO_LDFLAGS"
+#echo "CGO_CFLAGS: $CGO_CFLAGS"
+#echo "CGO_LDFLAGS: $CGO_LDFLAGS"
 
 set -e
 
@@ -66,12 +66,12 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-CGO_CFLAGS=$CGO_CFLAGS \
-CGO_LDFLAGS=$CGO_LDFLAGS \
-  go build \
-    -tags "$DATABASES $EXTRA" \
-    -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" \
-    -o $BIN
+#CGO_CFLAGS=$CGO_CFLAGS \
+#CGO_LDFLAGS=$CGO_LDFLAGS \
+go build \
+  -tags "$DATABASES $EXTRA" \
+  -ldflags="-X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" \
+  -o $BIN
 
 echo -n "checking usql --version: "
 BUILT_VER=$($BIN --version)

@@ -1,4 +1,4 @@
-mingw64_prefix=C:\msys64\mingw64
+mingw64_prefix=C:\msys64\opt\local
 
 includedir="${mingw64_prefix}\include"
 libdir="${mingw64_prefix}\lib"
