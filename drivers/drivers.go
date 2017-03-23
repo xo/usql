@@ -1,5 +1,12 @@
 package drivers
 
+import (
+	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+)
+
 // Drivers are the default sql drivers.
 var Drivers = map[string]string{
 	"cockroachdb": "cockroachdb", // github.com/lib/pq
