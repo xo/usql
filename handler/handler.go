@@ -18,6 +18,7 @@ import (
 	"github.com/knq/dburl"
 	"github.com/olekukonko/tablewriter"
 
+	"github.com/knq/usql/drivers"
 	"github.com/knq/usql/stmt"
 	"github.com/knq/usql/text"
 )
@@ -73,7 +74,10 @@ func (h *Handler) SetPrompt(l *readline.Instance, state string) {
 	l.SetPrompt(s + state + "> ")
 }
 
-// Open handles opening a specified database URL.
+// Open handles opening a specified database URL, passing either a single
+// string in the form of a URL, or more than one string, in which case the
+// first string is treated as a driver name, and the remaining strings are
+// joined (with a space) and passed as the DSN to sql.Open.
 func (h *Handler) Open(params ...string) error {
 	if len(params) == 0 {
 		return nil
@@ -118,7 +122,7 @@ func (h *Handler) Open(params ...string) error {
 	}
 
 	// check driver
-	if _, ok := drivers[h.u.Driver]; !ok {
+	if _, ok := drivers.Drivers[h.u.Driver]; !ok {
 		return &Error{
 			Driver: h.u.Driver,
 			Err:    ErrDriverNotAvailable,
@@ -140,8 +144,14 @@ func (h *Handler) Open(params ...string) error {
 		h.u.DSN, _ = dburl.GenMyMySQL(h.u)
 	}
 
+	// use special open func for pgx
+	f := sql.Open
+	if h.u.Driver == "pgx" {
+		f = drivers.PgxOpen(h.u)
+	}
+
 	// connect
-	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
+	h.db, err = f(h.u.Driver, h.u.DSN)
 	if err != nil {
 		return err
 	}
@@ -358,7 +368,7 @@ func (h *Handler) WrapError(err error) error {
 	if h.db != nil {
 		// attempt to clean up and standardize errors
 		driver := h.u.Driver
-		if s, ok := drivers[driver]; ok {
+		if s, ok := drivers.Drivers[driver]; ok {
 			driver = s
 		}
 
@@ -506,9 +516,9 @@ func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
 				}
 
 			case "drivers":
-				names := make([]string, len(drivers))
+				names := make([]string, len(drivers.Drivers))
 				var z int
-				for k := range drivers {
+				for k := range drivers.Drivers {
 					names[z] = k
 					z++
 				}

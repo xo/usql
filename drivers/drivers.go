@@ -3,16 +3,16 @@ package drivers
 import (
 	"runtime"
 
-	// mssql
+	// mssql driver
 	_ "github.com/denisenkom/go-mssqldb"
 
-	// mysql
+	// mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
-	// postgres
+	// postgres driver
 	_ "github.com/lib/pq"
 
-	// sqlite3
+	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/knq/dburl"

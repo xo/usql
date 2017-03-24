@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// mymysql driver
 	_ "github.com/ziutek/mymysql/godrv"
 )
 

@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// couchbase driver
 	_ "github.com/couchbase/go_n1ql"
 )
 

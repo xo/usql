@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// saphana driver
 	_ "github.com/SAP/go-hdb/driver"
 )
 

@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// avatica driver
 	_ "github.com/Boostport/avatica"
 )
 

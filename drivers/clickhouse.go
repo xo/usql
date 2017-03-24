@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// clickhouse driver
 	_ "github.com/kshvakov/clickhouse"
 )
 

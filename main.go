@@ -36,9 +36,6 @@ func main() {
 		return
 	}
 
-	// set available drivers
-	handler.SetAvailableDrivers(drivers.Drivers)
-
 	var err error
 
 	// load current user

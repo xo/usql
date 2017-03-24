@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// firebird driver
 	_ "github.com/nakagami/firebirdsql"
 )
 

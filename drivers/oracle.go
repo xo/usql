@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// oracle driver
 	_ "gopkg.in/rana/ora.v4"
 )
 

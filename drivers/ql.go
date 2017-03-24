@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// ql driver
 	_ "github.com/cznic/ql/driver"
 )
 

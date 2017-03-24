@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// adodb driver
 	_ "github.com/mattn/go-adodb"
 )
 

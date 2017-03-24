@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	// yql driver
 	_ "github.com/mattn/go-yql"
 )
 

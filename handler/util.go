@@ -92,13 +92,6 @@ func addQueryParam(a, b, urlstr, name, val string) string {
 	return urlstr
 }
 
-var drivers map[string]string
-
-// SetAvailableDrivers sets the known available drivers.
-func SetAvailableDrivers(m map[string]string) {
-	drivers = m
-}
-
 // pop pops the top item off of a if it is present, returning the value and the
 // new slice. if a is empty, then v will be the returned value.
 func pop(a []string, v string) ([]string, string) {
