@@ -142,6 +142,15 @@ func (h *Handler) Open(params ...string) error {
 
 	// connect
 	h.db, err = sql.Open(h.u.Driver, h.u.DSN)
+	if err != nil {
+		return err
+	}
+
+	// ping
+	err = h.WrapError(h.db.Ping())
+	if err != nil {
+		h.Close()
+	}
 	return err
 }
 
@@ -193,12 +202,7 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
 
 	// exec
-	err := f(w, typ, sqlstr)
-	if err != nil {
-		return h.WrapError(err)
-	}
-
-	return nil
+	return h.WrapError(f(w, typ, sqlstr))
 }
 
 // Query executes a query against the database.
@@ -347,13 +351,9 @@ func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
 // WrapError conditionally wraps an error if the error occurs while connected
 // to a database.
 func (h *Handler) WrapError(err error) error {
-	/*log.Printf(">>> errr: %+v", err)
-	log.Printf(">>> errr: %s", reflect.TypeOf(err))
-
-	switch e := err.(type) {
-	case *pq.Error:
-		log.Printf(">>> %#v", e)
-	}*/
+	if err == nil {
+		return nil
+	}
 
 	if h.db != nil {
 		// attempt to clean up and standardize errors

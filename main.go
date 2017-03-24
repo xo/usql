@@ -64,6 +64,7 @@ func main() {
 		if e, ok := err.(*handler.Error); ok && e.Err == handler.ErrDriverNotAvailable && e.Driver == "ora" {
 			fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags oracle github.com/knq/usql\n\n")
 		}
+		os.Exit(1)
 	}
 }
 
