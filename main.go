@@ -58,8 +58,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
 		// extra output for when the oracle driver is not available
-		if e, ok := err.(*handler.Error); ok && e.Err == handler.ErrDriverNotAvailable && e.Driver == "ora" {
-			fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags oracle github.com/knq/usql\n\n")
+		if e, ok := err.(*handler.Error); ok && e.Err == handler.ErrDriverNotAvailable {
+			tag := e.Driver
+			if _, ok := drivers.KnownDrivers[tag]; !ok {
+				for k, v := range drivers.KnownDrivers {
+					if v == tag {
+						tag = k
+						break
+					}
+				}
+			}
+
+			fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/knq/usql\n\n")
 		}
 		os.Exit(1)
 	}
