@@ -233,7 +233,7 @@ func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
 	}
 
 	// check for additional result sets ...
-	for NextResultSet(q) {
+	for nextResultSet(q) {
 		err = h.OutputRows(w, q)
 		if err != nil {
 			return err
