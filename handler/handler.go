@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -130,7 +131,7 @@ func (h *Handler) Run() error {
 
 			// run
 			res, err = r.Run(h)
-			if err != nil {
+			if err != nil && err != rline.ErrInterrupt {
 				fmt.Fprintf(stderr, "error: %v", err)
 				fmt.Fprintln(stderr)
 				continue
@@ -293,24 +294,50 @@ func (h *Handler) Open(params ...string) error {
 		f = drivers.PgxOpen(h.u)
 	}
 
-	// connect
-	h.db, err = f(h.u.Driver, h.u.DSN)
-	if err != nil {
-		return err
-	}
-
 	// force statement parse settings
 	isPG := h.u.Driver == "postgres" || h.u.Driver == "pgx"
 	stmt.AllowDollar(isPG)(h.buf)
 	stmt.AllowMultilineComments(isPG)(h.buf)
 
-	// do ping to force an error (if any)
-	err = h.WrapError(h.db.Ping())
+	// connect
+	h.db, err = f(h.u.Driver, h.u.DSN)
+	if err != nil && !drivers.IsPasswordErr(h.u.Driver, err) {
+		return err
+	} else if err == nil {
+		// do ping to force an error (if any)
+		err = h.db.Ping()
+		if err == nil {
+			return nil
+		}
+	}
+
+	// close connection
 	if err != nil {
 		h.Close()
 	}
 
-	return err
+	// bail without getting password
+	if !drivers.IsPasswordErr(h.u.Driver, err) || len(params) > 1 || !h.l.Interactive() {
+		return h.WrapError(err)
+	}
+
+	// print the error
+	fmt.Fprintf(h.l.Stderr(), "error: %v", h.WrapError(err))
+	fmt.Fprintln(h.l.Stderr())
+
+	// otherwise, try to collect a password ...
+	user := h.user.Username
+	if h.u.User != nil {
+		user = h.u.User.Username()
+	}
+	pass, err := h.l.Password()
+	if err != nil {
+		return err
+	}
+
+	// reconnect using the user/pass ...
+	h.u.User = url.UserPassword(user, pass)
+	return h.Open(h.u.String())
 }
 
 // Close closes the database connection if it is open.

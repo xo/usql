@@ -2,15 +2,16 @@ package drivers
 
 import (
 	"runtime"
+	"strings"
 
 	// mssql driver
 	_ "github.com/denisenkom/go-mssqldb"
 
 	// mysql driver
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 
 	// postgres driver
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 
 	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
@@ -60,4 +61,31 @@ func init() {
 			dburl.RegisterAlias("oleodbc", "odbc")
 		}
 	}
+}
+
+var pwErr = map[string]func(error) bool{
+	"mssql": func(err error) bool {
+		return strings.Contains(err.Error(), "Login failed for")
+	},
+	"mysql": func(err error) bool {
+		if e, ok := err.(*mysql.MySQLError); ok {
+			return e.Number == 1045
+		}
+		return false
+	},
+	"postgres": func(err error) bool {
+		if e, ok := err.(*pq.Error); ok {
+			return e.Code.Name() == "invalid_password"
+		}
+		return false
+	},
+}
+
+// IsPasswordErr
+func IsPasswordErr(name string, err error) bool {
+	if f, ok := pwErr[name]; ok {
+		return f(err)
+	}
+
+	return false
 }

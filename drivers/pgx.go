@@ -4,6 +4,7 @@ package drivers
 
 import (
 	// pgx driver
+
 	"github.com/jackc/pgx/stdlib"
 
 	"database/sql"
@@ -14,6 +15,13 @@ import (
 
 func init() {
 	Drivers["pgx"] = "pgx"
+
+	pwErr["pgx"] = func(err error) bool {
+		if e, ok := err.(pgx.PgError); ok {
+			return e.Code == "28P01"
+		}
+		return false
+	}
 }
 
 const (

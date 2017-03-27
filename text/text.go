@@ -33,7 +33,7 @@ var (
 
 	ConnInfo = `You are connected with driver %s (%s)`
 
-	EnterPassword = `Enter Password`
+	EnterPassword = `Password: `
 
 	HelpDesc string
 

@@ -54,7 +54,7 @@ func main() {
 
 	// run
 	err = run(args, cur)
-	if err != nil && err != io.EOF {
+	if err != nil && err != io.EOF && err != rline.ErrInterrupt {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
 		// extra output for when the oracle driver is not available
