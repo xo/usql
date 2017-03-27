@@ -127,6 +127,8 @@ func New(in, out string, histfile string) (IO, error) {
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 
+	var closers []func() error
+
 	// configure stdin
 	var stdin io.ReadCloser
 	if in != "" {
@@ -134,12 +136,12 @@ func New(in, out string, histfile string) (IO, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer stdin.Close()
+		closers = append(closers, stdin.Close)
 
 		interactive = false
 	} else if cygwin {
 		stdin = os.Stdin
-	} else if interactive {
+	} else {
 		stdin = readline.Stdin
 	}
 
@@ -150,12 +152,12 @@ func New(in, out string, histfile string) (IO, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer stdout.Close()
+		closers = append(closers, stdout.Close)
 
 		interactive = false
 	} else if cygwin {
 		stdout = os.Stdout
-	} else if interactive {
+	} else {
 		stdout = readline.Stdout
 	}
 
@@ -193,9 +195,16 @@ func New(in, out string, histfile string) (IO, error) {
 		return nil, err
 	}
 
+	closers = append(closers, l.Close)
+
 	return &Rline{
-		N:   l.Operation.Runes,
-		C:   l.Close,
+		N: l.Operation.Runes,
+		C: func() error {
+			for _, f := range closers {
+				f()
+			}
+			return nil
+		},
 		Out: stdout,
 		Err: stderr,
 		Int: interactive || cygwin,
