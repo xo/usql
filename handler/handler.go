@@ -311,13 +311,9 @@ func (h *Handler) Open(params ...string) error {
 		}
 	}
 
-	// close connection
-	if err != nil {
-		h.Close()
-	}
-
 	// bail without getting password
 	if !drivers.IsPasswordErr(h.u.Driver, err) || len(params) > 1 || !h.l.Interactive() {
+		h.Close()
 		return h.WrapError(err)
 	}
 
@@ -332,6 +328,8 @@ func (h *Handler) Open(params ...string) error {
 	}
 	pass, err := h.l.Password()
 	if err != nil {
+		// close connection
+		h.Close()
 		return err
 	}
 
