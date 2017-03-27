@@ -63,7 +63,9 @@ func init() {
 			Name:    "copyright",
 			Desc:    "show " + text.CommandName + " usage and distribution terms",
 			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				fmt.Fprintln(h.IO().Stdout(), text.Copyright)
+				out := h.IO().Stdout()
+				fmt.Fprintln(out, text.Copyright)
+				fmt.Fprintln(out)
 				return Res{}, nil
 			},
 		},
