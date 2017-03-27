@@ -81,7 +81,8 @@ var pwErr = map[string]func(error) bool{
 	},
 }
 
-// IsPasswordErr
+// IsPasswordErr returns true when the passed err is a authentication /
+// password error for the driver.
 func IsPasswordErr(name string, err error) bool {
 	if f, ok := pwErr[name]; ok {
 		return f(err)

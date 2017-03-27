@@ -75,7 +75,7 @@ func New(l rline.IO, user *user.User, wd string) *Handler {
 	return h
 }
 
-// Run reads executes the commands.
+// Run executes queries and commands.
 func (h *Handler) Run() error {
 	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
 
@@ -172,6 +172,12 @@ func (h *Handler) Run() error {
 			return exitWithErr
 		}
 	}
+}
+
+// Reset resets the handler's statement buffer.
+func (h *Handler) Reset() {
+	h.buf.Reset()
+	h.last, h.lastPrefix = "", ""
 }
 
 // Prompt creates the prompt text.
@@ -349,7 +355,7 @@ func (h *Handler) Close() error {
 	return nil
 }
 
-var beginTransactionRE = regexp.MustCompile(`(?i)^BEGIN\s*TRANSACTION;?$`)
+//var beginTransactionRE = regexp.MustCompile(`(?i)^BEGIN\s*TRANSACTION;?$`)
 
 // Execute executes a sql query against the connected database.
 func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {

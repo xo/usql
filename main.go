@@ -86,8 +86,8 @@ func run(args *Args, u *user.User) error {
 		return err
 	}
 
-	// setup input/output
-	l, err := setup(args, u)
+	// create input/output
+	l, err := rline.New(args.File, args.Out, args.HistoryFile)
 	if err != nil {
 		return err
 	}
@@ -103,14 +103,4 @@ func run(args *Args, u *user.User) error {
 	}
 
 	return h.Run()
-}
-
-// setup sets up the input/output based on args.
-func setup(args *Args, u *user.User) (rline.IO, error) {
-	if len(args.Commands) != 0 {
-		return rline.Commands(args.Commands)
-	}
-
-	// create readline instance
-	return rline.New(args.File, args.Out, args.HistoryFile)
 }

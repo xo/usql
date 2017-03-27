@@ -264,7 +264,7 @@ func TestFindWords(t *testing.T) {
 		}
 
 		if c != test.c {
-			t.Errorf("test %d expected word count %d, got: %d", test.c, c)
+			t.Errorf("test %d expected word count %d, got: %d", i, test.c, c)
 		}
 	}
 }

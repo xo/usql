@@ -1,6 +1,7 @@
 package rline
 
 import (
+	"errors"
 	"io"
 	"os"
 
@@ -10,8 +11,13 @@ import (
 	"github.com/knq/usql/text"
 )
 
-// ErrInterrupt is the interrupt error.
-var ErrInterrupt = readline.ErrInterrupt
+var (
+	// ErrInterrupt is the interrupt error.
+	ErrInterrupt = readline.ErrInterrupt
+
+	// ErrNotInteractive is the not interactive error.
+	ErrNotInteractive = errors.New("not interactive")
+)
 
 // IO is the common input/output interface.
 type IO interface {
@@ -41,6 +47,9 @@ type IO interface {
 
 	// Password prompts for a password.
 	Password() (string, error)
+
+	// ForceIntCyg forces the interactive and cygwin values.
+	ForceIntCyg(bool, bool)
 }
 
 // Rline provides a type compatible with the IO interface.
@@ -116,7 +125,12 @@ func (l *Rline) Password() (string, error) {
 		return l.Pw()
 	}
 
-	return "", nil
+	return "", ErrNotInteractive
+}
+
+// ForceIntCyg forces the interactive and cygwin values.
+func (l *Rline) ForceIntCyg(interactive, cygwin bool) {
+	l.Int, l.Cyg = interactive, cygwin
 }
 
 // New creates a new readline input/output handler.
@@ -219,9 +233,4 @@ func New(in, out string, histfile string) (IO, error) {
 			return string(buf), nil
 		},
 	}, nil
-}
-
-// Commands
-func Commands(cmds []string) (IO, error) {
-	return nil, nil
 }
