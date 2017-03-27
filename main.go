@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/alexflint/go-arg"
-	"github.com/mattn/go-isatty"
 
 	"github.com/knq/usql/drivers"
 	"github.com/knq/usql/handler"
+	"github.com/knq/usql/rline"
 )
 
 func main() {
@@ -53,7 +53,7 @@ func main() {
 	arg.MustParse(args)
 
 	// run
-	err = run(args, cur.HomeDir)
+	err = run(args, cur)
 	if err != nil && err != io.EOF {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
@@ -77,7 +77,7 @@ func main() {
 
 // run processes args, processing args.Commands if non-empty, or args.File if
 // specified, otherwise launch an interactive readline from stdin.
-func run(args *Args, homedir string) error {
+func run(args *Args, u *user.User) error {
 	var err error
 
 	// get working directory
@@ -86,15 +86,14 @@ func run(args *Args, homedir string) error {
 		return err
 	}
 
-	// determine interactive/cygwin
-	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
-	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
-
-	// create handler
-	h, err := handler.New(args.HistoryFile, homedir, wd, interactive || cygwin, cygwin)
+	// setup input/output
+	l, err := setup(args, u)
 	if err != nil {
 		return err
 	}
+
+	// create handler
+	h := handler.New(l, u, wd)
 
 	// open dsn
 	err = h.Open(args.DSN)
@@ -102,10 +101,15 @@ func run(args *Args, homedir string) error {
 		return err
 	}
 
-	// short circuit if commands provided as args
-	if len(args.Commands) > 0 {
-		return h.RunCommands(args.Commands)
+	return h.Run()
+}
+
+// setup sets up the input/output based on args.
+func setup(args *Args, u *user.User) (rline.IO, error) {
+	if len(args.Commands) != 0 {
+		return rline.Commands(args.Commands)
 	}
 
-	return h.RunReadline(args.File, args.Out)
+	// create readline instance
+	return rline.New(args.File, args.Out, args.HistoryFile)
 }

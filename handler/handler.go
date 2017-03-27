@@ -1,67 +1,180 @@
 package handler
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
-	"github.com/chzyer/readline"
 	"github.com/knq/dburl"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/metacmd"
+	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 	"github.com/knq/usql/text"
 )
 
 // Handler is a input process handler.
 type Handler struct {
-	histfile    string
-	homedir     string
-	wd          string
-	interactive bool
-	cygwin      bool
+	l    rline.IO
+	user *user.User
+	wd   string
 
+	// statement buffer
+	buf        *stmt.Stmt
+	lastPrefix string
+	last       string
+
+	// connection
 	u  *dburl.URL
 	db *sql.DB
 }
 
 // New creates a new input handler.
-func New(histfile, homedir, wd string, interactive, cygwin bool) (*Handler, error) {
-	return &Handler{
-		histfile:    histfile,
-		homedir:     homedir,
-		wd:          wd,
-		interactive: interactive,
-		cygwin:      cygwin,
-	}, nil
-}
+func New(l rline.IO, user *user.User, wd string) *Handler {
+	// set help intercept
+	f := l.Next
+	if l.Interactive() {
+		f = func() ([]rune, error) {
+			// next line
+			r, err := l.Next()
+			if err != nil {
+				return nil, err
+			}
 
-// ForceInteractive forces the interactive mode.
-func (h *Handler) ForceInteractive(interactive bool) {
-	h.interactive = interactive
-}
+			// check if line starts with help
+			rlen := len(r)
+			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
+				fmt.Fprintln(l.Stdout(), text.HelpDesc)
+				return nil, nil
+			}
 
-// HistoryFile returns the history file name for the handler.
-func (h *Handler) HistoryFile() string {
-	return h.histfile
-}
+			// save history
+			l.Save(string(r))
 
-// SetPrompt sets the prompt on a readline instance.
-func (h *Handler) SetPrompt(l *readline.Instance, state string) {
-	if !h.interactive {
-		return
+			return r, nil
+		}
 	}
 
+	h := &Handler{
+		l:    l,
+		user: user,
+		wd:   wd,
+		buf:  stmt.New(f),
+	}
+
+	return h
+}
+
+// Run reads executes the commands.
+func (h *Handler) Run() error {
+	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
+
+	// display welcome info
+	if iactive {
+		fmt.Fprintln(h.l.Stdout(), text.WelcomeDesc)
+		fmt.Fprintln(h.l.Stdout())
+	}
+
+	for {
+		var err error
+		var execute bool
+		var exitWithErr error
+
+		// set prompt
+		if iactive {
+			h.l.Prompt(h.Prompt())
+		}
+
+		// read next statement/command
+		cmd, params, err := h.buf.Next()
+		switch {
+		case !iactive && err == io.EOF:
+			execute, exitWithErr = true, io.EOF
+
+		case err == rline.ErrInterrupt:
+			h.buf.Reset()
+			continue
+
+		case err != nil:
+			return err
+		}
+
+		var res metacmd.Res
+		if cmd != "" {
+			// decode
+			var r metacmd.Runner
+			r, err = metacmd.Decode(cmd, params)
+			switch {
+			case err == metacmd.ErrUnknownCommand:
+				fmt.Fprintf(stderr, text.InvalidCommand, cmd)
+				fmt.Fprintln(stderr)
+				continue
+			case err == metacmd.ErrMissingRequiredArgument:
+				fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
+				fmt.Fprintln(stderr)
+				continue
+			case err != nil:
+				fmt.Fprintf(stderr, "error: %v", err)
+				fmt.Fprintln(stderr)
+				continue
+			}
+
+			// run
+			res, err = r.Run(h)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v", err)
+				fmt.Fprintln(stderr)
+				continue
+			}
+
+			// print unused command parameters
+			for i := res.Processed; i < len(params); i++ {
+				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, params[i])
+				fmt.Fprintln(stdout)
+			}
+		}
+
+		// quit
+		if res.Quit {
+			return nil
+		}
+
+		// execute buf
+		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
+			if h.buf.Len != 0 {
+				h.lastPrefix, h.last = h.buf.Prefix, h.buf.String()
+				h.buf.Reset()
+			}
+
+			//log.Printf(">> PROCESS EXECUTE: (%) `%s`", last)
+			if h.last != "" && h.last != ";" {
+				err = h.Execute(stdout, h.lastPrefix, h.last)
+				if err != nil {
+					fmt.Fprintf(stderr, "error: %v", err)
+					fmt.Fprintln(stderr)
+				}
+			}
+
+			execute = false
+		}
+
+		if exitWithErr != nil {
+			return exitWithErr
+		}
+	}
+}
+
+// Prompt creates the prompt text.
+func (h *Handler) Prompt() string {
 	s := text.NotConnected
 
 	if h.db != nil {
@@ -71,7 +184,37 @@ func (h *Handler) SetPrompt(l *readline.Instance, state string) {
 		}
 	}
 
-	l.SetPrompt(s + state + "> ")
+	return s + h.buf.State() + "> "
+}
+
+// IO returns the io for the handler.
+func (h *Handler) IO() rline.IO {
+	return h.l
+}
+
+// User returns the user for the handler.
+func (h *Handler) User() *user.User {
+	return h.user
+}
+
+// URL returns the URL for the handler.
+func (h *Handler) URL() *dburl.URL {
+	return h.u
+}
+
+// DB returns the sql.DB for the handler.
+func (h *Handler) DB() *sql.DB {
+	return h.db
+}
+
+// Last returns the last executed statement.
+func (h *Handler) Last() string {
+	return h.last
+}
+
+// Buf returns the current statement buffer.
+func (h *Handler) Buf() *stmt.Stmt {
+	return h.buf
 }
 
 // Open handles opening a specified database URL, passing either a single
@@ -156,11 +299,17 @@ func (h *Handler) Open(params ...string) error {
 		return err
 	}
 
-	// ping
+	// force statement parse settings
+	isPG := h.u.Driver == "postgres" || h.u.Driver == "pgx"
+	stmt.AllowDollar(isPG)(h.buf)
+	stmt.AllowMultilineComments(isPG)(h.buf)
+
+	// do ping to force an error (if any)
 	err = h.WrapError(h.db.Ping())
 	if err != nil {
 		h.Close()
 	}
+
 	return err
 }
 
@@ -190,23 +339,21 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 		f = h.Query
 	}
 
-	//var tx *sql.Tx
-
 	switch h.u.Driver {
 	case "ora":
 		sqlstr = strings.TrimSuffix(sqlstr, ";")
 
-	case "ql":
-		if typ == "BEGIN" && beginTransactionRE.MatchString(sqlstr) {
-			log.Printf("GOT BEGIN TRANSACTION")
-			//tx, err := h.db.Begin()
-			/*if err != nil {
-				return err
-			}*/
-		}
-		if typ == "COMMIT" {
-
-		}
+		//	case "ql":
+		//		if typ == "BEGIN" && beginTransactionRE.MatchString(sqlstr) {
+		//			log.Printf("GOT BEGIN TRANSACTION")
+		//			//tx, err := h.db.Begin()
+		//			/*if err != nil {
+		//				return err
+		//			}*/
+		//		}
+		//		if typ == "COMMIT" {
+		//
+		//		}
 	}
 
 	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
@@ -296,7 +443,7 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 				switch x := (*j).(type) {
 				case []byte:
 					if h.u.Driver == "sqlite3" {
-						row[n] = sqlite3Parse(x)
+						row[n] = drivers.Sqlite3Parse(x)
 					} else {
 						row[n] = string(x)
 					}
@@ -378,310 +525,6 @@ func (h *Handler) WrapError(err error) error {
 	return err
 }
 
-// Process reads line commands from stdin, writing output to stdout and stderr.
-func (h *Handler) Process(stdin io.Reader, stdout, stderr io.Writer) error {
-	var err error
-
-	// create readline instance
-	l, err := readline.NewEx(&readline.Config{
-		HistoryFile:            h.HistoryFile(),
-		DisableAutoSaveHistory: true,
-		InterruptPrompt:        "^C",
-		HistorySearchFold:      true,
-		Stdin:                  stdin,
-		Stdout:                 stdout,
-		Stderr:                 stderr,
-		FuncIsTerminal: func() bool {
-			return h.interactive
-		},
-		FuncFilterInputRune: func(r rune) (rune, bool) {
-			if r == readline.CharCtrlZ {
-				return r, false
-			}
-			return r, true
-		},
-	})
-	if err != nil {
-		return err
-	}
-	defer l.Close()
-
-	// display welcome info
-	if h.interactive {
-		fmt.Fprintln(l.Stdout(), text.WelcomeDesc)
-		fmt.Fprintln(l.Stdout())
-	}
-
-	// set help intercept
-	f := l.Operation.Runes
-	if h.interactive {
-		f = func() ([]rune, error) {
-			// next line
-			r, err := l.Operation.Runes()
-			if err != nil {
-				return nil, err
-			}
-
-			// check if line starts with help
-			rlen := len(r)
-			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
-				h.DisplayHelp(l.Stdout())
-				return nil, nil
-			}
-
-			// save history
-			l.SaveHistory(string(r))
-
-			return r, nil
-		}
-	}
-
-	// create stmt
-	var opts []stmt.Option
-	if h.db != nil && h.u.Driver == "postgres" {
-		opts = append(opts,
-			stmt.AllowDollar(true),
-			stmt.AllowMultilineComments(true),
-		)
-	}
-
-	// statement buf
-	var lastPrefix, last string
-	buf := stmt.New(f, opts...)
-	for {
-		var execute bool
-		var exitWithErr error
-
-		// set prompt
-		h.SetPrompt(l, buf.State())
-
-		// get next
-		cmd, params, err := buf.Next()
-		switch {
-		case !h.interactive && err == io.EOF:
-			execute, exitWithErr = true, io.EOF
-
-		case err == readline.ErrInterrupt:
-			buf.Reset()
-			continue
-
-		case err != nil:
-			return err
-		}
-
-		// grab ready state
-		execute = execute || buf.Ready()
-
-		// process command
-		if cmd != "" {
-			switch cmd {
-			case "q", "quit":
-				return nil
-
-			case "c", "connect":
-				writeErr(l, h.Close())
-
-				if len(params) < 1 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-					writeErr(l, h.Open(params[0]))
-					params = params[1:]
-				}
-
-			case "cdsn", "connect_dsn":
-				writeErr(l, h.Close())
-
-				if len(params) < 2 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-					writeErr(l, h.Open(params...))
-					params = nil
-				}
-
-			case "Z", "disconnect":
-				writeErr(l, h.Close())
-
-			case "copyright":
-				fmt.Fprintln(l.Stdout(), text.Copyright)
-
-			case "conninfo":
-				if h.u != nil {
-					fmt.Fprintf(l.Stdout(), text.ConnInfo, h.u.Driver, h.u.DSN)
-					fmt.Fprintln(l.Stdout())
-				}
-
-			case "dsn":
-				if h.u != nil {
-					fmt.Fprintln(l.Stdout(), h.u.Driver, "("+h.u.DSN+")")
-				}
-
-			case "drivers":
-				names := make([]string, len(drivers.Drivers))
-				var z int
-				for k := range drivers.Drivers {
-					names[z] = k
-					z++
-				}
-				sort.Strings(names)
-
-				fmt.Fprintln(l.Stdout(), text.AvailableDrivers)
-				for _, n := range names {
-					s := "  " + n
-
-					driver, aliases := dburl.SchemeDriverAndAliases(n)
-					if driver != n {
-						s += " (" + driver + ")"
-					}
-					if len(aliases) > 0 {
-						if len(aliases) > 0 {
-							s += " [" + strings.Join(aliases, ", ") + "]"
-						}
-					}
-					fmt.Fprintln(l.Stdout(), s)
-				}
-
-			case "errverbose":
-				notImpl(l, cmd)
-
-			case "g":
-				execute = true
-
-			case "gexec", "gset":
-				notImpl(l, cmd)
-
-			case "?", "h":
-				notImpl(l, cmd)
-
-			case "e", "edit":
-				var path, line string
-				params, path = pop(params, "")
-				params, line = pop(params, "")
-
-				s := last
-				if buf.Len != 0 {
-					s = buf.String()
-				}
-
-				n, err := h.LaunchEditor(path, line, s)
-				if err != nil {
-					writeErr(l, err)
-					break
-				}
-
-				buf.Reset()
-				buf.Feed(n)
-
-			case "ef", "ev":
-				notImpl(l, cmd)
-
-			case "p", "print":
-				// build
-				s := last
-				if buf.Len != 0 {
-					s = buf.String()
-				}
-				if s == "" {
-					s = text.QueryBufferEmpty
-				}
-
-				// print
-				fmt.Fprintln(l.Stdout(), s)
-
-			case "r", "reset":
-				buf.Reset()
-				fmt.Fprintln(l.Stdout(), text.QueryBufferReset)
-
-			case "echo":
-				// this could be done to echo the actual input (by using pos
-				// above), but the implementation here remains faithful to the
-				// psql implementation
-				fmt.Fprintln(l.Stdout(), strings.Join(params, " "))
-				params = nil
-
-			case "w", "write":
-				if len(params) == 0 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-					s := last
-					if buf.Len != 0 {
-						s = buf.String()
-					}
-					writeErr(l, ioutil.WriteFile(params[0], []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644))
-					params = params[1:]
-				}
-
-			case "o", "out":
-				notImpl(l, cmd)
-
-			case "i", "include", "ir", "include_relative":
-				if len(params) == 0 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-					var fname string
-					params, fname = pop(params, "")
-					relative := cmd == "ir" || cmd == "include_relative"
-					writeErr(l, h.IncludeFile(fname, relative), fname+": ")
-				}
-
-			case "!":
-				if len(params) == 0 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-
-				}
-
-			case "cd":
-				var path string
-				params, path = pop(params, h.homedir)
-				if strings.HasPrefix(path, "~/") {
-					path = filepath.Join(h.homedir, strings.TrimPrefix(path, "~/"))
-				}
-				writeErr(l, os.Chdir(path))
-
-			case "setenv":
-				if len(params) == 0 {
-					cmdErr(l, cmd, text.MissingRequiredArg)
-				} else {
-					var key, val string
-					params, key = pop(params, "")
-					params, val = pop(params, "")
-					writeErr(l, os.Setenv(key, val))
-				}
-
-			// invalid command
-			default:
-				fmt.Fprintf(l.Stderr(), text.InvalidCommand, cmd)
-				fmt.Fprintln(l.Stderr())
-				params = nil
-			}
-
-			// print unused command parameters
-			for _, p := range params {
-				fmt.Fprintf(l.Stdout(), text.ExtraArgumentIgnored, cmd, p)
-				fmt.Fprintln(l.Stdout())
-			}
-		}
-
-		if execute {
-			if buf.Len != 0 {
-				lastPrefix, last = buf.Prefix, buf.String()
-				buf.Reset()
-			}
-
-			//log.Printf(">> PROCESS EXECUTE: `%s`", last)
-			if last != "" && last != ";" {
-				writeErr(l, h.Execute(l.Stdout(), lastPrefix, last))
-			}
-
-			execute = false
-		}
-
-		if exitWithErr != nil {
-			return exitWithErr
-		}
-	}
-}
-
 // ProcessPrefix processes a prefix.
 func (h *Handler) ProcessPrefix(prefix, sqlstr string) (string, bool) {
 	if prefix == "" {
@@ -714,8 +557,8 @@ func (h *Handler) ProcessPrefix(prefix, sqlstr string) (string, bool) {
 	return "EXEC", false
 }
 
-// IncludeFile includes the specified path.
-func (h *Handler) IncludeFile(path string, relative bool) error {
+// Include includes the specified path.
+func (h *Handler) Include(path string, relative bool) error {
 	var err error
 
 	if relative && !filepath.IsAbs(path) {
@@ -740,131 +583,40 @@ func (h *Handler) IncludeFile(path string, relative bool) error {
 		return ErrCannotIncludeDirectories
 	}
 
-	log.Printf(">>>> path: %s", path)
-
-	return nil
-}
-
-// LaunchEditor launches an editor using the current query buffer.
-func (h *Handler) LaunchEditor(path, line, s string) ([]rune, error) {
-	var err error
-
-	ed := getenv("USQL_EDITOR", "EDITOR", "VISUAL")
-	if ed == "" {
-		return nil, ErrNoEditorDefined
-	}
-
-	if path == "" {
-		f, err := ioutil.TempFile("", "usql")
-		if err != nil {
-			return nil, err
-		}
-
-		err = f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		path = f.Name()
-		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// setup args
-	args := []string{path}
-	if line != "" {
-		args = append(args, "+"+line)
-	}
-
-	// create command
-	c := exec.Command(ed, args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-
-	// run
-	err = c.Run()
+	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+
+	l := &rline.Rline{
+		N: func() ([]rune, error) {
+			if !s.Scan() {
+				err := s.Err()
+				if err == nil {
+					return nil, io.EOF
+				}
+				return nil, err
+			}
+			return []rune(s.Text()), nil
+		},
+		Out: h.l.Stdout(),
+		Err: h.l.Stderr(),
+		Pw: func() (string, error) {
+			return h.l.Password()
+		},
 	}
 
-	// read
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+	p := New(l, h.user, filepath.Dir(path))
+	p.db, p.u = h.db, h.u
+
+	err = p.Run()
+	if err == io.EOF {
+		err = nil
 	}
 
-	return []rune(strings.TrimSuffix(string(buf), "\n")), nil
-}
-
-// RunCommands processes command line arguments.
-func (h *Handler) RunCommands(cmds []string) error {
-	h.interactive = false
-
-	var err error
-	for _, c := range cmds {
-		err = h.Process(strings.NewReader(c), os.Stdout, os.Stderr)
-		if err != nil && err != io.EOF {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// RunReadline processes input.
-func (h *Handler) RunReadline(in, out string) error {
-	var err error
-
-	// configure stdin
-	var stdin io.ReadCloser
-	if in != "" {
-		stdin, err = os.OpenFile(in, os.O_RDONLY, 0)
-		if err != nil {
-			return err
-		}
-		defer stdin.Close()
-
-		h.interactive = false
-	} else if h.cygwin {
-		stdin = os.Stdin
-	} else if h.interactive {
-		stdin = readline.Stdin
-	}
-
-	// configure stdout
-	var stdout io.WriteCloser
-	if out != "" {
-		stdout, err = os.OpenFile(out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-		defer stdout.Close()
-
-		h.interactive = false
-	} else if h.cygwin {
-		stdout = os.Stdout
-	} else if h.interactive {
-		stdin = readline.Stdin
-	}
-
-	// configure stderr
-	var stderr io.Writer = os.Stderr
-	if !h.cygwin {
-		stderr = readline.Stderr
-	}
-
-	// wrap it with cancelable stdin
-	if h.interactive {
-		stdin = readline.NewCancelableStdin(stdin)
-	}
-
-	return h.Process(stdin, stdout, stderr)
-}
-
-// DisplayHelp displays the help message.
-func (h *Handler) DisplayHelp(w io.Writer) {
-	io.WriteString(w, text.HelpDesc)
+	h.db, h.u = p.db, p.u
+	return err
 }

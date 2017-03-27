@@ -2,14 +2,8 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"strings"
-	"time"
 	"unicode"
-
-	"github.com/chzyer/readline"
-	"github.com/knq/xoutil"
 
 	"github.com/knq/usql/text"
 )
@@ -26,9 +20,6 @@ var (
 
 	// ErrCannotIncludeDirectories is the cannot include directories error.
 	ErrCannotIncludeDirectories = errors.New("cannot include directories")
-
-	// ErrNoEditorDefined is the no editor defined error.
-	ErrNoEditorDefined = errors.New("no editor defined")
 )
 
 // Error is a wrapper to standardize errors.
@@ -61,23 +52,6 @@ func (e *Error) Error() string {
 	return n + ": " + s
 }
 
-// sqlite3Parse will convert buf matching a time format to a time, and will
-// format it according to the handler time settings.
-//
-// TODO: only do this if the type of the column is a timestamp type.
-func sqlite3Parse(buf []byte) string {
-	s := string(buf)
-	if s != "" && strings.TrimSpace(s) != "" {
-		t := &xoutil.SqTime{}
-		err := t.Scan(buf)
-		if err == nil {
-			return t.Format(time.RFC3339Nano)
-		}
-	}
-
-	return s
-}
-
 // addQueryParam conditionally adds a ?name=val style query parameter to the
 // end of urlstr if a == b, when urlstr does not already contain name=.
 func addQueryParam(a, b, urlstr, name, val string) string {
@@ -90,41 +64,4 @@ func addQueryParam(a, b, urlstr, name, val string) string {
 	}
 
 	return urlstr
-}
-
-// pop pops the top item off of a if it is present, returning the value and the
-// new slice. if a is empty, then v will be the returned value.
-func pop(a []string, v string) ([]string, string) {
-	if len(a) != 0 {
-		return a[1:], a[0]
-	}
-	return a, v
-}
-
-// getenv tries retrieving successive keys from os environment variables.
-func getenv(keys ...string) string {
-	for _, key := range keys {
-		if s := os.Getenv(key); s != "" {
-			return s
-		}
-	}
-
-	return ""
-}
-
-// cmdErr is a util func to simply write a "\cmd: msg" style error.
-func cmdErr(l *readline.Instance, cmd, msg string) (int, error) {
-	return fmt.Fprintf(l.Stderr(), "\\%s: %s\n", cmd, msg)
-}
-
-// writeErr writes an error to stderr when err is not nil.
-func writeErr(l *readline.Instance, err error, prefixes ...string) {
-	if err != nil {
-		fmt.Fprintf(l.Stderr(), "error: %s%v\n", strings.Join(prefixes, ""), err)
-	}
-}
-
-// notImpl is a simple helper for not yet implemented commands.
-func notImpl(l *readline.Instance, cmd string) {
-	fmt.Fprintf(l.Stderr(), "COMMAND `\\%s` IS NOT YET IMPLEMENTED.\n", cmd)
 }
