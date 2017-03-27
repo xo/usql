@@ -91,6 +91,7 @@ func run(args *Args, u *user.User) error {
 	if err != nil {
 		return err
 	}
+	defer l.Close()
 
 	// create handler
 	h := handler.New(l, u, wd)
