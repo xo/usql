@@ -198,7 +198,7 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 		Stdout:                 stdout,
 		Stderr:                 stderr,
 		FuncIsTerminal: func() bool {
-			return interactive
+			return interactive || cygwin
 		},
 		FuncFilterInputRune: func(r rune) (rune, bool) {
 			if r == readline.CharCtrlZ {
