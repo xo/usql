@@ -68,7 +68,7 @@ func TestAppend(t *testing.T) {
 			t.Errorf("test %d expected resulting cap of %d, got: %d", i, test.c, c)
 		}
 
-		b.Reset()
+		b.Reset(nil)
 		if b.Len != 0 {
 			t.Errorf("test %d expected after reset len of 0, got: %d", i, b.Len)
 		}
@@ -193,7 +193,7 @@ func TestNextResetState(t *testing.T) {
 
 			if b.Ready() || cmd == "g" {
 				stmts = append(stmts, b.String())
-				b.Reset()
+				b.Reset(nil)
 			}
 			cmds = append(cmds, cmd)
 			aparams = append(aparams, params)
@@ -215,7 +215,7 @@ func TestNextResetState(t *testing.T) {
 			t.Fatalf("test %d expected end parse state `%s`, got: `%s`", i, test.state, st)
 		}
 
-		b.Reset()
+		b.Reset(nil)
 		if len(b.Buf) != 0 {
 			t.Fatalf("test %d after reset b.Buf should have len %d, got: %d", i, 0, len(b.Buf))
 		}
