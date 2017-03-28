@@ -9,6 +9,8 @@ var queryMap = map[string]bool{
 	"SELECT":  true, // retrieve rows from a table or view
 	"SHOW":    true, // show the value of a run-time parameter
 	"VALUES":  true, // compute a set of rows
+
+	"EXEC": true, // execute a stored procedure that returns rows (not postgres)
 }
 
 var execMap = map[string]bool{

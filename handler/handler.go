@@ -308,6 +308,7 @@ func (h *Handler) Open(params ...string) error {
 		err = h.db.Ping()
 		if err == nil {
 			return nil
+			//return h.Connected()
 		}
 	}
 
@@ -329,7 +330,7 @@ func (h *Handler) Open(params ...string) error {
 	pass, err := h.l.Password()
 	if err != nil {
 		// close connection
-		h.Close()
+		defer h.Close()
 		return err
 	}
 
@@ -345,6 +346,18 @@ func (h *Handler) Close() error {
 		h.db, h.u = nil, nil
 		return err
 	}
+
+	return nil
+}
+
+// Connected prints the connection information after a successful connection.
+func (h *Handler) Connected() error {
+	_, s, err := drivers.GetDatabaseInfo(h.u.Driver, h.db)
+	if err != nil {
+		return err
+	}
+
+	s = s
 
 	return nil
 }
@@ -579,7 +592,7 @@ func (h *Handler) ProcessPrefix(prefix, sqlstr string) (string, bool) {
 		}
 	}
 
-	return "EXEC", false
+	return s[0], false
 }
 
 // Include includes the specified path.

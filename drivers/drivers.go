@@ -1,7 +1,7 @@
 package drivers
 
 import (
-	"runtime"
+	"database/sql"
 	"strings"
 
 	// mssql driver
@@ -15,8 +15,6 @@ import (
 
 	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
-
-	"github.com/knq/dburl"
 )
 
 // Drivers are the supported SQL drivers.
@@ -50,19 +48,6 @@ var KnownDrivers = map[string]string{
 	"yql":        "yql",         // github.com/mattn/go-yql
 }
 
-func init() {
-	if runtime.GOOS == "windows" {
-		// if no odbc driver, but we have adodb, add 'odbc' as alias to oleodbc
-		// driver.
-		_, haveODBC := Drivers["odbc"]
-		_, haveADODB := Drivers["adodb"]
-		if haveADODB && !haveODBC {
-			dburl.Unregister("odbc")
-			dburl.RegisterAlias("oleodbc", "odbc")
-		}
-	}
-}
-
 var pwErr = map[string]func(error) bool{
 	"mssql": func(err error) bool {
 		return strings.Contains(err.Error(), "Login failed for")
@@ -89,4 +74,9 @@ func IsPasswordErr(name string, err error) bool {
 	}
 
 	return false
+}
+
+// GetDatabaseInfo returns information about the database.
+func GetDatabaseInfo(name string, db *sql.DB) (product string, ver string, err error) {
+	return "", "", nil
 }
