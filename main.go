@@ -18,7 +18,8 @@ import (
 )
 
 func main() {
-	// circumvent all logic to determine if usql was built with support for a specific driver
+	// circumvent all logic to determine if usql was built with support for a
+	// specific driver
 	if len(os.Args) == 2 &&
 		strings.HasPrefix(os.Args[1], "--has-") &&
 		strings.HasSuffix(os.Args[1], "-support") {
@@ -57,7 +58,7 @@ func main() {
 	if err != nil && err != io.EOF && err != rline.ErrInterrupt {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
-		// extra output for when the oracle driver is not available
+		// extra output for when a known driver is not available
 		if e, ok := err.(*handler.Error); ok && e.Err == handler.ErrDriverNotAvailable {
 			tag := e.Driver
 			if _, ok := drivers.KnownDrivers[tag]; !ok {
@@ -87,7 +88,7 @@ func run(args *Args, u *user.User) error {
 	}
 
 	// create input/output
-	l, err := rline.New(args.File, args.Out, args.HistoryFile)
+	l, err := rline.New(args.Commands, args.File, args.Out, args.HistoryFile)
 	if err != nil {
 		return err
 	}
@@ -102,5 +103,22 @@ func run(args *Args, u *user.User) error {
 		return err
 	}
 
+	// circumvent when provided commands
+	if len(args.Commands) != 0 {
+		return runCommands(args, h)
+	}
+
 	return h.Run()
+}
+
+// runCommands runs the cli passed commands (-c).
+func runCommands(args *Args, h *handler.Handler) error {
+	for _, cmd := range args.Commands {
+		h.Reset([]rune(cmd))
+		err := h.Run()
+		if err != nil && err != io.EOF {
+			return err
+		}
+	}
+	return nil
 }

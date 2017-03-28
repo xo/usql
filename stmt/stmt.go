@@ -6,7 +6,7 @@ const (
 )
 
 // Stmt is a reusable statement buffer that handles reading and parsing
-// statements.
+// SQL-like statements.
 type Stmt struct {
 	// f is the rune source.
 	f func() ([]rune, error)
@@ -45,8 +45,7 @@ type Stmt struct {
 	ready bool
 }
 
-// New creates a new Stmt using the supplied rune source f, skipping errors
-// equal to interruptErr.
+// New creates a new Stmt using the supplied rune source f.
 func New(f func() ([]rune, error), opts ...Option) *Stmt {
 	b := &Stmt{
 		f: f,
@@ -72,7 +71,7 @@ func (b *Stmt) Ready() bool {
 }
 
 // Reset resets the statement buffer.
-func (b *Stmt) Reset() {
+func (b *Stmt) Reset(r []rune) {
 	// reset buf
 	b.Buf, b.Len, b.Prefix = nil, 0, ""
 
@@ -87,6 +86,10 @@ func (b *Stmt) Reset() {
 
 	// ready state
 	b.ready = false
+
+	if r != nil {
+		b.r, b.rlen = r, len(r)
+	}
 }
 
 // lineend is the slice to use when appending a line.
@@ -102,12 +105,12 @@ var lineend = []rune{'\n'}
 // called again only after any remaining collected runes have been processed.
 //
 // Example:
-//     stmt := stmt.New(runeSrc)
+//     buf := stmt.New(runeSrc)
 //     for {
-//         cmd, params, err := stmt.Next()
+//         cmd, params, err := buf.Next()
 //         if err { /* ... */ }
 //
-//         execute, quit := stmt.Ready() || cmd == "g", cmd == "q"
+//         execute, quit := buf.Ready() || cmd == "g", cmd == "q"
 //
 //         // process command ...
 //         switch cmd {
@@ -119,18 +122,18 @@ var lineend = []rune{'\n'}
 //         }
 //
 //         if execute {
-//            s := stmt.String()
+//            s := buf.String()
 //            res, err := db.Query(s)
 //            /* handle database ... */
-//            stmt.Reset()
+//            buf.Reset(nil)
 //         }
 //     }
 func (b *Stmt) Next() (string, []string, error) {
+	var err error
 	var i int
 
 	// no runes to process, grab more
 	if b.rlen == 0 {
-		var err error
 		b.r, err = b.f()
 		if err != nil {
 			return "", nil, err
@@ -291,14 +294,6 @@ func (b *Stmt) Append(r, sep []rune) {
 	copy(b.Buf[blen:], sep)
 	copy(b.Buf[blen+seplen:], r)
 	b.Len = tlen
-}
-
-// Feed feeds the statement buffer, causing the statement buffer to parse r
-// during successive calls to Next, until r has been fully read.
-//
-// Note: this is used to circumvent the provided rune source func.
-func (b *Stmt) Feed(r []rune) {
-	b.r, b.rlen = r, len(r)
 }
 
 // AppendString is a util func wrapping Append.

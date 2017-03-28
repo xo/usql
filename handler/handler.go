@@ -88,7 +88,6 @@ func (h *Handler) Run() error {
 	for {
 		var err error
 		var execute bool
-		var exitWithErr error
 
 		// set prompt
 		if iactive {
@@ -98,11 +97,11 @@ func (h *Handler) Run() error {
 		// read next statement/command
 		cmd, params, err := h.buf.Next()
 		switch {
-		case !iactive && err == io.EOF:
-			execute, exitWithErr = true, io.EOF
+		case !iactive && err == nil:
+			execute = h.buf.Len != 0
 
 		case err == rline.ErrInterrupt:
-			h.buf.Reset()
+			h.buf.Reset(nil)
 			continue
 
 		case err != nil:
@@ -153,10 +152,10 @@ func (h *Handler) Run() error {
 		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
 			if h.buf.Len != 0 {
 				h.lastPrefix, h.last = h.buf.Prefix, h.buf.String()
-				h.buf.Reset()
+				h.buf.Reset(nil)
 			}
 
-			//log.Printf(">> PROCESS EXECUTE: (%) `%s`", last)
+			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
 			if h.last != "" && h.last != ";" {
 				err = h.Execute(stdout, h.lastPrefix, h.last)
 				if err != nil {
@@ -164,19 +163,13 @@ func (h *Handler) Run() error {
 					fmt.Fprintln(stderr)
 				}
 			}
-
-			execute = false
-		}
-
-		if exitWithErr != nil {
-			return exitWithErr
 		}
 	}
 }
 
 // Reset resets the handler's statement buffer.
-func (h *Handler) Reset() {
-	h.buf.Reset()
+func (h *Handler) Reset(r []rune) {
+	h.buf.Reset(r)
 	h.last, h.lastPrefix = "", ""
 }
 
@@ -308,9 +301,10 @@ func (h *Handler) Open(params ...string) error {
 	// connect
 	h.db, err = f(h.u.Driver, h.u.DSN)
 	if err != nil && !drivers.IsPasswordErr(h.u.Driver, err) {
-		return err
+		defer h.Close()
+		return h.WrapError(err)
 	} else if err == nil {
-		// do ping to force an error (if any)
+		// do ping to force error/check connection
 		err = h.db.Ping()
 		if err == nil {
 			return nil
@@ -319,7 +313,7 @@ func (h *Handler) Open(params ...string) error {
 
 	// bail without getting password
 	if !drivers.IsPasswordErr(h.u.Driver, err) || len(params) > 1 || !h.l.Interactive() {
-		h.Close()
+		defer h.Close()
 		return h.WrapError(err)
 	}
 
@@ -543,7 +537,7 @@ func (h *Handler) WrapError(err error) error {
 		return nil
 	}
 
-	if h.db != nil {
+	if h.u != nil {
 		// attempt to clean up and standardize errors
 		driver := h.u.Driver
 		if s, ok := drivers.Drivers[driver]; ok {

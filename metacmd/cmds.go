@@ -75,10 +75,12 @@ func init() {
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
 			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				if u := h.URL(); u != nil {
-					out := h.IO().Stdout()
+				out := h.IO().Stdout()
+				if db, u := h.DB(), h.URL(); db != nil && u != nil {
 					fmt.Fprintf(out, text.ConnInfo, u.Driver, u.DSN)
 					fmt.Fprintln(out)
+				} else {
+					fmt.Fprintln(out, text.NotConnected)
 				}
 				return Res{}, nil
 			},
@@ -203,12 +205,10 @@ func init() {
 					s = buf.String()
 				}
 
-				n, err := env.EditFile(path, line, s)
-
 				// reset if no error
+				n, err := env.EditFile(path, line, s)
 				if err == nil {
-					buf.Reset()
-					buf.Feed(n)
+					buf.Reset(n)
 				}
 
 				return res, err
@@ -242,7 +242,7 @@ func init() {
 			Desc:    "reset (clear) the query buffer",
 			Aliases: map[string]string{"reset": ""},
 			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				h.Buf().Reset()
+				h.Buf().Reset(nil)
 				fmt.Fprintln(h.IO().Stdout(), text.QueryBufferReset)
 				return Res{}, nil
 			},

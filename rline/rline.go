@@ -134,7 +134,7 @@ func (l *Rline) ForceIntCyg(interactive, cygwin bool) {
 }
 
 // New creates a new readline input/output handler.
-func New(in, out string, histfile string) (IO, error) {
+func New(cmds []string, in, out string, histfile string) (IO, error) {
 	var err error
 
 	// determine if interactive
@@ -145,7 +145,9 @@ func New(in, out string, histfile string) (IO, error) {
 
 	// configure stdin
 	var stdin io.ReadCloser
-	if in != "" {
+	if len(cmds) != 0 {
+		interactive, cygwin = false, false
+	} else if in != "" {
 		stdin, err = os.OpenFile(in, os.O_RDONLY, 0)
 		if err != nil {
 			return nil, err
@@ -211,8 +213,13 @@ func New(in, out string, histfile string) (IO, error) {
 
 	closers = append(closers, l.Close)
 
+	n := l.Operation.Runes
+	if len(cmds) != 0 {
+		n = nil
+	}
+
 	return &Rline{
-		N: l.Operation.Runes,
+		N: n,
 		C: func() error {
 			for _, f := range closers {
 				f()
