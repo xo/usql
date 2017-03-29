@@ -465,8 +465,8 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 
 	clen := len(cols)
 	var rows int
-	if clen != 0 {
-		for q.Next() {
+	for q.Next() {
+		if clen != 0 {
 			r := make([]interface{}, clen)
 			for i := range r {
 				r[i] = new(interface{})
