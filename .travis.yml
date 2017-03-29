@@ -1,14 +1,15 @@
 language: go
 go:
-  - 1.5
   - 1.8
   - tip
 services:
   - mysql
   - postgresql
 before_install:
+  - ./contrib/grab-oracle.sh
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
   - go get github.com/mattn/goveralls
 script:
+  - export PKG_CONFIG_PATH=.
   - go test -v ./stmt/...
