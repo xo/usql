@@ -7,7 +7,7 @@ services:
   - postgresql
 before_install:
   - ./contrib/grab-oracle.sh
-  - export PKG_CONFIG_PATH=.
+  - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
   - go get github.com/mattn/goveralls
