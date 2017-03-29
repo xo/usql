@@ -6,11 +6,12 @@ services:
   - mysql
   - postgresql
 before_install:
-  - ./contrib/grab-oracle.sh
-  - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
+install:
   - go get github.com/mattn/goveralls
+  - ./contrib/grab-oracle.sh
+  - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
-  - go test -v ./stmt/...
+  - go test -tags all -v ./...
