@@ -93,9 +93,10 @@ func init() {
 			Process: func(h Handler, _ string, _ []string) (Res, error) {
 				out := h.IO().Stdout()
 
-				names := make([]string, len(drivers.Drivers))
+				available := drivers.Available()
+				names := make([]string, len(available))
 				var z int
-				for k := range drivers.Drivers {
+				for k := range available {
 					names[z] = k
 					z++
 				}
@@ -126,7 +127,7 @@ func init() {
 			Name:    "c",
 			Desc:    "connect to database with url,URL",
 			Aliases: map[string]string{
-				"c":       "connect to database with SQL driver and parameters,DRIVER [PARAMS]",
+				"c":       "connect to database with SQL driver and parameters,DRIVER PARAMS...",
 				"connect": "",
 			},
 			Min: 1,

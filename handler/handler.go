@@ -3,13 +3,13 @@ package handler
 import (
 	"bufio"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -23,11 +23,38 @@ import (
 	"github.com/knq/usql/text"
 )
 
+var (
+	// ErrNotConnected is the not connected error.
+	ErrNotConnected = errors.New("not connected")
+
+	// ErrNoSuchFileOrDirectory is the no such file or directory error.
+	ErrNoSuchFileOrDirectory = errors.New("no such file or directory")
+
+	// ErrCannotIncludeDirectories is the cannot include directories error.
+	ErrCannotIncludeDirectories = errors.New("cannot include directories")
+
+	// ErrMissingDSN is the missing dsn error.
+	ErrMissingDSN = errors.New("missing dsn")
+)
+
+// forceParams are the params to force for specific database drivers.
+var forceParams = map[string][]string{
+	"mysql": []string{
+		"parseTime", "true",
+		"loc", "Local",
+		"sql_mode", "ansi",
+	},
+	"mymysql":     []string{"sql_mode", "ansi"},
+	"sqlite3":     []string{"loc", "auto"},
+	"cockroachdb": []string{"sslmode", "disable"},
+}
+
 // Handler is a input process handler.
 type Handler struct {
 	l    rline.IO
 	user *user.User
 	wd   string
+	nopw bool
 
 	// statement buffer
 	buf        *stmt.Stmt
@@ -40,7 +67,7 @@ type Handler struct {
 }
 
 // New creates a new input handler.
-func New(l rline.IO, user *user.User, wd string) *Handler {
+func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	// set help intercept
 	f := l.Next
 	if l.Interactive() {
@@ -65,14 +92,13 @@ func New(l rline.IO, user *user.User, wd string) *Handler {
 		}
 	}
 
-	h := &Handler{
+	return &Handler{
 		l:    l,
 		user: user,
 		wd:   wd,
+		nopw: nopw,
 		buf:  stmt.New(f),
 	}
-
-	return h
 }
 
 // Run executes queries and commands.
@@ -220,21 +246,24 @@ func (h *Handler) Buf() *stmt.Stmt {
 // Open handles opening a specified database URL, passing either a single
 // string in the form of a URL, or more than one string, in which case the
 // first string is treated as a driver name, and the remaining strings are
-// joined (with a space) and passed as the DSN to sql.Open.
+// joined (with a space) and passed as a DSN to sql.Open.
+//
+// If there is only one parameter, and it is not a well formatted URL, but
+// appears to be a file on disk, then an attempt will be made to open it with
+// an appropriate driver (mysql, postgres, sqlite3) depending on the type (unix
+// domain socket, directory, or regular file, respectively).
 func (h *Handler) Open(params ...string) error {
-	if len(params) == 0 {
+	if len(params) == 0 || params[0] == "" {
 		return nil
 	}
 
 	var err error
 	if len(params) < 2 {
 		urlstr := params[0]
-		if urlstr == "" {
-			return nil
-		}
 
 		// parse dsn
-		h.u, err = dburl.Parse(urlstr)
+		var u *dburl.URL
+		u, err = dburl.Parse(urlstr)
 		switch {
 		case err == dburl.ErrInvalidDatabaseScheme:
 			var fi os.FileInfo
@@ -257,6 +286,22 @@ func (h *Handler) Open(params ...string) error {
 		case err != nil:
 			return err
 		}
+
+		// force parameters
+		fp, ok := forceParams[u.Driver]
+		if !ok {
+			fp = forceParams[u.Scheme]
+		}
+		if len(fp) != 0 {
+			v := u.Query()
+			for i := 0; i < len(fp); i += 2 {
+				v.Set(fp[i], fp[i+1])
+			}
+			u.RawQuery = v.Encode()
+			u, _ = dburl.Parse(u.String())
+		}
+
+		h.u = u
 	} else {
 		h.u = &dburl.URL{
 			Driver: params[0],
@@ -264,79 +309,66 @@ func (h *Handler) Open(params ...string) error {
 		}
 	}
 
-	// check driver
-	if _, ok := drivers.Drivers[h.u.Driver]; !ok {
-		return &Error{
-			Driver: h.u.Driver,
-			Err:    ErrDriverNotAvailable,
-		}
-	}
-
-	// force connection parameters for drivers that are "url" style DSNs
-	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "parseTime", "true")
-	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "loc", "Local")
-	h.u.DSN = addQueryParam(h.u.Driver, "mysql", h.u.DSN, "sql_mode", "ansi")
-	h.u.DSN = addQueryParam(h.u.Driver, "sqlite3", h.u.DSN, "loc", "auto")
-	h.u.DSN = addQueryParam(h.u.Scheme, "cockroachdb", h.u.DSN, "sslmode", "disable")
-
-	// force connection parameter for mymysql
-	if h.u.Driver == "mymysql" {
-		q := h.u.Query()
-		q.Set("sql_mode", "ansi")
-		h.u.RawQuery = q.Encode()
-		h.u.DSN, _ = dburl.GenMyMySQL(h.u)
-	}
-
-	// use special open func for pgx
-	f := sql.Open
-	if h.u.Driver == "pgx" {
-		f = drivers.PgxOpen(h.u)
-	}
-
-	// force statement parse settings
-	isPG := h.u.Driver == "postgres" || h.u.Driver == "pgx"
-	stmt.AllowDollar(isPG)(h.buf)
-	stmt.AllowMultilineComments(isPG)(h.buf)
-
-	// connect
-	h.db, err = f(h.u.Driver, h.u.DSN)
-	if err != nil && !drivers.IsPasswordErr(h.u.Driver, err) {
+	// open connection
+	h.db, err = drivers.Open(h.u, h.buf)
+	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
-		return h.WrapError(err)
+		return err
 	} else if err == nil {
-		// do ping to force error/check connection
-		err = h.db.Ping()
+		// force error/check connection
+		err = drivers.Ping(h.u, h.db)
 		if err == nil {
-			return nil
-			//return h.Connected()
+			return h.Version()
 		}
 	}
 
 	// bail without getting password
-	if !drivers.IsPasswordErr(h.u.Driver, err) || len(params) > 1 || !h.l.Interactive() {
+	if h.nopw || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {
 		defer h.Close()
-		return h.WrapError(err)
+		return err
 	}
 
 	// print the error
-	fmt.Fprintf(h.l.Stderr(), "error: %v", h.WrapError(err))
+	fmt.Fprintf(h.l.Stderr(), "error: %v", err)
 	fmt.Fprintln(h.l.Stderr())
 
 	// otherwise, try to collect a password ...
-	user := h.user.Username
-	if h.u.User != nil {
-		user = h.u.User.Username()
-	}
-	pass, err := h.l.Password()
+	dsn, err := h.Password(params[0])
 	if err != nil {
 		// close connection
 		defer h.Close()
 		return err
 	}
 
-	// reconnect using the user/pass ...
-	h.u.User = url.UserPassword(user, pass)
-	return h.Open(h.u.String())
+	// reconnect
+	return h.Open(dsn)
+}
+
+// Password collects a password from input, and returning a modified DSN
+// including the collected password.
+func (h *Handler) Password(dsn string) (string, error) {
+	var err error
+
+	if dsn == "" {
+		return "", ErrMissingDSN
+	}
+
+	u, err := dburl.Parse(dsn)
+	if err != nil {
+		return "", err
+	}
+
+	user := h.user.Username
+	if u.User != nil {
+		user = u.User.Username()
+	}
+	pass, err := h.l.Password()
+	if err != nil {
+		return "", err
+	}
+
+	u.User = url.UserPassword(user, pass)
+	return u.String(), nil
 }
 
 // Close closes the database connection if it is open.
@@ -350,19 +382,21 @@ func (h *Handler) Close() error {
 	return nil
 }
 
-// Connected prints the connection information after a successful connection.
-func (h *Handler) Connected() error {
-	_, s, err := drivers.GetDatabaseInfo(h.u.Driver, h.db)
+// Version prints the database version information after a successful connection.
+func (h *Handler) Version() error {
+	ver, err := drivers.Version(h.u, h.db)
 	if err != nil {
 		return err
 	}
 
-	s = s
+	if ver != "" {
+		out := h.IO().Stdout()
+		fmt.Fprintf(out, text.ConnInfo, h.u.Driver, ver)
+		fmt.Fprintln(out)
+	}
 
 	return nil
 }
-
-//var beginTransactionRE = regexp.MustCompile(`(?i)^BEGIN\s*TRANSACTION;?$`)
 
 // Execute executes a sql query against the connected database.
 func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
@@ -370,34 +404,20 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 		return ErrNotConnected
 	}
 
-	// determine if query or exec
-	typ, q := h.ProcessPrefix(prefix, sqlstr)
+	// determine type and pre process string
+	typ, s, q, err := drivers.Process(h.u, prefix, sqlstr)
+	if err != nil {
+		return err
+	}
+
+	// exec or query
 	f := h.Exec
 	if q {
 		f = h.Query
 	}
 
-	switch h.u.Driver {
-	case "ora":
-		sqlstr = strings.TrimSuffix(sqlstr, ";")
-
-		//	case "ql":
-		//		if typ == "BEGIN" && beginTransactionRE.MatchString(sqlstr) {
-		//			log.Printf("GOT BEGIN TRANSACTION")
-		//			//tx, err := h.db.Begin()
-		//			/*if err != nil {
-		//				return err
-		//			}*/
-		//		}
-		//		if typ == "COMMIT" {
-		//
-		//		}
-	}
-
-	//log.Printf(">>>> EXECUTE: %s", runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
-
 	// exec
-	return h.WrapError(f(w, typ, sqlstr))
+	return drivers.WrapErr(h.u.Driver, f(w, typ, s))
 }
 
 // Query executes a query against the database.
@@ -418,7 +438,7 @@ func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
 	}
 
 	// check for additional result sets ...
-	for nextResultSet(q) {
+	for drivers.NextResultSet(q) {
 		err = h.OutputRows(w, q)
 		if err != nil {
 			return err
@@ -428,27 +448,12 @@ func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
 	return nil
 }
 
-var allcapsRE = regexp.MustCompile(`^[A-Z_]+$`)
-
 // OutputRows outputs the supplied SQL rows to the supplied writer.
 func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 	// get column names
-	cols, err := q.Columns()
+	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
 		return err
-	}
-
-	// fix display column names
-	for i, s := range cols {
-		s = strings.TrimSpace(s)
-		if len(s) == 0 {
-			cols[i] = fmt.Sprintf("col%d", i)
-		}
-
-		// fix case on oracle column names
-		if h.u.Driver == "ora" && allcapsRE.MatchString(cols[i]) {
-			cols[i] = strings.ToLower(cols[i])
-		}
 	}
 
 	// create output table
@@ -475,16 +480,10 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 			row := make([]string, clen)
 			for n, z := range r {
 				j := z.(*interface{})
-
 				//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
-
 				switch x := (*j).(type) {
 				case []byte:
-					if h.u.Driver == "sqlite3" {
-						row[n] = drivers.Sqlite3Parse(x)
-					} else {
-						row[n] = string(x)
-					}
+					row[n] = drivers.ConvertBytes(h.u, x)
 
 				case string:
 					row[n] = x
@@ -509,25 +508,25 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 
 	// row count
 	fmt.Fprintf(w, text.RowCount, rows)
-	fmt.Fprintln(w, "\n")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w)
 
 	return nil
 }
 
 // Exec does a database exec.
 func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
+	var err error
+
 	res, err := h.db.Exec(sqlstr)
 	if err != nil {
 		return err
 	}
 
-	// get count
-	var count int64
-	if h.u.Driver != "adodb" {
-		count, err = res.RowsAffected()
-		if err != nil {
-			return err
-		}
+	// get affected
+	count, err := drivers.RowsAffected(h.u, res)
+	if err != nil {
+		return err
 	}
 
 	// print name
@@ -541,58 +540,6 @@ func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
 	fmt.Fprintln(w)
 
 	return nil
-}
-
-// WrapError conditionally wraps an error if the error occurs while connected
-// to a database.
-func (h *Handler) WrapError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if h.u != nil {
-		// attempt to clean up and standardize errors
-		driver := h.u.Driver
-		if s, ok := drivers.Drivers[driver]; ok {
-			driver = s
-		}
-
-		return &Error{driver, err}
-	}
-
-	return err
-}
-
-// ProcessPrefix processes a prefix.
-func (h *Handler) ProcessPrefix(prefix, sqlstr string) (string, bool) {
-	if prefix == "" {
-		return "EXEC", false
-	}
-
-	s := strings.Split(prefix, " ")
-	if len(s) > 0 {
-		// check query map
-		if _, ok := queryMap[s[0]]; ok {
-			typ := s[0]
-			switch {
-			case typ == "SELECT" && len(s) >= 2 && s[1] == "INTO":
-				return "SELECT INTO", false
-			case typ == "PRAGMA":
-				return typ, !strings.ContainsRune(sqlstr, '=')
-			}
-			return typ, true
-		}
-
-		// find longest match
-		for i := len(s); i > 0; i-- {
-			typ := strings.Join(s[:i], " ")
-			if _, ok := execMap[typ]; ok {
-				return typ, false
-			}
-		}
-	}
-
-	return s[0], false
 }
 
 // Include includes the specified path.
@@ -647,7 +594,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		},
 	}
 
-	p := New(l, h.user, filepath.Dir(path))
+	p := New(l, h.user, filepath.Dir(path), h.nopw)
 	p.db, p.u = h.db, h.u
 
 	err = p.Run()

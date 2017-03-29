@@ -101,24 +101,21 @@ various queries.
 A list of planned / in progress work:
 
 ### General
-1. Show remote server version on connect
+1. .usqlpass file (ie .psqlpass)
 2. Fix meta command parsing when passed a quoted string ie, \echo "   foo
    bar  " should have all whitespace included in the parameter
-3. fix table output
+3. fix table output / formatting
 4. Transaction wrapping / starts/commits / "-1" one transaction stuff
 5. pager + pipe / gexec/gset support
-6. .usqlpass file (same as .psqlpass)
-7. SQL variables + environment
-8. Proper table formatting + \pset
-9. .usqlrc
-10. More command line options
-11. add support for managing multiple database connections simultaneously
+6. SQL variables + environment
+7. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
-15. SQL completion (WIP)
-16. syntax highlighting (WIP)
-17. \encoding and environment/command line options to set encoding of input (to
-    convert to utf-8 before feeding to SQL driver)
+8. SQL completion (WIP)
+9. syntax highlighting (WIP)
+10. \encoding and environment/command line options to set encoding of input (to
+    convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
+11. better --help support/output cli, man pages
 
 #### Not important / "Nice to haves":
 1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order

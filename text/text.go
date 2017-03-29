@@ -1,6 +1,9 @@
 package text
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 var (
 	CommandName = `usql`
@@ -60,4 +63,21 @@ func init() {
 	HelpDesc = HelpBanner +
 		"\n" + HelpCommandPrefix +
 		strings.Join(cmds, "\n"+strings.Repeat(" ", len(HelpCommandPrefix)))
+}
+
+var spaceRE = regexp.MustCompile(`\s+`)
+
+// Command returns the command name without spaces.
+func Command() string {
+	return spaceRE.ReplaceAllString(CommandName, "")
+}
+
+// CommandLower returns the lower case command name without spaces.
+func CommandLower() string {
+	return strings.ToLower(Command())
+}
+
+// CommandUpper returns the upper case command name without spaces.
+func CommandUpper() string {
+	return strings.ToUpper(Command())
 }

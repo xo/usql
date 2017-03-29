@@ -7,17 +7,21 @@ import (
 	"io"
 	"os"
 	"os/user"
-	"path/filepath"
 	"strings"
 
 	"github.com/alexflint/go-arg"
 
 	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/env"
 	"github.com/knq/usql/handler"
+	"github.com/knq/usql/internal"
 	"github.com/knq/usql/rline"
 )
 
 func main() {
+	// get available drivers and known build tags
+	available, known := drivers.Available(), internal.KnownBuildTags()
+
 	// circumvent all logic to determine if usql was built with support for a
 	// specific driver
 	if len(os.Args) == 2 &&
@@ -25,12 +29,12 @@ func main() {
 		strings.HasSuffix(os.Args[1], "-support") {
 
 		n := os.Args[1][6 : len(os.Args[1])-8]
-		if v, ok := drivers.KnownDrivers[n]; ok {
+		if v, ok := known[n]; ok {
 			n = v
 		}
 
 		var out int
-		if _, ok := drivers.Drivers[n]; ok {
+		if _, ok := available[n]; ok {
 			out = 1
 		}
 		fmt.Fprintf(os.Stdout, "%d", out)
@@ -48,8 +52,7 @@ func main() {
 
 	// parse args
 	args := &Args{
-		Username:    cur.Username,
-		HistoryFile: filepath.Join(cur.HomeDir, ".usql_history"),
+		Username: cur.Username,
 	}
 	arg.MustParse(args)
 
@@ -58,20 +61,18 @@ func main() {
 	if err != nil && err != io.EOF && err != rline.ErrInterrupt {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
-		// extra output for when a known driver is not available
-		if e, ok := err.(*handler.Error); ok && e.Err == handler.ErrDriverNotAvailable {
-			tag := e.Driver
-			if _, ok := drivers.KnownDrivers[tag]; !ok {
-				for k, v := range drivers.KnownDrivers {
-					if v == tag {
-						tag = k
-						break
-					}
+		if e, ok := err.(*drivers.Error); ok {
+			// extra output for when a driver is not available
+			if e.Err == drivers.ErrDriverNotAvailable {
+				tag := e.Driver
+				if t, ok := known[tag]; ok {
+					tag = t
 				}
-			}
 
-			fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/knq/usql\n\n")
+				fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/knq/usql\n\n")
+			}
 		}
+
 		os.Exit(1)
 	}
 }
@@ -88,19 +89,36 @@ func run(args *Args, u *user.User) error {
 	}
 
 	// create input/output
-	l, err := rline.New(args.Commands, args.File, args.Out, args.HistoryFile)
+	l, err := rline.New(args.Commands, args.File, args.Out, env.HistoryFile(u))
 	if err != nil {
 		return err
 	}
 	defer l.Close()
 
 	// create handler
-	h := handler.New(l, u, wd)
+	h := handler.New(l, u, wd, args.NoPassword)
+
+	// force a password ...
+	dsn := args.DSN
+	if args.ForcePassword {
+		dsn, err = h.Password(dsn)
+		if err != nil {
+			return err
+		}
+	}
 
 	// open dsn
-	err = h.Open(args.DSN)
+	err = h.Open(dsn)
 	if err != nil {
 		return err
+	}
+
+	// rc file
+	if rc := env.RCFile(u); !args.NoRC && rc != "" {
+		err = h.Include(rc, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	// circumvent when provided commands
