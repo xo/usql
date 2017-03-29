@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -vx
+set -e
 
 BASE=https://raw.githubusercontent.com/strongloop/loopback-oracle-builder/master/deps/oracle/Linux/x64
 
@@ -14,8 +14,16 @@ fi
 
 rm -rf instantclient_12_1
 
-unzip instantclient-basiclite-linux.x64-12.1.0.2.0.zip
-unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip
+unzip -qq instantclient-basiclite-linux.x64-12.1.0.2.0.zip
+unzip -qq instantclient-sdk-linux.x64-12.1.0.2.0.zip
+
+pushd instantclient_12_1 &> /dev/null
+
+ln -s libclntshcore.so.12.1 libclntshcore.so
+ln -s libclntsh.so.12.1 libclntsh.so
+ln -s libocci.so.12.1 libocci.so
+
+popd &> /dev/null
 
 DATA=$(cat << 'ENDSTR'
 prefix=${pcfiledir}
