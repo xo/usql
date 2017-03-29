@@ -116,7 +116,7 @@ func run(args *Args, u *user.User) error {
 	// rc file
 	if rc := env.RCFile(u); !args.NoRC && rc != "" {
 		err = h.Include(rc, false)
-		if err != nil {
+		if err != nil && err != handler.ErrNoSuchFileOrDirectory {
 			return err
 		}
 	}
