@@ -8,7 +8,7 @@ services:
 before_install:
   - ./contrib/grab-oracle.sh
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
-  - export PKG_CONFIG_OCI8_PREFIX
+  - export PKG_CONFIG_OCI8_PREFIX=$TRAVIS_BUILD_DIR
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
   - go get github.com/mattn/goveralls
