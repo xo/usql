@@ -23,7 +23,7 @@ prefix=${pcfiledir}
 version=12.1
 build=client64
 
-libdir=${prefix}/instantclient_12_1/lib
+libdir=${prefix}/instantclient_12_1
 includedir=${prefix}/instantclient_12_1/sdk/include
 
 Name: OCI
