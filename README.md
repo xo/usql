@@ -1,18 +1,13 @@
 # About usql
 
-usql is a universal command-line interface for working with SQL databases.
+usql is a universal command-line interface for working with SQL database. It provides a command-line interface for:
+PostgreSQL, MySQL, Oracle, SQLite, Microsoft SQL Server, Microsoft ADODB (Windows only), and others.
 
-usql provides a universal command-line interface for the following databases:
-PostgreSQL, MySQL, Oracle, SQLite, Microsoft SQL Server, Microsoft ADODB
-(Windows only), and others.
-
-The goal is to eventually have usql be a drop in replacement for PostgreSQL's
-`psql` command, with all the bells/whistles, but with the added benefit of
-working with multiple databases.
+The goal is to have usql a replacement for PostgreSQL's `psql` command, with the additional benefit of working with multiple databases.
 
 #### [Releases](https://github.com/knq/usql/releases)
 
-## Installing
+## Installation
 
 Install in the usual Go way:
 
@@ -27,14 +22,12 @@ $ go get -u -tags oracle github.com/knq/usql
 $ go get -u -tags 'oracle adodb' github.com/knq/usql
 ```
 
-Alternatively, you can download a binary release for your platform from the
-[GitHub releases page](https://github.com/knq/usql/releases).
+Alternatively, you can download a binary release for your platform from the [GitHub releases page](https://github.com/knq/usql/releases).
 
-## Using
+## Get Started
 
-`usql` makes use of the [`dburl`](https://github.com/knq/dburl) package for
-opening URLs. Almost every database recognized by `dburl` can be opened by
-`usql`.  Some example ways to connect to a database:
+`usql` makes use of the [`dburl`](https://github.com/knq/dburl) package for opening URLs. Almost every database recognized by `dburl` can be opened by `usql`.  
+Examples to connect to a database:
 
 ```sh
 # display command line arguments
@@ -81,9 +74,7 @@ $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=
 ## Example Output
 
 The following is an example of connecting to [xo's booktest](https://github.com/knq/xo)
-example Oracle database, performing a query, and then connecting to the
-PostgreSQL, MySQL, Microsoft SQL Server, and SQLite3 databases and executing
-various queries.
+example Oracle database, performing a query, and then connecting to the PostgreSQL, MySQL, Microsoft SQL Server, and SQLite3 databases and executing various queries.
 
 <p align="center">
   <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" target="_blank">
@@ -104,31 +95,31 @@ A list of planned / in progress work:
 1. .usqlpass file (ie .psqlpass)
 2. Fix meta command parsing when passed a quoted string ie, \echo "   foo
    bar  " should have all whitespace included in the parameter
-3. fix table output / formatting
+3. Fix table output / formatting
 4. Transaction wrapping / starts/commits / "-1" one transaction stuff
 5. pager + pipe / gexec/gset support
 6. SQL variables + environment
-7. add support for managing multiple database connections simultaneously
-    (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
+7. Add support for managing multiple database connections simultaneously
+    (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (may not be
     needed, if variable support works "as expected"?)
 8. SQL completion (WIP)
-9. syntax highlighting (WIP)
+9. Syntax highlighting (WIP)
 10. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-11. better --help support/output cli, man pages
+11. Better --help support/output cli, man pages
 
 #### Not important / "Nice to haves":
-1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
+1. Correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
 
 ### Command Processing + `psql` compatibility
 * PAGER + EDITOR support (WIP)
-* variable support / interpolation + \prompt, \set, \unset
+* Variable support / interpolation + \prompt, \set, \unset
 * the \j* commands (WIP)
 * \watch
 * \errverbose
 * formatting settings (\pset, \a, etc)
 * all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
-* remaining `psql` cli parameters
+* Remaining `psql` cli parameters
 
 ### Releases
 
@@ -144,7 +135,7 @@ Additional:
 
 ### Testing
 
-* full test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
+* Full test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
 
 ### Future Database Support
 
