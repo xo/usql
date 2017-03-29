@@ -18,13 +18,13 @@ unzip instantclient-basiclite-linux.x64-12.1.0.2.0.zip
 unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip
 
 DATA=$(cat << 'ENDSTR'
-prefix=./instantclient_12_1
+prefix=$HOME
 
 version=12.1
 build=client64
 
-libdir=${prefix}/lib
-includedir=${prefix}/sdk/include
+libdir=${prefix}/instantclient_12_1/lib
+includedir=${prefix}/instantclient_12_1/sdk/include
 
 Name: OCI
 Description: Oracle database engine
