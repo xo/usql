@@ -11,5 +11,6 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
   - go get github.com/mattn/goveralls
+  - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
   - go test -v ./stmt/...
