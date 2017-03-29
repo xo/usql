@@ -1,13 +1,13 @@
 language: go
 go:
+  - 1.5
   - 1.8
   - tip
-  #- 1.7
 services:
   - mysql
   - postgresql
 before_install:
   - go get github.com/mattn/goveralls
 script:
-  - go test -v ./...
+  - go test -v ./stmt/...
     #- goveralls -service=travis-ci -coverprofile=coverage.out
