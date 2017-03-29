@@ -8,10 +8,9 @@ services:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
-install:
   - go get github.com/mattn/goveralls
   - ./contrib/grab-oracle.sh
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
-  - go test -tags all -v ./...
+  - go test -tags all -v ./stmt/...
