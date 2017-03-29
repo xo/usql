@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -vx
 
 BASE=https://raw.githubusercontent.com/strongloop/loopback-oracle-builder/master/deps/oracle/Linux/x64
 
@@ -18,7 +18,7 @@ unzip instantclient-basiclite-linux.x64-12.1.0.2.0.zip
 unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip
 
 DATA=$(cat << 'ENDSTR'
-prefix=$HOME
+prefix=${pcfiledir}
 
 version=12.1
 build=client64
