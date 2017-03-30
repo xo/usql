@@ -1,4 +1,7 @@
 # sample ~/.usqlpass file
+# 
+# format is:
+# protocol:host:port:dbname:user:pass
 postgres:*:*:*:booktest:booktest
 
 mysql:localhost:*:testdb:user:pass
