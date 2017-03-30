@@ -227,10 +227,16 @@ Input/Output
   \i FILE               execute commands from file
   \ir FILE              as \i, but relative to location of current script
 
+Transaction
+  \begin                begin a transaction
+  \commit               commit current transaction
+  \rollback             rollback (abort) current transaction
+
 Connection
   \c URL                connect to database with url
   \c DRIVER PARAMS...   connect to database with SQL driver and parameters
   \Z                    close database connection
+  \password [USERNAME]  change the password for a user
   \conninfo             display information about the current database connection
 
 Operating System
