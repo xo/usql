@@ -3,16 +3,14 @@
 `usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle,
 SQLite3, Microsoft SQL Server, [and other databases](#database_support).
 
-#### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Compatibility][] | [Related][] | [Releases][]
+#### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
 
 [Quickstart]: #quickstart (Quickstart)
 [Demo]: #interactive-demo (Demonstration)
 [Database Support]: #database-support (Database Support)
 [Connection Strings]: #database-connection-strings (Database Connection Strings)
 [Commands]: #backslash--commands (Commands)
-[Building]: #build-install (Build/Install from Source)
-[Compatibility]: #compatibility-and-todo (Compatibility with PostgreSQL psql and TODO)
-[Related]: #related-projects (Related Projects)
+[Building]: #buildinstall-from-source (Build/Install from Source)
 [Releases]: https://github.com/knq/usql/releases (Project Releases)
 
 ## Quickstart
