@@ -37,11 +37,11 @@ var (
 	// ErrMissingDSN is the missing dsn error.
 	ErrMissingDSN = errors.New("missing dsn")
 
-	// ErrNoTransaction is the no transaction error.
-	ErrNoTransaction = errors.New("no transaction")
+	// ErrNoPreviousTransactionExists is the no previous transaction exists error.
+	ErrNoPreviousTransactionExists = errors.New("no previous transaction exists")
 
-	// ErrOutstandingTransaction is the outstanding transaction error.
-	ErrOutstandingTransaction = errors.New("outstanding transaction")
+	// ErrPreviousTransactionExists is the previous transaction exists error.
+	ErrPreviousTransactionExists = errors.New("previous transaction exists")
 )
 
 // Handler is a input process handler.
@@ -220,12 +220,12 @@ func (h *Handler) Prompt() string {
 		}
 	}
 
-	tx := " "
+	tx := ">"
 	if h.tx != nil {
 		tx = "~"
 	}
 
-	return s + h.buf.State() + ">" + tx
+	return s + h.buf.State() + tx + " "
 }
 
 // IO returns the io for the handler.
@@ -277,7 +277,7 @@ func (h *Handler) Open(params ...string) error {
 	}
 
 	if h.tx != nil {
-		return ErrOutstandingTransaction
+		return ErrPreviousTransactionExists
 	}
 
 	var err error
@@ -430,7 +430,7 @@ func (h *Handler) Password(dsn string) (string, error) {
 // Close closes the database connection if it is open.
 func (h *Handler) Close() error {
 	if h.tx != nil {
-		return ErrOutstandingTransaction
+		return ErrPreviousTransactionExists
 	}
 
 	if h.db != nil {
@@ -609,6 +609,10 @@ func (h *Handler) Begin() error {
 		return ErrNotConnected
 	}
 
+	if h.tx != nil {
+		return ErrPreviousTransactionExists
+	}
+
 	var err error
 	h.tx, err = h.db.Begin()
 	if err != nil {
@@ -620,11 +624,39 @@ func (h *Handler) Begin() error {
 
 // Commit commits a transaction.
 func (h *Handler) Commit() error {
-	if h.tx == nil {
-		return ErrNoTransaction
+	if h.db == nil {
+		return ErrNotConnected
 	}
 
-	err := h.tx.Commit()
+	if h.tx == nil {
+		return ErrNoPreviousTransactionExists
+	}
+
+	tx := h.tx
+	h.tx = nil
+
+	err := tx.Commit()
+	if err != nil {
+		return drivers.WrapErr(h.u.Driver, err)
+	}
+
+	return nil
+}
+
+// Rollback rollbacks a transaction.
+func (h *Handler) Rollback() error {
+	if h.db == nil {
+		return ErrNotConnected
+	}
+
+	if h.tx == nil {
+		return ErrNoPreviousTransactionExists
+	}
+
+	tx := h.tx
+	h.tx = nil
+
+	err := tx.Rollback()
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}

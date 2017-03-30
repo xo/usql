@@ -75,4 +75,13 @@ const (
 
 	// Include is the system include file meta command (\i and variants).
 	Include
+
+	// Begin is the transaction begin meta command (\begin).
+	Begin
+
+	// Commit is the transaction commit meta command (\commit).
+	Commit
+
+	// Rollback is the transaction rollback (abort) meta command (\rollback).
+	Rollback
 )

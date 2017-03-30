@@ -15,13 +15,14 @@ const (
 	SectionGeneral         Section = "General"
 	SectionHelp            Section = "Help"
 	SectionQueryBuffer     Section = "Query Buffer"
+	SectionTransaction     Section = "Transaction"
 	SectionInputOutput     Section = "Input/Output"
 	SectionInformational   Section = "Informational"
 	SectionFormatting      Section = "Formatting"
 	SectionConnection      Section = "Connection"
 	SectionOperatingSystem Section = "Operating System"
 	SectionVariables       Section = "Variables"
-	SectionLargeObjects    Section = "Large Objects"
+	//SectionLargeObjects    Section = "Large Objects"
 )
 
 // String satisfies stringer.
@@ -32,7 +33,8 @@ func (s Section) String() string {
 // SectionOrder is the order of sections to display via Listing.
 var SectionOrder = []Section{
 	SectionGeneral, SectionHelp, SectionQueryBuffer,
-	SectionInputOutput,                        /*SectionInformational, SectionFormatting,*/
+	SectionInputOutput, /*SectionInformational, SectionFormatting,*/
+	SectionTransaction,
 	SectionConnection, SectionOperatingSystem, /*SectionVariables,*/
 }
 

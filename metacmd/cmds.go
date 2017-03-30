@@ -337,6 +337,34 @@ func init() {
 				return Res{Processed: 1}, err
 			},
 		},
+
+		Begin: {
+			Section: SectionTransaction,
+			Name:    "begin",
+			Desc:    "begin a transaction",
+			Process: func(h Handler, _ string, _ []string) (Res, error) {
+				return Res{}, h.Begin()
+			},
+		},
+
+		Commit: {
+			Section: SectionTransaction,
+			Name:    "commit",
+			Desc:    "commit current transaction",
+			Process: func(h Handler, _ string, _ []string) (Res, error) {
+				return Res{}, h.Commit()
+			},
+		},
+
+		Rollback: {
+			Section: SectionTransaction,
+			Name:    "rollback",
+			Desc:    "rollback (abort) current transaction",
+			Aliases: map[string]string{"abort": ""},
+			Process: func(h Handler, _ string, _ []string) (Res, error) {
+				return Res{}, h.Rollback()
+			},
+		},
 	}
 
 	// set up map

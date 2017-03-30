@@ -46,6 +46,15 @@ type Handler interface {
 
 	// Include includes a file.
 	Include(string, bool) error
+
+	// Begin begins a transaction.
+	Begin() error
+
+	// Commit commits the current transaction.
+	Commit() error
+
+	// Rollback aborts the current transaction.
+	Rollback() error
 }
 
 // Runner is a runner interface type.
