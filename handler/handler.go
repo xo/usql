@@ -460,7 +460,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 	var new, new2, old string
 
 	// ask for previous password
-	if drivers.RequirePreviousPassword(h.u) {
+	if user == "" && drivers.RequirePreviousPassword(h.u) {
 		old, err = h.l.Password(text.EnterPreviousPassword)
 		if err != nil {
 			return "", err
