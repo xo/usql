@@ -315,33 +315,46 @@ for more features than the base `psql` command provides. Currently, the list of
 planned / in progress work:
 
 ##### General
-1. Fix meta command parsing when passed a quoted string ie, \echo "   foo
+1. pager + pipe / gexec/gset support
+2. variable support / interpolation + \prompt, \set, \unset
+3. backtick params in meta commands
+4. Fix meta command parsing when passed a quoted string ie, \echo "   foo
    bar  " should have all whitespace included in the parameter
-2. fix table output / formatting
-3. Transaction wrapping / starts/commits / "-1" one transaction stuff
-4. pager + pipe / gexec/gset support
-5. SQL variables + environment
-6. add support for managing multiple database connections simultaneously
+5. fix table output / formatting
+6. SQL variables + environment
+7. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
-7. SQL completion (WIP)
-8. syntax highlighting (WIP)
-9. \encoding and environment/command line options to set encoding of input (to
+8. SQL completion (WIP)
+9. syntax highlighting (WIP)
+10. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-10. better --help support/output cli, man pages
-
-##### Not important / "Nice to haves":
-1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
+11. better --help support/output cli, man pages
+12. \gprompt for prompting for prepared queries ...
+  - select * from ... where blah = :1 \gprompt string|password
+  - update users set pass = :1 \gprompt
 
 ##### Command Processing + `psql` compatibility
-* PAGER + EDITOR support (WIP)
-* variable support / interpolation + \prompt, \set, \unset
-* the \j* commands (WIP)
-* \watch
-* \errverbose
-* formatting settings (\pset, \a, etc)
-* all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
-* remaining `psql` cli parameters
+1. the \j* commands (WIP)
+2. \watch
+3. \errverbose
+4. formatting settings (\pset, \a, etc)
+5. all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
+6. remaining `psql` cli parameters
+
+##### Not important / "Nice to haves" / extremely low priority:
+
+1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
+
+##### Testing
+1. test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
+
+##### Future Database Support
+1. Google Spanner
+2. Cassandra
+3. CSV via SQLite3 vtable
+4. Google Sheets via SQLite3 vtable
+5. Atlassian JIRA JQL (why not? lol)
 
 ##### Releases
 
@@ -354,18 +367,6 @@ Need to write scripts for packaging and build binaries for:
 
 Additional:
 * Submit upstream to Debian unstable (WIP)
-
-##### Testing
-
-* full test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
-
-##### Future Database Support
-
-Notes / thoughts / comments on adding support for various "databases":
-
-* Google Spanner
-* Cassandra
-* Atlassian JIRA JQL (why not? lol)
 
 ## Related Projects
 
