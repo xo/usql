@@ -3,28 +3,24 @@
 `usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle,
 SQLite3, Microsoft SQL Server, [and other databases](#database_support).
 
-The goal of the `usql` project is to eventually provide a drop-in replacement
-for the amazing PostgreSQL's `psql` command -- including all bells/whistles --
-but with the added benefit of working with practically any database.
-Eventually, `usql` developers hope to leverage the power of Go and have plans for
-more features than the base `psql` command provides.
+#### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Compatibility][] | [Related][] | [Releases][]
 
-#### [Releases][] | [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][]
-
-[Releases]: https://github.com/knq/usql/releases (Releases)
 [Quickstart]: #quickstart (Quickstart)
-[Demo]: #demo (Demonstration)
-[Database Support]: #database_support (Database Support)
-[Connection Strings]: #connection_strings (Database Connection Strings)
-[Commands]: #commands (Commands)
-[Building]: #build_install (Build/Install from Source)
+[Demo]: #interactive-demo (Demonstration)
+[Database Support]: #database-support (Database Support)
+[Connection Strings]: #database-connection-strings (Database Connection Strings)
+[Commands]: #backslash--commands (Commands)
+[Building]: #build-install (Build/Install from Source)
+[Compatibility]: #compatibility-and-todo (Compatibility with PostgreSQL psql and TODO)
+[Related][]: #related-projects (Related Projects)
+[Releases]: https://github.com/knq/usql/releases (Project Releases)
 
-## Quickstart {#quickstart}
+## Quickstart
 
 1. [Download a release for your platform](https://github.com/knq/usql/releases)
 2. Extract the `.zip` (Windows), or `.tar.bz2` (OS X/Linux) file and place the
-   `usql` executable somewhere on your `%PATH%` (Windows), or on `$PATH` (OS X/Linux)
-3. Connect to a database using `usql protocol://user:pass@host/dbname`, and
+   `usql` executable somewhere on your `%PATH%` (Windows), or your `$PATH` (OS X/Linux)
+3. Connect to a database using `usql driver://user:pass@host/dbname`, and
    execute a SQL query, or [command](#commands):
 
 ```sh
@@ -55,16 +51,15 @@ pg:booktest@localhost/booktest=> \g
 pg:booktest@localhost/booktest=> \q
 ```
 
-Alternatively, if you already have a [working Go build environment](https://golang.org/doc/install)
-already configured, you may [install directly](#build_install) in the usual Go
-fashion:
+Alternatively, if you already have a [working Go build environment](https://golang.org/doc/install),
+you may [install directly](#build_install) in the usual Go fashion:
 
 ```sh
 # install usql with most SQL drivers
 $ go get -u -tags most github.com/knq/usql
 ```
 
-## Interactive Demo {#demo}
+## Interactive Demo
 
 The below is a demonstration using `usql` with [xo's booktest](https://github.com/knq/xo)
 simple test database, showcasing a early version of `usql`. In the
@@ -83,7 +78,7 @@ Please note the above was recorded using the an early release version of
 `usql`, and since then, `usql` has become significantly more robust and
 feature-compatible with PostgreSQL's `psql`.
 
-## Database Support {#database_support}
+## Database Support
 
 `usql` aims to provide support for all Go standard library compatible SQL
 drivers -- with an emphasis on supporting the drivers that sister project,
@@ -122,7 +117,7 @@ summarized below:
 
 <i><sup>*</sup>included by default when building</i>
 
-## Database Connection Strings {#connection_strings}
+## Database Connection Strings
 
 Database connection strings, or "data source name" (aka DSNs), used with `usql`
 have the same parsing rules as a normal URL, and have the following two forms:
@@ -204,7 +199,7 @@ $ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
 $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
 ```
 
-## Backslash (`\`) Commands {#commands}
+## Backslash (`\`) Commands
 
 The following are the currently supported backslash (`\ `) meta commands
 available to interactive `usql` sessions or to included (ie, `\i`) scripts:
@@ -254,7 +249,7 @@ provide support for the most frequently used `psql` meta commands -- note,
 however that `usql` is not close to a 100% replacement/drop-in compatible with
 `psql`. ***CAVEAT USER***.
 
-## Build/Install from Source {#build_install}
+## Build/Install from Source
 
 You can build or install `usql` from source in the usual Go fashion:
 
@@ -309,16 +304,20 @@ handler/interpreter. Additionally, `usql`'s code is fairly well-documented --
 please refer to the [GoDoc listing](https://godoc.org/github.com/knq/usql) to
 see how it's all put together.
 
-## Related Projects
+## Compatibility and TODO
 
-* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
-* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
+The goal of the `usql` project is to eventually provide a drop-in replacement
+for the amazing PostgreSQL's `psql` command -- including all bells/whistles --
+but with the added benefit of working with practically any database.
 
-## TODO
+Eventually, `usql` developers hope to leverage the power of Go and have plans for
+more features than the base `psql` command provides.
+
+#### TODO
 
 A list of planned / in progress work:
 
-### General
+##### General
 1. .usqlpass file (ie .psqlpass)
 2. Fix meta command parsing when passed a quoted string ie, \echo "   foo
    bar  " should have all whitespace included in the parameter
@@ -335,10 +334,10 @@ A list of planned / in progress work:
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
 11. better --help support/output cli, man pages
 
-#### Not important / "Nice to haves":
+##### Not important / "Nice to haves":
 1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
 
-### Command Processing + `psql` compatibility
+##### Command Processing + `psql` compatibility
 * PAGER + EDITOR support (WIP)
 * variable support / interpolation + \prompt, \set, \unset
 * the \j* commands (WIP)
@@ -348,7 +347,7 @@ A list of planned / in progress work:
 * all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
 * remaining `psql` cli parameters
 
-### Releases
+##### Releases
 
 Need to write scripts for packaging and build binaries for:
 
@@ -360,14 +359,19 @@ Need to write scripts for packaging and build binaries for:
 Additional:
 * Submit upstream to Debian unstable (WIP)
 
-### Testing
+##### Testing
 
 * full test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
 
-### Future Database Support
+##### Future Database Support
 
 Notes / thoughts / comments on adding support for various "databases":
 
 * Google Spanner
 * Cassandra
 * Atlassian JIRA JQL (why not? lol)
+
+## Related Projects
+
+* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
+* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
