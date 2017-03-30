@@ -34,7 +34,17 @@ var (
 
 	AvailableDrivers = `Available Drivers:`
 
-	ConnInfo = `You are connected with driver %s (%s)`
+	ConnInfo = `Connected with driver %s (%s)`
+
+	BadPassFile = `could not open "%s", not a file`
+
+	BadPassFileMode = `password file "%s" has group or world access`
+
+	BadPassFileLine = `line %d of password file incorrectly formatted`
+
+	BadPassFileFieldEmpty = `line %d field %d of password file cannot be blank`
+
+	BadPassFileUsername = `username in line %d of password file cannot contain *`
 
 	EnterPassword = `Password: `
 

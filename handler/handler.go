@@ -17,6 +17,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/env"
 	"github.com/knq/usql/metacmd"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
@@ -36,18 +37,6 @@ var (
 	// ErrMissingDSN is the missing dsn error.
 	ErrMissingDSN = errors.New("missing dsn")
 )
-
-// forceParams are the params to force for specific database drivers.
-var forceParams = map[string][]string{
-	"mysql": []string{
-		"parseTime", "true",
-		"loc", "Local",
-		"sql_mode", "ansi",
-	},
-	"mymysql":     []string{"sql_mode", "ansi"},
-	"sqlite3":     []string{"loc", "auto"},
-	"cockroachdb": []string{"sslmode", "disable"},
-}
 
 // Handler is a input process handler.
 type Handler struct {
@@ -262,8 +251,7 @@ func (h *Handler) Open(params ...string) error {
 		urlstr := params[0]
 
 		// parse dsn
-		var u *dburl.URL
-		u, err = dburl.Parse(urlstr)
+		h.u, err = dburl.Parse(urlstr)
 		switch {
 		case err == dburl.ErrInvalidDatabaseScheme:
 			var fi os.FileInfo
@@ -288,20 +276,7 @@ func (h *Handler) Open(params ...string) error {
 		}
 
 		// force parameters
-		fp, ok := forceParams[u.Driver]
-		if !ok {
-			fp = forceParams[u.Scheme]
-		}
-		if len(fp) != 0 {
-			v := u.Query()
-			for i := 0; i < len(fp); i += 2 {
-				v.Set(fp[i], fp[i+1])
-			}
-			u.RawQuery = v.Encode()
-			u, _ = dburl.Parse(u.String())
-		}
-
-		h.u = u
+		h.ForceParams(h.u)
 	} else {
 		h.u = &dburl.URL{
 			Driver: params[0],
@@ -342,6 +317,53 @@ func (h *Handler) Open(params ...string) error {
 
 	// reconnect
 	return h.Open(dsn)
+}
+
+// forceParamMap are the params to force for specific database drivers/schemes.
+var forceParamMap = map[string][]string{
+	"mysql": []string{
+		"parseTime", "true",
+		"loc", "Local",
+		"sql_mode", "ansi",
+	},
+	"mymysql":     []string{"sql_mode", "ansi"},
+	"sqlite3":     []string{"loc", "auto"},
+	"cockroachdb": []string{"sslmode", "disable"},
+}
+
+// ForceParams forces connection parameters on a database URL.
+//
+// Note: also forces/sets the username/password when a matching entry exists in
+// the PASS file.
+func (h *Handler) ForceParams(u *dburl.URL) {
+	var z *dburl.URL
+
+	// force driver parameters
+	fp, ok := forceParamMap[u.Driver]
+	if !ok {
+		fp = forceParamMap[u.Scheme]
+	}
+	if len(fp) != 0 {
+		v := u.Query()
+		for i := 0; i < len(fp); i += 2 {
+			v.Set(fp[i], fp[i+1])
+		}
+		u.RawQuery = v.Encode()
+	}
+
+	// see if password entry is present
+	user, err := env.PassFileEntry(u, h.user)
+	if err != nil {
+		errout := h.l.Stderr()
+		fmt.Fprintf(errout, "error: %v", err)
+		fmt.Fprintln(errout)
+	} else if user != nil {
+		u.User = user
+	}
+
+	// copy back to u
+	z, _ = dburl.Parse(u.String())
+	*u = *z
 }
 
 // Password collects a password from input, and returning a modified DSN
