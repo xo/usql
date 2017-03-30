@@ -7,8 +7,6 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/mattn/go-isatty"
-
-	"github.com/knq/usql/text"
 )
 
 var (
@@ -46,10 +44,7 @@ type IO interface {
 	Save(string) error
 
 	// Password prompts for a password.
-	Password() (string, error)
-
-	// ForceIntCyg forces the interactive and cygwin values.
-	ForceIntCyg(bool, bool)
+	Password(string) (string, error)
 }
 
 // Rline provides a type compatible with the IO interface.
@@ -63,7 +58,7 @@ type Rline struct {
 	Cyg bool
 	P   func(string)
 	S   func(string) error
-	Pw  func() (string, error)
+	Pw  func(string) (string, error)
 }
 
 // Next returns the next line of runes (excluding '\n') from the input.
@@ -120,17 +115,12 @@ func (l *Rline) Save(s string) error {
 }
 
 // Password prompts for a password.
-func (l *Rline) Password() (string, error) {
+func (l *Rline) Password(prompt string) (string, error) {
 	if l.Pw != nil {
-		return l.Pw()
+		return l.Pw(prompt)
 	}
 
 	return "", ErrNotInteractive
-}
-
-// ForceIntCyg forces the interactive and cygwin values.
-func (l *Rline) ForceIntCyg(interactive, cygwin bool) {
-	l.Int, l.Cyg = interactive, cygwin
 }
 
 // New creates a new readline input/output handler.
@@ -232,8 +222,8 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 		Cyg: cygwin,
 		P:   l.SetPrompt,
 		S:   l.SaveHistory,
-		Pw: func() (string, error) {
-			buf, err := l.ReadPassword(text.EnterPassword)
+		Pw: func(prompt string) (string, error) {
+			buf, err := l.ReadPassword(prompt)
 			if err != nil {
 				return "", err
 			}

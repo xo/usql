@@ -9,6 +9,9 @@ import (
 var (
 	// ErrDriverNotAvailable is the driver not available error.
 	ErrDriverNotAvailable = errors.New("driver not available")
+
+	// ErrChangePasswordNotSupported is the change password not supported error.
+	ErrChangePasswordNotSupported = errors.New("change password not supported")
 )
 
 // Error is a wrapper to standardize errors.
@@ -21,6 +24,11 @@ type Error struct {
 func WrapErr(name string, err error) error {
 	if err == nil {
 		return nil
+	}
+
+	// avoid double wrapping error
+	if _, ok := err.(*Error); ok {
+		return err
 	}
 
 	return &Error{name, err}

@@ -44,6 +44,9 @@ type Handler interface {
 	// Close closes the current database connection.
 	Close() error
 
+	// ChangePassword changes the password for a user.
+	ChangePassword(string) (string, error)
+
 	// Include includes a file.
 	Include(string, bool) error
 

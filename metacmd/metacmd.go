@@ -40,6 +40,9 @@ const (
 	// Disconnect is the disconnect meta command (\Z).
 	Disconnect
 
+	// Password is the change password meta command (\password).
+	Password
+
 	// ConnInfo is the connection info meta command (\conninfo).
 	ConnInfo
 

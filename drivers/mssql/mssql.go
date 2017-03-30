@@ -12,6 +12,7 @@ import (
 
 func init() {
 	drivers.Register("mssql", drivers.Driver{
+		ReqPP: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRow(
@@ -21,6 +22,10 @@ func init() {
 				return "", err
 			}
 			return "Microsoft SQL Server " + ver + ", " + level + ", " + edition, nil
+		},
+		ChPw: func(db drivers.DB, user, new, old string) error {
+			_, err := db.Exec(`alter login ` + user + ` with password = '` + new + `' old_password = '` + old + `'`)
+			return err
 		},
 		E: func(err error) (string, string) {
 			if e, ok := err.(mssql.Error); ok {

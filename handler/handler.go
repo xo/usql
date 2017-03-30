@@ -42,6 +42,9 @@ var (
 
 	// ErrPreviousTransactionExists is the previous transaction exists error.
 	ErrPreviousTransactionExists = errors.New("previous transaction exists")
+
+	// ErrPasswordAttemptsExhausted is the exhausted password attempts error.
+	ErrPasswordAttemptsExhausted = errors.New("password attempts exhuasted")
 )
 
 // Handler is a input process handler.
@@ -310,7 +313,7 @@ func (h *Handler) Open(params ...string) error {
 		}
 
 		// force parameters
-		h.ForceParams(h.u)
+		h.forceParams(h.u)
 	} else {
 		h.u = &dburl.URL{
 			Driver: params[0],
@@ -365,11 +368,11 @@ var forceParamMap = map[string][]string{
 	"cockroachdb": []string{"sslmode", "disable"},
 }
 
-// ForceParams forces connection parameters on a database URL.
+// forceParams forces connection parameters on a database URL.
 //
 // Note: also forces/sets the username/password when a matching entry exists in
 // the PASS file.
-func (h *Handler) ForceParams(u *dburl.URL) {
+func (h *Handler) forceParams(u *dburl.URL) {
 	var z *dburl.URL
 
 	// force driver parameters
@@ -400,7 +403,7 @@ func (h *Handler) ForceParams(u *dburl.URL) {
 	*u = *z
 }
 
-// Password collects a password from input, and returning a modified DSN
+// Password collects a password from input, and returns a modified DSN
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
 	var err error
@@ -418,7 +421,7 @@ func (h *Handler) Password(dsn string) (string, error) {
 	if u.User != nil {
 		user = u.User.Username()
 	}
-	pass, err := h.l.Password()
+	pass, err := h.l.Password(text.EnterPassword)
 	if err != nil {
 		return "", err
 	}
@@ -443,8 +446,56 @@ func (h *Handler) Close() error {
 	return nil
 }
 
+// ChangePassword changes a password for the user.
+func (h *Handler) ChangePassword(user string) (string, error) {
+	if h.db == nil {
+		return "", ErrNotConnected
+	}
+
+	if !drivers.CanChangePassword(h.u) {
+		return "", drivers.ErrChangePasswordNotSupported
+	}
+
+	var err error
+	var new, new2, old string
+
+	// ask for previous password
+	if drivers.RequirePreviousPassword(h.u) {
+		old, err = h.l.Password(text.EnterPreviousPassword)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// attempt to get passwords
+	for i := 0; i < 3; i++ {
+		new, err = h.l.Password(text.NewPassword)
+		if err != nil {
+			return "", err
+		}
+		new2, err = h.l.Password(text.ConfirmPassword)
+		if err != nil {
+			return "", err
+		}
+
+		if new == new2 {
+			break
+		}
+		fmt.Fprintln(h.l.Stderr(), text.PasswordsDoNotMatch)
+	}
+	if new != new2 {
+		return "", ErrPasswordAttemptsExhausted
+	}
+
+	return drivers.ChangePassword(h.u, h.DB(), user, new, old)
+}
+
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version() error {
+	if h.db == nil {
+		return ErrNotConnected
+	}
+
 	ver, err := drivers.Version(h.u, h.DB())
 	if err != nil {
 		return err
@@ -711,9 +762,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		},
 		Out: h.l.Stdout(),
 		Err: h.l.Stderr(),
-		Pw: func() (string, error) {
-			return h.l.Password()
-		},
+		Pw:  h.l.Password,
 	}
 
 	p := New(l, h.user, filepath.Dir(path), h.nopw)

@@ -25,6 +25,15 @@ func init() {
 			}
 			return "Oracle " + ver, nil
 		},
+		U: func(db drivers.DB) (string, error) {
+			var user string
+			err := db.QueryRow(`select user from dual`).Scan(&user)
+			return user, err
+		},
+		ChPw: func(db drivers.DB, user, new, _ string) error {
+			_, err := db.Exec(`alter user ` + user + ` IDENTIFIED BY ` + new)
+			return err
+		},
 		E: func(err error) (string, string) {
 			code, msg := "", err.Error()
 

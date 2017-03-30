@@ -15,6 +15,7 @@ type DB interface {
 	Exec(string, ...interface{}) (sql.Result, error)
 	Query(string, ...interface{}) (*sql.Rows, error)
 	QueryRow(string, ...interface{}) *sql.Row
+	Prepare(string) (*sql.Stmt, error)
 }
 
 // Driver holds funcs for a driver.
@@ -29,11 +30,20 @@ type Driver struct {
 	// comments.
 	AMC bool
 
+	// ReqPP will be used by RequirePreviousPassword.
+	ReqPP bool
+
 	// O will be used by Open if defined.
 	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 
 	// V will be used by Version if defined.
 	V func(DB) (string, error)
+
+	// U will be used by User if defined.
+	U func(DB) (string, error)
+
+	// ChPw will be used by ChangePassword if defined.
+	ChPw func(DB, string, string, string) error
 
 	// PwErr will be used by IsPasswordErr if defined.
 	PwErr func(error) bool
@@ -131,11 +141,23 @@ func Version(u *dburl.URL, db DB) (string, error) {
 	}
 
 	var ver string
-	db.QueryRow(`select version();`).Scan(&ver)
-	if ver == "" {
+	err := db.QueryRow(`select version();`).Scan(&ver)
+	if err != nil || ver == "" {
 		ver = "<unknown>"
 	}
 	return ver, nil
+}
+
+// User returns the current database user for the specified URL's driver.
+func User(u *dburl.URL, db DB) (string, error) {
+	if d, ok := drivers[u.Driver]; ok && d.U != nil {
+		user, err := d.U(db)
+		return user, WrapErr(u.Driver, err)
+	}
+
+	var user string
+	db.QueryRow(`select current_user`).Scan(&user)
+	return user, nil
 }
 
 // Process processes the supplied SQL query for the specified URL's driver.
@@ -161,6 +183,41 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 		return d.PwErr(err)
 	}
 	return false
+}
+
+// RequirePreviousPassword returns true if the specified URL's driver requires
+// a previous password when changing a user's password.
+func RequirePreviousPassword(u *dburl.URL) bool {
+	if d, ok := drivers[u.Driver]; ok {
+		return d.ReqPP
+	}
+	return false
+}
+
+// CanChangePassword returns whether or not the specified driver's URL supports
+// changing passwords.
+func CanChangePassword(u *dburl.URL) bool {
+	if d, ok := drivers[u.Driver]; ok {
+		return d.ChPw != nil
+	}
+	return false
+}
+
+// ChangePassword initiates a user password change for the specified URL's
+// driver.
+func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
+	if d, ok := drivers[u.Driver]; ok && d.ChPw != nil {
+		var err error
+		if user == "" {
+			user, err = User(u, db)
+			if err != nil {
+				return "", err
+			}
+		}
+
+		return user, d.ChPw(db, user, new, old)
+	}
+	return "", ErrChangePasswordNotSupported
 }
 
 // Columns returns the columns for SQL result for the specified URL's driver.

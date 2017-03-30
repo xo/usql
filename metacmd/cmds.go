@@ -146,6 +146,31 @@ func init() {
 			},
 		},
 
+		Password: {
+			Section: SectionConnection,
+			Name:    "password",
+			Desc:    "change the password for a user,[USERNAME]",
+			Aliases: map[string]string{"passwd": ""},
+			Process: func(h Handler, _ string, params []string) (Res, error) {
+				var res Res
+				var user string
+				if len(params) > 0 {
+					user = params[0]
+					res.Processed++
+				}
+
+				user, err := h.ChangePassword(user)
+				if err != nil {
+					return res, fmt.Errorf(text.PasswordChangeFailed, user, err)
+				}
+
+				/*fmt.Fprintf(h.IO().Stdout(), text.PasswordChangeSucceeded, user)
+				fmt.Fprintln(h.IO().Stdout())*/
+
+				return res, nil
+			},
+		},
+
 		Exec: {
 			Section: SectionGeneral,
 			Name:    "g",

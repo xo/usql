@@ -1,7 +1,6 @@
 package postgres
 
 import (
-
 	// DRIVER: postgres
 	"github.com/lib/pq"
 
@@ -19,6 +18,10 @@ func init() {
 				return "", err
 			}
 			return "PostgreSQL " + ver, nil
+		},
+		ChPw: func(db drivers.DB, user, new, _ string) error {
+			_, err := db.Exec(`alter user ` + user + ` password '` + new + `'`)
+			return err
 		},
 		E: func(err error) (string, string) {
 			if e, ok := err.(*pq.Error); ok {

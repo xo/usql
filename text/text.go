@@ -48,6 +48,18 @@ var (
 
 	EnterPassword = `Password: `
 
+	EnterPreviousPassword = `Old Password: `
+
+	PasswordsDoNotMatch = `Passwords do not match, trying again ...`
+
+	NewPassword = `New Password: `
+
+	ConfirmPassword = `Confirm Password: `
+
+	PasswordChangeFailed = `password change for user '%s' failed: %v`
+
+	//PasswordChangeSucceeded = `Password changed for user '%s'`
+
 	HelpDesc string
 
 	HelpBanner = `You are using ` + Banner + `.`
