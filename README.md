@@ -6,10 +6,10 @@ SQLite3, Microsoft SQL Server, [and other databases](#database_support).
 #### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
 
 [Quickstart]: #quickstart (Quickstart)
-[Demo]: #interactive-demo (Demonstration)
+[Demo]: #interactive-demo (Interactive Demo)
 [Database Support]: #database-support (Database Support)
 [Connection Strings]: #database-connection-strings (Database Connection Strings)
-[Commands]: #backslash--commands (Commands)
+[Commands]: #backslash--commands (Backslash Commands)
 [Building]: #buildinstall-from-source (Build/Install from Source)
 [Releases]: https://github.com/knq/usql/releases (Project Releases)
 
