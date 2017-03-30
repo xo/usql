@@ -12,7 +12,7 @@ SQLite3, Microsoft SQL Server, [and other databases](#database_support).
 [Commands]: #backslash--commands (Commands)
 [Building]: #build-install (Build/Install from Source)
 [Compatibility]: #compatibility-and-todo (Compatibility with PostgreSQL psql and TODO)
-[Related][]: #related-projects (Related Projects)
+[Related]: #related-projects (Related Projects)
 [Releases]: https://github.com/knq/usql/releases (Project Releases)
 
 ## Quickstart
