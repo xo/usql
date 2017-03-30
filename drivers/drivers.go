@@ -9,6 +9,14 @@ import (
 	"github.com/knq/usql/stmt"
 )
 
+// DB is the common interface for database operations, compatible with
+// database/sql.DB and database/sql.Tx.
+type DB interface {
+	Exec(string, ...interface{}) (sql.Result, error)
+	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryRow(string, ...interface{}) *sql.Row
+}
+
 // Driver holds funcs for a driver.
 type Driver struct {
 	// N is a name to override the driver name with.
@@ -18,7 +26,7 @@ type Driver struct {
 	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 
 	// V will be used by Version if defined.
-	V func(*sql.DB) (string, error)
+	V func(DB) (string, error)
 
 	// PwErr will be used by IsPasswordErr if defined.
 	PwErr func(error) bool
@@ -110,7 +118,7 @@ func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
 
 // Version returns information about the database connection for the specified
 // URL's driver.
-func Version(u *dburl.URL, db *sql.DB) (string, error) {
+func Version(u *dburl.URL, db DB) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.V != nil {
 		ver, err := d.V(db)
 		return ver, WrapErr(u.Driver, err)

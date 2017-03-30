@@ -36,6 +36,12 @@ var (
 
 	// ErrMissingDSN is the missing dsn error.
 	ErrMissingDSN = errors.New("missing dsn")
+
+	// ErrNoTransaction is the no transaction error.
+	ErrNoTransaction = errors.New("no transaction")
+
+	// ErrOutstandingTransaction is the outstanding transaction error.
+	ErrOutstandingTransaction = errors.New("outstanding transaction")
 )
 
 // Handler is a input process handler.
@@ -53,6 +59,7 @@ type Handler struct {
 	// connection
 	u  *dburl.URL
 	db *sql.DB
+	tx *sql.Tx
 }
 
 // New creates a new input handler.
@@ -182,6 +189,20 @@ func (h *Handler) Run() error {
 	}
 }
 
+// CommandRunner executes a set of commands.
+func (h *Handler) CommandRunner(cmds []string) func() error {
+	return func() error {
+		for _, cmd := range cmds {
+			h.Reset([]rune(cmd))
+			err := h.Run()
+			if err != nil && err != io.EOF {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 // Reset resets the handler's statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
@@ -199,7 +220,12 @@ func (h *Handler) Prompt() string {
 		}
 	}
 
-	return s + h.buf.State() + "> "
+	tx := " "
+	if h.tx != nil {
+		tx = "~"
+	}
+
+	return s + h.buf.State() + ">" + tx
 }
 
 // IO returns the io for the handler.
@@ -218,7 +244,11 @@ func (h *Handler) URL() *dburl.URL {
 }
 
 // DB returns the sql.DB for the handler.
-func (h *Handler) DB() *sql.DB {
+func (h *Handler) DB() drivers.DB {
+	if h.tx != nil {
+		return h.tx
+	}
+
 	return h.db
 }
 
@@ -244,6 +274,10 @@ func (h *Handler) Buf() *stmt.Stmt {
 func (h *Handler) Open(params ...string) error {
 	if len(params) == 0 || params[0] == "" {
 		return nil
+	}
+
+	if h.tx != nil {
+		return ErrOutstandingTransaction
 	}
 
 	var err error
@@ -395,10 +429,15 @@ func (h *Handler) Password(dsn string) (string, error) {
 
 // Close closes the database connection if it is open.
 func (h *Handler) Close() error {
+	if h.tx != nil {
+		return ErrOutstandingTransaction
+	}
+
 	if h.db != nil {
 		err := h.db.Close()
+		drv := h.u.Driver
 		h.db, h.u = nil, nil
-		return err
+		return drivers.WrapErr(drv, err)
 	}
 
 	return nil
@@ -406,7 +445,7 @@ func (h *Handler) Close() error {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version() error {
-	ver, err := drivers.Version(h.u, h.db)
+	ver, err := drivers.Version(h.u, h.DB())
 	if err != nil {
 		return err
 	}
@@ -433,35 +472,35 @@ func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	}
 
 	// exec or query
-	f := h.Exec
+	f := h.exec
 	if q {
-		f = h.Query
+		f = h.query
 	}
 
 	// exec
 	return drivers.WrapErr(h.u.Driver, f(w, typ, s))
 }
 
-// Query executes a query against the database.
-func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
+// query executes a query against the database.
+func (h *Handler) query(w io.Writer, _, sqlstr string) error {
 	var err error
 
 	// run query
-	q, err := h.db.Query(sqlstr)
+	q, err := h.DB().Query(sqlstr)
 	if err != nil {
 		return err
 	}
 	defer q.Close()
 
 	// output rows
-	err = h.OutputRows(w, q)
+	err = h.outputRows(w, q)
 	if err != nil {
 		return err
 	}
 
 	// check for additional result sets ...
 	for drivers.NextResultSet(q) {
-		err = h.OutputRows(w, q)
+		err = h.outputRows(w, q)
 		if err != nil {
 			return err
 		}
@@ -470,8 +509,8 @@ func (h *Handler) Query(w io.Writer, _, sqlstr string) error {
 	return nil
 }
 
-// OutputRows outputs the supplied SQL rows to the supplied writer.
-func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
+// outputRows outputs the supplied SQL rows to the supplied writer.
+func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 	// get column names
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
@@ -536,11 +575,11 @@ func (h *Handler) OutputRows(w io.Writer, q *sql.Rows) error {
 	return nil
 }
 
-// Exec does a database exec.
-func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
+// exec does a database exec.
+func (h *Handler) exec(w io.Writer, typ, sqlstr string) error {
 	var err error
 
-	res, err := h.db.Exec(sqlstr)
+	res, err := h.DB().Exec(sqlstr)
 	if err != nil {
 		return err
 	}
@@ -560,6 +599,35 @@ func (h *Handler) Exec(w io.Writer, typ, sqlstr string) error {
 	}
 
 	fmt.Fprintln(w)
+
+	return nil
+}
+
+// Begin begins a transaction.
+func (h *Handler) Begin() error {
+	if h.db == nil {
+		return ErrNotConnected
+	}
+
+	var err error
+	h.tx, err = h.db.Begin()
+	if err != nil {
+		return drivers.WrapErr(h.u.Driver, err)
+	}
+
+	return nil
+}
+
+// Commit commits a transaction.
+func (h *Handler) Commit() error {
+	if h.tx == nil {
+		return ErrNoTransaction
+	}
+
+	err := h.tx.Commit()
+	if err != nil {
+		return drivers.WrapErr(h.u.Driver, err)
+	}
 
 	return nil
 }

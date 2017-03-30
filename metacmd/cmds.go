@@ -349,7 +349,7 @@ func init() {
 		}
 
 		cmdMap[c.Name] = mc
-		for alias, _ := range c.Aliases {
+		for alias := range c.Aliases {
 			cmdMap[alias] = mc
 		}
 

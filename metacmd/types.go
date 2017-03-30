@@ -1,11 +1,11 @@
 package metacmd
 
 import (
-	"database/sql"
 	"errors"
 	"os/user"
 
 	"github.com/knq/dburl"
+	"github.com/knq/usql/drivers"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 )
@@ -30,7 +30,7 @@ type Handler interface {
 	URL() *dburl.URL
 
 	// DB returns the current database connection.
-	DB() *sql.DB
+	DB() drivers.DB
 
 	// Last returns the last executed query.
 	Last() string
@@ -68,7 +68,7 @@ const (
 	// ExecNone indicates no execution.
 	ExecNone ExecType = iota
 
-	// Exec indicates only plain execution (\g).
+	// ExecOnly indicates plain execution only (\g).
 	ExecOnly
 
 	// ExecPipe indicates execution and piping results (\g |file)

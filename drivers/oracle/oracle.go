@@ -17,7 +17,7 @@ var endRE = regexp.MustCompile(`;?\s*$`)
 
 func init() {
 	drivers.Register("ora", drivers.Driver{
-		V: func(db *sql.DB) (string, error) {
+		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT version FROM V$INSTANCE`).Scan(&ver)
 			if err != nil {

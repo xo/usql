@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"database/sql"
 
 	// DRIVER: postgres
 	"github.com/lib/pq"
@@ -12,7 +11,7 @@ import (
 func init() {
 	drivers.Register("postgres", drivers.Driver{
 		N: "pq",
-		V: func(db *sql.DB) (string, error) {
+		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`show server_version`).Scan(&ver)
 			if err != nil {

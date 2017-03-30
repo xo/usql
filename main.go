@@ -3,6 +3,7 @@ package main
 //go:generate ./gen-license.sh
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,11 @@ import (
 	"github.com/knq/usql/handler"
 	"github.com/knq/usql/internal"
 	"github.com/knq/usql/rline"
+)
+
+var (
+	// ErrSingleTransactionCannotBeUsedWithInteractiveMode is the single transaction cannot be used with interactive mode error.
+	ErrSingleTransactionCannotBeUsedWithInteractiveMode = errors.New("--single-transaction cannot be used with interactive mode")
 )
 
 func main() {
@@ -113,6 +119,17 @@ func run(args *Args, u *user.User) error {
 		return err
 	}
 
+	// start transaction
+	if args.SingleTransaction {
+		if h.IO().Interactive() {
+			return ErrSingleTransactionCannotBeUsedWithInteractiveMode
+		}
+		err = h.Begin()
+		if err != nil {
+			return err
+		}
+	}
+
 	// rc file
 	if rc := env.RCFile(u); !args.NoRC && rc != "" {
 		err = h.Include(rc, false)
@@ -121,22 +138,22 @@ func run(args *Args, u *user.User) error {
 		}
 	}
 
-	// circumvent when provided commands
+	// setup runner
+	f := h.Run
 	if len(args.Commands) != 0 {
-		return runCommands(args, h)
+		f = h.CommandRunner(args.Commands)
 	}
 
-	return h.Run()
-}
-
-// runCommands runs the cli passed commands (-c).
-func runCommands(args *Args, h *handler.Handler) error {
-	for _, cmd := range args.Commands {
-		h.Reset([]rune(cmd))
-		err := h.Run()
-		if err != nil && err != io.EOF {
-			return err
-		}
+	// run
+	err = f()
+	if err != nil {
+		return err
 	}
+
+	// commit
+	if args.SingleTransaction {
+		return h.Commit()
+	}
+
 	return nil
 }

@@ -1,7 +1,6 @@
 package saphana
 
 import (
-	"database/sql"
 	"strconv"
 
 	// DRIVER: hdb
@@ -12,7 +11,7 @@ import (
 
 func init() {
 	drivers.Register("hdb", drivers.Driver{
-		V: func(db *sql.DB) (string, error) {
+		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`select version from m_database`).Scan(&ver)
 			if err != nil {

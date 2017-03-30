@@ -1,7 +1,6 @@
 package mssql
 
 import (
-	"database/sql"
 	"strconv"
 	"strings"
 
@@ -13,7 +12,7 @@ import (
 
 func init() {
 	drivers.Register("mssql", drivers.Driver{
-		V: func(db *sql.DB) (string, error) {
+		V: func(db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRow(
 				`SELECT SERVERPROPERTY('productversion'), SERVERPROPERTY ('productlevel'), SERVERPROPERTY ('edition')`,
