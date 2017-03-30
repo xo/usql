@@ -1,0 +1,4 @@
+# sample ~/.usqlpass file
+postgres:*:*:*:booktest:booktest
+
+mysql:localhost:*:testdb:user:pass
