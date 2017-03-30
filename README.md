@@ -240,13 +240,6 @@ Operating System
 
 More coming soon!
 
-In time, the aim of the `usql` project is to provide out-of-the-box support for
-most of `psql`'s backslash meta commands. As of now, this is a continuing, and
-on-going effort -- and a substantial, good-faith attempt has been made to
-provide support for the most frequently used `psql` meta commands -- note,
-however that `usql` is not close to a 100% replacement/drop-in compatible with
-`psql`. ***CAVEAT USER***.
-
 ## Build/Install from Source
 
 You can build or install `usql` from source in the usual Go fashion:
@@ -308,12 +301,18 @@ The goal of the `usql` project is to eventually provide a drop-in replacement
 for the amazing PostgreSQL's `psql` command -- including all bells/whistles --
 but with the added benefit of working with practically any database.
 
-Eventually, `usql` developers hope to leverage the power of Go and have plans for
-more features than the base `psql` command provides.
+This is a continuing, and on-going effort -- and a substantial, good-faith
+attempt has been made to provide support for the most frequently used
+aspects/features of `psql`.
+
+Note, however, that `usql` is not close to a 100% replacement/drop-in, and
+not-yet fully compatible with `psql`. ***CAVEAT USER***.
 
 #### TODO
 
-A list of planned / in progress work:
+Eventually, `usql` developers hope to leverage the power of Go and have plans
+for more features than the base `psql` command provides. Currently, the list of
+planned / in progress work:
 
 ##### General
 1. .usqlpass file (ie .psqlpass)
