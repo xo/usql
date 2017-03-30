@@ -22,6 +22,13 @@ type Driver struct {
 	// N is a name to override the driver name with.
 	N string
 
+	// AD will be passed to query buffers to enable dollar ($$) style strings.
+	AD bool
+
+	// AMC will be passed to query buffers to enable multiline (/**/) style
+	// comments.
+	AMC bool
+
 	// O will be used by Open if defined.
 	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 
@@ -96,9 +103,8 @@ func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
 	}
 
 	// force query buffer settings
-	isPG := u.Driver == "postgres" || u.Driver == "pgx"
-	stmt.AllowDollar(isPG)(buf)
-	stmt.AllowMultilineComments(isPG)(buf)
+	stmt.AllowDollar(d.AD)(buf)
+	stmt.AllowMultilineComments(d.AMC)(buf)
 
 	f := sql.Open
 	if d.O != nil {
