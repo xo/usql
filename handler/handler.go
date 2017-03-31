@@ -3,7 +3,6 @@ package handler
 import (
 	"bufio"
 	"database/sql"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -22,29 +21,6 @@ import (
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 	"github.com/knq/usql/text"
-)
-
-var (
-	// ErrNotConnected is the not connected error.
-	ErrNotConnected = errors.New("not connected")
-
-	// ErrNoSuchFileOrDirectory is the no such file or directory error.
-	ErrNoSuchFileOrDirectory = errors.New("no such file or directory")
-
-	// ErrCannotIncludeDirectories is the cannot include directories error.
-	ErrCannotIncludeDirectories = errors.New("cannot include directories")
-
-	// ErrMissingDSN is the missing dsn error.
-	ErrMissingDSN = errors.New("missing dsn")
-
-	// ErrNoPreviousTransactionExists is the no previous transaction exists error.
-	ErrNoPreviousTransactionExists = errors.New("no previous transaction exists")
-
-	// ErrPreviousTransactionExists is the previous transaction exists error.
-	ErrPreviousTransactionExists = errors.New("previous transaction exists")
-
-	// ErrPasswordAttemptsExhausted is the exhausted password attempts error.
-	ErrPasswordAttemptsExhausted = errors.New("password attempts exhuasted")
 )
 
 // Handler is a input process handler.
@@ -139,11 +115,11 @@ func (h *Handler) Run() error {
 			var r metacmd.Runner
 			r, err = metacmd.Decode(cmd, params)
 			switch {
-			case err == metacmd.ErrUnknownCommand:
+			case err == text.ErrUnknownCommand:
 				fmt.Fprintf(stderr, text.InvalidCommand, cmd)
 				fmt.Fprintln(stderr)
 				continue
-			case err == metacmd.ErrMissingRequiredArgument:
+			case err == text.ErrMissingRequiredArgument:
 				fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
 				fmt.Fprintln(stderr)
 				continue
@@ -280,7 +256,7 @@ func (h *Handler) Open(params ...string) error {
 	}
 
 	if h.tx != nil {
-		return ErrPreviousTransactionExists
+		return text.ErrPreviousTransactionExists
 	}
 
 	var err error
@@ -409,7 +385,7 @@ func (h *Handler) Password(dsn string) (string, error) {
 	var err error
 
 	if dsn == "" {
-		return "", ErrMissingDSN
+		return "", text.ErrMissingDSN
 	}
 
 	u, err := dburl.Parse(dsn)
@@ -433,7 +409,7 @@ func (h *Handler) Password(dsn string) (string, error) {
 // Close closes the database connection if it is open.
 func (h *Handler) Close() error {
 	if h.tx != nil {
-		return ErrPreviousTransactionExists
+		return text.ErrPreviousTransactionExists
 	}
 
 	if h.db != nil {
@@ -449,14 +425,16 @@ func (h *Handler) Close() error {
 // ChangePassword changes a password for the user.
 func (h *Handler) ChangePassword(user string) (string, error) {
 	if h.db == nil {
-		return "", ErrNotConnected
-	}
-
-	if !drivers.CanChangePassword(h.u) {
-		return "", drivers.ErrChangePasswordNotSupported
+		return "", text.ErrNotConnected
 	}
 
 	var err error
+
+	err = drivers.CanChangePassword(h.u)
+	if err != nil {
+		return "", err
+	}
+
 	var new, new2, old string
 
 	// ask for previous password
@@ -484,7 +462,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 		fmt.Fprintln(h.l.Stderr(), text.PasswordsDoNotMatch)
 	}
 	if new != new2 {
-		return "", ErrPasswordAttemptsExhausted
+		return "", text.ErrPasswordAttemptsExhausted
 	}
 
 	return drivers.ChangePassword(h.u, h.DB(), user, new, old)
@@ -493,7 +471,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version() error {
 	if h.db == nil {
-		return ErrNotConnected
+		return text.ErrNotConnected
 	}
 
 	ver, err := drivers.Version(h.u, h.DB())
@@ -513,7 +491,7 @@ func (h *Handler) Version() error {
 // Execute executes a sql query against the connected database.
 func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
 	if h.db == nil {
-		return ErrNotConnected
+		return text.ErrNotConnected
 	}
 
 	// determine type and pre process string
@@ -657,11 +635,11 @@ func (h *Handler) exec(w io.Writer, typ, sqlstr string) error {
 // Begin begins a transaction.
 func (h *Handler) Begin() error {
 	if h.db == nil {
-		return ErrNotConnected
+		return text.ErrNotConnected
 	}
 
 	if h.tx != nil {
-		return ErrPreviousTransactionExists
+		return text.ErrPreviousTransactionExists
 	}
 
 	var err error
@@ -676,11 +654,11 @@ func (h *Handler) Begin() error {
 // Commit commits a transaction.
 func (h *Handler) Commit() error {
 	if h.db == nil {
-		return ErrNotConnected
+		return text.ErrNotConnected
 	}
 
 	if h.tx == nil {
-		return ErrNoPreviousTransactionExists
+		return text.ErrNoPreviousTransactionExists
 	}
 
 	tx := h.tx
@@ -697,11 +675,11 @@ func (h *Handler) Commit() error {
 // Rollback rollbacks a transaction.
 func (h *Handler) Rollback() error {
 	if h.db == nil {
-		return ErrNotConnected
+		return text.ErrNotConnected
 	}
 
 	if h.tx == nil {
-		return ErrNoPreviousTransactionExists
+		return text.ErrNoPreviousTransactionExists
 	}
 
 	tx := h.tx
@@ -726,7 +704,7 @@ func (h *Handler) Include(path string, relative bool) error {
 	path, err = filepath.EvalSymlinks(path)
 	switch {
 	case err != nil && os.IsNotExist(err):
-		return ErrNoSuchFileOrDirectory
+		return text.ErrNoSuchFileOrDirectory
 	case err != nil:
 		return err
 	}
@@ -734,11 +712,11 @@ func (h *Handler) Include(path string, relative bool) error {
 	fi, err := os.Stat(path)
 	switch {
 	case err != nil && os.IsNotExist(err):
-		return ErrNoSuchFileOrDirectory
+		return text.ErrNoSuchFileOrDirectory
 	case err != nil:
 		return err
 	case fi.IsDir():
-		return ErrCannotIncludeDirectories
+		return text.ErrCannotIncludeDirectories
 	}
 
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)

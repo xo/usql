@@ -1,21 +1,12 @@
 package metacmd
 
 import (
-	"errors"
 	"os/user"
 
 	"github.com/knq/dburl"
 	"github.com/knq/usql/drivers"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
-)
-
-var (
-	// ErrUnknownCommand is the unknown command error.
-	ErrUnknownCommand = errors.New("unknown command")
-
-	// ErrMissingRequiredArgument is the missing required argument error.
-	ErrMissingRequiredArgument = errors.New("missing required argument")
 )
 
 // Handler is the shared interface for a command handler.

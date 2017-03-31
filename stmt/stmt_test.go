@@ -127,12 +127,6 @@ func TestNextResetState(t *testing.T) {
 		{" select 1 \\g \\p \n select (15)\\g", []string{"select 1 ", "select (15)"}, []string{"g", "p", "g"}, "="},
 		{" select 1 (  \\g ) \n ;", []string{"select 1 (  \\g ) \n ;"}, []string{"", ""}, "="},
 
-		/*{"help", nil, nil, ErrHelpRequested, "="}, // 19
-		{"select 1;\nhelp", []string{"select 1;"}, []string{""}, ErrHelpRequested, "="},
-		{" select 1; \n  help  ", []string{"select 1;"}, []string{"", ""}, ErrHelpRequested, "="},
-		{" select 1; \n  help aoeu ", []string{"select 1;"}, []string{"", ""}, ErrHelpRequested, "="},
-		{" select 1\\g \n  help aoeu ", []string{"select 1"}, []string{"g"}, ErrHelpRequested, "="},*/
-
 		{ // 24
 			" select 1\n;select 2\\g  select 3;  \\p   \\z  foo bar ",
 			[]string{"select 1\n;", "select 2"},

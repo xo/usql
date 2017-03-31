@@ -46,19 +46,19 @@ var (
 
 	BadPassFileUsername = `username in line %d of password file cannot contain *`
 
-	EnterPassword = `Password: `
+	EnterPassword = `Enter password: `
 
-	EnterPreviousPassword = `Old Password: `
+	EnterPreviousPassword = `Enter previous password: `
 
 	PasswordsDoNotMatch = `Passwords do not match, trying again ...`
 
-	NewPassword = `New Password: `
+	NewPassword = `Enter new password: `
 
-	ConfirmPassword = `Confirm Password: `
+	ConfirmPassword = `Confirm password: `
 
-	PasswordChangeFailed = `password change for user '%s' failed: %v`
+	PasswordChangeFailed = `\password for "%s" failed: %v`
 
-	//PasswordChangeSucceeded = `Password changed for user '%s'`
+	//PasswordChangeSucceeded = `\password succeeded for "%s"`
 
 	HelpDesc string
 

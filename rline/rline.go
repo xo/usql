@@ -13,8 +13,8 @@ var (
 	// ErrInterrupt is the interrupt error.
 	ErrInterrupt = readline.ErrInterrupt
 
-	// ErrNotInteractive is the not interactive error.
-	ErrNotInteractive = errors.New("not interactive")
+	// ErrPasswordNotAvailable is the password not available error.
+	ErrPasswordNotAvailable = errors.New("password not available")
 )
 
 // IO is the common input/output interface.
@@ -120,7 +120,7 @@ func (l *Rline) Password(prompt string) (string, error) {
 		return l.Pw(prompt)
 	}
 
-	return "", ErrNotInteractive
+	return "", ErrPasswordNotAvailable
 }
 
 // New creates a new readline input/output handler.

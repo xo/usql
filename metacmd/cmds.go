@@ -160,7 +160,10 @@ func init() {
 				}
 
 				user, err := h.ChangePassword(user)
-				if err != nil {
+				switch {
+				case err == text.ErrPasswordNotSupportedByDriver || err == text.ErrNotConnected:
+					return res, err
+				case err != nil:
 					return res, fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
 

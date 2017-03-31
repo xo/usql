@@ -3,7 +3,6 @@ package main
 //go:generate ./gen-license.sh
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,11 +16,7 @@ import (
 	"github.com/knq/usql/handler"
 	"github.com/knq/usql/internal"
 	"github.com/knq/usql/rline"
-)
-
-var (
-	// ErrSingleTransactionCannotBeUsedWithInteractiveMode is the single transaction cannot be used with interactive mode error.
-	ErrSingleTransactionCannotBeUsedWithInteractiveMode = errors.New("--single-transaction cannot be used with interactive mode")
+	"github.com/knq/usql/text"
 )
 
 func main() {
@@ -69,7 +64,7 @@ func main() {
 
 		if e, ok := err.(*drivers.Error); ok {
 			// extra output for when a driver is not available
-			if e.Err == drivers.ErrDriverNotAvailable {
+			if e.Err == text.ErrDriverNotAvailable {
 				tag := e.Driver
 				if t, ok := known[tag]; ok {
 					tag = t
@@ -122,7 +117,7 @@ func run(args *Args, u *user.User) error {
 	// start transaction
 	if args.SingleTransaction {
 		if h.IO().Interactive() {
-			return ErrSingleTransactionCannotBeUsedWithInteractiveMode
+			return text.ErrSingleTransactionCannotBeUsedWithInteractiveMode
 		}
 		err = h.Begin()
 		if err != nil {
@@ -133,7 +128,7 @@ func run(args *Args, u *user.User) error {
 	// rc file
 	if rc := env.RCFile(u); !args.NoRC && rc != "" {
 		err = h.Include(rc, false)
-		if err != nil && err != handler.ErrNoSuchFileOrDirectory {
+		if err != nil && err != text.ErrNoSuchFileOrDirectory {
 			return err
 		}
 	}

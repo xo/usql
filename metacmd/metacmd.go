@@ -1,5 +1,9 @@
 package metacmd
 
+import (
+	"github.com/knq/usql/text"
+)
+
 // Metacmd represents a command and associated meta information about it.
 type Metacmd uint
 
@@ -7,12 +11,12 @@ type Metacmd uint
 func Decode(name string, params []string) (Runner, error) {
 	mc, ok := cmdMap[name]
 	if !ok {
-		return nil, ErrUnknownCommand
+		return nil, text.ErrUnknownCommand
 	}
 
 	cmd := cmds[mc]
 	if cmd.Min > len(params) {
-		return nil, ErrMissingRequiredArgument
+		return nil, text.ErrMissingRequiredArgument
 	}
 
 	return RunnerFunc(func(h Handler) (Res, error) {

@@ -19,11 +19,6 @@ import (
 	"github.com/knq/usql/text"
 )
 
-var (
-	// ErrNoEditorDefined is the no editor defined error.
-	ErrNoEditorDefined = errors.New("no editor defined")
-)
-
 // getenv tries retrieving successive keys from os environment variables.
 func getenv(keys ...string) string {
 	for _, key := range keys {
@@ -93,7 +88,7 @@ func EditFile(path, line, s string) ([]rune, error) {
 
 	ed := getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
 	if ed == "" {
-		return nil, ErrNoEditorDefined
+		return nil, text.ErrNoEditorDefined
 	}
 
 	if path == "" {

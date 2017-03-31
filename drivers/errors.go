@@ -1,17 +1,8 @@
 package drivers
 
 import (
-	"errors"
 	"strings"
 	"unicode"
-)
-
-var (
-	// ErrDriverNotAvailable is the driver not available error.
-	ErrDriverNotAvailable = errors.New("driver not available")
-
-	// ErrChangePasswordNotSupported is the change password not supported error.
-	ErrChangePasswordNotSupported = errors.New("change password not supported")
 )
 
 // Error is a wrapper to standardize errors.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/knq/dburl"
 	"github.com/knq/usql/stmt"
+	"github.com/knq/usql/text"
 )
 
 // DB is the common interface for database operations, compatible with
@@ -109,7 +110,7 @@ func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
 
 	d, ok := drivers[u.Driver]
 	if !ok {
-		return nil, WrapErr(u.Driver, ErrDriverNotAvailable)
+		return nil, WrapErr(u.Driver, text.ErrDriverNotAvailable)
 	}
 
 	// force query buffer settings
@@ -196,15 +197,16 @@ func RequirePreviousPassword(u *dburl.URL) bool {
 
 // CanChangePassword returns whether or not the specified driver's URL supports
 // changing passwords.
-func CanChangePassword(u *dburl.URL) bool {
-	if d, ok := drivers[u.Driver]; ok {
-		return d.ChPw != nil
+func CanChangePassword(u *dburl.URL) error {
+	if d, ok := drivers[u.Driver]; ok && d.ChPw != nil {
+		return nil
 	}
-	return false
+	return text.ErrPasswordNotSupportedByDriver
 }
 
 // ChangePassword initiates a user password change for the specified URL's
-// driver.
+// driver. If user is not supplied, then the current user will be retrieved
+// from User.
 func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.ChPw != nil {
 		var err error
@@ -217,7 +219,7 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 
 		return user, d.ChPw(db, user, new, old)
 	}
-	return "", ErrChangePasswordNotSupported
+	return "", text.ErrPasswordNotSupportedByDriver
 }
 
 // Columns returns the columns for SQL result for the specified URL's driver.
