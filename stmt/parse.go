@@ -35,6 +35,17 @@ func findNonSpace(r []rune, i, end int) (int, bool) {
 	return i, false
 }
 
+// findRune finds the next rune c in r, returning end if not found.
+func findRune(r []rune, i, end int, c rune) (int, bool) {
+	for ; i < end; i++ {
+		if r[i] == c {
+			return i, true
+		}
+	}
+
+	return i, false
+}
+
 // isEmptyLine returns true when r is empty or composed of only whitespace.
 func isEmptyLine(r []rune, i, end int) bool {
 	_, ok := findNonSpace(r, i, end)
@@ -73,7 +84,15 @@ func trimSplit(r []rune, i, end int) []string {
 			// empty
 			return a
 		}
-		m, _ := findSpace(r, n, end)
+
+		var m int
+		if c := r[n]; c == '\'' || c == '"' || c == '`' {
+			m, _ = findRune(r, n+1, end, c)
+			m++
+		} else {
+			m, _ = findSpace(r, n, end)
+		}
+
 		a = append(a, string(r[n:m]))
 		i = m
 	}
@@ -152,7 +171,8 @@ func readMultilineComment(r []rune, i, end int) (int, bool) {
 func readStringVar(r []rune, i, end int) *Var {
 	start, q := i, grab(r, i+1, end)
 	for i += 2; i < end; i++ {
-		if c := grab(r, i, end); c == q {
+		c := grab(r, i, end)
+		if c == q {
 			if i-start < 3 {
 				return nil
 			}
@@ -163,7 +183,13 @@ func readStringVar(r []rune, i, end int) *Var {
 				Q:   q,
 				N:   string(r[start+2 : i]),
 			}
-		}
+		} /*
+			// this is commented out, because need to determine what should be
+			// the "right" behavior ... should we only allow "identifiers"?
+			else if c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+				return nil
+			}
+		*/
 	}
 
 	return nil

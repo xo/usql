@@ -175,12 +175,20 @@ func TestTrimSplit(t *testing.T) {
 		{"\\c    foo    bar    z  ", 1, "c foo bar z"},
 		{"\\c    pg://blah    bar    z  ", 1, "c pg://blah bar z"},
 		{"\\foo    pg://blah    bar    z  ", 1, "foo pg://blah bar z"},
+
+		{`\c 'foo bar' z`, 1, `c|'foo bar'|z`},
+		{`\c foo "bar " z `, 1, `c|foo|"bar "|z`},
+		{"\\c `foo bar z  `  ", 1, "c|`foo bar z  `"},
 	}
 
 	for i, test := range tests {
 		z := []rune(test.s)
 		y := trimSplit(z, test.i, len(z))
-		exp := strings.Split(test.exp, " ")
+		sp := " "
+		if strings.Contains(test.exp, "|") {
+			sp = "|"
+		}
+		exp := strings.Split(test.exp, sp)
 		if test.exp == "" {
 			if len(y) != 0 {
 				t.Errorf("test %d expected result to have length 0, has length: %d", i, len(y))
@@ -198,26 +206,35 @@ func TestReadCommand(t *testing.T) {
 		exp string
 		r   string
 	}{
-		{"\\c foo bar z", 0, "c foo bar z", ""},
-		{"\\c foo bar z ", 0, "c foo bar z", ""},
-		{"\\c foo bar z  ", 0, "c foo bar z", ""},
-		{"\\c    foo    bar    z  ", 0, "c foo bar z", ""},
-		{"\\c    pg://blah    bar    z  ", 0, "c pg://blah bar z", ""},
-		{"\\foo    pg://blah    bar    z  ", 0, "foo pg://blah bar z", ""},
-		{"\\p \\p", 0, "p", "\\p"},
-		{"\\p foo \\p", 0, "p foo", "\\p"},
-		{"\\p foo   \\p bar", 0, "p foo", "\\p bar"},
-		{"\\p\\p", 0, "p\\p", ""},
-		{"\\p \\r foo", 0, "p", "\\r foo"},
-		{"\\print   \\reset    foo", 0, "print", "\\reset    foo"},
-		{"\\print   \\reset    foo", 9, "reset foo", ""},
-		{"\\print   \\reset    foo  ", 9, "reset foo", ""},
-		{"\\print   \\reset    foo  bar  ", 9, "reset foo bar", ""},
+		{`\c foo bar z`, 0, `c foo bar z`, ``},
+		{`\c foo bar z `, 0, `c foo bar z`, ``},
+		{`\c foo bar z  `, 0, `c foo bar z`, ``},
+		{`\c    foo    bar    z  `, 0, `c foo bar z`, ``},
+		{`\c    pg://blah    bar    z  `, 0, `c pg://blah bar z`, ``},
+		{`\foo    pg://blah    bar    z  `, 0, `foo pg://blah bar z`, ``},
+		{`\p \p`, 0, `p`, `\p`},
+		{`\p foo \p`, 0, `p foo`, `\p`},
+		{`\p foo   \p bar`, 0, `p foo`, `\p bar`},
+		{`\p\p`, 0, `p\p`, ``},
+		{`\p \r foo`, 0, `p`, `\r foo`},
+		{`\print   \reset    foo`, 0, `print`, `\reset    foo`},
+		{`\print   \reset    foo`, 9, `reset foo`, ``},
+		{`\print   \reset    foo  `, 9, `reset foo`, ``},
+		{`\print   \reset    foo  bar  `, 9, `reset foo bar`, ``},
+
+		{`\c 'foo bar' z`, 0, `c|'foo bar'|z`, ``},
+		{`\c foo "bar " z `, 0, `c|foo|"bar "|z`, ``},
+		{"\\c `foo bar z  `  ", 0, "c|`foo bar z  `", ``},
 	}
 
 	for i, test := range tests {
 		z := []rune(test.s)
-		a := strings.Split(test.exp, " ")
+
+		sp := " "
+		if strings.Contains(test.exp, "|") {
+			sp = "|"
+		}
+		a := strings.Split(test.exp, sp)
 
 		cmd, params, pos := readCommand(z, test.i, len(z))
 		if cmd != a[0] {
