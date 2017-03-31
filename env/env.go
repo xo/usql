@@ -46,10 +46,6 @@ func unquote(s string, c rune) (string, error) {
 		return "", text.ErrUnterminatedString
 	}
 
-	if c == '\'' {
-		return s, nil
-	}
-
 	return s[1 : len(s)-1], nil
 }
 
@@ -62,7 +58,7 @@ func getvar(s string) (bool, string, error) {
 		if err != nil {
 			return false, "", err
 		}
-		q, n = string(c), n[1:len(n)-1]
+		q = string(c)
 	}
 
 	if v, ok := vars[n]; ok {
@@ -346,7 +342,7 @@ func backtick(s string) (string, error) {
 	return strings.TrimSpace(string(buf)), nil
 }
 
-// Unquote unquotes the string,
+// Unquote unquotes the string.
 func Unquote(u *user.User, s string, exec bool) (string, error) {
 	if s == "" {
 		return "", nil
