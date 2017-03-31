@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/knq/dburl"
+
 	"github.com/knq/usql/drivers"
 	"github.com/knq/usql/env"
 	"github.com/knq/usql/text"
@@ -220,7 +221,7 @@ func init() {
 
 				// get path, line params
 				if len(params) > 0 {
-					path = env.Expand(params[0], h.User().HomeDir)
+					path = params[0]
 					res.Processed++
 				}
 				if len(params) > 1 {
@@ -235,7 +236,7 @@ func init() {
 				}
 
 				// reset if no error
-				n, err := env.EditFile(path, line, s)
+				n, err := env.EditFile(h.User(), path, line, s)
 				if err == nil {
 					buf.Reset(n)
 				}
@@ -315,13 +316,13 @@ func init() {
 			Process: func(h Handler, _ string, params []string) (Res, error) {
 				var res Res
 
-				home, path := h.User().HomeDir, ""
+				var path string
 				if len(params) > 0 {
-					path = env.Expand(params[0], home)
+					path = params[0]
 					res.Processed++
 				}
 
-				return res, os.Chdir(path)
+				return res, env.Chdir(h.User(), path)
 			},
 		},
 
@@ -356,7 +357,7 @@ func init() {
 			},
 			Process: func(h Handler, cmd string, params []string) (Res, error) {
 				err := h.Include(
-					env.Expand(params[0], h.User().HomeDir),
+					params[0],
 					cmd == "ir" || cmd == "include_relative",
 				)
 				if err != nil {

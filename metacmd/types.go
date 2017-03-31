@@ -4,7 +4,9 @@ import (
 	"os/user"
 
 	"github.com/knq/dburl"
+
 	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/env"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 )
@@ -49,6 +51,12 @@ type Handler interface {
 
 	// Rollback aborts the current transaction.
 	Rollback() error
+
+	// Vars returns the environment variable handler.
+	Vars() env.Vars
+
+	// Pvars returns the pretty environment variable handler.
+	Pvars() env.Pvars
 }
 
 // Runner is a runner interface type.

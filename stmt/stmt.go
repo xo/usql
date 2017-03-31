@@ -189,6 +189,9 @@ parse:
 			b.mc = true
 			i++
 
+		// potential variable declaration
+		case c == ':':
+
 		// unbalance
 		case c == '(':
 			b.b++

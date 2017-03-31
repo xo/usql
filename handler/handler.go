@@ -30,10 +30,16 @@ type Handler struct {
 	wd   string
 	nopw bool
 
+	// slm is single line mode
+	slm bool
+
 	// statement buffer
 	buf        *stmt.Stmt
 	lastPrefix string
 	last       string
+
+	vars  env.Vars
+	pvars env.Pvars
 
 	// connection
 	u  *dburl.URL
@@ -98,7 +104,7 @@ func (h *Handler) Run() error {
 		// read next statement/command
 		cmd, params, err := h.buf.Next()
 		switch {
-		case !iactive && err == nil:
+		case h.slm && err == nil:
 			execute = h.buf.Len != 0
 
 		case err == rline.ErrInterrupt:
@@ -170,6 +176,7 @@ func (h *Handler) Run() error {
 
 // CommandRunner executes a set of commands.
 func (h *Handler) CommandRunner(cmds []string) func() error {
+	h.slm = true
 	return func() error {
 		for _, cmd := range cmds {
 			h.Reset([]rune(cmd))
@@ -239,6 +246,16 @@ func (h *Handler) Last() string {
 // Buf returns the current statement buffer.
 func (h *Handler) Buf() *stmt.Stmt {
 	return h.buf
+}
+
+// Vars returns the variable handler.
+func (h *Handler) Vars() env.Vars {
+	return h.vars
+}
+
+// Pvars returns the pretty variable handler.
+func (h *Handler) Pvars() env.Pvars {
+	return h.pvars
 }
 
 // Open handles opening a specified database URL, passing either a single
@@ -365,7 +382,7 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	}
 
 	// see if password entry is present
-	user, err := env.PassFileEntry(u, h.user)
+	user, err := env.PassFileEntry(h.user, u)
 	if err != nil {
 		errout := h.l.Stderr()
 		fmt.Fprintf(errout, "error: %v", err)
@@ -701,32 +718,14 @@ func (h *Handler) Include(path string, relative bool) error {
 		path = filepath.Join(h.wd, path)
 	}
 
-	path, err = filepath.EvalSymlinks(path)
-	switch {
-	case err != nil && os.IsNotExist(err):
-		return text.ErrNoSuchFileOrDirectory
-	case err != nil:
-		return err
-	}
-
-	fi, err := os.Stat(path)
-	switch {
-	case err != nil && os.IsNotExist(err):
-		return text.ErrNoSuchFileOrDirectory
-	case err != nil:
-		return err
-	case fi.IsDir():
-		return text.ErrCannotIncludeDirectories
-	}
-
-	f, err := os.OpenFile(path, os.O_RDONLY, 0)
+	// read file
+	path, f, err := env.OpenFile(h.user, path, relative)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	s := bufio.NewScanner(f)
-
 	l := &rline.Rline{
 		N: func() ([]rune, error) {
 			if !s.Scan() {

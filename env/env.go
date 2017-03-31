@@ -30,60 +30,49 @@ func getenv(keys ...string) string {
 	return ""
 }
 
-// Expand expands the tilde (~) in the front of a path to a the supplied
+// expand expands the tilde (~) in the front of a path to a the supplied
 // directory.
-func Expand(path string, dir string) string {
+func expand(u *user.User, path string) string {
 	if strings.HasPrefix(path, "~/") {
-		return filepath.Join(dir, strings.TrimPrefix(path, "~/"))
+		return filepath.Join(u.HomeDir, strings.TrimPrefix(path, "~/"))
 	}
 
 	return path
 }
 
-// HistoryFile returns the path to the history file.
-//
-// Defaults to ~/.<command name>_history, overridden by environment variable
-// <COMMAND NAME>_HISTORY (ie, ~/.usql_history and USQL_HISTORY).
-func HistoryFile(u *user.User) string {
-	n := text.CommandUpper() + "_HISTORY"
-	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
-		path = s
+// OpenFile opens a file for reading, returning the full, expanded path of the
+// file.  All callers are responsible for closing the returned file.
+func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
+	var err error
+
+	path, err = filepath.EvalSymlinks(expand(u, path))
+	switch {
+	case err != nil && os.IsNotExist(err):
+		return "", nil, text.ErrNoSuchFileOrDirectory
+	case err != nil:
+		return "", nil, err
 	}
 
-	return Expand(path, u.HomeDir)
-}
-
-// RCFile returns the path to the RC file.
-//
-// Defaults to ~/.<command name>rc, overridden by environment variable
-// <COMMAND NAME>RC (ie, ~/.usqlrc and USQLRC).
-func RCFile(u *user.User) string {
-	n := text.CommandUpper() + "RC"
-	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
-		path = s
+	fi, err := os.Stat(path)
+	switch {
+	case err != nil && os.IsNotExist(err):
+		return "", nil, text.ErrNoSuchFileOrDirectory
+	case err != nil:
+		return "", nil, err
+	case fi.IsDir():
+		return "", nil, text.ErrCannotIncludeDirectories
 	}
 
-	return Expand(path, u.HomeDir)
-}
-
-// PassFile returns the path to the password file.
-//
-// Defaults to ~/.<command name>pass, overridden by environment variable
-// <COMMAND NAME>PASS (ie, ~/.usqlpass and USQLPASS).
-func PassFile(u *user.User) string {
-	n := text.CommandUpper() + "PASS"
-	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
-		path = s
+	f, err := os.OpenFile(path, os.O_RDONLY, 0)
+	if err != nil {
+		return "", nil, err
 	}
 
-	return Expand(path, u.HomeDir)
+	return path, f, nil
 }
 
 // EditFile edits a file. If path is empty, then a temporary file will be created.
-func EditFile(path, line, s string) ([]rune, error) {
+func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	var err error
 
 	ed := getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
@@ -91,7 +80,9 @@ func EditFile(path, line, s string) ([]rune, error) {
 		return nil, text.ErrNoEditorDefined
 	}
 
-	if path == "" {
+	if path != "" {
+		path = expand(u, path)
+	} else {
 		var f *os.File
 		f, err = ioutil.TempFile("", text.CommandLower())
 		if err != nil {
@@ -141,8 +132,51 @@ func EditFile(path, line, s string) ([]rune, error) {
 	return []rune(strings.TrimSuffix(string(buf), "\n")), nil
 }
 
-// PassFileEntry reads
-func PassFileEntry(v *dburl.URL, u *user.User) (*url.Userinfo, error) {
+// HistoryFile returns the path to the history file.
+//
+// Defaults to ~/.<command name>_history, overridden by environment variable
+// <COMMAND NAME>_HISTORY (ie, ~/.usql_history and USQL_HISTORY).
+func HistoryFile(u *user.User) string {
+	n := text.CommandUpper() + "_HISTORY"
+	path := "~/." + strings.ToLower(n)
+	if s := getenv(n); s != "" {
+		path = s
+	}
+
+	return expand(u, path)
+}
+
+// RCFile returns the path to the RC file.
+//
+// Defaults to ~/.<command name>rc, overridden by environment variable
+// <COMMAND NAME>RC (ie, ~/.usqlrc and USQLRC).
+func RCFile(u *user.User) string {
+	n := text.CommandUpper() + "RC"
+	path := "~/." + strings.ToLower(n)
+	if s := getenv(n); s != "" {
+		path = s
+	}
+
+	return expand(u, path)
+}
+
+// PassFile returns the path to the password file.
+//
+// Defaults to ~/.<command name>pass, overridden by environment variable
+// <COMMAND NAME>PASS (ie, ~/.usqlpass and USQLPASS).
+func PassFile(u *user.User) string {
+	n := text.CommandUpper() + "PASS"
+	path := "~/." + strings.ToLower(n)
+	if s := getenv(n); s != "" {
+		path = s
+	}
+
+	return expand(u, path)
+}
+
+// PassFileEntry determines if there is a password file entry for a specific
+// database URL.
+func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 	// check if v already has password defined ...
 	var username string
 	if v.User != nil {
@@ -243,4 +277,16 @@ func matchPassEntry(n, entry []string) (string, string, bool) {
 	}
 
 	return entry[4], entry[5], true
+}
+
+// Chdir changes the current working directory to the specified path, or to the
+// user's home directory if path is not specified.
+func Chdir(u *user.User, path string) error {
+	if path != "" {
+		path = expand(u, path)
+	} else {
+		path = u.HomeDir
+	}
+
+	return os.Chdir(path)
 }
