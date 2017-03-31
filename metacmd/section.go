@@ -35,7 +35,7 @@ var SectionOrder = []Section{
 	SectionGeneral, SectionHelp, SectionQueryBuffer,
 	SectionInputOutput, /*SectionInformational, SectionFormatting,*/
 	SectionTransaction,
-	SectionConnection, SectionOperatingSystem, /*SectionVariables,*/
+	SectionConnection, SectionOperatingSystem, SectionVariables,
 }
 
 // Listing writes the formatted command listing to w, separated into different

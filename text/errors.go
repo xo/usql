@@ -43,4 +43,7 @@ var (
 
 	// ErrPasswordNotSupportedByDriver is the password not supported by driver error.
 	ErrPasswordNotSupportedByDriver = errors.New(`\password not supported by driver`)
+
+	// ErrUnterminatedString is the unterminated string error.
+	ErrUnterminatedString = errors.New("unterminated string")
 )

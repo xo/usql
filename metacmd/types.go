@@ -6,7 +6,6 @@ import (
 	"github.com/knq/dburl"
 
 	"github.com/knq/usql/drivers"
-	"github.com/knq/usql/env"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 )
@@ -53,10 +52,10 @@ type Handler interface {
 	Rollback() error
 
 	// Vars returns the environment variable handler.
-	Vars() env.Vars
+	//Vars() env.Vars
 
 	// Pvars returns the pretty environment variable handler.
-	Pvars() env.Pvars
+	//Pvars() env.Pvars
 }
 
 // Runner is a runner interface type.
@@ -108,4 +107,41 @@ type Res struct {
 	// Processed informs the handling code how many parameters went
 	// unprocessed. A value of 0 means that no parameters were processed.
 	Processed int
+}
+
+// Params wraps command parameters.
+type Params struct {
+	// H is the handler.
+	H Handler
+
+	// N is the name of the command.
+	N string
+
+	// P are the passed parameters.
+	P []string
+
+	// R is the resulting state of the command execution.
+	R Res
+}
+
+// G returns the next parameter, increasing p.r.Processed.
+func (p *Params) G() string {
+	if len(p.P) > p.R.Processed {
+		s := p.P[p.R.Processed]
+		p.R.Processed++
+		return s
+	}
+	return ""
+}
+
+// A returns all remaining, unprocessed parameters.
+func (p *Params) A() []string {
+	x := make([]string, len(p.P)-p.R.Processed)
+	var j int
+	for i := p.R.Processed; i < len(p.P); i++ {
+		x[j] = p.P[i]
+		j++
+	}
+	p.R.Processed = len(p.P)
+	return x
 }

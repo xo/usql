@@ -38,7 +38,6 @@ type Handler struct {
 	lastPrefix string
 	last       string
 
-	vars  env.Vars
 	pvars env.Pvars
 
 	// connection
@@ -248,15 +247,14 @@ func (h *Handler) Buf() *stmt.Stmt {
 	return h.buf
 }
 
-// Vars returns the variable handler.
-func (h *Handler) Vars() env.Vars {
-	return h.vars
-}
-
-// Pvars returns the pretty variable handler.
-func (h *Handler) Pvars() env.Pvars {
-	return h.pvars
-}
+//// Vars returns the variable handler.
+//func (h *Handler) Vars() env.Vars {
+//}
+//
+//// Pvars returns the pretty variable handler.
+//func (h *Handler) Pvars() env.Pvars {
+//	return h.pvars
+//}
 
 // Open handles opening a specified database URL, passing either a single
 // string in the form of a URL, or more than one string, in which case the

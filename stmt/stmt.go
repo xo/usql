@@ -226,6 +226,10 @@ parse:
 		case b.q || b.mc || b.b != 0:
 			continue
 
+		// skip escaped commands
+		case c == '\\' && next == '\\':
+			i++
+
 		// start of command
 		case c == '\\':
 			// extract command from r

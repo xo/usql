@@ -21,7 +21,7 @@ type Cmd struct {
 	Desc    string
 	Min     int
 	Aliases map[string]string
-	Process func(Handler, string, []string) (Res, error)
+	Process func(*Params) error
 }
 
 // cmds is the set of commands.
@@ -43,9 +43,9 @@ func init() {
 				"?":  "show help on " + text.CommandName + " command-line options,options",
 				"? ": "show help on special variables,variables",
 			},
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				Listing(h.IO().Stdout())
-				return Res{}, nil
+			Process: func(p *Params) error {
+				Listing(p.H.IO().Stdout())
+				return nil
 			},
 		},
 
@@ -54,8 +54,9 @@ func init() {
 			Name:    "q",
 			Desc:    "quit " + text.CommandName,
 			Aliases: map[string]string{"quit": ""},
-			Process: func(Handler, string, []string) (Res, error) {
-				return Res{Quit: true}, nil
+			Process: func(p *Params) error {
+				p.R.Quit = true
+				return nil
 			},
 		},
 
@@ -63,11 +64,11 @@ func init() {
 			Section: SectionGeneral,
 			Name:    "copyright",
 			Desc:    "show " + text.CommandName + " usage and distribution terms",
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				out := h.IO().Stdout()
+			Process: func(p *Params) error {
+				out := p.H.IO().Stdout()
 				fmt.Fprintln(out, text.Copyright)
 				fmt.Fprintln(out)
-				return Res{}, nil
+				return nil
 			},
 		},
 
@@ -75,15 +76,15 @@ func init() {
 			Section: SectionConnection,
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				out := h.IO().Stdout()
-				if db, u := h.DB(), h.URL(); db != nil && u != nil {
+			Process: func(p *Params) error {
+				out := p.H.IO().Stdout()
+				if db, u := p.H.DB(), p.H.URL(); db != nil && u != nil {
 					fmt.Fprintf(out, text.ConnInfo, u.Driver, u.DSN)
 					fmt.Fprintln(out)
 				} else {
 					fmt.Fprintln(out, text.NotConnected)
 				}
-				return Res{}, nil
+				return nil
 			},
 		},
 
@@ -91,8 +92,8 @@ func init() {
 			Section: SectionGeneral,
 			Name:    "drivers",
 			Desc:    "display information about available database drivers",
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				out := h.IO().Stdout()
+			Process: func(p *Params) error {
+				out := p.H.IO().Stdout()
 
 				available := drivers.Available()
 				names := make([]string, len(available))
@@ -119,7 +120,7 @@ func init() {
 					fmt.Fprintln(out, s)
 				}
 
-				return Res{}, nil
+				return nil
 			},
 		},
 
@@ -132,8 +133,8 @@ func init() {
 				"connect": "",
 			},
 			Min: 1,
-			Process: func(h Handler, _ string, params []string) (Res, error) {
-				return Res{Processed: len(params)}, h.Open(params...)
+			Process: func(p *Params) error {
+				return p.H.Open(p.A()...)
 			},
 		},
 
@@ -142,8 +143,8 @@ func init() {
 			Name:    "Z",
 			Desc:    "close database connection",
 			Aliases: map[string]string{"disconnect": ""},
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				return Res{}, h.Close()
+			Process: func(p *Params) error {
+				return p.H.Close()
 			},
 		},
 
@@ -152,26 +153,19 @@ func init() {
 			Name:    "password",
 			Desc:    "change the password for a user,[USERNAME]",
 			Aliases: map[string]string{"passwd": ""},
-			Process: func(h Handler, _ string, params []string) (Res, error) {
-				var res Res
-				var user string
-				if len(params) > 0 {
-					user = params[0]
-					res.Processed++
-				}
-
-				user, err := h.ChangePassword(user)
+			Process: func(p *Params) error {
+				user, err := p.H.ChangePassword(p.G())
 				switch {
 				case err == text.ErrPasswordNotSupportedByDriver || err == text.ErrNotConnected:
-					return res, err
+					return err
 				case err != nil:
-					return res, fmt.Errorf(text.PasswordChangeFailed, user, err)
+					return fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
 
-				/*fmt.Fprintf(h.IO().Stdout(), text.PasswordChangeSucceeded, user)
-				fmt.Fprintln(h.IO().Stdout())*/
+				/*fmt.Fprintf(p.H.IO().Stdout(), text.PasswordChangeSucceeded, user)
+				fmt.Fprintln(p.H.IO().Stdout())*/
 
-				return res, nil
+				return nil
 			},
 		},
 
@@ -183,30 +177,21 @@ func init() {
 				"gexec": "execute query and execute each value of the result",
 				"gset":  "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
 			},
-			Process: func(h Handler, cmd string, params []string) (Res, error) {
-				res := Res{
-					Exec: ExecOnly,
-				}
+			Process: func(p *Params) error {
+				p.R.Exec = ExecOnly
 
-				switch cmd {
+				switch p.N {
 				case "g":
-					if len(params) > 0 {
-						res.ExecParam = params[0]
-						res.Processed++
-					}
+					p.R.ExecParam = p.G()
 
 				case "gexec":
-					res.Exec = ExecExec
+					p.R.Exec = ExecExec
 
 				case "gset":
-					res.Exec = ExecSet
-					if len(params) > 0 {
-						res.ExecParam = params[0]
-						res.Processed++
-					}
+					p.R.Exec, p.R.ExecParam = ExecSet, p.G()
 				}
 
-				return res, nil
+				return nil
 			},
 		},
 
@@ -215,33 +200,20 @@ func init() {
 			Name:    "e",
 			Desc:    "edit the query buffer (or file) with external editor,[FILE] [LINE]",
 			Aliases: map[string]string{"edit": ""},
-			Process: func(h Handler, _ string, params []string) (Res, error) {
-				var res Res
-				var path, line string
-
-				// get path, line params
-				if len(params) > 0 {
-					path = params[0]
-					res.Processed++
-				}
-				if len(params) > 1 {
-					line = params[1]
-					res.Processed++
-				}
-
+			Process: func(p *Params) error {
 				// get last statement
-				s, buf := h.Last(), h.Buf()
+				s, buf := p.H.Last(), p.H.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}
 
 				// reset if no error
-				n, err := env.EditFile(h.User(), path, line, s)
+				n, err := env.EditFile(p.H.User(), p.G(), p.G(), s)
 				if err == nil {
 					buf.Reset(n)
 				}
 
-				return res, err
+				return err
 			},
 		},
 
@@ -250,9 +222,9 @@ func init() {
 			Name:    "p",
 			Desc:    "show the contents of the query buffer",
 			Aliases: map[string]string{"print": ""},
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
+			Process: func(p *Params) error {
 				// get last statement
-				s, buf := h.Last(), h.Buf()
+				s, buf := p.H.Last(), p.H.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}
@@ -261,8 +233,8 @@ func init() {
 					s = text.QueryBufferEmpty
 				}
 
-				fmt.Fprintln(h.IO().Stdout(), s)
-				return Res{}, nil
+				fmt.Fprintln(p.H.IO().Stdout(), s)
+				return nil
 			},
 		},
 
@@ -271,10 +243,10 @@ func init() {
 			Name:    "r",
 			Desc:    "reset (clear) the query buffer",
 			Aliases: map[string]string{"reset": ""},
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				h.Buf().Reset(nil)
-				fmt.Fprintln(h.IO().Stdout(), text.QueryBufferReset)
-				return Res{}, nil
+			Process: func(p *Params) error {
+				p.H.Buf().Reset(nil)
+				fmt.Fprintln(p.H.IO().Stdout(), text.QueryBufferReset)
+				return nil
 			},
 		},
 
@@ -282,9 +254,9 @@ func init() {
 			Section: SectionInputOutput,
 			Name:    "echo",
 			Desc:    "write string to standard output,[STRING]",
-			Process: func(h Handler, _ string, params []string) (Res, error) {
-				fmt.Fprintln(h.IO().Stdout(), strings.Join(params, " "))
-				return Res{Processed: len(params)}, nil
+			Process: func(p *Params) error {
+				fmt.Fprintln(p.H.IO().Stdout(), strings.Join(p.A(), " "))
+				return nil
 			},
 		},
 
@@ -294,18 +266,14 @@ func init() {
 			Min:     1,
 			Desc:    "write query buffer to file,FILE",
 			Aliases: map[string]string{"write": ""},
-			Process: func(h Handler, _ string, params []string) (Res, error) {
+			Process: func(p *Params) error {
 				// get last statement
-				s, buf := h.Last(), h.Buf()
+				s, buf := p.H.Last(), p.H.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}
 
-				return Res{Processed: 1}, ioutil.WriteFile(
-					params[0],
-					[]byte(strings.TrimSuffix(s, "\n")+"\n"),
-					0644,
-				)
+				return ioutil.WriteFile(p.G(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
 			},
 		},
 
@@ -313,16 +281,8 @@ func init() {
 			Section: SectionOperatingSystem,
 			Name:    "cd",
 			Desc:    "change the current working directory,[DIR]",
-			Process: func(h Handler, _ string, params []string) (Res, error) {
-				var res Res
-
-				var path string
-				if len(params) > 0 {
-					path = params[0]
-					res.Processed++
-				}
-
-				return res, env.Chdir(h.User(), path)
+			Process: func(p *Params) error {
+				return env.Chdir(p.H.User(), p.G())
 			},
 		},
 
@@ -331,17 +291,17 @@ func init() {
 			Name:    "setenv",
 			Min:     1,
 			Desc:    "set or unset environment variable,NAME [VALUE]",
-			Process: func(h Handler, _ string, params []string) (Res, error) {
+			Process: func(p *Params) error {
 				var err error
 
-				n := params[0]
-				if len(params) == 1 {
+				n := p.G()
+				if len(p.P) == 1 {
 					err = os.Unsetenv(n)
 				} else {
-					err = os.Setenv(n, strings.Join(params, " "))
+					err = os.Setenv(n, strings.Join(p.A(), ""))
 				}
 
-				return Res{Processed: len(params)}, err
+				return err
 			},
 		},
 
@@ -355,15 +315,13 @@ func init() {
 				"include":          "",
 				"include_relative": "",
 			},
-			Process: func(h Handler, cmd string, params []string) (Res, error) {
-				err := h.Include(
-					params[0],
-					cmd == "ir" || cmd == "include_relative",
-				)
+			Process: func(p *Params) error {
+				path := p.G()
+				err := p.H.Include(path, p.N == "ir" || p.N == "include_relative")
 				if err != nil {
-					err = fmt.Errorf("%s: %v", params[0], err)
+					err = fmt.Errorf("%s: %v", path, err)
 				}
-				return Res{Processed: 1}, err
+				return err
 			},
 		},
 
@@ -371,8 +329,8 @@ func init() {
 			Section: SectionTransaction,
 			Name:    "begin",
 			Desc:    "begin a transaction",
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				return Res{}, h.Begin()
+			Process: func(p *Params) error {
+				return p.H.Begin()
 			},
 		},
 
@@ -380,8 +338,8 @@ func init() {
 			Section: SectionTransaction,
 			Name:    "commit",
 			Desc:    "commit current transaction",
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				return Res{}, h.Commit()
+			Process: func(p *Params) error {
+				return p.H.Commit()
 			},
 		},
 
@@ -390,8 +348,54 @@ func init() {
 			Name:    "rollback",
 			Desc:    "rollback (abort) current transaction",
 			Aliases: map[string]string{"abort": ""},
-			Process: func(h Handler, _ string, _ []string) (Res, error) {
-				return Res{}, h.Rollback()
+			Process: func(p *Params) error {
+				return p.H.Rollback()
+			},
+		},
+
+		Prompt: {
+			Section: SectionVariables,
+			Name:    "prompt",
+			Desc:    "prompt user to set internal variable,[TEXT] NAME",
+			Process: func(p *Params) error {
+				return nil
+			},
+		},
+
+		Set: {
+			Section: SectionVariables,
+			Name:    "set",
+			Desc:    "set internal variable, or list all if no parameters,[NAME [VALUE]]",
+			Process: func(p *Params) error {
+				if len(p.P) == 0 {
+					vars := env.All()
+					out := p.H.IO().Stdout()
+					n := make([]string, len(vars))
+					var i int
+					for k := range vars {
+						n[i] = k
+						i++
+					}
+					sort.Strings(n)
+
+					for _, k := range n {
+						fmt.Fprintln(out, k, "=", "'"+vars[k]+"'")
+					}
+				} else {
+					env.Set(p.G(), strings.Join(p.A(), ""))
+				}
+				return nil
+			},
+		},
+
+		Unset: {
+			Section: SectionVariables,
+			Name:    "unset",
+			Min:     1,
+			Desc:    "unset (delete) internal variable,NAME",
+			Process: func(p *Params) error {
+				env.Unset(p.G())
+				return nil
 			},
 		},
 	}

@@ -40,6 +40,38 @@ func expand(u *user.User, path string) string {
 	return path
 }
 
+// unquote unquotes a string.
+func unquote(s string, c rune) (string, error) {
+	if len(s) < 2 || rune(s[len(s)-1]) != c {
+		return "", text.ErrUnterminatedString
+	}
+
+	if c == '\'' {
+		return s, nil
+	}
+
+	return s[1 : len(s)-1], nil
+}
+
+// getvar retrieves a variable.
+func getvar(s string) (bool, string, error) {
+	q, n := "", s
+	if c := rune(s[0]); c == '\'' || c == '"' {
+		var err error
+		n, err = unquote(s, c)
+		if err != nil {
+			return false, "", err
+		}
+		q, n = string(c), n[1:len(n)-1]
+	}
+
+	if v, ok := vars[n]; ok {
+		return true, q + v + q, nil
+	}
+
+	return false, s, nil
+}
+
 // OpenFile opens a file for reading, returning the full, expanded path of the
 // file.  All callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
@@ -289,4 +321,65 @@ func Chdir(u *user.User, path string) error {
 	}
 
 	return os.Chdir(path)
+}
+
+// backtick runs a command like a backtick.
+func backtick(s string) (string, error) {
+	var shell, param string
+	if runtime.GOOS == "windows" {
+		shell, param = getenv("SHELL"), "-c"
+
+		if shell == "" {
+			shell, param = getenv("COMSPEC", "ComSpec"), "/c"
+		}
+	}
+
+	if shell == "" {
+		shell, param = getenv("SHELL"), "-c"
+	}
+
+	buf, err := exec.Command(shell, param, s).CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(buf)), nil
+}
+
+// Unquote unquotes the string,
+func Unquote(u *user.User, s string, exec bool) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+
+	if len(s) > 1 {
+		c := rune(s[0])
+		switch {
+		case c == ':':
+			ok, v, err := getvar(s[1:])
+			if err != nil {
+				return "", err
+			}
+
+			if ok {
+				return v, nil
+			}
+
+			return s, nil
+
+		case c == '\'' || c == '"':
+			return unquote(s, c)
+
+		case exec && c == '`':
+			var err error
+			s, err = unquote(s, c)
+			if err != nil {
+				return "", err
+			}
+
+			return backtick(s)
+		}
+	}
+
+	return s, nil
 }
