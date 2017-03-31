@@ -5,6 +5,22 @@ const (
 	MinCapIncrease = 512
 )
 
+// Var holds information about a variable.
+type Var struct {
+	// I is where the variable starts (ie, ':') in Stmt.Buf.
+	I int
+
+	// End is where the variable ends in Stmt.Buf.
+	End int
+
+	// Q is the quote character used if the variable was quoted, 0 otherwise.
+	Q rune
+
+	// N is the actual variable name excluding ':' and any enclosing quote
+	// characters.
+	N string
+}
+
 // Stmt is a reusable statement buffer that handles reading and parsing
 // SQL-like statements.
 type Stmt struct {
@@ -22,6 +38,9 @@ type Stmt struct {
 
 	// Prefix is the detected prefix of the statement.
 	Prefix string
+
+	// Vars is the list of encountered variables.
+	Vars []*Var
 
 	// r is the unprocessed runes.
 	r []rune
@@ -73,7 +92,7 @@ func (b *Stmt) Ready() bool {
 // Reset resets the statement buffer.
 func (b *Stmt) Reset(r []rune) {
 	// reset buf
-	b.Buf, b.Len, b.Prefix = nil, 0, ""
+	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
 
 	// quote state
 	b.q, b.qdbl, b.qdollar, b.qid = false, false, false, ""
@@ -191,6 +210,9 @@ parse:
 
 		// potential variable declaration
 		case c == ':':
+			if v := readVar(b.r, i, b.rlen); v != nil {
+				b.Vars = append(b.Vars, v)
+			}
 
 		// unbalance
 		case c == '(':

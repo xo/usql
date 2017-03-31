@@ -296,3 +296,116 @@ func TestFindPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestReadVar(t *testing.T) {
+	tests := []struct {
+		s   string
+		i   int
+		exp *Var
+	}{
+		{``, 0, nil},
+		{`:`, 0, nil},
+		{` :`, 0, nil},
+		{`a:`, 0, nil},
+		{`a:a`, 0, nil},
+		{`: `, 0, nil},
+		{`: a `, 0, nil},
+
+		{`:a`, 0, v(0, 2, `a`)}, // 7
+		{`:ab`, 0, v(0, 3, `ab`)},
+		{`:a `, 0, v(0, 2, `a`)},
+		{`:a_ `, 0, v(0, 3, `a_`)},
+		{":a_\t ", 0, v(0, 3, `a_`)},
+		{":a_\n ", 0, v(0, 3, `a_`)},
+
+		{`:a9`, 0, v(0, 3, `a9`)}, // 13
+		{`:ab9`, 0, v(0, 4, `ab9`)},
+		{`:a 9`, 0, v(0, 2, `a`)},
+		{`:a_9 `, 0, v(0, 4, `a_9`)},
+		{":a_9\t ", 0, v(0, 4, `a_9`)},
+		{":a_9\n ", 0, v(0, 4, `a_9`)},
+
+		{`:a_;`, 0, v(0, 3, `a_`)}, // 19
+		{`:a_\`, 0, v(0, 3, `a_`)},
+		{`:a_$`, 0, v(0, 3, `a_`)},
+		{`:a_'`, 0, v(0, 3, `a_`)},
+		{`:a_"`, 0, v(0, 3, `a_`)},
+
+		{`:ab `, 0, v(0, 3, `ab`)}, // 24
+		{`:ab123 `, 0, v(0, 6, `ab123`)},
+		{`:ab123`, 0, v(0, 6, `ab123`)},
+
+		{`:'`, 0, nil}, // 27
+		{`:' `, 0, nil},
+		{`:' a`, 0, nil},
+		{`:' a `, 0, nil},
+		{`:"`, 0, nil},
+		{`:" `, 0, nil},
+		{`:" a`, 0, nil},
+		{`:" a `, 0, nil},
+
+		{`:''`, 0, nil}, // 35
+		{`:'' `, 0, nil},
+		{`:'' a`, 0, nil},
+		{`:""`, 0, nil},
+		{`:"" `, 0, nil},
+		{`:"" a`, 0, nil},
+
+		{`:'     `, 0, nil}, // 41
+		{`:'       `, 0, nil},
+		{`:"     `, 0, nil},
+		{`:"       `, 0, nil},
+
+		{`:'a'`, 0, v(0, 4, `a`, `'`)}, // 45
+		{`:'a' `, 0, v(0, 4, `a`, `'`)},
+		{`:'ab'`, 0, v(0, 5, `ab`, `'`)},
+		{`:'ab' `, 0, v(0, 5, `ab`, `'`)},
+		{`:'ab  ' `, 0, v(0, 7, `ab  `, `'`)},
+
+		{`:"a"`, 0, v(0, 4, `a`, `"`)}, // 50
+		{`:"a" `, 0, v(0, 4, `a`, `"`)},
+		{`:"ab"`, 0, v(0, 5, `ab`, `"`)},
+		{`:"ab" `, 0, v(0, 5, `ab`, `"`)},
+		{`:"ab  " `, 0, v(0, 7, `ab  `, `"`)},
+	}
+
+	for i, test := range tests {
+		//t.Logf(">>> test %d", i)
+		z := []rune(test.s)
+		v := readVar(z, test.i, len(z))
+		if !reflect.DeepEqual(v, test.exp) {
+			t.Errorf("test %d expected %#v, got: %#v", i, test.exp, v)
+		}
+		if test.exp != nil && v != nil {
+			n := string(z[v.I+1 : v.End])
+
+			if v.Q != 0 {
+				if c := rune(n[0]); c != v.Q {
+					t.Errorf("test %d expected var to start with quote %c, got: %c", i, c, v.Q)
+				}
+				if c := rune(n[len(n)-1]); c != v.Q {
+					t.Errorf("test %d expected var to end with quote %c, got: %c", i, c, v.Q)
+				}
+				n = n[1 : len(n)-1]
+			}
+
+			if n != test.exp.N {
+				t.Errorf("test %d expected var name of `%s`, got: `%s`", i, test.exp.N, n)
+			}
+		}
+	}
+}
+
+func v(i, end int, n string, x ...string) *Var {
+	z := &Var{
+		I:   0,
+		End: end,
+		N:   n,
+	}
+
+	if len(x) != 0 {
+		z.Q = rune(x[0][0])
+	}
+
+	return z
+}

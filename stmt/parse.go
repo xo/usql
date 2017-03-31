@@ -148,6 +148,60 @@ func readMultilineComment(r []rune, i, end int) (int, bool) {
 	return end, false
 }
 
+// readStringVar reads a string quoted variable.
+func readStringVar(r []rune, i, end int) *Var {
+	start, q := i, grab(r, i+1, end)
+	for i += 2; i < end; i++ {
+		if c := grab(r, i, end); c == q {
+			if i-start < 3 {
+				return nil
+			}
+
+			return &Var{
+				I:   start,
+				End: i + 1,
+				Q:   q,
+				N:   string(r[start+2 : i]),
+			}
+		}
+	}
+
+	return nil
+}
+
+// readVar reads the variable.
+func readVar(r []rune, i, end int) *Var {
+	if grab(r, i, end) != ':' {
+		return nil
+	}
+
+	if end-i < 2 {
+		return nil
+	}
+
+	if c := grab(r, i+1, end); c == '"' || c == '\'' {
+		return readStringVar(r, i, end)
+	}
+
+	start := i
+	i++
+	for ; i < end; i++ {
+		if c := grab(r, i, end); c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+			break
+		}
+	}
+
+	if i-start < 2 {
+		return nil
+	}
+
+	return &Var{
+		I:   start,
+		End: i,
+		N:   string(r[start+1 : i]),
+	}
+}
+
 // readCommand reads the command and any parameters from r.
 func readCommand(r []rune, i, end int) (string, []string, int) {
 	i++
