@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -437,10 +438,63 @@ func (h *Handler) Close() error {
 	return nil
 }
 
+// ReadVar reads a variable from the interactive prompt, saving it to
+// environment variables.
+func (h *Handler) ReadVar(typ, prompt string) (string, error) {
+	if !h.l.Interactive() {
+		return "", text.ErrNotInteractive
+	}
+
+	var masked bool
+	// check type
+	switch typ {
+	case "password":
+		masked = true
+	case "string", "int", "uint", "float", "bool":
+	default:
+		return "", text.ErrInvalidType
+	}
+
+	var v string
+	var err error
+	if masked {
+		if prompt == "" {
+			prompt = text.EnterPassword
+		}
+		v, err = h.l.Password(prompt)
+	} else {
+		h.l.Prompt(prompt)
+		var r []rune
+		r, err = h.l.Next()
+		v = string(r)
+	}
+
+	var z interface{} = v
+	switch typ {
+	case "int":
+		z, err = strconv.ParseInt(v, 10, 64)
+	case "uint":
+		z, err = strconv.ParseUint(v, 10, 64)
+	case "float":
+		z, err = strconv.ParseFloat(v, 64)
+	case "bool":
+		z, err = strconv.ParseBool(v)
+	}
+	if err != nil {
+		return "", text.ErrInvalidValue
+	}
+
+	return fmt.Sprintf("%v", z), nil
+}
+
 // ChangePassword changes a password for the user.
 func (h *Handler) ChangePassword(user string) (string, error) {
 	if h.db == nil {
 		return "", text.ErrNotConnected
+	}
+
+	if !h.l.Interactive() {
+		return "", text.ErrNotInteractive
 	}
 
 	var err error

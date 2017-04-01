@@ -1,5 +1,9 @@
 package stmt
 
+import (
+	"github.com/knq/usql/env"
+)
+
 const (
 	// MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
 	MinCapIncrease = 512
@@ -19,6 +23,9 @@ type Var struct {
 	// N is the actual variable name excluding ':' and any enclosing quote
 	// characters.
 	N string
+
+	// Len is the length of the replaced variable.
+	Len int
 }
 
 // Stmt is a reusable statement buffer that handles reading and parsing
@@ -208,10 +215,19 @@ parse:
 			b.mc = true
 			i++
 
-		// potential variable declaration
-		case c == ':':
+		// variable declaration
+		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen); v != nil {
+				q := ""
+				if v.Q != 0 {
+					q = string(v.Q)
+				}
+
 				b.Vars = append(b.Vars, v)
+				if ok, z, _ := env.Getvar(q + v.N + q); ok {
+					b.r, b.rlen = substituteVar(b.r, v, z)
+					i--
+				}
 			}
 
 		// unbalance
@@ -226,7 +242,7 @@ parse:
 		case b.q || b.mc || b.b != 0:
 			continue
 
-		// skip escaped commands
+		// skip escaped backslash
 		case c == '\\' && next == '\\':
 			i++
 

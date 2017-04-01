@@ -2,10 +2,12 @@ package metacmd
 
 import (
 	"os/user"
+	"strings"
 
 	"github.com/knq/dburl"
 
 	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/env"
 	"github.com/knq/usql/rline"
 	"github.com/knq/usql/stmt"
 )
@@ -38,6 +40,9 @@ type Handler interface {
 
 	// ChangePassword changes the password for a user.
 	ChangePassword(string) (string, error)
+
+	// ReadVar reads a variable of a specified type.
+	ReadVar(string, string) (string, error)
 
 	// Include includes a file.
 	Include(string, bool) error
@@ -124,22 +129,36 @@ type Params struct {
 	R Res
 }
 
-// G returns the next parameter, increasing p.r.Processed.
+// G returns the next parameter, increasing p.R.Processed by 1.
 func (p *Params) G() string {
 	if len(p.P) > p.R.Processed {
-		s := p.P[p.R.Processed]
+		s, _ := env.Unquote(p.H.User(), p.P[p.R.Processed], true)
 		p.R.Processed++
 		return s
 	}
 	return ""
 }
 
-// A returns all remaining, unprocessed parameters.
+// V returns the next parameter only if it is prefixed with a "-", increasing
+// p.R.Processed when it is, otherwise returning d.
+func (p *Params) V(d string) string {
+	if len(p.P) > p.R.Processed && strings.HasPrefix(p.P[p.R.Processed], "-") {
+		s := p.P[p.R.Processed][1:]
+		p.R.Processed++
+		return s
+	}
+
+	return d
+}
+
+// A returns all remaining, unprocessed parameters, incrementing p.R.processed
+// appropriately.
 func (p *Params) A() []string {
 	x := make([]string, len(p.P)-p.R.Processed)
 	var j int
 	for i := p.R.Processed; i < len(p.P); i++ {
-		x[j] = p.P[i]
+		s, _ := env.Unquote(p.H.User(), p.P[i], true)
+		x[j] = s
 		j++
 	}
 	p.R.Processed = len(p.P)

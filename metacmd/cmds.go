@@ -356,9 +356,25 @@ func init() {
 		Prompt: {
 			Section: SectionVariables,
 			Name:    "prompt",
+			Min:     1,
 			Desc:    "prompt user to set internal variable,[TEXT] NAME",
 			Process: func(p *Params) error {
-				return nil
+				typ, n := p.V("string"), p.G()
+				if n == "" {
+					return text.ErrMissingRequiredArgument
+				}
+
+				err := env.ValidIdentifier(n)
+				if err != nil {
+					return err
+				}
+
+				v, err := p.H.ReadVar(typ, strings.Join(p.A(), " "))
+				if err != nil {
+					return err
+				}
+
+				return env.Set(n, v)
 			},
 		},
 
@@ -381,10 +397,10 @@ func init() {
 					for _, k := range n {
 						fmt.Fprintln(out, k, "=", "'"+vars[k]+"'")
 					}
-				} else {
-					env.Set(p.G(), strings.Join(p.A(), ""))
+					return nil
 				}
-				return nil
+
+				return env.Set(p.G(), strings.Join(p.A(), ""))
 			},
 		},
 
@@ -394,8 +410,7 @@ func init() {
 			Min:     1,
 			Desc:    "unset (delete) internal variable,NAME",
 			Process: func(p *Params) error {
-				env.Unset(p.G())
-				return nil
+				return env.Unset(p.G())
 			},
 		},
 	}

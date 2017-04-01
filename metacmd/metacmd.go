@@ -1,7 +1,6 @@
 package metacmd
 
 import (
-	"github.com/knq/usql/env"
 	"github.com/knq/usql/text"
 )
 
@@ -21,14 +20,6 @@ func Decode(name string, params []string) (Runner, error) {
 	}
 
 	return RunnerFunc(func(h Handler) (Res, error) {
-		for i, s := range params {
-			v, err := env.Unquote(h.User(), s, true)
-			if err != nil {
-				return Res{Processed: len(params)}, err
-			}
-			params[i] = v
-		}
-
 		p := &Params{h, name, params, Res{}}
 		err := cmd.Process(p)
 		return p.R, err

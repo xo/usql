@@ -413,9 +413,55 @@ func TestReadVar(t *testing.T) {
 	}
 }
 
+func TestSubstituteVar(t *testing.T) {
+	a512 := sl(512, 'a')
+
+	tests := []struct {
+		s   string
+		v   *Var
+		sub string
+		exp string
+	}{
+		{":a", v(0, 2, "a"), "x", "x"},
+		{" :a", v(1, 3, "a"), "x", " x"},
+		{":a ", v(0, 2, "a"), "x", "x "},
+		{" :a ", v(1, 3, "a"), "x", " x "},
+		{" :'a' ", v(1, 5, "a", "'"), "'x'", " 'x' "},
+		{` :"a" `, v(1, 5, "a", `"`), `"x"`, ` "x" `},
+
+		{":a", v(0, 2, "a"), "", ""}, // 6
+		{" :a", v(1, 3, "a"), "", " "},
+		{":a ", v(0, 2, "a"), "", " "},
+		{" :a ", v(1, 3, "a"), "", "  "},
+		{" :'a' ", v(1, 5, "a", "'"), "", "  "},
+		{` :"a" `, v(1, 5, "a", `"`), "", `  `},
+
+		{` :aaa `, v(1, 5, "aaa"), "", "  "}, // 12
+		{` :aaa `, v(1, 5, "aaa"), a512, " " + a512 + " "},
+		{` :` + a512 + ` `, v(1, len(a512)+2, a512), "", "  "},
+	}
+
+	for i, test := range tests {
+		z := []rune(test.s)
+		y, l := substituteVar(z, test.v, test.sub)
+
+		if test.v.Len != len(test.sub) {
+			t.Errorf("test %d, expected v.Len to be %d, got: %d", len(test.sub), test.v.Len)
+		}
+
+		if l != len(test.exp) {
+			t.Errorf("test %d expected l==%d, got: %d", i, len(test.exp), l)
+		}
+
+		if s := string(y); s != test.exp {
+			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, s)
+		}
+	}
+}
+
 func v(i, end int, n string, x ...string) *Var {
 	z := &Var{
-		I:   0,
+		I:   i,
 		End: end,
 		N:   n,
 	}

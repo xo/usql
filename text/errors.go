@@ -46,4 +46,19 @@ var (
 
 	// ErrUnterminatedString is the unterminated string error.
 	ErrUnterminatedString = errors.New("unterminated string")
+
+	// ErrNoShellAvailable is the no SHELL available error.
+	ErrNoShellAvailable = errors.New("no SHELL available")
+
+	// ErrNotInteractive is the not interactive error.
+	ErrNotInteractive = errors.New("not interactive")
+
+	// ErrInvalidType is the invalid type error.
+	ErrInvalidType = errors.New("invalid type")
+
+	// ErrInvalidIdentifier is the invalid identifier error.
+	ErrInvalidIdentifier = errors.New("invalid identifier")
+
+	// ErrInvalidValue is the invalid value error.
+	ErrInvalidValue = errors.New("invalid value")
 )

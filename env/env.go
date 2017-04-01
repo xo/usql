@@ -49,8 +49,8 @@ func unquote(s string, c rune) (string, error) {
 	return s[1 : len(s)-1], nil
 }
 
-// getvar retrieves a variable.
-func getvar(s string) (bool, string, error) {
+// Getvar retrieves a variable.
+func Getvar(s string) (bool, string, error) {
 	q, n := "", s
 	if c := rune(s[0]); c == '\'' || c == '"' {
 		var err error
@@ -319,19 +319,45 @@ func Chdir(u *user.User, path string) error {
 	return os.Chdir(path)
 }
 
-// backtick runs a command like a backtick.
-func backtick(s string) (string, error) {
+// getshell returns the user's defined SHELL, or system default (if found on
+// path).
+func getshell() (string, string) {
 	var shell, param string
-	if runtime.GOOS == "windows" {
-		shell, param = getenv("SHELL"), "-c"
 
-		if shell == "" {
-			shell, param = getenv("COMSPEC", "ComSpec"), "/c"
+	shell, param = getenv("SHELL"), "-c"
+	if shell == "" && runtime.GOOS == "windows" {
+		shell, param = getenv("COMSPEC", "ComSpec"), "/c"
+	}
+
+	// look up path for "cmd.exe" if no other SHELL
+	if shell == "" && runtime.GOOS == "windows" {
+		shell, _ = exec.LookPath("cmd.exe")
+		if shell != "" {
+			param = "/c"
 		}
 	}
 
+	// lookup path for "sh" if no other SHELL
 	if shell == "" {
-		shell, param = getenv("SHELL"), "-c"
+		shell, _ = exec.LookPath("sh")
+		if shell != "" {
+			param = "-c"
+		}
+	}
+
+	return shell, param
+}
+
+// Exec runs s using the user's SHELL / COMSPEC (Windows, aka 'ComSpec'),
+// with -c (or /c).
+//
+// When SHELL or COMSPEC is not defined, then "sh" / "cmd.exe" will be used
+// instead, assuming it is found on the system's PATH.
+func Exec(s string) (string, error) {
+	shell, param := getshell()
+
+	if shell == "" {
+		return "", text.ErrNoShellAvailable
 	}
 
 	buf, err := exec.Command(shell, param, s).CombinedOutput()
@@ -352,7 +378,7 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 		c := rune(s[0])
 		switch {
 		case c == ':':
-			ok, v, err := getvar(s[1:])
+			ok, v, err := Getvar(s[1:])
 			if err != nil {
 				return "", err
 			}
@@ -373,7 +399,7 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 				return "", err
 			}
 
-			return backtick(s)
+			return Exec(s)
 		}
 	}
 

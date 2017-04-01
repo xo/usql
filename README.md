@@ -321,24 +321,18 @@ for more features than the base `psql` command provides. Currently, the list of
 planned / in progress work:
 
 ##### General
-1. pager + pipe / gexec/gset support
-2. variable support / interpolation + \prompt, \set, \unset
-3. backtick params in meta commands
-4. Fix meta command parsing when passed a quoted string ie, \echo "   foo
-   bar  " should have all whitespace included in the parameter
-5. fix table output / formatting
-6. SQL variables + environment
-7. add support for managing multiple database connections simultaneously
+1. \gexec/\gset support
+2. PAGER
+3. \qecho + \o support
+4. fix table output / formatting
+6. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
-8. SQL completion (WIP)
-9. syntax highlighting (WIP)
-10. \encoding and environment/command line options to set encoding of input (to
+7. SQL completion (WIP)
+8. syntax highlighting (WIP)
+9. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-11. better --help support/output cli, man pages
-12. \gprompt for prompting for prepared queries ...
-  - select * from ... where blah = :1 \gprompt string|password
-  - update users set pass = :1 \gprompt
+10. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
 1. the \j* commands (WIP)
@@ -358,9 +352,10 @@ planned / in progress work:
 ##### Future Database Support
 1. Google Spanner
 2. Cassandra
-3. CSV via SQLite3 vtable
-4. Google Sheets via SQLite3 vtable
-5. Atlassian JIRA JQL (why not? lol)
+3. InfluxDB
+4. CSV via SQLite3 vtable
+5. Google Sheets via SQLite3 vtable
+6. Atlassian JIRA JQL (why not? lol)
 
 ##### Releases
 

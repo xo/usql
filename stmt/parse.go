@@ -197,7 +197,7 @@ func readStringVar(r []rune, i, end int) *Var {
 
 // readVar reads the variable.
 func readVar(r []rune, i, end int) *Var {
-	if grab(r, i, end) != ':' {
+	if grab(r, i, end) != ':' || grab(r, i+1, end) == ':' {
 		return nil
 	}
 
@@ -287,4 +287,23 @@ func findPrefix(r []rune, i, end, n int) string {
 	}
 
 	return ""
+}
+
+// substituteVar substitutes part of r, based on v, with s.
+func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
+	v.Len = len(s)
+
+	// grow ...
+	tlen := len(r) + v.Len - (v.End - v.I)
+	if tlen > cap(r) {
+		z := make([]rune, tlen)
+		copy(z, r)
+		r = z
+	}
+
+	// substitute
+	copy(r[v.I+v.Len:], r[v.End:])
+	copy(r[v.I:v.I+v.Len], []rune(s))
+
+	return r[:tlen], tlen
 }
