@@ -305,6 +305,25 @@ func init() {
 			},
 		},
 
+		ShellExec: {
+			Section: SectionOperatingSystem,
+			Name:    "!",
+			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
+			Process: func(p *Params) error {
+				if len(p.P) == 0 && !p.H.IO().Interactive() {
+					return text.ErrNotInteractive
+				}
+
+				p.R.Processed = len(p.P)
+				v, err := env.Exec(strings.TrimSpace(strings.Join(p.P, " ")))
+				if err == nil && v != "" {
+					fmt.Fprintln(p.H.IO().Stdout(), v)
+				}
+
+				return nil
+			},
+		},
+
 		Include: {
 			Section: SectionInputOutput,
 			Name:    "i",

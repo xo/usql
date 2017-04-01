@@ -360,12 +360,18 @@ func Exec(s string) (string, error) {
 		return "", text.ErrNoShellAvailable
 	}
 
-	buf, err := exec.Command(shell, param, s).CombinedOutput()
-	if err != nil {
-		return "", err
+	if strings.TrimSpace(s) != "" {
+		buf, err := exec.Command(shell, param, s).CombinedOutput()
+		if err != nil {
+			return "", err
+		}
+		return strings.TrimSpace(string(buf)), nil
 	}
 
-	return strings.TrimSpace(string(buf)), nil
+	// drop to shell
+	cmd := exec.Command(shell)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	return "", cmd.Run()
 }
 
 // Unquote unquotes the string.
@@ -397,6 +403,10 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 			s, err = unquote(s, c)
 			if err != nil {
 				return "", err
+			}
+
+			if strings.TrimSpace(s) == "" {
+				return "", nil
 			}
 
 			return Exec(s)

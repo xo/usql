@@ -82,6 +82,9 @@ const (
 	// SetEnv is the system set environment variable meta command (\setenv).
 	SetEnv
 
+	// ShellExec is the system shell exec meta command (\!).
+	ShellExec
+
 	// Include is the system include file meta command (\i and variants).
 	Include
 
