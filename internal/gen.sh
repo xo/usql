@@ -6,6 +6,11 @@ SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 
 ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort)
 
+SED=sed
+if [ "$(uname)" == "Darwin" ]; then
+  SED=gsed
+fi
+
 NL=$'\n'
 
 # generate imports for all drivers
@@ -42,8 +47,8 @@ done
 KNOWN=
 for i in $ALL; do
   NAME=$(basename $i)
-  DRV=$(sed -n '/DRIVER: /p' $i/$NAME.go|sed -e 's/.*DRIVER:\s*//')
-  PKG=$(sed -n '/DRIVER: /{n;p;}' $i/$NAME.go|sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/"\s*//')
+  DRV=$($SED -n '/DRIVER: /p' $i/$NAME.go|$SED -e 's/.*DRIVER:\s*//')
+  PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/"\s*//')
   KNOWN="$KNOWN$NL\"$DRV\": \"$NAME\", // $PKG"
 done
 
