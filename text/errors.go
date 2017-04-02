@@ -61,4 +61,7 @@ var (
 
 	// ErrInvalidValue is the invalid value error.
 	ErrInvalidValue = errors.New("invalid value")
+
+	// ErrTooManyRows is the too many rows error.
+	ErrTooManyRows = errors.New("too many rows")
 )

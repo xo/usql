@@ -33,7 +33,9 @@ func getenv(keys ...string) string {
 // expand expands the tilde (~) in the front of a path to a the supplied
 // directory.
 func expand(u *user.User, path string) string {
-	if strings.HasPrefix(path, "~/") {
+	if path == "~" {
+		return u.HomeDir
+	} else if strings.HasPrefix(path, "~/") {
 		return filepath.Join(u.HomeDir, strings.TrimPrefix(path, "~/"))
 	}
 

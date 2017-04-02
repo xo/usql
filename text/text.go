@@ -58,6 +58,8 @@ var (
 
 	PasswordChangeFailed = `\password for "%s" failed: %v`
 
+	CouldNotSetVariable = `could not set variable "%s"`
+
 	//PasswordChangeSucceeded = `\password succeeded for "%s"`
 
 	HelpDesc string

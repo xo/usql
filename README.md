@@ -322,24 +322,37 @@ planned / in progress work:
 
 ##### General
 1. \gexec/\gset support
-2. PAGER
-3. \qecho + \o support
-4. fix table output / formatting
-6. add support for managing multiple database connections simultaneously
+2. Google Spanner
+3. PAGER
+4. \qecho + \o support
+5. fix table output / formatting
+7. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
-7. SQL completion (WIP)
-8. syntax highlighting (WIP)
-9. \encoding and environment/command line options to set encoding of input (to
+    maybe execute using something like \g @:name or :@name ? or \g -name ?
+    \c -name pg://user@localhost/dbname
+    by using a -name syntax, can be the same as passed cli parameters for the provided dsn -- could even be the same form, like:
+    `usql -N myconn pg://booktest@localhost` or `usql --name myconn pg://`
+    then, working with \copy, could do:
+    `\copy -N myconn <source> to -N myconn2 <dest>`
+    syntax something like:
+    ```txt
+        source := <table> | (<select_stmt>)
+        dest := <table>
+        table := <identifier> (<column_list>)
+    ```
+8. SQL completion (WIP)
+9. syntax highlighting (WIP)
+10. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-10. better --help support/output cli, man pages
+11. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
 1. the \j* commands (WIP)
 2. \watch
 3. \errverbose
 4. formatting settings (\pset, \a, etc)
-5. all \\d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
+5. all \d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
 6. remaining `psql` cli parameters
 
 ##### Not important / "Nice to haves" / extremely low priority:
@@ -350,7 +363,6 @@ planned / in progress work:
 1. test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
 
 ##### Future Database Support
-1. Google Spanner
 2. Cassandra
 3. InfluxDB
 4. CSV via SQLite3 vtable

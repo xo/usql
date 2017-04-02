@@ -164,7 +164,7 @@ func (h *Handler) Run() error {
 
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
 			if h.last != "" && h.last != ";" {
-				err = h.Execute(stdout, h.lastPrefix, h.last)
+				err = h.Execute(stdout, res, h.lastPrefix, h.last)
 				if err != nil {
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
@@ -172,6 +172,29 @@ func (h *Handler) Run() error {
 			}
 		}
 	}
+}
+
+// Execute executes a query against the connected database.
+func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string) error {
+	if h.db == nil {
+		return text.ErrNotConnected
+	}
+
+	// determine type and pre process string
+	prefix, qstr, qtyp, err := drivers.Process(h.u, prefix, qstr)
+	if err != nil {
+		return drivers.WrapErr(h.u.Driver, err)
+	}
+
+	f := h.execOnly
+	switch res.Exec {
+	case metacmd.ExecSet:
+		f = h.execSet
+	case metacmd.ExecExec:
+		f = h.execExec
+	}
+
+	return drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam))
 }
 
 // CommandRunner executes a set of commands.
@@ -557,34 +580,91 @@ func (h *Handler) Version() error {
 	return nil
 }
 
-// Execute executes a sql query against the connected database.
-func (h *Handler) Execute(w io.Writer, prefix, sqlstr string) error {
-	if h.db == nil {
-		return text.ErrNotConnected
-	}
-
-	// determine type and pre process string
-	typ, s, q, err := drivers.Process(h.u, prefix, sqlstr)
-	if err != nil {
-		return err
-	}
-
+// execOnly executes a query against the database.
+func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string) error {
 	// exec or query
 	f := h.exec
-	if q {
+	if qtyp {
 		f = h.query
 	}
 
 	// exec
-	return drivers.WrapErr(h.u.Driver, f(w, typ, s))
+	return f(w, prefix, qstr)
+}
+
+// execSet executes a SQL query, setting all returned columns as variables.
+func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix string) error {
+	// query
+	q, err := h.DB().Query(qstr)
+	if err != nil {
+		return err
+	}
+
+	// get cols
+	cols, err := drivers.Columns(h.u, q)
+	if err != nil {
+		return err
+	}
+
+	var i int
+	var row []string
+	for q.Next() {
+		if i == 0 {
+			row, err = h.scan(q, len(cols))
+			if err != nil {
+				return err
+			}
+		}
+		i++
+	}
+	if i > 1 {
+		return text.ErrTooManyRows
+	}
+
+	// set vars
+	for i, c := range cols {
+		n := namePrefix + c
+		if err = env.ValidIdentifier(n); err != nil {
+			return fmt.Errorf(text.CouldNotSetVariable, n)
+		}
+		env.Set(n, row[i])
+	}
+
+	return nil
+}
+
+// execExec executes a query and re-executes all columns of all rows as if they
+// were their own queries.
+func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string) error {
+	// query
+	q, err := h.DB().Query(qstr)
+	if err != nil {
+		return err
+	}
+
+	// execRows
+	h.execRows(w, q)
+	if err != nil {
+		return err
+	}
+
+	// check for additional result sets ...
+	for drivers.NextResultSet(q) {
+		err = h.execRows(w, q)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // query executes a query against the database.
-func (h *Handler) query(w io.Writer, _, sqlstr string) error {
+func (h *Handler) query(w io.Writer, _, qstr string) error {
 	var err error
 
 	// run query
-	q, err := h.DB().Query(sqlstr)
+	q, err := h.DB().Query(qstr)
 	if err != nil {
 		return err
 	}
@@ -607,9 +687,40 @@ func (h *Handler) query(w io.Writer, _, sqlstr string) error {
 	return nil
 }
 
+// execRows executes all the columns in the row.
+func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
+	var err error
+
+	// get columns
+	cols, err := drivers.Columns(h.u, q)
+	if err != nil {
+		return err
+	}
+
+	clen, res := len(cols), metacmd.Res{Exec: metacmd.ExecOnly}
+	for q.Next() {
+		if clen != 0 {
+			row, err := h.scan(q, clen)
+			if err != nil {
+				return err
+			}
+
+			// execute
+			for _, qstr := range row {
+				err = h.Execute(w, res, stmt.FindPrefix(qstr, 4), qstr)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // outputRows outputs the supplied SQL rows to the supplied writer.
 func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
-	// get column names
+	// get columns
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
 		return err
@@ -626,37 +737,9 @@ func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 	var rows int
 	for q.Next() {
 		if clen != 0 {
-			r := make([]interface{}, clen)
-			for i := range r {
-				r[i] = new(interface{})
-			}
-
-			err = q.Scan(r...)
+			row, err := h.scan(q, clen)
 			if err != nil {
 				return err
-			}
-
-			row := make([]string, clen)
-			for n, z := range r {
-				j := z.(*interface{})
-				//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
-				switch x := (*j).(type) {
-				case []byte:
-					row[n] = drivers.ConvertBytes(h.u, x)
-
-				case string:
-					row[n] = x
-
-				case time.Time:
-					row[n] = x.Format(time.RFC3339Nano)
-
-				case fmt.Stringer:
-					row[n] = x.String()
-
-				default:
-					row[n] = fmt.Sprintf("%v", *j)
-				}
-
 			}
 			t.Append(row)
 			rows++
@@ -673,11 +756,47 @@ func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 	return nil
 }
 
+// scan scans a row.
+func (h *Handler) scan(q *sql.Rows, clen int) ([]string, error) {
+	r := make([]interface{}, clen)
+	for i := range r {
+		r[i] = new(interface{})
+	}
+
+	err := q.Scan(r...)
+	if err != nil {
+		return nil, err
+	}
+
+	row := make([]string, clen)
+	for n, z := range r {
+		j := z.(*interface{})
+		//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
+		switch x := (*j).(type) {
+		case []byte:
+			row[n] = drivers.ConvertBytes(h.u, x)
+
+		case string:
+			row[n] = x
+
+		case time.Time:
+			row[n] = x.Format(time.RFC3339Nano)
+
+		case fmt.Stringer:
+			row[n] = x.String()
+
+		default:
+			row[n] = fmt.Sprintf("%v", *j)
+		}
+	}
+	return row, err
+}
+
 // exec does a database exec.
-func (h *Handler) exec(w io.Writer, typ, sqlstr string) error {
+func (h *Handler) exec(w io.Writer, typ, qstr string) error {
 	var err error
 
-	res, err := h.DB().Exec(sqlstr)
+	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err
 	}

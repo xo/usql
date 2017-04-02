@@ -89,12 +89,12 @@ const (
 	// ExecPipe indicates execution and piping results (\g |file)
 	ExecPipe
 
-	// ExecExec indicates execution and executing the resulting rows (\gexec).
-	ExecExec
-
 	// ExecSet indicates execution and setting the resulting columns as
 	// variables (\gset).
 	ExecSet
+
+	// ExecExec indicates execution and executing the resulting rows (\gexec).
+	ExecExec
 )
 
 // Res is the result of a meta command execution.

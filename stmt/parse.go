@@ -289,6 +289,12 @@ func findPrefix(r []rune, i, end, n int) string {
 	return ""
 }
 
+// FindPrefix finds the prefix in s up to n words.
+func FindPrefix(s string, n int) string {
+	r := []rune(s)
+	return findPrefix(r, 0, len(r), n)
+}
+
 // substituteVar substitutes part of r, based on v, with s.
 func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 	v.Len = len(s)
