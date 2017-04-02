@@ -60,21 +60,19 @@ $ go get -u -tags most github.com/knq/usql
 ## Interactive Demo
 
 The below is a demonstration using `usql` with [xo's booktest](https://github.com/knq/xo)
-simple test database, showcasing a early version of `usql`. In the
-demonstration, `usql` connects to an Oracle database instance, performs some
-basic queries, and subsequently connects to PostgreSQL, MySQL, Microsoft SQL
-Server, and SQLite3 databases, and similarly executes the same basic queries
-against each database.
+simple test database, showcasing the release version v0.5.0. In the demonstration,
+`usql` connects to a PostgreSQL database, executes some queries, with variable
+interpolation, connects to a SQLite3 database file, and does some more quries,
+before then connecting to a Microsoft SQL database and ending the session.
 
 <p align="center">
-  <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" target="_blank">
-    <img src="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48.png" width="654"/>
+  <a href="https://asciinema.org/a/5pta801tqofc1847gsp5ytjdf" target="_blank">
+    <img src="https://asciinema.org/a/5pta801tqofc1847gsp5ytjdf.png" width="654"/>
   </a>
 </p>
 
-Please note the above was recorded using the an early release version of
-`usql`, and since then, `usql` has become significantly more robust and
-feature-compatible with PostgreSQL's `psql`.
+A previous demo showcasing `usql`'s general support for, and connecting to
+multiple databases <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" target="_blank">is also available for viewing</a>.
 
 ## Database Support
 
