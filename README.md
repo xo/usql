@@ -242,6 +242,12 @@ Connection
 Operating System
   \cd [DIR]             change the current working directory
   \setenv NAME [VALUE]  set or unset environment variable
+  \! [COMMAND]          execute command in shell or start interactive shell
+
+Variables
+  \prompt [TEXT] NAME   prompt user to set internal variable
+  \set [NAME [VALUE]]   set internal variable, or list all if no parameters
+  \unset NAME           unset (delete) internal variable
 ```
 
 More coming soon!
