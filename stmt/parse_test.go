@@ -446,7 +446,7 @@ func TestSubstituteVar(t *testing.T) {
 		y, l := substituteVar(z, test.v, test.sub)
 
 		if test.v.Len != len(test.sub) {
-			t.Errorf("test %d, expected v.Len to be %d, got: %d", len(test.sub), test.v.Len)
+			t.Errorf("test %d, expected v.Len to be %d, got: %d", i, len(test.sub), test.v.Len)
 		}
 
 		if l != len(test.exp) {

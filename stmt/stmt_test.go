@@ -244,7 +244,7 @@ func TestNextResetState(t *testing.T) {
 			t.Fatalf("test %d after reset should have len %d, got: %d", i, 0, b.Len)
 		}
 		if len(b.Vars) != 0 {
-			t.Fatalf("test %d after reset should have len(vars) == 0, got: %d", len(b.Vars))
+			t.Fatalf("test %d after reset should have len(vars) == 0, got: %d", i, len(b.Vars))
 		}
 		if b.Prefix != "" {
 			t.Fatalf("test %d after reset should have empty prefix, got: %s", i, b.Prefix)
