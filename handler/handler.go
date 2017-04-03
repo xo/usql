@@ -373,14 +373,14 @@ func (h *Handler) Open(params ...string) error {
 
 // forceParamMap are the params to force for specific database drivers/schemes.
 var forceParamMap = map[string][]string{
-	"mysql": []string{
+	"mysql": {
 		"parseTime", "true",
 		"loc", "Local",
 		"sql_mode", "ansi",
 	},
-	"mymysql":     []string{"sql_mode", "ansi"},
-	"sqlite3":     []string{"loc", "auto"},
-	"cockroachdb": []string{"sslmode", "disable"},
+	"mymysql":     {"sql_mode", "ansi"},
+	"sqlite3":     {"loc", "auto"},
+	"cockroachdb": {"sslmode", "disable"},
 }
 
 // forceParams forces connection parameters on a database URL.

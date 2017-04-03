@@ -24,7 +24,7 @@ var (
 	ErrPreviousTransactionExists = errors.New("previous transaction exists")
 
 	// ErrPasswordAttemptsExhausted is the exhausted password attempts error.
-	ErrPasswordAttemptsExhausted = errors.New("password attempts exhuasted")
+	ErrPasswordAttemptsExhausted = errors.New("password attempts exhausted")
 
 	// ErrSingleTransactionCannotBeUsedWithInteractiveMode is the single transaction cannot be used with interactive mode error.
 	ErrSingleTransactionCannotBeUsedWithInteractiveMode = errors.New("--single-transaction cannot be used with interactive mode")

@@ -1,5 +1,6 @@
 package text
 
+// License contains the license text for usql.
 var License = `The MIT License (MIT)
 
 Copyright (c) 2016-2017 Kenneth Shaw

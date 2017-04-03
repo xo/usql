@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Various usql text bits.
 var (
 	CommandName = `usql`
 
@@ -69,11 +70,11 @@ var (
 	HelpCommandPrefix = `Type:  `
 
 	HelpCommands = [][]string{
-		[]string{`copyright`, `for distribution terms`},
-		[]string{`h`, `for help with SQL commands`},
-		[]string{`?`, `for help with ` + CommandName + ` commands`},
-		[]string{`g`, `or terminate with semicolon to execute query`},
-		[]string{`q`, `to quit`},
+		{`copyright`, `for distribution terms`},
+		//[]string{`h`, `for help with SQL commands`},
+		{`?`, `for help with ` + CommandName + ` commands`},
+		{`g`, `or terminate with semicolon to execute query`},
+		{`q`, `to quit`},
 	}
 )
 
