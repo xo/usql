@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func sl(len int, c byte) string {
-	b := make([]byte, len)
+func sl(len int, r rune) string {
+	z := make([]rune, len)
 	for i := 0; i < len; i++ {
-		b[i] = c
+		z[i] = r
 	}
-	return string(b)
+	return string(z)
 }
 
 func TestAppend(t *testing.T) {

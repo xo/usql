@@ -297,19 +297,22 @@ func FindPrefix(s string, n int) string {
 
 // substituteVar substitutes part of r, based on v, with s.
 func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
-	v.Len = len(s)
+	sr, rcap := []rune(s), cap(r)
+	v.Len = len(sr)
 
 	// grow ...
 	tlen := len(r) + v.Len - (v.End - v.I)
-	if tlen > cap(r) {
+	if tlen > rcap {
 		z := make([]rune, tlen)
 		copy(z, r)
 		r = z
+	} else {
+		r = r[:rcap]
 	}
 
 	// substitute
 	copy(r[v.I+v.Len:], r[v.End:])
-	copy(r[v.I:v.I+v.Len], []rune(s))
+	copy(r[v.I:v.I+v.Len], sr)
 
 	return r[:tlen], tlen
 }
