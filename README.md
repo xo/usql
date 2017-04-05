@@ -1,7 +1,7 @@
 # About usql
 
 `usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle,
-SQLite3, Microsoft SQL Server, [and other databases](#database_support).
+SQLite3, Microsoft SQL Server, [and other databases](#database-support).
 
 #### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
 
