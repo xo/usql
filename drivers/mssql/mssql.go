@@ -12,6 +12,7 @@ import (
 
 func init() {
 	drivers.Register("mssql", drivers.Driver{
+		AMC:   true,
 		ReqPP: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver, level, edition string
