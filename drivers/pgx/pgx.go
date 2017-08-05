@@ -9,10 +9,6 @@ import (
 	"github.com/knq/usql/drivers"
 )
 
-const (
-	pgxMaxConnections = 3
-)
-
 func init() {
 	drivers.Register("pgx", drivers.Driver{
 		AD: true, AMC: true,
