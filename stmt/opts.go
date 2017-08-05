@@ -18,3 +18,19 @@ func AllowMultilineComments(enable bool) func(*Stmt) {
 		b.allowMc = enable
 	}
 }
+
+// AllowCComments is a statement buffer option to set allowing C-style comments
+// (ie, // ...).
+func AllowCComments(enable bool) func(*Stmt) {
+	return func(b *Stmt) {
+		b.allowCc = enable
+	}
+}
+
+// AllowHashComments is a statement buffer option to set allowing hash comments
+// (ie, # ...).
+func AllowHashComments(enable bool) func(*Stmt) {
+	return func(b *Stmt) {
+		b.allowHc = enable
+	}
+}

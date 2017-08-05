@@ -8,5 +8,7 @@ import (
 )
 
 func init() {
-	drivers.Register("clickhouse", drivers.Driver{})
+	drivers.Register("clickhouse", drivers.Driver{
+		AMC: true,
+	})
 }

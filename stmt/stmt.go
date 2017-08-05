@@ -35,7 +35,7 @@ type Stmt struct {
 	f func() ([]rune, error)
 
 	// parse settings
-	allowDollar, allowMc bool
+	allowDollar, allowMc, allowCc, allowHc bool
 
 	// Buf is the statement buffer.
 	Buf []rune
@@ -210,7 +210,15 @@ parse:
 		case c == '-' && next == '-':
 			i = b.rlen
 
-		// start of multiline comment (postgres)
+		// start of c-style comment, skip to end of line
+		case b.allowCc && c == '/' && next == '/':
+			i = b.rlen
+
+		// start of hash comment, skip to end of line
+		case b.allowHc && c == '#':
+			i = b.rlen
+
+		// start of multiline comment
 		case b.allowMc && c == '/' && next == '*':
 			b.mc = true
 			i++

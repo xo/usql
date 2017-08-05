@@ -11,6 +11,7 @@ import (
 
 func init() {
 	drivers.Register("hdb", drivers.Driver{
+		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`select version from m_database`).Scan(&ver)

@@ -11,6 +11,7 @@ import (
 
 func init() {
 	drivers.Register("n1ql", drivers.Driver{
+		AMC: true,
 		E: func(err error) (string, string) {
 			return "", strings.TrimPrefix(err.Error(), "N1QL: ")
 		},

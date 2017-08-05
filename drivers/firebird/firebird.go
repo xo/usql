@@ -8,5 +8,7 @@ import (
 )
 
 func init() {
-	drivers.Register("firebirdsql", drivers.Driver{})
+	drivers.Register("firebirdsql", drivers.Driver{
+		AMC: true,
+	})
 }

@@ -31,6 +31,12 @@ type Driver struct {
 	// comments.
 	AMC bool
 
+	// ACC will be passed to query buffers to enable C (//) style comments.
+	ACC bool
+
+	// AHC will be passed to query buffers to enable hash (#) style comments.
+	AHC bool
+
 	// ReqPP will be used by RequirePreviousPassword.
 	ReqPP bool
 

@@ -11,6 +11,8 @@ import (
 
 func init() {
 	drivers.Register("mysql", drivers.Driver{
+		AMC: true,
+		AHC: true,
 		E: func(err error) (string, string) {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return strconv.Itoa(int(e.Number)), e.Message

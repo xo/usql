@@ -11,7 +11,8 @@ import (
 
 func init() {
 	drivers.Register("pgx", drivers.Driver{
-		AD: true, AMC: true,
+		AD:  true,
+		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`show server_version`).Scan(&ver)

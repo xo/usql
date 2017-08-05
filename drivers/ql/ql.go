@@ -8,5 +8,8 @@ import (
 )
 
 func init() {
-	drivers.Register("ql", drivers.Driver{})
+	drivers.Register("ql", drivers.Driver{
+		AMC: true,
+		ACC: true,
+	})
 }

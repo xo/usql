@@ -15,6 +15,7 @@ import (
 
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
+		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`select sqlite_version()`).Scan(&ver)
