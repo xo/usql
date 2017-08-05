@@ -51,7 +51,7 @@ for i in $ALL; do
   NAME=$(basename $i)
   DRV=$($SED -n '/DRIVER: /p' $i/$NAME.go|$SED -e 's/.*DRIVER:\s*//')
   PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/"\s*//')
-  KNOWN="$KNOWN$NL\"$DRV\": \"$NAME\", // $PKG"
+  KNOWN="$KNOWN$NL\"$NAME\": \"$DRV\", // $PKG"
 done
 
 DATA=$(cat << ENDSTR
