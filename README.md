@@ -104,7 +104,6 @@ summarized below:
 | SAP HANA             | hdb                  | [github.com/SAP/go-hdb/driver](https://github.com/SAP/go-hdb)                                                                  |
 | Sybase SQL Anywhere  | sqlany               | [github.com/a-palchikov/sqlago](https://github.com/a-palchikov/sqlago)                                                         |
 | VoltDB               | voltdb               | [github.com/VoltDB/voltdb-client-go/voltdbclient](github.com/VoltDB/voltdb-client-go])                                         |
-| YQL                  | yql                  | [github.com/mattn/go-yql](https://github.com/mattn/go-yql)                                                                     |
 |                      |                      |                                                                                                                                |
 | Google Spanner       | spanner              | github.com/knq/spanner (not yet public)                                                                                        |
 |                      |                      |                                                                                                                                |

@@ -24,6 +24,5 @@ func KnownBuildTags() map[string]string {
 		"hdb":         "saphana",    // github.com/SAP/go-hdb/driver
 		"sqlite3":     "sqlite3",    // github.com/mattn/go-sqlite3
 		"voltdb":      "voltdb",     // github.com/VoltDB/voltdb-client-go/voltdbclient
-		"yql":         "yql",        // github.com/mattn/go-yql
 	}
 }
