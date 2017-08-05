@@ -1,13 +1,10 @@
 package pgx
 
 import (
-	"database/sql"
-
 	// DRIVER: pgx
-	"github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/stdlib"
 
 	"github.com/jackc/pgx"
-	"github.com/knq/dburl"
 
 	"github.com/knq/usql/drivers"
 )
@@ -19,31 +16,6 @@ const (
 func init() {
 	drivers.Register("pgx", drivers.Driver{
 		AD: true, AMC: true,
-		O: func(u *dburl.URL) (func(string, string) (*sql.DB, error), error) {
-			var err error
-
-			u.DSN, err = dburl.GenPostgres(u)
-			if err != nil {
-				return nil, err
-			}
-
-			cfg, err := pgx.ParseDSN(u.DSN)
-			if err != nil {
-				return nil, err
-			}
-
-			pool, err := pgx.NewConnPool(pgx.ConnPoolConfig{
-				ConnConfig:     cfg,
-				MaxConnections: pgxMaxConnections,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			return func(string, string) (*sql.DB, error) {
-				return stdlib.OpenFromConnPool(pool)
-			}, nil
-		},
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`show server_version`).Scan(&ver)
