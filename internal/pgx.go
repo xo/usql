@@ -6,5 +6,5 @@ package internal
 
 import (
 	// pgx driver
-	_ "github.com/knq/usql/drivers/pgx"
+	_ "github.com/xo/usql/drivers/pgx"
 )

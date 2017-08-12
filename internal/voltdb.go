@@ -6,5 +6,5 @@ package internal
 
 import (
 	// voltdb driver
-	_ "github.com/knq/usql/drivers/voltdb"
+	_ "github.com/xo/usql/drivers/voltdb"
 )

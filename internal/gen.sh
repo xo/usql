@@ -38,7 +38,7 @@ package internal
 
 import (
   // $NAME driver
-  _ "github.com/knq/usql/drivers/$NAME"
+  _ "github.com/xo/usql/drivers/$NAME"
 )
 ENDSTR
 )

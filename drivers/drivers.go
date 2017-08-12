@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/knq/dburl"
-	"github.com/knq/usql/stmt"
-	"github.com/knq/usql/text"
+	"github.com/xo/dburl"
+	"github.com/xo/usql/stmt"
+	"github.com/xo/usql/text"
 )
 
 // DB is the common interface for database operations, compatible with

@@ -6,7 +6,7 @@ import (
 	// DRIVER: hdb
 	_ "github.com/SAP/go-hdb/driver"
 
-	"github.com/knq/usql/drivers"
+	"github.com/xo/usql/drivers"
 )
 
 func init() {

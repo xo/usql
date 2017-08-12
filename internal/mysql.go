@@ -6,5 +6,5 @@ package internal
 
 import (
 	// mysql driver
-	_ "github.com/knq/usql/drivers/mysql"
+	_ "github.com/xo/usql/drivers/mysql"
 )

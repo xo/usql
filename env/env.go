@@ -14,9 +14,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/knq/dburl"
+	"github.com/xo/dburl"
 
-	"github.com/knq/usql/text"
+	"github.com/xo/usql/text"
 )
 
 // getenv tries retrieving successive keys from os environment variables.

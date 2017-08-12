@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx"
 
-	"github.com/knq/usql/drivers"
+	"github.com/xo/usql/drivers"
 )
 
 func init() {

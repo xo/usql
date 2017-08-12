@@ -13,15 +13,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/knq/dburl"
 	"github.com/olekukonko/tablewriter"
+	"github.com/xo/dburl"
 
-	"github.com/knq/usql/drivers"
-	"github.com/knq/usql/env"
-	"github.com/knq/usql/metacmd"
-	"github.com/knq/usql/rline"
-	"github.com/knq/usql/stmt"
-	"github.com/knq/usql/text"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/env"
+	"github.com/xo/usql/metacmd"
+	"github.com/xo/usql/rline"
+	"github.com/xo/usql/stmt"
+	"github.com/xo/usql/text"
 )
 
 // Handler is a input process handler.

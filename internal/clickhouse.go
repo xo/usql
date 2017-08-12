@@ -6,5 +6,5 @@ package internal
 
 import (
 	// clickhouse driver
-	_ "github.com/knq/usql/drivers/clickhouse"
+	_ "github.com/xo/usql/drivers/clickhouse"
 )
