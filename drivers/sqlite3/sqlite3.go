@@ -8,9 +8,9 @@ import (
 	// DRIVER: sqlite3
 	"github.com/mattn/go-sqlite3"
 
-	"github.com/xo/xoutil"
+	"github.com/knq/xoutil"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

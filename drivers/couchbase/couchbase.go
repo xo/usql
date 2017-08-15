@@ -6,7 +6,7 @@ import (
 	// DRIVER: n1ql
 	_ "github.com/couchbase/go_n1ql"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

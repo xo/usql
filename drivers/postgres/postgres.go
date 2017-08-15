@@ -4,7 +4,7 @@ import (
 	// DRIVER: postgres
 	"github.com/lib/pq"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

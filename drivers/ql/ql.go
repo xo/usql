@@ -4,7 +4,7 @@ import (
 	// DRIVER: ql
 	_ "github.com/cznic/ql/driver"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

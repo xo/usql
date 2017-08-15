@@ -6,7 +6,7 @@ import (
 	// DRIVER: odbc
 	"github.com/alexbrainman/odbc"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

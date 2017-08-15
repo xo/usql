@@ -6,5 +6,5 @@ package internal
 
 import (
 	// ql driver
-	_ "github.com/xo/usql/drivers/ql"
+	_ "github.com/knq/usql/drivers/ql"
 )

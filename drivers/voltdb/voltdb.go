@@ -4,7 +4,7 @@ import (
 	// DRIVER: voltdb
 	_ "github.com/VoltDB/voltdb-client-go/voltdbclient"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

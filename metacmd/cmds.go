@@ -7,11 +7,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/xo/dburl"
+	"github.com/knq/dburl"
 
-	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/env"
-	"github.com/xo/usql/text"
+	"github.com/knq/usql/drivers"
+	"github.com/knq/usql/env"
+	"github.com/knq/usql/text"
 )
 
 // Cmd is a command implementation.

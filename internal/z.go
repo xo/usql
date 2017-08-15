@@ -3,9 +3,9 @@ package internal
 import (
 	"runtime"
 
-	"github.com/xo/dburl"
+	"github.com/knq/dburl"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

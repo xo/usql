@@ -3,7 +3,7 @@ package env
 import (
 	"unicode"
 
-	"github.com/xo/usql/text"
+	"github.com/knq/usql/text"
 )
 
 // Vars is a map of variables.

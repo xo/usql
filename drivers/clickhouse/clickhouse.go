@@ -4,7 +4,7 @@ import (
 	// DRIVER: clickhouse
 	_ "github.com/kshvakov/clickhouse"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

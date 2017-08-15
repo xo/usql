@@ -6,7 +6,7 @@ import (
 	// DRIVER: adodb
 	_ "github.com/mattn/go-adodb"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

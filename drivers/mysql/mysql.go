@@ -6,7 +6,7 @@ import (
 	// DRIVER: mysql
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

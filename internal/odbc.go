@@ -6,5 +6,5 @@ package internal
 
 import (
 	// odbc driver
-	_ "github.com/xo/usql/drivers/odbc"
+	_ "github.com/knq/usql/drivers/odbc"
 )

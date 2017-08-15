@@ -8,7 +8,7 @@ import (
 
 	"github.com/ziutek/mymysql/mysql"
 
-	"github.com/xo/usql/drivers"
+	"github.com/knq/usql/drivers"
 )
 
 func init() {

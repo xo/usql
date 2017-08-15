@@ -6,5 +6,5 @@ package internal
 
 import (
 	// adodb driver
-	_ "github.com/xo/usql/drivers/adodb"
+	_ "github.com/knq/usql/drivers/adodb"
 )

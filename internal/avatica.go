@@ -6,5 +6,5 @@ package internal
 
 import (
 	// avatica driver
-	_ "github.com/xo/usql/drivers/avatica"
+	_ "github.com/knq/usql/drivers/avatica"
 )
