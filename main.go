@@ -23,8 +23,7 @@ func main() {
 	// get available drivers and known build tags
 	available, known := drivers.Available(), internal.KnownBuildTags()
 
-	// circumvent all logic to determine if usql was built with support for a
-	// specific driver
+	// report if database is supported
 	if len(os.Args) == 2 &&
 		strings.HasPrefix(os.Args[1], "--has-") &&
 		strings.HasSuffix(os.Args[1], "-support") {
