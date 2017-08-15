@@ -1,7 +1,7 @@
 package stmt
 
 import (
-	"github.com/knq/usql/env"
+	"github.com/xo/usql/env"
 )
 
 const (

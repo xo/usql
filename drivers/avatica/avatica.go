@@ -6,7 +6,7 @@ import (
 	// DRIVER: avatica
 	"github.com/Boostport/avatica"
 
-	"github.com/knq/usql/drivers"
+	"github.com/xo/usql/drivers"
 )
 
 func init() {

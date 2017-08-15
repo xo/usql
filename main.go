@@ -11,12 +11,12 @@ import (
 
 	"github.com/alexflint/go-arg"
 
-	"github.com/knq/usql/drivers"
-	"github.com/knq/usql/env"
-	"github.com/knq/usql/handler"
-	"github.com/knq/usql/internal"
-	"github.com/knq/usql/rline"
-	"github.com/knq/usql/text"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/env"
+	"github.com/xo/usql/handler"
+	"github.com/xo/usql/internal"
+	"github.com/xo/usql/rline"
+	"github.com/xo/usql/text"
 )
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 					tag = t
 				}
 
-				fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/knq/usql\n\n")
+				fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/xo/usql\n\n")
 			}
 		}
 

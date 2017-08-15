@@ -6,5 +6,5 @@ package internal
 
 import (
 	// sqlite3 driver
-	_ "github.com/knq/usql/drivers/sqlite3"
+	_ "github.com/xo/usql/drivers/sqlite3"
 )

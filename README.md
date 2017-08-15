@@ -11,11 +11,11 @@ SQLite3, Microsoft SQL Server, [and other databases](#database-support).
 [Connection Strings]: #database-connection-strings (Database Connection Strings)
 [Commands]: #backslash--commands (Backslash Commands)
 [Building]: #buildinstall-from-source (Build/Install from Source)
-[Releases]: https://github.com/knq/usql/releases (Project Releases)
+[Releases]: https://github.com/xo/usql/releases (Project Releases)
 
 ## Quickstart
 
-1. [Download a release for your platform](https://github.com/knq/usql/releases)
+1. [Download a release for your platform](https://github.com/xo/usql/releases)
 2. Extract the `.zip` (Windows), or `.tar.bz2` (OS X/Linux) file and place the
    `usql` executable somewhere on your `%PATH%` (Windows), or your `$PATH` (OS X/Linux)
 3. Connect to a database using `usql driver://user:pass@host/dbname`, and
@@ -54,12 +54,12 @@ you may [install directly](#build_install) in the usual Go fashion:
 
 ```sh
 # install usql with most SQL drivers
-$ go get -u -tags most github.com/knq/usql
+$ go get -u -tags most github.com/xo/usql
 ```
 
 ## Interactive Demo
 
-The below is a demonstration using `usql` with [xo's booktest](https://github.com/knq/xo)
+The below is a demonstration using `usql` with [xo's booktest](https://github.com/xo/xo)
 simple test database, showcasing the release version v0.5.0. In the demonstration,
 `usql` connects to a PostgreSQL database, executes some queries, with variable
 interpolation, connects to a SQLite3 database file, and does some more quries,
@@ -78,7 +78,7 @@ multiple databases <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" t
 
 `usql` aims to provide support for all Go standard library compatible SQL
 drivers -- with an emphasis on supporting the drivers that sister project,
-[`dburl`](https://github.com/knq/dburl), provides "out-of-the-box" URL support
+[`dburl`](https://github.com/xo/dburl), provides "out-of-the-box" URL support
 for.
 
 The databases currently supported by `usql` (and related build tag name) are
@@ -105,7 +105,7 @@ summarized below:
 | Sybase SQL Anywhere  | sqlany               | [github.com/a-palchikov/sqlago](https://github.com/a-palchikov/sqlago)                                                         |
 | VoltDB               | voltdb               | [github.com/VoltDB/voltdb-client-go/voltdbclient](github.com/VoltDB/voltdb-client-go])                                         |
 |                      |                      |                                                                                                                                |
-| Google Spanner       | spanner              | github.com/knq/spanner (not yet public)                                                                                        |
+| Google Spanner       | spanner              | github.com/xo/spanner (not yet public)                                                                                        |
 |                      |                      |                                                                                                                                |
 | **MOST DRIVERS**     | most                 | (all drivers listed above, excluding the drivers for Oracle and ODBC, which require third-party dependencies to build/install) |
 | **ALL DRIVERS**      | all                  | (all drivers listed above)                                                                                                     |
@@ -145,7 +145,7 @@ using the `mysql` driver, or when a directory is found, `usql` will attempt to
 open the path using the `postgres` driver; last, if it the path is a regular
 file, `usql` will attempt to open the file using the `sqlite3` driver.
 
-`usql` recognizes the same drivers and scheme aliases from the [`dburl`](https://github.com/knq/dburl)
+`usql` recognizes the same drivers and scheme aliases from the [`dburl`](https://github.com/xo/dburl)
 package. Please see the `dburl` documentation for more in-depth information on
 how DSNs are built from standard URLs. Additionally, all of the above formats
 can be used in conjuction with the `\c` (or `\connect`) backslash meta command.
@@ -255,7 +255,7 @@ You can build or install `usql` from source in the usual Go fashion:
 
 ```sh
 # install usql (includes support for PosgreSQL, MySQL, SQLite3, and MS SQL)
-$ go get -u github.com/knq/usql
+$ go get -u github.com/xo/usql
 ```
 
 Please note that default calls to `go get`, `go build`, or `go install` will
@@ -275,19 +275,19 @@ number of build tags to enable/disable specific drivers as needed:
 
 ```sh
 # install all drivers
-$ go get -u -tags all github.com/knq/usql
+$ go get -u -tags all github.com/xo/usql
 
 # install with "most" drivers (same as "all" but excludes oracle/odbc)
-$ go get -u -tags most github.com/knq/usql
+$ go get -u -tags most github.com/xo/usql
 
 # install with base drivers and oracle / odbc support
-$ go get -u -tags 'oracle odbc' github.com/knq/usql
+$ go get -u -tags 'oracle odbc' github.com/xo/usql
 
 # install all drivers but exclude avatica, and couchbase drivers
 $ go get -u -tags 'all no_avatica no_couchbase'
 ```
 
-For reference, [`usql` releases](https://github.com/knq/usql/releases) are
+For reference, [`usql` releases](https://github.com/xo/usql/releases) are
 built with the `most` tag, and with [additional SQLite3 specific build tags](contrib/build-release.sh).
 
 ### Using `usql` as a library
@@ -301,7 +301,7 @@ relatively straight-forward and easy to do so.
 Please refer to the [main command-line entry point](main.go) to see how `usql`
 uses its constituent packages to create a interactive command-line
 handler/interpreter. Additionally, `usql`'s code is fairly well-documented --
-please refer to the [GoDoc listing](https://godoc.org/github.com/knq/usql) to
+please refer to the [GoDoc listing](https://godoc.org/github.com/xo/usql) to
 see how it's all put together.
 
 ## Compatibility and TODO
@@ -386,5 +386,5 @@ Additional:
 
 ## Related Projects
 
-* [dburl](https://github.com/knq/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
-* [xo](https://github.com/knq/xo) - a command-line tool to generate Go code from a database schema
+* [dburl](https://github.com/xo/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
+* [xo](https://github.com/xo/xo) - a command-line tool to generate Go code from a database schema

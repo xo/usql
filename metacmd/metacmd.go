@@ -1,7 +1,7 @@
 package metacmd
 
 import (
-	"github.com/knq/usql/text"
+	"github.com/xo/usql/text"
 )
 
 // Metacmd represents a command and associated meta information about it.

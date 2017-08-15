@@ -57,7 +57,7 @@ pushd $SRC &> /dev/null
 
 go build \
   -tags "$TAGS" \
-  -ldflags="-s -w -X github.com/knq/usql/text.CommandName=$NAME -X github.com/knq/usql/text.CommandVersion=$VER" \
+  -ldflags="-s -w -X github.com/xo/usql/text.CommandName=$NAME -X github.com/xo/usql/text.CommandVersion=$VER" \
   -o $BIN
 
 echo -n "checking usql --version: "
