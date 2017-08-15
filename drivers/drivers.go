@@ -122,6 +122,8 @@ func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
 	// force query buffer settings
 	stmt.AllowDollar(d.AD)(buf)
 	stmt.AllowMultilineComments(d.AMC)(buf)
+	stmt.AllowCComments(d.ACC)(buf)
+	stmt.AllowHashComments(d.AHC)(buf)
 
 	f := sql.Open
 	if d.O != nil {
