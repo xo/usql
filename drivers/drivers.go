@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alecthomas/chroma"
+	"github.com/alecthomas/chroma/lexers"
 	"github.com/xo/dburl"
+
 	"github.com/xo/usql/stmt"
 	"github.com/xo/usql/text"
 )
@@ -39,6 +42,9 @@ type Driver struct {
 
 	// ReqPP will be used by RequirePreviousPassword.
 	ReqPP bool
+
+	// Syn is the name of the syntax lexer to use.
+	Syn string
 
 	// O will be used by Open if defined.
 	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
@@ -282,4 +288,17 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 // Ping pings the database for a specified URL's driver.
 func Ping(u *dburl.URL, db *sql.DB) error {
 	return WrapErr(u.Driver, db.Ping())
+}
+
+// Lexer returns the syntax lexer for a specified URL's driver.
+func Lexer(u *dburl.URL) chroma.Lexer {
+	var l chroma.Lexer
+	if d, ok := drivers[u.Driver]; ok && d.Syn != "" {
+		l = lexers.Get(d.Syn)
+	}
+	if l == nil {
+		l = lexers.Get("sql")
+	}
+
+	return l
 }

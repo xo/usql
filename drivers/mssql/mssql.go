@@ -14,6 +14,7 @@ func init() {
 	drivers.Register("mssql", drivers.Driver{
 		AMC:   true,
 		ReqPP: true,
+		Syn:   "tsql",
 		V: func(db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRow(

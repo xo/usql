@@ -13,6 +13,7 @@ func init() {
 	drivers.Register("pgx", drivers.Driver{
 		AD:  true,
 		AMC: true,
+		Syn: "postgres",
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`show server_version`).Scan(&ver)
