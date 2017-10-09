@@ -232,7 +232,7 @@ func init() {
 
 				if s == "" {
 					s = text.QueryBufferEmpty
-				} else if p.H.IO().Interactive() {
+				} else if p.H.IO().Interactive() && env.All()["SYNTAX_HL"] == "true" {
 					b := new(bytes.Buffer)
 					if p.H.Highlight(b, s) == nil {
 						s = b.String()

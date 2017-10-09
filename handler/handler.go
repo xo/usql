@@ -43,8 +43,6 @@ type Handler struct {
 	lastPrefix string
 	last       string
 
-	pvars env.Pvars
-
 	// connection
 	u  *dburl.URL
 	db *sql.DB
@@ -87,7 +85,7 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 
 	if iactive {
 		l.SetOutput(func(s string) string {
-			if len(s) == 0 || s == " \b" /* TODO: bail if syntax coloring is not enabled */ {
+			if len(s) == 0 || s == " \b" || env.All()["SYNTAX_HL"] != "true" {
 				return s
 			}
 
@@ -339,8 +337,12 @@ func (h *Handler) Buf() *stmt.Stmt {
 
 // Highlight highlights using the current environment settings.
 func (h *Handler) Highlight(w io.Writer, buf string) error {
+	vars := env.All()
+
 	// create lexer, formatter, styler
-	l, f, s := chroma.Coalesce(drivers.Lexer(h.u)), formatters.Get("terminal16m"), styles.Get("pygments")
+	l := chroma.Coalesce(drivers.Lexer(h.u))
+	f := formatters.Get(vars["SYNTAX_HL_FORMAT"])
+	s := styles.Get(vars["SYNTAX_HL_STYLE"])
 
 	// tokenize stream
 	it, err := l.Tokenise(nil, buf)
@@ -351,15 +353,6 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 	// write formatted output
 	return f.Format(w, s, it)
 }
-
-//// Vars returns the variable handler.
-//func (h *Handler) Vars() env.Vars {
-//}
-//
-//// Pvars returns the pretty variable handler.
-//func (h *Handler) Pvars() env.Pvars {
-//	return h.pvars
-//}
 
 // Open handles opening a specified database URL, passing either a single
 // string in the form of a URL, or more than one string, in which case the
@@ -646,6 +639,10 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version() error {
+	if env.All()["SHOW_HOST_INFORMATION"] != "true" {
+		return nil
+	}
+
 	if h.db == nil {
 		return text.ErrNotConnected
 	}

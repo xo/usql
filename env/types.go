@@ -3,6 +3,7 @@ package env
 import (
 	"unicode"
 
+	"github.com/xo/terminfo"
 	"github.com/xo/usql/text"
 )
 
@@ -30,7 +31,17 @@ type Pvars interface{}
 var vars Vars
 
 func init() {
-	vars = make(Vars)
+	colorLevel, _ := terminfo.ColorLevelFromEnv()
+	enable := "true"
+	if colorLevel < terminfo.ColorLevelBasic {
+		enable = "false"
+	}
+	vars = Vars{
+		"SHOW_HOST_INFORMATION": "true",
+		"SYNTAX_HL":             enable,
+		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
+		"SYNTAX_HL_STYLE":       "monokai",
+	}
 }
 
 // ValidIdentifier returns an error when n is not a valid identifier.
