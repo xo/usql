@@ -93,7 +93,7 @@ func trimSplit(r []rune, i, end int) []string {
 			m, _ = findSpace(r, n, end)
 		}
 
-		a = append(a, string(r[n:m]))
+		a = append(a, string(r[n:min(m, end)]))
 		i = m
 	}
 
