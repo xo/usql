@@ -10,7 +10,7 @@ type Metacmd uint
 // Decode converts a command name (or alias) into a Runner.
 func Decode(name string, params []string) (Runner, error) {
 	mc, ok := cmdMap[name]
-	if !ok {
+	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
 	}
 

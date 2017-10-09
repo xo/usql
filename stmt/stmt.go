@@ -309,7 +309,9 @@ parse:
 	b.rlen = len(b.r)
 
 	//log.Printf("returning from NEXT: `%s`", string(b.Buf))
-	//log.Printf(">>>>>>>>>>>>>> NEXT: `%s`", string(b.r))
+	//log.Printf(">>>>>>>>>>>> REMAIN: `%s`", string(b.r))
+	//log.Printf(">>>>>>>>>>>>    CMD: `%s`", cmd)
+	//log.Printf(">>>>>>>>>>>> PARAMS: %v", params)
 
 	return cmd, params, nil
 }

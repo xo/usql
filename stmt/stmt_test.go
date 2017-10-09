@@ -106,39 +106,39 @@ func TestNextResetState(t *testing.T) {
 		state string
 		vars  []string
 	}{
-		{"", nil, []string{""}, "=", nil}, // 0
-		{";", []string{";"}, []string{""}, "=", nil},
-		{" ; ", []string{";"}, []string{"", ""}, "=", nil},
-		{" \\v ", nil, []string{"v"}, "=", nil},
-		{" \\v \\p", nil, []string{"v", "p"}, "=", nil},
-		{" \\v   foo   \\p", nil, []string{"v foo", "p"}, "=", nil},
-		{" \\v   foo   bar  \\p   zz", nil, []string{"v foo|bar", "p zz"}, "=", nil},
-		{" \\very   foo   bar  \\print   zz", nil, []string{"very foo|bar", "print zz"}, "=", nil},
+		{``, nil, []string{``}, `=`, nil}, // 0
+		{`;`, []string{`;`}, []string{``}, `=`, nil},
+		{` ; `, []string{`;`}, []string{``, ``}, `=`, nil},
+		{` \v `, nil, []string{`\v`}, `=`, nil},
+		{` \v \p`, nil, []string{`\v`, `\p`}, `=`, nil},
+		{` \v   foo   \p`, nil, []string{`\v foo`, `\p`}, `=`, nil},
+		{` \v   foo   bar  \p   zz`, nil, []string{`\v foo|bar`, `\p zz`}, `=`, nil},
+		{` \very   foo   bar  \print   zz`, nil, []string{`\very foo|bar`, `\print zz`}, `=`, nil},
 
-		{"select 1;", []string{"select 1;"}, []string{""}, "=", nil}, // 8
-		{"select 1\\g", []string{"select 1"}, []string{"g"}, "=", nil},
-		{"select 1 \\g", []string{"select 1 "}, []string{"g"}, "=", nil},
-		{" select 1 \\g", []string{"select 1 "}, []string{"g"}, "=", nil},
-		{" select 1   \\g  ", []string{"select 1   "}, []string{"g"}, "=", nil},
+		{`select 1;`, []string{`select 1;`}, []string{``}, `=`, nil}, // 8
+		{`select 1\g`, []string{`select 1`}, []string{`\g`}, `=`, nil},
+		{`select 1 \g`, []string{`select 1 `}, []string{`\g`}, `=`, nil},
+		{` select 1 \g`, []string{`select 1 `}, []string{`\g`}, `=`, nil},
+		{` select 1   \g  `, []string{`select 1   `}, []string{`\g`}, `=`, nil},
 
-		{"select 1; select 1\\g", []string{"select 1;", "select 1"}, []string{"", "g"}, "=", nil}, // 13
-		{"select 1\n\\g", []string{"select 1"}, []string{"", "g"}, "=", nil},
-		{"select 1 \\g\n\n\n\n\\v", []string{"select 1 "}, []string{"g", "", "", "", "v"}, "=", nil},
-		{"select 1 \\g\n\n\n\n\\v aoeu \\p zzz \n\n", []string{"select 1 "}, []string{"g", "", "", "", "v aoeu", "p zzz", "", ""}, "=", nil},
-		{" select 1 \\g \\p \n select (15)\\g", []string{"select 1 ", "select (15)"}, []string{"g", "p", "g"}, "=", nil},
-		{" select 1 (  \\g ) \n ;", []string{"select 1 (  \\g ) \n ;"}, []string{"", ""}, "=", nil},
+		{`select 1; select 1\g`, []string{`select 1;`, `select 1`}, []string{``, `\g`}, `=`, nil}, // 13
+		{"select 1\n\\g", []string{`select 1`}, []string{``, `\g`}, `=`, nil},
+		{"select 1 \\g\n\n\n\n\\v", []string{`select 1 `}, []string{`\g`, ``, ``, ``, `\v`}, `=`, nil},
+		{"select 1 \\g\n\n\n\n\\v aoeu \\p zzz \n\n", []string{`select 1 `}, []string{`\g`, ``, ``, ``, `\v aoeu`, `\p zzz`, ``, ``}, `=`, nil},
+		{" select 1 \\g \\p \n select (15)\\g", []string{`select 1 `, `select (15)`}, []string{`\g`, `\p`, `\g`}, `=`, nil},
+		{" select 1 (  \\g ) \n ;", []string{"select 1 (  \\g ) \n ;"}, []string{``, ``}, `=`, nil},
 
 		{ // 19
 			" select 1\n;select 2\\g  select 3;  \\p   \\z  foo bar ",
 			[]string{"select 1\n;", "select 2"},
-			[]string{"", "", "g select|3;", "p", "z foo|bar"},
+			[]string{``, ``, `\g select|3;`, `\p`, `\z foo|bar`},
 			"=", nil,
 		},
 
 		{ // 20
 			" select 1\\g\n\n\tselect 2\\g\n select 3;  \\p   \\z  foo bar \\p\\p select * from;  \n\\p",
-			[]string{"select 1", "select 2", "select 3;"},
-			[]string{"g", "", "g", "", "p", "z foo|bar", "p\\p select|*|from;", "p"},
+			[]string{`select 1`, `select 2`, `select 3;`},
+			[]string{`\g`, ``, `\g`, ``, `\p`, `\z foo|bar`, `\p\p select|*|from;`, `\p`},
 			"=", nil,
 		},
 
@@ -153,16 +153,16 @@ func TestNextResetState(t *testing.T) {
 		{"select $tag$\n\n$tag$;", []string{"select $tag$\n\n$tag$;"}, []string{"", "", ""}, "=", nil},
 		{"select $tag$\n(\n$tag$;", []string{"select $tag$\n(\n$tag$;"}, []string{"", "", ""}, "=", nil},
 		{"select $tag$\n\\v(\n$tag$;", []string{"select $tag$\n\\v(\n$tag$;"}, []string{"", "", ""}, "=", nil},
-		{"select $tag$\n\\v(\n$tag$\\g", []string{"select $tag$\n\\v(\n$tag$"}, []string{"", "", "g"}, "=", nil},
-		{"select $$\n\\v(\n$tag$$zz$$\\g$$\\g", []string{"select $$\n\\v(\n$tag$$zz$$\\g$$"}, []string{"", "", "g"}, "=", nil},
+		{"select $tag$\n\\v(\n$tag$\\g", []string{"select $tag$\n\\v(\n$tag$"}, []string{"", "", `\g`}, "=", nil},
+		{"select $$\n\\v(\n$tag$$zz$$\\g$$\\g", []string{"select $$\n\\v(\n$tag$$zz$$\\g$$"}, []string{"", "", `\g`}, "=", nil},
 
-		{"select * --\n\\v", nil, []string{"", "v"}, "-", nil}, // 34
+		{"select * --\n\\v", nil, []string{"", `\v`}, "-", nil}, // 34
 		{"select * /* \n\n\n--*/\n;", []string{"select * /* \n\n\n--*/\n;"}, []string{"", "", "", "", ""}, "=", nil},
 
 		{"select * /* \n\n\n--*/\n", nil, []string{"", "", "", "", ""}, "-", nil}, // 36
 		{"select * /* \n\n\n--\n", nil, []string{"", "", "", "", ""}, "*", nil},
-		{"\\p \\p\nselect (", nil, []string{"p", "p", ""}, "(", nil},
-		{"\\p \\p\nselect ()", nil, []string{"p", "p", ""}, "-", nil},
+		{"\\p \\p\nselect (", nil, []string{`\p`, `\p`, ""}, "(", nil},
+		{"\\p \\p\nselect ()", nil, []string{`\p`, `\p`, ""}, "-", nil},
 		{"\n             \t\t               \n", nil, []string{"", "", ""}, "=", nil},
 		{"\n   aoeu      \t\t               \n", nil, []string{"", "", ""}, "-", nil},
 		{"$$", nil, []string{""}, "$", nil},
@@ -177,14 +177,14 @@ func TestNextResetState(t *testing.T) {
 		{`select :a:b;`, []string{"select :a:b;"}, []string{""}, "=", []string{"a", "b"}},
 
 		{"select :'a\n:foo:bar", nil, []string{"", ""}, "'", nil}, // 51
-		{"select :''\n:foo:bar\\g", []string{"select :''\n:foo:bar"}, []string{"", "g"}, "=", []string{"foo", "bar"}},
-		{"select :''\n:foo :bar\\g", []string{"select :''\n:foo :bar"}, []string{"", "g"}, "=", []string{"foo", "bar"}},
-		{"select :''\n :foo :bar \\g", []string{"select :''\n :foo :bar "}, []string{"", "g"}, "=", []string{"foo", "bar"}},
+		{"select :''\n:foo:bar\\g", []string{"select :''\n:foo:bar"}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
+		{"select :''\n:foo :bar\\g", []string{"select :''\n:foo :bar"}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
+		{"select :''\n :foo :bar \\g", []string{"select :''\n :foo :bar "}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
 
 		{"select :'a\n:'foo':\"bar\"", nil, []string{"", ""}, "'", nil}, // 55
-		{"select :''\n:'foo':\"bar\"\\g", []string{"select :''\n:'foo':\"bar\""}, []string{"", "g"}, "=", []string{"foo", "bar"}},
-		{"select :''\n:'foo' :\"bar\"\\g", []string{"select :''\n:'foo' :\"bar\""}, []string{"", "g"}, "=", []string{"foo", "bar"}},
-		{"select :''\n :'foo' :\"bar\" \\g", []string{"select :''\n :'foo' :\"bar\" "}, []string{"", "g"}, "=", []string{"foo", "bar"}},
+		{"select :''\n:'foo':\"bar\"\\g", []string{"select :''\n:'foo':\"bar\""}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
+		{"select :''\n:'foo' :\"bar\"\\g", []string{"select :''\n:'foo' :\"bar\""}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
+		{"select :''\n :'foo' :\"bar\" \\g", []string{"select :''\n :'foo' :\"bar\" "}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
 	}
 
 	for i, test := range tests {
@@ -202,7 +202,7 @@ func TestNextResetState(t *testing.T) {
 			}
 			vars = append(vars, b.Vars...)
 
-			if b.Ready() || cmd == "g" {
+			if b.Ready() || cmd == `\g` {
 				stmts = append(stmts, b.String())
 				b.Reset(nil)
 			}

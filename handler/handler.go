@@ -117,6 +117,8 @@ func (h *Handler) Run() error {
 
 		var res metacmd.Res
 		if cmd != "" {
+			cmd = strings.TrimPrefix(cmd, `\`)
+
 			// decode
 			var r metacmd.Runner
 			r, err = metacmd.Decode(cmd, params)

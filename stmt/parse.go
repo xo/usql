@@ -230,8 +230,6 @@ func readVar(r []rune, i, end int) *Var {
 
 // readCommand reads the command and any parameters from r.
 func readCommand(r []rune, i, end int) (string, []string, int) {
-	i++
-
 	// find end (either end of r, or the next command)
 	start, found := i, false
 	for ; i < end-1; i++ {
