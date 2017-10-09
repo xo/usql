@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io"
@@ -13,6 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alecthomas/chroma"
+	"github.com/alecthomas/chroma/formatters"
+	"github.com/alecthomas/chroma/styles"
 	"github.com/olekukonko/tablewriter"
 	"github.com/xo/dburl"
 
@@ -50,8 +54,8 @@ type Handler struct {
 // New creates a new input handler.
 func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	// set help intercept
-	f := l.Next
-	if l.Interactive() {
+	f, iactive := l.Next, l.Interactive()
+	if iactive {
 		f = func() ([]rune, error) {
 			// next line
 			r, err := l.Next()
@@ -73,13 +77,71 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 		}
 	}
 
-	return &Handler{
+	h := &Handler{
 		l:    l,
 		user: user,
 		wd:   wd,
 		nopw: nopw,
 		buf:  stmt.New(f),
 	}
+
+	if iactive {
+		l.SetOutput(func(s string) string {
+			if len(s) == 0 || s == " \b" /* TODO: bail if syntax coloring is not enabled */ {
+				return s
+			}
+
+			var endl string
+			for strings.HasSuffix(s, "\n") {
+				s = strings.TrimSuffix(s, "\n")
+				endl += "\n"
+			}
+
+			// reparse existing + added
+			orig := h.buf.String()
+			st := stmt.New(func() func() ([]rune, error) {
+				y := append(strings.Split(orig, "\n"), s)
+				return func() ([]rune, error) {
+					if len(y) > 0 {
+						z := y[0]
+						y = y[1:]
+						return []rune(z), nil
+					}
+					return nil, io.EOF
+				}
+			}())
+			drivers.ConfigStmt(h.u, st)
+			for {
+				_, _, err := st.Next()
+				if err != nil && err != io.EOF {
+					return s + endl
+				} else if err == io.EOF {
+					break
+				}
+			}
+
+			// determine remaining chars/commands if any
+			var remaining string
+			final := st.String()
+			if len(final) < len(orig)+len(s) {
+				remaining = (orig + s)[len(final):]
+			}
+			if s == remaining {
+				return s + endl
+			}
+
+			// highlight
+			b := new(bytes.Buffer)
+			if err := h.Highlight(b, final); err != nil {
+				return s + endl
+			}
+
+			ss := strings.Split(b.String(), "\n")
+			return ss[len(ss)-1] + remaining + endl
+		})
+	}
+
+	return h
 }
 
 // Run executes queries and commands.
@@ -127,10 +189,12 @@ func (h *Handler) Run() error {
 				fmt.Fprintf(stderr, text.InvalidCommand, cmd)
 				fmt.Fprintln(stderr)
 				continue
+
 			case err == text.ErrMissingRequiredArgument:
 				fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
 				fmt.Fprintln(stderr)
 				continue
+
 			case err != nil:
 				fmt.Fprintf(stderr, "error: %v", err)
 				fmt.Fprintln(stderr)
@@ -273,6 +337,21 @@ func (h *Handler) Buf() *stmt.Stmt {
 	return h.buf
 }
 
+// Highlight highlights using the current environment settings.
+func (h *Handler) Highlight(w io.Writer, buf string) error {
+	// create lexer, formatter, styler
+	l, f, s := chroma.Coalesce(drivers.Lexer(h.u)), formatters.Get("terminal16m"), styles.Get("pygments")
+
+	// tokenize stream
+	it, err := l.Tokenise(nil, buf)
+	if err != nil {
+		return err
+	}
+
+	// write formatted output
+	return f.Format(w, s, it)
+}
+
 //// Vars returns the variable handler.
 //func (h *Handler) Vars() env.Vars {
 //}
@@ -339,7 +418,7 @@ func (h *Handler) Open(params ...string) error {
 	}
 
 	// open connection
-	h.db, err = drivers.Open(h.u, h.buf)
+	h.db, err = drivers.Open(h.u)
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err
@@ -350,6 +429,9 @@ func (h *Handler) Open(params ...string) error {
 			return h.Version()
 		}
 	}
+
+	// set buffer options
+	drivers.ConfigStmt(h.u, h.buf)
 
 	// bail without getting password
 	if h.nopw || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {

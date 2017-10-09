@@ -117,19 +117,13 @@ func Registered(name string) bool {
 }
 
 // Open opens a sql.DB connection for the registered driver.
-func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
+func Open(u *dburl.URL) (*sql.DB, error) {
 	var err error
 
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil, WrapErr(u.Driver, text.ErrDriverNotAvailable)
 	}
-
-	// force query buffer settings
-	stmt.AllowDollar(d.AD)(buf)
-	stmt.AllowMultilineComments(d.AMC)(buf)
-	stmt.AllowCComments(d.ACC)(buf)
-	stmt.AllowHashComments(d.AHC)(buf)
 
 	f := sql.Open
 	if d.O != nil {
@@ -145,6 +139,23 @@ func Open(u *dburl.URL, buf *stmt.Stmt) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// ConfigStmt sets the stmt.Stmt config for the specified driver.
+func ConfigStmt(u *dburl.URL, buf *stmt.Stmt) {
+	var ad, amc, acc, ahc bool = true, true, true, true
+
+	if u != nil {
+		if d, ok := drivers[u.Driver]; ok {
+			ad, amc, acc, ahc = d.AD, d.AMC, d.ACC, d.AHC
+		}
+	}
+
+	// set stmt query buffer settings
+	stmt.AllowDollar(ad)(buf)
+	stmt.AllowMultilineComments(amc)(buf)
+	stmt.AllowCComments(acc)(buf)
+	stmt.AllowHashComments(ahc)(buf)
 }
 
 // Version returns information about the database connection for the specified
@@ -293,12 +304,16 @@ func Ping(u *dburl.URL, db *sql.DB) error {
 // Lexer returns the syntax lexer for a specified URL's driver.
 func Lexer(u *dburl.URL) chroma.Lexer {
 	var l chroma.Lexer
-	if d, ok := drivers[u.Driver]; ok && d.Syn != "" {
-		l = lexers.Get(d.Syn)
+	if u != nil {
+		if d, ok := drivers[u.Driver]; ok && d.Syn != "" {
+			l = lexers.Get(d.Syn)
+		}
 	}
 	if l == nil {
 		l = lexers.Get("sql")
 	}
+
+	l.Config().EnsureNL = false
 
 	return l
 }

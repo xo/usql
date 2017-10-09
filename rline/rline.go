@@ -45,15 +45,21 @@ type IO interface {
 
 	// Password prompts for a password.
 	Password(string) (string, error)
+
+	// SetOutput sets the output filter func.
+	SetOutput(func(string) string)
 }
 
 // Rline provides a type compatible with the IO interface.
 type Rline struct {
+	Inst *readline.Instance
+
 	N func() ([]rune, error)
 	C func() error
-	//In  io.Reader
+
 	Out io.Writer
 	Err io.Writer
+
 	Int bool
 	Cyg bool
 	P   func(string)
@@ -123,6 +129,11 @@ func (l *Rline) Password(prompt string) (string, error) {
 	return "", ErrPasswordNotAvailable
 }
 
+// SetOutput sets the output format func.
+func (l *Rline) SetOutput(f func(string) string) {
+	l.Inst.Config.Output = f
+}
+
 // New creates a new readline input/output handler.
 func New(cmds []string, in, out string, histfile string) (IO, error) {
 	var err error
@@ -173,8 +184,8 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 		stderr = readline.Stderr
 	}
 
-	// wrap it with cancelable stdin
 	if interactive {
+		// wrap it with cancelable stdin
 		stdin = readline.NewCancelableStdin(stdin)
 	}
 
@@ -209,7 +220,8 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 	}
 
 	return &Rline{
-		N: n,
+		Inst: l,
+		N:    n,
 		C: func() error {
 			for _, f := range closers {
 				f()

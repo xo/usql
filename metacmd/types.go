@@ -1,6 +1,7 @@
 package metacmd
 
 import (
+	"io"
 	"os/user"
 	"strings"
 
@@ -58,6 +59,9 @@ type Handler interface {
 
 	// Rollback aborts the current transaction.
 	Rollback() error
+
+	// Highlight highlights the statement.
+	Highlight(io.Writer, string) error
 
 	// Vars returns the environment variable handler.
 	//Vars() env.Vars

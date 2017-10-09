@@ -1,6 +1,7 @@
 package metacmd
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -231,6 +232,11 @@ func init() {
 
 				if s == "" {
 					s = text.QueryBufferEmpty
+				} else if p.H.IO().Interactive() {
+					b := new(bytes.Buffer)
+					if p.H.Highlight(b, s) == nil {
+						s = b.String()
+					}
 				}
 
 				fmt.Fprintln(p.H.IO().Stdout(), s)
