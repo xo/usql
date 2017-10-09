@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/chzyer/readline"
+	"github.com/gohxs/readline"
 	"github.com/mattn/go-isatty"
 )
 
