@@ -32,6 +32,9 @@ type Handler interface {
 	// Buf returns the current query buffer.
 	Buf() *stmt.Stmt
 
+	// Reset resets the last and current query buffer.
+	Reset([]rune)
+
 	// Open opens a database connection.
 	Open(...string) error
 

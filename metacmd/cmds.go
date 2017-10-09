@@ -244,7 +244,7 @@ func init() {
 			Desc:    "reset (clear) the query buffer",
 			Aliases: map[string]string{"reset": ""},
 			Process: func(p *Params) error {
-				p.H.Buf().Reset(nil)
+				p.H.Reset(nil)
 				fmt.Fprintln(p.H.IO().Stdout(), text.QueryBufferReset)
 				return nil
 			},
