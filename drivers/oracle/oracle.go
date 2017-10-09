@@ -20,19 +20,19 @@ func init() {
 		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT version FROM V$INSTANCE`).Scan(&ver)
+			err := db.QueryRow(`SELECT version FROM v$instance`).Scan(&ver)
 			if err != nil {
-				return ver, err
+				return "", err
 			}
 			return "Oracle " + ver, nil
 		},
 		U: func(db drivers.DB) (string, error) {
 			var user string
-			err := db.QueryRow(`select user from dual`).Scan(&user)
+			err := db.QueryRow(`SELECT user FROM dual`).Scan(&user)
 			return user, err
 		},
 		ChPw: func(db drivers.DB, user, new, _ string) error {
-			_, err := db.Exec(`alter user ` + user + ` IDENTIFIED BY ` + new)
+			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY ` + new)
 			return err
 		},
 		E: func(err error) (string, string) {
@@ -46,8 +46,7 @@ func init() {
 
 			if i := strings.LastIndex(msg, "ORA-"); i != -1 {
 				msg = msg[i:]
-				j := strings.Index(msg, ":")
-				if j != -1 {
+				if j := strings.Index(msg, ":"); j != -1 {
 					msg = msg[j+1:]
 					if code == "" {
 						code = msg[i:j]

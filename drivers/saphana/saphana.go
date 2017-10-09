@@ -14,7 +14,7 @@ func init() {
 		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`select version from m_database`).Scan(&ver)
+			err := db.QueryRow(`SELECT version FROM m_database`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

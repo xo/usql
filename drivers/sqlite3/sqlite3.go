@@ -18,7 +18,7 @@ func init() {
 		AMC: true,
 		V: func(db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`select sqlite_version()`).Scan(&ver)
+			err := db.QueryRow(`SELECT sqlite_version()`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

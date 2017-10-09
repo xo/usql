@@ -1,6 +1,7 @@
 package env
 
 import (
+	"os"
 	"unicode"
 
 	"github.com/xo/terminfo"
@@ -25,22 +26,30 @@ func (v Vars) All() map[string]string {
 	return map[string]string(v)
 }
 
-// Pvars is a map
-type Pvars interface{}
-
 var vars Vars
 
 func init() {
-	colorLevel, _ := terminfo.ColorLevelFromEnv()
-	enable := "true"
-	if colorLevel < terminfo.ColorLevelBasic {
-		enable = "false"
+	// get USQL_* variables
+	enableHostInformation := "true"
+	if v := os.Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
+		enableHostInformation = v
 	}
+
+	// get color level
+	colorLevel, _ := terminfo.ColorLevelFromEnv()
+	enableSyntaxHL := "true"
+	if colorLevel < terminfo.ColorLevelBasic {
+		enableSyntaxHL = "false"
+	}
+
 	vars = Vars{
-		"SHOW_HOST_INFORMATION": "true",
-		"SYNTAX_HL":             enable,
-		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
-		"SYNTAX_HL_STYLE":       "monokai",
+		// usql related logic
+		"SHOW_HOST_INFORMATION": enableHostInformation,
+
+		// syntax highlighting variables
+		"SYNTAX_HL":        enableSyntaxHL,
+		"SYNTAX_HL_FORMAT": colorLevel.ChromaFormatterName(),
+		"SYNTAX_HL_STYLE":  "monokai",
 	}
 }
 
