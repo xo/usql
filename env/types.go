@@ -47,9 +47,10 @@ func init() {
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 
 		// syntax highlighting variables
-		"SYNTAX_HL":        enableSyntaxHL,
-		"SYNTAX_HL_FORMAT": colorLevel.ChromaFormatterName(),
-		"SYNTAX_HL_STYLE":  "monokai",
+		"SYNTAX_HL":             enableSyntaxHL,
+		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
+		"SYNTAX_HL_STYLE":       "monokai",
+		"SYNTAX_HL_OVERRIDE_BG": "false",
 	}
 }
 

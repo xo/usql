@@ -25,6 +25,7 @@ import (
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/rline"
 	"github.com/xo/usql/stmt"
+	ustyles "github.com/xo/usql/styles"
 	"github.com/xo/usql/text"
 )
 
@@ -343,6 +344,11 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 	l := chroma.Coalesce(drivers.Lexer(h.u))
 	f := formatters.Get(vars["SYNTAX_HL_FORMAT"])
 	s := styles.Get(vars["SYNTAX_HL_STYLE"])
+
+	// override background
+	if vars["SYNTAX_HL_OVERRIDE_BG"] != "false" {
+		s = ustyles.Get(vars["SYNTAX_HL_STYLE"])
+	}
 
 	// tokenize stream
 	it, err := l.Tokenise(nil, buf)
