@@ -62,7 +62,7 @@ $ go get -u -tags most github.com/xo/usql
 The below is a demonstration using `usql` with [xo's booktest](https://github.com/xo/xo)
 simple test database, showcasing the release version v0.5.0. In the demonstration,
 `usql` connects to a PostgreSQL database, executes some queries, with variable
-interpolation, connects to a SQLite3 database file, and does some more quries,
+interpolation, connects to a SQLite3 database file, and does some more queries,
 before then connecting to a Microsoft SQL database and ending the session.
 
 <p align="center">
@@ -148,7 +148,7 @@ file, `usql` will attempt to open the file using the `sqlite3` driver.
 `usql` recognizes the same drivers and scheme aliases from the [`dburl`](https://github.com/xo/dburl)
 package. Please see the `dburl` documentation for more in-depth information on
 how DSNs are built from standard URLs. Additionally, all of the above formats
-can be used in conjuction with the `\c` (or `\connect`) backslash meta command.
+can be used in conjunction with the `\c` (or `\connect`) backslash meta command.
 
 ### Example Connection Strings
 
