@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -85,19 +86,29 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	}
 
 	if iactive {
+		lineterm := "\n"
+		if runtime.GOOS == "windows" {
+			lineterm = "\r\n"
+		}
+
 		l.SetOutput(func(s string) string {
+			// bail when empty, there is only a "backspace" string, or if syntax
+			// highlighting is not enabled
 			if len(s) == 0 || s == " \b" || env.All()["SYNTAX_HL"] != "true" {
 				return s
 			}
 
+			// count end lines
 			var endl string
-			for strings.HasSuffix(s, "\n") {
-				s = strings.TrimSuffix(s, "\n")
-				endl += "\n"
+			for strings.HasSuffix(s, lineterm) {
+				s = strings.TrimSuffix(s, lineterm)
+				endl += lineterm
 			}
 
-			// reparse existing + added
+			// capture current statement buffer
 			orig := h.buf.String()
+
+			// setup statement parser
 			st := stmt.New(func() func() ([]rune, error) {
 				y := append(strings.Split(orig, "\n"), s)
 				return func() ([]rune, error) {
@@ -110,6 +121,9 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 				}
 			}())
 			drivers.ConfigStmt(h.u, st)
+
+			// accumulate all "active" statements in buffer, breaking either at
+			// EOF or when a \ cmd has been encountered
 			for {
 				_, _, err := st.Next()
 				if err != nil && err != io.EOF {
@@ -119,22 +133,27 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 				}
 			}
 
-			// determine remaining chars/commands if any
+			// determine whatever is remaining after "active"
 			var remaining string
 			final := st.String()
 			if len(final) < len(orig)+len(s) {
 				remaining = (orig + s)[len(final):]
 			}
+
+			// this happens when a read line is empty and/or has only
+			// whitespace and a \ cmd
 			if s == remaining {
 				return s + endl
 			}
 
-			// highlight
+			// highlight entire final accumulated buffer
 			b := new(bytes.Buffer)
 			if err := h.Highlight(b, final); err != nil {
 				return s + endl
 			}
 
+			// return only last line plus whatever remaining string (ie, after
+			// a \ cmd) and the total end line count
 			ss := strings.Split(b.String(), "\n")
 			return ss[len(ss)-1] + remaining + endl
 		})

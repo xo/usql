@@ -62,12 +62,6 @@ type Handler interface {
 
 	// Highlight highlights the statement.
 	Highlight(io.Writer, string) error
-
-	// Vars returns the environment variable handler.
-	//Vars() env.Vars
-
-	// Pvars returns the pretty environment variable handler.
-	//Pvars() env.Pvars
 }
 
 // Runner is a runner interface type.
