@@ -11,6 +11,7 @@ package internal
 func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"adodb":      "adodb",       // github.com/mattn/go-adodb
+		"avatica":    "avatica",     // github.com/Boostport/avatica
 		"clickhouse": "clickhouse",  // github.com/kshvakov/clickhouse
 		"couchbase":  "n1ql",        // github.com/couchbase/go_n1ql
 		"firebird":   "firebirdsql", // github.com/nakagami/firebirdsql
