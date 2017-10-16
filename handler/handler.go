@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/formatters"
@@ -40,7 +41,7 @@ type Handler struct {
 	// slm is single line mode
 	slm bool
 
-	// statement buffer
+	// query statement buffer
 	buf        *stmt.Stmt
 	lastPrefix string
 	last       string
@@ -105,12 +106,23 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 				endl += lineterm
 			}
 
-			// capture current statement buffer
+			// capture current query statement buffer
 			orig := h.buf.String()
+			full := orig
+			if full != "" {
+				full += "\n"
+			}
+			full += s
 
 			// setup statement parser
 			st := stmt.New(func() func() ([]rune, error) {
-				y := append(strings.Split(orig, "\n"), s)
+				y := strings.Split(orig, "\n")
+				if y[0] == "" {
+					y[0] = s
+				} else {
+					y = append(y, s)
+				}
+
 				return func() ([]rune, error) {
 					if len(y) > 0 {
 						z := y[0]
@@ -124,20 +136,35 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 
 			// accumulate all "active" statements in buffer, breaking either at
 			// EOF or when a \ cmd has been encountered
+			var err error
+			var cmd, final string
 			for {
-				_, _, err := st.Next()
+				cmd, _, err = st.Next()
 				if err != nil && err != io.EOF {
 					return s + endl
 				} else if err == io.EOF {
 					break
 				}
+
+				if st.Ready() || cmd != "" {
+					final += st.String()
+					st.Reset(nil)
+
+					// grab remaining whitespace to add to final
+					l := len(final)
+					if i := strings.IndexFunc(full[l:], func(r rune) bool { return !unicode.IsSpace(r) }); i != -1 {
+						final += full[l : l+i]
+					}
+				}
+			}
+			if !st.Ready() && cmd == "" {
+				final += st.String()
 			}
 
 			// determine whatever is remaining after "active"
 			var remaining string
-			final := st.String()
-			if len(final) < len(orig)+len(s) {
-				remaining = (orig + s)[len(final):]
+			if len(final) < len(full) {
+				remaining = full[len(final):]
 			}
 
 			// this happens when a read line is empty and/or has only
@@ -153,7 +180,7 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 			}
 
 			// return only last line plus whatever remaining string (ie, after
-			// a \ cmd) and the total end line count
+			// a \ cmd) and the end line count
 			ss := strings.Split(b.String(), "\n")
 			return ss[len(ss)-1] + remaining + endl
 		})
@@ -296,7 +323,7 @@ func (h *Handler) CommandRunner(cmds []string) func() error {
 	}
 }
 
-// Reset resets the handler's statement buffer.
+// Reset resets the handler's query statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
 	h.last, h.lastPrefix = "", ""
@@ -350,7 +377,7 @@ func (h *Handler) Last() string {
 	return h.last
 }
 
-// Buf returns the current statement buffer.
+// Buf returns the current query statement buffer.
 func (h *Handler) Buf() *stmt.Stmt {
 	return h.buf
 }
