@@ -270,14 +270,14 @@ Note that for every build tag `<name>`, there is an additional tag `no_<name>`,
 that disables the respective driver(s). Additionally, there are the build tags
 `most` and `all`, that include most, and all SQL drivers, respectively.
 
-As such, you can easily (and quickly) recompile `usql` with by combining any
+As such, you can easily (and quickly) recompile `usql` by combining any
 number of build tags to enable/disable specific drivers as needed:
 
 ```sh
 # install all drivers
 $ go get -u -tags all github.com/xo/usql
 
-# install with "most" drivers (same as "all" but excludes oracle/odbc)
+# install with "most" drivers (same as "all" but excludes oracle/odbc or any other CGO-based drivers)
 $ go get -u -tags most github.com/xo/usql
 
 # install with base drivers and oracle / odbc support
