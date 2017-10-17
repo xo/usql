@@ -93,9 +93,9 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 		}
 
 		l.SetOutput(func(s string) string {
-			// bail when empty, there is only a "backspace" string, or if syntax
-			// highlighting is not enabled
-			if len(s) == 0 || s == " \b" || env.All()["SYNTAX_HL"] != "true" {
+			// bail when string is empty (ie, contains no printable, non-space
+			// characters) or if syntax highlighting is not enabled
+			if empty(s) || env.All()["SYNTAX_HL"] != "true" {
 				return s
 			}
 
@@ -1056,4 +1056,13 @@ func (h *Handler) Include(path string, relative bool) error {
 
 	h.db, h.u = p.db, p.u
 	return err
+}
+
+// empty reports whether s contains at least one printable, non-space character.
+func empty(s string) bool {
+	i := strings.IndexFunc(s, func(r rune) bool {
+		return unicode.IsPrint(r) && !unicode.IsSpace(r)
+	})
+
+	return i == -1
 }
