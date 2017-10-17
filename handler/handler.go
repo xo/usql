@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -87,106 +86,105 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	}
 
 	if iactive {
-		lineterm := "\n"
-		if runtime.GOOS == "windows" {
-			lineterm = "\r\n"
-		}
-
-		l.SetOutput(func(s string) string {
-			// bail when string is empty (ie, contains no printable, non-space
-			// characters) or if syntax highlighting is not enabled
-			if empty(s) || env.All()["SYNTAX_HL"] != "true" {
-				return s
-			}
-
-			// count end lines
-			var endl string
-			for strings.HasSuffix(s, lineterm) {
-				s = strings.TrimSuffix(s, lineterm)
-				endl += lineterm
-			}
-
-			// capture current query statement buffer
-			orig := h.buf.String()
-			full := orig
-			if full != "" {
-				full += "\n"
-			}
-			full += s
-
-			// setup statement parser
-			st := stmt.New(func() func() ([]rune, error) {
-				y := strings.Split(orig, "\n")
-				if y[0] == "" {
-					y[0] = s
-				} else {
-					y = append(y, s)
-				}
-
-				return func() ([]rune, error) {
-					if len(y) > 0 {
-						z := y[0]
-						y = y[1:]
-						return []rune(z), nil
-					}
-					return nil, io.EOF
-				}
-			}())
-			drivers.ConfigStmt(h.u, st)
-
-			// accumulate all "active" statements in buffer, breaking either at
-			// EOF or when a \ cmd has been encountered
-			var err error
-			var cmd, final string
-			for {
-				cmd, _, err = st.Next()
-				if err != nil && err != io.EOF {
-					return s + endl
-				} else if err == io.EOF {
-					break
-				}
-
-				if st.Ready() || cmd != "" {
-					final += st.String()
-					st.Reset(nil)
-
-					// grab remaining whitespace to add to final
-					l := len(final)
-					if i := strings.IndexFunc(full[l:], func(r rune) bool { return !unicode.IsSpace(r) }); i != -1 {
-						final += full[l : l+i]
-					}
-				}
-			}
-			if !st.Ready() && cmd == "" {
-				final += st.String()
-			}
-
-			// determine whatever is remaining after "active"
-			var remaining string
-			if len(final) < len(full) {
-				remaining = full[len(final):]
-			}
-
-			// this happens when a read line is empty and/or has only
-			// whitespace and a \ cmd
-			if s == remaining {
-				return s + endl
-			}
-
-			// highlight entire final accumulated buffer
-			b := new(bytes.Buffer)
-			if err := h.Highlight(b, final); err != nil {
-				return s + endl
-			}
-
-			// return only last line plus whatever remaining string (ie, after
-			// a \ cmd) and the end line count
-			ss := strings.Split(b.String(), "\n")
-			return ss[len(ss)-1] + remaining + endl
-		})
+		l.SetOutput(h.outputHighlighter)
 	}
 
 	return h
+}
+
+// outputHighlighter returns s as a highlighted string, based on the current
+// buffer and syntax highlighting settings.
+func (h *Handler) outputHighlighter(s string) string {
+	// bail when string is empty (ie, contains no printable, non-space
+	// characters) or if syntax highlighting is not enabled
+	if empty(s) || env.All()["SYNTAX_HL"] != "true" {
+		return s
+	}
+
+	// count end lines
+	var endl string
+	for strings.HasSuffix(s, lineterm) {
+		s = strings.TrimSuffix(s, lineterm)
+		endl += lineterm
+	}
+
+	// capture current query statement buffer
+	orig := h.buf.String()
+	full := orig
+	if full != "" {
+		full += "\n"
+	}
+	full += s
+
+	// setup statement parser
+	st := stmt.New(func() func() ([]rune, error) {
+		y := strings.Split(orig, "\n")
+		if y[0] == "" {
+			y[0] = s
+		} else {
+			y = append(y, s)
+		}
+
+		return func() ([]rune, error) {
+			if len(y) > 0 {
+				z := y[0]
+				y = y[1:]
+				return []rune(z), nil
+			}
+			return nil, io.EOF
+		}
+	}())
+	drivers.ConfigStmt(h.u, st)
+
+	// accumulate all "active" statements in buffer, breaking either at
+	// EOF or when a \ cmd has been encountered
+	var err error
+	var cmd, final string
+	for {
+		cmd, _, err = st.Next()
+		if err != nil && err != io.EOF {
+			return s + endl
+		} else if err == io.EOF {
+			break
+		}
+
+		if st.Ready() || cmd != "" {
+			final += st.String()
+			st.Reset(nil)
+
+			// grab remaining whitespace to add to final
+			l := len(final)
+			if i := strings.IndexFunc(full[l:], func(r rune) bool { return !unicode.IsSpace(r) }); i != -1 {
+				final += full[l : l+i]
+			}
+		}
+	}
+	if !st.Ready() && cmd == "" {
+		final += st.String()
+	}
+
+	// determine whatever is remaining after "active"
+	var remaining string
+	if len(final) < len(full) {
+		remaining = full[len(final):]
+	}
+
+	// this happens when a read line is empty and/or has only
+	// whitespace and a \ cmd
+	if s == remaining {
+		return s + endl
+	}
+
+	// highlight entire final accumulated buffer
+	b := new(bytes.Buffer)
+	if err := h.Highlight(b, final); err != nil {
+		return s + endl
+	}
+
+	// return only last line plus whatever remaining string (ie, after
+	// a \ cmd) and the end line count
+	ss := strings.Split(b.String(), "\n")
+	return ss[len(ss)-1] + remaining + endl
 }
 
 // Run executes queries and commands.
@@ -705,7 +703,7 @@ func (h *Handler) Version() error {
 	}
 
 	if ver != "" {
-		out := h.IO().Stdout()
+		out := h.l.Stdout()
 		fmt.Fprintf(out, text.ConnInfo, h.u.Driver, ver)
 		fmt.Fprintln(out)
 	}
@@ -1056,13 +1054,4 @@ func (h *Handler) Include(path string, relative bool) error {
 
 	h.db, h.u = p.db, p.u
 	return err
-}
-
-// empty reports whether s contains at least one printable, non-space character.
-func empty(s string) bool {
-	i := strings.IndexFunc(s, func(r rune) bool {
-		return unicode.IsPrint(r) && !unicode.IsSpace(r)
-	})
-
-	return i == -1
 }
