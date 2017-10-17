@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/xo/dburl"
+	"github.com/zaf/temp"
 
 	"github.com/xo/usql/text"
 )
@@ -114,7 +115,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		path = expand(u, path)
 	} else {
 		var f *os.File
-		f, err = ioutil.TempFile("", text.CommandLower())
+		f, err = temp.File("", text.CommandLower(), "sql")
 		if err != nil {
 			return nil, err
 		}
