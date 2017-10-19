@@ -324,12 +324,12 @@ for more features than the base `psql` command provides. Currently, the list of
 planned / in progress work:
 
 ##### General
-1. \gexec/\gset support
-2. Google Spanner
-3. PAGER
-4. \qecho + \o support
-5. fix table output / formatting
-7. add support for managing multiple database connections simultaneously
+0. Fix multiline behavior to mimic psql properly
+1. Google Spanner
+2. PAGER
+3. \qecho + \o support
+4. fix table output / formatting
+6. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
     maybe execute using something like \g @:name or :@name ? or \g -name ?
@@ -344,11 +344,11 @@ planned / in progress work:
         dest := <table>
         table := <identifier> (<column_list>)
     ```
-8. SQL completion (WIP)
-9. syntax highlighting (WIP)
-10. \encoding and environment/command line options to set encoding of input (to
+7. SQL completion (WIP)
+8. syntax highlighting (WIP)
+9. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-11. better --help support/output cli, man pages
+10. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
 1. the \j* commands (WIP)
