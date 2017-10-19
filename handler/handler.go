@@ -180,11 +180,12 @@ func (h *Handler) outputHighlighter(s string) string {
 	if err := h.Highlight(b, final); err != nil {
 		return s + endl
 	}
+	colored := b.String()
 
 	// return only last line plus whatever remaining string (ie, after
 	// a \ cmd) and the end line count
-	ss := strings.Split(b.String(), "\n")
-	return ss[len(ss)-1] + remaining + endl
+	ss := strings.Split(colored, "\n")
+	return lastcolor(colored) + ss[len(ss)-1] + remaining + endl
 }
 
 // Run executes queries and commands.

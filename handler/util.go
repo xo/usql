@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"regexp"
 	"runtime"
 	"strings"
 	"unicode"
@@ -23,4 +24,19 @@ func empty(s string) bool {
 	})
 
 	return i == -1
+}
+
+var ansiRE = regexp.MustCompile(`\x1b[[0-9]+(:[0-9]+)*m`)
+
+// lastcolor returns the last defined color in s, if any.
+func lastcolor(s string) string {
+	if i := strings.LastIndex(s, "\n"); i != -1 {
+		s = s[:i]
+	}
+
+	if i := strings.LastIndex(s, "\x1b[0m"); i != -1 {
+		s = s[i+4:]
+	}
+
+	return strings.Join(ansiRE.FindAllString(s, -1), "")
 }
