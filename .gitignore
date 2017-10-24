@@ -1,8 +1,9 @@
 /usql
 /usql.exe
 
-/vendor/
 /build
+/vendor
+/vendor.orig
 
 .usql_history*
 

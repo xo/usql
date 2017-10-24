@@ -1,0 +1,100 @@
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/Boostport/avatica"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/SAP/go-hdb"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/VoltDB/voltdb-client-go"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/alecthomas/chroma"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/alexbrainman/odbc"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/alexflint/go-arg"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/couchbase/go_n1ql"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/cznic/ql"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/denisenkom/go-mssqldb"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-sql-driver/mysql"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gohxs/readline"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jackc/pgx"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kshvakov/clickhouse"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lib/pq"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mattn/go-adodb"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mattn/go-isatty"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mattn/go-sqlite3"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/nakagami/firebirdsql"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/olekukonko/tablewriter"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/xo/dburl"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/xo/terminfo"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/xo/xoutil"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/zaf/temp"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/ziutek/mymysql"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/rana/ora.v4"
