@@ -14,6 +14,7 @@ install:
   - ./contrib/grab-oracle.sh
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
-  - go get -t -v ./...
+  - go get -u github.com/golang/dep
+  - dep ensure
 script:
   - go test -tags all -v ./...
