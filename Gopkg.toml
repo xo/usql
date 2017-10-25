@@ -98,3 +98,4 @@
 [[constraint]]
   branch = "master"
   name = "gopkg.in/rana/ora.v4"
+  source = "https://github.com/rana/ora.git"

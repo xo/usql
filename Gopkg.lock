@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/alecthomas/chroma"
   packages = [".","formatters","formatters/html","lexers","styles"]
-  revision = "02c4adc0664a104c4ea91c6c3a41a91b93bbd9ef"
+  revision = "3d8ce9089275df12d7c5a65b0780aff629f6d657"
 
 [[projects]]
   branch = "master"
@@ -35,7 +35,7 @@
   branch = "master"
   name = "github.com/alexflint/go-arg"
   packages = ["."]
-  revision = "cef6506c97e5731da728c374ff3523e481026423"
+  revision = "59fccacb2679dde66e0b20ed65bd26178fcbf54e"
 
 [[projects]]
   branch = "master"
@@ -59,7 +59,7 @@
   branch = "master"
   name = "github.com/couchbase/gomemcached"
   packages = [".","client"]
-  revision = "7237236c6b514efddd071efce3cfe47ef2dd0c14"
+  revision = "83a42f6030536e80fe9b872be2b487987b898f9d"
 
 [[projects]]
   branch = "master"
@@ -89,7 +89,7 @@
   branch = "master"
   name = "github.com/cznic/internal"
   packages = ["buffer","file","slice"]
-  revision = "4747030f7cf2f4c0a01512b00cd68734b167ac3b"
+  revision = "cef02a853c3a93623c42eacd574e7ea05f55531b"
 
 [[projects]]
   branch = "master"
@@ -143,7 +143,7 @@
   branch = "master"
   name = "github.com/dlclark/regexp2"
   packages = [".","syntax"]
-  revision = "7632a260cbaf5e7594fc1544a503456ecd0827f1"
+  revision = "487489b64fb796de2e55f4e8a4ad1e145f80e957"
 
 [[projects]]
   branch = "master"
@@ -155,7 +155,7 @@
   branch = "master"
   name = "github.com/go-ole/go-ole"
   packages = [".","oleutil"]
-  revision = "2ecd927eaf828c4fc088fae349b28eed1480ff56"
+  revision = "0e87ea779d9deb219633b828a023b32e1244dd57"
 
 [[projects]]
   branch = "master"
@@ -233,13 +233,13 @@
   branch = "master"
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
-  revision = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d"
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
 
 [[projects]]
   branch = "master"
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
-  revision = "5160b48509cf5c877bc22c11c373f8c7738cdb38"
+  revision = "615c193e01d8d462eef7ee390171506f531a1c9a"
 
 [[projects]]
   branch = "master"
@@ -263,7 +263,7 @@
   branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -323,7 +323,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "92447d55896d6f92b4a0d4fd83bd078b0374e8fa"
+  revision = "4b14673ba32bee7f5ac0f990a48f033919fd418b"
 
 [[projects]]
   branch = "master"
@@ -335,13 +335,13 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "429f518978ab01db8bb6f44b66785088e7fba58b"
+  revision = "a1a1f1746d156bbc9954f29134b20ed4ce2752f1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["transform"]
-  revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
+  revision = "6eab0e8f74e86c598ec3b6fad4888e0c11482d48"
 
 [[projects]]
   branch = "master"
@@ -360,10 +360,11 @@
   name = "gopkg.in/rana/ora.v4"
   packages = [".","date","num"]
   revision = "dd5dc46f8d55d512dece5c887042b0ae6c9b7d05"
+  source = "https://github.com/rana/ora.git"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6f65c12edf83379826692da51e686c3239e2030d930f561d9b63dd68c511a2ea"
+  inputs-digest = "cca35b843ed27a102e674c0f1ef0585d653e6902e7c9d8fb6ec4c0bb6948a2f4"
   solver-name = "gps-cdcl"
   solver-version = 1
