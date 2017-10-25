@@ -20,8 +20,8 @@ import (
 	"github.com/xo/usql/text"
 )
 
-// getenv tries retrieving successive keys from os environment variables.
-func getenv(keys ...string) string {
+// Getenv tries retrieving successive keys from os environment variables.
+func Getenv(keys ...string) string {
 	for _, key := range keys {
 		if s := os.Getenv(key); s != "" {
 			return s
@@ -106,7 +106,7 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	var err error
 
-	ed := getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
+	ed := Getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
 	if ed == "" {
 		return nil, text.ErrNoEditorDefined
 	}
@@ -135,7 +135,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	// setup args
 	args := []string{path}
 	if line != "" {
-		prefix := getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG")
+		prefix := Getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG")
 		if prefix == "" {
 			prefix = "+"
 		}
@@ -170,7 +170,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 func HistoryFile(u *user.User) string {
 	n := text.CommandUpper() + "_HISTORY"
 	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
+	if s := Getenv(n); s != "" {
 		path = s
 	}
 
@@ -184,7 +184,7 @@ func HistoryFile(u *user.User) string {
 func RCFile(u *user.User) string {
 	n := text.CommandUpper() + "RC"
 	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
+	if s := Getenv(n); s != "" {
 		path = s
 	}
 
@@ -198,7 +198,7 @@ func RCFile(u *user.User) string {
 func PassFile(u *user.User) string {
 	n := text.CommandUpper() + "PASS"
 	path := "~/." + strings.ToLower(n)
-	if s := getenv(n); s != "" {
+	if s := Getenv(n); s != "" {
 		path = s
 	}
 
@@ -327,9 +327,9 @@ func Chdir(u *user.User, path string) error {
 func getshell() (string, string) {
 	var shell, param string
 
-	shell, param = getenv("SHELL"), "-c"
+	shell, param = Getenv("SHELL"), "-c"
 	if shell == "" && runtime.GOOS == "windows" {
-		shell, param = getenv("COMSPEC", "ComSpec"), "/c"
+		shell, param = Getenv("COMSPEC", "ComSpec"), "/c"
 	}
 
 	// look up path for "cmd.exe" if no other SHELL

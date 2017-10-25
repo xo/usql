@@ -531,6 +531,17 @@ func (h *Handler) forceParams(u *dburl.URL) {
 		u.RawQuery = v.Encode()
 	}
 
+	// if oracle database, and the service name is not specified, use the
+	// environment variable if present.
+	if u.Driver == "ora" && strings.TrimPrefix(u.Path, "/") == "" {
+		if n := env.Getenv("ORACLE_SID", "ORASID"); n != "" {
+			u.Path = "/" + n
+			if u.Host == "" {
+				u.Host = "localhost"
+			}
+		}
+	}
+
 	// see if password entry is present
 	user, err := env.PassFileEntry(h.user, u)
 	if err != nil {

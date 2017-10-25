@@ -60,7 +60,7 @@ func init() {
 			if e, ok := err.(interface {
 				Code() int
 			}); ok {
-				return e.Code() == 1017
+				return e.Code() == 1017 || e.Code() == 1005
 			}
 			return false
 		},
