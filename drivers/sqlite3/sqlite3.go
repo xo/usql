@@ -16,6 +16,9 @@ import (
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
 		AMC: true,
+		FP: drivers.ForceQueryParameters([]string{
+			"loc", "auto",
+		}),
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT sqlite_version()`).Scan(&ver)

@@ -56,16 +56,3 @@ func (e *Error) Error() string {
 
 	return e.Driver + ": " + chop(e.Err.Error(), e.Driver)
 }
-
-// Verbose returns more information about the wrapped error.
-func (e *Error) Verbose() *ErrVerbose {
-	if d, ok := drivers[e.Driver]; ok && d.EV != nil {
-		return d.EV(e.Err)
-	}
-
-	return nil
-}
-
-// ErrVerbose standardizes the verbose information about an error.
-type ErrVerbose struct {
-}

@@ -499,48 +499,13 @@ func (h *Handler) Open(params ...string) error {
 	return h.Open(dsn)
 }
 
-// forceParamMap are the params to force for specific database drivers/schemes.
-var forceParamMap = map[string][]string{
-	"mysql": {
-		"parseTime", "true",
-		"loc", "Local",
-		"sql_mode", "ansi",
-	},
-	"mymysql":     {"sql_mode", "ansi"},
-	"sqlite3":     {"loc", "auto"},
-	"cockroachdb": {"sslmode", "disable"},
-}
-
 // forceParams forces connection parameters on a database URL.
 //
 // Note: also forces/sets the username/password when a matching entry exists in
 // the PASS file.
 func (h *Handler) forceParams(u *dburl.URL) {
-	var z *dburl.URL
-
 	// force driver parameters
-	fp, ok := forceParamMap[u.Driver]
-	if !ok {
-		fp = forceParamMap[u.Scheme]
-	}
-	if len(fp) != 0 {
-		v := u.Query()
-		for i := 0; i < len(fp); i += 2 {
-			v.Set(fp[i], fp[i+1])
-		}
-		u.RawQuery = v.Encode()
-	}
-
-	// if oracle database, and the service name is not specified, use the
-	// environment variable if present.
-	if u.Driver == "ora" && strings.TrimPrefix(u.Path, "/") == "" {
-		if n := env.Getenv("ORACLE_SID", "ORASID"); n != "" {
-			u.Path = "/" + n
-			if u.Host == "" {
-				u.Host = "localhost"
-			}
-		}
-	}
+	drivers.ForceParams(u)
 
 	// see if password entry is present
 	user, err := env.PassFileEntry(h.user, u)
@@ -553,7 +518,7 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	}
 
 	// copy back to u
-	z, _ = dburl.Parse(u.String())
+	z, _ := dburl.Parse(u.String())
 	*u = *z
 }
 

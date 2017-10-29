@@ -4,6 +4,7 @@ import (
 	// DRIVER: postgres
 	"github.com/lib/pq"
 
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
@@ -13,6 +14,11 @@ func init() {
 		AD:  true,
 		AMC: true,
 		Syn: "postgres",
+		FP: func(u *dburl.URL) {
+			if u.Scheme == "cockroachdb" {
+				drivers.ForceQueryParameters([]string{"sslmode", "disable"})(u)
+			}
+		},
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SHOW server_version`).Scan(&ver)

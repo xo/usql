@@ -14,6 +14,11 @@ func init() {
 		AMC: true,
 		AHC: true,
 		Syn: "mysql",
+		FP: drivers.ForceQueryParameters([]string{
+			"parseTime", "true",
+			"loc", "Local",
+			"sql_mode", "ansi",
+		}),
 		E: func(err error) (string, string) {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return strconv.Itoa(int(e.Number)), e.Message

@@ -46,6 +46,9 @@ type Driver struct {
 	// Syn is the name of the syntax lexer to use.
 	Syn string
 
+	// FP will be used to force parameters if defined.
+	FP func(*dburl.URL)
+
 	// O will be used by Open if defined.
 	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 
@@ -73,9 +76,6 @@ type Driver struct {
 
 	// E will be used by Error.Error if defined.
 	E func(error) (string, string)
-
-	// EV will be used by Error.Verbose if defined.
-	EV func(error) *ErrVerbose
 
 	// A will be used by RowsAffected if defined.
 	A func(sql.Result) (int64, error)
@@ -114,6 +114,14 @@ func Register(name string, d Driver, aliases ...string) {
 func Registered(name string) bool {
 	_, ok := drivers[name]
 	return ok
+}
+
+// ForceParams forces parameters on the supplied DSN for the registered driver.
+func ForceParams(u *dburl.URL) {
+	d, ok := drivers[u.Driver]
+	if ok && d.FP != nil {
+		d.FP(u)
+	}
 }
 
 // Open opens a sql.DB connection for the registered driver.
@@ -316,4 +324,21 @@ func Lexer(u *dburl.URL) chroma.Lexer {
 	l.Config().EnsureNL = false
 
 	return l
+}
+
+// ForceQueryParameters is a utility func that wraps forcing params of name,
+// value pairs.
+func ForceQueryParameters(params []string) func(*dburl.URL) {
+	if len(params)%2 != 0 {
+		panic("invalid query params")
+	}
+	return func(u *dburl.URL) {
+		if len(params) != 0 {
+			v := u.Query()
+			for i := 0; i < len(params); i += 2 {
+				v.Set(params[i], params[i+1])
+			}
+			u.RawQuery = v.Encode()
+		}
+	}
 }

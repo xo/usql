@@ -9,7 +9,9 @@ import (
 	// DRIVER: ora
 	_ "gopkg.in/rana/ora.v4"
 
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/env"
 )
 
 var allCapsRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
@@ -18,6 +20,18 @@ var endRE = regexp.MustCompile(`;?\s*$`)
 func init() {
 	drivers.Register("ora", drivers.Driver{
 		AMC: true,
+		FP: func(u *dburl.URL) {
+			// if the service name is not specified, use the environment
+			// variable if present
+			if strings.TrimPrefix(u.Path, "/") == "" {
+				if n := env.Getenv("ORACLE_SID", "ORASID"); n != "" {
+					u.Path = "/" + n
+					if u.Host == "" {
+						u.Host = "localhost"
+					}
+				}
+			}
+		},
 		V: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT version FROM v$instance`).Scan(&ver)
