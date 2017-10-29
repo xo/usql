@@ -499,10 +499,9 @@ func (h *Handler) Open(params ...string) error {
 	return h.Open(dsn)
 }
 
-// forceParams forces connection parameters on a database URL.
-//
-// Note: also forces/sets the username/password when a matching entry exists in
-// the PASS file.
+// forceParams forces connection parameters on a database URL, adding any
+// driver specific required parameters, and the username/password when a
+// matching entry exists in the PASS file.
 func (h *Handler) forceParams(u *dburl.URL) {
 	// force driver parameters
 	drivers.ForceParams(u)
