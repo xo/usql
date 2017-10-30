@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/alecthomas/chroma"
   packages = [".","formatters","formatters/html","lexers","styles"]
-  revision = "3d8ce9089275df12d7c5a65b0780aff629f6d657"
+  revision = "20d03ba7a203de48e2caa55da6a0cee7d0265786"
 
 [[projects]]
   branch = "master"
@@ -191,7 +191,7 @@
   branch = "master"
   name = "github.com/jackc/pgx"
   packages = [".","chunkreader","internal/sanitize","pgio","pgproto3","pgtype","stdlib"]
-  revision = "21ef44994481951efbbe40798bb3e31aef8ae9e5"
+  revision = "2b4558fe2278c7247fa99877deed173b24a366b5"
 
 [[projects]]
   branch = "master"
@@ -245,7 +245,7 @@
   branch = "master"
   name = "github.com/nakagami/firebirdsql"
   packages = ["."]
-  revision = "58d4b43572d99294ceb42125fcc97f3e668b202a"
+  revision = "8e47fbdec3e05de2cd21de138dba93e46a6336ee"
 
 [[projects]]
   branch = "master"
@@ -323,7 +323,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "4b14673ba32bee7f5ac0f990a48f033919fd418b"
+  revision = "c73622c77280266305273cb545f54516ced95b93"
 
 [[projects]]
   branch = "master"
@@ -335,7 +335,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "a1a1f1746d156bbc9954f29134b20ed4ce2752f1"
+  revision = "661970f62f5897bc0cd5fdca7e087ba8a98a8fa1"
 
 [[projects]]
   branch = "master"
