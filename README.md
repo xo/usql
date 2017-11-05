@@ -3,10 +3,10 @@
 `usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle,
 SQLite3, Microsoft SQL Server, [and other databases](#database-support).
 
-#### [Quickstart][] | [Demo][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
+#### [Quickstart][] | [Demos][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
 
 [Quickstart]: #quickstart (Quickstart)
-[Demo]: #interactive-demo (Interactive Demo)
+[Demos]: #interactive-demos (Interactive Demos)
 [Database Support]: #database-support (Database Support)
 [Connection Strings]: #database-connection-strings (Database Connection Strings)
 [Commands]: #backslash--commands (Backslash Commands)
@@ -53,11 +53,13 @@ Alternatively, if you already have a [working Go build environment](https://gola
 you may [install directly](#build_install) in the usual Go fashion:
 
 ```sh
-# install usql with most SQL drivers
+# build and install usql with "most" SQL drivers
 $ go get -u -tags most github.com/xo/usql
 ```
 
-## Interactive Demo
+## Interactive Demos
+
+The following recorded interactive demos are available:
 
 The below is a demonstration using `usql` with [xo's booktest](https://github.com/xo/xo)
 simple test database, showcasing the release version v0.5.0. In the demonstration,
@@ -325,11 +327,12 @@ planned / in progress work:
 
 ##### General
 0. Fix multiline behavior to mimic psql properly
-1. Google Spanner
-2. PAGER
-3. \qecho + \o support
-4. fix table output / formatting
-6. add support for managing multiple database connections simultaneously
+1. Title bar support
+2. Google Spanner
+3. PAGER
+4. \qecho + \o support
+5. fix table output / formatting
+7. add support for managing multiple database connections simultaneously
     (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
     needed, if variable support works "as expected"?)
     maybe execute using something like \g @:name or :@name ? or \g -name ?
@@ -344,11 +347,11 @@ planned / in progress work:
         dest := <table>
         table := <identifier> (<column_list>)
     ```
-7. SQL completion (WIP)
-8. syntax highlighting (WIP)
-9. \encoding and environment/command line options to set encoding of input (to
+8. SQL completion (WIP)
+9. syntax highlighting (WIP)
+10. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-10. better --help support/output cli, man pages
+11. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
 1. the \j* commands (WIP)
