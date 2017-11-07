@@ -630,11 +630,11 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 		return "", err
 	}
 
-	var new, new2, old string
+	var newpw, newpw2, oldpw string
 
 	// ask for previous password
 	if user == "" && drivers.RequirePreviousPassword(h.u) {
-		old, err = h.l.Password(text.EnterPreviousPassword)
+		oldpw, err = h.l.Password(text.EnterPreviousPassword)
 		if err != nil {
 			return "", err
 		}
@@ -642,25 +642,25 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 	// attempt to get passwords
 	for i := 0; i < 3; i++ {
-		new, err = h.l.Password(text.NewPassword)
+		newpw, err = h.l.Password(text.NewPassword)
 		if err != nil {
 			return "", err
 		}
-		new2, err = h.l.Password(text.ConfirmPassword)
+		newpw2, err = h.l.Password(text.ConfirmPassword)
 		if err != nil {
 			return "", err
 		}
 
-		if new == new2 {
+		if newpw == newpw2 {
 			break
 		}
 		fmt.Fprintln(h.l.Stderr(), text.PasswordsDoNotMatch)
 	}
-	if new != new2 {
+	if newpw != newpw2 {
 		return "", text.ErrPasswordAttemptsExhausted
 	}
 
-	return drivers.ChangePassword(h.u, h.DB(), user, new, old)
+	return drivers.ChangePassword(h.u, h.DB(), user, newpw, oldpw)
 }
 
 // Version prints the database version information after a successful connection.
