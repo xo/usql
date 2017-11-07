@@ -42,8 +42,8 @@ import (
 )
 ENDSTR
 )
-  echo "$DATA" > $NAME.go
-  gofmt -w -s $NAME.go
+  echo "$DATA" > $SRC/internal/$NAME.go
+  gofmt -w -s $SRC/internal/$NAME.go
 done
 
 KNOWN=
@@ -72,6 +72,6 @@ func KnownBuildTags() map[string]string {
 ENDSTR
 )
 
-echo "$DATA" > internal.go
+echo "$DATA" > $SRC/internal/internal.go
 
-gofmt -w -s internal.go
+gofmt -w -s $SRC/internal/internal.go

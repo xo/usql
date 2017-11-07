@@ -99,3 +99,7 @@
   branch = "master"
   name = "gopkg.in/rana/ora.v4"
   source = "https://github.com/rana/ora.git"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/prestodb/presto-go-client"

@@ -103,11 +103,12 @@ summarized below:
 | Firebird SQL         | firebird             | [github.com/nakagami/firebirdsql](https://github.com/nakagami/firebirdsql)                                                     |
 | Microsoft ADODB      | adodb                | [github.com/mattn/go-adodb](https://github.com/mattn/go-adodb)                                                                 |
 | ODBC                 | odbc                 | [github.com/alexbrainman/odbc](https://github.com/alexbrainman/odbc)                                                           |
+| Presto               | presto               | [github.com/prestodb/presto-go-client/presto](https://github.com/prestodb/presto-go-client)                                    |
 | SAP HANA             | hdb                  | [github.com/SAP/go-hdb/driver](https://github.com/SAP/go-hdb)                                                                  |
 | Sybase SQL Anywhere  | sqlany               | [github.com/a-palchikov/sqlago](https://github.com/a-palchikov/sqlago)                                                         |
 | VoltDB               | voltdb               | [github.com/VoltDB/voltdb-client-go/voltdbclient](github.com/VoltDB/voltdb-client-go])                                         |
 |                      |                      |                                                                                                                                |
-| Google Spanner       | spanner              | github.com/xo/spanner (not yet public)                                                                                        |
+| Google Spanner       | spanner              | github.com/xo/spanner (not yet public)                                                                                         |
 |                      |                      |                                                                                                                                |
 | **MOST DRIVERS**     | most                 | (all drivers listed above, excluding the drivers for Oracle and ODBC, which require third-party dependencies to build/install) |
 | **ALL DRIVERS**      | all                  | (all drivers listed above)                                                                                                     |

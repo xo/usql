@@ -266,6 +266,12 @@
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/prestodb/presto-go-client"
+  packages = ["presto"]
+  revision = "041307ca731dfd26c1641b2b25350e65fed831b4"
+
+[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
@@ -287,7 +293,7 @@
   branch = "master"
   name = "github.com/xo/dburl"
   packages = ["."]
-  revision = "4913e678bd23e3d1771dc50050d609ad6c5a6cbc"
+  revision = "50ed28d30ef8f00c5f76f422d615102b44b7b4d0"
 
 [[projects]]
   branch = "master"
@@ -365,6 +371,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cca35b843ed27a102e674c0f1ef0585d653e6902e7c9d8fb6ec4c0bb6948a2f4"
+  inputs-digest = "be561f76b47d551ce2078c772b7456b968afae28b6abdd9b001c76f0f0d0b858"
   solver-name = "gps-cdcl"
   solver-version = 1

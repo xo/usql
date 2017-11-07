@@ -22,6 +22,7 @@ func KnownBuildTags() map[string]string {
 		"oracle":     "ora",         // gopkg.in/rana/ora.v4
 		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
+		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto
 		"ql":         "ql",          // github.com/cznic/ql/driver
 		"saphana":    "hdb",         // github.com/SAP/go-hdb/driver
 		"sqlite3":    "sqlite3",     // github.com/mattn/go-sqlite3
