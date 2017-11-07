@@ -293,7 +293,7 @@
   branch = "master"
   name = "github.com/xo/dburl"
   packages = ["."]
-  revision = "a5d7da913f12b2db24f9649f5b6083bec02e4468"
+  revision = "11f4b13fa8399d68d895dda432d689f39a38c070"
 
 [[projects]]
   branch = "master"
