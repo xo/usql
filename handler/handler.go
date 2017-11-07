@@ -675,7 +675,7 @@ func (h *Handler) Version() error {
 
 	ver, err := drivers.Version(h.u, h.DB())
 	if err != nil {
-		return err
+		ver = fmt.Sprintf("<unknown, error: %v>", err)
 	}
 
 	if ver != "" {
@@ -761,7 +761,7 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 	}
 
 	// execRows
-	h.execRows(w, q)
+	err = h.execRows(w, q)
 	if err != nil {
 		return err
 	}
