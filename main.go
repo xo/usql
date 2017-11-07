@@ -61,16 +61,17 @@ func main() {
 	if err != nil && err != io.EOF && err != rline.ErrInterrupt {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
-		if e, ok := err.(*drivers.Error); ok {
-			// extra output for when a driver is not available
-			if e.Err == text.ErrDriverNotAvailable {
-				tag := e.Driver
-				if t, ok := known[tag]; ok {
-					tag = t
-				}
-
-				fmt.Fprint(os.Stderr, "\ntry:\n\n  go get -u -tags "+tag+" github.com/xo/usql\n\n")
+		if e, ok := err.(*drivers.Error); ok && e.Err == text.ErrDriverNotAvailable {
+			m := make(map[string]string, len(known))
+			for k, v := range known {
+				m[v] = k
 			}
+
+			tag := e.Driver
+			if t, ok := m[tag]; ok {
+				tag = t
+			}
+			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go get -u -tags %s github.com/xo/usql\n\n", tag)
 		}
 
 		os.Exit(1)
