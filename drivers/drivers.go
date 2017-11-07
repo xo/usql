@@ -72,7 +72,7 @@ type Driver struct {
 
 	// Cb will be used by ConvertBytes to convert a raw []byte slice to a
 	// string if defined.
-	Cb func([]byte) string
+	Cb func(string, []byte) string
 
 	// E will be used by Error.Error if defined.
 	E func(error) (string, string)
@@ -280,9 +280,9 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 }
 
 // ConvertBytes converts a raw byte slice for a specified URL's driver.
-func ConvertBytes(u *dburl.URL, buf []byte) string {
+func ConvertBytes(u *dburl.URL, tfmt string, buf []byte) string {
 	if d, ok := drivers[u.Driver]; ok && d.Cb != nil {
-		return d.Cb(buf)
+		return d.Cb(tfmt, buf)
 	}
 	return string(buf)
 }

@@ -687,6 +687,15 @@ func (h *Handler) Version() error {
 	return nil
 }
 
+// timefmt returns the current time format setting.
+func (h *Handler) timefmt() string {
+	s, ok := env.All()["TIME_FORMAT"]
+	if !ok || s == "" {
+		s = time.RFC3339Nano
+	}
+	return s
+}
+
 // execOnly executes a query against the database.
 func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string) error {
 	// exec or query
@@ -713,11 +722,13 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 		return err
 	}
 
+	// process row(s)
 	var i int
 	var row []string
+	clen, tfmt := len(cols), h.timefmt()
 	for q.Next() {
 		if i == 0 {
-			row, err = h.scan(q, len(cols))
+			row, err = h.scan(q, clen, tfmt)
 			if err != nil {
 				return err
 			}
@@ -804,10 +815,12 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 		return err
 	}
 
-	clen, res := len(cols), metacmd.Res{Exec: metacmd.ExecOnly}
+	// process rows
+	res := metacmd.Res{Exec: metacmd.ExecOnly}
+	clen, tfmt := len(cols), h.timefmt()
 	for q.Next() {
 		if clen != 0 {
-			row, err := h.scan(q, clen)
+			row, err := h.scan(q, clen, tfmt)
 			if err != nil {
 				return err
 			}
@@ -840,11 +853,12 @@ func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 	t.SetAutoWrapText(false)
 	t.SetHeader(cols)
 
-	clen := len(cols)
+	// process rows
 	var rows int
+	clen, tfmt := len(cols), h.timefmt()
 	for q.Next() {
 		if clen != 0 {
-			row, err := h.scan(q, clen)
+			row, err := h.scan(q, clen, tfmt)
 			if err != nil {
 				return err
 			}
@@ -864,7 +878,7 @@ func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 }
 
 // scan scans a row.
-func (h *Handler) scan(q *sql.Rows, clen int) ([]string, error) {
+func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 	r := make([]interface{}, clen)
 	for i := range r {
 		r[i] = new(interface{})
@@ -881,13 +895,13 @@ func (h *Handler) scan(q *sql.Rows, clen int) ([]string, error) {
 		//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
 		switch x := (*j).(type) {
 		case []byte:
-			row[n] = drivers.ConvertBytes(h.u, x)
+			row[n] = drivers.ConvertBytes(h.u, tfmt, x)
 
 		case string:
 			row[n] = x
 
 		case time.Time:
-			row[n] = x.Format(time.RFC3339Nano)
+			row[n] = x.Format(tfmt)
 
 		case fmt.Stringer:
 			row[n] = x.String()

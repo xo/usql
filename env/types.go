@@ -1,7 +1,7 @@
 package env
 
 import (
-	"os"
+	"time"
 	"unicode"
 
 	"github.com/xo/terminfo"
@@ -31,8 +31,12 @@ var vars Vars
 func init() {
 	// get USQL_* variables
 	enableHostInformation := "true"
-	if v := os.Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
+	if v := Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
+	}
+	timefmt := time.RFC3339Nano
+	if v := Getenv("USQL_TIME_FORMAT"); v != "" {
+		timefmt = v
 	}
 
 	// get color level
@@ -45,6 +49,7 @@ func init() {
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
+		"TIME_FORMAT":           timefmt,
 
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,

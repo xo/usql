@@ -3,7 +3,6 @@ package sqlite3
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	// DRIVER: sqlite3
 	"github.com/mattn/go-sqlite3"
@@ -39,7 +38,7 @@ func init() {
 
 			return code, msg
 		},
-		Cb: func(buf []byte) string {
+		Cb: func(tfmt string, buf []byte) string {
 			// attempt to convert buf if it matches a time format, and if it
 			// does, then return a formatted time string.
 			s := string(buf)
@@ -47,7 +46,7 @@ func init() {
 				t := &xoutil.SqTime{}
 				err := t.Scan(buf)
 				if err == nil {
-					return t.Format(time.RFC3339Nano)
+					return t.Format(tfmt)
 				}
 			}
 
