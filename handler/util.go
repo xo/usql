@@ -26,7 +26,7 @@ func empty(s string) bool {
 	return i == -1
 }
 
-var ansiRE = regexp.MustCompile(`\x1b[[0-9]+(:[0-9]+)*m`)
+var ansiRE = regexp.MustCompile(`\x1b[[0-9]+([:;][0-9]+)*m`)
 
 // lastcolor returns the last defined color in s, if any.
 func lastcolor(s string) string {

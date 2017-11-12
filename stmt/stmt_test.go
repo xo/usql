@@ -218,7 +218,7 @@ func TestNextResetState(t *testing.T) {
 			t.Fatalf("test %d expected statements %s, got: %s", i, jj(test.stmts), jj(stmts))
 		}
 
-		if cz := cc(t, cmds, aparams); !reflect.DeepEqual(cz, test.cmds) {
+		if cz := cc(cmds, aparams); !reflect.DeepEqual(cz, test.cmds) {
 			t.Fatalf("test %d expected commands %v, got: %v", i, jj(test.cmds), jj(cz))
 		}
 
@@ -261,14 +261,13 @@ func TestNextResetState(t *testing.T) {
 	}
 }
 
-func cc(t *testing.T, cmds []string, params [][]string) []string {
-	var z []string
+func cc(cmds []string, params [][]string) []string {
+	z := make([]string, len(cmds))
 	for i, c := range cmds {
-		p := strings.Join(params[i], "|")
-		if p != "" {
+		if p := strings.Join(params[i], "|"); p != "" {
 			c += " " + p
 		}
-		z = append(z, c)
+		z[i] = c
 	}
 	return z
 }
