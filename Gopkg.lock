@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/VoltDB/voltdb-client-go"
   packages = ["voltdbclient","wire"]
-  revision = "72c161eb7f87d2698c60985fc6be6a0f0b845ed1"
+  revision = "d8e2f3f75068977189b2360c22b5602e22bf6c2e"
 
 [[projects]]
   branch = "master"
@@ -59,7 +59,7 @@
   branch = "master"
   name = "github.com/couchbase/gomemcached"
   packages = [".","client"]
-  revision = "2469f4e607c92e54577b94c31485e02a9e7ea952"
+  revision = "441b2696d265b974dd9c86fdb816beaf6854d5ef"
 
 [[projects]]
   branch = "master"
@@ -161,7 +161,7 @@
   branch = "master"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
-  revision = "fade21009797158e7b79e04c340118a9220c6f9e"
+  revision = "949221881fa8e37a73d073dd3e33d857909d909e"
 
 [[projects]]
   branch = "master"
@@ -191,7 +191,7 @@
   branch = "master"
   name = "github.com/jackc/pgx"
   packages = [".","chunkreader","internal/sanitize","pgio","pgproto3","pgtype","stdlib"]
-  revision = "f6d37536c424300757bcba3933a67b5cb10a77be"
+  revision = "4878d9233938f8fd6d41ff03aa4ec7b020f54d01"
 
 [[projects]]
   branch = "master"
@@ -341,7 +341,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "bcc62b628abe70dd6bee1f06c4e31630209cd8d7"
+  revision = "1e2299c37cc91a509f1b12369872d27be0ce98a6"
 
 [[projects]]
   branch = "master"
@@ -365,7 +365,7 @@
   branch = "master"
   name = "gopkg.in/rana/ora.v4"
   packages = [".","date","num"]
-  revision = "60ae28a2d9faa9d69c41c4bc9e9b9b43c2cf4910"
+  revision = "45a65e7eb9594a0345ed67f1ace2c4ee59aed6b9"
   source = "https://github.com/rana/ora.git"
 
 [solve-meta]
