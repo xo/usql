@@ -5,13 +5,13 @@
   branch = "master"
   name = "github.com/Boostport/avatica"
   packages = [".","message"]
-  revision = "d2d275ce90cbeccf2a8971bed7964bfdeddc1c85"
+  revision = "162a3b3b89677af55d94428775c999b7b4f3c023"
 
 [[projects]]
   branch = "master"
   name = "github.com/SAP/go-hdb"
   packages = ["driver","driver/sqltrace","internal/bufio","internal/protocol","internal/unicode","internal/unicode/cesu8"]
-  revision = "ee43a501e5132d25c925fc7c1ccd753a482b0a07"
+  revision = "c80549df883e955dff808b1258c26f32b3ed10a4"
 
 [[projects]]
   branch = "master"
@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/alecthomas/chroma"
   packages = [".","formatters","formatters/html","lexers","styles"]
-  revision = "3289a10f11a73fdb305a788e4872a7a432968631"
+  revision = "c9f612c1940a4951cd2b55811744632a7b3b3bb2"
 
 [[projects]]
   branch = "master"
@@ -47,7 +47,7 @@
   branch = "master"
   name = "github.com/couchbase/go-couchbase"
   packages = ["."]
-  revision = "b2479ad629a58de79501b021497525f0ea27e226"
+  revision = "b68b134c84262afb37fbe4fea7bde4c3f29c9f25"
 
 [[projects]]
   branch = "master"
@@ -59,7 +59,7 @@
   branch = "master"
   name = "github.com/couchbase/gomemcached"
   packages = [".","client"]
-  revision = "56481a09982ccef7e3e408a3b97dd818821f42f2"
+  revision = "03899fb142a46ed6d39e9cdf524503d194994ea0"
 
 [[projects]]
   branch = "master"
@@ -137,7 +137,7 @@
   branch = "master"
   name = "github.com/denisenkom/go-mssqldb"
   packages = ["."]
-  revision = "88555645b640cc621e32f8693d7586a1aa1575f4"
+  revision = "8a15d1bb0c8eaa4b870c016b312de5b50b493b4e"
 
 [[projects]]
   branch = "master"
@@ -161,7 +161,7 @@
   branch = "master"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
-  revision = "cd4cb909ce1a31435164be29bf3682031f61539a"
+  revision = "9181e3a86a19bacd63e68d43ae8b7b36320d8092"
 
 [[projects]]
   branch = "master"
@@ -179,7 +179,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-cleanhttp"
   packages = ["."]
-  revision = "3573b8b52aa7b37b9358d966a898feb387f62437"
+  revision = "33f138d01ac027decb9a5bd76ad6e7c7c701b0c4"
 
 [[projects]]
   branch = "master"
@@ -191,7 +191,7 @@
   branch = "master"
   name = "github.com/jackc/pgx"
   packages = [".","chunkreader","internal/sanitize","pgio","pgproto3","pgtype","stdlib"]
-  revision = "e3c5552ff167be8659cf1ebe2bad0491650650ff"
+  revision = "cbb3fa5ecc6ad01b99c628a13b078862d7fb627c"
 
 [[projects]]
   branch = "master"
@@ -209,13 +209,13 @@
   branch = "master"
   name = "github.com/kshvakov/clickhouse"
   packages = [".","lib/binary","lib/column","lib/data","lib/protocol","lib/types","lib/writebuffer"]
-  revision = "95e4a6a9dd85f7b58c2db7d0dc820fd937bf7abf"
+  revision = "da7b08c0e3e9b546abd9e0ef6339ebf3a1ff0d53"
 
 [[projects]]
   branch = "master"
   name = "github.com/lib/pq"
   packages = [".","oid"]
-  revision = "8c6ee72f3e6bcb1542298dd5f76cb74af9742cec"
+  revision = "83612a56d3dd153a94a629cd64925371c9adad78"
 
 [[projects]]
   branch = "master"
@@ -245,7 +245,7 @@
   branch = "master"
   name = "github.com/nakagami/firebirdsql"
   packages = ["."]
-  revision = "8e47fbdec3e05de2cd21de138dba93e46a6336ee"
+  revision = "8b159d5505e9acdc6d9fcf505432e64dd14d4d2e"
 
 [[projects]]
   branch = "master"
@@ -257,7 +257,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "a7a4c189eb47ed33ce7b35f2880070a0c82a67d4"
+  revision = "65fec0d89a572b4367094e2058d3ebe667de3b60"
 
 [[projects]]
   branch = "master"
@@ -293,7 +293,7 @@
   branch = "master"
   name = "github.com/xo/dburl"
   packages = ["."]
-  revision = "11f4b13fa8399d68d895dda432d689f39a38c070"
+  revision = "2406b5c3c3d0d9ed027c66db23ff3f271c370c69"
 
 [[projects]]
   branch = "master"
@@ -317,19 +317,19 @@
   branch = "master"
   name = "github.com/ziutek/mymysql"
   packages = ["godrv","mysql","native"]
-  revision = "1d19cbf98d83564cc561192ae7d7183d795f7ac7"
+  revision = "ff6cc86d3d933e6c0e3185a19fb46e171a7651b2"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["md4","pbkdf2"]
-  revision = "b080dc9a8c480b08e698fb1219160d598526310f"
+  revision = "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "c7086645de248775cbf2373cf5ca4d2fa664b8c1"
+  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
 [[projects]]
   branch = "master"
@@ -341,13 +341,13 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "4ff8c001ce4cc464e644b922325097228fce14d8"
+  revision = "571f7bbbe08da2a8955aed9d4db316e78630e9a3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["transform"]
-  revision = "88f656faf3f37f690df1a32515b479415e1a6769"
+  revision = "d5a9226ed7dd70cade6ccae9d37517fe14dd9fee"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -371,7 +371,7 @@
   branch = "master"
   name = "gopkg.in/rana/ora.v4"
   packages = [".","date","num"]
-  revision = "2b287e5d34b47a9bad7f6e99a8c9af838931d8e1"
+  revision = "48b93e7bae8a775f5dc577d0b9ae5681459cb0b9"
   source = "https://github.com/rana/ora.git"
 
 [solve-meta]
