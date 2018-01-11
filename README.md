@@ -1,58 +1,27 @@
-# About usql
+# usql
 
-`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle
-Database, SQLite3, Microsoft SQL Server, [and other SQL databases][Database Support].
+A universal command-line interface for PostgreSQL, MySQL, Oracle Database,
+SQLite3, Microsoft SQL Server, [and other SQL databases][Database Support].
+
+[Installing][] | [Using][] | [Commands][] | [Building][] | [Database Support][] | [Releases][]
+
+[Installing]: #installing (Installing)
+[Using]: #using (Using)
+[Commands]: #commands (Commands)
+[Building]: #building (Building)
+[Database Support]: #database-support (Database Support)
+[Releases]: https://github.com/xo/usql/releases (Releases)
+
+## Overview
 
 `usql` provides a simple way of working with SQL databases via a command-line
 inspired by PostgreSQL's `psql` tool and has a few additional features that
 `psql` does not, such as syntax highlighting and context-based completion.
 
-Database administrators and developers that would prefer to work with other SQL
-databases with a tool like `psql`, will find `usql` intuitive, easy-to-use, and
-a great replacement for the command-line clients/tools available for other
-databases.
-
-#### [Database Support][] | [Installing][] | [Using][] | [Commands][] | [Releases][]
-
-[Database Support]: #database-support (Database Support)
-[Installing]: #installing (Installing)
-[Using]: #using (Using)
-[Commands]: #commands (Backslash Commands)
-[Releases]: https://github.com/xo/usql/releases (Project Releases)
-
-## Database Support
-
-`usql` works with all Go standard library compatible SQL drivers supported by
-[`github.com/xo/dburl`][4].
-
-The databases supported, their respective build tags, and the driver used by `usql` are:
-
-| Driver               | Build Tag  | Driver Used                                                                      |
-|----------------------|------------|----------------------------------------------------------------------------------|
-| Microsoft SQL Server | mssql      | [github.com/denisenkom/go-mssqldb][10]                                           |
-| MySQL                | mysql      | [github.com/go-sql-driver/mysql][11]                                             |
-| PostgreSQL           | postgres   | [github.com/lib/pq][12]                                                          |
-| SQLite3              | sqlite3    | [github.com/mattn/go-sqlite3][13]                                                |
-| Oracle               | oracle     | [gopkg.in/rana/ora.v4][14]                                                       |
-| MySQL                | mymysql    | [github.com/ziutek/mymysql/godrv][15]                                            |
-| PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][16]                                                |
-|                      |            |                                                                                  |
-| Apache Avatica       | avatica    | [github.com/Boostport/avatica][17]                                               |
-| ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][18]                                             |
-| Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][19]                                               |
-| Cznic QL             | ql         | [github.com/cznic/ql][20]                                                        |
-| Firebird SQL         | firebird   | [github.com/nakagami/firebirdsql][21]                                            |
-| Microsoft ADODB      | adodb      | [github.com/mattn/go-adodb][22]                                                  |
-| ODBC                 | odbc       | [github.com/alexbrainman/odbc][23]                                               |
-| Presto               | presto     | [github.com/prestodb/presto-go-client/presto][24]                                |
-| SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][25]                                               |
-| Sybase SQL Anywhere  | sqlany     | [github.com/a-palchikov/sqlago][26]                                              |
-| VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][27]                            |
-|                      |            |                                                                                  |
-| Google Spanner       | spanner    | github.com/xo/spanner (not yet public)                                           |
-|                      |            |                                                                                  |
-| **MOST DRIVERS**     | most       | all drivers excluding Oracle and ODBC (requires CGO and additional dependencies) |
-| **ALL DRIVERS**      | all        | all drivers                                                                      |
+Database administrators and developers that would prefer to work with
+non-PostgreSQL databases with a tool like `psql`, will find `usql` intuitive,
+easy-to-use, and a great replacement for the command-line clients/tools
+available for other databases.
 
 ## Installing
 
@@ -332,11 +301,11 @@ The `usql` project's goal is to support all standard `psql` commands.
 
 ## Building
 
-When building `usql` via `go get`, `go build`, or `go install`, only drivers
-for PostgreSQL, MySQL, SQLite3 and Microsoft SQL Server will be enabled by
-default. Other databases can be enabled by specifying appropriate build tags
-for their [database drivers][Database Support]. Additionally, the `most` and
-`all` build tags include most, and all SQL drivers, respectively:
+When building `usql` with `go`, only drivers for PostgreSQL, MySQL, SQLite3 and
+Microsoft SQL Server will be enabled by default. Other databases can be enabled
+by specifying the build tag for their [database driver][Database Support].
+Additionally, the `most` and `all` build tags include most, and all SQL
+drivers, respectively:
 
 ```sh
 # install all drivers
@@ -349,20 +318,20 @@ $ go get -u -tags most github.com/xo/usql
 $ go get -u -tags 'oracle odbc' github.com/xo/usql
 ```
 
-For every build tag `<name>`, there is also the `no_<name>` build tag disabling
-the driver:
+For every build tag `<driver>`, there is also the `no_<driver>` build tag
+disabling the driver:
 
-```
+```sh
 # install all drivers excluding avatica and couchbase
 $ go get -u -tags 'all no_avatica no_couchbase'
 ```
 
-#### Building Releases
+### Release Builds
 
 [Release builds][Releases] are built with the `most` build tag. [Additional
 SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
 
-## Using as a Package
+### Using as a Package
 
 An effort has been made to keep `usql`'s packages modular, and reusable by
 other developers wishing to leverage `usql`'s code base. As such, it is
@@ -372,6 +341,41 @@ project as an "official" client) using the core `usql` source tree.
 Please refer to [main.go](main.go) to see how `usql` puts together its
 packages. `usql`'s code is also well-documented -- please refer to the [GoDoc
 listing][5] to see the various APIs available.
+
+## Database Support
+
+`usql` works with all Go standard library compatible SQL drivers supported by
+[`github.com/xo/dburl`][4].
+
+The databases supported, the respective build tag, and the driver used by `usql` are:
+
+| Driver               | Build Tag  | Driver Used                                                                      |
+|----------------------|------------|----------------------------------------------------------------------------------|
+| Microsoft SQL Server | mssql      | [github.com/denisenkom/go-mssqldb][10]                                           |
+| MySQL                | mysql      | [github.com/go-sql-driver/mysql][11]                                             |
+| PostgreSQL           | postgres   | [github.com/lib/pq][12]                                                          |
+| SQLite3              | sqlite3    | [github.com/mattn/go-sqlite3][13]                                                |
+| Oracle               | oracle     | [gopkg.in/rana/ora.v4][14]                                                       |
+|                      |            |                                                                                  |
+| MySQL                | mymysql    | [github.com/ziutek/mymysql/godrv][15]                                            |
+| PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][16]                                                |
+|                      |            |                                                                                  |
+| Apache Avatica       | avatica    | [github.com/Boostport/avatica][17]                                               |
+| ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][18]                                             |
+| Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][19]                                               |
+| Cznic QL             | ql         | [github.com/cznic/ql][20]                                                        |
+| Firebird SQL         | firebird   | [github.com/nakagami/firebirdsql][21]                                            |
+| Microsoft ADODB      | adodb      | [github.com/mattn/go-adodb][22]                                                  |
+| ODBC                 | odbc       | [github.com/alexbrainman/odbc][23]                                               |
+| Presto               | presto     | [github.com/prestodb/presto-go-client/presto][24]                                |
+| SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][25]                                               |
+| Sybase SQL Anywhere  | sqlany     | [github.com/a-palchikov/sqlago][26]                                              |
+| VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][27]                            |
+|                      |            |                                                                                  |
+| Google Spanner       | spanner    | github.com/xo/spanner (not yet public)                                           |
+|                      |            |                                                                                  |
+| **MOST DRIVERS**     | most       | all drivers excluding Oracle and ODBC (requires CGO and additional dependencies) |
+| **ALL DRIVERS**      | all        | all drivers                                                                      |
 
 ## Related Projects
 
