@@ -1,157 +1,191 @@
 # About usql
 
-`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle,
-SQLite3, Microsoft SQL Server, [and other databases](#database-support).
+`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle
+Database, SQLite3, Microsoft SQL Server, [and other SQL databases][Database Support].
 
-#### [Quickstart][] | [Demos][] | [Database Support][] | [Connection Strings][] | [Commands][] | [Building][] | [Releases][]
+`usql` provides a simple way of working with SQL databases via a command-line
+inspired by PostgreSQL's `psql` tool and has a few additional features that
+`psql` does not, such as syntax highlighting and context-based completion.
 
-[Quickstart]: #quickstart (Quickstart)
-[Demos]: #interactive-demos (Interactive Demos)
+Database administrators and developers that would prefer to work with other SQL
+databases with a tool like `psql`, will find `usql` intuitive, easy-to-use, and
+a great replacement for the command-line clients/tools available for other
+databases.
+
+#### [Releases][] | [Installing][] | [Using][] | [Database Support][] | [Connection Strings][] | [Commands][]
+
+[Releases]: https://github.com/xo/usql/releases (Project Releases)
+[Installing]: #installing (Installing)
+[Using]: #using (Using)
 [Database Support]: #database-support (Database Support)
 [Connection Strings]: #database-connection-strings (Database Connection Strings)
 [Commands]: #backslash--commands (Backslash Commands)
-[Building]: #buildinstall-from-source (Build/Install from Source)
-[Releases]: https://github.com/xo/usql/releases (Project Releases)
 
-## Quickstart
+## Installing
 
-1. [Download a release for your platform](https://github.com/xo/usql/releases)
-2. Extract the `.zip` (Windows), or `.tar.bz2` (OS X/Linux) file and place the
-   `usql` executable somewhere on your `%PATH%` (Windows), or your `$PATH` (OS X/Linux)
-3. Connect to a database using `usql driver://user:pass@host/dbname`, and
-   execute a SQL query, or [command](#commands):
+`usql` can be installed by [via Release][], [via Go][], or [via Homebrew][]:
+
+[via Release]: #installing-via-release
+[via Go]: #installing-via-go
+[via Homebrew]: #installing-via-homebrew-osx
+
+### Installing via Release
+
+1. [Download a release for your platform][Releases]
+2. Extract the `usql` or `usql.exe` file from the `.tar.bz2` or `.zip` file
+3. Move the executable to somewhere on your `$PATH` (Linux/OSX) or `%PATH%` (Windows)
+
+### Installing via Go
+
+`usql` can be installed in the usual Go fashion:
 
 ```sh
+# install usql with basic database support (includes PosgreSQL, MySQL, SQLite3, and MS SQL drivers)
+$ go get -u github.com/xo/usql
+```
+
+Support for additional databases can be specified with [build tags][Database Support]:
+
+```sh
+# install usql with most drivers (excludes drivers requiring CGO)
+$ go get -u -tags most github.com/xo/usql
+
+# install usql with all drivers (includes drivers requiring CGO, namely Oracle and ODBC drivers)
+$ go get -u -tags all github.com/xo/usql
+```
+
+### Installing via Homebrew (OSX)
+
+`usql` is available in the [`xo/xo`][3] tap, and can be installed in the usual
+way with the `brew` command:
+
+```sh
+# add tap
+$ brew tap xo/xo
+
+# install usql with "most" drivers
+$ brew install usql
+```
+
+Additional support for [Oracle and ODBC databases][Database Support] can be
+installed by passing `--with-*` parameters during install:
+
+```sh
+# install xo with oracle support
+$ brew install --with-oracle xo
+
+# install usql with oracle and odbc support
+$ brew install --with-oracle --with-odbc usql
+```
+
+## Using
+
+After [installing][Installing], `usql` can be used similarly to the following:
+
+```sh
+# connect to a postgres database
 $ usql postgres://booktest@localhost/booktest
-error: pq: 28P01: password authentication failed for user "booktest"
-Password:
-You are connected with driver postgres (PostgreSQL 9.6.2)
+
+# connect to an oracle database
+$ usql oracle://user:pass@host/oracle.sid
+
+# connect to a postgres database and run script.sql
+$ usql pg://localhost/ -f script.sql
+```
+
+### Executing Queries and Commands
+
+`usql` provides a command intrepreter that intreprets `\ ` commands and sends
+SQL queries to a connected database similar to `psql`:
+
+```sh
+$ usql sqlite://example.sqlite3
+Connected with driver sqlite3 (SQLite3 3.17.0)
 Type "help" for help.
 
-pg:booktest@localhost/booktest=> select * from books;
-  book_id | author_id | isbn | booktype |      title       | year |            available            |      tags
-+---------+-----------+------+----------+------------------+------+---------------------------------+-----------------+
-        1 |         1 |    1 | FICTION  | asotenhuastonehu | 2016 | 2017-03-19T02:48:36.27928+07:00 | {}
-        2 |         1 |    2 | FICTION  | asotenhuastonehu | 2016 | 2017-03-19T02:48:36.27928+07:00 | {cool,disastor}
-        3 |         1 |    3 | FICTION  | asotenhuastonehu | 2001 | 2017-03-19T02:48:36.27928+07:00 | {cool}
+sq:example.sqlite3=> create table test (test_id int, name string);
+CREATE TABLE
+sq:example.sqlite3=> insert into test (test_id, name) values (1, 'hello');
+INSERT 1
+sq:example.sqlite3=> select * from test;
+  test_id | name
++---------+-------+
+        1 | hello
+(1 rows)
+
+sq:example.sqlite3=> select * from test
+sq:example.sqlite3-> \p
+select * from test
+sq:example.sqlite3-> \g
+  test_id | name
++---------+-------+
+        1 | hello
+(1 rows)
+
+sq:example.sqlite3=> \c postgres://booktest@localhost
+error: pq: 28P01: password authentication failed for user "booktest"
+Enter password:
+Connected with driver postgres (PostgreSQL 9.6.6)
+pg:booktest@localhost=> select * from authors;
+  author_id |      name
++-----------+----------------+
+          1 | Unknown Master
+          2 | blah
+          3 | aoeu
 (3 rows)
 
-pg:booktest@localhost/booktest=> \p
-select * from books;
-pg:booktest@localhost/booktest=> \g
-  book_id | author_id | isbn | booktype |      title       | year |            available            |      tags
-+---------+-----------+------+----------+------------------+------+---------------------------------+-----------------+
-        1 |         1 |    1 | FICTION  | asotenhuastonehu | 2016 | 2017-03-19T02:48:36.27928+07:00 | {}
-        2 |         1 |    2 | FICTION  | asotenhuastonehu | 2016 | 2017-03-19T02:48:36.27928+07:00 | {cool,disastor}
-        3 |         1 |    3 | FICTION  | asotenhuastonehu | 2001 | 2017-03-19T02:48:36.27928+07:00 | {cool}
-(3 rows)
-
-pg:booktest@localhost/booktest=> \q
+pg:booktest@localhost=>
 ```
-
-Alternatively, if you already have a [working Go build environment](https://golang.org/doc/install),
-you may [install directly](#build_install) in the usual Go fashion:
-
-```sh
-# build and install usql with "most" SQL drivers
-$ go get -u -tags most github.com/xo/usql
-```
-
-## Interactive Demos
-
-The following recorded interactive demos are available:
-
-The below is a demonstration using `usql` with [xo's booktest](https://github.com/xo/xo)
-simple test database, showcasing the release version v0.5.0. In the demonstration,
-`usql` connects to a PostgreSQL database, executes some queries, with variable
-interpolation, connects to a SQLite3 database file, and does some more queries,
-before then connecting to a Microsoft SQL database and ending the session.
-
-<p align="center">
-  <a href="https://asciinema.org/a/5pta801tqofc1847gsp5ytjdf" target="_blank">
-    <img src="https://asciinema.org/a/5pta801tqofc1847gsp5ytjdf.png" width="654"/>
-  </a>
-</p>
-
-A previous demo showcasing `usql`'s general support for, and connecting to
-multiple databases <a href="https://asciinema.org/a/73gxbg62ny2fx9ppxu0kd8c48" target="_blank">is also available for viewing</a>.
-
-## Database Support
-
-`usql` aims to provide support for all Go standard library compatible SQL
-drivers -- with an emphasis on supporting the drivers that sister project,
-[`dburl`](https://github.com/xo/dburl), provides "out-of-the-box" URL support
-for.
-
-The databases currently supported by `usql` (and related build tag name) are
-summarized below:
-
-| Drivers              | Build Tag            | Driver Package                                                                                                                 |
-|----------------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| Microsoft SQL Server | mssql<sup>*</sup>    | [github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb)                                                   |
-| MySQL                | mysql<sup>*</sup>    | [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)                                                       |
-| PostgreSQL           | postgres<sup>*</sup> | [github.com/lib/pq](https://github.com/lib/pq)                                                                                 |
-| SQLite3              | sqlite3<sup>*</sup>  | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)                                                             |
-| Oracle               | oracle               | [gopkg.in/rana/ora.v4](https://gopkg.in/rana/ora.v4)                                                                           |
-| MySQL                | mymysql              | [github.com/ziutek/mymysql/godrv](https://github.com/ziutek/mymysql)                                                           |
-| PostgreSQL           | pgx                  | [github.com/jackc/pgx/stdlib](https://github.com/jackc/pgx)                                                                    |
-|                      |                      |                                                                                                                                |
-| Apache Avatica       | avatica              | [github.com/Boostport/avatica](https://github.com/Boostport/avatica)                                                           |
-| ClickHouse           | clickhouse           | [github.com/kshvakov/clickhouse](https://github.com/kshvakov/clickhouse)                                                       |
-| Couchbase            | couchbase            | [github.com/couchbase/go_n1ql](https://github.com/couchbase/go_n1ql)                                                           |
-| Cznic QL             | ql                   | [github.com/cznic/ql](https://github.com/cznic/ql)                                                                             |
-| Firebird SQL         | firebird             | [github.com/nakagami/firebirdsql](https://github.com/nakagami/firebirdsql)                                                     |
-| Microsoft ADODB      | adodb                | [github.com/mattn/go-adodb](https://github.com/mattn/go-adodb)                                                                 |
-| ODBC                 | odbc                 | [github.com/alexbrainman/odbc](https://github.com/alexbrainman/odbc)                                                           |
-| Presto               | presto               | [github.com/prestodb/presto-go-client/presto](https://github.com/prestodb/presto-go-client)                                    |
-| SAP HANA             | hdb                  | [github.com/SAP/go-hdb/driver](https://github.com/SAP/go-hdb)                                                                  |
-| Sybase SQL Anywhere  | sqlany               | [github.com/a-palchikov/sqlago](https://github.com/a-palchikov/sqlago)                                                         |
-| VoltDB               | voltdb               | [github.com/VoltDB/voltdb-client-go/voltdbclient](github.com/VoltDB/voltdb-client-go])                                         |
-|                      |                      |                                                                                                                                |
-| Google Spanner       | spanner              | github.com/xo/spanner (not yet public)                                                                                         |
-|                      |                      |                                                                                                                                |
-| **MOST DRIVERS**     | most                 | (all drivers listed above, excluding the drivers for Oracle and ODBC, which require third-party dependencies to build/install) |
-| **ALL DRIVERS**      | all                  | (all drivers listed above)                                                                                                     |
-
-<i><sup>*</sup>included by default when building</i>
 
 ## Database Connection Strings
 
-Database connection strings, or "data source name" (aka DSNs), used with `usql`
-have the same parsing rules as a normal URL, and have the following two forms:
+`usql` database connection strings (aka "data source name" or DSNs)  have the
+same parsing rules as URLs, and can be passed to `usql` via command-line, or
+via to the `\connect` or `\c` [commands][Commands].
 
+`usql` connection strings look like the following:
+
+```txt
+   driver+transport://user:pass@host/dbname?opt1=a&opt2=b
+   driver:/path/to/file
+   /path/to/file
 ```
-   protocol+transport://user:pass@host/dbname?opt1=a&opt2=b
-   protocol:/path/to/file
-```
 
-Where:
+Where the above are:
 
-| Component          | Description                                                                          |
-|--------------------|--------------------------------------------------------------------------------------|
-| protocol           | driver name or alias (see below)                                                     |
-| transport          | "tcp", "udp", "unix" or driver name <i>(for ODBC connections)</i>                    |
-| user               | username                                                                             |
-| pass               | password                                                                             |
-| host               | host                                                                                 |
-| dbname<sup>*</sup> | database, instance, or service name/ID to connect to                                 |
-| ?opt1=...          | additional database driver options (see respective SQL driver for available options) |
+| Component          | Description                                                               |
+|--------------------|---------------------------------------------------------------------------|
+| driver             | driver name or alias                                                      |
+| transport          | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>           |
+| user               | username                                                                  |
+| pass               | password                                                                  |
+| host               | hostname                                                                  |
+| dbname<sup>*</sup> | database name, instance, or service name/ID                               |
+| ?opt1=...          | database driver options (see respective SQL driver for available options) |
+| /path/to/file      | a path on disk                                                            |
+
+With the exception of `driver`, all of the URL components are optional in the
+first two forms.
 
 <i><sup><b>*</b></sup> for Microsoft SQL Server, the syntax to supply an
 instance and database name is `/instance/dbname`, where `/instance` is
 optional. For Oracle databases, `/dbname` is the unique database ID (SID).</i>
 
-Additionally, if `usql` is passed a URL without a leading `scheme://`, `usql` will
-attempt to locate the path on disk, and if it exists will open it accordingly.
-Specifically, if `usql` finds a Unix Domain Socket, it will attempt to open it
-using the `mysql` driver, or when a directory is found, `usql` will attempt to
-open the path using the `postgres` driver; last, if it the path is a regular
-file, `usql` will attempt to open the file using the `sqlite3` driver.
+### Driver Aliases
 
-`usql` recognizes the same drivers and scheme aliases from the [`dburl`](https://github.com/xo/dburl)
-package. Please see the `dburl` documentation for more in-depth information on
-how DSNs are built from standard URLs. Additionally, all of the above formats
-can be used in conjunction with the `\c` (or `\connect`) backslash meta command.
+`usql` recognizes the same driver names and aliases from the [`dburl`][4]
+package. Please refer to the [`dburl` documentation][4] for supported aliases.
+
+### Paths on Disk
+
+When `usql` is passed a URL without specifying a `driver` scheme, `usql` will
+check if the URL is a path on disk. If the path exists, `usql` will attempt to
+use an appropriate database driver to open the path.
+
+If the specified path is a Unix Domain Socket, `usql` will attempt to open it
+using the MySQL driver. If the path is a directory, `usql` will attempt to open
+it using the PostgreSQL driver. If the path is a regular file, `usql` will
+attempt to open the file using the SQLite3 driver.
 
 ### Example Connection Strings
 
@@ -163,6 +197,7 @@ connect to databases with `usql`:
 $ usql pg://user:pass@localhost/dbname
 $ usql pgsql://user:pass@localhost/dbname
 $ usql postgres://user:pass@localhost:port/dbname
+$ psql /var/run/postgresql
 
 # connect to a mysql database
 $ usql my://user:pass@localhost/dbname
@@ -173,21 +208,20 @@ $ usql /var/run/mysqld/mysqld.sock
 $ usql ms://user:pass@localhost/dbname
 $ usql mssql://user:pass@localhost:port/dbname
 
-# connect using Windows domain authentication to a mssql (Microsoft SQL)
-# database
+# connect to a mssql (Microsoft SQL) database using Windows domain authentication
 $ runas /user:ACME\wiley /netonly "usql mssql://host/dbname/"
 
 # connect to a oracle database
 $ usql or://user:pass@localhost/dbname
 $ usql oracle://user:pass@localhost:port/dbname
 
-# connect to a pre-existing sqlite database
+# connect to a sqlite database that exists on disk
 $ usql dbname.sqlite3
 
-# note: when not using a "<scheme>://" or "<scheme>:" prefix, the file must already
-# exist; if it doesn't, please prefix with file:, sq:, sqlite3: or any other
-# scheme alias recognized by the dburl package for sqlite databases, and sqlite
-# will create a new database, like the following:
+# NOTE: when not a "<driver>://" or "<driver>:" scheme, the file must
+# already exist; if it doesn't, please prefix with file:, sq:, sqlite3: or any
+# other sqlite3 driver alias recognized by the dburl package, and a new, empty
+# database will be created by the sqlite3 driver at that path:
 $ usql sq://path/to/dbname.sqlite3
 $ usql sqlite3://path/to/dbname.sqlite3
 $ usql file:/path/to/dbname.sqlite3
@@ -197,12 +231,16 @@ $ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
 $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
 ```
 
-## Backslash (`\`) Commands
+## Commands
 
-The following are the currently supported backslash (`\ `) meta commands
-available to interactive `usql` sessions or to included (ie, `\i`) scripts:
+`usql` recognizes backslash (`\ `) commands, similar to `psql`. Currently
+available `usql` commands:
 
-```txt
+```sh
+$ usql
+Type "help" for help.
+
+(not connected)=> \?
 General
   \q                    quit usql
   \copyright            show usql usage and distribution terms
@@ -250,31 +288,51 @@ Variables
   \unset NAME           unset (delete) internal variable
 ```
 
-More coming soon!
+A goal for `usql` is to eventually support all commands available to `psql`.
 
-## Build/Install from Source
 
-You can build or install `usql` from source in the usual Go fashion:
+## Database Support
 
-```sh
-# install usql (includes support for PosgreSQL, MySQL, SQLite3, and MS SQL)
-$ go get -u github.com/xo/usql
-```
+`usql` aims to provide support for all Go standard library compatible SQL
+drivers. Specifically, `usql` supports all Go database drivers that sister
+project, [`github.com/xo/dburl`][4], supports.
 
-Please note that default calls to `go get`, `go build`, or `go install` will
-only include drivers for PostgreSQL, MySQL, SQLite3 and Microsoft SQL Server.
+The database drivers currently supported by `usql` (and related build tag name)
+are:
 
-If you need additional support for a database driver (or wish to disable a
-specific driver), you may use additional build tags with `go get`, `go build`,
-or `go install`. Please refer to the table in the [Database Support][] section
-above for the names of the various build tags.
+| Driver               | Build Tag  | Driver Used                                                                      |
+|----------------------|------------|----------------------------------------------------------------------------------|
+| Microsoft SQL Server | mssql      | [github.com/denisenkom/go-mssqldb][10]                                           |
+| MySQL                | mysql      | [github.com/go-sql-driver/mysql][11]                                             |
+| PostgreSQL           | postgres   | [github.com/lib/pq][12]                                                          |
+| SQLite3              | sqlite3    | [github.com/mattn/go-sqlite3][13]                                                |
+| Oracle               | oracle     | [gopkg.in/rana/ora.v4][14]                                                       |
+| MySQL                | mymysql    | [github.com/ziutek/mymysql/godrv][15]                                            |
+| PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][16]                                                |
+|                      |            |                                                                                  |
+| Apache Avatica       | avatica    | [github.com/Boostport/avatica][17]                                               |
+| ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][18]                                             |
+| Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][19]                                               |
+| Cznic QL             | ql         | [github.com/cznic/ql][20]                                                        |
+| Firebird SQL         | firebird   | [github.com/nakagami/firebirdsql][21]                                            |
+| Microsoft ADODB      | adodb      | [github.com/mattn/go-adodb][22]                                                  |
+| ODBC                 | odbc       | [github.com/alexbrainman/odbc][23]                                               |
+| Presto               | presto     | [github.com/prestodb/presto-go-client/presto][24]                                |
+| SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][25]                                               |
+| Sybase SQL Anywhere  | sqlany     | [github.com/a-palchikov/sqlago][26]                                              |
+| VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][27]                            |
+|                      |            |                                                                                  |
+| Google Spanner       | spanner    | github.com/xo/spanner (not yet public)                                           |
+|                      |            |                                                                                  |
+| **MOST DRIVERS**     | most       | all drivers excluding Oracle and ODBC (requires CGO and additional dependencies) |
+| **ALL DRIVERS**      | all        | all drivers                                                                      |
 
-Note that for every build tag `<name>`, there is an additional tag `no_<name>`,
-that disables the respective driver(s). Additionally, there are the build tags
-`most` and `all`, that include most, and all SQL drivers, respectively.
+### Specifying Build Tags
 
-As such, you can easily (and quickly) recompile `usql` by combining any
-number of build tags to enable/disable specific drivers as needed:
+By default when building `usql` via `go get`, `go build`, or `go install`, only
+drivers for PostgreSQL, MySQL, SQLite3 and Microsoft SQL Server will be
+enabled. [Additional drivers][Database Support] can be enabled (or disabled) by
+passing build tags to `go`:
 
 ```sh
 # install all drivers
@@ -290,71 +348,47 @@ $ go get -u -tags 'oracle odbc' github.com/xo/usql
 $ go get -u -tags 'all no_avatica no_couchbase'
 ```
 
-For reference, [`usql` releases](https://github.com/xo/usql/releases) are
-built with the `most` tag, and with [additional SQLite3 specific build tags](contrib/build-release.sh).
+#### Disabling Drivers
 
-### Using `usql` as a library
+For every build tag `<name>`, there is an additional `no_<name>` build tag that
+disables the respective driver. Additionally, the build tags `most` and `all`
+are available that include most, and all SQL drivers, respectively.
 
-Significant effort has gone into making `usql`'s codebase modular, and reusable
-by other developers wishing to leverage the existing features of `usql`. As
-such, if you would like to build your own SQL command-line interface (e.g, for
-use with a SQL-like project, or otherwise as an "official" client), it is
-relatively straight-forward and easy to do so.
+#### Building Releases
 
-Please refer to the [main command-line entry point](main.go) to see how `usql`
-uses its constituent packages to create a interactive command-line
-handler/interpreter. Additionally, `usql`'s code is fairly well-documented --
-please refer to the [GoDoc listing](https://godoc.org/github.com/xo/usql) to
-see how it's all put together.
+[Release builds][Releases] are built with the `most` build tag.  [Additional
+SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
 
-## Compatibility and TODO
+## Using as a Package
 
-The goal of the `usql` project is to eventually provide a drop-in replacement
-for the amazing PostgreSQL's `psql` command -- including all bells/whistles --
-but with the added benefit of working with practically any database.
+An effort has been made to keep `usql`'s packages modular, and reusable by
+other developers wishing to leverage `usql`'s code base. As such, it is
+possible to build a SQL command-line interface (e.g, for use by some other
+project as an "official" client) using the core `usql` source tree.
 
-This is a continuing, and on-going effort -- and a substantial, good-faith
-attempt has been made to provide support for the most frequently used
-aspects/features of `psql`.
+Please refer to [main.go](main.go) to see how `usql` puts together its
+packages. `usql`'s code is also well-documented -- please refer to the [GoDoc
+listing][5] to see the various APIs available.
 
-Note, however, that `usql` is not close to a 100% replacement/drop-in, and
-not-yet fully compatible with `psql`. ***CAVEAT USER***.
+## TODO
 
-#### TODO
-
-Eventually, `usql` developers hope to leverage the power of Go and have plans
-for more features than the base `psql` command provides. Currently, the list of
-planned / in progress work:
+`usql` aims to eventually provide a drop-in replacement for PostgreSQL's `psql`
+command. This is an on-going effort -- but a good-faith effort has been made to
+provide support for the most frequently used aspects/features of `psql`.
+Compatability (where possible) with `psql`, takes general development priority.
 
 ##### General
-0. Fix multiline behavior to mimic psql properly
-1. Title bar support
-2. Google Spanner
-3. PAGER
-4. \qecho + \o support
-5. fix table output / formatting
-7. add support for managing multiple database connections simultaneously
-    (@conn syntax, and a ~/.usqlconnections file, and ~/.usqlconfig) (maybe not
-    needed, if variable support works "as expected"?)
-    maybe execute using something like \g @:name or :@name ? or \g -name ?
-    \c -name pg://user@localhost/dbname
-    by using a -name syntax, can be the same as passed cli parameters for the provided dsn -- could even be the same form, like:
-    `usql -N myconn pg://booktest@localhost` or `usql --name myconn pg://`
-    then, working with \copy, could do:
-    `\copy -N myconn <source> to -N myconn2 <dest>`
-    syntax something like:
-    ```txt
-        source := <table> | (<select_stmt>)
-        dest := <table>
-        table := <identifier> (<column_list>)
-    ```
-8. SQL completion (WIP)
-9. syntax highlighting (WIP)
-10. \encoding and environment/command line options to set encoding of input (to
+1. Fix multiline behavior to mimic psql properly (on arrow up/down through history)
+2. PAGER
+3. \qecho + \o support
+4. fix table output / formatting
+5. context-based completion (WIP)
+6. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-11. better --help support/output cli, man pages
+7. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
+
 1. the \j* commands (WIP)
 2. \watch
 3. \errverbose
@@ -367,28 +401,44 @@ planned / in progress work:
 1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
 
 ##### Testing
+
 1. test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
 
 ##### Future Database Support
-2. Cassandra
-3. InfluxDB
-4. CSV via SQLite3 vtable
-5. Google Sheets via SQLite3 vtable
-6. Atlassian JIRA JQL (why not? lol)
 
-##### Releases
-
-Need to write scripts for packaging and build binaries for:
-
-* Debian/Ubuntu (.deb)
-* MacOS X (.pkg)
-* Windows (.msi)
-* CentOS/RHEL (.rpm)
-
-Additional:
-* Submit upstream to Debian unstable (WIP)
+1. Cassandra
+2. InfluxDB
+3. CSV via SQLite3 vtable
+4. Google Sheets via SQLite3 vtable
+5. Atlassian JIRA JQL (why not? lol)
+6. Google Spanner
 
 ## Related Projects
 
 * [dburl](https://github.com/xo/dburl) - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
 * [xo](https://github.com/xo/xo) - a command-line tool to generate Go code from a database schema
+
+[1]: https://golang.org/doc/install
+[2]: https://brew.sh/
+[3]: https://github.com/xo/homebrew-xo
+[4]: https://github.com/xo/dburl
+[5]: https://godoc.org/github.com/xo/usql
+
+[10]: https://github.com/denisenkom/go-mssqldb
+[11]: https://github.com/go-sql-driver/mysql
+[12]: https://github.com/lib/pq
+[13]: https://github.com/mattn/go-sqlite3
+[14]: https://gopkg.in/rana/ora.v4
+[15]: https://github.com/ziutek/mymysql
+[16]: https://github.com/jackc/pgx
+[17]: https://github.com/Boostport/avatica
+[18]: https://github.com/kshvakov/clickhouse
+[19]: https://github.com/couchbase/go_n1ql
+[20]: https://github.com/cznic/ql
+[21]: https://github.com/nakagami/firebirdsql
+[22]: https://github.com/mattn/go-adodb
+[23]: https://github.com/alexbrainman/odbc
+[24]: https://github.com/prestodb/presto-go-client
+[25]: https://github.com/SAP/go-hdb
+[26]: https://github.com/a-palchikov/sqlago
+[27]: https://github.com/VoltDB/voltdb-client-go
