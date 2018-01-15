@@ -8,7 +8,7 @@ if [ -z "$VER" ]; then
   exit 1
 fi
 
-PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]')
+PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
 TAG=v$VER
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 NAME=$(basename $SRC)
@@ -24,8 +24,7 @@ BIN=$DIR/$NAME
 TAGS="most fts5 vtable json1"
 
 case $PLATFORM in
-  mingw64|msys)
-    PLATFORM=windows
+  windows)
     EXT=zip
     BIN=$BIN.exe
   ;;
