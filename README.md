@@ -73,9 +73,6 @@ Additional support for [Oracle and ODBC databases][Database Support] can be
 installed by passing `--with-*` parameters during install:
 
 ```sh
-# install xo with oracle support
-$ brew install --with-oracle xo
-
 # install usql with oracle and odbc support
 $ brew install --with-oracle --with-odbc usql
 ```
