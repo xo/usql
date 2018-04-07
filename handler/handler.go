@@ -466,16 +466,17 @@ func (h *Handler) Open(params ...string) error {
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err
-	} else if err == nil {
-		// force error/check connection
-		err = drivers.Ping(h.u, h.db)
-		if err == nil {
-			return h.Version()
-		}
 	}
 
 	// set buffer options
 	drivers.ConfigStmt(h.u, h.buf)
+
+	// force error/check connection
+	if err == nil {
+		if err = drivers.Ping(h.u, h.db); err == nil {
+			return h.Version()
+		}
+	}
 
 	// bail without getting password
 	if h.nopw || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {
