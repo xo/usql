@@ -11,8 +11,8 @@ import (
 
 func init() {
 	drivers.Register("hdb", drivers.Driver{
-		AMC: true,
-		V: func(db drivers.DB) (string, error) {
+		AllowMultilineComments: true,
+		Version: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT version FROM m_database`).Scan(&ver)
 			if err != nil {
@@ -20,7 +20,7 @@ func init() {
 			}
 			return "SAP HANA " + ver, nil
 		},
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			code, msg := "", err.Error()
 			if e, ok := err.(interface {
 				Code() int

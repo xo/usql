@@ -11,9 +11,9 @@ import (
 
 func init() {
 	drivers.Register("adodb", drivers.Driver{
-		AMC: true,
-		ACC: true,
-		A: func(res sql.Result) (int64, error) {
+		AllowMultilineComments: true,
+		AllowCComments:         true,
+		RowsAffected: func(res sql.Result) (int64, error) {
 			return 0, nil
 		},
 	}, "oleodbc")

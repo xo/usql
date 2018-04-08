@@ -19,8 +19,8 @@ var endRE = regexp.MustCompile(`;?\s*$`)
 
 func init() {
 	drivers.Register("ora", drivers.Driver{
-		AMC: true,
-		FP: func(u *dburl.URL) {
+		AllowMultilineComments: true,
+		ForceParams: func(u *dburl.URL) {
 			// if the service name is not specified, use the environment
 			// variable if present
 			if strings.TrimPrefix(u.Path, "/") == "" {
@@ -32,7 +32,7 @@ func init() {
 				}
 			}
 		},
-		V: func(db drivers.DB) (string, error) {
+		Version: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT version FROM v$instance`).Scan(&ver)
 			if err != nil {
@@ -40,16 +40,16 @@ func init() {
 			}
 			return "Oracle " + ver, nil
 		},
-		U: func(db drivers.DB) (string, error) {
+		User: func(db drivers.DB) (string, error) {
 			var user string
 			err := db.QueryRow(`SELECT user FROM dual`).Scan(&user)
 			return user, err
 		},
-		ChPw: func(db drivers.DB, user, new, _ string) error {
+		ChangePassword: func(db drivers.DB, user, new, _ string) error {
 			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY ` + new)
 			return err
 		},
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			code, msg := "", err.Error()
 
 			if e, ok := err.(interface {
@@ -70,7 +70,7 @@ func init() {
 
 			return code, strings.TrimSpace(msg)
 		},
-		PwErr: func(err error) bool {
+		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(interface {
 				Code() int
 			}); ok {
@@ -78,7 +78,7 @@ func init() {
 			}
 			return false
 		},
-		Cols: func(rows *sql.Rows) ([]string, error) {
+		Columns: func(rows *sql.Rows) ([]string, error) {
 			cols, err := rows.Columns()
 			if err != nil {
 				return nil, err
@@ -92,7 +92,7 @@ func init() {
 
 			return cols, nil
 		},
-		P: func(prefix string, sqlstr string) (string, string, bool, error) {
+		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
 			sqlstr = endRE.ReplaceAllString(sqlstr, "")
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil

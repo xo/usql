@@ -13,8 +13,8 @@ var endRE = regexp.MustCompile(`;?\s*$`)
 
 func init() {
 	drivers.Register("presto", drivers.Driver{
-		AMC: true,
-		P: func(prefix string, sqlstr string) (string, string, bool, error) {
+		AllowMultilineComments: true,
+		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
 			sqlstr = endRE.ReplaceAllString(sqlstr, "")
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil

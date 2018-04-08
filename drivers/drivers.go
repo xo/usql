@@ -24,61 +24,65 @@ type DB interface {
 
 // Driver holds funcs for a driver.
 type Driver struct {
-	// N is a name to override the driver name with.
-	N string
+	// Name is a name to override the driver name with.
+	Name string
 
-	// AD will be passed to query buffers to enable dollar ($$) style strings.
-	AD bool
+	// AllowDollar will be passed to query buffers to enable dollar ($$) style
+	// strings.
+	AllowDollar bool
 
-	// AMC will be passed to query buffers to enable multiline (/**/) style
+	// AllowMultilineComments will be passed to query buffers to enable
+	// multiline (/**/) style comments.
+	AllowMultilineComments bool
+
+	// AllowCComments will be passed to query buffers to enable C (//) style
 	// comments.
-	AMC bool
+	AllowCComments bool
 
-	// ACC will be passed to query buffers to enable C (//) style comments.
-	ACC bool
+	// AllowHashComments will be passed to query buffers to enable hash (#)
+	// style comments.
+	AllowHashComments bool
 
-	// AHC will be passed to query buffers to enable hash (#) style comments.
-	AHC bool
+	// RequirePreviousPassword will be used by RequirePreviousPassword.
+	RequirePreviousPassword bool
 
-	// ReqPP will be used by RequirePreviousPassword.
-	ReqPP bool
+	// LexerName is the name of the syntax lexer to use.
+	LexerName string
 
-	// Syn is the name of the syntax lexer to use.
-	Syn string
+	// ForceParams will be used to force parameters if defined.
+	ForceParams func(*dburl.URL)
 
-	// FP will be used to force parameters if defined.
-	FP func(*dburl.URL)
+	// Open will be used by Open if defined.
+	Open func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 
-	// O will be used by Open if defined.
-	O func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
+	// Version will be used by Version if defined.
+	Version func(DB) (string, error)
 
-	// V will be used by Version if defined.
-	V func(DB) (string, error)
+	// User will be used by User if defined.
+	User func(DB) (string, error)
 
-	// U will be used by User if defined.
-	U func(DB) (string, error)
+	// ChangePassword will be used by ChangePassword if defined.
+	ChangePassword func(DB, string, string, string) error
 
-	// ChPw will be used by ChangePassword if defined.
-	ChPw func(DB, string, string, string) error
+	// IsPasswordErr will be used by IsPasswordErr if defined.
+	IsPasswordErr func(error) bool
 
-	// PwErr will be used by IsPasswordErr if defined.
-	PwErr func(error) bool
+	// Process will be used by Process if defined.
+	Process func(string, string) (string, string, bool, error)
 
-	// P will be used by Process if defined.
-	P func(string, string) (string, string, bool, error)
+	// Columns will be used to retrieve the columns for the rows if
+	// defined.
+	Columns func(*sql.Rows) ([]string, error)
 
-	// Cols will be used to retrieve the columns for the rows if defined.
-	Cols func(*sql.Rows) ([]string, error)
+	// ConvertBytes will be used by ConvertBytes to convert a raw []byte
+	// slice to a string if defined.
+	ConvertBytes func(string, []byte) string
 
-	// Cb will be used by ConvertBytes to convert a raw []byte slice to a
-	// string if defined.
-	Cb func(string, []byte) string
+	// Err will be used by Error.Error if defined.
+	Err func(error) (string, string)
 
-	// E will be used by Error.Error if defined.
-	E func(error) (string, string)
-
-	// A will be used by RowsAffected if defined.
-	A func(sql.Result) (int64, error)
+	// RowsAffected will be used by RowsAffected if defined.
+	RowsAffected func(sql.Result) (int64, error)
 }
 
 // drivers is the map of drivers funcs.
@@ -119,8 +123,8 @@ func Registered(name string) bool {
 // ForceParams forces parameters on the supplied DSN for the registered driver.
 func ForceParams(u *dburl.URL) {
 	d, ok := drivers[u.Driver]
-	if ok && d.FP != nil {
-		d.FP(u)
+	if ok && d.ForceParams != nil {
+		d.ForceParams(u)
 	}
 }
 
@@ -134,8 +138,8 @@ func Open(u *dburl.URL) (*sql.DB, error) {
 	}
 
 	f := sql.Open
-	if d.O != nil {
-		f, err = d.O(u)
+	if d.Open != nil {
+		f, err = d.Open(u)
 		if err != nil {
 			return nil, WrapErr(u.Driver, err)
 		}
@@ -149,28 +153,47 @@ func Open(u *dburl.URL) (*sql.DB, error) {
 	return db, nil
 }
 
-// ConfigStmt sets the stmt.Stmt config for the specified driver.
-func ConfigStmt(u *dburl.URL, buf *stmt.Stmt) {
-	var ad, amc, acc, ahc bool = true, true, true, true
-
+// stmtOpts returns statement options for the specified driver.
+func stmtOpts(u *dburl.URL) []stmt.Option {
 	if u != nil {
 		if d, ok := drivers[u.Driver]; ok {
-			ad, amc, acc, ahc = d.AD, d.AMC, d.ACC, d.AHC
+			return []stmt.Option{
+				stmt.AllowDollar(d.AllowDollar),
+				stmt.AllowMultilineComments(d.AllowMultilineComments),
+				stmt.AllowCComments(d.AllowCComments),
+				stmt.AllowHashComments(d.AllowHashComments),
+			}
 		}
 	}
 
-	// set stmt query buffer settings
-	stmt.AllowDollar(ad)(buf)
-	stmt.AllowMultilineComments(amc)(buf)
-	stmt.AllowCComments(acc)(buf)
-	stmt.AllowHashComments(ahc)(buf)
+	return []stmt.Option{
+		stmt.AllowDollar(true),
+		stmt.AllowMultilineComments(true),
+		stmt.AllowCComments(true),
+		stmt.AllowHashComments(true),
+	}
+}
+
+// NewStmt wraps creating a new stmt.Stmt for the specified driver.
+func NewStmt(u *dburl.URL, f func() ([]rune, error), opts ...stmt.Option) *stmt.Stmt {
+	return stmt.New(f, append(opts, stmtOpts(u)...)...)
+}
+
+// ConfigStmt sets the stmt.Stmt options for the specified driver.
+func ConfigStmt(u *dburl.URL, s *stmt.Stmt) {
+	if u == nil {
+		return
+	}
+	for _, o := range stmtOpts(u) {
+		o(s)
+	}
 }
 
 // Version returns information about the database connection for the specified
 // URL's driver.
 func Version(u *dburl.URL, db DB) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.V != nil {
-		ver, err := d.V(db)
+	if d, ok := drivers[u.Driver]; ok && d.Version != nil {
+		ver, err := d.Version(db)
 		return ver, WrapErr(u.Driver, err)
 	}
 
@@ -184,8 +207,8 @@ func Version(u *dburl.URL, db DB) (string, error) {
 
 // User returns the current database user for the specified URL's driver.
 func User(u *dburl.URL, db DB) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.U != nil {
-		user, err := d.U(db)
+	if d, ok := drivers[u.Driver]; ok && d.User != nil {
+		user, err := d.User(db)
 		return user, WrapErr(u.Driver, err)
 	}
 
@@ -196,8 +219,8 @@ func User(u *dburl.URL, db DB) (string, error) {
 
 // Process processes the supplied SQL query for the specified URL's driver.
 func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) {
-	if d, ok := drivers[u.Driver]; ok && d.P != nil {
-		a, b, c, err := d.P(prefix, sqlstr)
+	if d, ok := drivers[u.Driver]; ok && d.Process != nil {
+		a, b, c, err := d.Process(prefix, sqlstr)
 		return a, b, c, WrapErr(u.Driver, err)
 	}
 
@@ -213,8 +236,8 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 		drv, err = e.Driver, e.Err
 	}
 
-	if d, ok := drivers[drv]; ok && d.PwErr != nil {
-		return d.PwErr(err)
+	if d, ok := drivers[drv]; ok && d.IsPasswordErr != nil {
+		return d.IsPasswordErr(err)
 	}
 	return false
 }
@@ -223,7 +246,7 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 // a previous password when changing a user's password.
 func RequirePreviousPassword(u *dburl.URL) bool {
 	if d, ok := drivers[u.Driver]; ok {
-		return d.ReqPP
+		return d.RequirePreviousPassword
 	}
 	return false
 }
@@ -231,7 +254,7 @@ func RequirePreviousPassword(u *dburl.URL) bool {
 // CanChangePassword returns whether or not the specified driver's URL supports
 // changing passwords.
 func CanChangePassword(u *dburl.URL) error {
-	if d, ok := drivers[u.Driver]; ok && d.ChPw != nil {
+	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
 		return nil
 	}
 	return text.ErrPasswordNotSupportedByDriver
@@ -241,7 +264,7 @@ func CanChangePassword(u *dburl.URL) error {
 // driver. If user is not supplied, then the current user will be retrieved
 // from User.
 func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ChPw != nil {
+	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
 		var err error
 		if user == "" {
 			user, err = User(u, db)
@@ -250,7 +273,7 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 			}
 		}
 
-		return user, d.ChPw(db, user, new, old)
+		return user, d.ChangePassword(db, user, new, old)
 	}
 	return "", text.ErrPasswordNotSupportedByDriver
 }
@@ -260,8 +283,8 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 	var cols []string
 	var err error
 
-	if d, ok := drivers[u.Driver]; ok && d.Cols != nil {
-		cols, err = d.Cols(rows)
+	if d, ok := drivers[u.Driver]; ok && d.Columns != nil {
+		cols, err = d.Columns(rows)
 	} else {
 		cols, err = rows.Columns()
 	}
@@ -281,8 +304,8 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 
 // ConvertBytes converts a raw byte slice for a specified URL's driver.
 func ConvertBytes(u *dburl.URL, tfmt string, buf []byte) string {
-	if d, ok := drivers[u.Driver]; ok && d.Cb != nil {
-		return d.Cb(tfmt, buf)
+	if d, ok := drivers[u.Driver]; ok && d.ConvertBytes != nil {
+		return d.ConvertBytes(tfmt, buf)
 	}
 	return string(buf)
 }
@@ -292,8 +315,8 @@ func ConvertBytes(u *dburl.URL, tfmt string, buf []byte) string {
 func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 	var count int64
 	var err error
-	if d, ok := drivers[u.Driver]; ok && d.A != nil {
-		count, err = d.A(res)
+	if d, ok := drivers[u.Driver]; ok && d.RowsAffected != nil {
+		count, err = d.RowsAffected(res)
 	} else {
 		count, err = res.RowsAffected()
 	}
@@ -313,8 +336,8 @@ func Ping(u *dburl.URL, db *sql.DB) error {
 func Lexer(u *dburl.URL) chroma.Lexer {
 	var l chroma.Lexer
 	if u != nil {
-		if d, ok := drivers[u.Driver]; ok && d.Syn != "" {
-			l = lexers.Get(d.Syn)
+		if d, ok := drivers[u.Driver]; ok && d.LexerName != "" {
+			l = lexers.Get(d.LexerName)
 		}
 	}
 	if l == nil {

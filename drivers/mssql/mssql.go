@@ -12,10 +12,10 @@ import (
 
 func init() {
 	drivers.Register("mssql", drivers.Driver{
-		AMC:   true,
-		ReqPP: true,
-		Syn:   "tsql",
-		V: func(db drivers.DB) (string, error) {
+		AllowMultilineComments:  true,
+		RequirePreviousPassword: true,
+		LexerName:               "tsql",
+		Version: func(db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRow(
 				`SELECT SERVERPROPERTY('productversion'), SERVERPROPERTY ('productlevel'), SERVERPROPERTY ('edition')`,
@@ -25,11 +25,11 @@ func init() {
 			}
 			return "Microsoft SQL Server " + ver + ", " + level + ", " + edition, nil
 		},
-		ChPw: func(db drivers.DB, user, new, old string) error {
+		ChangePassword: func(db drivers.DB, user, new, old string) error {
 			_, err := db.Exec(`ALTER LOGIN ` + user + ` WITH password = '` + new + `' old_password = '` + old + `'`)
 			return err
 		},
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			if e, ok := err.(mssql.Error); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
@@ -41,7 +41,7 @@ func init() {
 
 			return "", msg
 		},
-		PwErr: func(err error) bool {
+		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
 	})

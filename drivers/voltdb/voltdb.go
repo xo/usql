@@ -9,6 +9,6 @@ import (
 
 func init() {
 	drivers.Register("voltdb", drivers.Driver{
-		AMC: true,
+		AllowMultilineComments: true,
 	})
 }

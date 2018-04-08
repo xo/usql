@@ -9,6 +9,6 @@ import (
 
 func init() {
 	drivers.Register("firebirdsql", drivers.Driver{
-		AMC: true,
+		AllowMultilineComments: true,
 	})
 }

@@ -13,19 +13,19 @@ import (
 
 func init() {
 	drivers.Register("mymysql", drivers.Driver{
-		AMC: true,
-		AHC: true,
-		Syn: "mysql",
-		FP: drivers.ForceQueryParameters([]string{
+		AllowMultilineComments: true,
+		AllowHashComments:      true,
+		LexerName:              "mysql",
+		ForceParams: drivers.ForceQueryParameters([]string{
 			"sql_mode", "ansi",
 		}),
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			if e, ok := err.(*mysql.Error); ok {
 				return strconv.Itoa(int(e.Code)), string(e.Msg)
 			}
 			return "", err.Error()
 		},
-		PwErr: func(err error) bool {
+		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*mysql.Error); ok {
 				return e.Code == mysql.ER_ACCESS_DENIED_ERROR
 			}

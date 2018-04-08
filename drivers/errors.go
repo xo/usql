@@ -12,7 +12,7 @@ type Error struct {
 }
 
 // WrapErr wraps an error using the specified driver when err is not nil.
-func WrapErr(name string, err error) error {
+func WrapErr(driver string, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -22,12 +22,7 @@ func WrapErr(name string, err error) error {
 		return err
 	}
 
-	return &Error{name, err}
-}
-
-// chop chops off a "prefix: " prefix from a string.
-func chop(s, prefix string) string {
-	return strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), prefix+":"), unicode.IsSpace)
+	return &Error{driver, err}
 }
 
 // Error satisfies the error interface, returning simple information about the
@@ -35,15 +30,15 @@ func chop(s, prefix string) string {
 func (e *Error) Error() string {
 	if d, ok := drivers[e.Driver]; ok {
 		n := e.Driver
-		if d.N != "" {
-			n = d.N
+		if d.Name != "" {
+			n = d.Name
 		}
 		s := n
 
 		var msg string
-		if d.E != nil {
+		if d.Err != nil {
 			var code string
-			code, msg = d.E(e.Err)
+			code, msg = d.Err(e.Err)
 			if code != "" {
 				s += ": " + code
 			}
@@ -55,4 +50,9 @@ func (e *Error) Error() string {
 	}
 
 	return e.Driver + ": " + chop(e.Err.Error(), e.Driver)
+}
+
+// chop chops off a "prefix: " prefix from a string.
+func chop(s, prefix string) string {
+	return strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), prefix+":"), unicode.IsSpace)
 }

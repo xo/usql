@@ -7,18 +7,17 @@ import (
 	// DRIVER: sqlite3
 	"github.com/mattn/go-sqlite3"
 
-	"github.com/xo/xoutil"
-
 	"github.com/xo/usql/drivers"
+	"github.com/xo/xoutil"
 )
 
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
-		AMC: true,
-		FP: drivers.ForceQueryParameters([]string{
+		AllowMultilineComments: true,
+		ForceParams: drivers.ForceQueryParameters([]string{
 			"loc", "auto",
 		}),
-		V: func(db drivers.DB) (string, error) {
+		Version: func(db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRow(`SELECT sqlite_version()`).Scan(&ver)
 			if err != nil {
@@ -26,7 +25,7 @@ func init() {
 			}
 			return "SQLite3 " + ver, nil
 		},
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			if e, ok := err.(sqlite3.Error); ok {
 				return strconv.Itoa(int(e.Code)), e.Error()
 			}
@@ -38,7 +37,7 @@ func init() {
 
 			return code, msg
 		},
-		Cb: func(tfmt string, buf []byte) string {
+		ConvertBytes: func(tfmt string, buf []byte) string {
 			// attempt to convert buf if it matches a time format, and if it
 			// does, then return a formatted time string.
 			s := string(buf)

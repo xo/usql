@@ -117,7 +117,7 @@ func (h *Handler) outputHighlighter(s string) string {
 	full += s
 
 	// setup statement parser
-	st := stmt.New(func() func() ([]rune, error) {
+	st := drivers.NewStmt(h.u, func() func() ([]rune, error) {
 		y := strings.Split(orig, "\n")
 		if y[0] == "" {
 			y[0] = s
@@ -134,7 +134,6 @@ func (h *Handler) outputHighlighter(s string) string {
 			return nil, io.EOF
 		}
 	}())
-	drivers.ConfigStmt(h.u, st)
 
 	// accumulate all "active" statements in buffer, breaking either at
 	// EOF or when a \ cmd has been encountered

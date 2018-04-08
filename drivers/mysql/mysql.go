@@ -11,22 +11,22 @@ import (
 
 func init() {
 	drivers.Register("mysql", drivers.Driver{
-		AMC: true,
-		AHC: true,
-		Syn: "mysql",
-		FP: drivers.ForceQueryParameters([]string{
+		AllowMultilineComments: true,
+		AllowHashComments:      true,
+		LexerName:              "mysql",
+		ForceParams: drivers.ForceQueryParameters([]string{
 			"parseTime", "true",
 			"loc", "Local",
 			"sql_mode", "ansi",
 		}),
-		E: func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
 
 			return "", err.Error()
 		},
-		PwErr: func(err error) bool {
+		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return e.Number == 1045
 			}

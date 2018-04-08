@@ -11,8 +11,8 @@ import (
 
 func init() {
 	drivers.Register("odbc", drivers.Driver{
-		Syn: "tsql",
-		PwErr: func(err error) bool {
+		LexerName: "tsql",
+		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*odbc.Error); ok {
 				msg := strings.ToLower(e.Error())
 				return strings.Contains(msg, "failed") &&
