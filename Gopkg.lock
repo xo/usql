@@ -2,40 +2,87 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/Boostport/avatica"
-  packages = [".","message"]
-  revision = "162a3b3b89677af55d94428775c999b7b4f3c023"
+  packages = [
+    ".",
+    "message"
+  ]
+  revision = "4243a38b8e3aa0aa9d09aec2e25133f19aa11439"
+  version = "v2.3.1"
 
 [[projects]]
   branch = "master"
   name = "github.com/SAP/go-hdb"
-  packages = ["driver","driver/sqltrace","internal/bufio","internal/protocol","internal/unicode","internal/unicode/cesu8"]
-  revision = "c80549df883e955dff808b1258c26f32b3ed10a4"
+  packages = [
+    "driver",
+    "driver/sqltrace",
+    "internal/bufio",
+    "internal/protocol",
+    "internal/unicode",
+    "internal/unicode/cesu8"
+  ]
+  revision = "18b52f9f36b84988ed1fa70daa79e4a7d9618f33"
 
 [[projects]]
   branch = "master"
   name = "github.com/VoltDB/voltdb-client-go"
-  packages = ["voltdbclient","wire"]
-  revision = "6c183613d69c850b0b1480f12a165de27b21680f"
+  packages = [
+    "voltdbclient",
+    "wire"
+  ]
+  revision = "93f757176d6bb2eee4f7386854195c44ce1047aa"
 
 [[projects]]
-  branch = "master"
   name = "github.com/alecthomas/chroma"
-  packages = [".","formatters","formatters/html","lexers","styles"]
-  revision = "38cc9bdc19d2bc494360dfe6140f34c7ab36a800"
+  packages = [
+    ".",
+    "formatters",
+    "formatters/html",
+    "lexers",
+    "lexers/a",
+    "lexers/b",
+    "lexers/c",
+    "lexers/d",
+    "lexers/e",
+    "lexers/f",
+    "lexers/g",
+    "lexers/h",
+    "lexers/i",
+    "lexers/internal",
+    "lexers/j",
+    "lexers/k",
+    "lexers/l",
+    "lexers/m",
+    "lexers/n",
+    "lexers/o",
+    "lexers/p",
+    "lexers/q",
+    "lexers/r",
+    "lexers/s",
+    "lexers/t",
+    "lexers/v",
+    "lexers/w",
+    "lexers/x",
+    "lexers/y",
+    "styles"
+  ]
+  revision = "3020e2ea8c6b1a9c2336022d847c4392c3997f02"
+  version = "v0.4.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/alexbrainman/odbc"
-  packages = [".","api"]
-  revision = "27e92eaad59a02cbedcf74ab280f5985a78347c8"
+  packages = [
+    ".",
+    "api"
+  ]
+  revision = "14913e72bfde8c83720086e5e32d4d8122b9932d"
 
 [[projects]]
   branch = "master"
   name = "github.com/alexflint/go-arg"
   packages = ["."]
-  revision = "59fccacb2679dde66e0b20ed65bd26178fcbf54e"
+  revision = "0cc8e30fd64c8c71d094be299ad424da93ef9aed"
 
 [[projects]]
   branch = "master"
@@ -47,7 +94,7 @@
   branch = "master"
   name = "github.com/couchbase/go-couchbase"
   packages = ["."]
-  revision = "b68b134c84262afb37fbe4fea7bde4c3f29c9f25"
+  revision = "2ea851386367e79acfdc52d8ea3f0419e3d0bfad"
 
 [[projects]]
   branch = "master"
@@ -58,20 +105,26 @@
 [[projects]]
   branch = "master"
   name = "github.com/couchbase/gomemcached"
-  packages = [".","client"]
-  revision = "06e4a68300a506bec58859231498e68b28b2937d"
+  packages = [
+    ".",
+    "client"
+  ]
+  revision = "4012a9505b539c2d0f5e072f91ddb6a75df1e50d"
 
 [[projects]]
   branch = "master"
   name = "github.com/couchbase/goutils"
-  packages = ["logging"]
-  revision = "cc8268840d416935b73cb17c1b7f23d81ab5aebc"
+  packages = [
+    "logging",
+    "scramsha"
+  ]
+  revision = "a8bc32b8203a49358563f1d2aa4db5dbfaff06b0"
 
 [[projects]]
   branch = "master"
   name = "github.com/cznic/b"
   packages = ["."]
-  revision = "c0c71e655879a2848b5a0e0208b63f97325cbacd"
+  revision = "35e9bbe41f07452a183c517a5fc5f3c9f45eaa0f"
 
 [[projects]]
   branch = "master"
@@ -80,34 +133,36 @@
   revision = "6a051e75936f623600b67c2b1116b6b6c0ffb936"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/cznic/golex"
-  packages = ["lex"]
-  revision = "4ab7c5e190e49208c823ce8ec803aa39e6a4b31a"
-
-[[projects]]
-  branch = "master"
   name = "github.com/cznic/internal"
-  packages = ["buffer","file","slice"]
-  revision = "4747030f7cf2f4c0a01512b00cd68734b167ac3b"
+  packages = [
+    "buffer",
+    "file",
+    "slice"
+  ]
+  revision = "cef02a853c3a93623c42eacd574e7ea05f55531b"
+  version = "1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/cznic/lldb"
   packages = ["."]
   revision = "bea8611dd5c407f3c5eab9f9c68e887a27dc6f0e"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/cznic/mathutil"
   packages = ["."]
-  revision = "c90ba19bea8927552cef4560ab888231566f049d"
+  revision = "7764e6a2216aaa02c36f75aad62538d39c2962c2"
 
 [[projects]]
-  branch = "master"
   name = "github.com/cznic/ql"
-  packages = [".","driver","vendored/github.com/camlistore/go4/lock"]
-  revision = "3f53e147d722f949b627631bc771623ab9bdb396"
+  packages = [
+    ".",
+    "driver",
+    "vendored/github.com/camlistore/go4/lock"
+  ]
+  revision = "7a63cd7aa46ecd9f549b96983029576af2178f60"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -136,14 +191,20 @@
 [[projects]]
   branch = "master"
   name = "github.com/denisenkom/go-mssqldb"
-  packages = ["."]
-  revision = "25953bd869105021ccb023711daeff786470a7f1"
+  packages = [
+    ".",
+    "internal/cp"
+  ]
+  revision = "2e93935aa9096273693401939a61fb8a9b2c9d14"
 
 [[projects]]
-  branch = "master"
   name = "github.com/dlclark/regexp2"
-  packages = [".","syntax"]
-  revision = "7632a260cbaf5e7594fc1544a503456ecd0827f1"
+  packages = [
+    ".",
+    "syntax"
+  ]
+  revision = "487489b64fb796de2e55f4e8a4ad1e145f80e957"
+  version = "v1.1.6"
 
 [[projects]]
   branch = "master"
@@ -152,16 +213,19 @@
   revision = "0bce6a6887123b67a60366d2c9fe2dfb74289d2e"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-ole/go-ole"
-  packages = [".","oleutil"]
+  packages = [
+    ".",
+    "oleutil"
+  ]
   revision = "a41e3c4b706f6ae8dfbff342b06e40fa4d2d0506"
+  version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
-  revision = "2cc627ac8defc45d65066ae98f898166f580f9a4"
+  revision = "a0583e0143b1624142adab07e0e97fe106d99561"
+  version = "v1.3"
 
 [[projects]]
   branch = "master"
@@ -170,10 +234,10 @@
   revision = "a780388e6e7cb475327da556ecfda0edbb374d80"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -185,37 +249,65 @@
   branch = "master"
   name = "github.com/hashicorp/go-uuid"
   packages = ["."]
-  revision = "64130c7a86d732268a38cb04cfbaf0cc987fda98"
+  revision = "27454136f0364f2d44b1276c552d69105cf8c498"
 
 [[projects]]
-  branch = "master"
   name = "github.com/jackc/pgx"
-  packages = [".","chunkreader","internal/sanitize","pgio","pgproto3","pgtype","stdlib"]
-  revision = "b85df46c9b87539a1f578c8bf61f2c71ecc88afd"
+  packages = [
+    ".",
+    "chunkreader",
+    "internal/sanitize",
+    "pgio",
+    "pgproto3",
+    "pgtype",
+    "stdlib"
+  ]
+  revision = "da3231b0b66e2e74cdb779f1d46c5e958ba8be27"
+  version = "v3.1.0"
 
 [[projects]]
   branch = "master"
-  name = "github.com/jcmturner/asn1"
+  name = "github.com/jcmturner/gofork"
+  packages = [
+    "encoding/asn1",
+    "x/crypto/pbkdf2"
+  ]
+  revision = "2aebee971930cd0dd525873330952ab7df5ac95c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kardianos/osext"
   packages = ["."]
-  revision = "478ccf09c45d824f741022c79e542624952a83c5"
+  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
 [[projects]]
   branch = "master"
   name = "github.com/knq/snaker"
   packages = ["."]
-  revision = "3b39b7d38b659cf4f16986c62359955695b78a5c"
+  revision = "d9ad1e7f342a5b58202aa92c5f1106d7bb8b9c73"
 
 [[projects]]
-  branch = "master"
   name = "github.com/kshvakov/clickhouse"
-  packages = [".","lib/binary","lib/column","lib/data","lib/protocol","lib/types","lib/writebuffer"]
-  revision = "a3d26dd0ef075c25d63f551e83dfae8e9b5c4eed"
+  packages = [
+    ".",
+    "lib/binary",
+    "lib/column",
+    "lib/data",
+    "lib/protocol",
+    "lib/types",
+    "lib/writebuffer"
+  ]
+  revision = "204d1310adca1f03cf10843c403249e1e4bb394b"
+  version = "v1.3.2"
 
 [[projects]]
   branch = "master"
   name = "github.com/lib/pq"
-  packages = [".","oid"]
-  revision = "83612a56d3dd153a94a629cd64925371c9adad78"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
 
 [[projects]]
   branch = "master"
@@ -224,28 +316,28 @@
   revision = "8a75490faf6ae99c92e96d210caeebdba7c93522"
 
 [[projects]]
-  branch = "master"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
-  branch = "master"
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
-  revision = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d"
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
+  version = "v0.0.2"
 
 [[projects]]
-  branch = "master"
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   revision = "6c771bb9887719704b210e87e934f08be014bdb1"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/nakagami/firebirdsql"
   packages = ["."]
-  revision = "e3fe46ed1f45a0087e50ad8486400b2438d62dd2"
+  revision = "cece140468a14c004d4df435dac988e8c84eec38"
 
 [[projects]]
   branch = "master"
@@ -257,49 +349,49 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "96aac992fc8b1a4c83841a6c3e7178d20d989625"
+  revision = "b8a9be070da40449e501c3c4730a889e42d87a9e"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "e881fd58d78e04cf6d0de1217f8707c8cc2249bc"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/prestodb/presto-go-client"
   packages = ["presto"]
-  revision = "4d48bb52c29b24c4d7e602c71560bb178be3e701"
+  revision = "568bdb2f6dbce76a5b9685d24163b3c42ae0f450"
 
 [[projects]]
+  branch = "master"
   name = "github.com/satori/go.uuid"
   packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
+  revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
 
 [[projects]]
   name = "github.com/spaolacci/murmur3"
   packages = ["."]
-  revision = "0d12bf811670bf6a1a63828dfbd003eded177fce"
-  version = "v1.0"
+  revision = "9f5d223c60793748f04a9d5b4b4eacddfc1f755d"
+  version = "v1.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/xinsnake/go-http-digest-auth-client"
   packages = ["."]
   revision = "366760120fe0342664d581b235be4eb08aca8834"
+  version = "v0.3.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/xo/dburl"
   packages = ["."]
-  revision = "2406b5c3c3d0d9ed027c66db23ff3f271c370c69"
+  revision = "82666a9bb38b3690e5698db74cc3efe1ff761a9b"
 
 [[projects]]
   branch = "master"
   name = "github.com/xo/terminfo"
   packages = ["."]
-  revision = "b44407a6f65799d69fa0c048c211288432e67110"
+  revision = "20ea4ff360f07b1a51d4caa53c0bdd3232974ec2"
 
 [[projects]]
   branch = "master"
@@ -314,69 +406,117 @@
   revision = "94e385923345495c4add5c23df1efc6d66964479"
 
 [[projects]]
-  branch = "master"
   name = "github.com/ziutek/mymysql"
-  packages = ["godrv","mysql","native"]
-  revision = "ff6cc86d3d933e6c0e3185a19fb46e171a7651b2"
+  packages = [
+    "godrv",
+    "mysql",
+    "native"
+  ]
+  revision = "e08c2f35356576b3c3690c252fe5dca728ae9292"
+  version = "v1.5.4"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["md4","pbkdf2"]
-  revision = "13931e22f9e72ea58bb73048bc752b48c6d4d4ac"
+  packages = [
+    "md4",
+    "pbkdf2"
+  ]
+  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp"]
-  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+  packages = [
+    "context",
+    "context/ctxhttp"
+  ]
+  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
-  revision = "810d7000345868fc619eb81f46307107118f4ae1"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
 
 [[projects]]
-  branch = "master"
   name = "golang.org/x/text"
   packages = ["transform"]
-  revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
-  version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
   name = "gopkg.in/jcmturner/aescts.v1"
   packages = ["."]
   revision = "f6abebb3171c4c1b1fea279cb7c7325020a26290"
+  version = "v1.0.1"
 
 [[projects]]
-  name = "gopkg.in/jcmturner/gokrb5.v2"
-  packages = ["asn1tools","client","config","credentials","crypto","crypto/common","crypto/etype","crypto/rfc3961","crypto/rfc3962","crypto/rfc4757","crypto/rfc8009","gssapi","iana","iana/adtype","iana/asnAppTag","iana/chksumtype","iana/errorcode","iana/etypeID","iana/flags","iana/keyusage","iana/msgtype","iana/nametype","iana/patype","keytab","krberror","messages","mstypes","ndr","pac","types"]
-  revision = "5cf868a24ea32b3d89fa06004db9fcb20601f586"
-  version = "v2.0.2"
+  name = "gopkg.in/jcmturner/dnsutils.v1"
+  packages = ["."]
+  revision = "13eeb8d49ffb74d7a75784c35e4d900607a3943c"
+  version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
+  name = "gopkg.in/jcmturner/gokrb5.v4"
+  packages = [
+    "asn1tools",
+    "client",
+    "config",
+    "credentials",
+    "crypto",
+    "crypto/common",
+    "crypto/etype",
+    "crypto/rfc3961",
+    "crypto/rfc3962",
+    "crypto/rfc4757",
+    "crypto/rfc8009",
+    "gssapi",
+    "iana",
+    "iana/addrtype",
+    "iana/adtype",
+    "iana/asnAppTag",
+    "iana/chksumtype",
+    "iana/errorcode",
+    "iana/etypeID",
+    "iana/flags",
+    "iana/keyusage",
+    "iana/msgtype",
+    "iana/nametype",
+    "iana/patype",
+    "keytab",
+    "krberror",
+    "messages",
+    "mstypes",
+    "ndr",
+    "pac",
+    "types"
+  ]
+  revision = "4f6bed961aa8e808136b8fd9de87cf47d3a77050"
+  version = "v4.1.1"
+
+[[projects]]
   name = "gopkg.in/rana/ora.v4"
-  packages = [".","date","num"]
+  packages = [
+    ".",
+    "date",
+    "num"
+  ]
   revision = "7a9ff49e7315c80623bc2b49c64fba1900e07209"
-  source = "https://github.com/rana/ora.git"
+  version = "v4.1.15"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "be561f76b47d551ce2078c772b7456b968afae28b6abdd9b001c76f0f0d0b858"
+  inputs-digest = "e6b23772e9bd8d95bebf9640c0194f4226aa41e08e33ed460e5204da6b0c5e60"
   solver-name = "gps-cdcl"
   solver-version = 1
