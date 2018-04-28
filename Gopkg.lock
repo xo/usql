@@ -2,15 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/Boostport/avatica"
-  packages = [
-    ".",
-    "message"
-  ]
-  revision = "4243a38b8e3aa0aa9d09aec2e25133f19aa11439"
-  version = "v2.3.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/SAP/go-hdb"
   packages = [
@@ -89,6 +80,20 @@
   name = "github.com/alexflint/go-scalar"
   packages = ["."]
   revision = "e80c3b7ed292b052c7083b6fd7154a8422c33f65"
+
+[[projects]]
+  name = "github.com/apache/calcite-avatica-go"
+  packages = [
+    ".",
+    "errors",
+    "generic",
+    "hsqldb",
+    "internal",
+    "message",
+    "phoenix"
+  ]
+  revision = "273c53f62206c90e6a4fbb05f4ac82b7f62cb9a7"
+  version = "3.0.0"
 
 [[projects]]
   branch = "master"
@@ -238,12 +243,6 @@
   packages = ["proto"]
   revision = "925541529c1fa6821df4e44ce2723319eb2be768"
   version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/go-cleanhttp"
-  packages = ["."]
-  revision = "d5fe4b57a186c716b0e00b8c301cbd9b4182694d"
 
 [[projects]]
   branch = "master"
@@ -517,6 +516,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e6b23772e9bd8d95bebf9640c0194f4226aa41e08e33ed460e5204da6b0c5e60"
+  inputs-digest = "f4809e1a80787b0d886c240918b3b8eaefac109ff72bc4e8b8a0b6cc423e85b5"
   solver-name = "gps-cdcl"
   solver-version = 1

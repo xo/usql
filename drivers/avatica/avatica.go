@@ -4,7 +4,9 @@ import (
 	"strconv"
 
 	// DRIVER: avatica
-	"github.com/Boostport/avatica"
+	_ "github.com/apache/calcite-avatica-go"
+
+	avaticaerrors "github.com/apache/calcite-avatica-go/errors"
 
 	"github.com/xo/usql/drivers"
 )
@@ -14,7 +16,7 @@ func init() {
 		AllowMultilineComments: true,
 		AllowCComments:         true,
 		Err: func(err error) (string, string) {
-			if e, ok := err.(avatica.ResponseError); ok {
+			if e, ok := err.(avaticaerrors.ResponseError); ok {
 				return strconv.Itoa(int(e.ErrorCode)), e.ErrorMessage
 			}
 			return "", err.Error()
