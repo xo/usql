@@ -2,7 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/SAP/go-hdb"
   packages = [
     "driver",
@@ -12,7 +11,8 @@
     "internal/unicode",
     "internal/unicode/cesu8"
   ]
-  revision = "18b52f9f36b84988ed1fa70daa79e4a7d9618f33"
+  revision = "103b4e40b11e6da42aa9d134b2c14c482d3572a4"
+  version = "v0.11.2"
 
 [[projects]]
   branch = "master"
@@ -73,7 +73,7 @@
   branch = "master"
   name = "github.com/alexflint/go-arg"
   packages = ["."]
-  revision = "0cc8e30fd64c8c71d094be299ad424da93ef9aed"
+  revision = "074ee5f759999d103724b5594e33901adeb28e73"
 
 [[projects]]
   branch = "master"
@@ -99,7 +99,7 @@
   branch = "master"
   name = "github.com/couchbase/go-couchbase"
   packages = ["."]
-  revision = "2ea851386367e79acfdc52d8ea3f0419e3d0bfad"
+  revision = "61d6cbd0da56a89a1b2f2ca54c3a1e83fe17fc96"
 
 [[projects]]
   branch = "master"
@@ -114,7 +114,7 @@
     ".",
     "client"
   ]
-  revision = "4012a9505b539c2d0f5e072f91ddb6a75df1e50d"
+  revision = "a8d5692cf80648cf926fbdabd8eb2f019a97a5dd"
 
 [[projects]]
   branch = "master"
@@ -123,7 +123,7 @@
     "logging",
     "scramsha"
   ]
-  revision = "a8bc32b8203a49358563f1d2aa4db5dbfaff06b0"
+  revision = "f98adca8eb365032cab838ef4d99453931afa112"
 
 [[projects]]
   branch = "master"
@@ -200,7 +200,7 @@
     ".",
     "internal/cp"
   ]
-  revision = "2e93935aa9096273693401939a61fb8a9b2c9d14"
+  revision = "e32faac87a2220f9342289f2c3b567d1424b8ec5"
 
 [[projects]]
   name = "github.com/dlclark/regexp2"
@@ -296,8 +296,8 @@
     "lib/types",
     "lib/writebuffer"
   ]
-  revision = "204d1310adca1f03cf10843c403249e1e4bb394b"
-  version = "v1.3.2"
+  revision = "8a2dd1e831a6c7381c11d40bcaf80ae98023c605"
+  version = "v1.3.3"
 
 [[projects]]
   branch = "master"
@@ -312,7 +312,7 @@
   branch = "master"
   name = "github.com/mattn/go-adodb"
   packages = ["."]
-  revision = "8a75490faf6ae99c92e96d210caeebdba7c93522"
+  revision = "605ea9751bec9faa27d32e6f5d394e3a195a3da4"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -348,7 +348,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "b8a9be070da40449e501c3c4730a889e42d87a9e"
+  revision = "d5dd8a50526aadb3d5f2c9b5233277bc2db90e88"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -360,7 +360,7 @@
   branch = "master"
   name = "github.com/prestodb/presto-go-client"
   packages = ["presto"]
-  revision = "568bdb2f6dbce76a5b9685d24163b3c42ae0f450"
+  revision = "74a3fc50f09db5e24cfe7170912be5b59b82b5f7"
 
 [[projects]]
   branch = "master"
@@ -384,7 +384,7 @@
   branch = "master"
   name = "github.com/xo/dburl"
   packages = ["."]
-  revision = "82666a9bb38b3690e5698db74cc3efe1ff761a9b"
+  revision = "6a21934dd3de290069382e550e1f7959e5892909"
 
 [[projects]]
   branch = "master"
@@ -421,7 +421,7 @@
     "md4",
     "pbkdf2"
   ]
-  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
+  revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
 
 [[projects]]
   branch = "master"
@@ -430,7 +430,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
+  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [[projects]]
   branch = "master"
@@ -445,7 +445,7 @@
     "unix",
     "windows"
   ]
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "cbbc999da32df943dac6cd71eb3ee39e1d7838b9"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -500,8 +500,8 @@
     "pac",
     "types"
   ]
-  revision = "4f6bed961aa8e808136b8fd9de87cf47d3a77050"
-  version = "v4.1.1"
+  revision = "e1c433026ac06f967e528af826f87ae63be40807"
+  version = "v4.1.2"
 
 [[projects]]
   name = "gopkg.in/rana/ora.v4"
