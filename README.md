@@ -201,7 +201,7 @@ $ usql dbname.sqlite3
 # NOTE: when the "<driver>://" or "<driver>:" scheme is omitted, the file must
 # already exist on disk.
 #
-# if the file does not yet exist, the URL must incorporate # file:, sq:, sqlite3:,
+# if the file does not yet exist, the URL must incorporate file:, sq:, sqlite3:,
 # or any other recognized sqlite3 driver alias to force usql to create a new,
 # empty database at the specified path:
 $ usql sq://path/to/dbname.sqlite3
@@ -341,7 +341,7 @@ disabling the driver:
 
 ```sh
 # install all drivers excluding avatica and couchbase
-$ go get -u -tags 'all no_avatica no_couchbase'
+$ go get -u -tags 'all no_avatica no_couchbase' github.com/xo/usql
 ```
 
 ### Release Builds
@@ -352,7 +352,7 @@ SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
 ### Using as a Package
 
 An effort has been made to keep `usql`'s packages modular, and reusable by
-other developers wishing to leverage `usql`'s code base. As such, it is
+other developers wishing to leverage the `usql` code base. As such, it is
 possible to build a SQL command-line interface (e.g, for use by some other
 project as an "official" client) using the core `usql` source tree.
 
