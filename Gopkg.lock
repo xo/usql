@@ -11,8 +11,8 @@
     "internal/unicode",
     "internal/unicode/cesu8"
   ]
-  revision = "103b4e40b11e6da42aa9d134b2c14c482d3572a4"
-  version = "v0.11.2"
+  revision = "e5dfb024db5fa3db1782e18bd89b6698181b78d3"
+  version = "v0.11.3"
 
 [[projects]]
   branch = "master"
@@ -99,7 +99,7 @@
   branch = "master"
   name = "github.com/couchbase/go-couchbase"
   packages = ["."]
-  revision = "61d6cbd0da56a89a1b2f2ca54c3a1e83fe17fc96"
+  revision = "16db1f1fe037412f12738fa4d8448c549c4edd77"
 
 [[projects]]
   branch = "master"
@@ -114,7 +114,7 @@
     ".",
     "client"
   ]
-  revision = "a8d5692cf80648cf926fbdabd8eb2f019a97a5dd"
+  revision = "0da75df145308b9a4e6704d762ca9d9b77752efc"
 
 [[projects]]
   branch = "master"
@@ -157,7 +157,7 @@
   branch = "master"
   name = "github.com/cznic/mathutil"
   packages = ["."]
-  revision = "7764e6a2216aaa02c36f75aad62538d39c2962c2"
+  revision = "ca4c9f2c136954238c3158b92de72078c7672ecc"
 
 [[projects]]
   name = "github.com/cznic/ql"
@@ -241,8 +241,8 @@
 [[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
-  version = "v1.0.0"
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -312,7 +312,7 @@
   branch = "master"
   name = "github.com/mattn/go-adodb"
   packages = ["."]
-  revision = "605ea9751bec9faa27d32e6f5d394e3a195a3da4"
+  revision = "329577bf18e68c091cfb6b29a43eeac2410c53be"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -348,7 +348,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "d5dd8a50526aadb3d5f2c9b5233277bc2db90e88"
+  revision = "d4647c9c7a84d847478d890b816b7d8b62b0b279"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -421,7 +421,7 @@
     "md4",
     "pbkdf2"
   ]
-  revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
+  revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
 
 [[projects]]
   branch = "master"
@@ -430,7 +430,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "2491c5de3490fced2f6cff376127c667efeed857"
 
 [[projects]]
   branch = "master"
@@ -445,7 +445,7 @@
     "unix",
     "windows"
   ]
-  revision = "cbbc999da32df943dac6cd71eb3ee39e1d7838b9"
+  revision = "d0faeb539838e250bd0a9db4182d48d4a1915181"
 
 [[projects]]
   name = "golang.org/x/text"
