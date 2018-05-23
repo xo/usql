@@ -11,17 +11,17 @@
     "internal/unicode",
     "internal/unicode/cesu8"
   ]
-  revision = "e5dfb024db5fa3db1782e18bd89b6698181b78d3"
-  version = "v0.11.3"
+  revision = "4e1c5bf7d81c4a7cd2c64f4eec5bc64068500b5a"
+  version = "v0.12.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/VoltDB/voltdb-client-go"
   packages = [
     "voltdbclient",
     "wire"
   ]
   revision = "93f757176d6bb2eee4f7386854195c44ce1047aa"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/alecthomas/chroma"
@@ -73,7 +73,7 @@
   branch = "master"
   name = "github.com/alexflint/go-arg"
   packages = ["."]
-  revision = "074ee5f759999d103724b5594e33901adeb28e73"
+  revision = "f7c0423bd11ee80ab81d25c6d46f492998af8547"
 
 [[projects]]
   branch = "master"
@@ -200,7 +200,7 @@
     ".",
     "internal/cp"
   ]
-  revision = "e32faac87a2220f9342289f2c3b567d1424b8ec5"
+  revision = "c4e5513e46d427e67707ab54c97990301fb56c10"
 
 [[projects]]
   name = "github.com/dlclark/regexp2"
@@ -230,7 +230,7 @@
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
-  version = "v1.3"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -306,13 +306,13 @@
     ".",
     "oid"
   ]
-  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+  revision = "0677bdde3e15a69060c33fac24fd53044b4694b8"
 
 [[projects]]
   branch = "master"
   name = "github.com/mattn/go-adodb"
   packages = ["."]
-  revision = "329577bf18e68c091cfb6b29a43eeac2410c53be"
+  revision = "92645cc323df2b111c5bd2b9d8fac54ac2ccf836"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -421,7 +421,7 @@
     "md4",
     "pbkdf2"
   ]
-  revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
+  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
 
 [[projects]]
   branch = "master"
@@ -430,7 +430,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "2491c5de3490fced2f6cff376127c667efeed857"
+  revision = "9ef9f5bb98a1fdc41f8cf6c250a4404b4085e389"
 
 [[projects]]
   branch = "master"
@@ -445,7 +445,7 @@
     "unix",
     "windows"
   ]
-  revision = "d0faeb539838e250bd0a9db4182d48d4a1915181"
+  revision = "88eb85aaee56831ad49eaf7aa80d73de9814cde2"
 
 [[projects]]
   name = "golang.org/x/text"
