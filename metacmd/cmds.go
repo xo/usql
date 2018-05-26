@@ -232,7 +232,7 @@ func init() {
 				switch {
 				case buf.Len != 0 && p.N == "raw":
 					s = buf.RawString()
-				default:
+				case buf.Len != 0:
 					s = buf.String()
 				}
 
