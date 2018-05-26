@@ -1,6 +1,9 @@
+// Package stmt contains a statement buffer implementation.
 package stmt
 
 import (
+	"bytes"
+
 	"github.com/xo/usql/env"
 )
 
@@ -88,6 +91,36 @@ func New(f func() ([]rune, error), opts ...Option) *Stmt {
 // String satisfies fmt.Stringer.
 func (b *Stmt) String() string {
 	return string(b.Buf)
+}
+
+// RawString returns the non-interpolated version of the statement buffer.
+func (b *Stmt) RawString() string {
+	if b.Len == 0 {
+		return ""
+	}
+	s, z := string(b.Buf), new(bytes.Buffer)
+	var i int
+
+	// deinterpolate vars
+	for _, v := range b.Vars {
+		if v.Len == 0 {
+			continue
+		}
+		z.WriteString(s[i:v.I])
+		z.WriteRune(':')
+		if v.Q != 0 {
+			z.WriteRune(v.Q)
+		}
+		z.WriteString(v.N)
+		if v.Q != 0 {
+			z.WriteRune(v.Q)
+		}
+		i = v.I + v.Len
+	}
+
+	// add remaining
+	z.WriteString(s[i:])
+	return z.String()
 }
 
 // Ready returns true when the statement buffer contains a non empty, balanced
@@ -226,15 +259,17 @@ parse:
 		// variable declaration
 		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen); v != nil {
-				q := ""
+				var q string
 				if v.Q != 0 {
 					q = string(v.Q)
 				}
-
 				b.Vars = append(b.Vars, v)
 				if ok, z, _ := env.Getvar(q + v.N + q); ok {
 					b.r, b.rlen = substituteVar(b.r, v, z)
 					i--
+				}
+				if b.Len != 0 {
+					v.I += b.Len + 1
 				}
 			}
 

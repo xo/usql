@@ -109,7 +109,7 @@ func (h *Handler) outputHighlighter(s string) string {
 	}
 
 	// capture current query statement buffer
-	orig := h.buf.String()
+	orig := h.buf.RawString()
 	full := orig
 	if full != "" {
 		full += "\n"
@@ -148,7 +148,7 @@ func (h *Handler) outputHighlighter(s string) string {
 		}
 
 		if st.Ready() || cmd != "" {
-			final += st.String()
+			final += st.RawString()
 			st.Reset(nil)
 
 			// grab remaining whitespace to add to final
@@ -159,7 +159,7 @@ func (h *Handler) outputHighlighter(s string) string {
 		}
 	}
 	if !st.Ready() && cmd == "" {
-		final += st.String()
+		final += st.RawString()
 	}
 
 	// determine whatever is remaining after "active"
