@@ -306,7 +306,7 @@
     ".",
     "oid"
   ]
-  revision = "0677bdde3e15a69060c33fac24fd53044b4694b8"
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
 
 [[projects]]
   branch = "master"
@@ -329,8 +329,8 @@
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
-  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
-  version = "v1.6.0"
+  revision = "323a32be5a2421b8c7087225079c6c900ec397cd"
+  version = "v1.7.0"
 
 [[projects]]
   branch = "master"
@@ -421,7 +421,7 @@
     "md4",
     "pbkdf2"
   ]
-  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
+  revision = "a3beeb748656e13e54256fd2cde19e058f41f60f"
 
 [[projects]]
   branch = "master"
@@ -430,7 +430,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "9ef9f5bb98a1fdc41f8cf6c250a4404b4085e389"
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
@@ -445,7 +445,7 @@
     "unix",
     "windows"
   ]
-  revision = "88eb85aaee56831ad49eaf7aa80d73de9814cde2"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   name = "golang.org/x/text"
