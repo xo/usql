@@ -21,7 +21,7 @@ fi
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
-TAGS="most fts5 vtable json1"
+TAGS="most fts5 vtable json1 no_ql"
 
 case $PLATFORM in
   windows)
@@ -54,7 +54,7 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-go build \
+vgo build \
   -tags "$TAGS" \
   -ldflags="-s -w -X github.com/xo/usql/text.CommandName=$NAME -X github.com/xo/usql/text.CommandVersion=$VER" \
   -o $BIN

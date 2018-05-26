@@ -1,5 +1,5 @@
 #!/bin/bash
 
-TAGS="all icu fts5 vtable json1"
+TAGS="all icu fts5 vtable json1 no_ql"
 
-go build -tags "$TAGS" $@
+vgo build -tags "$TAGS" $@

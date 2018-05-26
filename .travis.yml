@@ -9,12 +9,11 @@ services:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev
-  - go get github.com/mattn/goveralls github.com/golang/dep/cmd/dep
+  - go get github.com/mattn/goveralls golang.org/x/vgo
 install:
   - ./contrib/grab-oracle.sh
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
-  - dep ensure
 script:
-  - go build -tags 'all icu fts5 vtable json1'
-  - go test -tags all -v ./stmt
+  - vgo build -tags 'all icu fts5 vtable json1 no_ql'
+  - vgo test -tags 'all no_ql' -v ./stmt
