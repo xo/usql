@@ -41,9 +41,12 @@ type Handler struct {
 	slm bool
 
 	// query statement buffer
-	buf        *stmt.Stmt
-	lastPrefix string
+	buf *stmt.Stmt
+
+	// last statement
 	last       string
+	lastPrefix string
+	lastRaw    string
 
 	// connection
 	u  *dburl.URL
@@ -267,7 +270,7 @@ func (h *Handler) Run() error {
 		// execute buf
 		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
 			if h.buf.Len != 0 {
-				h.lastPrefix, h.last = h.buf.Prefix, h.buf.String()
+				h.last, h.lastPrefix, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.RawString()
 				h.buf.Reset(nil)
 			}
 
@@ -324,7 +327,7 @@ func (h *Handler) CommandRunner(cmds []string) func() error {
 // Reset resets the handler's query statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
-	h.last, h.lastPrefix = "", ""
+	h.last, h.lastPrefix, h.lastRaw = "", "", ""
 }
 
 // Prompt creates the prompt text.
@@ -373,6 +376,11 @@ func (h *Handler) DB() drivers.DB {
 // Last returns the last executed statement.
 func (h *Handler) Last() string {
 	return h.last
+}
+
+// LastRaw returns the last raw (non-interpolated) executed statement.
+func (h *Handler) LastRaw() string {
+	return h.lastRaw
 }
 
 // Buf returns the current query statement buffer.

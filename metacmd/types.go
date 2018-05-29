@@ -30,6 +30,9 @@ type Handler interface {
 	// Last returns the last executed query.
 	Last() string
 
+	// LastRaw returns the last raw (non-interpolated) query.
+	LastRaw() string
+
 	// Buf returns the current query buffer.
 	Buf() *stmt.Stmt
 

@@ -228,7 +228,15 @@ func init() {
 			},
 			Process: func(p *Params) error {
 				// get last statement
-				s, buf := p.H.Last(), p.H.Buf()
+				var s string
+				if p.N == "raw" {
+					s = p.H.LastRaw()
+				} else {
+					s = p.H.Last()
+				}
+
+				// use current statement buf if not empty
+				buf := p.H.Buf()
 				switch {
 				case buf.Len != 0 && p.N == "raw":
 					s = buf.RawString()
