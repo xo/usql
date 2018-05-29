@@ -28,7 +28,6 @@ require (
 	github.com/cznic/strutil v0.0.0-20171016134553-529a34b1c186
 	github.com/cznic/zappy v0.0.0-20160723133515-2533cb5b45cc
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
-	github.com/davecgh/go-spew v1.1.0
 	github.com/denisenkom/go-mssqldb v0.0.0-20180521163914-c4e5513e46d4
 	github.com/dlclark/regexp2 v1.1.6
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712
@@ -37,11 +36,9 @@ require (
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.1.0
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
-	github.com/hashicorp/go-uuid v0.0.0-20180228145832-27454136f036
 	github.com/hashicorp/go-version v0.0.0-20180322230233-23480c066577
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 	github.com/jackc/pgx v0.0.0-20180517214546-870744921917
-	github.com/jcmturner/gofork v0.0.0-20180107083740-2aebee971930
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/knq/snaker v0.0.0-20180306023312-d9ad1e7f342a
 	github.com/kshvakov/clickhouse v1.3.3
@@ -54,14 +51,11 @@ require (
 	github.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b
 	github.com/olekukonko/tablewriter v0.0.0-20180506121414-d4647c9c7a84
 	github.com/pkg/errors v0.8.0
-	github.com/pmezard/go-difflib v1.0.0
 	github.com/prestodb/presto-go-client v0.0.0-20180419180745-74a3fc50f09d
-	github.com/satori/go.uuid v1.2.0
 	github.com/sergi/go-diff v1.0.0
 	github.com/shopspring/decimal v0.0.0-20180319170823-2df3e6ddaf6e
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72
 	github.com/stretchr/objx v0.0.0-20180528122724-d1e4838ff99b
-	github.com/stretchr/testify v1.2.1
 	github.com/xinsnake/go-http-digest-auth-client v0.4.0
 	github.com/xo/dburl v0.0.0-20180409172314-6a21934dd3de
 	github.com/xo/terminfo v0.0.0-20180401022757-20ea4ff360f0
@@ -74,8 +68,6 @@ require (
 	golang.org/x/sys v0.0.0-20180525142821-c11f84a56e43
 	golang.org/x/text v0.3.0
 	gopkg.in/check.v1 v1.0.0-20161208181325-20d25e280405
-	gopkg.in/jcmturner/aescts.v1 v1.0.1
-	gopkg.in/jcmturner/dnsutils.v1 v1.0.1
 	gopkg.in/jcmturner/goidentity.v1 v1.0.0
 	gopkg.in/jcmturner/gokrb5.v4 v4.1.2
 	gopkg.in/rana/ora.v4 v4.1.15
