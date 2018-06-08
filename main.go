@@ -89,6 +89,15 @@ func run(args *Args, u *user.User) error {
 		return err
 	}
 
+	// handle variables
+	for _, v := range args.Variables {
+		if i := strings.Index(v, "="); i != -1 {
+			env.Set(v[:i], v[i+1:])
+		} else {
+			env.Unset(v)
+		}
+	}
+
 	// create input/output
 	l, err := rline.New(args.Commands, args.File, args.Out, env.HistoryFile(u))
 	if err != nil {
@@ -109,8 +118,7 @@ func run(args *Args, u *user.User) error {
 	}
 
 	// open dsn
-	err = h.Open(dsn)
-	if err != nil {
+	if err = h.Open(dsn); err != nil {
 		return err
 	}
 
@@ -119,16 +127,14 @@ func run(args *Args, u *user.User) error {
 		if h.IO().Interactive() {
 			return text.ErrSingleTransactionCannotBeUsedWithInteractiveMode
 		}
-		err = h.Begin()
-		if err != nil {
+		if err = h.Begin(); err != nil {
 			return err
 		}
 	}
 
 	// rc file
 	if rc := env.RCFile(u); !args.NoRC && rc != "" {
-		err = h.Include(rc, false)
-		if err != nil && err != text.ErrNoSuchFileOrDirectory {
+		if err = h.Include(rc, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
 			return err
 		}
 	}
@@ -140,8 +146,7 @@ func run(args *Args, u *user.User) error {
 	}
 
 	// run
-	err = f()
-	if err != nil {
+	if err = f(); err != nil {
 		return err
 	}
 

@@ -15,6 +15,7 @@ type Args struct {
 	NoPassword        bool     `arg:"-w,--no-password,help:never prompt for password"`
 	NoRC              bool     `arg:"-X,--no-rc,help:do not read start up file"`
 	SingleTransaction bool     `arg:"-1,--single-transaction,help:execute as a single transaction (if non-interactive)"`
+	Variables         []string `arg:"-v,--set,separate,help:set variable NAME=VALUE"`
 }
 
 // Description provides the go-arg description.
