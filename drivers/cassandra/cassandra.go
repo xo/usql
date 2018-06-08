@@ -11,8 +11,8 @@ import (
 	cql "github.com/MichaelS11/go-cql-driver"
 
 	"github.com/gocql/gocql"
-
 	"github.com/xo/dburl"
+
 	"github.com/xo/usql/drivers"
 )
 
@@ -29,7 +29,7 @@ func (*logger) Printf(string, ...interface{}) {}
 func (*logger) Println(...interface{})        {}
 func (l *logger) Write(buf []byte) (int, error) {
 	l.last = string(buf)
-	return 0, nil
+	return len(buf), nil
 }
 
 func init() {
