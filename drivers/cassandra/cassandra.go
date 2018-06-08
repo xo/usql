@@ -39,6 +39,7 @@ func init() {
 
 	var l *logger
 	drivers.Register("cql", drivers.Driver{
+		AllowDollar:            true,
 		AllowMultilineComments: true,
 		AllowCComments:         true,
 		ForceParams: func(u *dburl.URL) {
