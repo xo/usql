@@ -62,7 +62,7 @@ func init() {
 			return "Cassandra " + ver, nil
 		},
 		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
-			_, err := db.Exec(`ALTER ROLE ` + user + ` WITH PASSWORD '` + newpw + `'`)
+			_, err := db.Exec(`ALTER ROLE ` + user + ` WITH PASSWORD = '` + newpw + `'`)
 			return err
 		},
 		IsPasswordErr: func(err error) bool {
