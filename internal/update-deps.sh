@@ -18,4 +18,4 @@ done
 
 set -e -x
 
-go get -u $@ $PKGS
+vgo get $@ $PKGS

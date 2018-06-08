@@ -45,8 +45,8 @@ func init() {
 			err := db.QueryRow(`SELECT user FROM dual`).Scan(&user)
 			return user, err
 		},
-		ChangePassword: func(db drivers.DB, user, new, _ string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY ` + new)
+		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
+			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY ` + newpw)
 			return err
 		},
 		Err: func(err error) (string, string) {

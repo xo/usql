@@ -25,8 +25,8 @@ func init() {
 			}
 			return "Microsoft SQL Server " + ver + ", " + level + ", " + edition, nil
 		},
-		ChangePassword: func(db drivers.DB, user, new, old string) error {
-			_, err := db.Exec(`ALTER LOGIN ` + user + ` WITH password = '` + new + `' old_password = '` + old + `'`)
+		ChangePassword: func(db drivers.DB, user, newpw, oldpw string) error {
+			_, err := db.Exec(`ALTER LOGIN ` + user + ` WITH password = '` + newpw + `' old_password = '` + oldpw + `'`)
 			return err
 		},
 		Err: func(err error) (string, string) {

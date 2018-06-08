@@ -22,8 +22,8 @@ func init() {
 			}
 			return "PostgreSQL " + ver, nil
 		},
-		ChangePassword: func(db drivers.DB, user, new, _ string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` PASSWORD '` + new + `'`)
+		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
+			_, err := db.Exec(`ALTER USER ` + user + ` PASSWORD '` + newpw + `'`)
 			return err
 		},
 		Err: func(err error) (string, string) {

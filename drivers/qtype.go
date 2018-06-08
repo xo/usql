@@ -18,8 +18,7 @@ var queryMap = map[string]bool{
 }
 
 var execMap = map[string]bool{
-	"USE": true,
-
+	"USE":                              true, // use a schema / keyspace (mysql, cassandra)
 	"ABORT":                            true, // abort the current transaction
 	"ALTER AGGREGATE":                  true, // change the definition of an aggregate function
 	"ALTER COLLATION":                  true, // change the definition of a collation
@@ -182,6 +181,12 @@ var execMap = map[string]bool{
 	"UNLISTEN":                         true, // stop listening for a notification
 	"UPDATE":                           true, // update rows of a table
 	"VACUUM":                           true, // garbage-collect and optionally analyze a database
+	"CREATE KEYSPACE":                  true, // create a keyspace (cassandra)
+	"ALTER KEYSPACE":                   true, // alter a keyspace (cassandra)
+	"DROP KEYSPACE":                    true, // drop a keyspace (cassandra)
+	"LIST PERMISSIONS":                 true, // list permissions (cassandra)
+	"LIST ROLES":                       true, // list roles (cassandra)
+	"LIST USERS":                       true, // list users (cassandra) [deprecated]
 }
 
 // QueryExecType is the default way to determine the "EXEC" prefix for a SQL

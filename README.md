@@ -379,6 +379,7 @@ The databases supported, the respective build tag, and the driver used by `usql`
 | PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][d-pgx]                                             |
 |                      |            |                                                                                  |
 | Apache Avatica       | avatica    | [github.com/Boostport/avatica][d-avatica]                                        |
+| Cassandra            | cassandra  | [github.com/MichaelS11/go-cql-driver][d-cassandra]                               |
 | ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][d-clickhouse]                                   |
 | Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][d-couchbase]                                      |
 | Cznic QL             | ql         | [github.com/cznic/ql][d-ql]                                                      |
@@ -435,12 +436,11 @@ support for the most frequently used aspects/features of `psql`. Compatability
 
 ##### Future Database Support
 
-1. Cassandra
-2. InfluxDB
-3. CSV via SQLite3 vtable
-4. Google Sheets via SQLite3 vtable
-5. Atlassian JIRA JQL (why not? lol)
-6. Google Spanner
+1. InfluxDB
+2. CSV via SQLite3 vtable
+3. Google Sheets via SQLite3 vtable
+4. Atlassian JIRA JQL (why not? lol)
+5. Google Spanner
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
@@ -459,6 +459,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-mymysql]: https://github.com/ziutek/mymysql
 [d-pgx]: https://github.com/jackc/pgx
 [d-avatica]: https://github.com/Boostport/avatica
+[d-cassandra]: https://github.com/MichaelS11/go-cql-driver
 [d-clickhouse]: https://github.com/kshvakov/clickhouse
 [d-couchbase]: https://github.com/couchbase/go_n1ql
 [d-ql]: https://github.com/cznic/ql
