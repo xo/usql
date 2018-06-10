@@ -887,57 +887,59 @@ func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
 
 // scan scans a row.
 func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
+	var err error
+
+	// scan to []interface{}
 	r := make([]interface{}, clen)
 	for i := range r {
 		r[i] = new(interface{})
 	}
-
-	err := q.Scan(r...)
-	if err != nil {
+	if err = q.Scan(r...); err != nil {
 		return nil, err
 	}
 
 	// get conversion funcs
-	cb, cm, cs := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u), drivers.ConvertSlice(h.u)
+	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u),
+		drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
 
-	/*cols, err := q.Columns()
-	if err != nil {
-		return nil, err
-	}*/
 	row := make([]string, clen)
 	for n, z := range r {
 		j := z.(*interface{})
-		//log.Printf(">>> %s: %T", cols[n], *j)
 		switch x := (*j).(type) {
 		case []byte:
-			row[n], err = cb(x, tfmt)
-			if err != nil {
-				return nil, err
+			if x != nil {
+				row[n], err = cb(x, tfmt)
+				if err != nil {
+					return nil, err
+				}
 			}
-
-		case string:
-			row[n] = x
-
-		case time.Time:
-			row[n] = x.Format(tfmt)
 
 		case fmt.Stringer:
 			row[n] = x.String()
 
 		case map[string]interface{}:
-			row[n], err = cm(x)
-			if err != nil {
-				return nil, err
+			if x != nil {
+				row[n], err = cm(x)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 		case []interface{}:
-			row[n], err = cs(x)
-			if err != nil {
-				return nil, err
+			if x != nil {
+				row[n], err = cs(x)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 		default:
-			row[n] = fmt.Sprintf("%v", *j)
+			if x != nil {
+				row[n], err = cd(x)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 	}
 	return row, err

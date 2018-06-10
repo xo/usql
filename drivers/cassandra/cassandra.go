@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -81,6 +82,13 @@ func init() {
 		},
 		RowsAffected: func(sql.Result) (int64, error) {
 			return 0, nil
+		},
+		ConvertDefault: func(v interface{}) (string, error) {
+			buf, err := json.Marshal(v)
+			if err != nil {
+				return "", err
+			}
+			return string(buf), nil
 		},
 	})
 }

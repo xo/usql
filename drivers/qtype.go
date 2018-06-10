@@ -1,7 +1,10 @@
 package drivers
 
-import "strings"
+import (
+	"strings"
+)
 
+// queryMap is the map of SQL prefixes use as queries.
 var queryMap = map[string]bool{
 	"WITH":   true,
 	"PRAGMA": true,
@@ -13,12 +16,29 @@ var queryMap = map[string]bool{
 	"SELECT":   true, // retrieve rows from a table or view
 	"SHOW":     true, // show the value of a run-time parameter
 	"VALUES":   true, // compute a set of rows
+	"LIST":     true, //  list permissions, roles, users [cassandra]
 
 	"EXEC": true, // execute a stored procedure that returns rows (not postgres)
 }
 
+// execMap is the map of SQL prefixes to execute.
+//
+// Unless noted, these are extracted from the PostgreSQL docs.
+//
+// Note: originally extracted via a script, but maintained by hand as the
+// documentation for any new queries introduced by PostgreSQL need to be
+// manually scrutinized for variations.
 var execMap = map[string]bool{
-	"USE":                              true, // use a schema / keyspace (mysql, cassandra)
+	"USE": true, // use a schema / keyspace (mysql, cassandra)
+
+	"ALTER":  true, // alter catch-all
+	"CREATE": true, // create catch-all
+	"DROP":   true, // drop catch-all
+
+	"ALTER KEYSPACE":  true, // alter a keyspace (cassandra)
+	"CREATE KEYSPACE": true, // create a keyspace (cassandra)
+	"DROP KEYSPACE":   true, // drop a keyspace (cassandra)
+
 	"ABORT":                            true, // abort the current transaction
 	"ALTER AGGREGATE":                  true, // change the definition of an aggregate function
 	"ALTER COLLATION":                  true, // change the definition of a collation
@@ -36,9 +56,9 @@ var execMap = map[string]bool{
 	"ALTER LANGUAGE":                   true, // change the definition of a procedural language
 	"ALTER LARGE OBJECT":               true, // change the definition of a large object
 	"ALTER MATERIALIZED VIEW":          true, // change the definition of a materialized view
-	"ALTER OPERATOR":                   true, // change the definition of an operator
 	"ALTER OPERATOR CLASS":             true, // change the definition of an operator class
 	"ALTER OPERATOR FAMILY":            true, // change the definition of an operator family
+	"ALTER OPERATOR":                   true, // change the definition of an operator
 	"ALTER POLICY":                     true, // change the definition of a row level security policy
 	"ALTER ROLE":                       true, // change a database role
 	"ALTER RULE":                       true, // change the definition of a rule
@@ -46,16 +66,16 @@ var execMap = map[string]bool{
 	"ALTER SEQUENCE":                   true, // change the definition of a sequence generator
 	"ALTER SERVER":                     true, // change the definition of a foreign server
 	"ALTER SYSTEM":                     true, // change a server configuration parameter
-	"ALTER TABLE":                      true, // change the definition of a table
 	"ALTER TABLESPACE":                 true, // change the definition of a tablespace
+	"ALTER TABLE":                      true, // change the definition of a table
 	"ALTER TEXT SEARCH CONFIGURATION":  true, // change the definition of a text search configuration
 	"ALTER TEXT SEARCH DICTIONARY":     true, // change the definition of a text search dictionary
 	"ALTER TEXT SEARCH PARSER":         true, // change the definition of a text search parser
 	"ALTER TEXT SEARCH TEMPLATE":       true, // change the definition of a text search template
 	"ALTER TRIGGER":                    true, // change the definition of a trigger
 	"ALTER TYPE":                       true, // change the definition of a type
-	"ALTER USER":                       true, // change a database role
 	"ALTER USER MAPPING":               true, // change the definition of a user mapping
+	"ALTER USER":                       true, // change a database role
 	"ALTER VIEW":                       true, // change the definition of a view
 	"ANALYZE":                          true, // collect statistics about a database
 	"BEGIN":                            true, // start a transaction block
@@ -63,8 +83,8 @@ var execMap = map[string]bool{
 	"CLOSE":                            true, // close a cursor
 	"CLUSTER":                          true, // cluster a table according to an index
 	"COMMENT":                          true, // define or change the comment of an object
-	"COMMIT":                           true, // commit the current transaction
 	"COMMIT PREPARED":                  true, // commit a transaction that was earlier prepared for two-phase commit
+	"COMMIT":                           true, // commit the current transaction
 	"COPY":                             true, // copy data between a file and a table
 	"CREATE ACCESS METHOD":             true, // define a new access method
 	"CREATE AGGREGATE":                 true, // define a new aggregate function
@@ -82,18 +102,20 @@ var execMap = map[string]bool{
 	"CREATE INDEX":                     true, // define a new index
 	"CREATE LANGUAGE":                  true, // define a new procedural language
 	"CREATE MATERIALIZED VIEW":         true, // define a new materialized view
-	"CREATE OPERATOR":                  true, // define a new operator
 	"CREATE OPERATOR CLASS":            true, // define a new operator class
 	"CREATE OPERATOR FAMILY":           true, // define a new operator family
+	"CREATE OPERATOR":                  true, // define a new operator
 	"CREATE POLICY":                    true, // define a new row level security policy for a table
 	"CREATE ROLE":                      true, // define a new database role
 	"CREATE RULE":                      true, // define a new rewrite rule
 	"CREATE SCHEMA":                    true, // define a new schema
 	"CREATE SEQUENCE":                  true, // define a new sequence generator
 	"CREATE SERVER":                    true, // define a new foreign server
-	"CREATE TABLE":                     true, // define a new table
+	"CREATE STATISTICS":                true, // define extended statistics
+	"CREATE SUBSCRIPTION":              true, // define a new subscription
 	"CREATE TABLE AS":                  true, // define a new table from the results of a query
 	"CREATE TABLESPACE":                true, // define a new tablespace
+	"CREATE TABLE":                     true, // define a new table
 	"CREATE TEXT SEARCH CONFIGURATION": true, // define a new text search configuration
 	"CREATE TEXT SEARCH DICTIONARY":    true, // define a new text search dictionary
 	"CREATE TEXT SEARCH PARSER":        true, // define a new text search parser
@@ -101,8 +123,8 @@ var execMap = map[string]bool{
 	"CREATE TRANSFORM":                 true, // define a new transform
 	"CREATE TRIGGER":                   true, // define a new trigger
 	"CREATE TYPE":                      true, // define a new data type
-	"CREATE USER":                      true, // define a new database role
 	"CREATE USER MAPPING":              true, // define a new mapping of a user to a foreign server
+	"CREATE USER":                      true, // define a new database role
 	"CREATE VIEW":                      true, // define a new view
 	"DEALLOCATE":                       true, // deallocate a prepared statement
 	"DECLARE":                          true, // define a cursor
@@ -125,18 +147,21 @@ var execMap = map[string]bool{
 	"DROP INDEX":                       true, // remove an index
 	"DROP LANGUAGE":                    true, // remove a procedural language
 	"DROP MATERIALIZED VIEW":           true, // remove a materialized view
-	"DROP OPERATOR":                    true, // remove an operator
 	"DROP OPERATOR CLASS":              true, // remove an operator class
 	"DROP OPERATOR FAMILY":             true, // remove an operator family
+	"DROP OPERATOR":                    true, // remove an operator
 	"DROP OWNED":                       true, // remove database objects owned by a database role
 	"DROP POLICY":                      true, // remove a row level security policy from a table
+	"DROP PUBLICATION":                 true, // remove a publication
 	"DROP ROLE":                        true, // remove a database role
 	"DROP RULE":                        true, // remove a rewrite rule
 	"DROP SCHEMA":                      true, // remove a schema
 	"DROP SEQUENCE":                    true, // remove a sequence
 	"DROP SERVER":                      true, // remove a foreign server descriptor
-	"DROP TABLE":                       true, // remove a table
+	"DROP STATISTICS":                  true, // remove extended statistics
+	"DROP SUBSCRIPTION":                true, // remove a subscription
 	"DROP TABLESPACE":                  true, // remove a tablespace
+	"DROP TABLE":                       true, // remove a table
 	"DROP TEXT SEARCH CONFIGURATION":   true, // remove a text search configuration
 	"DROP TEXT SEARCH DICTIONARY":      true, // remove a text search dictionary
 	"DROP TEXT SEARCH PARSER":          true, // remove a text search parser
@@ -144,8 +169,8 @@ var execMap = map[string]bool{
 	"DROP TRANSFORM":                   true, // remove a transform
 	"DROP TRIGGER":                     true, // remove a trigger
 	"DROP TYPE":                        true, // remove a data type
-	"DROP USER":                        true, // remove a database role
 	"DROP USER MAPPING":                true, // remove a user mapping for a foreign server
+	"DROP USER":                        true, // remove a database role
 	"DROP VIEW":                        true, // remove a view
 	"END":                              true, // commit the current transaction
 	"EXECUTE":                          true, // execute a prepared statement
@@ -157,12 +182,12 @@ var execMap = map[string]bool{
 	"LOCK":                             true, // lock a table
 	"MOVE":                             true, // position a cursor
 	"NOTIFY":                           true, // generate a notification
-	"PREPARE":                          true, // prepare a statement for execution
 	"PREPARE TRANSACTION":              true, // prepare the current transaction for two-phase commit
+	"PREPARE":                          true, // prepare a statement for execution
 	"REASSIGN OWNED":                   true, // change the ownership of database objects owned by a database role
 	"REFRESH MATERIALIZED VIEW":        true, // replace the contents of a materialized view
 	"REINDEX":                          true, // rebuild indexes
-	"RELEASE SAVEPOINT":                true, // destroy a previously defined savepoint
+	"RELEASE":                          true, // destroy a previously defined savepoint
 	"RESET":                            true, // restore the value of a run-time parameter to the default value
 	"REVOKE":                           true, // remove access privileges
 	"ROLLBACK PREPARED":                true, // cancel a transaction that was earlier prepared for two-phase commit
@@ -181,12 +206,22 @@ var execMap = map[string]bool{
 	"UNLISTEN":                         true, // stop listening for a notification
 	"UPDATE":                           true, // update rows of a table
 	"VACUUM":                           true, // garbage-collect and optionally analyze a database
-	"CREATE KEYSPACE":                  true, // create a keyspace (cassandra)
-	"ALTER KEYSPACE":                   true, // alter a keyspace (cassandra)
-	"DROP KEYSPACE":                    true, // drop a keyspace (cassandra)
-	"LIST PERMISSIONS":                 true, // list permissions (cassandra)
-	"LIST ROLES":                       true, // list roles (cassandra)
-	"LIST USERS":                       true, // list users (cassandra) [deprecated]
+}
+
+// createIgnore are parts of the query exec type after CREATE to ignore.
+var createIgnore = map[string]bool{
+	"DEFAULT":    true,
+	"GLOBAL":     true,
+	"LOCAL":      true,
+	"OR":         true,
+	"PROCEDURAL": true,
+	"RECURSIVE":  true,
+	"REPLACE":    true,
+	"TEMPORARY":  true,
+	"TEMP":       true,
+	"TRUSTED":    true,
+	"UNIQUE":     true,
+	"UNLOGGED":   true,
 }
 
 // QueryExecType is the default way to determine the "EXEC" prefix for a SQL
@@ -208,6 +243,42 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 				return typ, !strings.ContainsRune(sqlstr, '=')
 			}
 			return typ, true
+		}
+
+		// normalize prefixes
+		switch s[0] {
+		// CREATE statements have a large number of variants
+		case "CREATE":
+			n := []string{"CREATE"}
+			for _, x := range s[1:] {
+				if _, ok := createIgnore[x]; ok {
+					continue
+				}
+				n = append(n, x)
+			}
+			s = n
+
+		case "DROP":
+			// "DROP [PROCEDURAL] LANGUAGE" => "DROP LANGUAGE"
+			n := []string{"DROP"}
+			for _, x := range s[1:] {
+				if x == "PROCEDURAL" {
+					continue
+				}
+				n = append(n, x)
+			}
+			s = n
+
+		case "RELEASE":
+			// "RELEASE [SAVEPOINT]" => "RELEASE"
+			n := []string{"RELEASE"}
+			for _, x := range s[1:] {
+				if x == "SAVEPOINT" {
+					continue
+				}
+				n = append(n, x)
+			}
+			s = n
 		}
 
 		// find longest match

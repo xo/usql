@@ -42,7 +42,7 @@ func init() {
 			// does, then return a formatted time string.
 			s := string(buf)
 			if s != "" && strings.TrimSpace(s) != "" {
-				t := &xoutil.SqTime{}
+				t := new(xoutil.SqTime)
 				if err := t.Scan(buf); err == nil {
 					return t.Format(tfmt), nil
 				}

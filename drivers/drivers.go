@@ -89,6 +89,10 @@ type Driver struct {
 	// to a string if defined.
 	ConvertMap func(map[string]interface{}) (string, error)
 
+	// ConvertDefault will be used by ConvertDefault to convert a interface{}
+	// to a string if defined.
+	ConvertDefault func(interface{}) (string, error)
+
 	// ConvertSlice will be used by ConvertSlice to convert a []interface{} to
 	// a string if defined.
 	ConvertSlice func([]interface{}) (string, error)
@@ -349,6 +353,17 @@ func ConvertSlice(u *dburl.URL) func([]interface{}) (string, error) {
 			return "", err
 		}
 		return string(buf), nil
+	}
+}
+
+// ConvertDefault returns a func to handle converting a interface{} for
+// the specified URL's driver.
+func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
+	if d, ok := drivers[u.Driver]; ok && d.ConvertDefault != nil {
+		return d.ConvertDefault
+	}
+	return func(v interface{}) (string, error) {
+		return fmt.Sprintf("%v", v), nil
 	}
 }
 
