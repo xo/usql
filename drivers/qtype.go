@@ -268,17 +268,6 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 				n = append(n, x)
 			}
 			s = n
-
-		case "RELEASE":
-			// "RELEASE [SAVEPOINT]" => "RELEASE"
-			n := []string{"RELEASE"}
-			for _, x := range s[1:] {
-				if x == "SAVEPOINT" {
-					continue
-				}
-				n = append(n, x)
-			}
-			s = n
 		}
 
 		// find longest match
