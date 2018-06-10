@@ -251,7 +251,7 @@ func TestReadCommand(t *testing.T) {
 	}
 }
 
-func TestFindWords(t *testing.T) {
+/*func TestFindWords(t *testing.T) {
 	tests := []struct {
 		s   string
 		i   int
@@ -284,32 +284,58 @@ func TestFindWords(t *testing.T) {
 			t.Errorf("test %d expected word count %d, got: %d", i, test.c, c)
 		}
 	}
-}
+}*/
 
 func TestFindPrefix(t *testing.T) {
 	tests := []struct {
 		s   string
-		i   int
 		w   int
 		exp string
 	}{
-		{"", 0, 4, ""},
-		{"  ", 0, 4, ""},
-		{"  ", 0, 4, ""},
-		{" select ", 0, 4, "SELECT"},
-		{" select to ", 0, 4, "SELECT TO"},
-		{" select to ", 1, 4, "SELECT TO"}, // 5
-		{" select   to   ", 0, 4, "SELECT TO"},
-		{"select into from", 0, 2, "SELECT INTO"},
-		{"select into * from", 0, 4, "SELECT INTO"},
-		{" select  into  *   from  ", 0, 4, "SELECT INTO"},
-		{"  select\n\n\tb\t\tzfrom j\n\n  ", 1, 2, "SELECT B"}, // 10
+		{"", 4, ""},
+		{"  ", 4, ""},
+		{"  ", 4, ""},
+		{" select ", 4, "SELECT"},
+		{" select to ", 4, "SELECT TO"},
+		{" select to ", 4, "SELECT TO"}, // 5
+		{" select   to   ", 4, "SELECT TO"},
+		{"select into from", 2, "SELECT INTO"},
+		{"select into * from", 4, "SELECT INTO"},
+		{" select into  *   from  ", 4, "SELECT INTO"},
+		{" select   \t  into \n *  \t\t\n\n\n  from     ", 4, "SELECT INTO"}, // 10
+		{"  select\n\n\tb\t\tzfrom j\n\n  ", 2, "SELECT B"},
+
+		{"select/* aoeu  */into", 4, "SELECTINTO"}, // 12
+		{"select/* aoeu  */\tinto", 4, "SELECT INTO"},
+		{"select/* aoeu  */ into", 4, "SELECT INTO"},
+		{"select/* aoeu  */ into ", 4, "SELECT INTO"},
+		{"select /* aoeu  */ into ", 4, "SELECT INTO"},
+		{"   select /* aoeu  */ into ", 4, "SELECT INTO"},
+		{" select * --test\n from where \n\nfff", 4, "SELECT"},
+		{"/*idreamedital*/foo//bar\n/*  nothing */test\n\n\nwe made /*\n\n\n\n*/   \t   it    ", 5, "FOO TEST WE MADE IT"},
+		{" --yes\n//no\n\n\t/*whatever*/ ", 4, ""}, // 20
+		{"/*/*test*/*/ select ", 4, ""},
+		{"/*/*test*/*/ select ", 4, ""},
+		{"//", 4, ""},
+		{"-", 4, ""},
+		{"* select", 4, ""},
+		{"/**/", 4, ""},
+		{"--\n\t\t\thello,\t--", 4, "HELLO"},
+		{"/*   */\n\n\n\tselect/*--\n*/\t\b\bzzz", 4, "SELECT ZZZ"}, // 28
+		{"n\nn\n\nn\tn", 7, "N N N N"},
+		{"n\nn\n\nn\tn", 1, "N"},
+		{"--\n/* */n/* */\nn\n--\nn\tn", 7, "N N N N"},
+		{"--\n/* */n\n/* */\nn\n--\nn\tn", 7, "N N N N"},
+		{"\n\n/* */\nn n", 7, "N N"},
+		{"\n\n/* */\nn/* */n", 7, "NN"},
+		{"\n\n/* */\nn /* */n", 7, "N N"},
+		{"\n\n/* */\nn/* */\nn", 7, "N N"},
+		{"\n\n/* */\nn/* */ n", 7, "N N"},
 	}
 	for i, test := range tests {
-		z := []rune(test.s)
-		p := findPrefix(z, test.i, len(z), test.w)
+		p := findPrefix([]rune(test.s), test.w)
 		if p != test.exp {
-			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, p)
+			t.Errorf("test %d %q expected %q, got: %q", i, test.s, test.exp, p)
 		}
 	}
 }

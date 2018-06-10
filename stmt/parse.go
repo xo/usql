@@ -17,7 +17,7 @@ func grab(r []rune, i, end int) rune {
 // findSpace finds first space rune in r, returning end if not found.
 func findSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if unicode.IsSpace(r[i]) {
+		if isSpace(r[i]) {
 			return i, true
 		}
 	}
@@ -27,7 +27,7 @@ func findSpace(r []rune, i, end int) (int, bool) {
 // findNonSpace finds first non space rune in r, returning end if not found.
 func findNonSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if !unicode.IsSpace(r[i]) {
+		if !isSpace(r[i]) {
 			return i, true
 		}
 	}
@@ -233,7 +233,7 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 	// find end (either end of r, or the next command)
 	start, found := i, false
 	for ; i < end-1; i++ {
-		if unicode.IsSpace(r[i]) && r[i+1] == '\\' {
+		if isSpace(r[i]) && r[i+1] == '\\' {
 			found = true
 			break
 		}
@@ -255,42 +255,84 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 	return a[0], a[1:], i
 }
 
-// findEndOfWords finds the end of the first n words in r, and returns the
-// end place and count of the words found.
-func findEndOfWords(r []rune, i, end, n int) (int, int) {
-	w := 0
-	for ; w < n; w++ {
-		z, ok := findNonSpace(r, i, end)
-		if !ok {
-			break
-		}
-		i, _ = findSpace(r, z, end)
-	}
-	return i, w
-}
-
 var spaceRE = regexp.MustCompile(`\s+`)
 
 // findPrefix finds the prefix in r up to n words.
-func findPrefix(r []rune, i, end, n int) string {
-	plen, w := findEndOfWords(r, i, end, n)
-	if w != 0 {
-		st, _ := findNonSpace(r, i, plen)
-		for i = st; i < plen; i++ {
-			if !unicode.IsSpace(r[i]) && !unicode.IsLetter(r[i]) {
+func findPrefix(r []rune, n int) string {
+	var s string
+	var words int
+	i, end := 0, len(r)
+
+loop:
+	for ; i < end; i++ {
+		// skip space
+		if j, ok := findNonSpace(r, i, end); i != j {
+			if z := len(s); z != 0 && ok && isSpace(grab(r, i, end)) && !isSpace(rune(s[z-1])) {
+				s += " "
+			}
+			r, end, i = r[j:], end-j, 0
+		}
+
+		// current and next
+		c, next := grab(r, i, end), grab(r, i+1, end)
+		switch {
+		case c == 0:
+			continue
+
+		// hit end of statement, or max words
+		case c == ';' || words == n:
+			break
+
+		// single line comments -- and //
+		case c == '-' && next == '-', c == '/' && next == '/':
+			if i != 0 {
+				s += strings.ToUpper(string(r[:i])) + " "
+				words++
+			}
+			i, _ = findRune(r, i, end, '\n')
+			if i >= end {
 				break
 			}
-		}
-		return strings.ToUpper(spaceRE.ReplaceAllString(strings.TrimSpace(string(r[st:i])), " "))
-	}
+			r, end, i = r[i+1:], end-i-1, -1
 
-	return ""
+		// multiline comments -- /* */
+		case c == '/' && next == '*':
+			if i != 0 {
+				s += strings.ToUpper(string(r[:i]))
+				words++
+			}
+			for i += 2; i < end; i++ {
+				if grab(r, i, end) == '*' && grab(r, i+1, end) == '/' {
+					r, end, i = r[i+2:], end-i-2, -1
+					break
+				}
+			}
+			if z := len(s); z > 1 && isSpace(r[0]) && !isSpace(rune(s[z-1])) {
+				s += " "
+			}
+
+		// ignore remaining, as no prefix can come after
+		case !unicode.IsLetter(c):
+			break loop
+
+		case next != '/' && !unicode.IsLetter(next):
+			s += strings.ToUpper(string(r[:i+1]))
+			words++
+			if next == 0 {
+				break
+			}
+			if next != 0 && isSpace(next) {
+				s += " "
+			}
+			r, end, i = r[i+2:], end-i-2, -1
+		}
+	}
+	return strings.TrimRight(s, " ")
 }
 
 // FindPrefix finds the prefix in s up to n words.
 func FindPrefix(s string, n int) string {
-	r := []rune(s)
-	return findPrefix(r, 0, len(r), n)
+	return findPrefix([]rune(s), n)
 }
 
 // substituteVar substitutes part of r, based on v, with s.
@@ -313,4 +355,10 @@ func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 	copy(r[v.I:v.I+v.Len], sr)
 
 	return r[:tlen], tlen
+}
+
+// isSpace is a special test for either a space or a control (ie, \b)
+// charaters.
+func isSpace(r rune) bool {
+	return unicode.IsSpace(r) || unicode.IsControl(r)
 }
