@@ -42,6 +42,7 @@ func init() {
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		AllowCComments:         true,
+		LexerName:              "cql",
 		ForceParams: func(u *dburl.URL) {
 			if q := u.Query(); q.Get("timeout") == "" {
 				q.Set("timeout", "300s")

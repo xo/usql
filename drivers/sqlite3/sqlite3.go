@@ -37,19 +37,17 @@ func init() {
 
 			return code, msg
 		},
-		ConvertBytes: func(tfmt string, buf []byte) string {
+		ConvertBytes: func(buf []byte, tfmt string) (string, error) {
 			// attempt to convert buf if it matches a time format, and if it
 			// does, then return a formatted time string.
 			s := string(buf)
 			if s != "" && strings.TrimSpace(s) != "" {
 				t := &xoutil.SqTime{}
-				err := t.Scan(buf)
-				if err == nil {
-					return t.Format(tfmt)
+				if err := t.Scan(buf); err == nil {
+					return t.Format(tfmt), nil
 				}
 			}
-
-			return s
+			return s, nil
 		},
 	})
 }

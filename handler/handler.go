@@ -897,13 +897,23 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 		return nil, err
 	}
 
+	// get conversion funcs
+	cb, cm, cs := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u), drivers.ConvertSlice(h.u)
+
+	/*cols, err := q.Columns()
+	if err != nil {
+		return nil, err
+	}*/
 	row := make([]string, clen)
 	for n, z := range r {
 		j := z.(*interface{})
-		//log.Printf(">>> %s: %s", cols[n], reflect.TypeOf(*j))
+		//log.Printf(">>> %s: %T", cols[n], *j)
 		switch x := (*j).(type) {
 		case []byte:
-			row[n] = drivers.ConvertBytes(h.u, tfmt, x)
+			row[n], err = cb(x, tfmt)
+			if err != nil {
+				return nil, err
+			}
 
 		case string:
 			row[n] = x
@@ -913,6 +923,18 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 
 		case fmt.Stringer:
 			row[n] = x.String()
+
+		case map[string]interface{}:
+			row[n], err = cm(x)
+			if err != nil {
+				return nil, err
+			}
+
+		case []interface{}:
+			row[n], err = cs(x)
+			if err != nil {
+				return nil, err
+			}
 
 		default:
 			row[n] = fmt.Sprintf("%v", *j)

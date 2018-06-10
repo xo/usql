@@ -2,6 +2,7 @@ package drivers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -74,15 +75,23 @@ type Driver struct {
 	// defined.
 	Columns func(*sql.Rows) ([]string, error)
 
-	// ConvertBytes will be used by ConvertBytes to convert a raw []byte
-	// slice to a string if defined.
-	ConvertBytes func(string, []byte) string
+	// RowsAffected will be used by RowsAffected if defined.
+	RowsAffected func(sql.Result) (int64, error)
 
 	// Err will be used by Error.Error if defined.
 	Err func(error) (string, string)
 
-	// RowsAffected will be used by RowsAffected if defined.
-	RowsAffected func(sql.Result) (int64, error)
+	// ConvertBytes will be used by ConvertBytes to convert a raw []byte
+	// slice to a string if defined.
+	ConvertBytes func([]byte, string) (string, error)
+
+	// ConvertMap will be used by ConvertMap to convert a map[string]interface{}
+	// to a string if defined.
+	ConvertMap func(map[string]interface{}) (string, error)
+
+	// ConvertSlice will be used by ConvertSlice to convert a []interface{} to
+	// a string if defined.
+	ConvertSlice func([]interface{}) (string, error)
 }
 
 // drivers is the map of drivers funcs.
@@ -302,12 +311,45 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 	return cols, nil
 }
 
-// ConvertBytes converts a raw byte slice for a specified URL's driver.
-func ConvertBytes(u *dburl.URL, tfmt string, buf []byte) string {
+// ConvertBytes returns a func to handle converting bytes for the specified
+// URL's driver.
+func ConvertBytes(u *dburl.URL) func([]byte, string) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.ConvertBytes != nil {
-		return d.ConvertBytes(tfmt, buf)
+		return d.ConvertBytes
 	}
-	return string(buf)
+	return func(buf []byte, _ string) (string, error) {
+		return string(buf), nil
+	}
+}
+
+// ConvertMap returns a func to handle converting a map[string]interface{} for
+// the specified URL's driver.
+func ConvertMap(u *dburl.URL) func(map[string]interface{}) (string, error) {
+	if d, ok := drivers[u.Driver]; ok && d.ConvertMap != nil {
+		return d.ConvertMap
+	}
+	return func(v map[string]interface{}) (string, error) {
+		buf, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		return string(buf), nil
+	}
+}
+
+// ConvertSlice returns a func to handle converting a []interface{} for
+// the specified URL's driver.
+func ConvertSlice(u *dburl.URL) func([]interface{}) (string, error) {
+	if d, ok := drivers[u.Driver]; ok && d.ConvertSlice != nil {
+		return d.ConvertSlice
+	}
+	return func(v []interface{}) (string, error) {
+		buf, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		return string(buf), nil
+	}
 }
 
 // RowsAffected returns the rows affected for the SQL result for a specified

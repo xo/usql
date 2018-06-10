@@ -6,7 +6,7 @@ require (
 	github.com/SAP/go-hdb v0.12.0
 	github.com/VoltDB/voltdb-client-go v1.0.1
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
-	github.com/alecthomas/chroma v0.4.0
+	github.com/alecthomas/chroma v0.0.0-20180609005026-307ceefd964b
 	github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721
 	github.com/alecthomas/repr v0.0.0-20180318094337-07932d32eb40
 	github.com/alexbrainman/odbc v0.0.0-20180530121416-fd59e65aa0cc
