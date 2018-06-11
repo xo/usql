@@ -308,9 +308,6 @@ func TestFindPrefix(t *testing.T) {
 		{"begin;test;create;awesome", 3, "BEGIN TEST CREATE"},
 	}
 	for i, test := range tests {
-		if i != 45 {
-			continue
-		}
 		if p := findPrefix([]rune(test.s), test.w); p != test.exp {
 			t.Errorf("test %d %q expected %q, got: %q", i, test.s, test.exp, p)
 		}
