@@ -57,12 +57,14 @@ func init() {
 			return sql.Open, nil
 		},
 		Version: func(db drivers.DB) (string, error) {
-			var ver string
-			err := db.QueryRow(`SELECT cql_version FROM system.local`).Scan(&ver)
+			var release, protocol, cql string
+			err := db.QueryRow(
+				`SELECT release_version, native_protocol_version, cql_version FROM system.local WHERE key = 'local'`,
+			).Scan(&release, &protocol, &cql)
 			if err != nil {
 				return "", err
 			}
-			return "Cassandra " + ver, nil
+			return "Cassandra " + release + ", Protocol " + protocol + ", CQL " + cql, nil
 		},
 		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
 			_, err := db.Exec(`ALTER ROLE ` + user + ` WITH PASSWORD = '` + newpw + `'`)

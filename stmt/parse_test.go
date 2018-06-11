@@ -304,8 +304,17 @@ func TestFindPrefix(t *testing.T) {
 		{"\r\n\r\nselect from where", 8, "SELECT FROM WHERE"},
 
 		{"\r\n\b\bselect 1;create 2;", 8, "SELECT"},
-		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION CREATE X WHERE"}, // 45
-		{"begin;test;create;awesome", 3, "BEGIN TEST CREATE"},
+		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION"}, // 45
+		{"begin;test;create;awesome", 3, "BEGIN"},
+		{" /* */ ; begin; ", 5, ""},
+		{" /* foo */ test; test", 5, "TEST"},
+		{";test", 5, ""},
+		{"\b\b\t;test", 5, ""},
+		{"\b\t; test", 5, ""},
+		{"\b\taoeu; test", 5, "AOEU"},
+		{"  TEST /*\n\t\b*/\b\t;aoeu", 10, "TEST"},
+		{"begin transaction\n\tinsert into x;\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
+		{"--\nbegin /* */transaction/* */\n/* */\tinsert into x;--/* */\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
 	}
 	for i, test := range tests {
 		if p := findPrefix([]rune(test.s), test.w); p != test.exp {

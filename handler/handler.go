@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/formatters"
@@ -160,9 +159,9 @@ func (h *Handler) outputHighlighter(s string) string {
 
 			// grab remaining whitespace to add to final
 			l := len(final)
-			if i := strings.IndexFunc(full[l:], func(r rune) bool {
-				return !unicode.IsSpace(r) || !unicode.IsControl(r)
-			}); i != -1 {
+
+			// find first non empty character
+			if i := strings.IndexFunc(full[l:], stmt.IsSpace); i != -1 {
 				final += full[l : l+i]
 			}
 		}
@@ -326,6 +325,7 @@ func (h *Handler) Run() error {
 				var forceBatch bool
 				if h.u != nil {
 					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
+					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
 				}
 
 				// execute

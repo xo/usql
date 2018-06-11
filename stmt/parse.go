@@ -22,7 +22,7 @@ func grab(r []rune, i, end int) rune {
 // findSpace finds first space rune in r, returning end if not found.
 func findSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if isSpace(r[i]) {
+		if IsSpace(r[i]) {
 			return i, true
 		}
 	}
@@ -32,7 +32,7 @@ func findSpace(r []rune, i, end int) (int, bool) {
 // findNonSpace finds first non space rune in r, returning end if not found.
 func findNonSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if !isSpace(r[i]) {
+		if !IsSpace(r[i]) {
 			return i, true
 		}
 	}
@@ -238,7 +238,7 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 	// find end (either end of r, or the next command)
 	start, found := i, false
 	for ; i < end-1; i++ {
-		if isSpace(r[i]) && r[i+1] == '\\' {
+		if IsSpace(r[i]) && r[i+1] == '\\' {
 			found = true
 			break
 		}
@@ -278,6 +278,10 @@ loop:
 		case c == 0:
 			continue
 
+		// statement terminator
+		case c == ';':
+			break loop
+
 		// single line comments '--' and '//'
 		case c == '-' && next == '-', c == '/' && next == '/':
 			if i != 0 {
@@ -304,8 +308,9 @@ loop:
 				}
 			}
 
-			// append when remaining runes begin with space
-			if sl := len(s); sl != 0 && isSpace(r[0]) && !isSpace(s[sl-1]) {
+			// add space when remaining runes begin with space, and previous
+			// captured word did not
+			if sl := len(s); sl != 0 && IsSpace(r[0]) && !IsSpace(s[sl-1]) {
 				s = append(s, ' ')
 			}
 
@@ -315,12 +320,12 @@ loop:
 
 		// ignore remaining, as no prefix can come after
 		case next != '/' && !unicode.IsLetter(next):
-			s, words = appendUpperRunes(s, r[:i+1]), words+1
+			s, words = appendUpperRunes(s, r[:i+1], ' '), words+1
 			if next == 0 {
 				break
 			}
-			if isSpace(next) || next == ';' {
-				s = append(s, ' ')
+			if next == ';' {
+				break loop
 			}
 			r, end, i = r[i+2:], end-i-2, -1
 		}
@@ -359,12 +364,6 @@ func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 	copy(r[v.I:v.I+v.Len], sr)
 
 	return r[:tlen], tlen
-}
-
-// isSpace is a special test for either a space or a control (ie, \b)
-// characters.
-func isSpace(r rune) bool {
-	return unicode.IsSpace(r) || unicode.IsControl(r)
 }
 
 // appendUpperRunes creates a new []rune from s, with the runes in r on the end
