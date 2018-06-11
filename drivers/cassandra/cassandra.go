@@ -90,5 +90,8 @@ func init() {
 			}
 			return string(buf), nil
 		},
+		BatchQueryPrefixes: map[string]string{
+			"BEGIN BATCH": "APPLY BATCH",
+		},
 	})
 }

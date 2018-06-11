@@ -89,13 +89,20 @@ type Driver struct {
 	// to a string if defined.
 	ConvertMap func(map[string]interface{}) (string, error)
 
+	// ConvertSlice will be used by ConvertSlice to convert a []interface{} to
+	// a string if defined.
+	ConvertSlice func([]interface{}) (string, error)
+
 	// ConvertDefault will be used by ConvertDefault to convert a interface{}
 	// to a string if defined.
 	ConvertDefault func(interface{}) (string, error)
 
-	// ConvertSlice will be used by ConvertSlice to convert a []interface{} to
-	// a string if defined.
-	ConvertSlice func([]interface{}) (string, error)
+	// BatchAsTransaction will cause batched queries to be done in a
+	// transaction block.
+	BatchAsTransaction bool
+
+	// BatchQueryPrefixes will be used by BatchQueryPrefixes if defined.
+	BatchQueryPrefixes map[string]string
 }
 
 // drivers is the map of drivers funcs.
@@ -365,6 +372,31 @@ func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
 	return func(v interface{}) (string, error) {
 		return fmt.Sprintf("%v", v), nil
 	}
+}
+
+// BatchAsTransaction returns whether or not the the specified URL's driver requires
+// batched queries to be done within a transaction block.
+func BatchAsTransaction(u *dburl.URL) bool {
+	if d, ok := drivers[u.Driver]; ok {
+		return d.BatchAsTransaction
+	}
+	return false
+}
+
+// IsBatchQueryPrefix returns whether or not the supplied query prefix is a
+// batch query prefix, and the closing prefix. Used to direct the handler to
+// continue accumulating statements.
+func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
+	// normalize
+	typ, q := QueryExecType(prefix, "")
+
+	d, ok := drivers[u.Driver]
+	if q || !ok || d.BatchQueryPrefixes == nil {
+		return typ, "", false
+	}
+
+	end, ok := d.BatchQueryPrefixes[typ]
+	return typ, end, ok
 }
 
 // RowsAffected returns the rows affected for the SQL result for a specified

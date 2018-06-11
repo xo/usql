@@ -29,16 +29,17 @@ var queryMap = map[string]bool{
 // documentation for any new queries introduced by PostgreSQL need to be
 // manually scrutinized for variations.
 var execMap = map[string]bool{
-	"USE": true, // use a schema / keyspace (mysql, cassandra)
+	// cassandra
+	"ALTER KEYSPACE":  true, // alter a keyspace
+	"CREATE KEYSPACE": true, // create a keyspace
+	"DROP KEYSPACE":   true, // drop a keyspace
+	"BEGIN BATCH":     true, // begin batch
+	"APPLY BATCH":     true, // apply batch
 
-	"ALTER":  true, // alter catch-all
-	"CREATE": true, // create catch-all
-	"DROP":   true, // drop catch-all
+	// ql
+	"BEGIN TRANSACTION": true, // begin batch
 
-	"ALTER KEYSPACE":  true, // alter a keyspace (cassandra)
-	"CREATE KEYSPACE": true, // create a keyspace (cassandra)
-	"DROP KEYSPACE":   true, // drop a keyspace (cassandra)
-
+	// postgresql
 	"ABORT":                            true, // abort the current transaction
 	"ALTER AGGREGATE":                  true, // change the definition of an aggregate function
 	"ALTER COLLATION":                  true, // change the definition of a collation

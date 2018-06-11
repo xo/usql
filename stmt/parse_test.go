@@ -300,8 +300,17 @@ func TestFindPrefix(t *testing.T) {
 		{"*/ \n --\naoeu", 7, ""},
 		{"--\n\n--\ntest", 7, "TEST"}, // 40
 		{"\b\btest", 7, "TEST"},
+		{"select/*\r\n\r\n*/blah", 7, "SELECTBLAH"},
+		{"\r\n\r\nselect from where", 8, "SELECT FROM WHERE"},
+
+		{"\r\n\b\bselect 1;create 2;", 8, "SELECT"},
+		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION CREATE X WHERE"}, // 45
+		{"begin;test;create;awesome", 3, "BEGIN TEST CREATE"},
 	}
 	for i, test := range tests {
+		if i != 45 {
+			continue
+		}
 		if p := findPrefix([]rune(test.s), test.w); p != test.exp {
 			t.Errorf("test %d %q expected %q, got: %q", i, test.s, test.exp, p)
 		}

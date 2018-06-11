@@ -6,6 +6,11 @@ import (
 	"unicode"
 )
 
+const (
+	// prefixWords is the number of words to extract from a prefix.
+	prefixWords = 6
+)
+
 // grab grabs i from r, or returns 0 if i >= end.
 func grab(r []rune, i, end int) rune {
 	if i < end {
@@ -305,7 +310,7 @@ loop:
 			}
 
 		// end of statement, max words, or punctuation that can be ignored
-		case c == ';' || words == n || !unicode.IsLetter(c):
+		case words == n || !unicode.IsLetter(c):
 			break loop
 
 		// ignore remaining, as no prefix can come after
@@ -314,7 +319,7 @@ loop:
 			if next == 0 {
 				break
 			}
-			if isSpace(next) {
+			if isSpace(next) || next == ';' {
 				s = append(s, ' ')
 			}
 			r, end, i = r[i+2:], end-i-2, -1
@@ -329,9 +334,9 @@ loop:
 	return string(s)
 }
 
-// FindPrefix finds the prefix in s up to n words.
-func FindPrefix(s string, n int) string {
-	return findPrefix([]rune(s), n)
+// FindPrefix finds the first 6 prefix words in s.
+func FindPrefix(s string) string {
+	return findPrefix([]rune(s), prefixWords)
 }
 
 // substituteVar substitutes part of r, based on v, with s.

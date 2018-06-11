@@ -368,27 +368,21 @@ func init() {
 			Section: SectionTransaction,
 			Name:    "begin",
 			Desc:    "begin a transaction",
-			Process: func(p *Params) error {
-				return p.H.Begin()
+			Aliases: map[string]string{
+				"commit":   "commit current transaction",
+				"rollback": "rollback (abort) current transaction",
 			},
-		},
-
-		Commit: {
-			Section: SectionTransaction,
-			Name:    "commit",
-			Desc:    "commit current transaction",
 			Process: func(p *Params) error {
-				return p.H.Commit()
-			},
-		},
-
-		Rollback: {
-			Section: SectionTransaction,
-			Name:    "rollback",
-			Desc:    "rollback (abort) current transaction",
-			Aliases: map[string]string{"abort": ""},
-			Process: func(p *Params) error {
-				return p.H.Rollback()
+				var f func() error
+				switch p.N {
+				case "begin":
+					f = p.H.Begin
+				case "commit":
+					f = p.H.Commit
+				case "rollback":
+					f = p.H.Rollback
+				}
+				return f()
 			},
 		},
 

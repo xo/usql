@@ -48,6 +48,10 @@ type Handler struct {
 	lastPrefix string
 	lastRaw    string
 
+	// batch
+	batch    bool
+	batchEnd string
+
 	// connection
 	u  *dburl.URL
 	db *sql.DB
@@ -269,15 +273,56 @@ func (h *Handler) Run() error {
 
 		// execute buf
 		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
+			// intercept batch query
+			typ, end, batch := drivers.IsBatchQueryPrefix(h.u, h.buf.Prefix)
+			switch {
+			case h.batch && batch:
+				fmt.Fprintf(stderr, "error: cannot perform %s in existing batch", typ)
+				fmt.Fprintln(stderr)
+				continue
+
+			// cannot use \g* while accumulating statements for batch queries
+			case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
+				fmt.Fprintf(stderr, "error: cannot force batch execution", typ)
+				fmt.Fprintln(stderr)
+				continue
+
+			case batch:
+				h.batch, h.batchEnd = true, end
+
+			case h.batch:
+				var lend string
+				if len(h.last) != 0 {
+					lend = "\n"
+				}
+
+				// append to last
+				h.last += lend + h.buf.String()
+				h.lastPrefix = h.buf.Prefix
+				h.lastRaw += lend + h.buf.RawString()
+				h.buf.Reset(nil)
+
+				// break
+				if h.batchEnd != typ {
+					continue
+				}
+
+				h.lastPrefix = h.batchEnd
+				h.batch, h.batchEnd = false, ""
+			}
+
 			if h.buf.Len != 0 {
 				h.last, h.lastPrefix, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.RawString()
 				h.buf.Reset(nil)
 			}
 
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
-			if h.last != "" && h.last != ";" {
-				err = h.Execute(stdout, res, h.lastPrefix, h.last)
-				if err != nil {
+			if !h.batch && h.last != "" && h.last != ";" {
+				// force a transaction for batched queries for certain drivers
+				_, _, forceBatch := drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
+
+				// execute
+				if err = h.Execute(stdout, res, h.lastPrefix, h.last, forceBatch); err != nil {
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
 				}
@@ -287,7 +332,7 @@ func (h *Handler) Run() error {
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string) error {
+func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string, forceTrans bool) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -298,6 +343,13 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string) err
 		return drivers.WrapErr(h.u.Driver, err)
 	}
 
+	// start a transaction if forced
+	if forceTrans {
+		if err = h.Begin(); err != nil {
+			return err
+		}
+	}
+
 	f := h.execOnly
 	switch res.Exec {
 	case metacmd.ExecSet:
@@ -306,7 +358,18 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string) err
 		f = h.execExec
 	}
 
-	return drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam))
+	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam)); err != nil {
+		if forceTrans {
+			h.Reset(nil)
+		}
+		return err
+	}
+
+	if forceTrans {
+		return h.Commit()
+	}
+
+	return nil
 }
 
 // CommandRunner executes a set of commands.
@@ -315,8 +378,7 @@ func (h *Handler) CommandRunner(cmds []string) func() error {
 	return func() error {
 		for _, cmd := range cmds {
 			h.Reset([]rune(cmd))
-			err := h.Run()
-			if err != nil && err != io.EOF {
+			if err := h.Run(); err != nil && err != io.EOF {
 				return err
 			}
 		}
@@ -327,7 +389,7 @@ func (h *Handler) CommandRunner(cmds []string) func() error {
 // Reset resets the handler's query statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
-	h.last, h.lastPrefix, h.lastRaw = "", "", ""
+	h.last, h.lastPrefix, h.lastRaw, h.batch, h.batchEnd = "", "", "", false, ""
 }
 
 // Prompt creates the prompt text.
@@ -342,7 +404,7 @@ func (h *Handler) Prompt() string {
 	}
 
 	tx := ">"
-	if h.tx != nil {
+	if h.tx != nil || h.batch {
 		tx = "~"
 	}
 
@@ -835,8 +897,7 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 
 			// execute
 			for _, qstr := range row {
-				err = h.Execute(w, res, stmt.FindPrefix(qstr, 4), qstr)
-				if err != nil {
+				if err = h.Execute(w, res, stmt.FindPrefix(qstr), qstr, false); err != nil {
 					return err
 				}
 			}

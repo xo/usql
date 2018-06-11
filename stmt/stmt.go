@@ -337,7 +337,7 @@ parse:
 	}
 
 	// set prefix
-	b.Prefix = findPrefix(b.Buf, 6)
+	b.Prefix = findPrefix(b.Buf, prefixWords)
 
 	// reset r
 	b.r = b.r[i:]

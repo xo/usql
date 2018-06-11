@@ -40,7 +40,7 @@ const (
 	// Copyright is the copyright meta command (\copyright).
 	Copyright
 
-	// Connect is the connect meta command (\c).
+	// Connect is the connect meta command (\c, \connect).
 	Connect
 
 	// Disconnect is the disconnect meta command (\Z).
@@ -64,10 +64,10 @@ const (
 	// Edit is the edit query buffer meta command (\e).
 	Edit
 
-	// Print is the print query buffer meta command (\p).
+	// Print is the print query buffer meta command (\p, \print, \raw).
 	Print
 
-	// Reset is the reset query buffer meta command (\r).
+	// Reset is the reset query buffer meta command (\r, \reset).
 	Reset
 
 	// Echo is the echo meta command (\echo).
@@ -88,14 +88,8 @@ const (
 	// Include is the system include file meta command (\i and variants).
 	Include
 
-	// Begin is the transaction begin meta command (\begin).
+	// Transact is the transaction meta command (\begin, \commit, \rollback).
 	Begin
-
-	// Commit is the transaction commit meta command (\commit).
-	Commit
-
-	// Rollback is the transaction rollback (abort) meta command (\rollback).
-	Rollback
 
 	// Prompt is the variable prompt meta command (\prompt).
 	Prompt

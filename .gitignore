@@ -1,11 +1,13 @@
 /usql
 /usql.exe
 
-/build
-/vendor
-/vendor.orig
+/build/
+/vendor/
+/vendor.orig/
+/db/
 
 .usql_history*
+.[a-f0-9]*
 
 *.ini
 *.csv
