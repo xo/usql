@@ -274,41 +274,43 @@ func (h *Handler) Run() error {
 		// execute buf
 		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
 			// intercept batch query
-			typ, end, batch := drivers.IsBatchQueryPrefix(h.u, h.buf.Prefix)
-			switch {
-			case h.batch && batch:
-				fmt.Fprintf(stderr, "error: cannot perform %s in existing batch", typ)
-				fmt.Fprintln(stderr)
-				continue
-
-			// cannot use \g* while accumulating statements for batch queries
-			case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
-				fmt.Fprintf(stderr, "error: cannot force batch execution", typ)
-				fmt.Fprintln(stderr)
-				continue
-
-			case batch:
-				h.batch, h.batchEnd = true, end
-
-			case h.batch:
-				var lend string
-				if len(h.last) != 0 {
-					lend = "\n"
-				}
-
-				// append to last
-				h.last += lend + h.buf.String()
-				h.lastPrefix = h.buf.Prefix
-				h.lastRaw += lend + h.buf.RawString()
-				h.buf.Reset(nil)
-
-				// break
-				if h.batchEnd != typ {
+			if h.u != nil {
+				typ, end, batch := drivers.IsBatchQueryPrefix(h.u, h.buf.Prefix)
+				switch {
+				case h.batch && batch:
+					fmt.Fprintf(stderr, "error: cannot perform %s in existing batch", typ)
+					fmt.Fprintln(stderr)
 					continue
-				}
 
-				h.lastPrefix = h.batchEnd
-				h.batch, h.batchEnd = false, ""
+				// cannot use \g* while accumulating statements for batch queries
+				case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
+					fmt.Fprint(stderr, "error: cannot force batch execution")
+					fmt.Fprintln(stderr)
+					continue
+
+				case batch:
+					h.batch, h.batchEnd = true, end
+
+				case h.batch:
+					var lend string
+					if len(h.last) != 0 {
+						lend = "\n"
+					}
+
+					// append to last
+					h.last += lend + h.buf.String()
+					h.lastPrefix = h.buf.Prefix
+					h.lastRaw += lend + h.buf.RawString()
+					h.buf.Reset(nil)
+
+					// break
+					if h.batchEnd != typ {
+						continue
+					}
+
+					h.lastPrefix = h.batchEnd
+					h.batch, h.batchEnd = false, ""
+				}
 			}
 
 			if h.buf.Len != 0 {
