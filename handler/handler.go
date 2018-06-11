@@ -360,7 +360,8 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string, for
 
 	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam)); err != nil {
 		if forceTrans {
-			h.Reset(nil)
+			defer h.tx.Rollback()
+			h.tx = nil
 		}
 		return err
 	}
