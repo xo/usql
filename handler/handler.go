@@ -983,6 +983,9 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 				}
 			}
 
+		case string:
+			row[n] = x
+
 		case fmt.Stringer:
 			row[n] = x.String()
 
