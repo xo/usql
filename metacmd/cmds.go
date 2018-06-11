@@ -224,7 +224,7 @@ func init() {
 			Desc:    "show the contents of the query buffer",
 			Aliases: map[string]string{
 				"print": "",
-				"raw":   "show the raw contents (non-interpolated) of the query buffer",
+				"raw":   "show the raw (non-interpolated) contents of the query buffer",
 			},
 			Process: func(p *Params) error {
 				// get last statement

@@ -255,79 +255,78 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 	return a[0], a[1:], i
 }
 
-var spaceRE = regexp.MustCompile(`\s+`)
-
 // findPrefix finds the prefix in r up to n words.
 func findPrefix(r []rune, n int) string {
-	var s string
+	var s []rune
 	var words int
-	i, end := 0, len(r)
 
 loop:
-	for ; i < end; i++ {
-		// skip space
-		if j, ok := findNonSpace(r, i, end); i != j {
-			if z := len(s); z != 0 && ok && isSpace(grab(r, i, end)) && !isSpace(rune(s[z-1])) {
-				s += " "
-			}
+	for i, end := 0, len(r); i < end; i++ {
+		// skip space + control characters
+		if j, _ := findNonSpace(r, i, end); i != j {
 			r, end, i = r[j:], end-j, 0
 		}
 
-		// current and next
+		// grab current and next character
 		c, next := grab(r, i, end), grab(r, i+1, end)
 		switch {
 		case c == 0:
 			continue
 
-		// hit end of statement, or max words
-		case c == ';' || words == n:
-			break
-
-		// single line comments -- and //
+		// single line comments '--' and '//'
 		case c == '-' && next == '-', c == '/' && next == '/':
 			if i != 0 {
-				s += strings.ToUpper(string(r[:i])) + " "
-				words++
+				s, words = appendUpperRunes(s, r[:i], ' '), words+1
 			}
-			i, _ = findRune(r, i, end, '\n')
-			if i >= end {
+
+			// find line end
+			if i, _ = findRune(r, i, end, '\n'); i >= end {
 				break
 			}
 			r, end, i = r[i+1:], end-i-1, -1
 
-		// multiline comments -- /* */
+		// multiline comments '/*' '*/'
 		case c == '/' && next == '*':
 			if i != 0 {
-				s += strings.ToUpper(string(r[:i]))
-				words++
+				s, words = appendUpperRunes(s, r[:i]), words+1
 			}
+
+			// find comment end '*/'
 			for i += 2; i < end; i++ {
 				if grab(r, i, end) == '*' && grab(r, i+1, end) == '/' {
 					r, end, i = r[i+2:], end-i-2, -1
 					break
 				}
 			}
-			if z := len(s); z > 1 && isSpace(r[0]) && !isSpace(rune(s[z-1])) {
-				s += " "
+
+			// append when remaining runes begin with space
+			if sl := len(s); sl != 0 && isSpace(r[0]) && !isSpace(s[sl-1]) {
+				s = append(s, ' ')
 			}
 
-		// ignore remaining, as no prefix can come after
-		case !unicode.IsLetter(c):
+		// end of statement, max words, or punctuation that can be ignored
+		case c == ';' || words == n || !unicode.IsLetter(c):
 			break loop
 
+		// ignore remaining, as no prefix can come after
 		case next != '/' && !unicode.IsLetter(next):
-			s += strings.ToUpper(string(r[:i+1]))
-			words++
+			s, words = appendUpperRunes(s, r[:i+1]), words+1
 			if next == 0 {
 				break
 			}
-			if next != 0 && isSpace(next) {
-				s += " "
+			if isSpace(next) {
+				s = append(s, ' ')
 			}
 			r, end, i = r[i+2:], end-i-2, -1
 		}
 	}
-	return strings.TrimRight(s, " ")
+
+	// trim right ' ', if any
+	if sl := len(s); sl != 0 && s[sl-1] == ' ' {
+		return string(s[:sl-1])
+	}
+
+	return string(s)
 }
 
 // FindPrefix finds the prefix in s up to n words.
@@ -358,7 +357,20 @@ func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 }
 
 // isSpace is a special test for either a space or a control (ie, \b)
-// charaters.
+// characters.
 func isSpace(r rune) bool {
 	return unicode.IsSpace(r) || unicode.IsControl(r)
+}
+
+// appendUpperRunes creates a new []rune from s, with the runes in r on the end
+// converted to upper case. extra runes will be appended to the final []rune.
+func appendUpperRunes(s []rune, r []rune, extra ...rune) []rune {
+	sl, rl, el := len(s), len(r), len(extra)
+	sre := make([]rune, sl+rl+el)
+	copy(sre[:sl], s)
+	for i := 0; i < rl; i++ {
+		sre[sl+i] = unicode.ToUpper(r[i])
+	}
+	copy(sre[sl+rl:], extra)
+	return sre
 }

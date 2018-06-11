@@ -251,41 +251,6 @@ func TestReadCommand(t *testing.T) {
 	}
 }
 
-/*func TestFindWords(t *testing.T) {
-	tests := []struct {
-		s   string
-		i   int
-		w   int
-		exp string
-		c   int
-	}{
-		{"", 0, 4, "", 0},
-		{"  ", 0, 4, "", 0},
-		{"  ", 0, 4, "", 0},
-		{" select ", 0, 4, " select", 1},
-		{" select to ", 0, 4, " select to", 2},
-		{" select to ", 1, 4, "select to", 2}, // 5
-		{" select   to   ", 0, 4, " select   to", 2},
-		{"select into from", 0, 2, "select into", 2},
-		{"select into * from", 0, 4, "select into * from", 4},
-		{" select  into  *   from  ", 0, 4, " select  into  *   from", 4},
-		{"  select\n\n\tb\t\tzfrom j\n\n  ", 1, 2, " select\n\n\tb", 2}, // 10
-	}
-	for i, test := range tests {
-		z := []rune(test.s)
-
-		end, c := findEndOfWords(z, test.i, len(z), test.w)
-		s := string(z[test.i:end])
-		if s != test.exp {
-			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, s)
-		}
-
-		if c != test.c {
-			t.Errorf("test %d expected word count %d, got: %d", i, test.c, c)
-		}
-	}
-}*/
-
 func TestFindPrefix(t *testing.T) {
 	tests := []struct {
 		s   string
@@ -331,10 +296,13 @@ func TestFindPrefix(t *testing.T) {
 		{"\n\n/* */\nn /* */n", 7, "N N"},
 		{"\n\n/* */\nn/* */\nn", 7, "N N"},
 		{"\n\n/* */\nn/* */ n", 7, "N N"},
+		{"*/aoeu", 7, ""},
+		{"*/ \n --\naoeu", 7, ""},
+		{"--\n\n--\ntest", 7, "TEST"}, // 40
+		{"\b\btest", 7, "TEST"},
 	}
 	for i, test := range tests {
-		p := findPrefix([]rune(test.s), test.w)
-		if p != test.exp {
+		if p := findPrefix([]rune(test.s), test.w); p != test.exp {
 			t.Errorf("test %d %q expected %q, got: %q", i, test.s, test.exp, p)
 		}
 	}
@@ -427,7 +395,6 @@ func TestReadVar(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		//t.Logf(">>> test %d", i)
 		z := []rune(test.s)
 		v := readVar(z, test.i, len(z))
 		if !reflect.DeepEqual(v, test.exp) {
