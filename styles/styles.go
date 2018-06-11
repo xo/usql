@@ -1,3 +1,5 @@
+// Package styles provides chroma styles based on the chroma styles but removing
+// the backgrounds.
 package styles
 
 import (
@@ -7,6 +9,7 @@ import (
 	cstyles "github.com/alecthomas/chroma/styles"
 )
 
+// styles is the set of styles with their background colors removed.
 var styles = struct {
 	styles map[string]*chroma.Style
 	sync.Mutex
@@ -14,7 +17,7 @@ var styles = struct {
 	styles: make(map[string]*chroma.Style),
 }
 
-// Get retrieves the
+// Get retrieves the equivalent chroma style.
 func Get(name string) *chroma.Style {
 	styles.Lock()
 	defer styles.Unlock()

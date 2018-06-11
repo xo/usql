@@ -161,7 +161,9 @@ func (h *Handler) outputHighlighter(s string) string {
 			l := len(final)
 
 			// find first non empty character
-			if i := strings.IndexFunc(full[l:], stmt.IsSpace); i != -1 {
+			if i := strings.IndexFunc(full[l:], func(r rune) bool {
+				return !stmt.IsSpace(r)
+			}); i != -1 {
 				final += full[l : l+i]
 			}
 		}
@@ -703,8 +705,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 	var err error
 
-	err = drivers.CanChangePassword(h.u)
-	if err != nil {
+	if err = drivers.CanChangePassword(h.u); err != nil {
 		return "", err
 	}
 
@@ -720,20 +721,19 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 	// attempt to get passwords
 	for i := 0; i < 3; i++ {
-		newpw, err = h.l.Password(text.NewPassword)
-		if err != nil {
+		if newpw, err = h.l.Password(text.NewPassword); err != nil {
 			return "", err
 		}
-		newpw2, err = h.l.Password(text.ConfirmPassword)
-		if err != nil {
+		if newpw2, err = h.l.Password(text.ConfirmPassword); err != nil {
 			return "", err
 		}
-
 		if newpw == newpw2 {
 			break
 		}
 		fmt.Fprintln(h.l.Stderr(), text.PasswordsDoNotMatch)
 	}
+
+	// verify passwords match
 	if newpw != newpw2 {
 		return "", text.ErrPasswordAttemptsExhausted
 	}
