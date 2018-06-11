@@ -160,7 +160,9 @@ func (h *Handler) outputHighlighter(s string) string {
 
 			// grab remaining whitespace to add to final
 			l := len(final)
-			if i := strings.IndexFunc(full[l:], func(r rune) bool { return !unicode.IsSpace(r) }); i != -1 {
+			if i := strings.IndexFunc(full[l:], func(r rune) bool {
+				return !unicode.IsSpace(r) || !unicode.IsControl(r)
+			}); i != -1 {
 				final += full[l : l+i]
 			}
 		}
@@ -321,7 +323,10 @@ func (h *Handler) Run() error {
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
 			if !h.batch && h.last != "" && h.last != ";" {
 				// force a transaction for batched queries for certain drivers
-				_, _, forceBatch := drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
+				var forceBatch bool
+				if h.u != nil {
+					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
+				}
 
 				// execute
 				if err = h.Execute(stdout, res, h.lastPrefix, h.last, forceBatch); err != nil {
