@@ -73,7 +73,7 @@ func init() {
 			},
 		},
 
-		ConnInfo: {
+		ConnectionInfo: {
 			Section: SectionConnection,
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
@@ -364,7 +364,7 @@ func init() {
 			},
 		},
 
-		Begin: {
+		Transact: {
 			Section: SectionTransaction,
 			Name:    "begin",
 			Desc:    "begin a transaction",

@@ -49,8 +49,8 @@ const (
 	// Password is the change password meta command (\password).
 	Password
 
-	// ConnInfo is the connection info meta command (\conninfo).
-	ConnInfo
+	// ConnectionInfo is the connection info meta command (\conninfo).
+	ConnectionInfo
 
 	// Drivers is the driver info meta command (\drivers).
 	Drivers
@@ -89,7 +89,7 @@ const (
 	Include
 
 	// Transact is the transaction meta command (\begin, \commit, \rollback).
-	Begin
+	Transact
 
 	// Prompt is the variable prompt meta command (\prompt).
 	Prompt
