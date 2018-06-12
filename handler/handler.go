@@ -185,8 +185,8 @@ func (h *Handler) outputHighlighter(s string) string {
 
 	// determine whatever is remaining after "active"
 	var remaining string
-	if finall := len(final); finall < len(full) {
-		remaining = full[finall:]
+	if fnl := len(final); fnl < len(full) {
+		remaining = full[fnl:]
 	}
 
 	// this happens when a read line is empty and/or has only

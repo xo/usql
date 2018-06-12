@@ -12,7 +12,7 @@ fi
 PKGS=
 for i in $ALL; do
   NAME=$(basename $i)
-  PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/"\s*//')
+  PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/[a-z]\+\s\+"//' |$SED -e 's/"\s*//')
   PKGS="$PKGS $PKG"
 done
 

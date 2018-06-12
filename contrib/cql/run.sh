@@ -6,3 +6,5 @@ docker stop cql
 docker rm cql
 
 docker run -d --rm -p 9042:9042 --name cql cassandra-x
+
+docker exec -it cql cat /etc/cassandra/cassandra.yaml
