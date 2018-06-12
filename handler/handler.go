@@ -114,11 +114,21 @@ func (h *Handler) outputHighlighter(s string) string {
 		endl += lineterm
 	}
 
+	// leading whitespace
+	var leading string
+
 	// capture current query statement buffer
 	orig := h.buf.RawString()
 	full := orig
 	if full != "" {
 		full += "\n"
+	} else {
+		// get leading whitespace
+		if i := strings.IndexFunc(s, func(r rune) bool {
+			return !stmt.IsSpace(r)
+		}); i != -1 {
+			leading = s[:i]
+		}
 	}
 	full += s
 
@@ -171,11 +181,12 @@ func (h *Handler) outputHighlighter(s string) string {
 	if !st.Ready() && cmd == "" {
 		final += st.RawString()
 	}
+	final = leading + final
 
 	// determine whatever is remaining after "active"
 	var remaining string
-	if len(final) < len(full) {
-		remaining = full[len(final):]
+	if finall := len(final); finall < len(full) {
+		remaining = full[finall:]
 	}
 
 	// this happens when a read line is empty and/or has only
