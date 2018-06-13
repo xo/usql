@@ -4,15 +4,17 @@ A universal command-line interface for PostgreSQL, MySQL, Oracle Database,
 SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
 including NoSQL and non-relational databases!
 
+[travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master (https://travis-ci.org/xo/usql)
+
 [Installing][] | [Building][] | [Using][] | [Commands][] | [Database Support][] | [Variables][] | [Releases][]
 
 [Installing]: #installing (Installing)
+[Building]: #building (Building)
 [Using]: #using (Using)
 [Commands]: #commands (Commands)
-[Building]: #building (Building)
 [Database Support]: #database-support (Database Support)
+[Variables]: #variables-and-interpolation
 [Releases]: https://github.com/xo/usql/releases (Releases)
-[travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master (https://travis-ci.org/xo/usql)
 
 ## Overview
 
@@ -309,8 +311,8 @@ $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=
 
 ### Executing Queries and Commands
 
-`usql` provides a command intrepreter that intreprets [`\ ` commands][Commands]
-and sends queries to the database similar to `psql`:
+`usql` provides a command intrepreter that intreprets [meta (`\ `) commands][Commands]
+and sends queries to the database:
 
 ```sh
 $ usql sqlite://example.sqlite3
@@ -414,8 +416,8 @@ Requests would be greatly appreciated!
 
 ## Variables and Interpolation
 
-As with `psql`, `usql` supports client-side interpolation of variables that can
-be `\set` and `\unset`:
+`usql` supports client-side interpolation of variables that can be `\set` and
+`\unset`:
 
 ```sh
 $ usql
@@ -428,9 +430,9 @@ FOO = 'bar'
 (not connected)=>
 ```
 
-A variable, `NAME`, that has been `\set` will be directly interpolated (by
-string substitution) into the query when prefixed with `:` and optionally
-surrounded by quotation marks (`'` or `"`):
+A `\set` variable, `NAME`,  will be directly interpolated (by string
+substitution) into the query when prefixed with `:` and optionally surrounded
+by quotation marks (`'` or `"`):
 
 ```sh
 pg:booktest@localhost=> \set FOO bar
@@ -461,7 +463,7 @@ pg:booktest@localhost-> \g
 pg:booktest@localhost=>
 ```
 
-**Note**: variables contained within another string will **NOT** be
+**Note**: variables contained within other strings will **NOT** be
 interpolated:
 
 ```
