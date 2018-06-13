@@ -6,27 +6,27 @@ including NoSQL and non-relational databases!
 
 [travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master (https://travis-ci.org/xo/usql)
 
-[Installing][] | [Building][] | [Using][] | [Commands][] | [Database Support][] | [Variables][] | [Releases][]
+[Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][]
 
 [Installing]: #installing (Installing)
 [Building]: #building (Building)
 [Using]: #using (Using)
-[Commands]: #commands (Commands)
 [Database Support]: #database-support (Database Support)
-[Variables]: #variables-and-interpolation
+[Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
 [Releases]: https://github.com/xo/usql/releases (Releases)
 
 ## Overview
 
-`usql` provides a simple way of working with [SQL and NoSQL databases][Database Support]
-via a command-line inspired by PostgreSQL's `psql`. `usql` has a few
-additional features that `psql` does not, such as syntax highlighting and
-context-based completion.
+`usql` provides a simple way to work with [SQL and NoSQL databases][Database Support]
+via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
+core `psql` features, such as [variables][], [backticks][], and [commands][]
+and has additional features that `psql` does not, such as [syntax highlighting][highlighting],
+context-based completion, and [multiple database support][Database Support].
 
-Database administrators and developers that would prefer to work with
-non-PostgreSQL databases with a tool like `psql`, will find `usql` intuitive,
+Database administrators and developers that would prefer to work with a tool
+like `psql` with non-PostgreSQL databases, will find `usql` intuitive,
 easy-to-use, and a great replacement for the command-line clients/tools
-available for other databases.
+for other databases.
 
 ## Installing
 
@@ -45,7 +45,7 @@ available for other databases.
 
 ### Installing via Homebrew (macOS)
 
-`usql` is available in the [`xo/xo`][xo-tap] tap, and can be installed in the
+`usql` is available in the [`xo/xo` tap][xo-tap], and can be installed in the
 usual way with the [`brew` command][homebrew]:
 
 ```sh
@@ -125,19 +125,19 @@ $ go get -u -tags 'all no_avatica no_couchbase' github.com/xo/usql
 
 ### Release Builds
 
-[Release builds][Releases] are built with the `most` build tag. [Additional
-SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
+[Release builds][Releases] are built with the `most` build tag. Additional
+[SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
 
-### Using as a Package
+### Embedding
 
 An effort has been made to keep `usql`'s packages modular, and reusable by
 other developers wishing to leverage the `usql` code base. As such, it is
-possible to build a SQL command-line interface (e.g, for use by some other
-project as an "official" client) using the core `usql` source tree.
+possible to embed or create a SQL command-line interface (e.g, for use by some
+other project as an "official" client) using the core `usql` source tree.
 
 Please refer to [main.go](main.go) to see how `usql` puts together its
 packages. `usql`'s code is also well-documented -- please refer to the [GoDoc
-listing][godoc] to see the various APIs available.
+listing][godoc] for an overview of the various packages and APIs.
 
 ## Database Support
 
@@ -190,15 +190,47 @@ $ usql oracle://user:pass@host/oracle.sid
 $ usql pg://localhost/ -f script.sql
 ```
 
-### Connecting to a Database
+#### Command-line Options
+
+Supported command-line options:
+
+```sh
+$ usql --help
+usql, the universal command-line interface for SQL databases.
+
+usql 0.7.0
+Usage: usql [--command COMMAND] [--file FILE] [--output OUTPUT] [--username USERNAME] [--password] [--no-password] [--no-rc] [--single-transaction] [--set SET] DSN
+
+Positional arguments:
+  DSN                    database url
+
+Options:
+  --command COMMAND, -c COMMAND
+                         run only single command (SQL or internal) and exit
+  --file FILE, -f FILE   execute commands from file and exit
+  --output OUTPUT, -o OUTPUT
+                         output file
+  --username USERNAME, -U USERNAME
+                         database user name [default: ken]
+  --password, -W         force password prompt (should happen automatically)
+  --no-password, -w      never prompt for password
+  --no-rc, -X            do not read start up file
+  --single-transaction, -1
+                         execute as a single transaction (if non-interactive)
+  --set SET, -v SET      set variable NAME=VALUE
+  --help, -h             display this help and exit
+  --version              display version and exit
+```
+
+### Connecting to Databases
 
 `usql` opens a database connection by [parsing a URL][dburl] and passing the
-resulting connection string to the [database driver][Database Support].
-Database connection strings (aka "data source name" or DSNs) have the same
-parsing rules as URLs, and can be passed to `usql` via command-line, or to the
-`\connect` or `\c` [commands][Commands].
+resulting connection string to [a database driver][Database Support]. Database
+connection strings (aka "data source name" or DSNs) have the same parsing rules
+as URLs, and can be passed to `usql` via command-line, or to the `\connect` or
+`\c` [commands][].
 
-`usql` connection strings look like the following:
+Connection strings look like the following:
 
 ```txt
    driver+transport://user:pass@host/dbname?opt1=a&opt2=b
@@ -252,10 +284,23 @@ using the MySQL driver. If the path is a directory, `usql` will attempt to open
 it using the PostgreSQL driver. If the path is a regular file, `usql` will
 attempt to open the file using the SQLite3 driver.
 
-### Connection String Examples
+#### Driver Defaults
+
+As with URLs, most components in the URL are optional and many components can
+be left out. `usql` will attempt connecting using defaults where possible:
+
+```sh
+# connect to postgres using the local $USER and the unix domain socket in /var/run/postgresql
+$ usql pg://
+```
+
+Please see documentation for [the database driver][Database Support] you are
+connecting with for more information.
+
+### Connection Examples
 
 The following are example connection strings and additional ways to connect to
-databases with `usql`:
+databases using `usql`:
 
 ```sh
 # connect to a postgres database
@@ -311,8 +356,8 @@ $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=
 
 ### Executing Queries and Commands
 
-`usql` provides a command intrepreter that intreprets [meta (`\ `) commands][Commands]
-and sends queries to the database:
+The interactive intrepreter reads queries and [meta (`\ `) commands][commands],
+sending the query to the connected database:
 
 ```sh
 $ usql sqlite://example.sqlite3
@@ -353,10 +398,12 @@ pg:booktest@localhost=> select * from authors;
 pg:booktest@localhost=>
 ```
 
-## Commands
+Commands may accept one or more parameter, and can be quoted using either `'`
+or `"`. Command parameters may also be [backtick'd][backticks].
 
-`usql` recognizes backslash (`\ `) commands similar to `psql`. Currently
-available commands:
+### Backslash Commands
+
+Currently available commands:
 
 ```sh
 $ usql
@@ -411,10 +458,12 @@ Variables
   \unset NAME           unset (delete) internal variable
 ```
 
-The `usql` project's goal is to support all standard `psql` commands. Pull
-Requests would be greatly appreciated!
+## Features and Compatibility
 
-## Variables and Interpolation
+The `usql` project's goal is to support all standard `psql` commands and
+features. Pull Requests are always appreciated!
+
+#### Variables and Interpolation
 
 `usql` supports client-side interpolation of variables that can be `\set` and
 `\unset`:
@@ -443,7 +492,9 @@ pg:booktest@localhost=> select * from authors where name = :'FOO';
 (1 rows)
 ```
 
-Interpolation has three forms: `:NAME`, `:'NAME'`, and `:"NAME"`.
+The three forms, `:NAME`, `:'NAME'`, and `:"NAME"`, are used to interpolate a
+variable in parts of a query that may require quoting, such as for a column
+name, or when doing concatenation in a query:
 
 ```sh
 pg:booktest@localhost=> \set TBLNAME authors
@@ -478,10 +529,9 @@ select ':FOO';
 pg:booktest@localhost=>
 ```
 
-## Backtick'd parameters
+#### Backtick'd parameters
 
-As with `psql`, meta (`\ `) commands supports backticks on parameters and
-quotation marks:
+[Meta (`\ `) commands][commands] support backticks on parameters:
 
 ```sh
 (not connected)=> \echo Welcome `echo $USER` -- 'currently:' "(" `date` ")"
@@ -501,10 +551,129 @@ Wed Jun 13 12:17:11 WIB 2018
 pg:booktest@localhost=>
 ```
 
-## Related Projects
+#### Passwords
 
-* [dburl][dburl] - a Go package providing a standard, URL style mechanism for parsing and opening database connection URLs
-* [xo][xo] - a command-line tool to generate Go code from a database schema
+`usql` supports reading passwords for databases from a `.usqlpass` file
+contained in the user's `HOME` directory at startup:
+
+```sh
+$ cat $HOME/.usqlpass
+# format is:
+# protocol:host:port:dbname:user:pass
+postgres:*:*:*:booktest:booktest
+$ usql pg://
+Connected with driver postgres (PostgreSQL 9.6.9)
+Type "help" for help.
+
+pg:booktest@=>
+```
+
+Note: the `.usqlpass` file cannot be readable by other users. Please set the
+permissions accordingly:
+
+```sh
+$ chmod 0600 ~/.usqlpass
+```
+
+#### Runtime Configuration (RC) File
+
+`usql` supports executing a `.usqlrc` contained in the user's `HOME` directory:
+
+```sh
+$ cat $HOME/.usqlrc
+\echo WELCOME TO THE JUNGLE `date`
+\set SYNTAX_HL_STYLE paraiso-dark
+$ usql
+WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
+Type "help" for help.
+
+(not connected)=> \set
+SYNTAX_HL_STYLE = 'paraiso-dark'
+(not connected)=>
+```
+
+The `.usqlrc` file is read by `usql` at startup in the same way as a file
+passed on the command-line with `-f` / `--file`. It is commonly used to set
+startup environment variables and settings.
+
+You can temporarily disable the RC-file by passing `-X` or `--no-rc` on the
+command-line:
+
+```sh
+$ usql --no-rc pg://
+```
+
+#### Host Connection Information
+
+By default, `usql` displays connection information when connecting to a
+database. This might cause problems with some databases or connections. This
+can be disabled by setting the system environment variable `USQL_SHOW_HOST_INFORMATION`
+to `false`:
+
+```sh
+$ export USQL_SHOW_HOST_INFORMATION=false
+$ usql pg://booktest@localhost
+Type "help" for help.
+
+pg:booktest@=>
+```
+
+`SHOW_HOST_INFORMATION` is a standard [`usql` variable][variables],
+and can be `\set` or `\unset`. Additionally, it can be passed via the
+command-line using `-v` or `--set`:
+
+```sh
+$ usql --set SHOW_HOST_INFORMATION=false pg://
+Type "help" for help.
+
+pg:booktest@=> \set SHOW_HOST_INFORMATION true
+pg:booktest@=> \connect pg://
+Connected with driver postgres (PostgreSQL 9.6.9)
+pg:booktest@=>
+```
+
+#### Syntax Highlighting
+
+Interactive queries will be syntax highlighted by default, using
+[Chroma][chroma]. There are a number of [variables][] that control syntax
+highlighting:
+
+| Variable                | Default                         | Values            | Description                                                  |
+|-------------------------|---------------------------------|-------------------|--------------------------------------------------------------|
+| `SYNTAX_HL`             | `true`                          | `true` or `false` | enables syntax highlighting                                  |
+| `SYNTAX_HL_FORMAT`      | _dependent on terminal support_ | formatter name    | [Chroma formatter name][chroma-formatter]                    |
+| `SYNTAX_HL_OVERRIDE_BG` | `true`                          | `true` or `false` | enables overriding the background color of the chroma styles |
+| `SYNTAX_HL_STYLE`       | `monokai`                       | style name        | [Chroma style name][chroma-style]                            |
+
+#### Time Formatting
+
+Some databases support time/date columns that [support formatting][go-time]. By
+default, `usql` formats time/date columns as [RFC3339Nano][go-time], and can be
+set using the [`TIME_FORMAT` variable][variables]:
+
+```sh
+$ ./usql pg://
+Connected with driver postgres (PostgreSQL 9.6.9)
+Type "help" for help.
+
+pg:booktest@=> \set
+TIME_FORMAT = 'RFC3339Nano'
+pg:booktest@=> select now();
+                now
++----------------------------------+
+  2018-06-14T03:24:12.481923+07:00
+(1 rows)
+
+pg:booktest@=> \set TIME_FORMAT Kitchen
+pg:booktest@=> \g
+   now
++--------+
+  3:24AM
+(1 rows)
+```
+
+Any [Go supported time format][go-time] or const name (for example, `Kitchen`,
+in the above) can be used for `TIME_FORMAT`.
 
 ## TODO
 
@@ -515,6 +684,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 
 ##### General
 
+0.  updated asciinema demo
 1.  support more prompt configuration, colored prompt by default
 2.  add window title / status output
 2.  change `drivers.Convert*` to drivers.Marshal style interfaces
@@ -559,27 +729,42 @@ support for the most frequently used aspects/features of `psql`. Compatability
 
 ##### Future Database Support
 
-1. Native Oracle
-2. InfluxDB
-3. CSV via SQLite3 vtable
-4. Google Spanner
-5. Google Sheets via SQLite3 vtable
-6. [Charlatan][d-charlatan]
-7. InfluxDB IQL
-8. Aerospike AQL
-9. ArrangoDB AQL
-10. OrientDB SQL
-11. Cypher / SparQL
-12. Atlassian JIRA JQL
+1. Redis CLI
+2. Native Oracle
+3. InfluxDB
+4. CSV via SQLite3 vtable
+5. Google Spanner
+6. Google Sheets via SQLite3 vtable
+7. [Charlatan][d-charlatan]
+8. InfluxDB IQL
+9. Aerospike AQL
+10. ArrangoDB AQL
+11. OrientDB SQL
+12. Cypher / SparQL
+13. Atlassian JIRA JQL
+
+## Related Projects
+
+* [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing and opening database connection URLs
+* [xo][xo] - Go command-line tool to generate Go code from a database schema
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
 [godoc]: https://godoc.org/github.com/xo/usql
 [go-project]: https://golang.org/project
+[go-time]: https://golang.org/pkg/time/#pkg-constants
 [homebrew]: https://brew.sh/
 [xo]: https://github.com/xo/xo
 [xo-tap]: https://github.com/xo/homebrew-xo
 [xo-tap-notes]: https://github.com/xo/homebrew-xo#oracle-notes
+[chroma]: https://github.com/alecthomas/chroma
+[chroma-formatter]: https://github.com/alecthomas/chroma#formatters
+[chroma-style]: https://xyproto.github.io/splash/docs/all.html
+
+[commands]: #backslash-commands (Commands)
+[backticks]: #backtick-d-parameters (Backtick Parameters)
+[highlighting]: #syntax-highlighting (Syntax Highlighting)
+[variables]: #variables-and-interpolation (Variable Interpolation)
 
 [d-mssql]: https://github.com/denisenkom/go-mssqldb
 [d-mysql]: https://github.com/go-sql-driver/mysql

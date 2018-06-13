@@ -34,7 +34,7 @@ func init() {
 	if v := Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
 	}
-	timefmt := time.RFC3339Nano
+	timefmt := "RFC3339Nano"
 	if v := Getenv("USQL_TIME_FORMAT"); v != "" {
 		timefmt = v
 	}
@@ -97,4 +97,32 @@ func Unset(name string) error {
 // All returns all variables.
 func All() map[string]string {
 	return vars
+}
+
+// timeConstMap is the name
+var timeConstMap = map[string]string{
+	"ANSIC":       time.ANSIC,
+	"UnixDate":    time.UnixDate,
+	"RubyDate":    time.RubyDate,
+	"RFC822":      time.RFC822,
+	"RFC822Z":     time.RFC822Z,
+	"RFC850":      time.RFC850,
+	"RFC1123":     time.RFC1123,
+	"RFC1123Z":    time.RFC1123Z,
+	"RFC3339":     time.RFC3339,
+	"RFC3339Nano": time.RFC3339Nano,
+	"Kitchen":     time.Kitchen,
+	"Stamp":       time.Stamp,
+	"StampMilli":  time.StampMilli,
+	"StampMicro":  time.StampMicro,
+	"StampNano":   time.StampNano,
+}
+
+// Timefmt returns the environment TIME_FORMAT.
+func Timefmt() string {
+	tfmt := vars["TIME_FORMAT"]
+	if s, ok := timeConstMap[tfmt]; ok {
+		return s
+	}
+	return tfmt
 }

@@ -778,8 +778,8 @@ func (h *Handler) Version() error {
 
 // timefmt returns the current time format setting.
 func (h *Handler) timefmt() string {
-	s, ok := env.All()["TIME_FORMAT"]
-	if !ok || s == "" {
+	s := env.Timefmt()
+	if s == "" {
 		s = time.RFC3339Nano
 	}
 	return s
