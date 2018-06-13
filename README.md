@@ -408,39 +408,61 @@ support for the most frequently used aspects/features of `psql`. Compatability
 (where possible) with `psql`, takes general development priority.
 
 ##### General
-1. Fix multiline behavior to mimic psql properly (on arrow up/down through history)
-2. PAGER
-3. \qecho + \o support
-4. fix table output / formatting
-5. context-based completion (WIP)
-6. \encoding and environment/command line options to set encoding of input (to
+
+1.  support more prompt configuration, colored prompt by default
+2.  add window title / status output
+2.  change `drivers.Convert*` to drivers.Marshal style interfaces
+3.  allow configuration for JSON encoding/decoding output
+4.  return single 'driver' type handling marshaling / scanning of types / columns
+5.  implement a table writer that follows "optional func" parameter style, is streaming /
+    handles marshalers, can handle the different configuration options for `\pset`
+6.  implement "extended" display for queries (for `\gx` / formatting)
+7.  implement better environment variable handling
+8.  implement proper readline
+9.  tab-completion of queries
+10. show hidden (client) queries (`\set SHOW_HIDDEN`)
+11. fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
+12. proper `PAGER` support
+13. `\qecho` + `\o` support
+14. context-based completion (WIP)
+15. full `\if` `\elif` `\else` `\endif` support
+16. fix `WITH ... DELETE` queries (postgresql)
+17. better --help support/output cli, man pages
+18. translations
+16. \encoding and environment/command line options to set encoding of input (to
     convert to utf-8 before feeding to SQL driver) (how important is this ... ?)
-7. better --help support/output cli, man pages
 
 ##### Command Processing + `psql` compatibility
 
-1. the \j* commands (WIP)
-2. \watch
-3. \errverbose
-4. formatting settings (\pset, \a, etc)
-5. all \d* commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
-6. remaining `psql` cli parameters
+1. formatting settings (`\pset`, `\a`, etc)
+2. all `\d*` commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
+3. all `\e*` commands from `psql` (WIP, need to finish work extracting stored procs for all the major databases)
+3. `\watch`
+4. `\errverbose` (show verbose info for last error)
+5. remaining `psql` cli parameters
+6. `\j*` commands (WIP)
 
-##### Not important / "Nice to haves" / extremely low priority:
+###### Low priority compatibity fixes:
 
-1. correct operation of interweaved -f/-c commands, ie: -f 1 -c 1 -c 2 -f 2 -f 3 -c 3 runs in the specified order
+1. correct operation of interweaved `-f`/`-c` commands, ie: `usql -f 1 -c 1 -c 2 -f 2 -f 3 -c 3` runs in the specified order
 
 ##### Testing
 
-1. test suite for databases, doing a minimal set of SELECT, INSERT, UPDATE, DELETE
+1. test suite for databases, doing minimal of `SELECT`, `INSERT`, `UPDATE`, `DELETE` for every database
 
 ##### Future Database Support
 
 1. InfluxDB
 2. CSV via SQLite3 vtable
-3. Google Sheets via SQLite3 vtable
-4. Atlassian JIRA JQL (why not? lol)
-5. Google Spanner
+3. Google Spanner
+4. Google Sheets via SQLite3 vtable
+5. [Charalatan][d-charalatan]
+6. InfluxDB IFQL
+7. Aerospike AQL
+8. Arrangodb AQL
+9. OrientDB SQL
+10. Cypher / SparQL
+11. Atlassian JIRA JQL
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
@@ -471,3 +493,4 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-sqlago]: https://github.com/a-palchikov/sqlago
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-spanner]: https://github.com/xo/spanner
+[d-charlatan]: github.com/BatchLabs/charlatan
