@@ -75,7 +75,7 @@ case $PLATFORM in
 esac
 
 case $PLATFORM in
-  linux|windows)
+  linux|windows|darwin)
     echo "packing $BIN"
     upx -q -q $BIN
   ;;
