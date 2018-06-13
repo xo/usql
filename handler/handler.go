@@ -997,6 +997,9 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 		case string:
 			row[n] = x
 
+		case time.Time:
+			row[n] = x.Format(tfmt)
+
 		case fmt.Stringer:
 			row[n] = x.String()
 
