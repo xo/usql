@@ -126,7 +126,7 @@ $ go get -u -tags 'all no_avatica no_couchbase' github.com/xo/usql
 ### Release Builds
 
 [Release builds][Releases] are built with the `most` build tag. Additional
-[SQLite3 build tags](contrib/build-release.sh) are also specified for releases.
+[SQLite3 build tags](build-release.sh) are also specified for releases.
 
 ### Embedding
 

@@ -1,0 +1,4 @@
+-- example usqlrc file
+-- put in $HOME/.usqlrc
+\echo welcome `echo $USER`, today is:`date`
+\set SYNTAX_HL_STYLE paraiso-dark

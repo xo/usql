@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get install -y unixodbc unixodbc-dev
   - go get github.com/mattn/goveralls golang.org/x/vgo
 install:
-  - ./contrib/grab-oracle.sh
+  - ./contrib/oraclre/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
