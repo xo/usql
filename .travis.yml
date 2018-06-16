@@ -6,7 +6,7 @@ services:
   - mysql
   - postgresql
 before_install:
-  - suod add-apt-repository ppa:duggan/bats --yes
+  - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev bats
   - go get github.com/mattn/goveralls golang.org/x/vgo
