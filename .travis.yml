@@ -15,6 +15,6 @@ install:
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
-  - vgo build -v -x -tags 'all icu fts5 vtable json1'
+  - vgo install -v -x -tags 'all icu fts5 vtable json1'
   - vgo test ./stmt/
-  - ./contrib/run-bats-tests.sh
+  - bats -t ./contrib/tests.bats
