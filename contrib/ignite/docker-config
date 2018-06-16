@@ -1,4 +1,5 @@
+# see https://github.com/apache/ignite/tree/master/modules/docker
+
 NAME=ignite
-IMAGE=apacheignite/ignite
+IMAGE=ignite-x
 NETWORK=host
-ENV=CONFIG_URI=https://raw.githubusercontent.com/apache/ignite/master/examples/config/example-cache.xml

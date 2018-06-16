@@ -43,6 +43,12 @@ docker rm $NAME
 
 set -e
 
+echo docker run \
+  --detach \
+  --rm \
+  $(for k in "${!PARAMS[@]}"; do echo --$k=${PARAMS[$k]}; done) \
+  $IMAGE
+
 docker run \
   --detach \
   --rm \
