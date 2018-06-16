@@ -18,4 +18,5 @@ install:
 script:
   - go test ./stmt/
   - go build -tags 'all icu fts5 vtable json1'
+  - export USQL_SHOW_HOST_INFORMATION=false
   - bats -t ./contrib/tests.bats
