@@ -6,13 +6,15 @@ services:
   - mysql
   - postgresql
 before_install:
+  - suod add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get -qq update
-  - sudo apt-get install -y unixodbc unixodbc-dev
+  - sudo apt-get install -y unixodbc unixodbc-dev bats
   - go get github.com/mattn/goveralls golang.org/x/vgo
 install:
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
 script:
+  - vgo test  -v -x -tags 'all icu fts5 vtable json1' ./...
   - vgo build -v -x -tags 'all icu fts5 vtable json1'
-  - vgo test -tags 'all' -v ./stmt
+  - ./contrib/run-bats-tests.sh
