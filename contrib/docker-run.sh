@@ -29,7 +29,7 @@ shift
 
 # setup params
 declare -A PARAMS=()
-for k in NAME ENV PUBLISH VOLUME; do
+for k in NAME PUBLISH NETWORK VOLUME ENV; do
   n=$(tr 'A-Z' 'a-z' <<< "$k")
   v=$(eval echo "\$$k")
   if [ ! -z "$v" ]; then
