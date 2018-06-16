@@ -8,7 +8,7 @@ services:
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get -qq update
-  - sudo apt-get install -y unixodbc unixodbc-dev bats
+  - sudo apt-get install -y unixodbc unixodbc-dev bats expect
   - go get github.com/mattn/goveralls golang.org/x/vgo
 install:
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
