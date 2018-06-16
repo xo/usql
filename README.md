@@ -144,7 +144,67 @@ listing][godoc] for an overview of the various packages and APIs.
 `usql` works with all Go standard library compatible SQL drivers supported by
 [`github.com/xo/dburl`][dburl].
 
-The databases supported, the respective build tag, and the driver used by `usql` are:
+The list of drivers that `usql` was built with can be displayed using the
+[`\drivers` command][commands]:
+
+```sh
+(not connected)=> \drivers
+(not connected)=> \drivers
+Available Drivers:
+  mssql [ms, sqlserver]
+  mysql [my, maria, aurora, mariadb, percona]
+  postgres [pg, pgsql, postgresql]
+  sqlite3 [sq, file, sqlite]
+```
+
+The above shows that `usql` was built with 4 drivers (`mssql`, `mysql`,
+`postgres`, and `sqlite3`). The names contained within `[...]` are the
+additional scheme aliases recognized by [`\connect` command][commands] when
+connecting to a database.
+
+#### Supported Database Schemes and Aliases
+
+The following is a table of all drivers, schemes, and aliases that `usql`
+supports:
+
+| Database (scheme/driver)     | Protocol Aliases [real driver]        |
+|------------------------------|---------------------------------------|
+| Microsoft SQL Server (mssql) | ms, sqlserver                         |
+| MySQL (mysql)                | my, mariadb, maria, percona, aurora   |
+| Oracle (ora)                 | or, oracle, oci8, oci                 |
+| PostgreSQL (postgres)        | pg, postgresql, pgsql                 |
+| SQLite3 (sqlite3)            | sq, sqlite, file                      |
+|                              |                                       |
+| Amazon Redshift (redshift)   | rs [postgres]                         |
+| CockroachDB (cockroachdb)    | cr, cockroach, crdb, cdb [postgres]   |
+| MemSQL (memsql)              | me [mysql]                            |
+| TiDB (tidb)                  | ti [mysql]                            |
+| Vitess (vitess)              | vt [mysql]                            |
+|                              |                                       |
+| Google Spanner (spanner)     | gs, google, span (not yet public)     |
+|                              |                                       |
+| MySQL (mymysql)              | zm, mymy                              |
+| PostgreSQL (pgx)             | px                                    |
+|                              |                                       |
+| Apache Avatica (avatica)     | av, phoenix                           |
+| Apache Ignite (ignite)       | ig, gridgain                          |
+| Cassandra (cql)              | ca, cassandra, datastax, scy, scylla  |
+| ClickHouse (clickhouse)      | ch                                    |
+| Couchbase (n1ql)             | n1, couchbase                         |
+| Cznic QL (ql)                | ql, cznic, cznicql                    |
+| Firebird SQL (firebirdsql)   | fb, firebird                          |
+| Microsoft ADODB (adodb)      | ad, ado                               |
+| ODBC (odbc)                  | od                                    |
+| OLE ODBC (oleodbc)           | oo, ole, oleodbc [adodb]              |
+| Presto (presto)              | pr, prestodb, prestos, prs, prestodbs |
+| SAP HANA (hdb)               | sa, saphana, sap, hana                |
+| Snowflake (snowflake)        | sf                                    |
+| VoltDB (voltdb)              | vo, volt, vdb                         |
+
+#### Go Drivers and Build Tags
+
+The following are the [Go SQL drivers][go-sql] that `usql` supports, and the
+associated Go build tag:
 
 | Driver               | Build Tag  | Driver Used                                                                      |
 |----------------------|------------|----------------------------------------------------------------------------------|
@@ -158,6 +218,7 @@ The databases supported, the respective build tag, and the driver used by `usql`
 | PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][d-pgx]                                             |
 |                      |            |                                                                                  |
 | Apache Avatica       | avatica    | [github.com/Boostport/avatica][d-avatica]                                        |
+| Apache Ignite        | ignite     | [github.com/amsokol/ignite-go-client][d-ignite]                                  |
 | Cassandra            | cassandra  | [github.com/MichaelS11/go-cql-driver][d-cassandra]                               |
 | ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][d-clickhouse]                                   |
 | Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][d-couchbase]                                      |
@@ -167,6 +228,7 @@ The databases supported, the respective build tag, and the driver used by `usql`
 | ODBC                 | odbc       | [github.com/alexbrainman/odbc][d-odbc]                                           |
 | Presto               | presto     | [github.com/prestodb/presto-go-client/presto][d-presto]                          |
 | SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][d-hdb]                                            |
+| Snowflake            | snowflake  | [github.com/snowflakedb/gosnowflake][d-snowflake]                                |
 | VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                      |
 |                      |            |                                                                                  |
 | Google Spanner       | spanner    | github.com/xo/spanner (not yet public)                                           |
@@ -707,6 +769,8 @@ support for the most frequently used aspects/features of `psql`. Compatability
 18. translations
 16. `\encoding` and environment/command line options to set encoding of input (to
     convert to UTF-8 before feeding to SQL driver) (how important is this ... ?)
+17. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
+18. fix `usql --help` usage output and fix multiple aliases (for `--set`, `--variable`)
 
 ##### Command Processing + `psql` compatibility
 
@@ -753,6 +817,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [godoc]: https://godoc.org/github.com/xo/usql
 [go-project]: https://golang.org/project
 [go-time]: https://golang.org/pkg/time/#pkg-constants
+[go-sql]: https://golang.org/pkg/database/sql/
 [homebrew]: https://brew.sh/
 [xo]: https://github.com/xo/xo
 [xo-tap]: https://github.com/xo/homebrew-xo
@@ -786,4 +851,6 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-sqlago]: https://github.com/a-palchikov/sqlago
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-spanner]: https://github.com/xo/spanner
-[d-charlatan]: github.com/BatchLabs/charlatan
+[d-charlatan]: https://github.com/BatchLabs/charlatan
+[d-ignite]: https://github.com/amsokol/ignite-go-client
+[d-snowflake]: https://github.com/snowflakedb/gosnowflake

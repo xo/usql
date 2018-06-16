@@ -10,7 +10,7 @@ fi
 
 PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
 TAG=v$VER
-SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
+SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))
 NAME=$(basename $SRC)
 EXT=tar.bz2
 
@@ -21,7 +21,7 @@ fi
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
-TAGS="most fts5 vtable json1 no_ql"
+TAGS="most fts5 vtable json1"
 
 case $PLATFORM in
   windows)

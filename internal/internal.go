@@ -16,6 +16,7 @@ func KnownBuildTags() map[string]string {
 		"clickhouse": "clickhouse",  // github.com/kshvakov/clickhouse
 		"couchbase":  "n1ql",        // github.com/couchbase/go_n1ql
 		"firebird":   "firebirdsql", // github.com/nakagami/firebirdsql
+		"ignite":     "ignite",      // github.com/amsokol/ignite-go-client/sql
 		"mssql":      "mssql",       // github.com/denisenkom/go-mssqldb
 		"mymysql":    "mymysql",     // github.com/ziutek/mymysql/godrv
 		"mysql":      "mysql",       // github.com/go-sql-driver/mysql
@@ -24,8 +25,9 @@ func KnownBuildTags() map[string]string {
 		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
 		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto
-		"ql":         "ql",          // github.com/cznic/ql/driver
+		"ql":         "ql",          // github.com/kenshaw/cznic-ql/ql/driver
 		"saphana":    "hdb",         // github.com/SAP/go-hdb/driver
+		"snowflake":  "snowflake",   // github.com/snowflakedb/gosnowflake
 		"sqlite3":    "sqlite3",     // github.com/mattn/go-sqlite3
 		"voltdb":     "voltdb",      // github.com/VoltDB/voltdb-client-go/voltdbclient
 	}

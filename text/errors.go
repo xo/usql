@@ -54,7 +54,7 @@ var (
 	ErrNotInteractive = errors.New("not interactive")
 
 	// ErrInvalidType is the invalid type error.
-	ErrInvalidType = errors.New("invalid type")
+	ErrInvalidType = errors.New("invalid -TYPE: TYPE must be password, string, int, uint, float, or bool")
 
 	// ErrInvalidIdentifier is the invalid identifier error.
 	ErrInvalidIdentifier = errors.New("invalid identifier")

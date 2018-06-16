@@ -2,6 +2,7 @@ module github.com/xo/usql
 
 require (
 	cloud.google.com/go v0.23.0
+	github.com/Masterminds/semver v1.4.2
 	github.com/MichaelS11/go-cql-driver v0.0.0-20180531180346-5c0274c0ad62
 	github.com/SAP/go-hdb v0.12.0
 	github.com/VoltDB/voltdb-client-go v1.0.1
@@ -12,7 +13,8 @@ require (
 	github.com/alexbrainman/odbc v0.0.0-20180530121416-fd59e65aa0cc
 	github.com/alexflint/go-arg v0.0.0-20180516182405-f7c0423bd11e
 	github.com/alexflint/go-scalar v0.0.0-20170216020425-e80c3b7ed292
-	github.com/apache/calcite-avatica-go v0.0.0-20180529084656-24bae0c8efd0
+	github.com/amsokol/ignite-go-client v0.10.0
+	github.com/apache/calcite-avatica-go v0.0.0-20180616025455-bb93a1045eda
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/chzyer/logex v1.1.10
@@ -22,15 +24,7 @@ require (
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20180502221210-0da75df14530
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a
-	github.com/cznic/b v0.0.0-20180115125044-35e9bbe41f07
-	github.com/cznic/fileutil v0.0.0-20180108211300-6a051e75936f
-	github.com/cznic/internal v0.0.0-20170905175358-4747030f7cf2
-	github.com/cznic/lldb v1.1.0
 	github.com/cznic/mathutil v0.0.0-20180504122225-ca4c9f2c1369
-	github.com/cznic/ql v1.1.0
-	github.com/cznic/sortutil v0.0.0-20150617083342-4c7342852e65
-	github.com/cznic/strutil v0.0.0-20171016134553-529a34b1c186
-	github.com/cznic/zappy v0.0.0-20160723133515-2533cb5b45cc
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
 	github.com/denisenkom/go-mssqldb v0.0.0-20180601030418-c12642a8f788
 	github.com/dlclark/regexp2 v1.1.6
@@ -42,10 +36,12 @@ require (
 	github.com/golang/protobuf v1.1.0
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 	github.com/google/go-cmp v0.2.0
+	github.com/google/uuid v0.0.0-20171129191014-dec09d789f3d
 	github.com/hashicorp/go-version v0.0.0-20180322230233-23480c066577
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 	github.com/jackc/pgx v0.0.0-20180517214546-870744921917
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
+	github.com/kenshaw/cznic-ql v1.1.0
 	github.com/knq/snaker v0.0.0-20180306023312-d9ad1e7f342a
 	github.com/kr/pretty v0.1.0
 	github.com/kshvakov/clickhouse v1.3.3
@@ -61,10 +57,11 @@ require (
 	github.com/prestodb/presto-go-client v0.0.0-20180604210701-a80ce5f9dc7f
 	github.com/sergi/go-diff v1.0.0
 	github.com/shopspring/decimal v0.0.0-20180607144847-19e3cb6c2930
+	github.com/snowflakedb/gosnowflake v1.1.8
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72
 	github.com/stretchr/objx v0.0.0-20180531200725-0ab728f62c7f
 	github.com/xinsnake/go-http-digest-auth-client v0.4.0
-	github.com/xo/dburl v0.0.0-20180608031107-f8c03f113950
+	github.com/xo/dburl v0.0.0-20180616042004-cd61869a0c08
 	github.com/xo/terminfo v0.0.0-20180401022757-20ea4ff360f0
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
@@ -74,6 +71,7 @@ require (
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 	golang.org/x/sys v0.0.0-20180606202747-9527bec2660b
 	golang.org/x/text v0.3.0
+	google.golang.org/appengine v1.1.0
 	gopkg.in/check.v1 v1.0.0-20161208181325-20d25e280405
 	gopkg.in/jcmturner/goidentity.v1 v1.0.0
 	gopkg.in/jcmturner/gokrb5.v4 v4.1.2

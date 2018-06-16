@@ -11,7 +11,7 @@ var (
 
 	CommandVersion = `0.0.0-dev`
 
-	Banner = CommandName + `, the universal command-line interface for SQL databases`
+	Banner = `the universal command-line interface for SQL databases`
 
 	NotConnected = `(not connected)`
 
@@ -29,7 +29,7 @@ var (
 
 	MissingRequiredArg = `\%s: missing required argument`
 
-	Copyright = Banner + ".\n\n" + License
+	Copyright = CommandName + ", " + Banner + ".\n\n" + License
 
 	RowCount = `(%d rows)`
 
@@ -65,7 +65,7 @@ var (
 
 	HelpDesc string
 
-	HelpBanner = `You are using ` + Banner + `.`
+	HelpBanner = `You are using ` + CommandName + ", " + Banner + `.`
 
 	HelpCommandPrefix = `Type:  `
 

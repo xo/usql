@@ -44,5 +44,5 @@ func init() {
 			}
 			return false
 		},
-	}, "cockroachdb")
+	}, "cockroachdb", "redshift")
 }

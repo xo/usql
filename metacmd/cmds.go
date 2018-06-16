@@ -390,7 +390,7 @@ func init() {
 			Section: SectionVariables,
 			Name:    "prompt",
 			Min:     1,
-			Desc:    "prompt user to set internal variable,[TEXT] NAME",
+			Desc:    "prompt user to set variable,[-TYPE] [TEXT] NAME",
 			Process: func(p *Params) error {
 				typ, n := p.V("string"), p.G()
 				if n == "" {
