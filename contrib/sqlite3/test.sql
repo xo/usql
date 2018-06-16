@@ -1,7 +1,6 @@
 -- sqlite3 test script
 
-\set SYNTAX_HL true
-\set SYNTAX_FORMAT terminal16m
+\set
 
 help
 
