@@ -1,0 +1,3 @@
+NAME=cassandra
+IMAGE=cassandra-x
+PUBLISH=9042:9042

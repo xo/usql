@@ -1,0 +1,5 @@
+NAME=oracle
+IMAGE=sath89/oracle-12c
+PUBLISH=1521:1521
+ENV=DBCA_TOTAL_MEMORY=1024
+VOLUME=/media/src/opt/oracle:/u01/app/oracle

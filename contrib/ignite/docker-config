@@ -1,0 +1,4 @@
+NAME=ignite
+IMAGE=apacheignite/ignite
+PUBLISH=47500-47509:47500-47509
+ENV=CONFIG_URI=https://raw.githubusercontent.com/apache/ignite/master/examples/config/example-cache.xml
