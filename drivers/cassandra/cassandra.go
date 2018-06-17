@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
@@ -22,18 +23,40 @@ import (
 // packages, since the cql package does not (at this time) return any error
 // other than sql.ErrBadConn.
 type logger struct {
-	last string
+	debug bool
+	last  string
 }
 
-func (*logger) Print(...interface{})          {}
-func (*logger) Printf(string, ...interface{}) {}
-func (*logger) Println(...interface{})        {}
+func (l *logger) Print(v ...interface{}) {
+	if l.debug {
+		log.Print(v...)
+	}
+}
+func (l *logger) Printf(s string, v ...interface{}) {
+	if l.debug {
+		log.Printf(s, v...)
+	}
+}
+func (l *logger) Println(v ...interface{}) {
+	if l.debug {
+		log.Println(v...)
+	}
+}
 func (l *logger) Write(buf []byte) (int, error) {
+	if l.debug {
+		log.Printf("WRITE: %s", string(buf))
+	}
 	l.last = string(buf)
 	return len(buf), nil
 }
 
 func init() {
+	var debug bool
+	if s := os.Getenv("CQL_DEBUG"); s != "" {
+		log.Printf("ENABLING DEBUGGING FOR CQL")
+		debug = true
+	}
+
 	// error regexp's
 	authReqRE := regexp.MustCompile(`authentication required`)
 	passwordErrRE := regexp.MustCompile(`Provided username (.*)and/or password are incorrect`)
@@ -52,7 +75,7 @@ func init() {
 		},
 		Open: func(*dburl.URL) (func(string, string) (*sql.DB, error), error) {
 			// override cql and gocql loggers
-			l = new(logger)
+			l = &logger{debug: debug}
 			gocql.Logger, cql.CqlDriver.Logger = l, log.New(l, "", 0)
 			return sql.Open, nil
 		},
