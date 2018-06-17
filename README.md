@@ -30,10 +30,11 @@ for other databases.
 
 ## Installing
 
-`usql` can be installed by [via Release][], [via Homebrew][], or [via Go][]:
+`usql` can be installed by [via Release][], [via Homebrew][], [via Scoop][] or [via Go][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos
+[via Scoop]: #installing-via-scoop
 [via Go]: #installing-via-go
 
 ### Installing via Release
@@ -75,6 +76,14 @@ $ brew uninstall InstantClientTap/instantclient/instantclient-sdk
 
 # remove conflicting tap
 $ brew untap InstantClientTap/instantclient
+```
+
+### Installing via Scoop
+
+On Windows, `usql` can be installed using [Scoop](https://scoop.sh):
+
+```
+scoop install usql
 ```
 
 ### Installing via Go
