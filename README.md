@@ -34,7 +34,7 @@ for other databases.
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos
-[via Scoop]: #installing-via-scoop
+[via Scoop]: #installing-via-scoop-windows
 [via Go]: #installing-via-go
 
 ### Installing via Release
@@ -78,11 +78,14 @@ $ brew uninstall InstantClientTap/instantclient/instantclient-sdk
 $ brew untap InstantClientTap/instantclient
 ```
 
-### Installing via Scoop
+### Installing via Scoop (Windows)
 
-On Windows, `usql` can be installed using [Scoop](https://scoop.sh):
+`usql` can be installed using [Scoop](https://scoop.sh):
 
-```
+```powershell
+# install scoop if not already installed
+iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+
 scoop install usql
 ```
 
