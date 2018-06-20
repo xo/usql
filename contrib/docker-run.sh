@@ -28,12 +28,14 @@ echo "NAME: $NAME"
 shift
 
 # setup params
-declare -A PARAMS=()
+declare -a PARAMS
 for k in NAME PUBLISH NETWORK VOLUME ENV; do
   n=$(tr 'A-Z' 'a-z' <<< "$k")
   v=$(eval echo "\$$k")
   if [ ! -z "$v" ]; then
-    PARAMS[$n]=$v
+    for p in $v; do
+      PARAMS=("${PARAMS[@]}" "--$n=$p")
+    done
   fi
 done
 
@@ -43,14 +45,5 @@ docker rm $NAME
 
 set -e
 
-echo docker run \
-  --detach \
-  --rm \
-  $(for k in "${!PARAMS[@]}"; do echo --$k=${PARAMS[$k]}; done) \
-  $IMAGE
-
-docker run \
-  --detach \
-  --rm \
-  $(for k in "${!PARAMS[@]}"; do echo --$k=${PARAMS[$k]}; done) \
-  $IMAGE
+echo docker run --detach --rm ${PARAMS[@]} $IMAGE
+     docker run --detach --rm ${PARAMS[@]} $IMAGE
