@@ -17,8 +17,8 @@ import (
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/formatters"
 	"github.com/alecthomas/chroma/styles"
-	"github.com/olekukonko/tablewriter"
 	"github.com/xo/dburl"
+	"github.com/xo/tblfmt"
 
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
@@ -877,21 +877,7 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 	}
 	defer q.Close()
 
-	// output rows
-	err = h.outputRows(w, q)
-	if err != nil {
-		return err
-	}
-
-	// check for additional result sets ...
-	for drivers.NextResultSet(q) {
-		err = h.outputRows(w, q)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return tblfmt.NewTableEncoder(q).EncodeAll(w)
 }
 
 // execRows executes all the columns in the row.
@@ -922,45 +908,6 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 			}
 		}
 	}
-
-	return nil
-}
-
-// outputRows outputs the supplied SQL rows to the supplied writer.
-func (h *Handler) outputRows(w io.Writer, q *sql.Rows) error {
-	// get columns
-	cols, err := drivers.Columns(h.u, q)
-	if err != nil {
-		return err
-	}
-
-	// create output table
-	t := tablewriter.NewWriter(w)
-	t.SetAutoFormatHeaders(false)
-	t.SetBorder(false)
-	t.SetAutoWrapText(false)
-	t.SetHeader(cols)
-
-	// process rows
-	var rows int
-	clen, tfmt := len(cols), h.timefmt()
-	for q.Next() {
-		if clen != 0 {
-			row, err := h.scan(q, clen, tfmt)
-			if err != nil {
-				return err
-			}
-			t.Append(row)
-			rows++
-		}
-	}
-
-	t.Render()
-
-	// row count
-	fmt.Fprintf(w, text.RowCount, rows)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w)
 
 	return nil
 }

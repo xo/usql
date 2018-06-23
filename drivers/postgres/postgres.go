@@ -21,6 +21,8 @@ func init() {
 			}
 		},
 		Version: func(db drivers.DB) (string, error) {
+			// numeric version
+			// SHOW server_version_num;
 			var ver string
 			err := db.QueryRow(`SHOW server_version`).Scan(&ver)
 			if err != nil {

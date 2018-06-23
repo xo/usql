@@ -52,7 +52,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.7.0
 	github.com/nakagami/firebirdsql v0.0.0-20180530105109-0e771568861d
 	github.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b
-	github.com/olekukonko/tablewriter v0.0.0-20180506121414-d4647c9c7a84
 	github.com/pkg/errors v0.8.0
 	github.com/prestodb/presto-go-client v0.0.0-20180604210701-a80ce5f9dc7f
 	github.com/sergi/go-diff v1.0.0
@@ -62,6 +61,7 @@ require (
 	github.com/stretchr/objx v0.0.0-20180531200725-0ab728f62c7f
 	github.com/xinsnake/go-http-digest-auth-client v0.4.0
 	github.com/xo/dburl v0.0.0-20180616042004-cd61869a0c08
+	github.com/xo/tblfmt v0.0.0-20180623041837-ff80f928cff8
 	github.com/xo/terminfo v0.0.0-20180401022757-20ea4ff360f0
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
