@@ -61,7 +61,7 @@ require (
 	github.com/stretchr/objx v0.0.0-20180531200725-0ab728f62c7f
 	github.com/xinsnake/go-http-digest-auth-client v0.4.0
 	github.com/xo/dburl v0.0.0-20180616042004-cd61869a0c08
-	github.com/xo/tblfmt v0.0.0-20180623041837-ff80f928cff8
+	github.com/xo/tblfmt v0.0.0-20180623052840-598d7aa4566c
 	github.com/xo/terminfo v0.0.0-20180401022757-20ea4ff360f0
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
