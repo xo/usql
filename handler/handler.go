@@ -241,7 +241,7 @@ func (h *Handler) Run() error {
 			return err
 		}
 
-		var res metacmd.Res
+		var res metacmd.Result
 		if cmd != "" {
 			cmd = strings.TrimPrefix(cmd, `\`)
 
@@ -352,7 +352,7 @@ func (h *Handler) Run() error {
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(w io.Writer, res metacmd.Res, prefix, qstr string, forceTrans bool) error {
+func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, forceTrans bool) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -891,7 +891,7 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 	}
 
 	// process rows
-	res := metacmd.Res{Exec: metacmd.ExecOnly}
+	res := metacmd.Result{Exec: metacmd.ExecOnly}
 	clen, tfmt := len(cols), h.timefmt()
 	for q.Next() {
 		if clen != 0 {

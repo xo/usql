@@ -45,7 +45,7 @@ func init() {
 				"? ": "show help on special variables,variables",
 			},
 			Process: func(p *Params) error {
-				Listing(p.H.IO().Stdout())
+				Listing(p.Handler.IO().Stdout())
 				return nil
 			},
 		},
@@ -56,7 +56,7 @@ func init() {
 			Desc:    "quit " + text.CommandName,
 			Aliases: map[string]string{"quit": ""},
 			Process: func(p *Params) error {
-				p.R.Quit = true
+				p.Result.Quit = true
 				return nil
 			},
 		},
@@ -66,7 +66,7 @@ func init() {
 			Name:    "copyright",
 			Desc:    "show " + text.CommandName + " usage and distribution terms",
 			Process: func(p *Params) error {
-				out := p.H.IO().Stdout()
+				out := p.Handler.IO().Stdout()
 				fmt.Fprintln(out, text.Copyright)
 				fmt.Fprintln(out)
 				return nil
@@ -78,8 +78,8 @@ func init() {
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
 			Process: func(p *Params) error {
-				out := p.H.IO().Stdout()
-				if db, u := p.H.DB(), p.H.URL(); db != nil && u != nil {
+				out := p.Handler.IO().Stdout()
+				if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
 					fmt.Fprintf(out, text.ConnInfo, u.Driver, u.DSN)
 					fmt.Fprintln(out)
 				} else {
@@ -94,7 +94,7 @@ func init() {
 			Name:    "drivers",
 			Desc:    "display information about available database drivers",
 			Process: func(p *Params) error {
-				out := p.H.IO().Stdout()
+				out := p.Handler.IO().Stdout()
 
 				available := drivers.Available()
 				names := make([]string, len(available))
@@ -135,7 +135,7 @@ func init() {
 			},
 			Min: 1,
 			Process: func(p *Params) error {
-				return p.H.Open(p.A()...)
+				return p.Handler.Open(p.GetAll()...)
 			},
 		},
 
@@ -145,7 +145,7 @@ func init() {
 			Desc:    "close database connection",
 			Aliases: map[string]string{"disconnect": ""},
 			Process: func(p *Params) error {
-				return p.H.Close()
+				return p.Handler.Close()
 			},
 		},
 
@@ -155,7 +155,7 @@ func init() {
 			Desc:    "change the password for a user,[USERNAME]",
 			Aliases: map[string]string{"passwd": ""},
 			Process: func(p *Params) error {
-				user, err := p.H.ChangePassword(p.G())
+				user, err := p.Handler.ChangePassword(p.Get())
 				switch {
 				case err == text.ErrPasswordNotSupportedByDriver || err == text.ErrNotConnected:
 					return err
@@ -163,8 +163,8 @@ func init() {
 					return fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
 
-				/*fmt.Fprintf(p.H.IO().Stdout(), text.PasswordChangeSucceeded, user)
-				fmt.Fprintln(p.H.IO().Stdout())*/
+				/*fmt.Fprintf(p.Handler.IO().Stdout(), text.PasswordChangeSucceeded, user)
+				fmt.Fprintln(p.Handler.IO().Stdout())*/
 
 				return nil
 			},
@@ -179,17 +179,17 @@ func init() {
 				"gset":  "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
 			},
 			Process: func(p *Params) error {
-				p.R.Exec = ExecOnly
+				p.Result.Exec = ExecOnly
 
-				switch p.N {
+				switch p.Name {
 				case "g":
-					p.R.ExecParam = p.G()
+					p.Result.ExecParam = p.Get()
 
 				case "gexec":
-					p.R.Exec = ExecExec
+					p.Result.Exec = ExecExec
 
 				case "gset":
-					p.R.Exec, p.R.ExecParam = ExecSet, p.G()
+					p.Result.Exec, p.Result.ExecParam = ExecSet, p.Get()
 				}
 
 				return nil
@@ -203,13 +203,13 @@ func init() {
 			Aliases: map[string]string{"edit": ""},
 			Process: func(p *Params) error {
 				// get last statement
-				s, buf := p.H.Last(), p.H.Buf()
+				s, buf := p.Handler.Last(), p.Handler.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}
 
 				// reset if no error
-				n, err := env.EditFile(p.H.User(), p.G(), p.G(), s)
+				n, err := env.EditFile(p.Handler.User(), p.Get(), p.Get(), s)
 				if err == nil {
 					buf.Reset(n)
 				}
@@ -229,16 +229,16 @@ func init() {
 			Process: func(p *Params) error {
 				// get last statement
 				var s string
-				if p.N == "raw" {
-					s = p.H.LastRaw()
+				if p.Name == "raw" {
+					s = p.Handler.LastRaw()
 				} else {
-					s = p.H.Last()
+					s = p.Handler.Last()
 				}
 
 				// use current statement buf if not empty
-				buf := p.H.Buf()
+				buf := p.Handler.Buf()
 				switch {
-				case buf.Len != 0 && p.N == "raw":
+				case buf.Len != 0 && p.Name == "raw":
 					s = buf.RawString()
 				case buf.Len != 0:
 					s = buf.String()
@@ -246,14 +246,14 @@ func init() {
 
 				if s == "" {
 					s = text.QueryBufferEmpty
-				} else if p.H.IO().Interactive() && env.All()["SYNTAX_HL"] == "true" {
+				} else if p.Handler.IO().Interactive() && env.All()["SYNTAX_HL"] == "true" {
 					b := new(bytes.Buffer)
-					if p.H.Highlight(b, s) == nil {
+					if p.Handler.Highlight(b, s) == nil {
 						s = b.String()
 					}
 				}
 
-				fmt.Fprintln(p.H.IO().Stdout(), s)
+				fmt.Fprintln(p.Handler.IO().Stdout(), s)
 				return nil
 			},
 		},
@@ -264,8 +264,8 @@ func init() {
 			Desc:    "reset (clear) the query buffer",
 			Aliases: map[string]string{"reset": ""},
 			Process: func(p *Params) error {
-				p.H.Reset(nil)
-				fmt.Fprintln(p.H.IO().Stdout(), text.QueryBufferReset)
+				p.Handler.Reset(nil)
+				fmt.Fprintln(p.Handler.IO().Stdout(), text.QueryBufferReset)
 				return nil
 			},
 		},
@@ -275,7 +275,7 @@ func init() {
 			Name:    "echo",
 			Desc:    "write string to standard output,[STRING]",
 			Process: func(p *Params) error {
-				fmt.Fprintln(p.H.IO().Stdout(), strings.Join(p.A(), " "))
+				fmt.Fprintln(p.Handler.IO().Stdout(), strings.Join(p.GetAll(), " "))
 				return nil
 			},
 		},
@@ -288,12 +288,12 @@ func init() {
 			Aliases: map[string]string{"write": ""},
 			Process: func(p *Params) error {
 				// get last statement
-				s, buf := p.H.Last(), p.H.Buf()
+				s, buf := p.Handler.Last(), p.Handler.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}
 
-				return ioutil.WriteFile(p.G(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
+				return ioutil.WriteFile(p.Get(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
 			},
 		},
 
@@ -302,7 +302,7 @@ func init() {
 			Name:    "cd",
 			Desc:    "change the current working directory,[DIR]",
 			Process: func(p *Params) error {
-				return env.Chdir(p.H.User(), p.G())
+				return env.Chdir(p.Handler.User(), p.Get())
 			},
 		},
 
@@ -314,11 +314,11 @@ func init() {
 			Process: func(p *Params) error {
 				var err error
 
-				n := p.G()
-				if len(p.P) == 1 {
+				n := p.Get()
+				if len(p.Params) == 1 {
 					err = os.Unsetenv(n)
 				} else {
-					err = os.Setenv(n, strings.Join(p.A(), ""))
+					err = os.Setenv(n, strings.Join(p.GetAll(), ""))
 				}
 
 				return err
@@ -330,14 +330,14 @@ func init() {
 			Name:    "!",
 			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
 			Process: func(p *Params) error {
-				if len(p.P) == 0 && !p.H.IO().Interactive() {
+				if len(p.Params) == 0 && !p.Handler.IO().Interactive() {
 					return text.ErrNotInteractive
 				}
 
-				p.R.Processed = len(p.P)
-				v, err := env.Exec(strings.TrimSpace(strings.Join(p.P, " ")))
+				p.Result.Processed = len(p.Params)
+				v, err := env.Exec(strings.TrimSpace(strings.Join(p.Params, " ")))
 				if err == nil && v != "" {
-					fmt.Fprintln(p.H.IO().Stdout(), v)
+					fmt.Fprintln(p.Handler.IO().Stdout(), v)
 				}
 
 				return nil
@@ -355,8 +355,8 @@ func init() {
 				"include_relative": "",
 			},
 			Process: func(p *Params) error {
-				path := p.G()
-				err := p.H.Include(path, p.N == "ir" || p.N == "include_relative")
+				path := p.Get()
+				err := p.Handler.Include(path, p.Name == "ir" || p.Name == "include_relative")
 				if err != nil {
 					err = fmt.Errorf("%s: %v", path, err)
 				}
@@ -374,13 +374,13 @@ func init() {
 			},
 			Process: func(p *Params) error {
 				var f func() error
-				switch p.N {
+				switch p.Name {
 				case "begin":
-					f = p.H.Begin
+					f = p.Handler.Begin
 				case "commit":
-					f = p.H.Commit
+					f = p.Handler.Commit
 				case "rollback":
-					f = p.H.Rollback
+					f = p.Handler.Rollback
 				}
 				return f()
 			},
@@ -392,7 +392,7 @@ func init() {
 			Min:     1,
 			Desc:    "prompt user to set variable,[-TYPE] [TEXT] NAME",
 			Process: func(p *Params) error {
-				typ, n := p.V("string"), p.G()
+				typ, n := p.GetOptional("string"), p.Get()
 				if n == "" {
 					return text.ErrMissingRequiredArgument
 				}
@@ -402,7 +402,7 @@ func init() {
 					return err
 				}
 
-				v, err := p.H.ReadVar(typ, strings.Join(p.A(), " "))
+				v, err := p.Handler.ReadVar(typ, strings.Join(p.GetAll(), " "))
 				if err != nil {
 					return err
 				}
@@ -416,9 +416,9 @@ func init() {
 			Name:    "set",
 			Desc:    "set internal variable, or list all if no parameters,[NAME [VALUE]]",
 			Process: func(p *Params) error {
-				if len(p.P) == 0 {
+				if len(p.Params) == 0 {
 					vars := env.All()
-					out := p.H.IO().Stdout()
+					out := p.Handler.IO().Stdout()
 					n := make([]string, len(vars))
 					var i int
 					for k := range vars {
@@ -433,7 +433,7 @@ func init() {
 					return nil
 				}
 
-				return env.Set(p.G(), strings.Join(p.A(), ""))
+				return env.Set(p.Get(), strings.Join(p.GetAll(), ""))
 			},
 		},
 
@@ -443,7 +443,7 @@ func init() {
 			Min:     1,
 			Desc:    "unset (delete) internal variable,NAME",
 			Process: func(p *Params) error {
-				return env.Unset(p.G())
+				return env.Unset(p.Get())
 			},
 		},
 	}

@@ -19,10 +19,10 @@ func Decode(name string, params []string) (Runner, error) {
 		return nil, text.ErrMissingRequiredArgument
 	}
 
-	return RunnerFunc(func(h Handler) (Res, error) {
-		p := &Params{h, name, params, Res{}}
+	return RunnerFunc(func(h Handler) (Result, error) {
+		p := &Params{h, name, params, Result{}}
 		err := cmd.Process(p)
-		return p.R, err
+		return p.Result, err
 	}), nil
 }
 

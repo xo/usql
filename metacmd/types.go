@@ -69,14 +69,14 @@ type Handler interface {
 
 // Runner is a runner interface type.
 type Runner interface {
-	Run(Handler) (Res, error)
+	Run(Handler) (Result, error)
 }
 
 // RunnerFunc is a type wrapper for a single func satisfying Runner.Run.
-type RunnerFunc func(Handler) (Res, error)
+type RunnerFunc func(Handler) (Result, error)
 
 // Run satisfies the Runner interface.
-func (f RunnerFunc) Run(h Handler) (Res, error) {
+func (f RunnerFunc) Run(h Handler) (Result, error) {
 	return f(h)
 }
 
@@ -101,8 +101,8 @@ const (
 	ExecExec
 )
 
-// Res is the result of a meta command execution.
-type Res struct {
+// Result is the result of metacmd execution.
+type Result struct {
 	// Quit instructs the handling code to quit.
 	Quit bool
 
@@ -118,53 +118,53 @@ type Res struct {
 	Processed int
 }
 
-// Params wraps command parameters.
+// Params wraps metacmd parameters.
 type Params struct {
-	// H is the handler.
-	H Handler
+	// Handler is the process handler.
+	Handler Handler
 
-	// N is the name of the command.
-	N string
+	// Name is the name of the metacmd.
+	Name string
 
-	// P are the passed parameters.
-	P []string
+	// Params are the passed parameters.
+	Params []string
 
-	// R is the resulting state of the command execution.
-	R Res
+	// Result is the resulting state of the command execution.
+	Result Result
 }
 
-// G returns the next parameter, increasing p.R.Processed by 1.
-func (p *Params) G() string {
-	if len(p.P) > p.R.Processed {
-		s, _ := env.Unquote(p.H.User(), p.P[p.R.Processed], true)
-		p.R.Processed++
+// Get returns the next parameter, increasing p.Result.Processed by 1.
+func (p *Params) Get() string {
+	if len(p.Params) > p.Result.Processed {
+		s, _ := env.Unquote(p.Handler.User(), p.Params[p.Result.Processed], true)
+		p.Result.Processed++
 		return s
 	}
 	return ""
 }
 
-// V returns the next parameter only if it is prefixed with a "-", increasing
-// p.R.Processed when it is, otherwise returning d.
-func (p *Params) V(d string) string {
-	if len(p.P) > p.R.Processed && strings.HasPrefix(p.P[p.R.Processed], "-") {
-		s := p.P[p.R.Processed][1:]
-		p.R.Processed++
+// GetOptional returns the next parameter only if it is prefixed with a "-",
+// increasing p.Result.Processed by 1 when it does, otherwise returning
+// defaultVal.
+func (p *Params) GetOptional(defaultVal string) string {
+	if len(p.Params) > p.Result.Processed && strings.HasPrefix(p.Params[p.Result.Processed], "-") {
+		s := p.Params[p.Result.Processed][1:]
+		p.Result.Processed++
 		return s
 	}
-
-	return d
+	return defaultVal
 }
 
-// A returns all remaining, unprocessed parameters, incrementing p.R.processed
-// appropriately.
-func (p *Params) A() []string {
-	x := make([]string, len(p.P)-p.R.Processed)
+// GetAll gets all remaining, unprocessed parameters, incrementing
+// p.Result.processed appropriately.
+func (p *Params) GetAll() []string {
+	x := make([]string, len(p.Params)-p.Result.Processed)
 	var j int
-	for i := p.R.Processed; i < len(p.P); i++ {
-		s, _ := env.Unquote(p.H.User(), p.P[i], true)
+	for i := p.Result.Processed; i < len(p.Params); i++ {
+		s, _ := env.Unquote(p.Handler.User(), p.Params[i], true)
 		x[j] = s
 		j++
 	}
-	p.R.Processed = len(p.P)
+	p.Result.Processed = len(p.Params)
 	return x
 }
