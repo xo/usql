@@ -269,31 +269,24 @@ $ usql pg://localhost/ -f script.sql
 Supported command-line options:
 
 ```sh
-$ usql --help
-usql, the universal command-line interface for SQL databases.
+usql, the universal command-line interface for SQL databases
 
-usql 0.7.0
-Usage: usql [--command COMMAND] [--file FILE] [--output OUTPUT] [--username USERNAME] [--password] [--no-password] [--no-rc] [--single-transaction] [--set SET] DSN
+Usage:
+  usql [OPTIONS]... [DSN]
 
-Positional arguments:
-  DSN                    database url
+Arguments:
+  DSN                            database url
 
 Options:
-  --command COMMAND, -c COMMAND
-                         run only single command (SQL or internal) and exit
-  --file FILE, -f FILE   execute commands from file and exit
-  --output OUTPUT, -o OUTPUT
-                         output file
-  --username USERNAME, -U USERNAME
-                         database user name [default: ken]
-  --password, -W         force password prompt (should happen automatically)
-  --no-password, -w      never prompt for password
-  --no-rc, -X            do not read start up file
-  --single-transaction, -1
-                         execute as a single transaction (if non-interactive)
-  --set SET, -v SET      set variable NAME=VALUE
-  --help, -h             display this help and exit
-  --version              display version and exit
+  -c, --command=COMMAND ...      run only single command (SQL or internal) and exit
+  -f, --file=FILE ...            execute commands from file and exit
+  -w, --no-password              never prompt for password
+  -X, --no-rc                    do not read start up file
+  -o, --out=OUT                  output file
+  -W, --password                 force password prompt (should happen automatically)
+  -1, --single-transaction       execute as a single transaction (if non-interactive)
+  -v, --variable=NAME=VALUE ...  set variable
+      --version                  display version and exit
 ```
 
 ### Connecting to Databases
@@ -764,25 +757,20 @@ support for the most frequently used aspects/features of `psql`. Compatability
 2.  change `drivers.Convert*` to drivers.Marshal style interfaces
 3.  allow configuration for JSON encoding/decoding output
 4.  return single 'driver' type handling marshaling / scanning of types / columns
-5.  implement a table writer that follows "optional func" parameter style, is streaming /
-    handles marshalers, can handle the different configuration options for `\pset`
-6.  implement "extended" display for queries (for `\gx` / formatting)
-7.  implement better environment variable handling
-8.  implement proper readline
-9.  tab-completion of queries
-10. show hidden (client) queries (`\set SHOW_HIDDEN`)
-11. fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
-12. proper `PAGER` support
-13. `\qecho` + `\o` support
-14. context-based completion (WIP)
-15. full `\if` `\elif` `\else` `\endif` support
-16. fix `WITH ... DELETE` queries (postgresql)
-17. better `--help` support/output cli, man pages
-18. translations
-16. `\encoding` and environment/command line options to set encoding of input (to
-    convert to UTF-8 before feeding to SQL driver) (how important is this ... ?)
-17. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
-18. fix `usql --help` usage output and fix multiple aliases (for `--set`, `--variable`)
+5.  implement "extended" display for queries (for `\gx` / formatting)
+6.  implement better environment variable handling
+7.  implement proper readline
+8.  tab-completion of queries
+9. show hidden (client) queries (`\set SHOW_HIDDEN`)
+10. fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
+11. proper `PAGER` support
+12. `\qecho` + `\o` support
+13. context-based completion (WIP)
+14. full `\if` `\elif` `\else` `\endif` support
+15. fix `WITH ... DELETE` queries (postgresql)
+16. better `--help` / man pages
+17. translations
+18. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
 
 ##### Command Processing + `psql` compatibility
 

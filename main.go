@@ -9,8 +9,6 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/alexflint/go-arg"
-
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/handler"
@@ -50,11 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// parse args
-	args := &Args{
-		Username: cur.Username,
-	}
-	arg.MustParse(args)
+	args := NewArgs()
 
 	// run
 	err = run(args, cur)
@@ -78,7 +72,7 @@ func main() {
 	}
 }
 
-// run processes args, processing args.Commands if non-empty, or args.File if
+// run processes args, processing args.CommandOrFiles if non-empty, if
 // specified, otherwise launch an interactive readline from stdin.
 func run(args *Args, u *user.User) error {
 	var err error
@@ -99,7 +93,7 @@ func run(args *Args, u *user.User) error {
 	}
 
 	// create input/output
-	l, err := rline.New(args.Commands, args.File, args.Out, env.HistoryFile(u))
+	l, err := rline.New(len(args.CommandOrFiles) != 0, args.Out, env.HistoryFile(u))
 	if err != nil {
 		return err
 	}
@@ -141,8 +135,8 @@ func run(args *Args, u *user.User) error {
 
 	// setup runner
 	f := h.Run
-	if len(args.Commands) != 0 {
-		f = h.CommandRunner(args.Commands)
+	if len(args.CommandOrFiles) != 0 {
+		f = runCommandOrFiles(h, args.CommandOrFiles)
 	}
 
 	// run
@@ -156,4 +150,24 @@ func run(args *Args, u *user.User) error {
 	}
 
 	return nil
+}
+
+// runCommandOrFiles proccesses all the supplied commands or files.
+func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func() error {
+	return func() error {
+		for _, x := range commandsOrFiles {
+			h.SetSingleLineMode(x.Command)
+			if x.Command {
+				h.Reset([]rune(x.Value))
+				if err := h.Run(); err != nil && err != io.EOF {
+					return err
+				}
+			} else {
+				if err := h.Include(x.Value, false); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
 }

@@ -9,10 +9,11 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.0.0-20180612023532-d7b2ed20a498
 	github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721
+	github.com/alecthomas/kingpin v0.0.0-20171217180838-947dcec5ba9c
 	github.com/alecthomas/repr v0.0.0-20180318094337-07932d32eb40
+	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/alexbrainman/odbc v0.0.0-20180530121416-fd59e65aa0cc
-	github.com/alexflint/go-arg v0.0.0-20180516182405-f7c0423bd11e
-	github.com/alexflint/go-scalar v0.0.0-20170216020425-e80c3b7ed292
 	github.com/amsokol/ignite-go-client v0.10.0
 	github.com/apache/calcite-avatica-go v0.0.0-20180616025455-bb93a1045eda
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932

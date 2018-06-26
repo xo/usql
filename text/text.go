@@ -106,3 +106,20 @@ func CommandLower() string {
 func CommandUpper() string {
 	return strings.ToUpper(Command())
 }
+
+// UsageTemplate returns the usage template
+func UsageTemplate() string {
+	n := CommandLower()
+
+	return n + `, ` + Banner + `
+
+Usage:
+  ` + n + ` [OPTIONS]... [DSN]
+
+Arguments:
+  DSN                            database url
+
+{{if .Context.Flags}}\
+Options:
+{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}{{end}}`
+}

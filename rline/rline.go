@@ -135,7 +135,7 @@ func (l *Rline) SetOutput(f func(string) string) {
 }
 
 // New creates a new readline input/output handler.
-func New(cmds []string, in, out string, histfile string) (IO, error) {
+func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	var err error
 
 	// determine if interactive
@@ -146,16 +146,8 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 
 	// configure stdin
 	var stdin io.ReadCloser
-	if len(cmds) != 0 {
+	if forceNonInteractive {
 		interactive, cygwin = false, false
-	} else if in != "" {
-		stdin, err = os.OpenFile(in, os.O_RDONLY, 0)
-		if err != nil {
-			return nil, err
-		}
-		closers = append(closers, stdin.Close)
-
-		interactive = false
 	} else if cygwin {
 		stdin = os.Stdin
 	} else {
@@ -215,7 +207,7 @@ func New(cmds []string, in, out string, histfile string) (IO, error) {
 	closers = append(closers, l.Close)
 
 	n := l.Operation.Runes
-	if len(cmds) != 0 {
+	if forceNonInteractive {
 		n = nil
 	}
 

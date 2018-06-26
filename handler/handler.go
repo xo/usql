@@ -36,8 +36,8 @@ type Handler struct {
 	wd   string
 	nopw bool
 
-	// slm is single line mode
-	slm bool
+	// singleLineMode is single line mode
+	singleLineMode bool
 
 	// query statement buffer
 	buf *stmt.Stmt
@@ -96,6 +96,11 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	}
 
 	return h
+}
+
+// SetSingleLineMode allows setting the single line mode toggle.
+func (h *Handler) SetSingleLineMode(singleLineMode bool) {
+	h.singleLineMode = singleLineMode
 }
 
 // outputHighlighter returns s as a highlighted string, based on the current
@@ -230,7 +235,7 @@ func (h *Handler) Run() error {
 		// read next statement/command
 		cmd, params, err := h.buf.Next()
 		switch {
-		case h.slm && err == nil:
+		case h.singleLineMode && err == nil:
 			execute = h.buf.Len != 0
 
 		case err == rline.ErrInterrupt:
@@ -391,20 +396,6 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	}
 
 	return nil
-}
-
-// CommandRunner executes a set of commands.
-func (h *Handler) CommandRunner(cmds []string) func() error {
-	h.slm = true
-	return func() error {
-		for _, cmd := range cmds {
-			h.Reset([]rune(cmd))
-			if err := h.Run(); err != nil && err != io.EOF {
-				return err
-			}
-		}
-		return nil
-	}
 }
 
 // Reset resets the handler's query statement buffer.
