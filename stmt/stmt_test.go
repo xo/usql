@@ -249,7 +249,7 @@ func TestNextResetState(t *testing.T) {
 		if b.Prefix != "" {
 			t.Fatalf("test %d after reset should have empty prefix, got: %s", i, b.Prefix)
 		}
-		if b.q || b.qdbl || b.qdollar || b.qid != "" || b.mc || b.b != 0 {
+		if b.quote || b.quoteDouble || b.quoteDollar || b.quoteTagID != "" || b.multilineComment || b.balanceCount != 0 {
 			t.Fatalf("test %d after reset should have a cleared parse state", i)
 		}
 		if st := b.State(); st != "=" {
@@ -291,7 +291,7 @@ func sp(a, sep string) func() ([]rune, error) {
 
 func hasVar(vars []*Var, n string) bool {
 	for _, v := range vars {
-		if v.N == n {
+		if v.Name == n {
 			return true
 		}
 	}

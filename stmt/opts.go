@@ -15,7 +15,7 @@ func AllowDollar(enable bool) func(*Stmt) {
 // (ie, /* ... */).
 func AllowMultilineComments(enable bool) func(*Stmt) {
 	return func(b *Stmt) {
-		b.allowMc = enable
+		b.allowMultilineComments = enable
 	}
 }
 
@@ -23,7 +23,7 @@ func AllowMultilineComments(enable bool) func(*Stmt) {
 // (ie, // ...).
 func AllowCComments(enable bool) func(*Stmt) {
 	return func(b *Stmt) {
-		b.allowCc = enable
+		b.allowCComments = enable
 	}
 }
 
@@ -31,6 +31,6 @@ func AllowCComments(enable bool) func(*Stmt) {
 // (ie, # ...).
 func AllowHashComments(enable bool) func(*Stmt) {
 	return func(b *Stmt) {
-		b.allowHc = enable
+		b.allowHashComments = enable
 	}
 }

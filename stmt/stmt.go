@@ -20,12 +20,13 @@ type Var struct {
 	// End is where the variable ends in Stmt.Buf.
 	End int
 
-	// Q is the quote character used if the variable was quoted, 0 otherwise.
-	Q rune
+	// Quote is the quote character used if the variable was quoted, 0
+	// otherwise.
+	Quote rune
 
-	// N is the actual variable name excluding ':' and any enclosing quote
+	// Name is the actual variable name excluding ':' and any enclosing quote
 	// characters.
-	N string
+	Name string
 
 	// Len is the length of the replaced variable.
 	Len int
@@ -38,7 +39,7 @@ type Stmt struct {
 	f func() ([]rune, error)
 
 	// parse settings
-	allowDollar, allowMc, allowCc, allowHc bool
+	allowDollar, allowMultilineComments, allowCComments, allowHashComments bool
 
 	// Buf is the statement buffer.
 	Buf []rune
@@ -59,16 +60,16 @@ type Stmt struct {
 	rlen int
 
 	// quoted string state
-	q       bool
-	qdbl    bool
-	qdollar bool
-	qid     string
+	quote       bool
+	quoteDouble bool
+	quoteDollar bool
+	quoteTagID  string
 
 	// multicomment state
-	mc bool
+	multilineComment bool
 
 	// balanced paren count
-	b int
+	balanceCount int
 
 	// ready is the state
 	ready bool
@@ -108,12 +109,12 @@ func (b *Stmt) RawString() string {
 		}
 		z.WriteString(s[i:v.I])
 		z.WriteRune(':')
-		if v.Q != 0 {
-			z.WriteRune(v.Q)
+		if v.Quote != 0 {
+			z.WriteRune(v.Quote)
 		}
-		z.WriteString(v.N)
-		if v.Q != 0 {
-			z.WriteRune(v.Q)
+		z.WriteString(v.Name)
+		if v.Quote != 0 {
+			z.WriteRune(v.Quote)
 		}
 		i = v.I + v.Len
 	}
@@ -135,13 +136,13 @@ func (b *Stmt) Reset(r []rune) {
 	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
 
 	// quote state
-	b.q, b.qdbl, b.qdollar, b.qid = false, false, false, ""
+	b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
 
 	// multicomment state
-	b.mc = false
+	b.multilineComment = false
 
 	// balance state
-	b.b = 0
+	b.balanceCount = 0
 
 	// ready state
 	b.ready = false
@@ -211,31 +212,31 @@ parse:
 		c, next := b.r[i], grab(b.r, i+1, b.rlen)
 		switch {
 		// find end of string quote
-		case b.q:
+		case b.quote:
 			pos, ok := readString(b.r, i, b.rlen, b)
 			i = pos
 			if ok {
-				b.q, b.qdbl, b.qdollar, b.qid = false, false, false, ""
+				b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
 			}
 
 		// find end of multiline comment
-		case b.mc:
+		case b.multilineComment:
 			pos, ok := readMultilineComment(b.r, i, b.rlen)
-			i, b.mc = pos, !ok
+			i, b.multilineComment = pos, !ok
 
 		// start of single quoted string
 		case c == '\'':
-			b.q = true
+			b.quote = true
 
 		// start of double quoted string
 		case c == '"':
-			b.q, b.qdbl = true, true
+			b.quote, b.quoteDouble = true, true
 
 		// start of dollar quoted string literal (postgres)
 		case b.allowDollar && c == '$':
 			id, pos, ok := readDollarAndTag(b.r, i, b.rlen)
 			if ok {
-				b.q, b.qdollar, b.qid = true, true, id
+				b.quote, b.quoteDollar, b.quoteTagID = true, true, id
 			}
 			i = pos
 
@@ -244,27 +245,27 @@ parse:
 			i = b.rlen
 
 		// start of c-style comment, skip to end of line
-		case b.allowCc && c == '/' && next == '/':
+		case b.allowCComments && c == '/' && next == '/':
 			i = b.rlen
 
 		// start of hash comment, skip to end of line
-		case b.allowHc && c == '#':
+		case b.allowHashComments && c == '#':
 			i = b.rlen
 
 		// start of multiline comment
-		case b.allowMc && c == '/' && next == '*':
-			b.mc = true
+		case b.allowMultilineComments && c == '/' && next == '*':
+			b.multilineComment = true
 			i++
 
 		// variable declaration
 		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen); v != nil {
 				var q string
-				if v.Q != 0 {
-					q = string(v.Q)
+				if v.Quote != 0 {
+					q = string(v.Quote)
 				}
 				b.Vars = append(b.Vars, v)
-				if ok, z, _ := env.Getvar(q + v.N + q); ok {
+				if ok, z, _ := env.Getvar(q + v.Name + q); ok {
 					b.r, b.rlen = substituteVar(b.r, v, z)
 					i--
 				}
@@ -275,14 +276,14 @@ parse:
 
 		// unbalance
 		case c == '(':
-			b.b++
+			b.balanceCount++
 
 		// balance
 		case c == ')':
-			b.b = max(0, b.b-1)
+			b.balanceCount = max(0, b.balanceCount-1)
 
 		// continue processing
-		case b.q || b.mc || b.b != 0:
+		case b.quote || b.multilineComment || b.balanceCount != 0:
 			continue
 
 		// skip escaped backslash
@@ -321,8 +322,8 @@ parse:
 	// 1. line is empty/whitespace and not in a string/multiline comment
 
 	empty := isEmptyLine(b.r, 0, i)
-	appendLine := b.q || b.mc || !empty
-	if !b.mc && cmd != "" && empty {
+	appendLine := b.quote || b.multilineComment || !empty
+	if !b.multilineComment && cmd != "" && empty {
 		appendLine = false
 	}
 	if appendLine {
@@ -394,19 +395,19 @@ func (b *Stmt) AppendString(s, sep string) {
 // State returns a string representing the state of statement parsing.
 func (b *Stmt) State() string {
 	switch {
-	case b.q && b.qdollar:
+	case b.quote && b.quoteDollar:
 		return "$"
 
-	case b.q && b.qdbl:
+	case b.quote && b.quoteDouble:
 		return `"`
 
-	case b.q:
+	case b.quote:
 		return "'"
 
-	case b.mc:
+	case b.multilineComment:
 		return "*"
 
-	case b.b != 0:
+	case b.balanceCount != 0:
 		return "("
 
 	case b.Len != 0:

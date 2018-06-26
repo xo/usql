@@ -144,15 +144,15 @@ func readString(r []rune, i, end int, b *Stmt) (int, bool) {
 	for ; i < end; i++ {
 		c = r[i]
 		switch {
-		case b.allowDollar && b.qdollar && c == '$':
-			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.qid == id {
+		case b.allowDollar && b.quoteDollar && c == '$':
+			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.quoteTagID == id {
 				return pos, true
 			}
 
-		case b.qdbl && c == '"':
+		case b.quoteDouble && c == '"':
 			return i, true
 
-		case !b.qdbl && !b.qdollar && c == '\'' && prev != '\'':
+		case !b.quoteDouble && !b.quoteDollar && c == '\'' && prev != '\'':
 			return i, true
 		}
 		prev = r[i]
@@ -183,10 +183,10 @@ func readStringVar(r []rune, i, end int) *Var {
 			}
 
 			return &Var{
-				I:   start,
-				End: i + 1,
-				Q:   q,
-				N:   string(r[start+2 : i]),
+				I:     start,
+				End:   i + 1,
+				Quote: q,
+				Name:  string(r[start+2 : i]),
 			}
 		} /*
 			// this is commented out, because need to determine what should be
@@ -227,9 +227,9 @@ func readVar(r []rune, i, end int) *Var {
 	}
 
 	return &Var{
-		I:   start,
-		End: i,
-		N:   string(r[start+1 : i]),
+		I:    start,
+		End:  i,
+		Name: string(r[start+1 : i]),
 	}
 }
 

@@ -418,18 +418,18 @@ func TestReadVar(t *testing.T) {
 		if test.exp != nil && v != nil {
 			n := string(z[v.I+1 : v.End])
 
-			if v.Q != 0 {
-				if c := rune(n[0]); c != v.Q {
-					t.Errorf("test %d expected var to start with quote %c, got: %c", i, c, v.Q)
+			if v.Quote != 0 {
+				if c := rune(n[0]); c != v.Quote {
+					t.Errorf("test %d expected var to start with quote %c, got: %c", i, c, v.Quote)
 				}
-				if c := rune(n[len(n)-1]); c != v.Q {
-					t.Errorf("test %d expected var to end with quote %c, got: %c", i, c, v.Q)
+				if c := rune(n[len(n)-1]); c != v.Quote {
+					t.Errorf("test %d expected var to end with quote %c, got: %c", i, c, v.Quote)
 				}
 				n = n[1 : len(n)-1]
 			}
 
-			if n != test.exp.N {
-				t.Errorf("test %d expected var name of `%s`, got: `%s`", i, test.exp.N, n)
+			if n != test.exp.Name {
+				t.Errorf("test %d expected var name of `%s`, got: `%s`", i, test.exp.Name, n)
 			}
 		}
 	}
@@ -520,13 +520,13 @@ func TestSubstituteVar(t *testing.T) {
 
 func v(i, end int, n string, x ...string) *Var {
 	z := &Var{
-		I:   i,
-		End: end,
-		N:   n,
+		I:    i,
+		End:  end,
+		Name: n,
 	}
 
 	if len(x) != 0 {
-		z.Q = []rune(x[0])[0]
+		z.Quote = []rune(x[0])[0]
 	}
 
 	return z

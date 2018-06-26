@@ -783,10 +783,6 @@ support for the most frequently used aspects/features of `psql`. Compatability
 6. `\j*` commands (WIP)
 7. `\copy` (add support for copying between two different databases ...?)
 
-###### Low priority compatibity fixes:
-
-1. correct operation of interweaved `-f`/`-c` commands, ie: `usql -f 1 -c 1 -c 2 -f 2 -f 3 -c 3` runs in the specified order
-
 ##### Testing
 
 1. test suite for databases, doing minimal of `SELECT`, `INSERT`, `UPDATE`, `DELETE` for every database
