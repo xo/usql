@@ -18,6 +18,7 @@ func KnownBuildTags() map[string]string {
 		"firebird":   "firebirdsql", // github.com/nakagami/firebirdsql
 		"ignite":     "ignite",      // github.com/amsokol/ignite-go-client/sql
 		"mssql":      "mssql",       // github.com/denisenkom/go-mssqldb
+		"mylogin":    "mylogin",     // github.com/dolmen-go/mylogin-driver/register
 		"mymysql":    "mymysql",     // github.com/ziutek/mymysql/godrv
 		"mysql":      "mysql",       // github.com/go-sql-driver/mysql
 		"odbc":       "odbc",        // github.com/alexbrainman/odbc
