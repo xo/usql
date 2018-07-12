@@ -1,6 +1,8 @@
 cloud.google.com/go v0.23.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.24.0 h1:dXbX9JusOVTZ7hxXPTN2SMJzIzO/IT8kbnWlXiSrDRI=
 cloud.google.com/go v0.24.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+cloud.google.com/go v0.25.0 h1:6vD6xZTc8Jo6To8gHxFDRVsMvWFDgY3rugNszcDalN8=
+cloud.google.com/go v0.25.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/MichaelS11/go-cql-driver v0.0.0-20180531180346-5c0274c0ad62/go.mod h1:nW8K1gl1mu8o29Ns1Sv/EvYe9BBrh1T/GqucnYcO9PI=
 github.com/MichaelS11/go-cql-driver v0.0.0-20180612014040-804dfcd83dce h1:Pj/jGAeyN8dvOh1iB4hYZc7BcA0Uyz0/gxfwWux94xo=
@@ -104,11 +106,14 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib/difflib v0.0.0-20160110105554-792786c7400a/go.mod h1:G7mAYYxgmS0lVkHyy2hEOLQCFB0DlQFTMLWggykrydY=
 github.com/prestodb/presto-go-client v0.0.0-20180604210701-a80ce5f9dc7f/go.mod h1:psTrT5qzpQmYNpaWiyurHCiVTLMYYpAd5o0YQAJWpQg=
+github.com/prestodb/presto-go-client v0.0.0-20180706131729-d5ba9568cfcb h1:ok9GpQhPlUJNz5xccVSBeEZvmyUy4bfKrTrIqjxb0lA=
+github.com/prestodb/presto-go-client v0.0.0-20180706131729-d5ba9568cfcb/go.mod h1:psTrT5qzpQmYNpaWiyurHCiVTLMYYpAd5o0YQAJWpQg=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sergi/go-diff v1.0.0 h1:Kpca3qRNrduNnOQeazBd0ysaKrUJiIuISHxogkT9RPQ=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/shopspring/decimal v0.0.0-20180607144847-19e3cb6c2930 h1:pSgp2x9zCkCjb8rxXFNpGE8hDIrt+UXW7jUQ5fbTlzM=
 github.com/shopspring/decimal v0.0.0-20180607144847-19e3cb6c2930/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=
+github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=
 github.com/snowflakedb/gosnowflake v1.1.8/go.mod h1:NsRq2QeiMUuoNUJhp5Q6xGC4uBrsS9g6LwZVEkTWgsE=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/stretchr/objx v0.0.0-20180531200725-0ab728f62c7f/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

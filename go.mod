@@ -1,7 +1,7 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.24.0
+	cloud.google.com/go v0.25.0
 	github.com/Masterminds/semver v1.4.2
 	github.com/MichaelS11/go-cql-driver v0.0.0-20180612014040-804dfcd83dce
 	github.com/SAP/go-hdb v0.12.1
@@ -61,10 +61,10 @@ require (
 	github.com/pkg/browser v0.0.0-20170505125900-c90ca0c84f15
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/prestodb/presto-go-client v0.0.0-20180604210701-a80ce5f9dc7f
+	github.com/prestodb/presto-go-client v0.0.0-20180706131729-d5ba9568cfcb
 	github.com/satori/go.uuid v1.2.0
 	github.com/sergi/go-diff v1.0.0
-	github.com/shopspring/decimal v0.0.0-20180607144847-19e3cb6c2930
+	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/snowflakedb/gosnowflake v1.1.8
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72
 	github.com/stretchr/objx v0.0.0-20180531200725-0ab728f62c7f
