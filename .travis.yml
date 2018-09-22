@@ -11,9 +11,9 @@ install:
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
-  - go get -v -u -tags 'all icu fts5 vtable json1' ./...
+  - go get -v -u -tags 'all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable' ./...
 script:
   - go test ./stmt/
-  - go build -tags 'all icu fts5 vtable json1'
+  - go build -tags 'all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable'
   - export USQL_SHOW_HOST_INFORMATION=false
   - bats -t ./contrib/tests.bats
