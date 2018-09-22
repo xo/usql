@@ -72,5 +72,5 @@ fi
 
 set -e
 
-echo docker run --detach --rm ${PARAMS[@]} $IMAGE
-     docker run --detach --rm ${PARAMS[@]} $IMAGE
+echo docker run --detach --rm ${PARAMS[@]} $IMAGE $EXTRA
+     docker run --detach --rm ${PARAMS[@]} $IMAGE $EXTRA

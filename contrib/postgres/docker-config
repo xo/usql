@@ -1,4 +1,5 @@
 NAME=postgres
-IMAGE=postgres
+IMAGE=postgres-x
 PUBLISH=5432:5432
 ENV="POSTGRES_PASSWORD=P4ssw0rd"
+EXTRA="-c ssl=on"
