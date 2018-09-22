@@ -1,0 +1,3 @@
+NAME=clickhouse
+IMAGE=yandex/clickhouse-server
+PUBLISH=9000:9000
