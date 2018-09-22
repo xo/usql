@@ -1,0 +1,4 @@
+NAME=postgres
+IMAGE=postgres
+PUBLISH=5432:5432
+ENV="POSTGRES_PASSWORD=P4ssw0rd"
