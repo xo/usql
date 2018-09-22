@@ -58,7 +58,7 @@ require (
 	github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce // indirect
 	github.com/snowflakedb/gosnowflake v1.1.11
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
-	github.com/xo/dburl v0.0.0-20180616042004-cd61869a0c08
+	github.com/xo/dburl v0.0.0-20180921222126-e33971d4c132
 	github.com/xo/tblfmt v0.0.0-20180624044826-2f8d72e9c74c
 	github.com/xo/terminfo v0.0.0-20180619023156-be18a85ebefc
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5

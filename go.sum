@@ -2,8 +2,6 @@ cloud.google.com/go v0.28.0 h1:KZ/88LWSw8NxMkjdQyX7LQSGR9PkHr4PaVuNm8zgFq0=
 cloud.google.com/go v0.28.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/Masterminds/semver v1.4.2 h1:WBLTQ37jOCzSLtXNdoo8bNM8876KhNqOKvrlGITgsTc=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
-github.com/MichaelS11/go-cql-driver v0.0.0-20180828181329-ee604f43fe0c h1:zkHy7lvO1baB3jnTqv1xtMx5EqE016W6ajQGHJK0Uz8=
-github.com/MichaelS11/go-cql-driver v0.0.0-20180828181329-ee604f43fe0c/go.mod h1:nW8K1gl1mu8o29Ns1Sv/EvYe9BBrh1T/GqucnYcO9PI=
 github.com/MichaelS11/go-cql-driver v0.0.0-20180921223547-562010467821 h1:GlMydUa57lyzEBc6A7Alm2atUj9GxamvcSoVHVbYkBw=
 github.com/MichaelS11/go-cql-driver v0.0.0-20180921223547-562010467821/go.mod h1:nW8K1gl1mu8o29Ns1Sv/EvYe9BBrh1T/GqucnYcO9PI=
 github.com/SAP/go-hdb v0.13.1 h1:BuZlUZtqbF/oVSQ8Vp+/+wOtcBLh55zwMV7XnvYcz8g=
@@ -62,8 +60,6 @@ github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMW
 github.com/hashicorp/go-uuid v1.0.0 h1:RS8zrF7PhGwyNPOtxSClXXj9HA8feRnJzgnI1RJCSnM=
 github.com/hashicorp/go-uuid v1.0.0/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/jackc/fake v0.0.0-20150926172116-812a484cc733/go.mod h1:WrMFNQdiFJ80sQsxDoMokWK1W5TQtxBFNpzWTD84ibQ=
-github.com/jackc/pgx v0.0.0-20180807142828-89f1e6ac7276 h1:1eFkcQVtFBPkGRs5oUM1OBsH/CW63KsR6hbvdpzAV10=
-github.com/jackc/pgx v0.0.0-20180807142828-89f1e6ac7276/go.mod h1:0ZGrqGqkRlliWnWB4zKnWtjbSWbGkVEFm4TeybAXq+I=
 github.com/jackc/pgx v3.2.0+incompatible h1:0Vihzu20St42/UDsvZGdNE6jak7oi/UOeMzwMPHkgFY=
 github.com/jackc/pgx v3.2.0+incompatible/go.mod h1:0ZGrqGqkRlliWnWB4zKnWtjbSWbGkVEFm4TeybAXq+I=
 github.com/jcmturner/gofork v0.0.0-20180107083740-2aebee971930/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
@@ -104,7 +100,8 @@ github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasO
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/xinsnake/go-http-digest-auth-client v0.4.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
-github.com/xo/dburl v0.0.0-20180616042004-cd61869a0c08/go.mod h1:g6rdekR8vgfVZrkLWfobLTm0kVez7GAN23mWtkGCJ14=
+github.com/xo/dburl v0.0.0-20180921222126-e33971d4c132 h1:cRKJ4yZeCZbCEXJmjZMa9s2z+3eavo2a4qu/usvVopI=
+github.com/xo/dburl v0.0.0-20180921222126-e33971d4c132/go.mod h1:g6rdekR8vgfVZrkLWfobLTm0kVez7GAN23mWtkGCJ14=
 github.com/xo/tblfmt v0.0.0-20180624044826-2f8d72e9c74c h1:ZXx3jA4UJjTJplBLctAhyLx/iWY8NAI5aZ3dgnJ9udk=
 github.com/xo/tblfmt v0.0.0-20180624044826-2f8d72e9c74c/go.mod h1:4R0eNZMeBNbY2GasmIWTcmSz1gns0IARcabierVNYFE=
 github.com/xo/terminfo v0.0.0-20180619023156-be18a85ebefc h1:v7JUq4Zo2NraxIGvOE1Nhwa8BITU3H5fecTxHGcpMdI=
