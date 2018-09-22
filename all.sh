@@ -2,4 +2,4 @@
 
 TAGS="all fts5 vtable json1"
 
-vgo build -tags "$TAGS" $@
+go build -tags "$TAGS" $@
