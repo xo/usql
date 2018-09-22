@@ -21,7 +21,7 @@ fi
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
-TAGS="most fts5 vtable json1"
+TAGS="most sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable"
 
 case $PLATFORM in
   windows)
@@ -54,7 +54,7 @@ mkdir -p $DIR
 
 pushd $SRC &> /dev/null
 
-vgo build \
+go build \
   -tags "$TAGS" \
   -ldflags="-s -w -X github.com/xo/usql/text.CommandName=$NAME -X github.com/xo/usql/text.CommandVersion=$VER" \
   -o $BIN

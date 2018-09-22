@@ -2,7 +2,7 @@ module github.com/xo/usql
 
 require (
 	cloud.google.com/go v0.28.0 // indirect
-	github.com/MichaelS11/go-cql-driver v0.0.0-20180828181329-ee604f43fe0c
+	github.com/MichaelS11/go-cql-driver v0.0.0-20180921223547-562010467821
 	github.com/SAP/go-hdb v0.13.1
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
 	github.com/VoltDB/voltdb-client-go v1.0.1
@@ -37,7 +37,7 @@ require (
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgx v0.0.0-20180807142828-89f1e6ac7276
+	github.com/jackc/pgx v3.2.0+incompatible
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kenshaw/cznic-ql v1.1.0
 	github.com/kr/pretty v0.1.0 // indirect
