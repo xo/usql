@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	// DRIVER: ql
-	"github.com/kenshaw/cznic-ql/ql"
+	"github.com/cznic/ql"
 
 	"github.com/xo/usql/drivers"
 )
