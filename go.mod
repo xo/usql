@@ -1,7 +1,7 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.28.0 // indirect
+	cloud.google.com/go v0.30.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.0.0-20180921223547-562010467821
 	github.com/SAP/go-hdb v0.13.1
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
@@ -13,7 +13,7 @@ require (
 	github.com/alecthomas/repr v0.0.0-20180920225502-7ed41413b477 // indirect
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
-	github.com/alexbrainman/odbc v0.0.0-20180623103511-d5d4e9f0506f
+	github.com/alexbrainman/odbc v0.0.0-20181014040027-2d7d0e45c787
 	github.com/amsokol/ignite-go-client v0.11.0
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 // indirect
@@ -27,11 +27,11 @@ require (
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
 	github.com/cznic/ql v1.2.0
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
-	github.com/denisenkom/go-mssqldb v0.0.0-20180901172138-1eb28afdf9b6
+	github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f
 	github.com/dlclark/regexp2 v1.1.6 // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-sql-driver/mysql v1.4.0
-	github.com/gocql/gocql v0.0.0-20180929150753-7ce14ecfedc6
+	github.com/gocql/gocql v0.0.0-20181017232604-769ad8b22407
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
@@ -40,22 +40,20 @@ require (
 	github.com/jackc/pgx v3.2.0+incompatible
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/kr/pty v1.1.3 // indirect
 	github.com/kshvakov/clickhouse v1.3.4
 	github.com/lib/pq v1.0.0
-	github.com/mattn/go-adodb v0.0.0-20180514035843-92645cc323df
+	github.com/mattn/go-adodb v0.0.0-20181006063745-71e75ebd1d86
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-sqlite3 v1.9.0
-	github.com/nakagami/firebirdsql v0.0.0-20180909024512-9a54e708dddc
+	github.com/nakagami/firebirdsql v0.0.0-20181010052830-d881f646c38b
 	github.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
-	github.com/prestodb/presto-go-client v0.0.0-20180706131729-d5ba9568cfcb
+	github.com/prestodb/presto-go-client v0.0.0-20181017163158-5b3197d92811
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
-	github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce // indirect
-	github.com/snowflakedb/gosnowflake v1.1.12
+	github.com/snowflakedb/gosnowflake v1.1.13
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/xo/dburl v0.0.0-20180921222126-e33971d4c132
 	github.com/xo/tblfmt v0.0.0-20180921222052-3ae3311c5ac9
@@ -63,9 +61,9 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4 // indirect
-	golang.org/x/net v0.0.0-20181003013248-f5e5bdd77824 // indirect
-	golang.org/x/sys v0.0.0-20180928133829-e4b3c5e90611 // indirect
+	golang.org/x/crypto v0.0.0-20181015023909-0c41d7ab0a0e // indirect
+	golang.org/x/net v0.0.0-20181017193950-04a2e542c03f // indirect
+	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba // indirect
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/rana/ora.v4 v4.1.15
