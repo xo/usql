@@ -1,0 +1,4 @@
+NAME=firebird
+IMAGE=jacobalberty/firebird
+PUBLISH=3050:3050
+ENV="FIREBIRD_DATABASE=booktest FIREBIRD_USER=booktest FIREBIRD_PASSWORD=booktest"
