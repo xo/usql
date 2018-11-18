@@ -1,6 +1,7 @@
 language: go
 go:
   - 1.10.x
+  - 1.11.x
   - tip
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
@@ -8,6 +9,7 @@ before_install:
   - sudo apt-get install -y unixodbc unixodbc-dev bats expect
   - go get github.com/mattn/goveralls
 install:
+  - export GO111MODULE=on
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
