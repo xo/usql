@@ -376,6 +376,7 @@ $ usql pgsql://user:pass@host/dbname
 $ usql postgres://user:pass@host:port/dbname
 $ usql pg://
 $ usql /var/run/postgresql
+$ usql pg://user:pass@host/dbname?sslmode=disable # Connect without SSL
 
 # connect to a mysql database
 $ usql my://user:pass@host/dbname
