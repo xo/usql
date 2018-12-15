@@ -310,7 +310,7 @@ loop:
 
 			// add space when remaining runes begin with space, and previous
 			// captured word did not
-			if sl := len(s); sl != 0 && IsSpace(r[0]) && !IsSpace(s[sl-1]) {
+			if sl := len(s); end > 0 && sl != 0 && IsSpace(r[0]) && !IsSpace(s[sl-1]) {
 				s = append(s, ' ')
 			}
 
