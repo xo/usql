@@ -37,7 +37,8 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f
 	github.com/dlclark/regexp2 v1.1.6 // indirect
-	github.com/go-ole/go-ole v1.2.1 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/go-ole/go-ole v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocql/gocql v0.0.0-20181124151448-70385f88b28b
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
@@ -52,6 +53,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-adodb v0.0.0-20181006063745-71e75ebd1d86
 	github.com/mattn/go-isatty v0.0.4
+	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/nakagami/firebirdsql v0.0.0-20181208074127-c61d7b6480f2
 	github.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
@@ -66,14 +68,14 @@ require (
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/xo/dburl v0.0.0-20181118001949-f3ca07bd6afc
 	github.com/xo/tblfmt v0.0.0-20181118003015-0b109994b29d
-	github.com/xo/terminfo v0.0.0-20180619023156-be18a85ebefc
+	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
-	golang.org/x/net v0.0.0-20181213202711-891ebc4b82d6 // indirect
+	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
-	golang.org/x/sys v0.0.0-20181213200352-4d1cda033e06 // indirect
+	golang.org/x/sys v0.0.0-20181220155339-97b4c2a92938 // indirect
 	google.golang.org/appengine v1.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.0 // indirect
