@@ -21,7 +21,7 @@ fi
 DIR=$BUILD/$PLATFORM/$VER
 BIN=$DIR/$NAME
 
-TAGS="most sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable"
+TAGS="most sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable"
 
 case $PLATFORM in
   windows)
@@ -30,7 +30,7 @@ case $PLATFORM in
   ;;
 
   linux|darwin)
-    TAGS="$TAGS no_adodb"
+    TAGS="$TAGS sqlite_icu no_adodb"
   ;;
 esac
 
