@@ -55,8 +55,7 @@ require (
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
-	github.com/nakagami/firebirdsql v0.0.0-20181208074127-c61d7b6480f2
-	github.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
+	github.com/nakagami/firebirdsql v0.0.0-20190105130315-4b22b1b6ef76
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20181210213652-c52a52637959
@@ -72,6 +71,7 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
+	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
