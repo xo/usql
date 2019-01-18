@@ -1,10 +1,10 @@
-# usql ![Build Status][travis-ci]
+# usql [![Build Status][travis-ci]](https://travis-ci.org/xo/usql)
 
 A universal command-line interface for PostgreSQL, MySQL, Oracle Database,
 SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
 including NoSQL and non-relational databases!
 
-[travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master (https://travis-ci.org/xo/usql)
+[travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master "Travis CI"
 
 [Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][]
 
@@ -30,7 +30,7 @@ for other databases.
 
 ## Installing
 
-`usql` can be installed by [via Release][], [via Homebrew][], [via Scoop][] or [via Go][]:
+`usql` can be installed [via Release][], [via Homebrew][], [via Scoop][] or [via Go][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos
