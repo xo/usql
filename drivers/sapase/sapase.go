@@ -40,7 +40,7 @@ func init() {
 			}
 
 			msg := err.Error()
-			if i := strings.LastIndex(msg, "mssql:"); i != -1 {
+			if i := strings.LastIndex(msg, "tds:"); i != -1 {
 				msg = msg[i:]
 			}
 
