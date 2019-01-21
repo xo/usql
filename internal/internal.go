@@ -11,7 +11,7 @@ package internal
 func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"adodb":      "adodb",       // github.com/mattn/go-adodb
-		"avatica":    "avatica",     // github.com/apache/calcite-avatica-go
+		"avatica":    "avatica",     // github.com/apache/calcite-avatica-go/v3
 		"cassandra":  "cql",         // github.com/MichaelS11/go-cql-driver
 		"clickhouse": "clickhouse",  // github.com/kshvakov/clickhouse
 		"couchbase":  "n1ql",        // github.com/couchbase/go_n1ql
@@ -25,7 +25,8 @@ func KnownBuildTags() map[string]string {
 		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
 		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto
-		"ql":         "ql",          // github.com/kenshaw/cznic-ql/ql/driver
+		"ql":         "ql",          // github.com/cznic/ql
+		"sapase":     "tds",         // github.com/thda/tds
 		"saphana":    "hdb",         // github.com/SAP/go-hdb/driver
 		"snowflake":  "snowflake",   // github.com/snowflakedb/gosnowflake
 		"sqlite3":    "sqlite3",     // github.com/mattn/go-sqlite3
