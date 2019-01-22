@@ -60,7 +60,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.1.15
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
-	github.com/thda/tds v0.1.1
+	github.com/thda/tds v0.1.2
 	github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c
 	github.com/xo/tblfmt v0.0.0-20181118003015-0b109994b29d
 	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
@@ -68,9 +68,9 @@ require (
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
-	golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc // indirect
+	golang.org/x/crypto v0.0.0-20190122013713-64072686203f // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190116161447-11f53e031339 // indirect
+	golang.org/x/sys v0.0.0-20190121090251-770c60269bf0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
