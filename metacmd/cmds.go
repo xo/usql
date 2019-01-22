@@ -78,7 +78,7 @@ func init() {
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
 			Process: func(p *Params) error {
-				out := p.Handler.IO().Stdout()
+				out := p.Handler.IO().Stderr()
 				if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
 					fmt.Fprintf(out, text.ConnInfo, u.Driver, u.DSN)
 					fmt.Fprintln(out)
