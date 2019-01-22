@@ -100,7 +100,7 @@ func run(args *Args, u *user.User) error {
 	defer l.Close()
 
 	// create handler
-	h := handler.New(l, u, wd, args.NoPassword)
+	h := handler.New(l, u, wd, args.NoPassword, args.AsJSON)
 
 	// force a password ...
 	dsn := args.DSN

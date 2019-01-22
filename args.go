@@ -23,6 +23,7 @@ type Args struct {
 
 	CommandOrFiles    []CommandOrFile
 	Out               string
+	AsJSON            bool
 	ForcePassword     bool
 	NoPassword        bool
 	NoRC              bool
@@ -30,6 +31,7 @@ type Args struct {
 	Variables         []string
 }
 
+// Next args parser
 func (args *Args) Next() (string, bool, error) {
 	if len(args.CommandOrFiles) == 0 {
 		return "", false, io.EOF
@@ -61,6 +63,7 @@ func (c commandOrFile) IsCumulative() bool {
 	return true
 }
 
+// NewArgs parsed
 func NewArgs() *Args {
 	args := new(Args)
 
@@ -74,6 +77,7 @@ func NewArgs() *Args {
 	kingpin.Flag("file", "execute commands from file and exit").Short('f').SetValue(commandOrFile{args, false})
 
 	// general flags
+	kingpin.Flag("as-json", "output as json").Short('j').BoolVar(&args.AsJSON)
 	kingpin.Flag("no-password", "never prompt for password").Short('w').BoolVar(&args.NoPassword)
 	kingpin.Flag("no-rc", "do not read start up file").Short('X').BoolVar(&args.NoRC)
 	kingpin.Flag("out", "output file").Short('o').StringVar(&args.Out)

@@ -17,6 +17,7 @@ import (
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/formatters"
 	"github.com/alecthomas/chroma/styles"
+	"github.com/mtxr/jsonfmt"
 	"github.com/xo/dburl"
 	"github.com/xo/tblfmt"
 
@@ -31,10 +32,11 @@ import (
 
 // Handler is a input process handler.
 type Handler struct {
-	l    rline.IO
-	user *user.User
-	wd   string
-	nopw bool
+	l      rline.IO
+	user   *user.User
+	wd     string
+	nopw   bool
+	asJSON bool
 
 	// singleLineMode is single line mode
 	singleLineMode bool
@@ -58,7 +60,7 @@ type Handler struct {
 }
 
 // New creates a new input handler.
-func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
+func New(l rline.IO, user *user.User, wd string, nopw bool, asJSON bool) *Handler {
 	// set help intercept
 	f, iactive := l.Next, l.Interactive()
 	if iactive {
@@ -84,11 +86,12 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	}
 
 	h := &Handler{
-		l:    l,
-		user: user,
-		wd:   wd,
-		nopw: nopw,
-		buf:  stmt.New(f),
+		l:      l,
+		user:   user,
+		wd:     wd,
+		nopw:   nopw,
+		asJSON: asJSON,
+		buf:    stmt.New(f),
 	}
 
 	if iactive {
@@ -868,6 +871,9 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 	}
 	defer q.Close()
 
+	if h.asJSON {
+		return jsonfmt.NewJSONEncoder(q).EncodeAll(w)
+	}
 	return tblfmt.NewTableEncoder(q).EncodeAll(w)
 }
 
@@ -1090,7 +1096,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		Pw:  h.l.Password,
 	}
 
-	p := New(l, h.user, filepath.Dir(path), h.nopw)
+	p := New(l, h.user, filepath.Dir(path), h.nopw, h.asJSON)
 	p.db, p.u = h.db, h.u
 
 	err = p.Run()
