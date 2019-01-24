@@ -209,6 +209,7 @@ supports:
 | ODBC (odbc)                  | od                                    |
 | OLE ODBC (oleodbc)           | oo, ole, oleodbc [adodb]              |
 | Presto (presto)              | pr, prestodb, prestos, prs, prestodbs |
+| SAP ASE (tds)                | ax, ase, sapase                       |
 | SAP HANA (hdb)               | sa, saphana, sap, hana                |
 | Snowflake (snowflake)        | sf                                    |
 | VoltDB (voltdb)              | vo, volt, vdb                         |
@@ -239,6 +240,7 @@ associated Go build tag:
 | Microsoft ADODB      | adodb      | [github.com/mattn/go-adodb][d-adodb]                                             |
 | ODBC                 | odbc       | [github.com/alexbrainman/odbc][d-odbc]                                           |
 | Presto               | presto     | [github.com/prestodb/presto-go-client/presto][d-presto]                          |
+| SAP ASE              | tds        | [github.com/thda/tds][d-tds]                                                     |
 | SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][d-hdb]                                            |
 | Snowflake            | snowflake  | [github.com/snowflakedb/gosnowflake][d-snowflake]                                |
 | VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                      |
@@ -844,6 +846,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-adodb]: https://github.com/mattn/go-adodb
 [d-odbc]: https://github.com/alexbrainman/odbc
 [d-presto]: https://github.com/prestodb/presto-go-client
+[d-tds]: htttps://github.com/thda/tds
 [d-hdb]: https://github.com/SAP/go-hdb
 [d-sqlago]: https://github.com/a-palchikov/sqlago
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
