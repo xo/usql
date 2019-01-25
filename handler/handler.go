@@ -868,7 +868,7 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 	}
 	defer q.Close()
 
-	return tblfmt.NewTableEncoder(q).EncodeAll(w)
+	return tblfmt.EncodeTableAll(w, q)
 }
 
 // execRows executes all the columns in the row.

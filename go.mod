@@ -36,7 +36,7 @@ require (
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-ole/go-ole v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gocql/gocql v0.0.0-20181124151448-70385f88b28b
+	github.com/gocql/gocql v0.0.0-20190122205811-30de9a1866a8
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
@@ -62,15 +62,15 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/thda/tds v0.1.2
 	github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c
-	github.com/xo/tblfmt v0.0.0-20181118003015-0b109994b29d
+	github.com/xo/tblfmt v0.0.0-20190125101128-77206d64be95
 	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
-	golang.org/x/crypto v0.0.0-20190122013713-64072686203f // indirect
+	golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190121090251-770c60269bf0 // indirect
+	golang.org/x/sys v0.0.0-20190124100055-b90733256f2e // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
