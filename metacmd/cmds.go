@@ -517,12 +517,12 @@ func init() {
 					return err
 				}
 
-				switch l {
-				case 0:
+				switch {
+				case l == 0:
 					if v, err = env.Ptoggle(field, extra); err != nil {
 						return err
 					}
-				case 1:
+				case l >= 1:
 					v, err = env.Pset(field, p.Get())
 					if err != nil {
 						return err
