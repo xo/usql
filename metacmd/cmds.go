@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/xo/dburl"
@@ -411,7 +412,7 @@ func init() {
 			},
 		},
 
-		Set: {
+		SetVar: {
 			Section: SectionVariables,
 			Name:    "set",
 			Desc:    "set internal variable, or list all if no parameters,[NAME [VALUE]]",
@@ -444,6 +445,115 @@ func init() {
 			Desc:    "unset (delete) internal variable,NAME",
 			Process: func(p *Params) error {
 				return env.Unset(p.Get())
+			},
+		},
+
+		SetFormatVar: {
+			Section: SectionFormatting,
+			Name:    "pset",
+			Desc:    "set table output option,[NAME [VALUE]]",
+			Aliases: map[string]string{
+				"a": "toggle between unaligned and aligned output mode",
+				"C": "set table title, or unset if none,[STRING]",
+				"f": "show or set field separator for unaligned query output,[STRING]",
+				"H": "toggle HTML output mode",
+				"T": "set HTML <table> tag attributes, or unset if none,[STRING]",
+				"t": "show only rows,[on|off]",
+				"x": "toggle expanded output,[on|off|auto]",
+			},
+			Process: func(p *Params) error {
+				out, l := p.Handler.IO().Stdout(), len(p.Params)
+
+				// display all variables
+				if p.Name == "pset" && l == 0 {
+					vars := env.Pall()
+					n := make([]string, len(vars))
+					var i, w int
+					for k := range vars {
+						n[i], w = k, max(len(k), w)
+						i++
+					}
+					sort.Strings(n)
+
+					for _, k := range n {
+						v := vars[k]
+						switch k {
+						case "fieldsep", "recordsep", "null":
+							v = strconv.QuoteToASCII(v)
+
+						case "tableattr", "title":
+							if v != "" {
+								v = strconv.QuoteToASCII(v)
+							}
+						}
+						fmt.Fprintln(out, k+strings.Repeat(" ", w-len(k)), v)
+					}
+					return nil
+				}
+
+				var field, extra string
+				switch p.Name {
+				case "pset":
+					field = p.Get()
+					l--
+				case "a":
+					field = "format"
+				case "C":
+					field = "title"
+				case "f":
+					field = "fieldsep"
+				case "H":
+					field, extra = "format", "html"
+				case "T":
+					field = "tableattr"
+				case "t":
+					field = "tuples_only"
+				case "x":
+					field = "expanded"
+				}
+
+				v, err := env.Pget(field)
+				if err != nil {
+					return err
+				}
+
+				switch l {
+				case 0:
+					if v, err = env.Ptoggle(field, extra); err != nil {
+						return err
+					}
+				case 1:
+					v, err = env.Pset(field, p.Get())
+					if err != nil {
+						return err
+					}
+					// short circuit to replicate behavior of psql
+					if field == "footer" {
+						return nil
+					}
+				}
+
+				// special field name for expanded, when = auto
+				if field == "expanded" && v == "auto" {
+					field = "expanded_auto"
+				}
+
+				// format output
+				mask := text.FormatFieldNameSetMap[field]
+				unsetMask := text.FormatFieldNameUnsetMap[field]
+				switch {
+				case strings.Contains(mask, "%d"):
+					i, _ := strconv.Atoi(v)
+					fmt.Fprintf(out, mask, i)
+				case unsetMask != "" && v == "":
+					fmt.Fprint(out, unsetMask)
+				case !strings.Contains(mask, "%"):
+					fmt.Fprint(out, mask)
+				default:
+					fmt.Fprintf(out, mask, v)
+				}
+				fmt.Fprintln(out)
+				return nil
 			},
 		},
 	}

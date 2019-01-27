@@ -91,6 +91,17 @@ func run(args *Args, u *user.User) error {
 			env.Unset(v)
 		}
 	}
+	for _, v := range args.PVariables {
+		if i := strings.Index(v, "="); i != -1 {
+			if _, err = env.Pset(v[:i], v[i+1:]); err != nil {
+				return err
+			}
+		} else {
+			if _, err = env.Ptoggle(v, ""); err != nil {
+				return err
+			}
+		}
+	}
 
 	// create input/output
 	l, err := rline.New(len(args.CommandOrFiles) != 0, args.Out, env.HistoryFile(u))

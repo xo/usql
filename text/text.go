@@ -25,7 +25,7 @@ var (
 
 	InvalidCommand = `Invalid command \%s. Try \? for help.`
 
-	ExtraArgumentIgnored = `\%s: extra argument "%s" ignored`
+	ExtraArgumentIgnored = `\%s: extra argument %q ignored`
 
 	MissingRequiredArg = `\%s: missing required argument`
 
@@ -37,9 +37,9 @@ var (
 
 	ConnInfo = `Connected with driver %s (%s)`
 
-	BadPassFile = `could not open "%s", not a file`
+	BadPassFile = `could not open %q, not a file`
 
-	BadPassFileMode = `password file "%s" has group or world access`
+	BadPassFileMode = `password file %q has group or world access`
 
 	BadPassFileLine = `line %d of password file incorrectly formatted`
 
@@ -57,11 +57,11 @@ var (
 
 	ConfirmPassword = `Confirm password: `
 
-	PasswordChangeFailed = `\password for "%s" failed: %v`
+	PasswordChangeFailed = `\password for %q failed: %v`
 
-	CouldNotSetVariable = `could not set variable "%s"`
+	CouldNotSetVariable = `could not set variable %q`
 
-	//PasswordChangeSucceeded = `\password succeeded for "%s"`
+	//PasswordChangeSucceeded = `\password succeeded for %q`
 
 	HelpDesc string
 
@@ -75,6 +75,39 @@ var (
 		{`?`, `for help with ` + CommandName + ` commands`},
 		{`g`, `or terminate with semicolon to execute query`},
 		{`q`, `to quit`},
+	}
+
+	UnknownFormatFieldName = `unknown option: %s`
+
+	FormatFieldInvalidValue = `unrecognized value %q for %q: %s expected`
+
+	FormatFieldNameSetMap = map[string]string{
+		`border`:                   `Border style is %d.`,
+		`columns`:                  `Target width is %d.`,
+		`expanded`:                 `Expanded display is %s.`,
+		`expanded_auto`:            `Expanded display is used automatically.`,
+		`fieldsep`:                 `Field separator is %q.`,
+		`fieldsep_zero`:            `Field separator is zero byte.`,
+		`footer`:                   `Default footer is %s.`,
+		`format`:                   `Output format is %s.`,
+		`linestyle`:                `Line style is %s.`,
+		`null`:                     `Null display is %q.`,
+		`numericlocale`:            `Locale-adjusted numeric output is %s.`,
+		`pager`:                    `Pager usage is %s.`,
+		`pager_min_lines`:          `Pager won't be used for less than %d line(s).`,
+		`recordsep`:                `Field separator is %q.`,
+		`recordsep_zero`:           `Record separator is zero byte.`,
+		`tableattr`:                `Table attributes are %q.`,
+		`title`:                    `Title is %q.`,
+		`tuples_only`:              `Tuples only is %s.`,
+		`unicode_border_linestyle`: `Unicode border line style is %q.`,
+		`unicode_column_linestyle`: `Unicode column line style is %q.`,
+		`unicode_header_linestyle`: `Unicode header line style is %q.`,
+	}
+
+	FormatFieldNameUnsetMap = map[string]string{
+		`tableattr`: `Table attributes unset.`,
+		`title`:     `Title is unset.`,
 	}
 )
 
@@ -93,22 +126,22 @@ func init() {
 var spaceRE = regexp.MustCompile(`\s+`)
 
 // Command returns the command name without spaces.
-func Command() string {
+var Command = func() string {
 	return spaceRE.ReplaceAllString(CommandName, "")
 }
 
 // CommandLower returns the lower case command name without spaces.
-func CommandLower() string {
+var CommandLower = func() string {
 	return strings.ToLower(Command())
 }
 
 // CommandUpper returns the upper case command name without spaces.
-func CommandUpper() string {
+var CommandUpper = func() string {
 	return strings.ToUpper(Command())
 }
 
-// UsageTemplate returns the usage template
-func UsageTemplate() string {
+// UsageTemplate returns the usage template.
+var UsageTemplate = func() string {
 	n := CommandLower()
 
 	return n + `, ` + Banner + `

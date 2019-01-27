@@ -33,7 +33,7 @@ func (s Section) String() string {
 // SectionOrder is the order of sections to display via Listing.
 var SectionOrder = []Section{
 	SectionGeneral, SectionHelp, SectionQueryBuffer,
-	SectionInputOutput, /*SectionInformational, SectionFormatting,*/
+	SectionInputOutput /*, SectionInformational */, SectionFormatting,
 	SectionTransaction,
 	SectionConnection, SectionOperatingSystem, SectionVariables,
 }
@@ -60,7 +60,9 @@ func Listing(w io.Writer) {
 				}
 				aliases = append(aliases, alias)
 			}
-			sort.Strings(aliases)
+			sort.Slice(aliases, func(i, j int) bool {
+				return strings.ToLower(aliases[i]) < strings.ToLower(aliases[j])
+			})
 
 			for _, alias := range aliases {
 				s, opts := optText(cmd.Aliases[alias])

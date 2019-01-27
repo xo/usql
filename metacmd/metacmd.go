@@ -94,9 +94,12 @@ const (
 	// Prompt is the variable prompt meta command (\prompt).
 	Prompt
 
-	// Set is the variable set meta command (\set).
-	Set
+	// SetVar is the set variable meta command (\set).
+	SetVar
 
 	// Unset is the variable unset meta command (\unset).
 	Unset
+
+	// SetFormatVar is the set format variable meta commands (\pset, \a, \C, \f, \H, \t, \T, \x).
+	SetFormatVar
 )
