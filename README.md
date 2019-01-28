@@ -846,7 +846,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-adodb]: https://github.com/mattn/go-adodb
 [d-odbc]: https://github.com/alexbrainman/odbc
 [d-presto]: https://github.com/prestodb/presto-go-client
-[d-tds]: htttps://github.com/thda/tds
+[d-tds]: https://github.com/thda/tds
 [d-hdb]: https://github.com/SAP/go-hdb
 [d-sqlago]: https://github.com/a-palchikov/sqlago
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
