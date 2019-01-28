@@ -82,10 +82,10 @@ func NewArgs() *Args {
 	kingpin.Flag("out", "output file").Short('o').StringVar(&args.Out)
 	kingpin.Flag("password", "force password prompt (should happen automatically)").Short('W').BoolVar(&args.ForcePassword)
 	kingpin.Flag("single-transaction", "execute as a single transaction (if non-interactive)").Short('1').BoolVar(&args.SingleTransaction)
-	kingpin.Flag("variable", "set variable").Short('v').PlaceHolder("NAME=VALUE").StringsVar(&args.Variables)
+	kingpin.Flag("set", "set variable NAME to VALUE").Short('v').PlaceHolder(", --variable=NAME=VALUE").StringsVar(&args.Variables)
 
 	// pset
-	kingpin.Flag("pset", `set printing option VAR to ARG (see \pset command)`).Short('P').PlaceHolder("VAR=ARG").StringsVar(&args.PVariables)
+	kingpin.Flag("pset", `set printing option VAR to ARG (see \pset command)`).Short('P').PlaceHolder("VAR[=ARG]").StringsVar(&args.PVariables)
 
 	// pset flags
 	type psetconfig struct {
@@ -131,14 +131,14 @@ func NewArgs() *Args {
 	}
 
 	// add --set as a hidden alias for --variable
-	kingpin.Flag("set", "set variable").Hidden().StringsVar(&args.Variables)
+	kingpin.Flag("variable", "set variable NAME to VALUE").Hidden().StringsVar(&args.Variables)
 
 	// add --version flag
 	kingpin.Flag("version", "display version and exit").PreAction(func(*kingpin.ParseContext) error {
 		fmt.Fprintln(os.Stdout, text.CommandName, text.CommandVersion)
 		os.Exit(0)
 		return nil
-	}).Bool()
+	}).Short('V').Bool()
 
 	// hide help flag
 	kingpin.HelpFlag.Short('h').Hidden()
