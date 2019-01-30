@@ -62,7 +62,7 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/thda/tds v0.1.2
 	github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c
-	github.com/xo/tblfmt v0.0.0-20190128080608-1c1f094c2e48
+	github.com/xo/tblfmt v0.0.0-20190130125850-facad3fe7ef8
 	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
