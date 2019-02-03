@@ -16,8 +16,6 @@ require (
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/chzyer/logex v1.1.10 // indirect
-	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/couchbase/go-couchbase v0.0.0-20190117181324-d904413d884d // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
@@ -57,10 +55,10 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
-	github.com/snowflakedb/gosnowflake v1.1.15
+	github.com/snowflakedb/gosnowflake v1.1.16
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
-	github.com/thda/tds v0.1.2
+	github.com/thda/tds v0.1.3
 	github.com/xo/dburl v0.0.0-20190203050942-98997a05b24f
 	github.com/xo/tblfmt v0.0.0-20190130125850-facad3fe7ef8
 	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
@@ -70,7 +68,6 @@ require (
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190124100055-b90733256f2e // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
