@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gohxs/readline"
-	"github.com/mattn/go-isatty"
+	isatty "github.com/mattn/go-isatty"
 )
 
 var (

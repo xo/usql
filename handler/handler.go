@@ -869,6 +869,7 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 	defer q.Close()
 
 	return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
+	//return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()), tblfmt.WithByteBufferPool(pool))
 }
 
 // execRows executes all the columns in the row.

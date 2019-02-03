@@ -391,7 +391,7 @@ func init() {
 			Section: SectionVariables,
 			Name:    "prompt",
 			Min:     1,
-			Desc:    "prompt user to set variable,[-TYPE] [TEXT] NAME",
+			Desc:    "prompt user to set variable,[-TYPE] [PROMPT] <VAR>",
 			Process: func(p *Params) error {
 				typ, n := p.GetOptional("string"), p.Get()
 				if n == "" {
@@ -464,7 +464,7 @@ func init() {
 			Process: func(p *Params) error {
 				out, l := p.Handler.IO().Stdout(), len(p.Params)
 
-				// display all variables
+				// display variables
 				if p.Name == "pset" && l == 0 {
 					vars := env.Pall()
 					n := make([]string, len(vars))
@@ -527,13 +527,9 @@ func init() {
 					if err != nil {
 						return err
 					}
-					// short circuit to replicate behavior of psql
-					if field == "footer" {
-						return nil
-					}
 				}
 
-				// special field name for expanded, when = auto
+				// special replacement name for expanded field, when 'auto'
 				if field == "expanded" && v == "auto" {
 					field = "expanded_auto"
 				}
