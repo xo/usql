@@ -1,6 +1,5 @@
 language: go
 go:
-  - 1.10.x
   - 1.11.x
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
@@ -8,13 +7,13 @@ before_install:
   - sudo apt-get install -y unixodbc unixodbc-dev bats expect
   - go get github.com/mattn/goveralls
 install:
-  - export GO111MODULE=on
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
   - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
-  - go get -v -u -tags 'all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable' ./...
 script:
-  - go test ./stmt/
-  - go build -tags 'all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable'
+  - export GO111MODULE=on
+  - export TAGS='all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable'
+  - go test -v -x -tags="$TAGS" ./...
+  - go build -tags="$TAGS" -o usql
   - export USQL_SHOW_HOST_INFORMATION=false
   - bats -t ./contrib/tests.bats
