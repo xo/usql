@@ -38,7 +38,7 @@ done
 
 # setup params
 declare -a PARAMS
-for k in NAME PUBLISH NETWORK VOLUME ENV NETWORK; do
+for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED; do
   n=$(tr 'A-Z' 'a-z' <<< "$k")
   v=$(eval echo "\$$k")
   if [ ! -z "$v" ]; then
@@ -48,10 +48,12 @@ for k in NAME PUBLISH NETWORK VOLUME ENV NETWORK; do
   fi
 done
 
-echo "IMAGE:   $IMAGE"
-echo "PUBLISH: $PUBLISH"
-echo "UPDATE:  $UPDATE"
-echo "NETWORK: $NETWORK"
+echo "IMAGE:      $IMAGE (update: $UPDATE)"
+echo "PUBLISH:    $PUBLISH"
+echo "ENV:        $ENV"
+echo "VOLUME:     $VOLUME"
+echo "NETWORK:    $NETWORK"
+echo "PRIVILEGED: $PRIVILEGED"
 
 if [ "$UPDATE" -eq "1" ]; then
   if [ ! -f $BASE/Dockerfile ]; then

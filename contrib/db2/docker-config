@@ -1,0 +1,6 @@
+NAME=db2
+PUBLISH="50000:50000 55000:55000"
+IMAGE=store/ibmcorp/db2_developer_c:11.1.4.4-x86_64
+ENV="LICENSE=accept DB2INSTANCE=db2inst1 DB2INST1_PASSWORD=P4ssw0rd DBNAME=testdb"
+PRIVILEGED=true
+VOLUME=/media/src/opt/db2:/database

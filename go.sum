@@ -176,6 +176,8 @@ github.com/xinsnake/go-http-digest-auth-client v0.4.0 h1:tTaEBUSDiMi7RDIuj0fy/ps
 github.com/xinsnake/go-http-digest-auth-client v0.4.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
 github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c h1:yFwDkVLWRT/kAnip/qpOJSmgWVof5HhOF/k3iEArNdY=
 github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c/go.mod h1:g6rdekR8vgfVZrkLWfobLTm0kVez7GAN23mWtkGCJ14=
+github.com/xo/dburl v0.0.0-20190203050942-98997a05b24f h1:mpE3N7Ao9j/miA6UsIpIsm925lXkff09BVQykBPtP9I=
+github.com/xo/dburl v0.0.0-20190203050942-98997a05b24f/go.mod h1:g6rdekR8vgfVZrkLWfobLTm0kVez7GAN23mWtkGCJ14=
 github.com/xo/tblfmt v0.0.0-20190130125850-facad3fe7ef8 h1:7ZrYN1NqzyGS+GdNsFjTs+TlwZYNpMhktgdTBrHzc2c=
 github.com/xo/tblfmt v0.0.0-20190130125850-facad3fe7ef8/go.mod h1:bSA7wykaIHZTJICoVhnHeBrORU6M05xMBQxrp9PfUog=
 github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d h1:Twjwthj6dtuj9d1B5pkypN140xps3nIY1Q/1NlE1n8k=

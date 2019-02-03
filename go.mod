@@ -61,7 +61,7 @@ require (
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/thda/tds v0.1.2
-	github.com/xo/dburl v0.0.0-20190121004108-4a9410ecb80c
+	github.com/xo/dburl v0.0.0-20190203050942-98997a05b24f
 	github.com/xo/tblfmt v0.0.0-20190130125850-facad3fe7ef8
 	github.com/xo/terminfo v0.0.0-20181215143347-9ba9fdd85c0d
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
