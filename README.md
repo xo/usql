@@ -271,6 +271,7 @@ $ usql pg://localhost/ -f script.sql
 Supported command-line options:
 
 ```sh
+$ usql --help
 usql, the universal command-line interface for SQL databases
 
 Usage:
@@ -280,15 +281,28 @@ Arguments:
   DSN                            database url
 
 Options:
-  -c, --command=COMMAND ...      run only single command (SQL or internal) and exit
-  -f, --file=FILE ...            execute commands from file and exit
-  -w, --no-password              never prompt for password
-  -X, --no-rc                    do not read start up file
-  -o, --out=OUT                  output file
-  -W, --password                 force password prompt (should happen automatically)
-  -1, --single-transaction       execute as a single transaction (if non-interactive)
-  -v, --variable=NAME=VALUE ...  set variable
-      --version                  display version and exit
+  -c, --command=COMMAND ...    run only single command (SQL or internal) and exit
+  -f, --file=FILE ...          execute commands from file and exit
+  -w, --no-password            never prompt for password
+  -X, --no-rc                  do not read start up file
+  -o, --out=OUT                output file
+  -W, --password               force password prompt (should happen automatically)
+  -1, --single-transaction     execute as a single transaction (if non-interactive)
+  -v, --set=, --variable=NAME=VALUE ...
+                               set variable NAME to VALUE
+  -P, --pset=VAR[=ARG] ...     set printing option VAR to ARG (see \pset command)
+  -A, --no-align               unaligned table output mode
+  -F, --field-separator=TEXT   field separator for unaligned output (default, "|")
+  -H, --html                   HTML table output mode
+  -R, --record-separator=TEXT  record separator for unaligned output (default, \n)
+  -t, --tuples-only            print rows only
+  -T, --table-attr=TEXT        set HTML table tag attributes (e.g., width, border)
+  -x, --expanded               turn on expanded table output
+  -z, --field-separator-zero   set field separator for unaligned output to zero byte
+  -0, --record-separator-zero  set record separator for unaligned output to zero byte
+  -J, --json                   JSON output mode
+  -C, --csv                    CSV output mode
+  -V, --version                display version and exit
 ```
 
 ### Connecting to Databases
@@ -309,16 +323,16 @@ Connection strings look like the following:
 
 Where the above are:
 
-| Component          | Description                                                               |
-|--------------------|---------------------------------------------------------------------------|
-| driver             | driver name or alias                                                      |
-| transport          | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>           |
-| user               | username                                                                  |
-| pass               | password                                                                  |
-| host               | hostname                                                                  |
-| dbname<sup>*</sup> | database name, instance, or service name/ID                               |
-| ?opt1=a&...        | database driver options (see respective SQL driver for available options) |
-| /path/to/file      | a path on disk                                                            |
+| Component          | Description                                                                          |
+|--------------------|--------------------------------------------------------------------------------------|
+| driver             | driver name or alias                                                                 |
+| transport          | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>                      |
+| user               | username                                                                             |
+| pass               | password                                                                             |
+| host               | hostname                                                                             |
+| dbname<sup>*</sup> | database name, instance, or service name/ID                                          |
+| ?opt1=a&...        | additional database driver options (see respective SQL driver for available options) |
+| /path/to/file      | a path on disk                                                                       |
 
 <i><sup><b>*</b></sup> for Microsoft SQL Server, the syntax to supply an
 instance and database name is `/instance/dbname`, where `/instance` is
@@ -422,6 +436,25 @@ $ usql file:/path/to/dbname.sqlite3
 # connect to a adodb ole resource (windows only)
 $ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
 $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
+
+# connect with ODBC driver (requires building with odbc tag)
+$ cat /etc/odbcinst.ini
+[DB2]
+Description=DB2 driver
+Driver=/opt/db2/clidriver/lib/libdb2.so
+FileUsage = 1
+DontDLClose = 1
+
+[PostgreSQL ANSI]
+Description=PostgreSQL ODBC driver (ANSI version)
+Driver=psqlodbca.so
+Setup=libodbcpsqlS.so
+Debug=0
+CommLog=1
+UsageCount=1
+# connect to db2, postgres databases using ODBC
+$ usql odbc+DB2://user:pass@localhost/dbname
+$ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trace.log
 ```
 
 ### Executing Queries and Commands
@@ -481,51 +514,61 @@ Type "help" for help.
 
 (not connected)=> \?
 General
-  \q                    quit usql
-  \copyright            show usql usage and distribution terms
-  \drivers              display information about available database drivers
-  \g [FILE] or ;        execute query (and send results to file or |pipe)
-  \gexec                execute query and execute each value of the result
-  \gset [PREFIX]        execute query and store results in usql variables
+  \q                              quit usql
+  \copyright                      show usql usage and distribution terms
+  \drivers                        display information about available database drivers
+  \g [FILE] or ;                  execute query (and send results to file or |pipe)
+  \gexec                          execute query and execute each value of the result
+  \gset [PREFIX]                  execute query and store results in usql variables
 
 Help
-  \? [commands]         show help on backslash commands
-  \? options            show help on usql command-line options
-  \? variables          show help on special variables
+  \? [commands]                   show help on backslash commands
+  \? options                      show help on usql command-line options
+  \? variables                    show help on special variables
 
 Query Buffer
-  \e [FILE] [LINE]      edit the query buffer (or file) with external editor
-  \p                    show the contents of the query buffer
-  \raw                  show the raw (non-interpolated) contents of the query buffer
-  \r                    reset (clear) the query buffer
-  \w FILE               write query buffer to file
+  \e [FILE] [LINE]                edit the query buffer (or file) with external editor
+  \p                              show the contents of the query buffer
+  \raw                            show the raw (non-interpolated) contents of the query buffer
+  \r                              reset (clear) the query buffer
+  \w FILE                         write query buffer to file
 
 Input/Output
-  \echo [STRING]        write string to standard output
-  \i FILE               execute commands from file
-  \ir FILE              as \i, but relative to location of current script
+  \echo [STRING]                  write string to standard output
+  \i FILE                         execute commands from file
+  \ir FILE                        as \i, but relative to location of current script
+
+Formatting
+  \pset [NAME [VALUE]]            set table output option
+  \a                              toggle between unaligned and aligned output mode
+  \C [STRING]                     set table title, or unset if none
+  \f [STRING]                     show or set field separator for unaligned query output
+  \H                              toggle HTML output mode
+  \t [on|off]                     show only rows
+  \T [STRING]                     set HTML <table> tag attributes, or unset if none
+  \x [on|off|auto]                toggle expanded output
 
 Transaction
-  \begin                begin a transaction
-  \commit               commit current transaction
-  \rollback             rollback (abort) current transaction
+  \begin                          begin a transaction
+  \commit                         commit current transaction
+  \rollback                       rollback (abort) current transaction
 
 Connection
-  \c URL                connect to database with url
-  \c DRIVER PARAMS...   connect to database with SQL driver and parameters
-  \Z                    close database connection
-  \password [USERNAME]  change the password for a user
-  \conninfo             display information about the current database connection
+  \c URL                          connect to database with url
+  \c DRIVER PARAMS...             connect to database with SQL driver and parameters
+  \Z                              close database connection
+  \password [USERNAME]            change the password for a user
+  \conninfo                       display information about the current database connection
 
 Operating System
-  \cd [DIR]             change the current working directory
-  \setenv NAME [VALUE]  set or unset environment variable
-  \! [COMMAND]          execute command in shell or start interactive shell
+  \cd [DIR]                       change the current working directory
+  \setenv NAME [VALUE]            set or unset environment variable
+  \! [COMMAND]                    execute command in shell or start interactive shell
 
 Variables
-  \prompt [TEXT] NAME   prompt user to set internal variable
-  \set [NAME [VALUE]]   set internal variable, or list all if no parameters
-  \unset NAME           unset (delete) internal variable
+  \prompt [-TYPE] [PROMPT] <VAR>  prompt user to set variable
+  \set [NAME [VALUE]]             set internal variable, or list all if no parameters
+  \unset NAME                     unset (delete) internal variable
 ```
 
 ## Features and Compatibility
@@ -587,7 +630,7 @@ pg:booktest@localhost=>
 **Note**: variables contained within other strings will **NOT** be
 interpolated:
 
-```
+```sh
 pg:booktest@localhost=> select ':FOO';
   ?column?
 +----------+
@@ -722,7 +765,7 @@ default, `usql` formats time/date columns as [RFC3339Nano][go-time], and can be
 set using the [`TIME_FORMAT` variable][variables]:
 
 ```sh
-$ ./usql pg://
+$ usql pg://
 Connected with driver postgres (PostgreSQL 9.6.9)
 Type "help" for help.
 
