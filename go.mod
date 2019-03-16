@@ -2,7 +2,7 @@ module github.com/xo/usql
 
 require (
 	cloud.google.com/go v0.36.0 // indirect
-	github.com/MichaelS11/go-cql-driver v0.0.0-20190302044339-0b0c78ad339b
+	github.com/MichaelS11/go-cql-driver v0.0.0-20190315050006-6dafc35aac9b
 	github.com/SAP/go-hdb v0.13.2
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
 	github.com/VoltDB/voltdb-client-go v1.0.1

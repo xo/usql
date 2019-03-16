@@ -12,6 +12,8 @@ github.com/Masterminds/semver v1.4.2 h1:WBLTQ37jOCzSLtXNdoo8bNM8876KhNqOKvrlGITg
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/MichaelS11/go-cql-driver v0.0.0-20190302044339-0b0c78ad339b h1:ee5b6kjZG7dvKUkC1O6CzjdVJ8DKms2dYBitv3fn6Yg=
 github.com/MichaelS11/go-cql-driver v0.0.0-20190302044339-0b0c78ad339b/go.mod h1:nW8K1gl1mu8o29Ns1Sv/EvYe9BBrh1T/GqucnYcO9PI=
+github.com/MichaelS11/go-cql-driver v0.0.0-20190315050006-6dafc35aac9b h1:N6NSfpXMN3QhfrSo70Rd7HcBH/T/7aykQLIsBkFWRaM=
+github.com/MichaelS11/go-cql-driver v0.0.0-20190315050006-6dafc35aac9b/go.mod h1:nW8K1gl1mu8o29Ns1Sv/EvYe9BBrh1T/GqucnYcO9PI=
 github.com/SAP/go-hdb v0.13.2 h1:19+oZb2RGKCJpSZjFN/dcdOuSACSWGJlinHwgVyvUnM=
 github.com/SAP/go-hdb v0.13.2/go.mod h1:etBT+FAi1t5k3K3tf5vQTnosgYmhDkRi8jEnQqCnxF0=
 github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc h1:MhBvG7RLaLqlyjxMR6of35vt6MVQ+eXMcgn9X/sy0FE=
