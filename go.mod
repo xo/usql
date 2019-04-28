@@ -16,9 +16,9 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/couchbase/go-couchbase v0.0.0-20190416175839-bd7bbd52bb9b // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20190425215726-2f7ed8e51683 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
-	github.com/couchbase/gomemcached v0.0.0-20190418210050-dc9ffaf392f0 // indirect
+	github.com/couchbase/gomemcached v0.0.0-20190420034518-d7858f29a056 // indirect
 	github.com/couchbase/goutils v0.0.0-20190315194238-f9d42b11473b // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect
@@ -29,11 +29,11 @@ require (
 	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect
-	github.com/denisenkom/go-mssqldb v0.0.0-20190418034912-35416408c946
+	github.com/denisenkom/go-mssqldb v0.0.0-20190423183735-731ef375ac02
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gocql/gocql v0.0.0-20190418090649-59a610c947c5
+	github.com/gocql/gocql v0.0.0-20190423091413-b99afaf3b163
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
@@ -67,13 +67,12 @@ require (
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
-	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480 // indirect
-	golang.org/x/net v0.0.0-20190419010253-1f3472d942ba // indirect
-	golang.org/x/sync v0.0.0-20190412183630-56d357773e84 // indirect
-	golang.org/x/sys v0.0.0-20190418153312-f0ce4c0180be // indirect
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
+	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sys v0.0.0-20190426135247-a129542de9ae // indirect
+	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/rana/ora.v4 v4.1.15
 )
-
-replace github.com/golang/lint => golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3
