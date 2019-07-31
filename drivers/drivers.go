@@ -454,3 +454,9 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 		}
 	}
 }
+
+// NextResultSet is a wrapper around the go1.8 introduced
+// sql.Rows.NextResultSet call.
+func NextResultSet(q *sql.Rows) bool {
+	return q.NextResultSet()
+}

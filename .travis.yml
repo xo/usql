@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.11.x
+  - 1.12.x
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get -qq update
