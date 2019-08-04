@@ -32,6 +32,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20190724012636-11b2859924c1
 	github.com/dlclark/regexp2 v1.1.8 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/frankban/quicktest v1.4.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocql/gocql v0.0.0-20190728105348-76e94bbd190c
@@ -48,6 +49,7 @@ require (
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/nakagami/firebirdsql v0.0.0-20190609025626-90ca2b3395f5
+	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20190703204924-a4497272570e
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
@@ -63,7 +65,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190730183949-1393eb018365 // indirect
+	golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/rana/ora.v4 v4.1.15
 )
