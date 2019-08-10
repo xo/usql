@@ -110,8 +110,8 @@ github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964/go.mod h1:Xd9
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/denisenkom/go-mssqldb v0.0.0-20190724012636-11b2859924c1 h1:vHTzcl17WBhVXW/KIk2wAoWva7w5WhdNsZtw4caVZZI=
-github.com/denisenkom/go-mssqldb v0.0.0-20190724012636-11b2859924c1/go.mod h1:uU0N10vx1abI4qeVe79CxepBP6PPREVTgMS5Gx6/mOk=
+github.com/denisenkom/go-mssqldb v0.0.0-20190806190131-db2462fef53b h1:C8eKel5CV265bq4KKOvyMKyNK4NPPr1mImhqm8xcK7k=
+github.com/denisenkom/go-mssqldb v0.0.0-20190806190131-db2462fef53b/go.mod h1:uU0N10vx1abI4qeVe79CxepBP6PPREVTgMS5Gx6/mOk=
 github.com/dlclark/regexp2 v1.1.6 h1:CqB4MjHw0MFCDj+PHHjiESmHX+N7t0tJzKvC6M97BRg=
 github.com/dlclark/regexp2 v1.1.6/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dlclark/regexp2 v1.1.8 h1:PaGxkppZw/DfM3uf94XCjAdwgUCx4yVAI203rNk8xDs=
@@ -206,8 +206,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/kshvakov/clickhouse v1.3.9 h1:fGK8joFwxh/9HHOe+EDa0/7WnNiKYTLrjE46IhERe1U=
-github.com/kshvakov/clickhouse v1.3.9/go.mod h1:DMzX7FxRymoNkVgizH0DWAL8Cur7wHLgx3MUnGwJqpE=
+github.com/kshvakov/clickhouse v1.3.11 h1:dtzTJY0fCA+MWkLyuKZaNPkmSwdX4gh8+Klic9NB1Lw=
+github.com/kshvakov/clickhouse v1.3.11/go.mod h1:/SVBAcqF3u7rxQ9sTWCZwf8jzzvxiZGeQvtmSF2BBEc=
 github.com/lib/pq v1.2.0 h1:LXpIM/LZ5xGFhOpXAQUIMM1HdyqzVYM13zNdjCEEcA0=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/mattn/go-adodb v0.0.1 h1:g/pk3V8m/WFX2IQRI58wAC24OQUFFXEiNsvs7dQ1WKg=

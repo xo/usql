@@ -14,8 +14,6 @@ require (
 	github.com/alexbrainman/odbc v0.0.0-20190102080306-cf37ce290779
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
-	github.com/bkaradzic/go-lz4 v1.0.0 // indirect
-	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/couchbase/go-couchbase v0.0.0-20190708161019-23e7ca2ce2b7 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
@@ -29,7 +27,7 @@ require (
 	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect
-	github.com/denisenkom/go-mssqldb v0.0.0-20190724012636-11b2859924c1
+	github.com/denisenkom/go-mssqldb v0.0.0-20190806190131-db2462fef53b
 	github.com/dlclark/regexp2 v1.1.8 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/frankban/quicktest v1.4.0 // indirect
@@ -43,7 +41,7 @@ require (
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.5.0+incompatible
 	github.com/jcmturner/gofork v1.0.0 // indirect
-	github.com/kshvakov/clickhouse v1.3.9
+	github.com/kshvakov/clickhouse v1.3.11
 	github.com/lib/pq v1.2.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.8
@@ -69,5 +67,3 @@ require (
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/rana/ora.v4 v4.1.15
 )
-
-go 1.13
