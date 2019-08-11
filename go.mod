@@ -1,7 +1,7 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.43.0 // indirect
+	cloud.google.com/go v0.44.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.0.0-20190315050006-6dafc35aac9b
 	github.com/SAP/go-hdb v0.14.1
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
@@ -15,7 +15,7 @@ require (
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/couchbase/go-couchbase v0.0.0-20190708161019-23e7ca2ce2b7 // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20190808163554-a309852c6932 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20190515232915-c4b4ca0eb21d // indirect
 	github.com/couchbase/goutils v0.0.0-20190315194238-f9d42b11473b // indirect
@@ -28,14 +28,15 @@ require (
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190806190131-db2462fef53b
-	github.com/dlclark/regexp2 v1.1.8 // indirect
+	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/frankban/quicktest v1.4.0 // indirect
+	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gocql/gocql v0.0.0-20190728105348-76e94bbd190c
+	github.com/gocql/gocql v0.0.0-20190810123941-df4b9cc33030
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -63,7 +64,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3 // indirect
+	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/rana/ora.v4 v4.1.15
 )
