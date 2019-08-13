@@ -7,8 +7,8 @@ before_install:
   - sudo apt-get install -y unixodbc unixodbc-dev bats expect
 install:
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
-  - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
-  - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/$(realpath instantclient_*)
+  - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR:$PKG_CONFIG_PATH
+  - export LD_LIBRARY_PATH=$(realpath $TRAVIS_BUILD_DIR/instantclient_*):$LD_LIBRARY_PATH
 script:
   - export GO111MODULE=on
   - export TAGS='all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable'
