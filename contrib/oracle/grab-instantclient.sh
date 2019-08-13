@@ -3,21 +3,13 @@
 DEST=${1:-/opt/oracle}
 
 VERSION=19.3.0.0.0dbru
-DVER=$(awk -F. '{print $1 "_" $2}' <<< "$VERSION")
-
 BASE=https://media.githubusercontent.com/media/epoweripione/oracle-instantclient-18/master
 
-BASIC=$BASE/instantclient-basic-linux.x64-$VERSION.zip
-SDK=$BASE/instantclient-sdk-linux.x64-$VERSION.zip
-
-if [ ! -w $DEST ]; then
-  echo "ERROR: not able to write to $DEST"
-  exit 1
-fi
-
-echo "DEST:  $DEST"
-echo "BASIC: $BASIC"
-echo "SDK:   $SDK"
+# build list of archives to retrieve
+declare -a ARCHIVES
+for i in basic sdk sqlplus; do
+  ARCHIVES+=("$BASE/instantclient-$i-linux.x64-$VERSION.zip")
+done
 
 grab() {
   echo -n "RETRIEVING: $1 -> $2     "
@@ -36,27 +28,35 @@ cache() {
   fi
 }
 
+set -e
+
+echo "DEST:       $DEST"
+if [ ! -w $DEST ]; then
+  echo "$DEST is not writable!"
+  exit 1
+fi
 if [ ! -e "$DEST" ]; then
-  echo "$DEST does not exist"
+  echo "$DEST does not exist!"
   exit 1
 fi
 
-set -e
-
-# retrieve
-cache $DEST $BASIC
-cache $DEST $SDK
+# retrieve archives
+for i in ${ARCHIVES[@]}; do
+  cache $DEST $i
+done
 
 # remove existing directory, if any
+DVER=$(awk -F. '{print $1 "_" $2}' <<< "$VERSION")
 if [ -e $DEST/instantclient_$DVER ]; then
-  echo "REMOVING: $DEST/instantclient_$DVER"
+  echo "REMOVING:   $DEST/instantclient_$DVER"
   rm -rf $DEST/instantclient_$DVER
 fi
 
 # extract
 pushd $DEST &> /dev/null
-unzip -qq $(basename $BASIC)
-unzip -qq $(basename $SDK)
+for i in ${ARCHIVES[@]}; do
+  unzip -qq $(basename $i)
+done
 popd &> /dev/null
 
 # write pkg-config file

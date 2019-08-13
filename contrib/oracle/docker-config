@@ -1,5 +1,5 @@
 NAME=oracle
-IMAGE=sath89/oracle-12c
+IMAGE=oracle/database:19.3.0-ee
 PUBLISH=1521:1521
-ENV=DBCA_TOTAL_MEMORY=1024
-VOLUME=/media/src/opt/oracle:/u01/app/oracle
+ENV="ORACLE_SID=orasid ORACLE_PDB=db1 ORACLE_PWD=P4ssw0rd"
+VOLUME=/media/src/opt/oracle:/opt/oracle/oradata
