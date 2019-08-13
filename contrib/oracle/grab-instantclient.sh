@@ -2,18 +2,22 @@
 
 DEST=${1:-/opt/oracle}
 
-BASE=https://raw.githubusercontent.com/strongloop/loopback-oracle-builder/master/deps/oracle/Linux/x64
-LITE=$BASE/instantclient-basiclite-linux.x64-12.1.0.2.0.zip
-SDK=$BASE/instantclient-sdk-linux.x64-12.1.0.2.0.zip
+VERSION=19.3.0.0.0dbru
+DVER=$(awk -F. '{print $1 "_" $2}' <<< "$VERSION")
+
+BASE=https://media.githubusercontent.com/media/epoweripione/oracle-instantclient-18/master
+
+BASIC=$BASE/instantclient-basic-linux.x64-$VERSION.zip
+SDK=$BASE/instantclient-sdk-linux.x64-$VERSION.zip
 
 if [ ! -w $DEST ]; then
   echo "ERROR: not able to write to $DEST"
   exit 1
 fi
 
-echo "DEST: $DEST"
-echo "LITE: $LITE"
-echo "SDK:  $SDK"
+echo "DEST:  $DEST"
+echo "BASIC: $BASIC"
+echo "SDK:   $SDK"
 
 grab() {
   echo -n "RETRIEVING: $1 -> $2     "
@@ -40,44 +44,37 @@ fi
 set -e
 
 # retrieve
-cache $DEST $LITE
+cache $DEST $BASIC
 cache $DEST $SDK
 
 # remove existing directory, if any
-if [ -e $DEST/instantclient_12_1 ]; then
-  echo "REMOVING: $DEST/instantclient_12_1"
-  rm -rf $DEST/instantclient_12_1
+if [ -e $DEST/instantclient_$DVER ]; then
+  echo "REMOVING: $DEST/instantclient_$DVER"
+  rm -rf $DEST/instantclient_$DVER
 fi
 
 # extract
 pushd $DEST &> /dev/null
-unzip -qq $(basename $LITE)
+unzip -qq $(basename $BASIC)
 unzip -qq $(basename $SDK)
 popd &> /dev/null
 
-# add missing symlinks
-pushd $DEST/instantclient_12_1 &> /dev/null
-ln -s libclntshcore.so.12.1 libclntshcore.so
-ln -s libclntsh.so.12.1 libclntsh.so
-ln -s libocci.so.12.1 libocci.so
-popd &> /dev/null
-
 # write pkg-config file
-DATA=$(cat << 'ENDSTR'
-prefix=${pcfiledir}
+DATA=$(cat <<ENDSTR
+prefix=\${pcfiledir}
 
-version=12.1
+version=$VERSION
 build=client64
 
-libdir=${prefix}/instantclient_12_1
-includedir=${prefix}/instantclient_12_1/sdk/include
+libdir=\${prefix}/instantclient_${DVER}
+includedir=\${prefix}/instantclient_${DVER}/sdk/include
 
 Name: OCI
 Description: Oracle database engine
-Version: ${version}
-Libs: -L${libdir} -lclntsh
+Version: ${VERSION}
+Libs: -L\${libdir} -lclntsh
 Libs.private:
-Cflags: -I${includedir}
+Cflags: -I\${includedir}
 ENDSTR
 )
 echo "$DATA" > $DEST/oci8.pc
