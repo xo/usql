@@ -5,11 +5,10 @@ before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get -qq update
   - sudo apt-get install -y unixodbc unixodbc-dev bats expect
-  - go get github.com/mattn/goveralls
 install:
   - ./contrib/oracle/grab-instantclient.sh $TRAVIS_BUILD_DIR
   - export PKG_CONFIG_PATH=$TRAVIS_BUILD_DIR
-  - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/instantclient_12_1
+  - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/$(realpath instantclient_*)
 script:
   - export GO111MODULE=on
   - export TAGS='all sqlite_app_armor sqlite_fts5 sqlite_icu sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable'
