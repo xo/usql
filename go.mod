@@ -57,7 +57,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.2.0
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.6
-	github.com/xo/dburl v0.0.0-20190814022322-4f5f01744769
+	github.com/xo/dburl v0.0.0-20190814034758-0192e0fb89d1
 	github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5

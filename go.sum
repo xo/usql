@@ -289,8 +289,8 @@ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyC
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/xinsnake/go-http-digest-auth-client v0.4.0 h1:tTaEBUSDiMi7RDIuj0fy/pszIub8g2DmLjTelB3/3Tk=
 github.com/xinsnake/go-http-digest-auth-client v0.4.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
-github.com/xo/dburl v0.0.0-20190814022322-4f5f01744769 h1:568RuTNAJtiN8RT9Byi6Nu/J3Wnm2o+TQlAz6iXwx9c=
-github.com/xo/dburl v0.0.0-20190814022322-4f5f01744769/go.mod h1:4IshDr4yFV1Tx9ridzD33zwbZiHrA4xtvDugQAGLez8=
+github.com/xo/dburl v0.0.0-20190814034758-0192e0fb89d1 h1:H+ZHS83b8PJ9wIT4FFVB1+9Hdo2KkIksasP/1OpCiQE=
+github.com/xo/dburl v0.0.0-20190814034758-0192e0fb89d1/go.mod h1:4IshDr4yFV1Tx9ridzD33zwbZiHrA4xtvDugQAGLez8=
 github.com/xo/tblfmt v0.0.0-20190131174246-1761efe18ea6/go.mod h1:bSA7wykaIHZTJICoVhnHeBrORU6M05xMBQxrp9PfUog=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8 h1:qhiFkSGFxTqLLnBE45iM1+USbeFcaYCJANlX/sWWMx4=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
