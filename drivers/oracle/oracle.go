@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: ora
-	_ "gopkg.in/rana/ora.v4"
+	// DRIVER: goracle
+	_ "gopkg.in/goracle.v2"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -18,7 +18,7 @@ var allCapsRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
 var endRE = regexp.MustCompile(`;?\s*$`)
 
 func init() {
-	drivers.Register("ora", drivers.Driver{
+	drivers.Register("goracle", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {
 			// if the service name is not specified, use the environment
@@ -38,7 +38,7 @@ func init() {
 			if err != nil {
 				return "", err
 			}
-			return "Oracle " + ver, nil
+			return "Oracle Database " + ver, nil
 		},
 		User: func(db drivers.DB) (string, error) {
 			var user string

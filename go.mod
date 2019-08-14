@@ -1,7 +1,7 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.44.0 // indirect
+	cloud.google.com/go v0.44.3 // indirect
 	github.com/MichaelS11/go-cql-driver v0.0.0-20190315050006-6dafc35aac9b
 	github.com/SAP/go-hdb v0.14.1
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
@@ -31,6 +31,7 @@ require (
 	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/frankban/quicktest v1.4.1 // indirect
+	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocql/gocql v0.0.0-20190810123941-df4b9cc33030
@@ -56,15 +57,15 @@ require (
 	github.com/snowflakedb/gosnowflake v1.2.0
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.6
-	github.com/xo/dburl v0.0.0-20190203050942-98997a05b24f
+	github.com/xo/dburl v0.0.0-20190814022322-4f5f01744769
 	github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
+	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
+	gopkg.in/goracle.v2 v2.18.3
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
-	gopkg.in/rana/ora.v4 v4.1.15
 )

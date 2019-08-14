@@ -42,7 +42,7 @@ for other databases.
 1. [Download a release for your platform][Releases]
 2. Extract the `usql` or `usql.exe` file from the `.tar.bz2` or `.zip` file
 3. Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or
-   `%PATH%` (Windows)
+`%PATH%` (Windows)
 
 ### Installing via Homebrew (macOS)
 
@@ -65,10 +65,10 @@ installed by passing `--with-*` parameters during install:
 $ brew install --with-oracle --with-odbc usql
 ```
 
-Please note that Oracle support requires using the [`xo/xo` tap's][xo-tap]
-`instantclient-sdk` formula. Any other `instantclient-sdk` formulae or older
-versions of the Oracle Instant Client SDK [should be uninstalled][xo-tap-notes]
-prior to attempting the above:
+Please note that Oracle Database support requires using the [`xo/xo`
+tap's][xo-tap] `instantclient-sdk` formula. Any other `instantclient-sdk`
+formulae or older versions of the Oracle Instant Client SDK [should be
+uninstalled][xo-tap-notes] prior to attempting the above:
 
 ```sh
 # uninstall the instantclient-sdk formula
@@ -160,19 +160,32 @@ The list of drivers that `usql` was built with can be displayed using the
 [`\drivers` command][commands]:
 
 ```sh
-(not connected)=> \drivers
+$ cd $GOPATH/src/github.com/xo/usql
+$ go build -tags 'no_most postgres mysql cql sqlite3' && ./usql
+Type "help" for help.
+
 (not connected)=> \drivers
 Available Drivers:
+  cockroachdb (postgres) [cr, cdb, crdb, cockroach]
+  memsql (mysql) [me]
   mssql [ms, sqlserver]
   mysql [my, maria, aurora, mariadb, percona]
   postgres [pg, pgsql, postgresql]
+  redshift (postgres) [rs]
   sqlite3 [sq, file, sqlite]
+  tidb (mysql) [ti]
+  vitess (mysql) [vt]
+(not connected)=>
 ```
 
-The above shows that `usql` was built with 4 drivers (`mssql`, `mysql`,
-`postgres`, and `sqlite3`). The names contained within `[...]` are the
-additional scheme aliases recognized by [`\connect` command][commands] when
-connecting to a database.
+The above shows that `usql` was built with only the `postgres`, `mysql`, `cql`,
+and `sqlite3` drivers. The output above reflects information about the drivers
+available to `usql`, specifically the available driver and its primary URL
+scheme, the driver's available aliases (shown in `[...]`), and the
+real/underlying driver (shown in `(...)`) for the database.
+
+Any of the protocol schemes or aliases shown above can be used in conjunction
+with the [`\connect` command][commands] when connecting to a database.
 
 #### Supported Database Schemes and Aliases
 
@@ -183,7 +196,7 @@ supports:
 |------------------------------|---------------------------------------|
 | Microsoft SQL Server (mssql) | ms, sqlserver                         |
 | MySQL (mysql)                | my, mariadb, maria, percona, aurora   |
-| Oracle (ora)                 | or, oracle, oci8, oci                 |
+| Oracle Database (goracle)    | or, oracle, oci8, oci, odpi, odpi-c   |
 | PostgreSQL (postgres)        | pg, postgresql, pgsql                 |
 | SQLite3 (sqlite3)            | sq, sqlite, file                      |
 |                              |                                       |
@@ -225,7 +238,7 @@ associated Go build tag:
 | MySQL                | mysql      | [github.com/go-sql-driver/mysql][d-mysql]                                        |
 | PostgreSQL           | postgres   | [github.com/lib/pq][d-postgres]                                                  |
 | SQLite3              | sqlite3    | [github.com/mattn/go-sqlite3][d-sqlite3]                                         |
-| Oracle               | oracle     | [gopkg.in/rana/ora.v4][d-oracle]                                                 |
+| Oracle Database      | oracle     | [gopkg.in/goracle.v2][d-oracle]                                                  |
 |                      |            |                                                                                  |
 | MySQL                | mymysql    | [github.com/ziutek/mymysql/godrv][d-mymysql]                                     |
 | PostgreSQL           | pgx        | [github.com/jackc/pgx/stdlib][d-pgx]                                             |
@@ -334,9 +347,10 @@ Where the above are:
 | ?opt1=a&...        | additional database driver options (see respective SQL driver for available options) |
 | /path/to/file      | a path on disk                                                                       |
 
-<i><sup><b>*</b></sup> for Microsoft SQL Server, the syntax to supply an
-instance and database name is `/instance/dbname`, where `/instance` is
-optional. For Oracle databases, `/dbname` is the unique database ID (SID).</i>
+<i><sup><b>*</b></sup> for Microsoft SQL Server, `/dbname` can be
+`/instance/dbname`, where `/instance` is optional. For Oracle Database,
+`/dbname` is of the form `/service/dbname` where `/service` is the service name
+or SID, and `/dbname` is optional. Please see below for examples.</i>
 
 #### Driver Aliases
 
@@ -877,7 +891,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-mysql]: https://github.com/go-sql-driver/mysql
 [d-postgres]: https://github.com/lib/pq
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
-[d-oracle]: https://gopkg.in/rana/ora.v4
+[d-oracle]: https://gopkg.in/goracle.v2
 [d-mymysql]: https://github.com/ziutek/mymysql
 [d-pgx]: https://github.com/jackc/pgx
 [d-avatica]: https://github.com/Boostport/avatica
