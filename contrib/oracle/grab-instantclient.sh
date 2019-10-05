@@ -2,8 +2,9 @@
 
 DEST=${1:-/opt/oracle}
 
+# https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip
 VERSION=19.3.0.0.0dbru
-BASE=https://media.githubusercontent.com/media/epoweripione/oracle-instantclient-18/master
+BASE=https://download.oracle.com/otn_software/linux/instantclient/193000
 
 # build list of archives to retrieve
 declare -a ARCHIVES
