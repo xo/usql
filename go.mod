@@ -6,7 +6,7 @@ require (
 	github.com/SAP/go-hdb v0.14.1
 	github.com/SermoDigital/jose v0.9.2-0.20180104203859-803625baeddc // indirect
 	github.com/VoltDB/voltdb-client-go v1.0.1
-	github.com/alecthomas/chroma v0.6.7
+	github.com/alecthomas/chroma v0.6.8
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -15,10 +15,10 @@ require (
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/couchbase/go-couchbase v0.0.0-20191013193455-4240e28ff9f2 // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20191031153726-96c2e23d589a // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20191004160342-7b5da2ec40b2 // indirect
-	github.com/couchbase/goutils v0.0.0-20190315194238-f9d42b11473b // indirect
+	github.com/couchbase/goutils v0.0.0-20191018232750-b49639060d85 // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gocql/gocql v0.0.0-20191018090344-07ace3bab0f8
+	github.com/gocql/gocql v0.0.0-20191102131523-9faa4c08d962
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
@@ -50,6 +50,7 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.10
+	github.com/mattn/go-runewidth v0.0.5 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/nakagami/firebirdsql v0.0.0-20191006235538-bba3f542e616
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
@@ -66,12 +67,12 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
-	golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582 // indirect
-	golang.org/x/sys v0.0.0-20191018095205-727590c5006e // indirect
+	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf // indirect
+	golang.org/x/net v0.0.0-20191101175033-0deb6923b6d9 // indirect
+	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/goracle.v2 v2.21.4
+	gopkg.in/goracle.v2 v2.22.0
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 )
 
