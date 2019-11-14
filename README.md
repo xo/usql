@@ -225,6 +225,7 @@ supports:
 | SAP ASE (tds)                | ax, ase, sapase                       |
 | SAP HANA (hdb)               | sa, saphana, sap, hana                |
 | Snowflake (snowflake)        | sf                                    |
+| Vertica (vertica)            | ve                                    |
 | VoltDB (voltdb)              | vo, volt, vdb                         |
 
 #### Go Drivers and Build Tags
@@ -256,6 +257,7 @@ associated Go build tag:
 | SAP ASE              | tds        | [github.com/thda/tds][d-tds]                                                     |
 | SAP HANA             | hdb        | [github.com/SAP/go-hdb/driver][d-hdb]                                            |
 | Snowflake            | snowflake  | [github.com/snowflakedb/gosnowflake][d-snowflake]                                |
+| Vertica              | vertica    | [github.com/vertica/vertica-sql-go][d-vertica]                                   |
 | VoltDB               | voltdb     | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                      |
 |                      |            |                                                                                  |
 | Google Spanner       | spanner    | github.com/xo/spanner (not yet public)                                           |
@@ -911,3 +913,4 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-charlatan]: https://github.com/BatchLabs/charlatan
 [d-ignite]: https://github.com/amsokol/ignite-go-client
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
+[d-vertica]: https://github.com/vertica/vertica-sql-go
