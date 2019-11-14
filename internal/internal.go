@@ -30,6 +30,7 @@ func KnownBuildTags() map[string]string {
 		"saphana":    "hdb",         // github.com/SAP/go-hdb/driver
 		"snowflake":  "snowflake",   // github.com/snowflakedb/gosnowflake
 		"sqlite3":    "sqlite3",     // github.com/mattn/go-sqlite3
+		"vertica":    "vertica",     // github.com/vertica/vertica-sql-go
 		"voltdb":     "voltdb",      // github.com/VoltDB/voltdb-client-go/voltdbclient
 	}
 }
