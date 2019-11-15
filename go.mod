@@ -15,7 +15,7 @@ require (
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/calcite-avatica-go/v3 v3.2.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/couchbase/go-couchbase v0.0.0-20191113180141-fb2c298255fc // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20191115001346-d9e5b3bd1ebc // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20191004160342-7b5da2ec40b2 // indirect
 	github.com/couchbase/goutils v0.0.0-20191018232750-b49639060d85 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.2
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
-	github.com/vertica/vertica-sql-go v0.1.5
+	github.com/vertica/vertica-sql-go v0.1.6
 	github.com/xo/dburl v0.0.0-20191114042849-512519f35716
 	github.com/xo/tblfmt v0.0.0-20191005012402-ba132150857e
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62
@@ -70,7 +70,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708 // indirect
 	golang.org/x/net v0.0.0-20191112182307-2180aed22343 // indirect
-	golang.org/x/sys v0.0.0-20191113165036-4c7a9d0fe056 // indirect
+	golang.org/x/sys v0.0.0-20191115151921-52ab43148777 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/goracle.v2 v2.22.4
