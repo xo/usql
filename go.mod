@@ -61,7 +61,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.2
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
-	github.com/vertica/vertica-sql-go v0.1.5
+	github.com/vertica/vertica-sql-go v0.1.6
 	github.com/xo/dburl v0.0.0-20191114042849-512519f35716
 	github.com/xo/tblfmt v0.0.0-20191005012402-ba132150857e
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62

@@ -241,6 +241,8 @@ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyC
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/vertica/vertica-sql-go v0.1.5 h1:C03+E8wmXMsfKzZybXiz7ebktV/995w1AajpvpSaI8s=
 github.com/vertica/vertica-sql-go v0.1.5/go.mod h1:2LGtkNSdFF5CTJYeUA5qWfREuvYaql+51fNzmoD5W7c=
+github.com/vertica/vertica-sql-go v0.1.6 h1:NlXQ618ccsFn1E+vWUXkfd6yBKUnU82ZSs4GLeTmUGQ=
+github.com/vertica/vertica-sql-go v0.1.6/go.mod h1:2LGtkNSdFF5CTJYeUA5qWfREuvYaql+51fNzmoD5W7c=
 github.com/xinsnake/go-http-digest-auth-client v0.4.0 h1:tTaEBUSDiMi7RDIuj0fy/pszIub8g2DmLjTelB3/3Tk=
 github.com/xinsnake/go-http-digest-auth-client v0.4.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
 github.com/xo/dburl v0.0.0-20191114042849-512519f35716 h1:jZOOQ4erf4oiFUWtEKj2dFPSV3vFQ3NBcZBtWDYIWVk=
