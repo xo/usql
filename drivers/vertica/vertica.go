@@ -19,7 +19,7 @@ func init() {
 		logger.SetLogLevel(logger.NONE)
 	}
 
-	codeRE := regexp.MustCompile(`(?i)^\[([0-9a-z]+)\]\s+(.+)`)
+	errCodeRE := regexp.MustCompile(`(?i)^\[([0-9a-z]+)\]\s+(.+)`)
 
 	drivers.Register("vertica", drivers.Driver{
 		AllowDollar:            true,
@@ -37,8 +37,8 @@ func init() {
 		},
 		Err: func(err error) (string, string) {
 			msg := strings.TrimSpace(strings.TrimPrefix(err.Error(), "Error:"))
-			if m := codeRE.FindAllStringSubmatch(msg, -1); m != nil {
-				return m[0][1], m[0][2]
+			if m := errCodeRE.FindAllStringSubmatch(msg, -1); m != nil {
+				return m[0][1], strings.TrimSpace(m[0][2])
 			}
 			return "", msg
 		},
