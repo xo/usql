@@ -14,10 +14,9 @@ import (
 	"github.com/xo/usql/env"
 )
 
-var allCapsRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
-var endRE = regexp.MustCompile(`;?\s*$`)
-
 func init() {
+	allCapsRE := regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
+	endRE := regexp.MustCompile(`;?\s*$`)
 	drivers.Register("goracle", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {

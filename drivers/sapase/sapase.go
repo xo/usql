@@ -12,9 +12,9 @@ import (
 	"github.com/xo/usql/drivers"
 )
 
-var endRE = regexp.MustCompile(`;?\s*$`)
-
 func init() {
+	endRE := regexp.MustCompile(`;?\s*$`)
+
 	drivers.Register("tds", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,

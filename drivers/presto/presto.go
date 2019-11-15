@@ -9,9 +9,8 @@ import (
 	"github.com/xo/usql/drivers"
 )
 
-var endRE = regexp.MustCompile(`;?\s*$`)
-
 func init() {
+	endRE := regexp.MustCompile(`;?\s*$`)
 	drivers.Register("presto", drivers.Driver{
 		AllowMultilineComments: true,
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {

@@ -298,7 +298,8 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 	return "", text.ErrPasswordNotSupportedByDriver
 }
 
-// Columns returns the columns for SQL result for the specified URL's driver.
+// Columns returns the column names for the SQL row result for the specified
+// URL's driver.
 func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 	var cols []string
 	var err error
