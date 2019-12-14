@@ -13,7 +13,7 @@ func KnownBuildTags() map[string]string {
 		"adodb":      "adodb",       // github.com/mattn/go-adodb
 		"avatica":    "avatica",     // github.com/apache/calcite-avatica-go/v3
 		"cassandra":  "cql",         // github.com/MichaelS11/go-cql-driver
-		"clickhouse": "clickhouse",  // github.com/kshvakov/clickhouse
+		"clickhouse": "clickhouse",  // github.com/ClickHouse/clickhouse-go
 		"couchbase":  "n1ql",        // github.com/couchbase/go_n1ql
 		"firebird":   "firebirdsql", // github.com/nakagami/firebirdsql
 		"ignite":     "ignite",      // github.com/amsokol/ignite-go-client/sql

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	// DRIVER: clickhouse
-	_ "github.com/kshvakov/clickhouse"
+	_ "github.com/ClickHouse/clickhouse-go"
 
 	"github.com/xo/usql/drivers"
 )
