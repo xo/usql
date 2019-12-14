@@ -21,7 +21,7 @@ func KnownBuildTags() map[string]string {
 		"mymysql":    "mymysql",     // github.com/ziutek/mymysql/godrv
 		"mysql":      "mysql",       // github.com/go-sql-driver/mysql
 		"odbc":       "odbc",        // github.com/alexbrainman/odbc
-		"oracle":     "goracle",     // gopkg.in/goracle.v2
+		"oracle":     "godror",      // github.com/godror/godror
 		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
 		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto

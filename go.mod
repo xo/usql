@@ -32,16 +32,15 @@ require (
 	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/frankban/quicktest v1.4.1 // indirect
-	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9
+	github.com/godror/godror v0.9.1
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -61,7 +60,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
 	github.com/vertica/vertica-sql-go v0.1.6
-	github.com/xo/dburl v0.0.0-20191116074001-eeed741d1a6d
+	github.com/xo/dburl v0.0.0-20191214132317-9b5bbd7ad5eb
 	github.com/xo/tblfmt v0.0.0-20191213174814-b2e6455d048a
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
@@ -70,9 +69,8 @@ require (
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/sys v0.0.0-20191210023423-ac6580df4449 // indirect
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/goracle.v2 v2.24.1
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 )
 

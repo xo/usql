@@ -196,7 +196,7 @@ supports:
 |------------------------------|---------------------------------------|
 | Microsoft SQL Server (mssql) | ms, sqlserver                         |
 | MySQL (mysql)                | my, mariadb, maria, percona, aurora   |
-| Oracle Database (goracle)    | or, oracle, oci8, oci, odpi, odpi-c   |
+| Oracle Database (godror)     | or, oracle, oci8, oci, odpi, odpi-c   |
 | PostgreSQL (postgres)        | pg, postgresql, pgsql                 |
 | SQLite3 (sqlite3)            | sq, sqlite, file                      |
 |                              |                                       |

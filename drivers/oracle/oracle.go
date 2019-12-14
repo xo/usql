@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: goracle
-	_ "gopkg.in/goracle.v2"
+	// DRIVER: godror
+	_ "github.com/godror/godror"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -17,7 +17,7 @@ import (
 func init() {
 	allCapsRE := regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
 	endRE := regexp.MustCompile(`;?\s*$`)
-	drivers.Register("goracle", drivers.Driver{
+	drivers.Register("godror", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {
 			// if the service name is not specified, use the environment
