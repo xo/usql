@@ -25,7 +25,7 @@ func KnownBuildTags() map[string]string {
 		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
 		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto
-		"ql":         "ql",          // github.com/cznic/ql
+		"ql":         "ql",          // modernc.org/ql
 		"sapase":     "tds",         // github.com/thda/tds
 		"saphana":    "hdb",         // github.com/SAP/go-hdb/driver
 		"snowflake":  "snowflake",   // github.com/snowflakedb/gosnowflake

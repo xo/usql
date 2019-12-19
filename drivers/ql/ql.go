@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	// DRIVER: ql
-	"github.com/cznic/ql"
+	"modernc.org/ql"
 
 	"github.com/xo/usql/drivers"
 )

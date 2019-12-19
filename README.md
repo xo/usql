@@ -249,7 +249,7 @@ associated Go build tag:
 | Cassandra            | cassandra  | [github.com/MichaelS11/go-cql-driver][d-cassandra]                               |
 | ClickHouse           | clickhouse | [github.com/kshvakov/clickhouse][d-clickhouse]                                   |
 | Couchbase            | couchbase  | [github.com/couchbase/go_n1ql][d-couchbase]                                      |
-| Cznic QL             | ql         | [github.com/cznic/ql][d-ql]                                                      |
+| Cznic QL             | ql         | [modernc.org/ql][d-ql]                                                           |
 | Firebird SQL         | firebird   | [github.com/nakagami/firebirdsql][d-firebird]                                    |
 | Microsoft ADODB      | adodb      | [github.com/mattn/go-adodb][d-adodb]                                             |
 | ODBC                 | odbc       | [github.com/alexbrainman/odbc][d-odbc]                                           |
@@ -900,7 +900,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-cassandra]: https://github.com/MichaelS11/go-cql-driver
 [d-clickhouse]: https://github.com/kshvakov/clickhouse
 [d-couchbase]: https://github.com/couchbase/go_n1ql
-[d-ql]: https://github.com/cznic/ql
+[d-ql]: https://modernc.org/ql
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-adodb]: https://github.com/mattn/go-adodb
 [d-odbc]: https://github.com/alexbrainman/odbc
