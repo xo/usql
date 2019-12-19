@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	// DRIVER: avatica
-	_ "github.com/apache/calcite-avatica-go/v3"
+	_ "github.com/apache/calcite-avatica-go/v4"
 
-	avaticaerrors "github.com/apache/calcite-avatica-go/v3/errors"
+	avaticaerrors "github.com/apache/calcite-avatica-go/v4/errors"
 
 	"github.com/xo/usql/drivers"
 )

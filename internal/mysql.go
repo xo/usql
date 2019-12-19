@@ -1,4 +1,4 @@
-// +build !no_mysql
+// +build !no_base,!no_mysql
 
 package internal
 

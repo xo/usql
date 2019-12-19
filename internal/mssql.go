@@ -1,4 +1,4 @@
-// +build !no_mssql
+// +build !no_base,!no_mssql
 
 package internal
 
