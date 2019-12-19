@@ -8,6 +8,7 @@ import (
 
 	// DRIVER: godror
 	_ "github.com/godror/godror"
+	"golang.org/x/xerrors"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -49,15 +50,23 @@ func init() {
 			return err
 		},
 		Err: func(err error) (string, string) {
-			code, msg := "", err.Error()
+			if e := xerrors.Unwrap(err); e != nil {
+				err = e
+			}
 
+			code, msg := "", err.Error()
 			if e, ok := err.(interface {
 				Code() int
 			}); ok {
 				code = fmt.Sprintf("ORA-%05d", e.Code())
 			}
+			if e, ok := err.(interface {
+				Message() string
+			}); ok {
+				msg = e.Message()
+			}
 
-			if i := strings.LastIndex(msg, "ORA-"); i != -1 {
+			if i := strings.LastIndex(msg, "ORA-"); msg == "" && i != -1 {
 				msg = msg[i:]
 				if j := strings.Index(msg, ":"); j != -1 {
 					msg = msg[j+1:]
@@ -70,6 +79,9 @@ func init() {
 			return code, strings.TrimSpace(msg)
 		},
 		IsPasswordErr: func(err error) bool {
+			if e := xerrors.Unwrap(err); e != nil {
+				err = e
+			}
 			if e, ok := err.(interface {
 				Code() int
 			}); ok {
