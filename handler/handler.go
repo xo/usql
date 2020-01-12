@@ -98,7 +98,7 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	return h
 }
 
-// SetSingleLineMode allows setting the single line mode toggle.
+// SetSingleLineMode sets the single line mode toggle.
 func (h *Handler) SetSingleLineMode(singleLineMode bool) {
 	h.singleLineMode = singleLineMode
 }
@@ -869,7 +869,7 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 	defer q.Close()
 
 	return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
-	//return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()), tblfmt.WithByteBufferPool(pool))
+	// return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()), tblfmt.WithByteBufferPool(pool))
 }
 
 // execRows executes all the columns in the row.
@@ -1093,6 +1093,7 @@ func (h *Handler) Include(path string, relative bool) error {
 
 	p := New(l, h.user, filepath.Dir(path), h.nopw)
 	p.db, p.u = h.db, h.u
+	drivers.ConfigStmt(p.u, p.buf)
 
 	err = p.Run()
 	if err == io.EOF {
