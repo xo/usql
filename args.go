@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/alecthomas/kingpin"
 
@@ -64,6 +63,26 @@ func (c commandOrFile) IsCumulative() bool {
 	return true
 }
 
+// for populating args.PVariables with user-specified options
+type pset struct {
+	args *Args
+	vals []string
+}
+
+func (p pset) Set(value string) error {
+	p.vals[0] = fmt.Sprintf(p.vals[0], value[0])
+	p.args.PVariables = append(p.args.PVariables, p.vals...)
+	return nil
+}
+
+func (p pset) String() string {
+	return ""
+}
+
+func (p pset) IsCumulative() bool {
+	return true
+}
+
 func NewArgs() *Args {
 	args := &Args{}
 
@@ -88,6 +107,10 @@ func NewArgs() *Args {
 	kingpin.Flag("pset", `set printing option VAR to ARG (see \pset command)`).Short('P').PlaceHolder("VAR[=ARG]").StringsVar(&args.PVariables)
 
 	// pset flags
+	kingpin.Flag("field-separator", `field separator for unaligned output (default, "|")`).Short('F').SetValue(pset{args, []string{"fieldsep=%q", "fieldsep_zero=off"}})
+	kingpin.Flag("record-separator", `record separator for unaligned output (default, \n)`).Short('R').SetValue(pset{args, []string{"recordsep=%q", "recordsep_zero=off"}})
+	kingpin.Flag("table-attr", "set HTML table tag attributes (e.g., width, border)").Short('T').SetValue(pset{args, []string{"tableattr=%q"}})
+
 	type psetconfig struct {
 		long  string
 		short rune
@@ -99,35 +122,21 @@ func NewArgs() *Args {
 	}
 	for _, c := range []psetconfig{
 		pc("no-align", 'A', "unaligned table output mode", "format=unaligned"),
-		pc("field-separator", 'F', `field separator for unaligned output (default, "|")`, "fieldsep=%q", "fieldsep_zero=off"),
 		pc("html", 'H', "HTML table output mode", "format=html"),
-		pc("record-separator", 'R', `record separator for unaligned output (default, \n)`, "recordsep=%q", "recordsep_zero=off"),
 		pc("tuples-only", 't', "print rows only", "tuples_only=on"),
-		pc("table-attr", 'T', "set HTML table tag attributes (e.g., width, border)", "tableattr=%q"),
 		pc("expanded", 'x', "turn on expanded table output", "expanded=on"),
 		pc("field-separator-zero", 'z', "set field separator for unaligned output to zero byte", "fieldsep=''", "fieldsep_zero=on"),
 		pc("record-separator-zero", '0', "set record separator for unaligned output to zero byte", "recordsep=''", "recordsep_zero=on"),
 		pc("json", 'J', "JSON output mode", "format=json"),
 		pc("csv", 'C', "CSV output mode", "format=csv"),
 	} {
-		a := kingpin.Flag(c.long, c.help).Short(c.short).PlaceHolder("TEXT")
-		if strings.Contains(c.vals[0], "%q") {
-			a.PreAction(func(ctxt *kingpin.ParseContext) error {
-				if len(ctxt.Elements) != 1 {
-					return fmt.Errorf("--%s must be passed a value", c.long)
-				}
-				vals := make([]string, len(c.vals))
-				copy(vals, c.vals)
-				vals[0] = fmt.Sprintf(vals[0], *ctxt.Elements[0].Value)
-				args.PVariables = append(args.PVariables, vals...)
-				return nil
-			}).String()
-		} else {
-			a.PreAction(func(*kingpin.ParseContext) error {
-				args.PVariables = append(args.PVariables, c.vals...)
-				return nil
-			}).Bool()
-		}
+		// make copy of values for the callback closure (see https://stackoverflow.com/q/26692844)
+		vals := make([]string, len(c.vals))
+		copy(vals, c.vals)
+		kingpin.Flag(c.long, c.help).Short(c.short).PlaceHolder("TEXT").PreAction(func(*kingpin.ParseContext) error {
+			args.PVariables = append(args.PVariables, vals...)
+			return nil
+		}).Bool()
 	}
 
 	// add --set as a hidden alias for --variable
