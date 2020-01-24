@@ -27,7 +27,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gocql/gocql v0.0.0-20200103014340-68f928edb90a
-	github.com/godror/godror v0.10.3
+	github.com/godror/godror v0.11.0
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgx v3.6.1+incompatible
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/lib/pq v1.3.0
 	github.com/mattn/go-adodb v0.0.1
@@ -50,8 +50,8 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.4
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
-	github.com/vertica/vertica-sql-go v0.1.6
-	github.com/xo/dburl v0.0.0-20191219122722-3cca8608d645
+	github.com/vertica/vertica-sql-go v0.1.7
+	github.com/xo/dburl v0.0.0-20200124232849-e9ec94f52bc3
 	github.com/xo/tblfmt v0.0.0-20191214134155-4c686ae34009
 	github.com/xo/terminfo v0.0.0-20190125114736-1a4775eeeb62
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
