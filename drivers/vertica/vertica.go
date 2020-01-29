@@ -1,7 +1,6 @@
 package vertica
 
 import (
-	"database/sql"
 	"os"
 	"regexp"
 	"strings"
@@ -44,9 +43,6 @@ func init() {
 		},
 		IsPasswordErr: func(err error) bool {
 			return strings.HasSuffix(strings.TrimSpace(err.Error()), "Invalid username or password")
-		},
-		RowsAffected: func(sql.Result) (int64, error) {
-			return 0, nil
 		},
 	})
 }

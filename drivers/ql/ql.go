@@ -1,8 +1,6 @@
 package ql
 
 import (
-	"database/sql"
-
 	// DRIVER: ql
 	"modernc.org/ql"
 
@@ -20,8 +18,5 @@ func init() {
 			"BEGIN TRANSACTION": "COMMIT",
 		},
 		BatchAsTransaction: true,
-		RowsAffected: func(res sql.Result) (int64, error) {
-			return 0, nil
-		},
 	})
 }

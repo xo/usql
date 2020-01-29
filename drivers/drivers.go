@@ -2,7 +2,6 @@ package drivers
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -404,10 +403,6 @@ func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
 // RowsAffected returns the rows affected for the SQL result for a specified
 // URL's driver.
 func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
-	if res == driver.ResultNoRows {
-		return 0, nil
-	}
-
 	var count int64
 	var err error
 	if d, ok := drivers[u.Driver]; ok && d.RowsAffected != nil {
@@ -415,6 +410,11 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 	} else {
 		count, err = res.RowsAffected()
 	}
+
+	if err != nil && err.Error() == "no RowsAffected available after DDL statement" {
+		return 0, nil
+	}
+
 	if err != nil {
 		return 0, WrapErr(u.Driver, err)
 	}
