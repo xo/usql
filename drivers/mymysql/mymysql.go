@@ -16,9 +16,6 @@ func init() {
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
 		LexerName:              "mysql",
-		ForceParams: drivers.ForceQueryParameters([]string{
-			"sql_mode", "ansi",
-		}),
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*mysql.Error); ok {
 				return strconv.Itoa(int(e.Code)), string(e.Msg)
