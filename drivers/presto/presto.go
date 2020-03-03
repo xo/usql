@@ -18,5 +18,15 @@ func init() {
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil
 		},
+		Version: func(db drivers.DB) (string, error) {
+			var ver string
+			err := db.QueryRow(
+				`SELECT node_version FROM system.runtime.nodes LIMIT 1`,
+			).Scan(&ver)
+			if err != nil {
+				return "", err
+			}
+			return "Presto " + ver, nil
+		},
 	})
 }

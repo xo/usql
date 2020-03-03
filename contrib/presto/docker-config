@@ -1,0 +1,3 @@
+NAME=presto
+IMAGE=starburstdata/presto
+PUBLISH=8080:8080
