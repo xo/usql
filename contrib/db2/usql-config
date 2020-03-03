@@ -1,0 +1,2 @@
+DB="odbc+db2://db2inst1:P4ssw0rd@localhost/testdb"
+VSQL="SELECT service_level AS version FROM sysibmadm.env_inst_info;"

@@ -1,0 +1,2 @@
+DB="clickhouse://localhost"
+VSQL="select version() as version;"

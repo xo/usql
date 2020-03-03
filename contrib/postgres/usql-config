@@ -1,0 +1,2 @@
+DB="postgres://postgres:P4ssw0rd@localhost"
+VSQL="SHOW server_version;"

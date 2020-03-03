@@ -1,0 +1,2 @@
+DB="couchbase://localhost:8093"
+VSQL="select version() as version;"

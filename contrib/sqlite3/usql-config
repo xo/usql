@@ -1,0 +1,2 @@
+DB="sqlite3:test.sqlite3"
+VSQL="SELECT sqlite_version() AS version;"

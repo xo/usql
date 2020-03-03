@@ -34,10 +34,8 @@ require (
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
-	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/lib/pq v1.3.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.11
@@ -45,7 +43,8 @@ require (
 	github.com/nakagami/firebirdsql v0.0.0-20200209020130-035d0abf81c8
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
-	github.com/prestodb/presto-go-client v0.0.0-20191203220353-4980913e2459
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prestodb/presto-go-client v0.0.0-20200302111820-5ec09431be26
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
 	github.com/snowflakedb/gosnowflake v1.3.4
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -57,12 +56,11 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/crypto v0.0.0-20200109152110-61a87790db17 // indirect
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/sys v0.0.0-20200107162124-548cf772de50 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.3.0 // indirect
 	modernc.org/ql v1.0.1
 	modernc.org/sortutil v1.1.0 // indirect

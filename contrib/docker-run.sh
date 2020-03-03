@@ -23,7 +23,7 @@ if [[ "$DIR" != "$NAME" ]]; then
   exit 1
 fi
 
-echo "NAME:    $NAME"
+echo "NAME:       $NAME"
 
 shift
 

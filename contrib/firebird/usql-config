@@ -1,0 +1,2 @@
+DB="firebird://booktest:booktest@localhost/booktest"
+VSQL="SELECT rdb\$get_context('SYSTEM', 'ENGINE_VERSION') AS version FROM rdb\$database;"

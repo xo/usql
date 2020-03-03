@@ -1,4 +1,4 @@
 NAME=mssql
-IMAGE=microsoft/mssql-server-linux
+IMAGE=mcr.microsoft.com/mssql/server:2019-latest
 PUBLISH=1433:1433
 ENV="ACCEPT_EULA=Y MSSQL_PID=Express SA_PASSWORD=Adm1nP@ssw0rd"
