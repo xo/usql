@@ -95,17 +95,17 @@ scoop install usql
 
 ```sh
 # install usql with basic database support (includes PosgreSQL, MySQL, SQLite3, and MS SQL drivers)
-$ go get -u github.com/xo/usql
+$ GO111MODULE=on go get -u github.com/xo/usql
 ```
 
 Support for additional databases can be specified with [build tags][Database Support]:
 
 ```sh
 # install usql with most drivers (excludes drivers requiring CGO)
-$ go get -u -tags most github.com/xo/usql
+$ GO111MODULE=on go get -u -tags most github.com/xo/usql
 
 # install usql with all drivers (includes drivers requiring CGO, namely Oracle and ODBC drivers)
-$ go get -u -tags all github.com/xo/usql
+$ GO111MODULE=on go get -u -tags all github.com/xo/usql
 ```
 
 ## Building
@@ -118,13 +118,13 @@ drivers, respectively:
 
 ```sh
 # install all drivers
-$ go get -u -tags all github.com/xo/usql
+$ GO111MODULE=on go get -u -tags all github.com/xo/usql
 
 # install with most drivers (same as all but excludes Oracle/ODBC)
-$ go get -u -tags most github.com/xo/usql
+$ GO111MODULE=on go get -u -tags most github.com/xo/usql
 
 # install with base drivers and Oracle/ODBC support
-$ go get -u -tags 'oracle odbc' github.com/xo/usql
+$ GO111MODULE=on go get -u -tags 'oracle odbc' github.com/xo/usql
 ```
 
 For every build tag `<driver>`, there is also the `no_<driver>` build tag
@@ -132,7 +132,7 @@ disabling the driver:
 
 ```sh
 # install all drivers excluding avatica and couchbase
-$ go get -u -tags 'all no_avatica no_couchbase' github.com/xo/usql
+$ GO111MODULE=on go get -u -tags 'all no_avatica no_couchbase' github.com/xo/usql
 ```
 
 ### Release Builds
@@ -161,6 +161,7 @@ The list of drivers that `usql` was built with can be displayed using the
 
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
+$ export GO111MODULE=on
 $ go build -tags 'no_most postgres mysql cql sqlite3' && ./usql
 Type "help" for help.
 
