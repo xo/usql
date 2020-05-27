@@ -9,7 +9,7 @@ package internal
 func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"adodb":      "adodb",       // github.com/mattn/go-adodb
-		"avatica":    "avatica",     // github.com/apache/calcite-avatica-go/v3
+		"avatica":    "avatica",     // github.com/apache/calcite-avatica-go/v4
 		"cassandra":  "cql",         // github.com/MichaelS11/go-cql-driver
 		"clickhouse": "clickhouse",  // github.com/ClickHouse/clickhouse-go
 		"couchbase":  "n1ql",        // github.com/couchbase/go_n1ql
@@ -20,7 +20,7 @@ func KnownBuildTags() map[string]string {
 		"mysql":      "mysql",       // github.com/go-sql-driver/mysql
 		"odbc":       "odbc",        // github.com/alexbrainman/odbc
 		"oracle":     "godror",      // github.com/godror/godror
-		"pgx":        "pgx",         // github.com/jackc/pgx/stdlib
+		"pgx":        "pgx",         // github.com/jackc/pgx/v4/stdlib
 		"postgres":   "postgres",    // github.com/lib/pq
 		"presto":     "presto",      // github.com/prestodb/presto-go-client/presto
 		"ql":         "ql",          // modernc.org/ql

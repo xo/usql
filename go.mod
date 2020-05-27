@@ -13,7 +13,6 @@ require (
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/calcite-avatica-go/v4 v4.0.0
-	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20200511154942-3ec1c355fbee // indirect
@@ -22,15 +21,14 @@ require (
 	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/gocql/gocql v0.0.0-20200519160334-799061058e31
+	github.com/gocql/gocql v0.0.0-20200526081602-cd04bd7f22a7
 	github.com/godror/godror v0.16.0
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/jackc/pgconn v1.5.0
+	github.com/jackc/pgx/v4 v4.6.0
 	github.com/lib/pq v1.5.2
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
@@ -53,10 +51,11 @@ require (
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
 	modernc.org/ql v1.1.0
 	modernc.org/sortutil v1.1.0 // indirect
 	modernc.org/strutil v1.1.0 // indirect
 )
 
-go 1.13
+go 1.14

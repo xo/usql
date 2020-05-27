@@ -1,10 +1,12 @@
 package pgx
 
 import (
-	// DRIVER: pgx
-	_ "github.com/jackc/pgx/stdlib"
+	"errors"
 
-	"github.com/jackc/pgx"
+	// DRIVER: pgx
+	_ "github.com/jackc/pgx/v4/stdlib"
+
+	"github.com/jackc/pgconn"
 
 	"github.com/xo/usql/drivers"
 )
@@ -27,13 +29,15 @@ func init() {
 			return err
 		},
 		Err: func(err error) (string, string) {
-			if e, ok := err.(pgx.PgError); ok {
+			var e *pgconn.PgError
+			if errors.As(err, &e) {
 				return e.Code, e.Message
 			}
 			return "", err.Error()
 		},
 		IsPasswordErr: func(err error) bool {
-			if e, ok := err.(pgx.PgError); ok {
+			var e *pgconn.PgError
+			if errors.As(err, &e) {
 				return e.Code == "28P01"
 			}
 			return false
