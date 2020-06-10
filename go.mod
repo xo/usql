@@ -9,6 +9,7 @@ require (
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
@@ -18,27 +19,26 @@ require (
 	github.com/couchbase/gomemcached v0.0.0-20200511154942-3ec1c355fbee // indirect
 	github.com/couchbase/goutils v0.0.0-20191018232750-b49639060d85 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20200428022330-06a60b6afbbc
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gocql/gocql v0.0.0-20200526081602-cd04bd7f22a7
-	github.com/godror/godror v0.16.0
+	github.com/godror/godror v0.16.1
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/uuid v1.1.1 // indirect
 	github.com/jackc/pgconn v1.5.0
 	github.com/jackc/pgx/v4 v4.6.0
-	github.com/lib/pq v1.5.2
+	github.com/lib/pq v1.7.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	github.com/nakagami/firebirdsql v0.0.0-20200524013450-1ea0be23737c
+	github.com/nakagami/firebirdsql v0.0.0-20200606095443-fa78fa0c1aa0
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
-	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20200302111820-5ec09431be26
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/snowflakedb/gosnowflake v1.3.4
+	github.com/snowflakedb/gosnowflake v1.3.5
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
 	github.com/vertica/vertica-sql-go v1.1.0
