@@ -36,7 +36,7 @@ require (
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	github.com/nakagami/firebirdsql v0.0.0-20200708222550-b4aac75cd3c0
+	github.com/nakagami/firebirdsql v0.0.0-20200724081317-0cfab755829a
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20200302111820-5ec09431be26
 	github.com/shopspring/decimal v1.2.0 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/thda/tds v0.1.7
 	github.com/vertica/vertica-sql-go v1.1.0
 	github.com/xinsnake/go-http-digest-auth-client v0.6.0 // indirect
-	github.com/xo/dburl v0.0.0-20200124232849-e9ec94f52bc3
+	github.com/xo/dburl v0.0.0-20200727080105-4a02649c2fea
 	github.com/xo/tblfmt v0.0.0-20200425011819-c88dde44428d
 	github.com/xo/terminfo v0.0.0-20200218205459-454e5b68f9e8
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
@@ -53,12 +53,13 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
+	golang.org/x/sys v0.0.0-20200724161237-0e2f3a69832c // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
 	modernc.org/ql v1.1.0
 	modernc.org/sortutil v1.1.0 // indirect
+	modernc.org/sqlite v1.4.0-beta1
 	modernc.org/strutil v1.1.0 // indirect
 )
 
