@@ -6,16 +6,16 @@ require (
 	github.com/MichaelS11/go-cql-driver v0.0.0-20190914174813-cf3b3196aa43
 	github.com/SAP/go-hdb v0.100.10
 	github.com/VoltDB/voltdb-client-go v1.0.1
-	github.com/alecthomas/chroma v0.7.3
+	github.com/alecthomas/chroma v0.8.0
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
-	github.com/apache/arrow/go/arrow v0.0.0-20200723122728-a06a0f4c6b32 // indirect
+	github.com/apache/arrow/go/arrow v0.0.0-20200729233021-adec0c19958c // indirect
 	github.com/apache/calcite-avatica-go/v4 v4.0.0
-	github.com/couchbase/go-couchbase v0.0.0-20200708133453-a63050e27560 // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20200729203859-2f81ea7ba5a9 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.0.0-20200618124739-5bac349aff71 // indirect
 	github.com/couchbase/goutils v0.0.0-20191018232750-b49639060d85 // indirect
@@ -25,14 +25,14 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gocql/gocql v0.0.0-20200624222514-34081eda590e
-	github.com/godror/godror v0.17.5
+	github.com/godror/godror v0.18.0
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/jackc/pgconn v1.6.3
 	github.com/jackc/pgx/v4 v4.8.0
-	github.com/lib/pq v1.7.1
+	github.com/lib/pq v1.8.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
@@ -51,15 +51,15 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
+	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200724161237-0e2f3a69832c // indirect
+	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
 	modernc.org/ql v1.1.0
 	modernc.org/sortutil v1.1.0 // indirect
-	modernc.org/sqlite v1.4.0-beta1
+	modernc.org/sqlite v1.4.0-beta1.0.20200728164257-2491c1ae5a0c
 	modernc.org/strutil v1.1.0 // indirect
 )
 
