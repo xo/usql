@@ -13,7 +13,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
-	github.com/apache/arrow/go/arrow v0.0.0-20200729233021-adec0c19958c // indirect
+	github.com/apache/arrow/go/arrow v0.0.0-20200804212857-e03628a0fa0a // indirect
 	github.com/apache/calcite-avatica-go/v4 v4.0.0
 	github.com/couchbase/go-couchbase v0.0.0-20200729203859-2f81ea7ba5a9 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
@@ -30,8 +30,9 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
-	github.com/jackc/pgconn v1.6.3
-	github.com/jackc/pgx/v4 v4.8.0
+	github.com/jackc/pgconn v1.6.4
+	github.com/jackc/pgproto3/v2 v2.0.4 // indirect
+	github.com/jackc/pgx/v4 v4.8.1
 	github.com/lib/pq v1.8.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
@@ -40,7 +41,7 @@ require (
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20200302111820-5ec09431be26
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/snowflakedb/gosnowflake v1.3.6
+	github.com/snowflakedb/gosnowflake v1.3.7
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
 	github.com/vertica/vertica-sql-go v1.1.0
@@ -53,14 +54,14 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+	golang.org/x/sys v0.0.0-20200803210538-64077c9b5642 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
+	modernc.org/crt/v3 v3.25.1 // indirect
 	modernc.org/ql v1.1.0
 	modernc.org/sortutil v1.1.0 // indirect
-	modernc.org/sqlite v1.4.0-beta1.0.20200728164257-2491c1ae5a0c
-	modernc.org/strutil v1.1.0 // indirect
+	modernc.org/sqlite v1.4.0-beta1.0.20200804151532-43c865ce5d35
 )
 
 go 1.14
