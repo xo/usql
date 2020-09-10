@@ -1,9 +1,7 @@
 #!/bin/bash
 
-SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
-
+SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../)
 ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort)
-
 SED=sed
 if [ "$(uname)" == "Darwin" ]; then
   SED=gsed
