@@ -13,11 +13,11 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
-	github.com/apache/arrow/go/arrow v0.0.0-20200909221917-5c3beb37f40f // indirect
+	github.com/apache/arrow/go/arrow v0.0.0-20200910002612-9921c83dfd3a // indirect
 	github.com/apache/calcite-avatica-go/v4 v4.0.0
 	github.com/couchbase/go-couchbase v0.0.0-20200903133030-4bec0f660f90 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
-	github.com/couchbase/gomemcached v0.0.0-20200618124739-5bac349aff71 // indirect
+	github.com/couchbase/gomemcached v0.1.0 // indirect
 	github.com/couchbase/goutils v0.0.0-20191018232750-b49639060d85 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20200831201914-36b6ff1bbc10
 	github.com/dlclark/regexp2 v1.2.1 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/thda/tds v0.1.7
 	github.com/vertica/vertica-sql-go v1.1.0
 	github.com/xinsnake/go-http-digest-auth-client v0.6.0 // indirect
-	github.com/xo/dburl v0.0.0-20200727080105-4a02649c2fea
+	github.com/xo/dburl v0.0.0-20200910011426-652e0d5720a3
 	github.com/xo/tblfmt v0.0.0-20200425011819-c88dde44428d
 	github.com/xo/terminfo v0.0.0-20200218205459-454e5b68f9e8
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
@@ -67,4 +67,4 @@ require (
 	modernc.org/strutil v1.1.0 // indirect
 )
 
-go 1.14
+go 1.13
