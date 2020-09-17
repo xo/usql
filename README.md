@@ -44,17 +44,14 @@ for other databases.
 3. Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or
 `%PATH%` (Windows)
 
-### Installing via Homebrew (macOS)
+### Installing via Homebrew (macOS and Linux)
 
 `usql` is available in the [`xo/xo` tap][xo-tap], and can be installed in the
 usual way with the [`brew` command][homebrew]:
 
 ```sh
-# add tap
-$ brew tap xo/xo
-
 # install usql with "most" drivers
-$ brew install usql
+$ brew install xo/xo/usql
 ```
 
 Additional support for [Oracle and ODBC databases][Database Support] can be
