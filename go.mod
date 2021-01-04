@@ -13,7 +13,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
 	github.com/alexbrainman/odbc v0.0.0-20200426075526-f0492dfa1575
 	github.com/amsokol/ignite-go-client v0.12.2
-	github.com/apache/arrow/go/arrow v0.0.0-20201231084302-25b7302ecc6c // indirect
+	github.com/apache/arrow/go/arrow v0.0.0-20210103220046-f49f293327c7 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
@@ -26,12 +26,13 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gocql/gocql v0.0.0-20201215165327-e49edf966d90
-	github.com/godror/godror v0.22.3
+	github.com/godror/godror v0.23.0
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/uuid v1.1.3 // indirect
 	github.com/jackc/pgconn v1.8.0
+	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
 	github.com/lib/pq v1.9.0
@@ -57,7 +58,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
-	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
+	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect

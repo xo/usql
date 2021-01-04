@@ -33,8 +33,8 @@ github.com/amsokol/ignite-go-client v0.12.2 h1:q4Mr+UUiKVnR7ykjR1YARVS5jp+ZU6ekC
 github.com/amsokol/ignite-go-client v0.12.2/go.mod h1:K3tKJGcLQORFD+ds7f0f9fl88tv0KZcpfuNhzRyuLVE=
 github.com/apache/arrow/go/arrow v0.0.0-20200601151325-b2287a20f230 h1:5ultmol0yeX75oh1hY78uAFn3dupBQ/QUNxERCkiaUQ=
 github.com/apache/arrow/go/arrow v0.0.0-20200601151325-b2287a20f230/go.mod h1:QNYViu/X0HXDHw7m3KXzWSVXIbfUvJqBFe6Gj8/pYA0=
-github.com/apache/arrow/go/arrow v0.0.0-20201231084302-25b7302ecc6c h1:b0PvCbpDSPlKBx7ahJP8U2WeiBJntAcccH3OYl+VZ9Q=
-github.com/apache/arrow/go/arrow v0.0.0-20201231084302-25b7302ecc6c/go.mod h1:c9sxoIT3YgLxH4UhLOCKaBlEojuMhVYpk4Ntv3opUTQ=
+github.com/apache/arrow/go/arrow v0.0.0-20210103220046-f49f293327c7 h1:8bhP+mJoOLyNB595/eqAL8ruwMI9bYS8fjWFGXUMus0=
+github.com/apache/arrow/go/arrow v0.0.0-20210103220046-f49f293327c7/go.mod h1:c9sxoIT3YgLxH4UhLOCKaBlEojuMhVYpk4Ntv3opUTQ=
 github.com/apache/calcite-avatica-go/v5 v5.0.0 h1:B0l4O6KGR/sRHDaAgFT+AdGFouvp5Y/B9/82ag5rhds=
 github.com/apache/calcite-avatica-go/v5 v5.0.0/go.mod h1:mbmgGJJQk6WZfh7U9z0QOa2OjS4L9w5bVMj2LD6wwVM=
 github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 h1:mXoPYz/Ul5HYEDvkta6I8/rnYM5gSdSV2tJ6XbZuEtY=
@@ -112,8 +112,8 @@ github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9 h1:SBOCi413wRa7i5ZET6d
 github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9/go.mod h1:DL0ekTmBSTdlNF25Orwt/JMzqIq3EJ4MVa/J/uK64OY=
 github.com/gocql/gocql v0.0.0-20201215165327-e49edf966d90 h1:wSTQK2N221ppLtM8g/2/1LOy+4hblTb17U6F+0aDDXo=
 github.com/gocql/gocql v0.0.0-20201215165327-e49edf966d90/go.mod h1:DL0ekTmBSTdlNF25Orwt/JMzqIq3EJ4MVa/J/uK64OY=
-github.com/godror/godror v0.22.3 h1:J8Vj1bLUS9mTawmCHouNjQ7y8z1LKlI3fqUUPyGKQjs=
-github.com/godror/godror v0.22.3/go.mod h1:YlPoIf962ZZKPM5Xqa8NxmGgck39pi51tqAs+K3IaFM=
+github.com/godror/godror v0.23.0 h1:QbZrkaN8pmmrUDZl0P0SWRbD4wHXeWBXtq/0EfQ8zAg=
+github.com/godror/godror v0.23.0/go.mod h1:YlPoIf962ZZKPM5Xqa8NxmGgck39pi51tqAs+K3IaFM=
 github.com/gofrs/uuid v3.2.0+incompatible h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=
 github.com/gofrs/uuid v3.2.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c h1:yE35fKFwcelIte3q5q1/cPiY7pI7vvf5/j/0ddxNCKs=
@@ -200,6 +200,8 @@ github.com/jackc/pgproto3/v2 v2.0.0-rc3.0.20190831210041-4c03ce451f29/go.mod h1:
 github.com/jackc/pgproto3/v2 v2.0.1/go.mod h1:WfJCnwN3HIg9Ish/j3sgWXnAfK8A9Y0bwXYU5xKaEdA=
 github.com/jackc/pgproto3/v2 v2.0.6 h1:b1105ZGEMFe7aCvrT1Cca3VoVb4ZFMaFJLJcg/3zD+8=
 github.com/jackc/pgproto3/v2 v2.0.6/go.mod h1:WfJCnwN3HIg9Ish/j3sgWXnAfK8A9Y0bwXYU5xKaEdA=
+github.com/jackc/pgproto3/v2 v2.0.7 h1:6Pwi1b3QdY65cuv6SyVO0FgPd5J3Bl7wf/nQQjinHMA=
+github.com/jackc/pgproto3/v2 v2.0.7/go.mod h1:WfJCnwN3HIg9Ish/j3sgWXnAfK8A9Y0bwXYU5xKaEdA=
 github.com/jackc/pgservicefile v0.0.0-20200307190119-3430c5407db8/go.mod h1:vsD4gTJCa9TptPL8sPkXrLZ+hDuNrZCnj29CQpr4X1E=
 github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b h1:C8S2+VttkHFdOOCXJe+YGfa4vHYwlt4Zx+IVXQ97jYg=
 github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b/go.mod h1:vsD4gTJCa9TptPL8sPkXrLZ+hDuNrZCnj29CQpr4X1E=
@@ -442,8 +444,8 @@ golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68 h1:nxC68pudNYkKU6jWhgrqdreuFiOQWj1Fs7T3VrH4Pjw=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20201223074533-0d417f636930 h1:vRgIt+nup/B/BwIS0g2oC0haq0iqbV3ZA+u6+0TlNCo=
-golang.org/x/sys v0.0.0-20201223074533-0d417f636930/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 h1:joucsQqXmyBVxViHCPFjG3hx8JzIFSaym3l3MM/Jsdg=
+golang.org/x/sys v0.0.0-20201231184435-2d18734c6014/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
