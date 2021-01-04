@@ -58,12 +58,10 @@ github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
-github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 h1:1ZELwRDUvpBpmgKSIUP6VMW1jIehzD0sCdWxRyejegw=
-github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17/go.mod h1:+/bddYDxXsf9qt0xpDUtRR47A2GjaXmGGAqQ/k3GJ8A=
 github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127 h1:6Y3osD8rWOIAu/z5lrBns2cZSKSr6s+GEX64Ii0JtuI=
 github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127/go.mod h1:Rn19fO9CVfhJkqyIED9ixL5Kh5XuH7hXgDTxyfGY7hM=
-github.com/couchbase/gomemcached v0.1.1 h1:xCS8ZglJDhrlQg3jmK7Rn1V8f7bPjXABLC05CgLQauc=
-github.com/couchbase/gomemcached v0.1.1/go.mod h1:mxliKQxOv84gQ0bJWbI+w9Wxdpt9HjDvgW9MjCym5Vo=
+github.com/couchbase/gomemcached v0.1.2-0.20201216195009-d0bafc05d04e h1:1paCepxhRJaewm8pTo5PC/0xPvVdrKVhn1+5ayuO2yY=
+github.com/couchbase/gomemcached v0.1.2-0.20201216195009-d0bafc05d04e/go.mod h1:mxliKQxOv84gQ0bJWbI+w9Wxdpt9HjDvgW9MjCym5Vo=
 github.com/couchbase/goutils v0.0.0-20201030094643-5e82bb967e67 h1:NCqJ6fwen6YP0WlV/IyibaT0kPt3JEI1rA62V/UPKT4=
 github.com/couchbase/goutils v0.0.0-20201030094643-5e82bb967e67/go.mod h1:BQwMFlJzDjFDG3DJUdU0KORxn88UlsOULuxLExMh3Hs=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
@@ -245,6 +243,8 @@ github.com/jcmturner/rpc/v2 v2.0.3/go.mod h1:VUJYCIDm3PVOEHw8sgt091/20OJjskO/YJk
 github.com/jmoiron/sqlx v1.2.0/go.mod h1:1FEQNm3xlJgrMD+FBdI9+xvCksHtbpVBBw5dYhBSsks=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
+github.com/kenshaw/go-couchbase v0.0.0-20210104231425-ee71e5a22c59 h1:J0fDZahwnwpL3NMagZpkHbMrKkm3IXEJzKdcmPvGblY=
+github.com/kenshaw/go-couchbase v0.0.0-20210104231425-ee71e5a22c59/go.mod h1:lb574inMXnGoeCGtjVfn3XrlpGBZJWZeVm614MdoxC8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=

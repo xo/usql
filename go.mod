@@ -17,8 +17,6 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
-	github.com/couchbase/gomemcached v0.1.1 // indirect
-	github.com/couchbase/goutils v0.0.0-20201030094643-5e82bb967e67 // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/color v1.10.0 // indirect
@@ -56,7 +54,6 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 	golang.org/x/text v0.3.4 // indirect
@@ -75,5 +72,7 @@ require (
 	modernc.org/sqlite v1.7.5
 	modernc.org/zappy v1.0.2 // indirect
 )
+
+replace github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 => github.com/kenshaw/go-couchbase v0.0.0-20210104231425-ee71e5a22c59
 
 go 1.15
