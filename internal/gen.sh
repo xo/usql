@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="mssql mysql postgres sqlite3"
+BASE="mssql mysql oracle postgres sqlite3"
 
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 
