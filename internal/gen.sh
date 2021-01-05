@@ -22,7 +22,7 @@ for i in $ALL; do
   if ! [[ "$BASE" =~ "$NAME" && "$NAME" != "ql" ]]; then
     TAGS="all,!no_$NAME"
 
-    if [[ "$NAME" != "odbc" && "$NAME" != "oracle" ]]; then
+    if [[ "$NAME" != "odbc" ]]; then
       TAGS="$TAGS most,!no_$NAME"
     fi
 

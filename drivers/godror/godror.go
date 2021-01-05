@@ -1,4 +1,4 @@
-package oracle
+package godror
 
 import (
 	"database/sql"
@@ -6,9 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: oracle
-	_ "github.com/sijms/go-ora"
-
+	// DRIVER: godror
+	_ "github.com/godror/godror"
 	"golang.org/x/xerrors"
 
 	"github.com/xo/dburl"
@@ -19,7 +18,7 @@ import (
 func init() {
 	allCapsRE := regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
 	endRE := regexp.MustCompile(`;?\s*$`)
-	drivers.Register("oracle", drivers.Driver{
+	drivers.Register("godror", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {
 			// if the service name is not specified, use the environment
@@ -54,6 +53,7 @@ func init() {
 			if e := xerrors.Unwrap(err); e != nil {
 				err = e
 			}
+
 			code, msg := "", err.Error()
 			if e, ok := err.(interface {
 				Code() int
@@ -65,6 +65,7 @@ func init() {
 			}); ok {
 				msg = e.Message()
 			}
+
 			if i := strings.LastIndex(msg, "ORA-"); msg == "" && i != -1 {
 				msg = msg[i:]
 				if j := strings.Index(msg, ":"); j != -1 {
@@ -74,6 +75,7 @@ func init() {
 					}
 				}
 			}
+
 			return code, strings.TrimSpace(msg)
 		},
 		IsPasswordErr: func(err error) bool {
@@ -92,11 +94,13 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+
 			for i, c := range cols {
 				if allCapsRE.MatchString(c) {
 					cols[i] = strings.ToLower(c)
 				}
 			}
+
 			return cols, nil
 		},
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
