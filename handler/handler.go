@@ -144,9 +144,10 @@ func (h *Handler) outputHighlighter(s string) string {
 	var cmd, final string
 	for {
 		cmd, _, err = st.Next()
-		if err != nil && err != io.EOF {
+		switch {
+		case err != nil && err != io.EOF:
 			return s + endl
-		} else if err == io.EOF {
+		case err == io.EOF:
 			break
 		}
 		if st.Ready() || cmd != "" {
@@ -197,7 +198,6 @@ func (h *Handler) Run() error {
 		fmt.Fprintln(h.l.Stdout())
 	}
 	for {
-		var err error
 		var execute bool
 		// set prompt
 		if iactive {
@@ -527,7 +527,6 @@ func (h *Handler) forceParams(u *dburl.URL) {
 // Password collects a password from input, and returns a modified DSN
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
-	var err error
 	if dsn == "" {
 		return "", text.ErrMissingDSN
 	}
@@ -614,20 +613,20 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 	if !h.l.Interactive() {
 		return "", text.ErrNotInteractive
 	}
-	var err error
-	if err = drivers.CanChangePassword(h.u); err != nil {
+	if err := drivers.CanChangePassword(h.u); err != nil {
 		return "", err
 	}
 	var newpw, newpw2, oldpw string
 	// ask for previous password
 	if user == "" && drivers.RequirePreviousPassword(h.u) {
-		oldpw, err = h.l.Password(text.EnterPreviousPassword)
-		if err != nil {
+		var err error
+		if oldpw, err = h.l.Password(text.EnterPreviousPassword); err != nil {
 			return "", err
 		}
 	}
 	// attempt to get passwords
 	for i := 0; i < 3; i++ {
+		var err error
 		if newpw, err = h.l.Password(text.NewPassword); err != nil {
 			return "", err
 		}
@@ -750,7 +749,6 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 
 // query executes a query against the database.
 func (h *Handler) query(w io.Writer, _, qstr string) error {
-	var err error
 	// run query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -763,7 +761,6 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 
 // execRows executes all the columns in the row.
 func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
-	var err error
 	// get columns
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
@@ -791,26 +788,24 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 
 // scan scans a row.
 func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
-	var err error
 	// scan to []interface{}
 	r := make([]interface{}, clen)
 	for i := range r {
 		r[i] = new(interface{})
 	}
-	if err = q.Scan(r...); err != nil {
+	if err := q.Scan(r...); err != nil {
 		return nil, err
 	}
 	// get conversion funcs
-	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u),
-		drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
+	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u), drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
 	row := make([]string, clen)
 	for n, z := range r {
 		j := z.(*interface{})
 		switch x := (*j).(type) {
 		case []byte:
 			if x != nil {
-				row[n], err = cb(x, tfmt)
-				if err != nil {
+				var err error
+				if row[n], err = cb(x, tfmt); err != nil {
 					return nil, err
 				}
 			}
@@ -822,33 +817,32 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 			row[n] = x.String()
 		case map[string]interface{}:
 			if x != nil {
-				row[n], err = cm(x)
-				if err != nil {
+				var err error
+				if row[n], err = cm(x); err != nil {
 					return nil, err
 				}
 			}
 		case []interface{}:
 			if x != nil {
-				row[n], err = cs(x)
-				if err != nil {
+				var err error
+				if row[n], err = cs(x); err != nil {
 					return nil, err
 				}
 			}
 		default:
 			if x != nil {
-				row[n], err = cd(x)
-				if err != nil {
+				var err error
+				if row[n], err = cd(x); err != nil {
 					return nil, err
 				}
 			}
 		}
 	}
-	return row, err
+	return row, nil
 }
 
 // exec does a database exec.
 func (h *Handler) exec(w io.Writer, typ, qstr string) error {
-	var err error
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err
@@ -877,8 +871,7 @@ func (h *Handler) Begin() error {
 		return text.ErrPreviousTransactionExists
 	}
 	var err error
-	h.tx, err = h.db.Begin()
-	if err != nil {
+	if h.tx, err = h.db.Begin(); err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
 	return nil
@@ -920,7 +913,6 @@ func (h *Handler) Rollback() error {
 
 // Include includes the specified path.
 func (h *Handler) Include(path string, relative bool) error {
-	var err error
 	if relative && !filepath.IsAbs(path) {
 		path = filepath.Join(h.wd, path)
 	}

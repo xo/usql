@@ -165,10 +165,10 @@ var lineend = []rune{'\n'}
 //         }
 //     }
 func (b *Stmt) Next() (string, []string, error) {
-	var err error
 	var i int
 	// no runes to process, grab more
 	if b.rlen == 0 {
+		var err error
 		b.r, err = b.f()
 		if err != nil {
 			return "", nil, err

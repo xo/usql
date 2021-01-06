@@ -68,8 +68,7 @@ func Getvar(s string) (bool, string, error) {
 // OpenFile opens a file for reading, returning the full, expanded path of the
 // file.  All callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
-	var err error
-	path, err = filepath.EvalSymlinks(expand(u, path))
+	path, err := filepath.EvalSymlinks(expand(u, path))
 	switch {
 	case err != nil && os.IsNotExist(err):
 		return "", nil, text.ErrNoSuchFileOrDirectory
@@ -94,7 +93,6 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 
 // EditFile edits a file. If path is empty, then a temporary file will be created.
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
-	var err error
 	ed := Getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
 	if ed == "" {
 		return nil, text.ErrNoEditorDefined
@@ -102,18 +100,15 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	if path != "" {
 		path = expand(u, path)
 	} else {
-		var f *os.File
-		f, err = temp.File("", text.CommandLower(), "sql")
+		f, err := temp.File("", text.CommandLower(), "sql")
 		if err != nil {
 			return nil, err
 		}
-		err = f.Close()
-		if err != nil {
+		if err = f.Close(); err != nil {
 			return nil, err
 		}
 		path = f.Name()
-		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
-		if err != nil {
+		if err := ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644); err != nil {
 			return nil, err
 		}
 	}
@@ -132,8 +127,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	// run
-	err = c.Run()
-	if err != nil {
+	if err := c.Run(); err != nil {
 		return nil, err
 	}
 	// read
