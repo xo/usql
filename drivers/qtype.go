@@ -6,9 +6,8 @@ import (
 
 // queryMap is the map of SQL prefixes use as queries.
 var queryMap = map[string]bool{
-	"WITH":   true,
-	"PRAGMA": true,
-
+	"WITH":     true,
+	"PRAGMA":   true,
 	"EXPLAIN":  true, // show the execution plan of a statement
 	"DESCRIBE": true, // describe (mysql)
 	"DESC":     true, // describe (mysql)
@@ -17,8 +16,7 @@ var queryMap = map[string]bool{
 	"SHOW":     true, // show the value of a run-time parameter
 	"VALUES":   true, // compute a set of rows
 	"LIST":     true, //  list permissions, roles, users [cassandra]
-
-	"EXEC": true, // execute a stored procedure that returns rows (not postgres)
+	"EXEC":     true, // execute a stored procedure that returns rows (not postgres)
 }
 
 // execMap is the map of SQL prefixes to execute.
@@ -35,10 +33,8 @@ var execMap = map[string]bool{
 	"DROP KEYSPACE":   true, // drop a keyspace
 	"BEGIN BATCH":     true, // begin batch
 	"APPLY BATCH":     true, // apply batch
-
 	// ql
 	"BEGIN TRANSACTION": true, // begin batch
-
 	// postgresql
 	"ABORT":                            true, // abort the current transaction
 	"ALTER AGGREGATE":                  true, // change the definition of an aggregate function
@@ -231,7 +227,6 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 	if prefix == "" {
 		return "EXEC", false
 	}
-
 	s := strings.Split(prefix, " ")
 	if len(s) > 0 {
 		// check query map
@@ -245,7 +240,6 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 			}
 			return typ, true
 		}
-
 		// normalize prefixes
 		switch s[0] {
 		// CREATE statements have a large number of variants
@@ -258,7 +252,6 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 				n = append(n, x)
 			}
 			s = n
-
 		case "DROP":
 			// "DROP [PROCEDURAL] LANGUAGE" => "DROP LANGUAGE"
 			n := []string{"DROP"}
@@ -270,7 +263,6 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 			}
 			s = n
 		}
-
 		// find longest match
 		for i := len(s); i > 0; i-- {
 			typ := strings.Join(s[:i], " ")
@@ -279,6 +271,5 @@ func QueryExecType(prefix, sqlstr string) (string, bool) {
 			}
 		}
 	}
-
 	return s[0], false
 }

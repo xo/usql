@@ -3,9 +3,7 @@ package clickhouse
 import (
 	"regexp"
 
-	// DRIVER: presto
-	_ "github.com/prestodb/presto-go-client/presto"
-
+	_ "github.com/prestodb/presto-go-client/presto" // DRIVER: presto
 	"github.com/xo/usql/drivers"
 )
 

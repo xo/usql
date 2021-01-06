@@ -16,12 +16,10 @@ func WrapErr(driver string, err error) error {
 	if err == nil {
 		return nil
 	}
-
 	// avoid double wrapping error
 	if _, ok := err.(*Error); ok {
 		return err
 	}
-
 	return &Error{driver, err}
 }
 
@@ -34,7 +32,6 @@ func (e *Error) Error() string {
 			n = d.Name
 		}
 		s := n
-
 		var msg string
 		if d.Err != nil {
 			var code string
@@ -45,10 +42,8 @@ func (e *Error) Error() string {
 		} else {
 			msg = e.Err.Error()
 		}
-
 		return s + ": " + chop(msg, n)
 	}
-
 	return e.Driver + ": " + chop(e.Err.Error(), e.Driver)
 }
 

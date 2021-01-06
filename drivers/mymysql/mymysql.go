@@ -3,12 +3,9 @@ package mymysql
 import (
 	"strconv"
 
-	// DRIVER: mymysql
-	_ "github.com/ziutek/mymysql/godrv"
-
-	"github.com/ziutek/mymysql/mysql"
-
 	"github.com/xo/usql/drivers"
+	_ "github.com/ziutek/mymysql/godrv" // DRIVER: mymysql
+	"github.com/ziutek/mymysql/mysql"
 )
 
 func init() {

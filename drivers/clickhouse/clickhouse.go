@@ -3,9 +3,7 @@ package clickhouse
 import (
 	"database/sql"
 
-	// DRIVER: clickhouse
-	_ "github.com/ClickHouse/clickhouse-go"
-
+	_ "github.com/ClickHouse/clickhouse-go" // DRIVER: clickhouse
 	"github.com/xo/usql/drivers"
 )
 

@@ -16,18 +16,14 @@ const (
 type Var struct {
 	// I is where the variable starts (ie, ':') in Stmt.Buf.
 	I int
-
 	// End is where the variable ends in Stmt.Buf.
 	End int
-
 	// Quote is the quote character used if the variable was quoted, 0
 	// otherwise.
 	Quote rune
-
 	// Name is the actual variable name excluding ':' and any enclosing quote
 	// characters.
 	Name string
-
 	// Len is the length of the replaced variable.
 	Len int
 }
@@ -37,40 +33,29 @@ type Var struct {
 type Stmt struct {
 	// f is the rune source.
 	f func() ([]rune, error)
-
 	// parse settings
 	allowDollar, allowMultilineComments, allowCComments, allowHashComments bool
-
 	// Buf is the statement buffer.
 	Buf []rune
-
 	// Len is the current len of any statement in Buf.
 	Len int
-
 	// Prefix is the detected prefix of the statement.
 	Prefix string
-
 	// Vars is the list of encountered variables.
 	Vars []*Var
-
 	// r is the unprocessed runes.
 	r []rune
-
 	// rlen is the number of unprocessed runes.
 	rlen int
-
 	// quoted string state
 	quote       bool
 	quoteDouble bool
 	quoteDollar bool
 	quoteTagID  string
-
 	// multicomment state
 	multilineComment bool
-
 	// balanced paren count
 	balanceCount int
-
 	// ready is the state
 	ready bool
 }
@@ -80,12 +65,10 @@ func New(f func() ([]rune, error), opts ...Option) *Stmt {
 	b := &Stmt{
 		f: f,
 	}
-
 	// apply opts
 	for _, o := range opts {
 		o(b)
 	}
-
 	return b
 }
 
@@ -101,7 +84,6 @@ func (b *Stmt) RawString() string {
 	}
 	s, z := string(b.Buf), new(bytes.Buffer)
 	var i int
-
 	// deinterpolate vars
 	for _, v := range b.Vars {
 		if v.Len == 0 {
@@ -118,7 +100,6 @@ func (b *Stmt) RawString() string {
 		}
 		i = v.I + v.Len
 	}
-
 	// add remaining
 	z.WriteString(s[i:])
 	return z.String()
@@ -134,19 +115,14 @@ func (b *Stmt) Ready() bool {
 func (b *Stmt) Reset(r []rune) {
 	// reset buf
 	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
-
 	// quote state
 	b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
-
 	// multicomment state
 	b.multilineComment = false
-
 	// balance state
 	b.balanceCount = 0
-
 	// ready state
 	b.ready = false
-
 	if r != nil {
 		b.r, b.rlen = r, len(r)
 	}
@@ -191,7 +167,6 @@ var lineend = []rune{'\n'}
 func (b *Stmt) Next() (string, []string, error) {
 	var err error
 	var i int
-
 	// no runes to process, grab more
 	if b.rlen == 0 {
 		b.r, err = b.f()
@@ -200,14 +175,11 @@ func (b *Stmt) Next() (string, []string, error) {
 		}
 		b.rlen = len(b.r)
 	}
-
 	var cmd string
 	var params []string
-
 parse:
 	for ; i < b.rlen; i++ {
-		//log.Printf(">> (%c) %d", b.r[i], i)
-
+		// log.Printf(">> (%c) %d", b.r[i], i)
 		// grab c, next
 		c, next := b.r[i], grab(b.r, i+1, b.rlen)
 		switch {
@@ -218,20 +190,16 @@ parse:
 			if ok {
 				b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
 			}
-
 		// find end of multiline comment
 		case b.multilineComment:
 			pos, ok := readMultilineComment(b.r, i, b.rlen)
 			i, b.multilineComment = pos, !ok
-
 		// start of single quoted string
 		case c == '\'':
 			b.quote = true
-
 		// start of double quoted string
 		case c == '"':
 			b.quote, b.quoteDouble = true, true
-
 		// start of dollar quoted string literal (postgres)
 		case b.allowDollar && c == '$':
 			id, pos, ok := readDollarAndTag(b.r, i, b.rlen)
@@ -239,24 +207,19 @@ parse:
 				b.quote, b.quoteDollar, b.quoteTagID = true, true, id
 			}
 			i = pos
-
 		// start of sql comment, skip to end of line
 		case c == '-' && next == '-':
 			i = b.rlen
-
 		// start of c-style comment, skip to end of line
 		case b.allowCComments && c == '/' && next == '/':
 			i = b.rlen
-
 		// start of hash comment, skip to end of line
 		case b.allowHashComments && c == '#':
 			i = b.rlen
-
 		// start of multiline comment
 		case b.allowMultilineComments && c == '/' && next == '*':
 			b.multilineComment = true
 			i++
-
 		// variable declaration
 		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen); v != nil {
@@ -273,23 +236,18 @@ parse:
 					v.I += b.Len + 1
 				}
 			}
-
 		// unbalance
 		case c == '(':
 			b.balanceCount++
-
 		// balance
 		case c == ')':
 			b.balanceCount = max(0, b.balanceCount-1)
-
 		// continue processing
 		case b.quote || b.multilineComment || b.balanceCount != 0:
 			continue
-
 		// skip escaped backslash
 		case c == '\\' && next == '\\':
 			i++
-
 		// start of command
 		case c == '\\':
 			// extract command from r
@@ -297,22 +255,17 @@ parse:
 			cmd, params, pos = readCommand(b.r, i, b.rlen)
 			b.r = append(b.r[:i], b.r[pos:]...)
 			b.rlen = len(b.r)
-
 			break parse
-
 		// terminated
 		case c == ';':
 			b.ready = true
 			i++
-
 			break parse
 		}
 	}
-
 	// fix i -- i will be +1 when passing the length, which is a problem as the
 	// '\n' will get copied from the source.
 	i = min(i, b.rlen)
-
 	// append line to buf when:
 	// 1. in a quoted string (ie, ', ", or $)
 	// 2. in a multiline comment
@@ -320,7 +273,6 @@ parse:
 	//
 	// DO NOT append to buf when:
 	// 1. line is empty/whitespace and not in a string/multiline comment
-
 	empty := isEmptyLine(b.r, 0, i)
 	appendLine := b.quote || b.multilineComment || !empty
 	if !b.multilineComment && cmd != "" && empty {
@@ -332,23 +284,18 @@ parse:
 		if b.Len == 0 {
 			st, _ = findNonSpace(b.r, 0, i)
 		}
-
-		//log.Printf(">> appending: `%s`", string(r[st:i]))
+		// log.Printf(">> appending: `%s`", string(r[st:i]))
 		b.Append(b.r[st:i], lineend)
 	}
-
 	// set prefix
 	b.Prefix = findPrefix(b.Buf, prefixWords)
-
 	// reset r
 	b.r = b.r[i:]
 	b.rlen = len(b.r)
-
-	//log.Printf("returning from NEXT: `%s`", string(b.Buf))
-	//log.Printf(">>>>>>>>>>>> REMAIN: `%s`", string(b.r))
-	//log.Printf(">>>>>>>>>>>>    CMD: `%s`", cmd)
-	//log.Printf(">>>>>>>>>>>> PARAMS: %v", params)
-
+	// log.Printf("returning from NEXT: `%s`", string(b.Buf))
+	// log.Printf(">>>>>>>>>>>> REMAIN: `%s`", string(b.r))
+	// log.Printf(">>>>>>>>>>>>    CMD: `%s`", cmd)
+	// log.Printf(">>>>>>>>>>>> PARAMS: %v", params)
 	return cmd, params, nil
 }
 
@@ -362,16 +309,13 @@ parse:
 // to reset the Buf.
 func (b *Stmt) Append(r, sep []rune) {
 	rlen := len(r)
-
 	// initial
 	if b.Buf == nil {
 		b.Buf, b.Len = r, rlen
 		return
 	}
-
 	blen, seplen := b.Len, len(sep)
 	tlen := blen + rlen + seplen
-
 	// grow
 	if bcap := cap(b.Buf); tlen > bcap {
 		n := tlen + 2*rlen
@@ -380,7 +324,6 @@ func (b *Stmt) Append(r, sep []rune) {
 		copy(z, b.Buf)
 		b.Buf = z
 	}
-
 	b.Buf = b.Buf[:tlen]
 	copy(b.Buf[blen:], sep)
 	copy(b.Buf[blen+seplen:], r)
@@ -397,22 +340,16 @@ func (b *Stmt) State() string {
 	switch {
 	case b.quote && b.quoteDollar:
 		return "$"
-
 	case b.quote && b.quoteDouble:
 		return `"`
-
 	case b.quote:
 		return "'"
-
 	case b.multilineComment:
 		return "*"
-
 	case b.balanceCount != 0:
 		return "("
-
 	case b.Len != 0:
 		return "-"
 	}
-
 	return "="
 }

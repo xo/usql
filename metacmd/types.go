@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/xo/dburl"
-
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/rline"
@@ -17,52 +16,36 @@ import (
 type Handler interface {
 	// IO handles the handler's IO.
 	IO() rline.IO
-
 	// User returns the current user.
 	User() *user.User
-
 	// URL returns the current database URL.
 	URL() *dburl.URL
-
 	// DB returns the current database connection.
 	DB() drivers.DB
-
 	// Last returns the last executed query.
 	Last() string
-
 	// LastRaw returns the last raw (non-interpolated) query.
 	LastRaw() string
-
 	// Buf returns the current query buffer.
 	Buf() *stmt.Stmt
-
 	// Reset resets the last and current query buffer.
 	Reset([]rune)
-
 	// Open opens a database connection.
 	Open(...string) error
-
 	// Close closes the current database connection.
 	Close() error
-
 	// ChangePassword changes the password for a user.
 	ChangePassword(string) (string, error)
-
 	// ReadVar reads a variable of a specified type.
 	ReadVar(string, string) (string, error)
-
 	// Include includes a file.
 	Include(string, bool) error
-
 	// Begin begins a transaction.
 	Begin() error
-
 	// Commit commits the current transaction.
 	Commit() error
-
 	// Rollback aborts the current transaction.
 	Rollback() error
-
 	// Highlight highlights the statement.
 	Highlight(io.Writer, string) error
 }
@@ -86,17 +69,13 @@ type ExecType int
 const (
 	// ExecNone indicates no execution.
 	ExecNone ExecType = iota
-
 	// ExecOnly indicates plain execution only (\g).
 	ExecOnly
-
 	// ExecPipe indicates execution and piping results (\g |file)
 	ExecPipe
-
 	// ExecSet indicates execution and setting the resulting columns as
 	// variables (\gset).
 	ExecSet
-
 	// ExecExec indicates execution and executing the resulting rows (\gexec).
 	ExecExec
 )
@@ -105,14 +84,11 @@ const (
 type Result struct {
 	// Quit instructs the handling code to quit.
 	Quit bool
-
 	// Exec informs the handling code of the type of execution.
 	Exec ExecType
-
 	// ExecParam is an accompanying parameter for execution. For ExecPipe, it
 	// will be the name of a file. For ExecSet it will be the variable prefix.
 	ExecParam string
-
 	// Processed informs the handling code how many parameters went
 	// unprocessed. A value of 0 means that no parameters were processed.
 	Processed int
@@ -122,13 +98,10 @@ type Result struct {
 type Params struct {
 	// Handler is the process handler.
 	Handler Handler
-
 	// Name is the name of the metacmd.
 	Name string
-
 	// Params are the passed parameters.
 	Params []string
-
 	// Result is the resulting state of the command execution.
 	Result Result
 }

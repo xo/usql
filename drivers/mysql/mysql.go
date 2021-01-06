@@ -3,9 +3,7 @@ package mysql
 import (
 	"strconv"
 
-	// DRIVER: mysql
-	"github.com/go-sql-driver/mysql"
-
+	"github.com/go-sql-driver/mysql" // DRIVER: mysql
 	"github.com/xo/usql/drivers"
 )
 
@@ -23,7 +21,6 @@ func init() {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
-
 			return "", err.Error()
 		},
 		IsPasswordErr: func(err error) bool {

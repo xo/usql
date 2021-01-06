@@ -21,11 +21,9 @@ var styles = struct {
 func Get(name string) *chroma.Style {
 	styles.Lock()
 	defer styles.Unlock()
-
 	if _, ok := styles.styles[name]; !ok {
 		// get original style
 		s := cstyles.Get(name)
-
 		// create new entry map
 		m := make(chroma.StyleEntries)
 		for _, typ := range s.Types() {
@@ -34,14 +32,11 @@ func Get(name string) *chroma.Style {
 				continue
 			}
 			z := s.Get(typ)
-
 			// unset background
 			z.Background = chroma.Colour(0)
 			m[typ] = z.String()
 		}
-
 		styles.styles[name] = chroma.MustNewStyle(s.Name, m)
 	}
-
 	return styles.styles[name]
 }

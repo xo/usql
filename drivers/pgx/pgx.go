@@ -3,11 +3,8 @@ package pgx
 import (
 	"errors"
 
-	// DRIVER: pgx
-	_ "github.com/jackc/pgx/v4/stdlib"
-
 	"github.com/jackc/pgconn"
-
+	_ "github.com/jackc/pgx/v4/stdlib" // DRIVER: pgx
 	"github.com/xo/usql/drivers"
 )
 

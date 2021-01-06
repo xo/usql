@@ -6,14 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: oracle
-	_ "github.com/sijms/go-ora"
-
-	"golang.org/x/xerrors"
-
+	_ "github.com/sijms/go-ora" // DRIVER: oracle
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
+	"golang.org/x/xerrors"
 )
 
 func init() {

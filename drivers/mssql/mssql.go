@@ -4,9 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	// DRIVER: mssql
-	"github.com/denisenkom/go-mssqldb"
-
+	mssql "github.com/denisenkom/go-mssqldb" // DRIVER: mssql
 	"github.com/xo/usql/drivers"
 )
 
@@ -33,12 +31,10 @@ func init() {
 			if e, ok := err.(mssql.Error); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
-
 			msg := err.Error()
 			if i := strings.LastIndex(msg, "mssql:"); i != -1 {
 				msg = msg[i:]
 			}
-
 			return "", msg
 		},
 		IsPasswordErr: func(err error) bool {

@@ -3,9 +3,7 @@ package couchbase
 import (
 	"strings"
 
-	// DRIVER: n1ql
-	_ "github.com/couchbase/go_n1ql"
-
+	_ "github.com/couchbase/go_n1ql" // DRIVER: n1ql
 	"github.com/xo/usql/drivers"
 )
 

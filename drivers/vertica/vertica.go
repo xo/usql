@@ -5,9 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: vertica
-	_ "github.com/vertica/vertica-sql-go"
-
+	_ "github.com/vertica/vertica-sql-go" // DRIVER: vertica
 	"github.com/vertica/vertica-sql-go/logger"
 	"github.com/xo/usql/drivers"
 )
@@ -17,9 +15,7 @@ func init() {
 	if os.Getenv("VERTICA_SQL_GO_LOG_LEVEL") == "" {
 		logger.SetLogLevel(logger.NONE)
 	}
-
 	errCodeRE := regexp.MustCompile(`(?i)^\[([0-9a-z]+)\]\s+(.+)`)
-
 	drivers.Register("vertica", drivers.Driver{
 		AllowDollar:            true,
 		AllowMultilineComments: true,

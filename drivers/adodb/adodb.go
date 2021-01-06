@@ -3,9 +3,7 @@ package adodb
 import (
 	"database/sql"
 
-	// DRIVER: adodb
-	_ "github.com/mattn/go-adodb"
-
+	_ "github.com/mattn/go-adodb" // DRIVER: adodb
 	"github.com/xo/usql/drivers"
 )
 

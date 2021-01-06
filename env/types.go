@@ -41,26 +41,22 @@ func init() {
 	if v := Getenv("USQL_TIME_FORMAT"); v != "" {
 		timefmt = v
 	}
-
 	// get color level
 	colorLevel, _ := terminfo.ColorLevelFromEnv()
 	enableSyntaxHL := "true"
 	if colorLevel < terminfo.ColorLevelBasic {
 		enableSyntaxHL = "false"
 	}
-
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"TIME_FORMAT":           timefmt,
-
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
 		"SYNTAX_HL_STYLE":       "monokai",
 		"SYNTAX_HL_OVERRIDE_BG": "true",
 	}
-
 	pvars = Vars{
 		"border":                   "1",
 		"columns":                  "0",
@@ -105,7 +101,6 @@ func Set(name, value string) error {
 	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
-
 	vars.Set(name, value)
 	return nil
 }
@@ -115,7 +110,6 @@ func Unset(name string) error {
 	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
-
 	vars.Unset(name)
 	return nil
 }
@@ -130,11 +124,13 @@ func Pall() map[string]string {
 	return pvars
 }
 
-var onRE = regexp.MustCompile(`(?i)^(t|tr|tru|true|on)$`)
-var offRE = regexp.MustCompile(`(?i)^(f|fa|fal|fals|false|of|off)$`)
-var formatRE = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json)$`)
-var linestlyeRE = regexp.MustCompile(`^(ascii|old-ascii|unicode)$`)
-var borderRE = regexp.MustCompile(`^(single|double)$`)
+var (
+	onRE        = regexp.MustCompile(`(?i)^(t|tr|tru|true|on)$`)
+	offRE       = regexp.MustCompile(`(?i)^(f|fa|fal|fals|false|of|off)$`)
+	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json)$`)
+	linestlyeRE = regexp.MustCompile(`^(ascii|old-ascii|unicode)$`)
+	borderRE    = regexp.MustCompile(`^(single|double)$`)
+)
 
 func Pget(name string) (string, error) {
 	v, ok := pvars[name]
@@ -150,7 +146,6 @@ func Ptoggle(name, extra string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf(text.UnknownFormatFieldName, name)
 	}
-
 	switch name {
 	case "border", "columns", "pager", "pager_min_lines":
 	case "expanded":
@@ -162,7 +157,6 @@ func Ptoggle(name, extra string) (string, error) {
 		default:
 			panic(fmt.Sprintf("invalid state for field %s", name))
 		}
-
 	case "fieldsep_zero", "footer", "numericlocale", "recordsep_zero", "tuples_only":
 		switch pvars[name] {
 		case "on":
@@ -172,7 +166,6 @@ func Ptoggle(name, extra string) (string, error) {
 		default:
 			panic(fmt.Sprintf("invalid state for field %s", name))
 		}
-
 	case "format":
 		switch {
 		case extra != "" && pvars[name] != extra:
@@ -182,19 +175,14 @@ func Ptoggle(name, extra string) (string, error) {
 		default:
 			pvars[name] = "aligned"
 		}
-
 	case "linestyle":
 	case "fieldsep", "null", "recordsep":
-
 	case "tableattr", "title":
 		pvars[name] = ""
-
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
-
 	default:
 		panic(fmt.Sprintf("field %s was defined in package pvars variable, but not in switch", name))
 	}
-
 	return pvars[name], nil
 }
 
@@ -204,12 +192,10 @@ func Pset(name, value string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf(text.UnknownFormatFieldName, name)
 	}
-
 	switch name {
 	case "border", "columns", "pager", "pager_min_lines":
 		i, _ := strconv.Atoi(value)
 		pvars[name] = fmt.Sprintf("%d", i)
-
 	case "expanded":
 		switch {
 		case value == "auto":
@@ -221,7 +207,6 @@ func Pset(name, value string) (string, error) {
 		default:
 			return "", text.ErrInvalidFormatExpandedType
 		}
-
 	case "fieldsep_zero", "footer", "numericlocale", "recordsep_zero", "tuples_only":
 		switch {
 		case onRE.MatchString(value):
@@ -231,32 +216,26 @@ func Pset(name, value string) (string, error) {
 		default:
 			return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
 		}
-
 	case "format":
 		if !formatRE.MatchString(value) {
 			return "", text.ErrInvalidFormatType
 		}
 		pvars[name] = value
-
 	case "linestyle":
 		if !linestlyeRE.MatchString(value) {
 			return "", text.ErrInvalidFormatLineStyle
 		}
 		pvars[name] = value
-
 	case "fieldsep", "null", "recordsep", "tableattr", "title":
 		pvars[name] = value
-
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
 		if !borderRE.MatchString(value) {
 			return "", text.ErrInvalidFormatBorderLineStyle
 		}
 		pvars[name] = value
-
 	default:
 		panic(fmt.Sprintf("field %s was defined in package pvars variable, but not in switch", name))
 	}
-
 	return pvars[name], nil
 }
 

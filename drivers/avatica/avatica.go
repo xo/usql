@@ -3,11 +3,8 @@ package avatica
 import (
 	"strconv"
 
-	// DRIVER: avatica
-	_ "github.com/apache/calcite-avatica-go/v5"
-
+	_ "github.com/apache/calcite-avatica-go/v5" // DRIVER: avatica
 	avaticaerrors "github.com/apache/calcite-avatica-go/v5/errors"
-
 	"github.com/xo/usql/drivers"
 )
 

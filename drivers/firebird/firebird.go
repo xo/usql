@@ -1,9 +1,7 @@
 package firebird
 
 import (
-	// DRIVER: firebirdsql
-	_ "github.com/nakagami/firebirdsql"
-
+	_ "github.com/nakagami/firebirdsql" // DRIVER: firebirdsql
 	"github.com/xo/usql/drivers"
 )
 

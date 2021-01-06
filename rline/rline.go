@@ -12,7 +12,6 @@ import (
 var (
 	// ErrInterrupt is the interrupt error.
 	ErrInterrupt = readline.ErrInterrupt
-
 	// ErrPasswordNotAvailable is the password not available error.
 	ErrPasswordNotAvailable = errors.New("password not available")
 )
@@ -21,31 +20,22 @@ var (
 type IO interface {
 	// Next returns the next line of runes (excluding '\n') from the input.
 	Next() ([]rune, error)
-
 	// Close closes the IO.
 	Close() error
-
 	// Stdout is the IO's standard out.
 	Stdout() io.Writer
-
 	// Stderr is the IO's standard error out.
 	Stderr() io.Writer
-
 	// Interactive determines if the IO is an interactive terminal.
 	Interactive() bool
-
 	// Cygwin determines if the IO is a Cygwin interactive terminal.
 	Cygwin() bool
-
 	// Prompt sets the prompt for the next interactive line read.
 	Prompt(string)
-
 	// Save saves a line of history.
 	Save(string) error
-
 	// Password prompts for a password.
 	Password(string) (string, error)
-
 	// SetOutput sets the output filter func.
 	SetOutput(func(string) string)
 }
@@ -53,18 +43,15 @@ type IO interface {
 // Rline provides a type compatible with the IO interface.
 type Rline struct {
 	Inst *readline.Instance
-
-	N func() ([]rune, error)
-	C func() error
-
-	Out io.Writer
-	Err io.Writer
-
-	Int bool
-	Cyg bool
-	P   func(string)
-	S   func(string) error
-	Pw  func(string) (string, error)
+	N    func() ([]rune, error)
+	C    func() error
+	Out  io.Writer
+	Err  io.Writer
+	Int  bool
+	Cyg  bool
+	P    func(string)
+	S    func(string) error
+	Pw   func(string) (string, error)
 }
 
 // Next returns the next line of runes (excluding '\n') from the input.
@@ -72,7 +59,6 @@ func (l *Rline) Next() ([]rune, error) {
 	if l.N != nil {
 		return l.N()
 	}
-
 	return nil, io.EOF
 }
 
@@ -116,7 +102,6 @@ func (l *Rline) Save(s string) error {
 	if l.S != nil {
 		return l.S(s)
 	}
-
 	return nil
 }
 
@@ -125,7 +110,6 @@ func (l *Rline) Password(prompt string) (string, error) {
 	if l.Pw != nil {
 		return l.Pw(prompt)
 	}
-
 	return "", ErrPasswordNotAvailable
 }
 
@@ -137,13 +121,10 @@ func (l *Rline) SetOutput(f func(string) string) {
 // New creates a new readline input/output handler.
 func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	var err error
-
 	// determine if interactive
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
-
 	var closers []func() error
-
 	// configure stdin
 	var stdin io.ReadCloser
 	if forceNonInteractive {
@@ -153,34 +134,29 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	} else {
 		stdin = readline.Stdin
 	}
-
 	// configure stdout
 	var stdout io.WriteCloser
 	if out != "" {
-		stdout, err = os.OpenFile(out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+		stdout, err = os.OpenFile(out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return nil, err
 		}
 		closers = append(closers, stdout.Close)
-
 		interactive = false
 	} else if cygwin {
 		stdout = os.Stdout
 	} else {
 		stdout = readline.Stdout
 	}
-
 	// configure stderr
 	var stderr io.Writer = os.Stderr
 	if !cygwin {
 		stderr = readline.Stderr
 	}
-
 	if interactive {
 		// wrap it with cancelable stdin
 		stdin = readline.NewCancelableStdin(stdin)
 	}
-
 	// create readline instance
 	l, err := readline.NewEx(&readline.Config{
 		HistoryFile:            histfile,
@@ -203,14 +179,11 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	closers = append(closers, l.Close)
-
 	n := l.Operation.Runes
 	if forceNonInteractive {
 		n = nil
 	}
-
 	return &Rline{
 		Inst: l,
 		N:    n,

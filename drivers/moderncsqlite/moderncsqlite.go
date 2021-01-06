@@ -5,12 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	// DRIVER: moderncsqlite
-	"modernc.org/sqlite"
-
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/xoutil"
+	"modernc.org/sqlite" // DRIVER: moderncsqlite
 )
 
 func init() {

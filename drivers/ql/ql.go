@@ -1,16 +1,13 @@
 package ql
 
 import (
-	// DRIVER: ql
-	"modernc.org/ql"
-
 	"github.com/xo/usql/drivers"
+	"modernc.org/ql" // DRIVER: ql
 )
 
 func init() {
 	ql.RegisterDriver()
 	// ql.RegisterMemDriver()
-
 	drivers.Register("ql", drivers.Driver{
 		AllowMultilineComments: true,
 		AllowCComments:         true,

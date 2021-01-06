@@ -36,7 +36,6 @@ func findNonSpace(r []rune, i, end int) (int, bool) {
 			return i, true
 		}
 	}
-
 	return i, false
 }
 
@@ -47,7 +46,6 @@ func findRune(r []rune, i, end int, c rune) (int, bool) {
 			return i, true
 		}
 	}
-
 	return i, false
 }
 
@@ -63,33 +61,28 @@ func isEmptyLine(r []rune, i, end int) bool {
 // Note: assumes s contains at least one non space.
 func StartsWith(r []rune, i, end int, s string) bool {
 	slen := len(s)
-
 	// find start
 	var found bool
 	i, found = findNonSpace(r, i, end)
 	if !found || i+slen > end {
 		return false
 	}
-
 	// check
 	if strings.ToLower(string(r[i:i+slen])) == s {
 		return true
 	}
-
 	return false
 }
 
 // trimSplit splits r by whitespace into a string slice.
 func trimSplit(r []rune, i, end int) []string {
 	var a []string
-
 	for i < end {
 		n, found := findNonSpace(r, i, end)
 		if !found || n == end {
 			// empty
 			return a
 		}
-
 		var m int
 		if c := r[n]; c == '\'' || c == '"' || c == '`' {
 			m, _ = findRune(r, n+1, end, c)
@@ -97,11 +90,9 @@ func trimSplit(r []rune, i, end int) []string {
 		} else {
 			m, _ = findSpace(r, n, end)
 		}
-
 		a = append(a, string(r[n:min(m, end)]))
 		i = m
 	}
-
 	return a
 }
 
@@ -124,13 +115,11 @@ func readDollarAndTag(r []rune, i, end int) (string, int, bool) {
 	if !found {
 		return "", i, false
 	}
-
 	// check valid identifier
 	id := string(r[start+1 : i])
 	if id != "" && !identifierRE.MatchString(id) {
 		return "", i, false
 	}
-
 	return id, i, true
 }
 
@@ -148,16 +137,13 @@ func readString(r []rune, i, end int, b *Stmt) (int, bool) {
 			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.quoteTagID == id {
 				return pos, true
 			}
-
 		case b.quoteDouble && c == '"':
 			return i, true
-
 		case !b.quoteDouble && !b.quoteDollar && c == '\'' && prev != '\'':
 			return i, true
 		}
 		prev = r[i]
 	}
-
 	return end, false
 }
 
@@ -181,7 +167,6 @@ func readStringVar(r []rune, i, end int) *Var {
 			if i-start < 3 {
 				return nil
 			}
-
 			return &Var{
 				I:     start,
 				End:   i + 1,
@@ -196,7 +181,6 @@ func readStringVar(r []rune, i, end int) *Var {
 			}
 		*/
 	}
-
 	return nil
 }
 
@@ -205,15 +189,12 @@ func readVar(r []rune, i, end int) *Var {
 	if grab(r, i, end) != ':' || grab(r, i+1, end) == ':' {
 		return nil
 	}
-
 	if end-i < 2 {
 		return nil
 	}
-
 	if c := grab(r, i+1, end); c == '"' || c == '\'' {
 		return readStringVar(r, i, end)
 	}
-
 	start := i
 	i++
 	for ; i < end; i++ {
@@ -221,11 +202,9 @@ func readVar(r []rune, i, end int) *Var {
 			break
 		}
 	}
-
 	if i-start < 2 {
 		return nil
 	}
-
 	return &Var{
 		I:    start,
 		End:  i,
@@ -243,20 +222,17 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 			break
 		}
 	}
-
 	// fix i
 	if found {
 		i++
 	} else {
 		i = end
 	}
-
 	// split values
 	a := trimSplit(r, start, i)
 	if len(a) == 0 {
 		return "", nil, i
 	}
-
 	return a[0], a[1:], i
 }
 
@@ -264,42 +240,35 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 func findPrefix(r []rune, n int) string {
 	var s []rune
 	var words int
-
 loop:
 	for i, end := 0, len(r); i < end; i++ {
 		// skip space + control characters
 		if j, _ := findNonSpace(r, i, end); i != j {
 			r, end, i = r[j:], end-j, 0
 		}
-
 		// grab current and next character
 		c, next := grab(r, i, end), grab(r, i+1, end)
 		switch {
 		case c == 0:
 			continue
-
 		// statement terminator
 		case c == ';':
 			break loop
-
 		// single line comments '--' and '//'
 		case c == '-' && next == '-', c == '/' && next == '/':
 			if i != 0 {
 				s, words = appendUpperRunes(s, r[:i], ' '), words+1
 			}
-
 			// find line end
 			if i, _ = findRune(r, i, end, '\n'); i >= end {
 				break
 			}
 			r, end, i = r[i+1:], end-i-1, -1
-
 		// multiline comments '/*' '*/'
 		case c == '/' && next == '*':
 			if i != 0 {
 				s, words = appendUpperRunes(s, r[:i]), words+1
 			}
-
 			// find comment end '*/'
 			for i += 2; i < end; i++ {
 				if grab(r, i, end) == '*' && grab(r, i+1, end) == '/' {
@@ -307,17 +276,14 @@ loop:
 					break
 				}
 			}
-
 			// add space when remaining runes begin with space, and previous
 			// captured word did not
 			if sl := len(s); end > 0 && sl != 0 && IsSpace(r[0]) && !IsSpace(s[sl-1]) {
 				s = append(s, ' ')
 			}
-
 		// end of statement, max words, or punctuation that can be ignored
 		case words == n || !unicode.IsLetter(c):
 			break loop
-
 		// ignore remaining, as no prefix can come after
 		case next != '/' && !unicode.IsLetter(next):
 			s, words = appendUpperRunes(s, r[:i+1], ' '), words+1
@@ -330,12 +296,10 @@ loop:
 			r, end, i = r[i+2:], end-i-2, -1
 		}
 	}
-
 	// trim right ' ', if any
 	if sl := len(s); sl != 0 && s[sl-1] == ' ' {
 		return string(s[:sl-1])
 	}
-
 	return string(s)
 }
 
@@ -348,7 +312,6 @@ func FindPrefix(s string) string {
 func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 	sr, rcap := []rune(s), cap(r)
 	v.Len = len(sr)
-
 	// grow ...
 	tlen := len(r) + v.Len - (v.End - v.I)
 	if tlen > rcap {
@@ -358,11 +321,9 @@ func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
 	} else {
 		r = r[:rcap]
 	}
-
 	// substitute
 	copy(r[v.I+v.Len:], r[v.End:])
 	copy(r[v.I:v.I+v.Len], sr)
-
 	return r[:tlen], tlen
 }
 

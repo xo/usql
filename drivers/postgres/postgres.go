@@ -1,11 +1,8 @@
 package postgres
 
 import (
-	// DRIVER: postgres
-	"github.com/lib/pq"
-
+	"github.com/lib/pq" // DRIVER: postgres
 	"github.com/xo/dburl"
-
 	"github.com/xo/usql/drivers"
 )
 

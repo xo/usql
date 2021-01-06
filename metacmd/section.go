@@ -22,7 +22,7 @@ const (
 	SectionConnection      Section = "Connection"
 	SectionOperatingSystem Section = "Operating System"
 	SectionVariables       Section = "Variables"
-	//SectionLargeObjects    Section = "Large Objects"
+	// SectionLargeObjects    Section = "Large Objects"
 )
 
 // String satisfies stringer.
@@ -42,16 +42,13 @@ var SectionOrder = []Section{
 // sections for all known commands.
 func Listing(w io.Writer) {
 	sectionDescs := make(map[Section][][]string, len(SectionOrder))
-
 	var plen int
 	for _, section := range SectionOrder {
 		var descs [][]string
 		for _, c := range sectMap[section] {
 			cmd := cmds[c]
-
 			s, opts := optText(cmd.Desc)
 			descs, plen = add(descs, `  \`+cmd.Name+opts, s, plen)
-
 			// sort aliases
 			var aliases []string
 			for alias, str := range cmd.Aliases {
@@ -63,7 +60,6 @@ func Listing(w io.Writer) {
 			sort.Slice(aliases, func(i, j int) bool {
 				return strings.ToLower(aliases[i]) < strings.ToLower(aliases[j])
 			})
-
 			for _, alias := range aliases {
 				s, opts := optText(cmd.Aliases[alias])
 				descs, plen = add(descs, `  \`+strings.TrimSpace(alias)+opts, s, plen)
@@ -71,7 +67,6 @@ func Listing(w io.Writer) {
 		}
 		sectionDescs[section] = descs
 	}
-
 	for _, section := range SectionOrder {
 		fmt.Fprintln(w, section)
 		for _, line := range sectionDescs[section] {
@@ -96,7 +91,6 @@ func optText(s string) (string, string) {
 	if i := strings.LastIndex(s, ","); i != -1 {
 		return s[:i], " " + strings.TrimSpace(s[i+1:])
 	}
-
 	return s, ""
 }
 
@@ -105,6 +99,5 @@ func max(a, b int) int {
 	if a > b {
 		return a
 	}
-
 	return b
 }

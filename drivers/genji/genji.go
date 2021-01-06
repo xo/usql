@@ -1,9 +1,7 @@
 package genji
 
 import (
-	// DRIVER: genji
-	_ "github.com/genjidb/genji/sql/driver"
-
+	_ "github.com/genjidb/genji/sql/driver" // DRIVER: genji
 	"github.com/xo/usql/drivers"
 )
 

@@ -7,81 +7,47 @@ import (
 
 // Various usql text bits.
 var (
-	CommandName = `usql`
-
-	CommandVersion = `0.0.0-dev`
-
-	Banner = `the universal command-line interface for SQL databases`
-
-	NotConnected = `(not connected)`
-
-	HelpPrefix = `help`
-
-	WelcomeDesc = `Type "` + HelpPrefix + `" for help.`
-
-	QueryBufferEmpty = `Query buffer is empty.`
-
-	QueryBufferReset = `Query buffer reset (cleared).`
-
-	InvalidCommand = `Invalid command \%s. Try \? for help.`
-
-	ExtraArgumentIgnored = `\%s: extra argument %q ignored`
-
-	MissingRequiredArg = `\%s: missing required argument`
-
-	Copyright = CommandName + ", " + Banner + ".\n\n" + License
-
-	RowCount = `(%d rows)`
-
-	AvailableDrivers = `Available Drivers:`
-
-	ConnInfo = `Connected with driver %s (%s)`
-
-	BadPassFile = `could not open %q, not a file`
-
-	BadPassFileMode = `password file %q has group or world access`
-
-	BadPassFileLine = `line %d of password file incorrectly formatted`
-
+	CommandName           = `usql`
+	CommandVersion        = `0.0.0-dev`
+	Banner                = `the universal command-line interface for SQL databases`
+	NotConnected          = `(not connected)`
+	HelpPrefix            = `help`
+	WelcomeDesc           = `Type "` + HelpPrefix + `" for help.`
+	QueryBufferEmpty      = `Query buffer is empty.`
+	QueryBufferReset      = `Query buffer reset (cleared).`
+	InvalidCommand        = `Invalid command \%s. Try \? for help.`
+	ExtraArgumentIgnored  = `\%s: extra argument %q ignored`
+	MissingRequiredArg    = `\%s: missing required argument`
+	Copyright             = CommandName + ", " + Banner + ".\n\n" + License
+	RowCount              = `(%d rows)`
+	AvailableDrivers      = `Available Drivers:`
+	ConnInfo              = `Connected with driver %s (%s)`
+	BadPassFile           = `could not open %q, not a file`
+	BadPassFileMode       = `password file %q has group or world access`
+	BadPassFileLine       = `line %d of password file incorrectly formatted`
 	BadPassFileFieldEmpty = `line %d field %d of password file cannot be blank`
-
-	BadPassFileUsername = `username in line %d of password file cannot contain *`
-
-	EnterPassword = `Enter password: `
-
+	BadPassFileUsername   = `username in line %d of password file cannot contain *`
+	EnterPassword         = `Enter password: `
 	EnterPreviousPassword = `Enter previous password: `
-
-	PasswordsDoNotMatch = `Passwords do not match, trying again ...`
-
-	NewPassword = `Enter new password: `
-
-	ConfirmPassword = `Confirm password: `
-
-	PasswordChangeFailed = `\password for %q failed: %v`
-
-	CouldNotSetVariable = `could not set variable %q`
-
-	//PasswordChangeSucceeded = `\password succeeded for %q`
-
-	HelpDesc string
-
-	HelpBanner = `You are using ` + CommandName + ", " + Banner + `.`
-
+	PasswordsDoNotMatch   = `Passwords do not match, trying again ...`
+	NewPassword           = `Enter new password: `
+	ConfirmPassword       = `Confirm password: `
+	PasswordChangeFailed  = `\password for %q failed: %v`
+	CouldNotSetVariable   = `could not set variable %q`
+	// PasswordChangeSucceeded = `\password succeeded for %q`
+	HelpDesc          string
+	HelpBanner        = `You are using ` + CommandName + ", " + Banner + `.`
 	HelpCommandPrefix = `Type:  `
-
-	HelpCommands = [][]string{
+	HelpCommands      = [][]string{
 		{`copyright`, `for distribution terms`},
 		//[]string{`h`, `for help with SQL commands`},
 		{`?`, `for help with ` + CommandName + ` commands`},
 		{`g`, `or terminate with semicolon to execute query`},
 		{`q`, `to quit`},
 	}
-
-	UnknownFormatFieldName = `unknown option: %s`
-
+	UnknownFormatFieldName  = `unknown option: %s`
 	FormatFieldInvalidValue = `unrecognized value %q for %q: %s expected`
-
-	FormatFieldNameSetMap = map[string]string{
+	FormatFieldNameSetMap   = map[string]string{
 		`border`:                   `Border style is %d.`,
 		`columns`:                  `Target width is %d.`,
 		`expanded`:                 `Expanded display is %s.`,
@@ -104,7 +70,6 @@ var (
 		`unicode_column_linestyle`: `Unicode column line style is %q.`,
 		`unicode_header_linestyle`: `Unicode header line style is %q.`,
 	}
-
 	FormatFieldNameUnsetMap = map[string]string{
 		`tableattr`: `Table attributes unset.`,
 		`title`:     `Title is unset.`,
@@ -117,7 +82,6 @@ func init() {
 	for i, h := range HelpCommands {
 		cmds[i] = `\` + h[0] + " " + h[1]
 	}
-
 	HelpDesc = HelpBanner +
 		"\n" + HelpCommandPrefix +
 		strings.Join(cmds, "\n"+strings.Repeat(" ", len(HelpCommandPrefix)))
@@ -143,7 +107,6 @@ var CommandUpper = func() string {
 // UsageTemplate returns the usage template.
 var UsageTemplate = func() string {
 	n := CommandLower()
-
 	return n + `, ` + Banner + `
 
 Usage:

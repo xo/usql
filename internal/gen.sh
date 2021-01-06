@@ -3,13 +3,7 @@
 BASE="mssql mysql oracle postgres sqlite3"
 
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
-
 ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort)
-
-SED=sed
-if [ "$(uname)" == "Darwin" ]; then
-  SED=gsed
-fi
 
 NL=$'\n'
 
@@ -17,18 +11,14 @@ NL=$'\n'
 for i in $ALL; do
   MOST=""
   NAME=$(basename $i)
-
   TAGS="!no_base,!no_$NAME"
   if ! [[ "$BASE" =~ "$NAME" && "$NAME" != "ql" ]]; then
     TAGS="all,!no_$NAME"
-
     if [[ "$NAME" != "odbc" ]]; then
       TAGS="$TAGS most,!no_$NAME"
     fi
-
     TAGS="$TAGS $NAME,!no_$NAME"
   fi
-
   DATA=$(cat << ENDSTR
 // +build $TAGS
 
@@ -49,8 +39,8 @@ done
 KNOWN=
 for i in $ALL; do
   NAME=$(basename $i)
-  DRV=$($SED -n '/DRIVER: /p' $i/$NAME.go|$SED -e 's/.*DRIVER:\s*//')
-  PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/[a-z]\+\s\+"//' |$SED -e 's/"\s*//')
+  DRV=$(sed -n '/DRIVER: /p' $i/$NAME.go|sed -e 's/.*DRIVER:\s*//')
+  PKG=$(sed -n '/DRIVER: /p' $i/$NAME.go |sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/[a-z]\+\s\+"//' |sed -e 's/".*//')
   KNOWN="$KNOWN$NL\"$NAME\": \"$DRV\", // $PKG"
 done
 
@@ -69,7 +59,5 @@ func KnownBuildTags() map[string]string {
 }
 ENDSTR
 )
-
 echo "$DATA" > $SRC/internal/internal.go
-
 gofmt -w -s $SRC/internal/internal.go

@@ -18,7 +18,6 @@ func TestGrab(t *testing.T) {
 		{"a ", 1, ' '},
 		{"a", 1, 0},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		r := grab(z, test.i, len(z))
@@ -41,12 +40,10 @@ func TestFindSpace(t *testing.T) {
 		{"a ", 0, 1, true},
 		{" a ", 0, 0, true},
 		{"aaa", 0, 3, false},
-
 		{" a ", 1, 2, true},
 		{"aaa", 1, 3, false},
 		{" aaa", 1, 4, false},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		n, b := findSpace(z, test.i, len(z))
@@ -72,14 +69,12 @@ func TestFindNonSpace(t *testing.T) {
 		{"a ", 0, 0, true},
 		{" a ", 0, 1, true},
 		{"    ", 0, 4, false},
-
 		{" a ", 1, 1, true},
 		{"aaa", 1, 1, true},
 		{" aaa", 1, 1, true},
 		{"  aa", 1, 2, true},
 		{"    ", 1, 4, false},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		n, b := findNonSpace(z, test.i, len(z))
@@ -104,14 +99,12 @@ func TestIsEmptyLine(t *testing.T) {
 		{" a ", 0, false},
 		{" \na", 0, false},
 		{" \n\ta", 0, false},
-
 		{"a ", 1, true},
 		{" a", 1, false},
 		{" a ", 1, false},
 		{" \na", 1, false},
 		{" \n\t ", 1, true},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		b := isEmptyLine(z, test.i, len(z))
@@ -134,7 +127,6 @@ func TestStartsWith(t *testing.T) {
 		{"     help foo", 1, true},
 		{"     foo help", 1, false},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		b := StartsWith(z, test.i, len(z), "help")
@@ -153,34 +145,28 @@ func TestTrimSplit(t *testing.T) {
 		{``, 0, ``},
 		{`   `, 0, ``},
 		{" \t\n  ", 0, ``},
-
 		{`a`, 0, `a`},
 		{`a `, 0, `a`},
 		{` a`, 0, `a`},
 		{` a `, 0, `a`},
-
 		{`a b`, 0, `a b`},
 		{`a b `, 0, `a b`},
 		{` a b`, 0, `a b`},
 		{` a b `, 0, `a b`},
-
 		{`foo bar`, 0, `foo bar`},
 		{`foo bar `, 0, `foo bar`},
 		{` foo bar`, 0, `foo bar`},
 		{` foo bar `, 0, `foo bar`},
-
 		{`\c foo bar z`, 1, `c foo bar z`},
 		{`\c foo bar z `, 1, `c foo bar z`},
 		{`\c foo bar z  `, 1, `c foo bar z`},
 		{`\c    foo    bar    z  `, 1, `c foo bar z`},
 		{`\c    pg://blah    bar    z  `, 1, `c pg://blah bar z`},
 		{`\foo    pg://blah    bar    z  `, 1, `foo pg://blah bar z`},
-
 		{`\c 'foo bar' z`, 1, `c|'foo bar'|z`},
 		{`\c foo "bar " z `, 1, `c|foo|"bar "|z`},
 		{"\\c `foo bar z  `  ", 1, "c|`foo bar z  `"},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		y := trimSplit(z, test.i, len(z))
@@ -221,21 +207,17 @@ func TestReadCommand(t *testing.T) {
 		{`\print   \reset    foo`, 9, `\reset foo`, ``},
 		{`\print   \reset    foo  `, 9, `\reset foo`, ``},
 		{`\print   \reset    foo  bar  `, 9, `\reset foo bar`, ``},
-
 		{`\c 'foo bar' z`, 0, `\c|'foo bar'|z`, ``},
 		{`\c foo "bar " z `, 0, `\c|foo|"bar "|z`, ``},
 		{"\\c `foo bar z  `  ", 0, "\\c|`foo bar z  `", ``},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
-
 		sp := " "
 		if strings.Contains(test.exp, "|") {
 			sp = "|"
 		}
 		a := strings.Split(test.exp, sp)
-
 		cmd, params, pos := readCommand(z, test.i, len(z))
 		if cmd != a[0] {
 			t.Errorf("test %d expected command to be `%s`, got: `%s`", i, a[0], cmd)
@@ -243,7 +225,6 @@ func TestReadCommand(t *testing.T) {
 		if !reflect.DeepEqual(params, a[1:]) {
 			t.Errorf("test %d expected %v, got: %v", i, a[1:], params)
 		}
-
 		m := string(z[pos:])
 		if m != test.r {
 			t.Errorf("test %d expected remaining to be `%s`, got: `%s`", i, test.r, m)
@@ -269,7 +250,6 @@ func TestFindPrefix(t *testing.T) {
 		{" select into  *   from  ", 4, "SELECT INTO"},
 		{" select   \t  into \n *  \t\t\n\n\n  from     ", 4, "SELECT INTO"}, // 10
 		{"  select\n\n\tb\t\tzfrom j\n\n  ", 2, "SELECT B"},
-
 		{"select/* aoeu  */into", 4, "SELECTINTO"}, // 12
 		{"select/* aoeu  */\tinto", 4, "SELECT INTO"},
 		{"select/* aoeu  */ into", 4, "SELECT INTO"},
@@ -302,7 +282,6 @@ func TestFindPrefix(t *testing.T) {
 		{"\b\btest", 7, "TEST"},
 		{"select/*\r\n\r\n*/blah", 7, "SELECTBLAH"},
 		{"\r\n\r\nselect from where", 8, "SELECT FROM WHERE"},
-
 		{"\r\n\b\bselect 1;create 2;", 8, "SELECT"},
 		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION"}, // 45
 		{"begin;test;create;awesome", 3, "BEGIN"},
@@ -336,31 +315,26 @@ func TestReadVar(t *testing.T) {
 		{`a:a`, 0, nil},
 		{`: `, 0, nil},
 		{`: a `, 0, nil},
-
 		{`:a`, 0, v(0, 2, `a`)}, // 7
 		{`:ab`, 0, v(0, 3, `ab`)},
 		{`:a `, 0, v(0, 2, `a`)},
 		{`:a_ `, 0, v(0, 3, `a_`)},
 		{":a_\t ", 0, v(0, 3, `a_`)},
 		{":a_\n ", 0, v(0, 3, `a_`)},
-
 		{`:a9`, 0, v(0, 3, `a9`)}, // 13
 		{`:ab9`, 0, v(0, 4, `ab9`)},
 		{`:a 9`, 0, v(0, 2, `a`)},
 		{`:a_9 `, 0, v(0, 4, `a_9`)},
 		{":a_9\t ", 0, v(0, 4, `a_9`)},
 		{":a_9\n ", 0, v(0, 4, `a_9`)},
-
 		{`:a_;`, 0, v(0, 3, `a_`)}, // 19
 		{`:a_\`, 0, v(0, 3, `a_`)},
 		{`:a_$`, 0, v(0, 3, `a_`)},
 		{`:a_'`, 0, v(0, 3, `a_`)},
 		{`:a_"`, 0, v(0, 3, `a_`)},
-
 		{`:ab `, 0, v(0, 3, `ab`)}, // 24
 		{`:ab123 `, 0, v(0, 6, `ab123`)},
 		{`:ab123`, 0, v(0, 6, `ab123`)},
-
 		{`:'`, 0, nil}, // 27
 		{`:' `, 0, nil},
 		{`:' a`, 0, nil},
@@ -369,38 +343,32 @@ func TestReadVar(t *testing.T) {
 		{`:" `, 0, nil},
 		{`:" a`, 0, nil},
 		{`:" a `, 0, nil},
-
 		{`:''`, 0, nil}, // 35
 		{`:'' `, 0, nil},
 		{`:'' a`, 0, nil},
 		{`:""`, 0, nil},
 		{`:"" `, 0, nil},
 		{`:"" a`, 0, nil},
-
 		{`:'     `, 0, nil}, // 41
 		{`:'       `, 0, nil},
 		{`:"     `, 0, nil},
 		{`:"       `, 0, nil},
-
 		{`:'a'`, 0, v(0, 4, `a`, `'`)}, // 45
 		{`:'a' `, 0, v(0, 4, `a`, `'`)},
 		{`:'ab'`, 0, v(0, 5, `ab`, `'`)},
 		{`:'ab' `, 0, v(0, 5, `ab`, `'`)},
 		{`:'ab  ' `, 0, v(0, 7, `ab  `, `'`)},
-
 		{`:"a"`, 0, v(0, 4, `a`, `"`)}, // 50
 		{`:"a" `, 0, v(0, 4, `a`, `"`)},
 		{`:"ab"`, 0, v(0, 5, `ab`, `"`)},
 		{`:"ab" `, 0, v(0, 5, `ab`, `"`)},
 		{`:"ab  " `, 0, v(0, 7, `ab  `, `"`)},
-
 		{`:型`, 0, v(0, 2, "型")}, // 55
 		{`:'型'`, 0, v(0, 4, "型", `'`)},
 		{`:"型"`, 0, v(0, 4, "型", `"`)},
 		{` :型 `, 1, v(1, 3, "型")},
 		{` :'型' `, 1, v(1, 5, "型", `'`)},
 		{` :"型" `, 1, v(1, 5, "型", `"`)},
-
 		{`:型示師`, 0, v(0, 4, "型示師")}, // 61
 		{`:'型示師'`, 0, v(0, 6, "型示師", `'`)},
 		{`:"型示師"`, 0, v(0, 6, "型示師", `"`)},
@@ -408,7 +376,6 @@ func TestReadVar(t *testing.T) {
 		{` :'型示師' `, 1, v(1, 7, "型示師", `'`)},
 		{` :"型示師" `, 1, v(1, 7, "型示師", `"`)},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		v := readVar(z, test.i, len(z))
@@ -417,7 +384,6 @@ func TestReadVar(t *testing.T) {
 		}
 		if test.exp != nil && v != nil {
 			n := string(z[v.I+1 : v.End])
-
 			if v.Quote != 0 {
 				if c := rune(n[0]); c != v.Quote {
 					t.Errorf("test %d expected var to start with quote %c, got: %c", i, c, v.Quote)
@@ -427,7 +393,6 @@ func TestReadVar(t *testing.T) {
 				}
 				n = n[1 : len(n)-1]
 			}
-
 			if n != test.exp.Name {
 				t.Errorf("test %d expected var name of `%s`, got: `%s`", i, test.exp.Name, n)
 			}
@@ -437,7 +402,6 @@ func TestReadVar(t *testing.T) {
 
 func TestSubstituteVar(t *testing.T) {
 	a512 := sl(512, 'a')
-
 	tests := []struct {
 		s   string
 		v   *Var
@@ -450,47 +414,39 @@ func TestSubstituteVar(t *testing.T) {
 		{` :a `, v(1, 3, `a`), `x`, ` x `},
 		{` :'a' `, v(1, 5, `a`, `'`), `'x'`, ` 'x' `},
 		{` :"a" `, v(1, 5, "a", `"`), `"x"`, ` "x" `},
-
 		{`:a`, v(0, 2, `a`), ``, ``}, // 6
 		{` :a`, v(1, 3, `a`), ``, ` `},
 		{`:a `, v(0, 2, `a`), ``, ` `},
 		{` :a `, v(1, 3, `a`), ``, `  `},
 		{` :'a' `, v(1, 5, `a`, `'`), ``, `  `},
 		{` :"a" `, v(1, 5, "a", `"`), "", `  `},
-
 		{` :aaa `, v(1, 5, "aaa"), "", "  "}, // 12
 		{` :aaa `, v(1, 5, "aaa"), a512, " " + a512 + " "},
 		{` :` + a512 + ` `, v(1, len(a512)+2, a512), "", "  "},
-
 		{`:foo`, v(0, 4, "foo"), "这是一个", `这是一个`}, // 15
 		{`:foo `, v(0, 4, "foo"), "这是一个", `这是一个 `},
 		{` :foo`, v(1, 5, "foo"), "这是一个", ` 这是一个`},
 		{` :foo `, v(1, 5, "foo"), "这是一个", ` 这是一个 `},
-
 		{`:'foo'`, v(0, 6, `foo`, `'`), `'这是一个'`, `'这是一个'`}, // 19
 		{`:'foo' `, v(0, 6, `foo`, `'`), `'这是一个'`, `'这是一个' `},
 		{` :'foo'`, v(1, 7, `foo`, `'`), `'这是一个'`, ` '这是一个'`},
 		{` :'foo' `, v(1, 7, `foo`, `'`), `'这是一个'`, ` '这是一个' `},
-
 		{`:"foo"`, v(0, 6, `foo`, `"`), `"这是一个"`, `"这是一个"`}, // 23
 		{`:"foo" `, v(0, 6, `foo`, `"`), `"这是一个"`, `"这是一个" `},
 		{` :"foo"`, v(1, 7, `foo`, `"`), `"这是一个"`, ` "这是一个"`},
 		{` :"foo" `, v(1, 7, `foo`, `"`), `"这是一个"`, ` "这是一个" `},
-
 		{`:型`, v(0, 2, `型`), `x`, `x`}, // 27
 		{` :型`, v(1, 3, `型`), `x`, ` x`},
 		{`:型 `, v(0, 2, `型`), `x`, `x `},
 		{` :型 `, v(1, 3, `型`), `x`, ` x `},
 		{` :'型' `, v(1, 5, `型`, `'`), `'x'`, ` 'x' `},
 		{` :"型" `, v(1, 5, "型", `"`), `"x"`, ` "x" `},
-
 		{`:型`, v(0, 2, `型`), ``, ``}, // 33
 		{` :型`, v(1, 3, `型`), ``, ` `},
 		{`:型 `, v(0, 2, `型`), ``, ` `},
 		{` :型 `, v(1, 3, `型`), ``, `  `},
 		{` :'型' `, v(1, 5, `型`, `'`), ``, `  `},
 		{` :"型" `, v(1, 5, "型", `"`), "", `  `},
-
 		{`:型示師`, v(0, 4, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼`}, // 39
 		{` :型示師`, v(1, 5, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼`},
 		{`:型示師 `, v(0, 4, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼 `},
@@ -499,19 +455,15 @@ func TestSubstituteVar(t *testing.T) {
 		{` :'型示師' `, v(1, 7, `型示師`), `'本門台初埼本門台初埼'`, ` '本門台初埼本門台初埼' `},
 		{` :"型示師" `, v(1, 7, `型示師`), `"本門台初埼本門台初埼"`, ` "本門台初埼本門台初埼" `},
 	}
-
 	for i, test := range tests {
 		z := []rune(test.s)
 		y, l := substituteVar(z, test.v, test.sub)
-
 		if sl := len([]rune(test.sub)); test.v.Len != sl {
 			t.Errorf("test %d, expected v.Len to be %d, got: %d", i, sl, test.v.Len)
 		}
-
 		if el := len([]rune(test.exp)); l != el {
 			t.Errorf("test %d expected l==%d, got: %d", i, el, l)
 		}
-
 		if s := string(y); s != test.exp {
 			t.Errorf("test %d expected `%s`, got: `%s`", i, test.exp, s)
 		}
@@ -524,10 +476,8 @@ func v(i, end int, n string, x ...string) *Var {
 		End:  end,
 		Name: n,
 	}
-
 	if len(x) != 0 {
 		z.Quote = []rune(x[0])[0]
 	}
-
 	return z
 }

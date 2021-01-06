@@ -3,9 +3,7 @@ package athena
 import (
 	"regexp"
 
-	// DRIVER: athena
-	_ "github.com/uber/athenadriver/go"
-
+	_ "github.com/uber/athenadriver/go" // DRIVER: athena
 	"github.com/xo/usql/drivers"
 )
 

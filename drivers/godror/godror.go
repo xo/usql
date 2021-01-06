@@ -6,13 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: godror
-	_ "github.com/godror/godror"
-	"golang.org/x/xerrors"
-
+	_ "github.com/godror/godror" // DRIVER: godror
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -53,7 +51,6 @@ func init() {
 			if e := xerrors.Unwrap(err); e != nil {
 				err = e
 			}
-
 			code, msg := "", err.Error()
 			if e, ok := err.(interface {
 				Code() int
@@ -65,7 +62,6 @@ func init() {
 			}); ok {
 				msg = e.Message()
 			}
-
 			if i := strings.LastIndex(msg, "ORA-"); msg == "" && i != -1 {
 				msg = msg[i:]
 				if j := strings.Index(msg, ":"); j != -1 {
@@ -75,7 +71,6 @@ func init() {
 					}
 				}
 			}
-
 			return code, strings.TrimSpace(msg)
 		},
 		IsPasswordErr: func(err error) bool {
@@ -94,13 +89,11 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-
 			for i, c := range cols {
 				if allCapsRE.MatchString(c) {
 					cols[i] = strings.ToLower(c)
 				}
 			}
-
 			return cols, nil
 		},
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {

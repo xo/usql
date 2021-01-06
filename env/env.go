@@ -15,9 +15,8 @@ import (
 	"strings"
 
 	"github.com/xo/dburl"
-	"github.com/zaf/temp"
-
 	"github.com/xo/usql/text"
+	"github.com/zaf/temp"
 )
 
 // Getenv tries retrieving successive keys from os environment variables.
@@ -27,7 +26,6 @@ func Getenv(keys ...string) string {
 			return s
 		}
 	}
-
 	return ""
 }
 
@@ -39,7 +37,6 @@ func expand(u *user.User, path string) string {
 	} else if strings.HasPrefix(path, "~/") {
 		return filepath.Join(u.HomeDir, strings.TrimPrefix(path, "~/"))
 	}
-
 	return path
 }
 
@@ -48,7 +45,6 @@ func unquote(s string, c rune) (string, error) {
 	if len(s) < 2 || rune(s[len(s)-1]) != c {
 		return "", text.ErrUnterminatedString
 	}
-
 	return s[1 : len(s)-1], nil
 }
 
@@ -63,11 +59,9 @@ func Getvar(s string) (bool, string, error) {
 		}
 		q = string(c)
 	}
-
 	if v, ok := vars[n]; ok {
 		return true, q + v + q, nil
 	}
-
 	return false, s, nil
 }
 
@@ -75,7 +69,6 @@ func Getvar(s string) (bool, string, error) {
 // file.  All callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
 	var err error
-
 	path, err = filepath.EvalSymlinks(expand(u, path))
 	switch {
 	case err != nil && os.IsNotExist(err):
@@ -83,7 +76,6 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 	case err != nil:
 		return "", nil, err
 	}
-
 	fi, err := os.Stat(path)
 	switch {
 	case err != nil && os.IsNotExist(err):
@@ -93,24 +85,20 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 	case fi.IsDir():
 		return "", nil, text.ErrCannotIncludeDirectories
 	}
-
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
 		return "", nil, err
 	}
-
 	return path, f, nil
 }
 
 // EditFile edits a file. If path is empty, then a temporary file will be created.
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	var err error
-
 	ed := Getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
 	if ed == "" {
 		return nil, text.ErrNoEditorDefined
 	}
-
 	if path != "" {
 		path = expand(u, path)
 	} else {
@@ -119,19 +107,16 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		err = f.Close()
 		if err != nil {
 			return nil, err
 		}
-
 		path = f.Name()
-		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
+		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	// setup args
 	args := []string{path}
 	if line != "" {
@@ -141,25 +126,21 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		}
 		args = append(args, prefix+line)
 	}
-
 	// create command
 	c := exec.Command(ed, args...)
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
-
 	// run
 	err = c.Run()
 	if err != nil {
 		return nil, err
 	}
-
 	// read
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-
 	return []rune(strings.TrimSuffix(string(buf), "\n")), nil
 }
 
@@ -173,7 +154,6 @@ func HistoryFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-
 	return expand(u, path)
 }
 
@@ -187,7 +167,6 @@ func RCFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-
 	return expand(u, path)
 }
 
@@ -201,7 +180,6 @@ func PassFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-
 	return expand(u, path)
 }
 
@@ -216,30 +194,25 @@ func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 			return nil, nil
 		}
 	}
-
 	// check if pass file exists
 	path := PassFile(u)
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
-
 	// check pass file is not directory
 	if fi.IsDir() {
 		return nil, fmt.Errorf(text.BadPassFile, path)
 	}
-
 	// check pass file is not group/world readable/writable/executable
 	if runtime.GOOS != "windows" && fi.Mode()&0x3f != 0 {
 		return nil, fmt.Errorf(text.BadPassFileMode, path)
 	}
-
 	// read pass file entries
 	entries, err := readPassEntries(path)
 	if err != nil {
 		return nil, err
 	}
-
 	// find matching entry
 	n := strings.Split(v.Normalize(":", "", 3), ":")
 	if len(n) < 3 {
@@ -253,7 +226,6 @@ func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 			return url.UserPassword(u, p), nil
 		}
 	}
-
 	return nil, nil
 }
 
@@ -266,35 +238,29 @@ func readPassEntries(path string) ([][]string, error) {
 		return nil, err
 	}
 	defer f.Close()
-
 	var entries [][]string
 	s := bufio.NewScanner(f)
 	i := 0
 	for s.Scan() {
 		i++
-
 		// grab next line
 		line := strings.TrimSpace(commentRE.ReplaceAllString(s.Text(), ""))
 		if line == "" {
 			continue
 		}
-
 		// split and check length
 		v := strings.Split(line, ":")
 		if len(v) != 6 {
 			return nil, fmt.Errorf(text.BadPassFileLine, i)
 		}
-
 		// make sure no blank entries exist
 		for j := 0; j < len(v); j++ {
 			if v[j] == "" {
 				return nil, fmt.Errorf(text.BadPassFileFieldEmpty, i, j)
 			}
 		}
-
 		entries = append(entries, v)
 	}
-
 	return entries, nil
 }
 
@@ -306,7 +272,6 @@ func matchPassEntry(n, entry []string) (string, string, bool) {
 			return "", "", false
 		}
 	}
-
 	return entry[4], entry[5], true
 }
 
@@ -318,7 +283,6 @@ func Chdir(u *user.User, path string) error {
 	} else {
 		path = u.HomeDir
 	}
-
 	return os.Chdir(path)
 }
 
@@ -326,12 +290,10 @@ func Chdir(u *user.User, path string) error {
 // path).
 func getshell() (string, string) {
 	var shell, param string
-
 	shell, param = Getenv("SHELL"), "-c"
 	if shell == "" && runtime.GOOS == "windows" {
 		shell, param = Getenv("COMSPEC", "ComSpec"), "/c"
 	}
-
 	// look up path for "cmd.exe" if no other SHELL
 	if shell == "" && runtime.GOOS == "windows" {
 		shell, _ = exec.LookPath("cmd.exe")
@@ -339,7 +301,6 @@ func getshell() (string, string) {
 			param = "/c"
 		}
 	}
-
 	// lookup path for "sh" if no other SHELL
 	if shell == "" {
 		shell, _ = exec.LookPath("sh")
@@ -347,7 +308,6 @@ func getshell() (string, string) {
 			param = "-c"
 		}
 	}
-
 	return shell, param
 }
 
@@ -358,11 +318,9 @@ func getshell() (string, string) {
 // instead, assuming it is found on the system's PATH.
 func Exec(s string) (string, error) {
 	shell, param := getshell()
-
 	if shell == "" {
 		return "", text.ErrNoShellAvailable
 	}
-
 	if strings.TrimSpace(s) != "" {
 		buf, err := exec.Command(shell, param, s).CombinedOutput()
 		if err != nil {
@@ -370,7 +328,6 @@ func Exec(s string) (string, error) {
 		}
 		return strings.TrimSpace(string(buf)), nil
 	}
-
 	// drop to shell
 	cmd := exec.Command(shell)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
@@ -382,7 +339,6 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 	if s == "" {
 		return "", nil
 	}
-
 	if len(s) > 1 {
 		c := rune(s[0])
 		switch {
@@ -391,30 +347,23 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 			if err != nil {
 				return "", err
 			}
-
 			if ok {
 				return v, nil
 			}
-
 			return s, nil
-
 		case c == '\'' || c == '"':
 			return unquote(s, c)
-
 		case exec && c == '`':
 			var err error
 			s, err = unquote(s, c)
 			if err != nil {
 				return "", err
 			}
-
 			if strings.TrimSpace(s) == "" {
 				return "", nil
 			}
-
 			return Exec(s)
 		}
 	}
-
 	return s, nil
 }

@@ -6,15 +6,12 @@ import (
 	"strconv"
 	"strings"
 
-	// DRIVER: tds
-	"github.com/thda/tds"
-
+	"github.com/thda/tds" // DRIVER: tds
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
 	endRE := regexp.MustCompile(`;?\s*$`)
-
 	drivers.Register("tds", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
@@ -38,12 +35,10 @@ func init() {
 			if e, ok := err.(tds.SybError); ok {
 				return strconv.Itoa(int(e.MsgNumber)), e.Message
 			}
-
 			msg := err.Error()
 			if i := strings.LastIndex(msg, "tds:"); i != -1 {
 				msg = msg[i:]
 			}
-
 			return "", msg
 		},
 		IsPasswordErr: func(err error) bool {

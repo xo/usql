@@ -3,11 +3,8 @@ package ignite
 import (
 	"strconv"
 
-	// DRIVER: ignite
-	_ "github.com/amsokol/ignite-go-client/sql"
-
 	"github.com/amsokol/ignite-go-client/binary/errors"
-
+	_ "github.com/amsokol/ignite-go-client/sql" // DRIVER: ignite
 	"github.com/xo/usql/drivers"
 )
 

@@ -3,9 +3,7 @@ package snowflake
 import (
 	"strconv"
 
-	// DRIVER: snowflake
-	"github.com/snowflakedb/gosnowflake"
-
+	"github.com/snowflakedb/gosnowflake" // DRIVER: snowflake
 	"github.com/xo/usql/drivers"
 )
 

@@ -3,9 +3,7 @@ package saphana
 import (
 	"strconv"
 
-	// DRIVER: hdb
-	_ "github.com/SAP/go-hdb/driver"
-
+	_ "github.com/SAP/go-hdb/driver" // DRIVER: hdb
 	"github.com/xo/usql/drivers"
 )
 
@@ -14,8 +12,7 @@ func init() {
 		AllowMultilineComments: true,
 		Version: func(db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT version FROM m_database`).Scan(&ver)
-			if err != nil {
+			if err := db.QueryRow(`SELECT version FROM m_database`).Scan(&ver); err != nil {
 				return "", err
 			}
 			return "SAP HANA " + ver, nil
@@ -27,13 +24,11 @@ func init() {
 			}); ok {
 				code = strconv.Itoa(e.Code())
 			}
-
 			if e, ok := err.(interface {
 				Text() string
 			}); ok {
 				msg = e.Text()
 			}
-
 			return code, msg
 		},
 	})

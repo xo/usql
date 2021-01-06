@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/xo/dburl"
-
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
@@ -50,7 +49,6 @@ func init() {
 				return nil
 			},
 		},
-
 		Quit: {
 			Section: SectionGeneral,
 			Name:    "q",
@@ -61,7 +59,6 @@ func init() {
 				return nil
 			},
 		},
-
 		Copyright: {
 			Section: SectionGeneral,
 			Name:    "copyright",
@@ -73,7 +70,6 @@ func init() {
 				return nil
 			},
 		},
-
 		ConnectionInfo: {
 			Section: SectionConnection,
 			Name:    "conninfo",
@@ -89,14 +85,12 @@ func init() {
 				return nil
 			},
 		},
-
 		Drivers: {
 			Section: SectionGeneral,
 			Name:    "drivers",
 			Desc:    "display information about available database drivers",
 			Process: func(p *Params) error {
 				out := p.Handler.IO().Stdout()
-
 				available := drivers.Available()
 				names := make([]string, len(available))
 				var z int
@@ -105,11 +99,9 @@ func init() {
 					z++
 				}
 				sort.Strings(names)
-
 				fmt.Fprintln(out, text.AvailableDrivers)
 				for _, n := range names {
 					s := "  " + n
-
 					driver, aliases := dburl.SchemeDriverAndAliases(n)
 					if driver != n {
 						s += " (" + driver + ")"
@@ -121,11 +113,9 @@ func init() {
 					}
 					fmt.Fprintln(out, s)
 				}
-
 				return nil
 			},
 		},
-
 		Connect: {
 			Section: SectionConnection,
 			Name:    "c",
@@ -139,7 +129,6 @@ func init() {
 				return p.Handler.Open(p.GetAll()...)
 			},
 		},
-
 		Disconnect: {
 			Section: SectionConnection,
 			Name:    "Z",
@@ -149,7 +138,6 @@ func init() {
 				return p.Handler.Close()
 			},
 		},
-
 		Password: {
 			Section: SectionConnection,
 			Name:    "password",
@@ -163,14 +151,11 @@ func init() {
 				case err != nil:
 					return fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
-
 				/*fmt.Fprintf(p.Handler.IO().Stdout(), text.PasswordChangeSucceeded, user)
 				fmt.Fprintln(p.Handler.IO().Stdout())*/
-
 				return nil
 			},
 		},
-
 		Exec: {
 			Section: SectionGeneral,
 			Name:    "g",
@@ -181,22 +166,17 @@ func init() {
 			},
 			Process: func(p *Params) error {
 				p.Result.Exec = ExecOnly
-
 				switch p.Name {
 				case "g":
 					p.Result.ExecParam = p.Get()
-
 				case "gexec":
 					p.Result.Exec = ExecExec
-
 				case "gset":
 					p.Result.Exec, p.Result.ExecParam = ExecSet, p.Get()
 				}
-
 				return nil
 			},
 		},
-
 		Edit: {
 			Section: SectionQueryBuffer,
 			Name:    "e",
@@ -208,17 +188,14 @@ func init() {
 				if buf.Len != 0 {
 					s = buf.String()
 				}
-
 				// reset if no error
 				n, err := env.EditFile(p.Handler.User(), p.Get(), p.Get(), s)
 				if err == nil {
 					buf.Reset(n)
 				}
-
 				return err
 			},
 		},
-
 		Print: {
 			Section: SectionQueryBuffer,
 			Name:    "p",
@@ -235,7 +212,6 @@ func init() {
 				} else {
 					s = p.Handler.Last()
 				}
-
 				// use current statement buf if not empty
 				buf := p.Handler.Buf()
 				switch {
@@ -244,7 +220,6 @@ func init() {
 				case buf.Len != 0:
 					s = buf.String()
 				}
-
 				if s == "" {
 					s = text.QueryBufferEmpty
 				} else if p.Handler.IO().Interactive() && env.All()["SYNTAX_HL"] == "true" {
@@ -253,12 +228,10 @@ func init() {
 						s = b.String()
 					}
 				}
-
 				fmt.Fprintln(p.Handler.IO().Stdout(), s)
 				return nil
 			},
 		},
-
 		Reset: {
 			Section: SectionQueryBuffer,
 			Name:    "r",
@@ -270,7 +243,6 @@ func init() {
 				return nil
 			},
 		},
-
 		Echo: {
 			Section: SectionInputOutput,
 			Name:    "echo",
@@ -280,7 +252,6 @@ func init() {
 				return nil
 			},
 		},
-
 		Write: {
 			Section: SectionQueryBuffer,
 			Name:    "w",
@@ -293,11 +264,9 @@ func init() {
 				if buf.Len != 0 {
 					s = buf.String()
 				}
-
-				return ioutil.WriteFile(p.Get(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0644)
+				return ioutil.WriteFile(p.Get(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 			},
 		},
-
 		ChangeDir: {
 			Section: SectionOperatingSystem,
 			Name:    "cd",
@@ -306,7 +275,6 @@ func init() {
 				return env.Chdir(p.Handler.User(), p.Get())
 			},
 		},
-
 		SetEnv: {
 			Section: SectionOperatingSystem,
 			Name:    "setenv",
@@ -314,18 +282,15 @@ func init() {
 			Desc:    "set or unset environment variable,NAME [VALUE]",
 			Process: func(p *Params) error {
 				var err error
-
 				n := p.Get()
 				if len(p.Params) == 1 {
 					err = os.Unsetenv(n)
 				} else {
 					err = os.Setenv(n, strings.Join(p.GetAll(), ""))
 				}
-
 				return err
 			},
 		},
-
 		ShellExec: {
 			Section: SectionOperatingSystem,
 			Name:    "!",
@@ -334,17 +299,14 @@ func init() {
 				if len(p.Params) == 0 && !p.Handler.IO().Interactive() {
 					return text.ErrNotInteractive
 				}
-
 				p.Result.Processed = len(p.Params)
 				v, err := env.Exec(strings.TrimSpace(strings.Join(p.Params, " ")))
 				if err == nil && v != "" {
 					fmt.Fprintln(p.Handler.IO().Stdout(), v)
 				}
-
 				return nil
 			},
 		},
-
 		Include: {
 			Section: SectionInputOutput,
 			Name:    "i",
@@ -364,7 +326,6 @@ func init() {
 				return err
 			},
 		},
-
 		Transact: {
 			Section: SectionTransaction,
 			Name:    "begin",
@@ -386,7 +347,6 @@ func init() {
 				return f()
 			},
 		},
-
 		Prompt: {
 			Section: SectionVariables,
 			Name:    "prompt",
@@ -397,21 +357,17 @@ func init() {
 				if n == "" {
 					return text.ErrMissingRequiredArgument
 				}
-
 				err := env.ValidIdentifier(n)
 				if err != nil {
 					return err
 				}
-
 				v, err := p.Handler.ReadVar(typ, strings.Join(p.GetAll(), " "))
 				if err != nil {
 					return err
 				}
-
 				return env.Set(n, v)
 			},
 		},
-
 		SetVar: {
 			Section: SectionVariables,
 			Name:    "set",
@@ -427,17 +383,14 @@ func init() {
 						i++
 					}
 					sort.Strings(n)
-
 					for _, k := range n {
 						fmt.Fprintln(out, k, "=", "'"+vars[k]+"'")
 					}
 					return nil
 				}
-
 				return env.Set(p.Get(), strings.Join(p.GetAll(), ""))
 			},
 		},
-
 		Unset: {
 			Section: SectionVariables,
 			Name:    "unset",
@@ -447,7 +400,6 @@ func init() {
 				return env.Unset(p.Get())
 			},
 		},
-
 		SetFormatVar: {
 			Section: SectionFormatting,
 			Name:    "pset",
@@ -463,7 +415,6 @@ func init() {
 			},
 			Process: func(p *Params) error {
 				out, l := p.Handler.IO().Stdout(), len(p.Params)
-
 				// display variables
 				if p.Name == "pset" && l == 0 {
 					vars := env.Pall()
@@ -474,13 +425,11 @@ func init() {
 						i++
 					}
 					sort.Strings(n)
-
 					for _, k := range n {
 						v := vars[k]
 						switch k {
 						case "fieldsep", "recordsep", "null":
 							v = strconv.QuoteToASCII(v)
-
 						case "tableattr", "title":
 							if v != "" {
 								v = strconv.QuoteToASCII(v)
@@ -490,7 +439,6 @@ func init() {
 					}
 					return nil
 				}
-
 				var field, extra string
 				switch p.Name {
 				case "pset":
@@ -511,12 +459,10 @@ func init() {
 				case "x":
 					field = "expanded"
 				}
-
 				v, err := env.Pget(field)
 				if err != nil {
 					return err
 				}
-
 				switch {
 				case l == 0:
 					if v, err = env.Ptoggle(field, extra); err != nil {
@@ -528,12 +474,10 @@ func init() {
 						return err
 					}
 				}
-
 				// special replacement name for expanded field, when 'auto'
 				if field == "expanded" && v == "auto" {
 					field = "expanded_auto"
 				}
-
 				// format output
 				mask := text.FormatFieldNameSetMap[field]
 				unsetMask := text.FormatFieldNameUnsetMap[field]
@@ -553,7 +497,6 @@ func init() {
 			},
 		},
 	}
-
 	// set up map
 	cmdMap = make(map[string]Metacmd, len(cmds))
 	sectMap = make(map[Section][]Metacmd, len(SectionOrder))
@@ -562,12 +505,10 @@ func init() {
 		if mc == None {
 			continue
 		}
-
 		cmdMap[c.Name] = mc
 		for alias := range c.Aliases {
 			cmdMap[alias] = mc
 		}
-
 		sectMap[c.Section] = append(sectMap[c.Section], mc)
 	}
 }

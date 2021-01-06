@@ -9,12 +9,9 @@ import (
 	"regexp"
 	"strings"
 
-	// DRIVER: cql
-	cql "github.com/MichaelS11/go-cql-driver"
-
+	cql "github.com/MichaelS11/go-cql-driver" // DRIVER: cql
 	"github.com/gocql/gocql"
 	"github.com/xo/dburl"
-
 	"github.com/xo/usql/drivers"
 )
 
@@ -32,16 +29,19 @@ func (l *logger) Print(v ...interface{}) {
 		log.Print(v...)
 	}
 }
+
 func (l *logger) Printf(s string, v ...interface{}) {
 	if l.debug {
 		log.Printf(s, v...)
 	}
 }
+
 func (l *logger) Println(v ...interface{}) {
 	if l.debug {
 		log.Println(v...)
 	}
 }
+
 func (l *logger) Write(buf []byte) (int, error) {
 	if l.debug {
 		log.Printf("WRITE: %s", string(buf))
@@ -56,11 +56,9 @@ func init() {
 		log.Printf("ENABLING DEBUGGING FOR CQL")
 		debug = true
 	}
-
 	// error regexp's
 	authReqRE := regexp.MustCompile(`authentication required`)
 	passwordErrRE := regexp.MustCompile(`Provided username (.*)and/or password are incorrect`)
-
 	var l *logger
 	drivers.Register("cql", drivers.Driver{
 		AllowDollar:            true,

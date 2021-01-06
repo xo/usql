@@ -1,9 +1,7 @@
 package cosmos
 
 import (
-	// DRIVER: cosmos
-	_ "github.com/btnguyen2k/gocosmos"
-
+	_ "github.com/btnguyen2k/gocosmos" // DRIVER: cosmos
 	"github.com/xo/usql/drivers"
 )
 

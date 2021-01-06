@@ -4,9 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	// DRIVER: sqlite3
-	"github.com/mattn/go-sqlite3"
-
+	"github.com/mattn/go-sqlite3" // DRIVER: sqlite3
 	"github.com/xo/usql/drivers"
 	"github.com/xo/xoutil"
 )
@@ -29,12 +27,10 @@ func init() {
 			if e, ok := err.(sqlite3.Error); ok {
 				return strconv.Itoa(int(e.Code)), e.Error()
 			}
-
 			code, msg := "", err.Error()
 			if e, ok := err.(sqlite3.ErrNo); ok {
 				code = strconv.Itoa(int(e))
 			}
-
 			return code, msg
 		},
 		ConvertBytes: func(buf []byte, tfmt string) (string, error) {

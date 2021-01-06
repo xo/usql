@@ -19,7 +19,6 @@ import (
 	"github.com/alecthomas/chroma/styles"
 	"github.com/xo/dburl"
 	"github.com/xo/tblfmt"
-
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/metacmd"
@@ -35,22 +34,17 @@ type Handler struct {
 	user *user.User
 	wd   string
 	nopw bool
-
 	// singleLineMode is single line mode
 	singleLineMode bool
-
 	// query statement buffer
 	buf *stmt.Stmt
-
 	// last statement
 	last       string
 	lastPrefix string
 	lastRaw    string
-
 	// batch
 	batch    bool
 	batchEnd string
-
 	// connection
 	u  *dburl.URL
 	db *sql.DB
@@ -68,21 +62,17 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 			if err != nil {
 				return nil, err
 			}
-
 			// check if line starts with help
 			rlen := len(r)
 			if rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
 				fmt.Fprintln(l.Stdout(), text.HelpDesc)
 				return nil, nil
 			}
-
 			// save history
 			l.Save(string(r))
-
 			return r, nil
 		}
 	}
-
 	h := &Handler{
 		l:    l,
 		user: user,
@@ -90,11 +80,9 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 		nopw: nopw,
 		buf:  stmt.New(f),
 	}
-
 	if iactive {
 		l.SetOutput(h.outputHighlighter)
 	}
-
 	return h
 }
 
@@ -111,17 +99,14 @@ func (h *Handler) outputHighlighter(s string) string {
 	if empty(s) || env.All()["SYNTAX_HL"] != "true" {
 		return s
 	}
-
 	// count end lines
 	var endl string
 	for strings.HasSuffix(s, lineterm) {
 		s = strings.TrimSuffix(s, lineterm)
 		endl += lineterm
 	}
-
 	// leading whitespace
 	var leading string
-
 	// capture current query statement buffer
 	orig := h.buf.RawString()
 	full := orig
@@ -136,7 +121,6 @@ func (h *Handler) outputHighlighter(s string) string {
 		}
 	}
 	full += s
-
 	// setup statement parser
 	st := drivers.NewStmt(h.u, func() func() ([]rune, error) {
 		y := strings.Split(orig, "\n")
@@ -145,7 +129,6 @@ func (h *Handler) outputHighlighter(s string) string {
 		} else {
 			y = append(y, s)
 		}
-
 		return func() ([]rune, error) {
 			if len(y) > 0 {
 				z := y[0]
@@ -155,7 +138,6 @@ func (h *Handler) outputHighlighter(s string) string {
 			return nil, io.EOF
 		}
 	}())
-
 	// accumulate all "active" statements in buffer, breaking either at
 	// EOF or when a \ cmd has been encountered
 	var err error
@@ -167,14 +149,11 @@ func (h *Handler) outputHighlighter(s string) string {
 		} else if err == io.EOF {
 			break
 		}
-
 		if st.Ready() || cmd != "" {
 			final += st.RawString()
 			st.Reset(nil)
-
 			// grab remaining whitespace to add to final
 			l := len(final)
-
 			// find first non empty character
 			if i := strings.IndexFunc(full[l:], func(r rune) bool {
 				return !stmt.IsSpace(r)
@@ -187,26 +166,22 @@ func (h *Handler) outputHighlighter(s string) string {
 		final += st.RawString()
 	}
 	final = leading + final
-
 	// determine whatever is remaining after "active"
 	var remaining string
 	if fnl := len(final); fnl < len(full) {
 		remaining = full[fnl:]
 	}
-
 	// this happens when a read line is empty and/or has only
 	// whitespace and a \ cmd
 	if s == remaining {
 		return s + endl
 	}
-
 	// highlight entire final accumulated buffer
 	b := new(bytes.Buffer)
 	if err := h.Highlight(b, final); err != nil {
 		return s + endl
 	}
 	colored := b.String()
-
 	// return only last line plus whatever remaining string (ie, after
 	// a \ cmd) and the end line count
 	ss := strings.Split(colored, "\n")
@@ -216,40 +191,32 @@ func (h *Handler) outputHighlighter(s string) string {
 // Run executes queries and commands.
 func (h *Handler) Run() error {
 	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
-
 	// display welcome info
 	if iactive {
 		fmt.Fprintln(h.l.Stdout(), text.WelcomeDesc)
 		fmt.Fprintln(h.l.Stdout())
 	}
-
 	for {
 		var err error
 		var execute bool
-
 		// set prompt
 		if iactive {
 			h.l.Prompt(h.Prompt())
 		}
-
 		// read next statement/command
 		cmd, params, err := h.buf.Next()
 		switch {
 		case h.singleLineMode && err == nil:
 			execute = h.buf.Len != 0
-
 		case err == rline.ErrInterrupt:
 			h.buf.Reset(nil)
 			continue
-
 		case err != nil:
 			return err
 		}
-
 		var res metacmd.Result
 		if cmd != "" {
 			cmd = strings.TrimPrefix(cmd, `\`)
-
 			// decode
 			var r metacmd.Runner
 			r, err = metacmd.Decode(cmd, params)
@@ -258,18 +225,15 @@ func (h *Handler) Run() error {
 				fmt.Fprintf(stderr, text.InvalidCommand, cmd)
 				fmt.Fprintln(stderr)
 				continue
-
 			case err == text.ErrMissingRequiredArgument:
 				fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
 				fmt.Fprintln(stderr)
 				continue
-
 			case err != nil:
 				fmt.Fprintf(stderr, "error: %v", err)
 				fmt.Fprintln(stderr)
 				continue
 			}
-
 			// run
 			res, err = r.Run(h)
 			if err != nil && err != rline.ErrInterrupt {
@@ -277,19 +241,16 @@ func (h *Handler) Run() error {
 				fmt.Fprintln(stderr)
 				continue
 			}
-
 			// print unused command parameters
 			for i := res.Processed; i < len(params); i++ {
 				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, params[i])
 				fmt.Fprintln(stdout)
 			}
 		}
-
 		// quit
 		if res.Quit {
 			return nil
 		}
-
 		// execute buf
 		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
 			// intercept batch query
@@ -300,43 +261,35 @@ func (h *Handler) Run() error {
 					fmt.Fprintf(stderr, "error: cannot perform %s in existing batch", typ)
 					fmt.Fprintln(stderr)
 					continue
-
 				// cannot use \g* while accumulating statements for batch queries
 				case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
 					fmt.Fprint(stderr, "error: cannot force batch execution")
 					fmt.Fprintln(stderr)
 					continue
-
 				case batch:
 					h.batch, h.batchEnd = true, end
-
 				case h.batch:
 					var lend string
 					if len(h.last) != 0 {
 						lend = "\n"
 					}
-
 					// append to last
 					h.last += lend + h.buf.String()
 					h.lastPrefix = h.buf.Prefix
 					h.lastRaw += lend + h.buf.RawString()
 					h.buf.Reset(nil)
-
 					// break
 					if h.batchEnd != typ {
 						continue
 					}
-
 					h.lastPrefix = h.batchEnd
 					h.batch, h.batchEnd = false, ""
 				}
 			}
-
 			if h.buf.Len != 0 {
 				h.last, h.lastPrefix, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.RawString()
 				h.buf.Reset(nil)
 			}
-
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
 			if !h.batch && h.last != "" && h.last != ";" {
 				// force a transaction for batched queries for certain drivers
@@ -345,7 +298,6 @@ func (h *Handler) Run() error {
 					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
 					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
 				}
-
 				// execute
 				if err = h.Execute(stdout, res, h.lastPrefix, h.last, forceBatch); err != nil {
 					fmt.Fprintf(stderr, "error: %v", err)
@@ -361,20 +313,17 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-
 	// determine type and pre process string
 	prefix, qstr, qtyp, err := drivers.Process(h.u, prefix, qstr)
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
-
 	// start a transaction if forced
 	if forceTrans {
 		if err = h.Begin(); err != nil {
 			return err
 		}
 	}
-
 	f := h.execOnly
 	switch res.Exec {
 	case metacmd.ExecSet:
@@ -382,7 +331,6 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	case metacmd.ExecExec:
 		f = h.execExec
 	}
-
 	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
@@ -390,11 +338,9 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 		}
 		return err
 	}
-
 	if forceTrans {
 		return h.Commit()
 	}
-
 	return nil
 }
 
@@ -407,19 +353,16 @@ func (h *Handler) Reset(r []rune) {
 // Prompt creates the prompt text.
 func (h *Handler) Prompt() string {
 	s := text.NotConnected
-
 	if h.db != nil {
 		s = h.u.Short()
 		if s == "" {
 			s = "(" + h.u.Driver + ")"
 		}
 	}
-
 	tx := ">"
 	if h.tx != nil || h.batch {
 		tx = "~"
 	}
-
 	return s + h.buf.State() + tx + " "
 }
 
@@ -443,7 +386,6 @@ func (h *Handler) DB() drivers.DB {
 	if h.tx != nil {
 		return h.tx
 	}
-
 	return h.db
 }
 
@@ -465,23 +407,19 @@ func (h *Handler) Buf() *stmt.Stmt {
 // Highlight highlights using the current environment settings.
 func (h *Handler) Highlight(w io.Writer, buf string) error {
 	vars := env.All()
-
 	// create lexer, formatter, styler
 	l := chroma.Coalesce(drivers.Lexer(h.u))
 	f := formatters.Get(vars["SYNTAX_HL_FORMAT"])
 	s := styles.Get(vars["SYNTAX_HL_STYLE"])
-
 	// override background
 	if vars["SYNTAX_HL_OVERRIDE_BG"] != "false" {
 		s = ustyles.Get(vars["SYNTAX_HL_STYLE"])
 	}
-
 	// tokenize stream
 	it, err := l.Tokenise(nil, buf)
 	if err != nil {
 		return err
 	}
-
 	// write formatted output
 	return f.Format(w, s, it)
 }
@@ -499,15 +437,12 @@ func (h *Handler) Open(params ...string) error {
 	if len(params) == 0 || params[0] == "" {
 		return nil
 	}
-
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
-
 	var err error
 	if len(params) < 2 {
 		urlstr := params[0]
-
 		// parse dsn
 		h.u, err = dburl.Parse(urlstr)
 		switch {
@@ -517,22 +452,17 @@ func (h *Handler) Open(params ...string) error {
 			if err != nil {
 				return err
 			}
-
 			switch {
 			case fi.IsDir():
 				return h.Open("postgres+unix:" + urlstr)
-
 			case fi.Mode()&os.ModeSocket != 0:
 				return h.Open("mysql+unix:" + urlstr)
 			}
-
 			// it is a file, so reattempt to open it with sqlite3
 			return h.Open("sqlite3:" + urlstr)
-
 		case err != nil:
 			return err
 		}
-
 		// force parameters
 		h.forceParams(h.u)
 	} else {
@@ -541,34 +471,28 @@ func (h *Handler) Open(params ...string) error {
 			DSN:    strings.Join(params[1:], " "),
 		}
 	}
-
 	// open connection
 	h.db, err = drivers.Open(h.u)
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err
 	}
-
 	// set buffer options
 	drivers.ConfigStmt(h.u, h.buf)
-
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(h.u, h.db); err == nil {
 			return h.Version()
 		}
 	}
-
 	// bail without getting password
 	if h.nopw || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {
 		defer h.Close()
 		return err
 	}
-
 	// print the error
 	fmt.Fprintf(h.l.Stderr(), "error: %v", err)
 	fmt.Fprintln(h.l.Stderr())
-
 	// otherwise, try to collect a password ...
 	dsn, err := h.Password(params[0])
 	if err != nil {
@@ -576,7 +500,6 @@ func (h *Handler) Open(params ...string) error {
 		defer h.Close()
 		return err
 	}
-
 	// reconnect
 	return h.Open(dsn)
 }
@@ -587,7 +510,6 @@ func (h *Handler) Open(params ...string) error {
 func (h *Handler) forceParams(u *dburl.URL) {
 	// force driver parameters
 	drivers.ForceParams(u)
-
 	// see if password entry is present
 	user, err := env.PassFileEntry(h.user, u)
 	if err != nil {
@@ -597,7 +519,6 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	} else if user != nil {
 		u.User = user
 	}
-
 	// copy back to u
 	z, _ := dburl.Parse(u.String())
 	*u = *z
@@ -607,16 +528,13 @@ func (h *Handler) forceParams(u *dburl.URL) {
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
 	var err error
-
 	if dsn == "" {
 		return "", text.ErrMissingDSN
 	}
-
 	u, err := dburl.Parse(dsn)
 	if err != nil {
 		return "", err
 	}
-
 	user := h.user.Username
 	if u.User != nil {
 		user = u.User.Username()
@@ -625,7 +543,6 @@ func (h *Handler) Password(dsn string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	u.User = url.UserPassword(user, pass)
 	return u.String(), nil
 }
@@ -635,14 +552,12 @@ func (h *Handler) Close() error {
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
-
 	if h.db != nil {
 		err := h.db.Close()
 		drv := h.u.Driver
 		h.db, h.u = nil, nil
 		return drivers.WrapErr(drv, err)
 	}
-
 	return nil
 }
 
@@ -652,7 +567,6 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 	if !h.l.Interactive() {
 		return "", text.ErrNotInteractive
 	}
-
 	var masked bool
 	// check type
 	switch typ {
@@ -662,7 +576,6 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 	default:
 		return "", text.ErrInvalidType
 	}
-
 	var v string
 	var err error
 	if masked {
@@ -676,7 +589,6 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 		r, err = h.l.Next()
 		v = string(r)
 	}
-
 	var z interface{} = v
 	switch typ {
 	case "int":
@@ -691,7 +603,6 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 	if err != nil {
 		return "", text.ErrInvalidValue
 	}
-
 	return fmt.Sprintf("%v", z), nil
 }
 
@@ -700,19 +611,14 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 	if h.db == nil {
 		return "", text.ErrNotConnected
 	}
-
 	if !h.l.Interactive() {
 		return "", text.ErrNotInteractive
 	}
-
 	var err error
-
 	if err = drivers.CanChangePassword(h.u); err != nil {
 		return "", err
 	}
-
 	var newpw, newpw2, oldpw string
-
 	// ask for previous password
 	if user == "" && drivers.RequirePreviousPassword(h.u) {
 		oldpw, err = h.l.Password(text.EnterPreviousPassword)
@@ -720,7 +626,6 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 			return "", err
 		}
 	}
-
 	// attempt to get passwords
 	for i := 0; i < 3; i++ {
 		if newpw, err = h.l.Password(text.NewPassword); err != nil {
@@ -734,12 +639,10 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 		}
 		fmt.Fprintln(h.l.Stderr(), text.PasswordsDoNotMatch)
 	}
-
 	// verify passwords match
 	if newpw != newpw2 {
 		return "", text.ErrPasswordAttemptsExhausted
 	}
-
 	return drivers.ChangePassword(h.u, h.DB(), user, newpw, oldpw)
 }
 
@@ -748,22 +651,18 @@ func (h *Handler) Version() error {
 	if env.All()["SHOW_HOST_INFORMATION"] != "true" {
 		return nil
 	}
-
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-
 	ver, err := drivers.Version(h.u, h.DB())
 	if err != nil {
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
 	}
-
 	if ver != "" {
 		out := h.l.Stdout()
 		fmt.Fprintf(out, text.ConnInfo, h.u.Driver, ver)
 		fmt.Fprintln(out)
 	}
-
 	return nil
 }
 
@@ -783,7 +682,6 @@ func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string
 	if qtyp {
 		f = h.query
 	}
-
 	// exec
 	return f(w, prefix, qstr)
 }
@@ -795,13 +693,11 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 	if err != nil {
 		return err
 	}
-
 	// get cols
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
 		return err
 	}
-
 	// process row(s)
 	var i int
 	var row []string
@@ -818,7 +714,6 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 	if i > 1 {
 		return text.ErrTooManyRows
 	}
-
 	// set vars
 	for i, c := range cols {
 		n := namePrefix + c
@@ -827,7 +722,6 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 		}
 		env.Set(n, row[i])
 	}
-
 	return nil
 }
 
@@ -839,13 +733,11 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 	if err != nil {
 		return err
 	}
-
 	// execRows
 	err = h.execRows(w, q)
 	if err != nil {
 		return err
 	}
-
 	// check for additional result sets ...
 	for drivers.NextResultSet(q) {
 		err = h.execRows(w, q)
@@ -853,21 +745,18 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 			return err
 		}
 	}
-
 	return nil
 }
 
 // query executes a query against the database.
 func (h *Handler) query(w io.Writer, _, qstr string) error {
 	var err error
-
 	// run query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
 		return err
 	}
 	defer q.Close()
-
 	return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
 	// return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()), tblfmt.WithByteBufferPool(pool))
 }
@@ -875,13 +764,11 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 // execRows executes all the columns in the row.
 func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 	var err error
-
 	// get columns
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
 		return err
 	}
-
 	// process rows
 	res := metacmd.Result{Exec: metacmd.ExecOnly}
 	clen, tfmt := len(cols), h.timefmt()
@@ -891,7 +778,6 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 			if err != nil {
 				return err
 			}
-
 			// execute
 			for _, qstr := range row {
 				if err = h.Execute(w, res, stmt.FindPrefix(qstr), qstr, false); err != nil {
@@ -900,14 +786,12 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 			}
 		}
 	}
-
 	return nil
 }
 
 // scan scans a row.
 func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 	var err error
-
 	// scan to []interface{}
 	r := make([]interface{}, clen)
 	for i := range r {
@@ -916,11 +800,9 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 	if err = q.Scan(r...); err != nil {
 		return nil, err
 	}
-
 	// get conversion funcs
 	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u),
 		drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
-
 	row := make([]string, clen)
 	for n, z := range r {
 		j := z.(*interface{})
@@ -932,16 +814,12 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 					return nil, err
 				}
 			}
-
 		case string:
 			row[n] = x
-
 		case time.Time:
 			row[n] = x.Format(tfmt)
-
 		case fmt.Stringer:
 			row[n] = x.String()
-
 		case map[string]interface{}:
 			if x != nil {
 				row[n], err = cm(x)
@@ -949,7 +827,6 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 					return nil, err
 				}
 			}
-
 		case []interface{}:
 			if x != nil {
 				row[n], err = cs(x)
@@ -957,7 +834,6 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 					return nil, err
 				}
 			}
-
 		default:
 			if x != nil {
 				row[n], err = cd(x)
@@ -973,28 +849,22 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 // exec does a database exec.
 func (h *Handler) exec(w io.Writer, typ, qstr string) error {
 	var err error
-
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err
 	}
-
 	// get affected
 	count, err := drivers.RowsAffected(h.u, res)
 	if err != nil {
 		return err
 	}
-
 	// print name
 	fmt.Fprint(w, typ)
-
 	// print count
 	if count > 0 {
 		fmt.Fprint(w, " ", count)
 	}
-
 	fmt.Fprintln(w)
-
 	return nil
 }
 
@@ -1003,17 +873,14 @@ func (h *Handler) Begin() error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
-
 	var err error
 	h.tx, err = h.db.Begin()
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
-
 	return nil
 }
 
@@ -1022,19 +889,15 @@ func (h *Handler) Commit() error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-
 	if h.tx == nil {
 		return text.ErrNoPreviousTransactionExists
 	}
-
 	tx := h.tx
 	h.tx = nil
-
 	err := tx.Commit()
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
-
 	return nil
 }
 
@@ -1043,37 +906,30 @@ func (h *Handler) Rollback() error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-
 	if h.tx == nil {
 		return text.ErrNoPreviousTransactionExists
 	}
-
 	tx := h.tx
 	h.tx = nil
-
 	err := tx.Rollback()
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
-
 	return nil
 }
 
 // Include includes the specified path.
 func (h *Handler) Include(path string, relative bool) error {
 	var err error
-
 	if relative && !filepath.IsAbs(path) {
 		path = filepath.Join(h.wd, path)
 	}
-
 	// read file
 	path, f, err := env.OpenFile(h.user, path, relative)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-
 	s := bufio.NewScanner(f)
 	l := &rline.Rline{
 		N: func() ([]rune, error) {
@@ -1090,16 +946,13 @@ func (h *Handler) Include(path string, relative bool) error {
 		Err: h.l.Stderr(),
 		Pw:  h.l.Password,
 	}
-
 	p := New(l, h.user, filepath.Dir(path), h.nopw)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
-
 	err = p.Run()
 	if err == io.EOF {
 		err = nil
 	}
-
 	h.db, h.u = p.db, p.u
 	return err
 }
