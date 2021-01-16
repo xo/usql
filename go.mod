@@ -71,7 +71,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
-	github.com/xo/dburl v0.2.0
+	github.com/xo/dburl v0.2.1
 	github.com/xo/tblfmt v0.1.0
 	github.com/xo/terminfo v0.0.0-20210104072544-c22d04bf3159
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
@@ -104,7 +104,5 @@ require (
 replace github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 => github.com/kenshaw/go-couchbase v0.0.0-20210104231425-ee71e5a22c59
 
 replace github.com/btnguyen2k/gocosmos v0.1.3 => github.com/kenshaw/gocosmos v0.1.4-0.20210105064112-ccf71873706d
-
-replace github.com/xo/dburl v0.2.0 => github.com/nineinchnick/dburl v0.0.0-20210116103919-427645d77539
 
 go 1.15
