@@ -66,6 +66,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.12
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
+	github.com/trinodb/trino-go-client v0.0.0-20210115095943-f7fb3eab12b1
 	github.com/uber/athenadriver v1.1.12
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
@@ -103,5 +104,7 @@ require (
 replace github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 => github.com/kenshaw/go-couchbase v0.0.0-20210104231425-ee71e5a22c59
 
 replace github.com/btnguyen2k/gocosmos v0.1.3 => github.com/kenshaw/gocosmos v0.1.4-0.20210105064112-ccf71873706d
+
+replace github.com/xo/dburl v0.2.0 => github.com/nineinchnick/dburl v0.0.0-20210116103919-427645d77539
 
 go 1.15

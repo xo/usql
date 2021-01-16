@@ -1,0 +1,3 @@
+NAME=trino
+IMAGE=trinodb/trino
+PUBLISH=8080:8080

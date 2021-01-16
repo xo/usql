@@ -512,6 +512,8 @@ github.com/nakagami/firebirdsql v0.9.0 h1:76d+wfcripQLNBYuRnS4UzIqMDuM+dGE6G6PYw
 github.com/nakagami/firebirdsql v0.9.0/go.mod h1:0rX0CUWOX5X9z68Cm/ZF8Gg9zMNbx24KXd6tlDFebuY=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
+github.com/nineinchnick/dburl v0.0.0-20210116103919-427645d77539 h1:Bo9h+OVEuDk494Rnyc2tcyrSvu0Qdku6uWNzjtTHzrg=
+github.com/nineinchnick/dburl v0.0.0-20210116103919-427645d77539/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
 github.com/pelletier/go-toml v1.7.0/go.mod h1:vwGMzjaWMwyfHwgIBhI2YUM4fB6nL6lVAvS1LBMMhTE=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pierrec/lz4 v2.2.6+incompatible h1:6aCX4/YZ9v8q69hTyiR7dNLnTA3fgtKHVVW5BCd5Znw=
@@ -589,6 +591,8 @@ github.com/thda/tds v0.1.7 h1:s29kbnJK0agL3ps85A/sb9XS2uxgKF5UJ6AZjbyqXX4=
 github.com/thda/tds v0.1.7/go.mod h1:isLIF1oZdXfkqVMJM8RyNrsjlHPlTKnPlnsBs7ngZcM=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
+github.com/trinodb/trino-go-client v0.0.0-20210115095943-f7fb3eab12b1 h1:K4mlQBWW1lfLsapPyzihpDJeIp3QFxzl8Wj1bDA09UA=
+github.com/trinodb/trino-go-client v0.0.0-20210115095943-f7fb3eab12b1/go.mod h1:/CMFmXqrFGmn76o/ZGefBLq7X6l0tsTJV4zrgQMVvvM=
 github.com/twinj/uuid v1.0.0 h1:fzz7COZnDrXGTAOHGuUGYd6sG+JMq+AoE7+Jlu0przk=
 github.com/twinj/uuid v1.0.0/go.mod h1:mMgcE1RHFUFqe5AfiwlINXisXfDGro23fWdPUfOMjRY=
 github.com/uber-go/tally v3.3.17+incompatible h1:nFHIuW3VQ22wItiE9kPXic8dEgExWOsVOHwpmoIvsMw=
@@ -614,8 +618,6 @@ github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhe
 github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0 h1:nrYFWDrB2F7VwYlNravXZS0nOtg9axlATH3Jns55/F0=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
-github.com/xo/dburl v0.2.0 h1:ggG82Ly7ZsXv9h0CNc0O6ltyAItoIyd7vG/+orhc1QM=
-github.com/xo/dburl v0.2.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.1.0 h1:MqdHiVHbHy5JYTn44t2dIJf8tckPl+mzw0DqpFNPfrA=
 github.com/xo/tblfmt v0.1.0/go.mod h1:uavzhZXPco8lx36715T/HQW0XLX0km6wUo53GIEozqU=

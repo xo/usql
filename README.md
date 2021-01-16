@@ -233,6 +233,7 @@ supports:
 | SAP ASE (tds)                   | ax, ase, sapase                          |
 | SAP HANA (hdb)                  | sa, saphana, sap, hana                   |
 | Snowflake (snowflake)           | sf                                       |
+| Trino (trino)                   | tr, trino, trinos, trs                   |
 | Vertica (vertica)               | ve                                       |
 | VoltDB (voltdb)                 | vo, volt, vdb                            |
 <!-- END SCHEME TABLE -->
@@ -277,6 +278,7 @@ associated Go build tag:
 | SAP ASE              | tds           | [github.com/thda/tds][d-tds]                                          |
 | SAP HANA             | hdb           | [github.com/SAP/go-hdb/driver][d-hdb]                                 |
 | Snowflake            | snowflake     | [github.com/snowflakedb/gosnowflake][d-snowflake]                     |
+| Trino                | trino         | [github.com/trinodb/trino-go-client/trino][d-trino]               |
 | Vertica              | vertica       | [github.com/vertica/vertica-sql-go][d-vertica]                        |
 | VoltDB               | voltdb        | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]           |
 |                      |               |                                                                       |
@@ -935,5 +937,6 @@ support for the most frequently used aspects/features of `psql`. Compatability
 [d-sqlago]: https://github.com/a-palchikov/sqlago
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-tds]: https://github.com/thda/tds
+[d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
