@@ -1,4 +1,4 @@
-package clickhouse
+package presto
 
 import (
 	"regexp"
