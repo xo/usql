@@ -175,11 +175,10 @@ func TestTrimSplit(t *testing.T) {
 			sp = "|"
 		}
 		exp := strings.Split(test.exp, sp)
-		if test.exp == "" {
-			if len(y) != 0 {
-				t.Errorf("test %d expected result to have length 0, has length: %d", i, len(y))
-			}
-		} else if !reflect.DeepEqual(y, exp) {
+		switch {
+		case test.exp == "" && len(y) != 0:
+			t.Errorf("test %d expected result to have length 0, has length: %d", i, len(y))
+		case test.exp != "" && !reflect.DeepEqual(y, exp):
 			t.Errorf("test %d expected %v, got: %v", i, exp, y)
 		}
 	}

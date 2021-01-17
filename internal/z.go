@@ -4,7 +4,6 @@ import (
 	"runtime"
 
 	"github.com/xo/dburl"
-
 	"github.com/xo/usql/drivers"
 )
 

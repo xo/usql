@@ -220,9 +220,10 @@ func init() {
 				case buf.Len != 0:
 					s = buf.String()
 				}
-				if s == "" {
+				switch {
+				case s == "":
 					s = text.QueryBufferEmpty
-				} else if p.Handler.IO().Interactive() && env.All()["SYNTAX_HL"] == "true" {
+				case p.Handler.IO().Interactive() && env.All()["SYNTAX_HL"] == "true":
 					b := new(bytes.Buffer)
 					if p.Handler.Highlight(b, s) == nil {
 						s = b.String()
@@ -281,14 +282,11 @@ func init() {
 			Min:     1,
 			Desc:    "set or unset environment variable,NAME [VALUE]",
 			Process: func(p *Params) error {
-				var err error
 				n := p.Get()
 				if len(p.Params) == 1 {
-					err = os.Unsetenv(n)
-				} else {
-					err = os.Setenv(n, strings.Join(p.GetAll(), ""))
+					return os.Unsetenv(n)
 				}
-				return err
+				return os.Setenv(n, strings.Join(p.GetAll(), ""))
 			},
 		},
 		ShellExec: {

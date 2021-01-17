@@ -120,32 +120,34 @@ func (l *Rline) SetOutput(f func(string) string) {
 
 // New creates a new readline input/output handler.
 func New(forceNonInteractive bool, out, histfile string) (IO, error) {
-	var err error
 	// determine if interactive
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 	var closers []func() error
 	// configure stdin
 	var stdin io.ReadCloser
-	if forceNonInteractive {
+	switch {
+	case forceNonInteractive:
 		interactive, cygwin = false, false
-	} else if cygwin {
+	case cygwin:
 		stdin = os.Stdin
-	} else {
+	default:
 		stdin = readline.Stdin
 	}
 	// configure stdout
 	var stdout io.WriteCloser
-	if out != "" {
+	switch {
+	case out != "":
+		var err error
 		stdout, err = os.OpenFile(out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return nil, err
 		}
 		closers = append(closers, stdout.Close)
 		interactive = false
-	} else if cygwin {
+	case cygwin:
 		stdout = os.Stdout
-	} else {
+	default:
 		stdout = readline.Stdout
 	}
 	// configure stderr
@@ -189,7 +191,7 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		N:    n,
 		C: func() error {
 			for _, f := range closers {
-				f()
+				_ = f()
 			}
 			return nil
 		},

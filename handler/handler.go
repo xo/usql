@@ -69,7 +69,7 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 				return nil, nil
 			}
 			// save history
-			l.Save(string(r))
+			_ = l.Save(string(r))
 			return r, nil
 		}
 	}
@@ -142,12 +142,14 @@ func (h *Handler) outputHighlighter(s string) string {
 	// EOF or when a \ cmd has been encountered
 	var err error
 	var cmd, final string
+loop:
 	for {
 		cmd, _, err = st.Next()
-		if err != nil && err != io.EOF {
+		switch {
+		case err != nil && err != io.EOF:
 			return s + endl
-		} else if err == io.EOF {
-			break
+		case err == io.EOF:
+			break loop
 		}
 		if st.Ready() || cmd != "" {
 			final += st.RawString()
@@ -197,7 +199,6 @@ func (h *Handler) Run() error {
 		fmt.Fprintln(h.l.Stdout())
 	}
 	for {
-		var err error
 		var execute bool
 		// set prompt
 		if iactive {
@@ -448,8 +449,7 @@ func (h *Handler) Open(params ...string) error {
 		switch {
 		case err == dburl.ErrInvalidDatabaseScheme:
 			var fi os.FileInfo
-			fi, err = os.Stat(urlstr)
-			if err != nil {
+			if fi, err = os.Stat(urlstr); err != nil {
 				return err
 			}
 			switch {
@@ -512,11 +512,12 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	drivers.ForceParams(u)
 	// see if password entry is present
 	user, err := env.PassFileEntry(h.user, u)
-	if err != nil {
+	switch {
+	case err != nil:
 		errout := h.l.Stderr()
 		fmt.Fprintf(errout, "error: %v", err)
 		fmt.Fprintln(errout)
-	} else if user != nil {
+	case user != nil:
 		u.User = user
 	}
 	// copy back to u
@@ -527,7 +528,6 @@ func (h *Handler) forceParams(u *dburl.URL) {
 // Password collects a password from input, and returns a modified DSN
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
-	var err error
 	if dsn == "" {
 		return "", text.ErrMissingDSN
 	}
@@ -720,7 +720,7 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 		if err = env.ValidIdentifier(n); err != nil {
 			return fmt.Errorf(text.CouldNotSetVariable, n)
 		}
-		env.Set(n, row[i])
+		_ = env.Set(n, row[i])
 	}
 	return nil
 }
@@ -750,7 +750,6 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 
 // query executes a query against the database.
 func (h *Handler) query(w io.Writer, _, qstr string) error {
-	var err error
 	// run query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -763,7 +762,6 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 
 // execRows executes all the columns in the row.
 func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
-	var err error
 	// get columns
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
@@ -801,8 +799,7 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 		return nil, err
 	}
 	// get conversion funcs
-	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u),
-		drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
+	cb, cm, cs, cd := drivers.ConvertBytes(h.u), drivers.ConvertMap(h.u), drivers.ConvertSlice(h.u), drivers.ConvertDefault(h.u)
 	row := make([]string, clen)
 	for n, z := range r {
 		j := z.(*interface{})
@@ -848,7 +845,6 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 
 // exec does a database exec.
 func (h *Handler) exec(w io.Writer, typ, qstr string) error {
-	var err error
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err
@@ -920,7 +916,6 @@ func (h *Handler) Rollback() error {
 
 // Include includes the specified path.
 func (h *Handler) Include(path string, relative bool) error {
-	var err error
 	if relative && !filepath.IsAbs(path) {
 		path = filepath.Join(h.wd, path)
 	}

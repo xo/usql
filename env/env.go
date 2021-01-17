@@ -32,9 +32,10 @@ func Getenv(keys ...string) string {
 // expand expands the tilde (~) in the front of a path to a the supplied
 // directory.
 func expand(u *user.User, path string) string {
-	if path == "~" {
+	switch {
+	case path == "~":
 		return u.HomeDir
-	} else if strings.HasPrefix(path, "~/") {
+	case strings.HasPrefix(path, "~/"):
 		return filepath.Join(u.HomeDir, strings.TrimPrefix(path, "~/"))
 	}
 	return path
@@ -53,8 +54,7 @@ func Getvar(s string) (bool, string, error) {
 	q, n := "", s
 	if c := rune(s[0]); c == '\'' || c == '"' {
 		var err error
-		n, err = unquote(s, c)
-		if err != nil {
+		if n, err = unquote(s, c); err != nil {
 			return false, "", err
 		}
 		q = string(c)
@@ -68,8 +68,7 @@ func Getvar(s string) (bool, string, error) {
 // OpenFile opens a file for reading, returning the full, expanded path of the
 // file.  All callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
-	var err error
-	path, err = filepath.EvalSymlinks(expand(u, path))
+	path, err := filepath.EvalSymlinks(expand(u, path))
 	switch {
 	case err != nil && os.IsNotExist(err):
 		return "", nil, text.ErrNoSuchFileOrDirectory
@@ -94,7 +93,6 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 
 // EditFile edits a file. If path is empty, then a temporary file will be created.
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
-	var err error
 	ed := Getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
 	if ed == "" {
 		return nil, text.ErrNoEditorDefined
@@ -102,8 +100,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	if path != "" {
 		path = expand(u, path)
 	} else {
-		var f *os.File
-		f, err = temp.File("", text.CommandLower(), "sql")
+		f, err := temp.File("", text.CommandLower(), "sql")
 		if err != nil {
 			return nil, err
 		}
@@ -132,8 +129,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	// run
-	err = c.Run()
-	if err != nil {
+	if err := c.Run(); err != nil {
 		return nil, err
 	}
 	// read
@@ -355,8 +351,7 @@ func Unquote(u *user.User, s string, exec bool) (string, error) {
 			return unquote(s, c)
 		case exec && c == '`':
 			var err error
-			s, err = unquote(s, c)
-			if err != nil {
+			if s, err = unquote(s, c); err != nil {
 				return "", err
 			}
 			if strings.TrimSpace(s) == "" {

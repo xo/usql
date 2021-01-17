@@ -174,11 +174,13 @@ func TestNextResetState(t *testing.T) {
 		var stmts, cmds []string
 		var aparams [][]string
 		var vars []*Var
+	loop:
 		for {
 			cmd, params, err := b.Next()
-			if err == io.EOF {
-				break
-			} else if err != nil {
+			switch {
+			case err == io.EOF:
+				break loop
+			case err != nil:
 				t.Fatalf("test %d did not expect error, got: %v", i, err)
 			}
 			vars = append(vars, b.Vars...)
