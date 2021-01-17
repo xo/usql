@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 
@@ -125,12 +126,32 @@ func Pall() map[string]string {
 }
 
 var (
-	onRE        = regexp.MustCompile(`(?i)^(t|tr|tru|true|on)$`)
-	offRE       = regexp.MustCompile(`(?i)^(f|fa|fal|fals|false|of|off)$`)
 	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json)$`)
 	linestlyeRE = regexp.MustCompile(`^(ascii|old-ascii|unicode)$`)
 	borderRE    = regexp.MustCompile(`^(single|double)$`)
 )
+
+func ParseBool(value, name string) (string, error) {
+	switch strings.ToLower(value) {
+	case "1", "t", "tr", "tru", "true", "on":
+		return "on", nil
+	case "0", "f", "fa", "fal", "fals", "false", "of", "off":
+		return "off", nil
+	}
+	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
+}
+
+func ParseAutoBool(value, name string) (string, error) {
+	switch strings.ToLower(value) {
+	case "auto":
+		return "auto", nil
+	case "1", "t", "tr", "tru", "true", "on":
+		return "on", nil
+	case "0", "f", "fa", "fal", "fals", "false", "of", "off":
+		return "off", nil
+	}
+	return "", fmt.Errorf(text.FormatFieldInvalid, value, name)
+}
 
 func Pget(name string) (string, error) {
 	v, ok := pvars[name]
@@ -197,25 +218,17 @@ func Pset(name, value string) (string, error) {
 		i, _ := strconv.Atoi(value)
 		pvars[name] = fmt.Sprintf("%d", i)
 	case "expanded":
-		switch {
-		case value == "auto":
-			pvars[name] = "auto"
-		case onRE.MatchString(value):
-			pvars[name] = "on"
-		case offRE.MatchString(value):
-			pvars[name] = "off"
-		default:
+		s, err := ParseAutoBool(value, name)
+		if err != nil {
 			return "", text.ErrInvalidFormatExpandedType
 		}
+		pvars[name] = s
 	case "fieldsep_zero", "footer", "numericlocale", "recordsep_zero", "tuples_only":
-		switch {
-		case onRE.MatchString(value):
-			pvars[name] = "on"
-		case offRE.MatchString(value):
-			pvars[name] = "off"
-		default:
-			return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
+		s, err := ParseBool(value, name)
+		if err != nil {
+			return "", err
 		}
+		pvars[name] = s
 	case "format":
 		if !formatRE.MatchString(value) {
 			return "", text.ErrInvalidFormatType

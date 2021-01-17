@@ -46,7 +46,8 @@ var (
 		{`q`, `to quit`},
 	}
 	UnknownFormatFieldName  = `unknown option: %s`
-	FormatFieldInvalidValue = `unrecognized value %q for %q: %s expected`
+	FormatFieldInvalid      = `unrecognized value %q for "%s"`
+	FormatFieldInvalidValue = `unrecognized value %q for "%s": %s expected`
 	FormatFieldNameSetMap   = map[string]string{
 		`border`:                   `Border style is %d.`,
 		`columns`:                  `Target width is %d.`,
@@ -74,7 +75,7 @@ var (
 		`tableattr`: `Table attributes unset.`,
 		`title`:     `Title is unset.`,
 	}
-	TimingSet = `Timing is %s.`
+	TimingSet  = `Timing is %s.`
 	TimingDesc = `Time: %0.3f ms`
 )
 

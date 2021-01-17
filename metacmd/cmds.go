@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,11 +33,6 @@ var cmdMap map[string]Metacmd
 
 // sectMap is the map of sections to its respective commands.
 var sectMap map[Section][]Metacmd
-
-var (
-	onRE  = regexp.MustCompile(`(?i)^(t|tr|tru|true|on)$`)
-	offRE = regexp.MustCompile(`(?i)^(f|fa|fal|fals|false|of|off)$`)
-)
 
 func init() {
 	cmds = []Cmd{
@@ -298,21 +292,22 @@ func init() {
 		Timing: {
 			Section: SectionOperatingSystem,
 			Name:    "timing",
-			Desc:    "toggle timing of commands",
+			Desc:    "toggle timing of commands,[on|off]",
 			Process: func(p *Params) error {
 				out, l := p.Handler.IO().Stdout(), len(p.Params)
 				switch {
 				case l == 0:
 					p.Handler.SetTiming(!p.Handler.GetTiming())
 				case l >= 1:
-					switch {
-					case onRE.MatchString(p.Get()):
-						p.Handler.SetTiming(true)
-					case offRE.MatchString(p.Get()):
-						p.Handler.SetTiming(false)
-					default:
-						return fmt.Errorf(text.FormatFieldInvalidValue, p.Get(), "timing", "Boolean")
+					s, err := env.ParseBool(p.Get(), "\\timing")
+					if err != nil {
+						fmt.Fprintln(p.Handler.IO().Stderr(), err.Error())
 					}
+					var b bool
+					if s == "on" {
+						b = true
+					}
+					p.Handler.SetTiming(b)
 				}
 				v := "off"
 				if p.Handler.GetTiming() {
