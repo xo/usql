@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kingpin"
+
 	"github.com/xo/usql/text"
 )
 
@@ -18,21 +19,24 @@ type CommandOrFile struct {
 
 // Args are the command line arguments.
 type Args struct {
-	DSN               string
+	DSN string
+
 	CommandOrFiles    []CommandOrFile
 	Out               string
 	ForcePassword     bool
 	NoPassword        bool
 	NoRC              bool
 	SingleTransaction bool
-	Variables         []string
-	PVariables        []string
+
+	Variables  []string
+	PVariables []string
 }
 
 func (args *Args) Next() (string, bool, error) {
 	if len(args.CommandOrFiles) == 0 {
 		return "", false, io.EOF
 	}
+
 	cmd := args.CommandOrFiles[0]
 	args.CommandOrFiles = args.CommandOrFiles[1:]
 	return cmd.Value, cmd.Command, nil
@@ -81,12 +85,16 @@ func (p pset) IsCumulative() bool {
 
 func NewArgs() *Args {
 	args := &Args{}
+
 	// set usage template
 	kingpin.UsageTemplate(text.UsageTemplate())
+
 	kingpin.Arg("dsn", "database url").StringVar(&args.DSN)
+
 	// command / file flags
 	kingpin.Flag("command", "run only single command (SQL or internal) and exit").Short('c').SetValue(commandOrFile{args, true})
 	kingpin.Flag("file", "execute commands from file and exit").Short('f').SetValue(commandOrFile{args, false})
+
 	// general flags
 	kingpin.Flag("no-password", "never prompt for password").Short('w').BoolVar(&args.NoPassword)
 	kingpin.Flag("no-rc", "do not read start up file").Short('X').BoolVar(&args.NoRC)
@@ -94,12 +102,15 @@ func NewArgs() *Args {
 	kingpin.Flag("password", "force password prompt (should happen automatically)").Short('W').BoolVar(&args.ForcePassword)
 	kingpin.Flag("single-transaction", "execute as a single transaction (if non-interactive)").Short('1').BoolVar(&args.SingleTransaction)
 	kingpin.Flag("set", "set variable NAME to VALUE").Short('v').PlaceHolder(", --variable=NAME=VALUE").StringsVar(&args.Variables)
+
 	// pset
 	kingpin.Flag("pset", `set printing option VAR to ARG (see \pset command)`).Short('P').PlaceHolder("VAR[=ARG]").StringsVar(&args.PVariables)
+
 	// pset flags
 	kingpin.Flag("field-separator", `field separator for unaligned output (default, "|")`).Short('F').SetValue(pset{args, []string{"fieldsep=%q", "fieldsep_zero=off"}})
 	kingpin.Flag("record-separator", `record separator for unaligned output (default, \n)`).Short('R').SetValue(pset{args, []string{"recordsep=%q", "recordsep_zero=off"}})
 	kingpin.Flag("table-attr", "set HTML table tag attributes (e.g., width, border)").Short('T').SetValue(pset{args, []string{"tableattr=%q"}})
+
 	type psetconfig struct {
 		long  string
 		short rune
@@ -127,17 +138,22 @@ func NewArgs() *Args {
 			return nil
 		}).Bool()
 	}
+
 	// add --set as a hidden alias for --variable
 	kingpin.Flag("variable", "set variable NAME to VALUE").Hidden().StringsVar(&args.Variables)
+
 	// add --version flag
 	kingpin.Flag("version", "display version and exit").PreAction(func(*kingpin.ParseContext) error {
 		fmt.Fprintln(os.Stdout, text.CommandName, text.CommandVersion)
 		os.Exit(0)
 		return nil
 	}).Short('V').Bool()
+
 	// hide help flag
 	kingpin.HelpFlag.Short('h').Hidden()
+
 	// parse
 	kingpin.Parse()
+
 	return args
 }

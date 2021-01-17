@@ -124,13 +124,13 @@ func ForceParams(u *dburl.URL) {
 
 // Open opens a sql.DB connection for the registered driver.
 func Open(u *dburl.URL) (*sql.DB, error) {
+	var err error
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil, WrapErr(u.Driver, text.ErrDriverNotAvailable)
 	}
 	f := sql.Open
 	if d.Open != nil {
-		var err error
 		f, err = d.Open(u)
 		if err != nil {
 			return nil, WrapErr(u.Driver, err)
@@ -250,8 +250,8 @@ func CanChangePassword(u *dburl.URL) error {
 // from User.
 func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
+		var err error
 		if user == "" {
-			var err error
 			user, err = User(u, db)
 			if err != nil {
 				return "", err
