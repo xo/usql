@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -198,6 +199,7 @@ func (h *Handler) Run() error {
 		fmt.Fprintln(h.l.Stdout(), text.WelcomeDesc)
 		fmt.Fprintln(h.l.Stdout())
 	}
+	var lastErr error
 	for {
 		var execute bool
 		// set prompt
@@ -213,6 +215,9 @@ func (h *Handler) Run() error {
 			h.buf.Reset(nil)
 			continue
 		case err != nil:
+			if err == io.EOF {
+				return lastErr
+			}
 			return err
 		}
 		var res metacmd.Result
@@ -221,23 +226,23 @@ func (h *Handler) Run() error {
 			// decode
 			var r metacmd.Runner
 			r, err = metacmd.Decode(cmd, params)
-			switch {
-			case err == text.ErrUnknownCommand:
-				fmt.Fprintf(stderr, text.InvalidCommand, cmd)
-				fmt.Fprintln(stderr)
-				continue
-			case err == text.ErrMissingRequiredArgument:
-				fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
-				fmt.Fprintln(stderr)
-				continue
-			case err != nil:
-				fmt.Fprintf(stderr, "error: %v", err)
+			if err != nil {
+				lastErr = WrapErr(cmd, err)
+				switch {
+				case err == text.ErrUnknownCommand:
+					fmt.Fprintf(stderr, text.InvalidCommand, cmd)
+				case err == text.ErrMissingRequiredArgument:
+					fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
+				default:
+					fmt.Fprintf(stderr, "error: %v", err)
+				}
 				fmt.Fprintln(stderr)
 				continue
 			}
 			// run
 			res, err = r.Run(h)
 			if err != nil && err != rline.ErrInterrupt {
+				lastErr = WrapErr(cmd, err)
 				fmt.Fprintf(stderr, "error: %v", err)
 				fmt.Fprintln(stderr)
 				continue
@@ -259,12 +264,16 @@ func (h *Handler) Run() error {
 				typ, end, batch := drivers.IsBatchQueryPrefix(h.u, h.buf.Prefix)
 				switch {
 				case h.batch && batch:
-					fmt.Fprintf(stderr, "error: cannot perform %s in existing batch", typ)
+					err = fmt.Errorf("cannot perform %s in existing batch", typ)
+					lastErr = WrapErr(h.buf.String(), err)
+					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
 					continue
 				// cannot use \g* while accumulating statements for batch queries
 				case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
-					fmt.Fprint(stderr, "error: cannot force batch execution")
+					err = errors.New("cannot force batch execution")
+					lastErr = WrapErr(h.buf.String(), err)
+					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
 					continue
 				case batch:
@@ -301,6 +310,7 @@ func (h *Handler) Run() error {
 				}
 				// execute
 				if err = h.Execute(stdout, res, h.lastPrefix, h.last, forceBatch); err != nil {
+					lastErr = WrapErr(h.last, err)
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
 				}
@@ -945,9 +955,6 @@ func (h *Handler) Include(path string, relative bool) error {
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
 	err = p.Run()
-	if err == io.EOF {
-		err = nil
-	}
 	h.db, h.u = p.db, p.u
 	return err
 }

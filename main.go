@@ -3,6 +3,7 @@ package main
 //go:generate ./gen-license.sh
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -45,8 +46,12 @@ func main() {
 	// run
 	err = run(args, cur)
 	if err != nil && err != io.EOF && err != rline.ErrInterrupt {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		if e, ok := err.(*drivers.Error); ok && e.Err == text.ErrDriverNotAvailable {
+		var he *handler.Error
+		if !errors.As(err, &he) {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		}
+		var e *drivers.Error
+		if errors.As(err, &e) && e.Err == text.ErrDriverNotAvailable {
 			m := make(map[string]string, len(known))
 			for k, v := range known {
 				m[v] = k
@@ -146,7 +151,7 @@ func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func
 			h.SetSingleLineMode(x.Command)
 			if x.Command {
 				h.Reset([]rune(x.Value))
-				if err := h.Run(); err != nil && err != io.EOF {
+				if err := h.Run(); err != nil {
 					return err
 				}
 			} else {
