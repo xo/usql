@@ -35,6 +35,8 @@ type Handler struct {
 	user *user.User
 	wd   string
 	nopw bool
+	// timing of every command executed
+	timing bool
 	// singleLineMode is single line mode
 	singleLineMode bool
 	// query statement buffer
@@ -90,6 +92,16 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 // SetSingleLineMode sets the single line mode toggle.
 func (h *Handler) SetSingleLineMode(singleLineMode bool) {
 	h.singleLineMode = singleLineMode
+}
+
+// GetTiming gets the timing toggle.
+func (h *Handler) GetTiming() bool {
+	return h.timing
+}
+
+// SetTiming sets the timing toggle.
+func (h *Handler) SetTiming(timing bool) {
+	h.timing = timing
 }
 
 // outputHighlighter returns s as a highlighted string, based on the current
@@ -760,14 +772,26 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 
 // query executes a query against the database.
 func (h *Handler) query(w io.Writer, _, qstr string) error {
+	start := time.Now()
 	// run query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
 		return err
 	}
 	defer q.Close()
-	return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
-	// return tblfmt.EncodeAll(w, q, map[string]string(env.Pall()), tblfmt.WithByteBufferPool(pool))
+	err = tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
+	if err != nil {
+		return err
+	}
+	if h.timing {
+		d := time.Since(start)
+		fmt.Fprintf(h.l.Stdout(), text.TimingDesc, float64(d.Microseconds())/1000)
+		if d > 1*time.Second {
+			fmt.Fprintf(h.l.Stdout(), " (%v)", d.Round(1*time.Millisecond))
+		}
+		fmt.Fprintln(h.l.Stdout())
+	}
+	return err
 }
 
 // execRows executes all the columns in the row.

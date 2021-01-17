@@ -599,6 +599,7 @@ Connection
 Operating System
   \cd [DIR]                       change the current working directory
   \setenv NAME [VALUE]            set or unset environment variable
+  \timing [on|off]                toggle timing of commands
   \! [COMMAND]                    execute command in shell or start interactive shell
 
 Variables

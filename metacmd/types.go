@@ -48,6 +48,10 @@ type Handler interface {
 	Rollback() error
 	// Highlight highlights the statement.
 	Highlight(io.Writer, string) error
+	// GetTiming mode.
+	GetTiming() bool
+	// SetTiming mode.
+	SetTiming(bool)
 }
 
 // Runner is a runner interface type.
