@@ -1,16 +1,12 @@
 #!/bin/bash
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../)
-ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort)
-SED=sed
-if [ "$(uname)" == "Darwin" ]; then
-  SED=gsed
-fi
+ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort|grep -v genji)
 
 PKGS=
 for i in $ALL; do
   NAME=$(basename $i)
-  PKG=$($SED -n '/DRIVER: /{n;p;}' $i/$NAME.go|$SED -e 's/^\(\s\|"\|_\)\+//'|$SED -e 's/[a-z]\+\s\+"//' |$SED -e 's/"\s*//')
+  PKG=$(sed -n '/DRIVER: /p' $i/$NAME.go |sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/[a-z]\+\s\+"//' |sed -e 's/".*//')
   PKGS="$PKGS $PKG"
 done
 
