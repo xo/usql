@@ -76,4 +76,6 @@ const (
 	Unset
 	// SetFormatVar is the set format variable meta commands (\pset, \a, \C, \f, \H, \t, \T, \x).
 	SetFormatVar
+	// Timing is the timing meta command (\timing).
+	Timing
 )

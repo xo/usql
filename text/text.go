@@ -74,6 +74,8 @@ var (
 		`tableattr`: `Table attributes unset.`,
 		`title`:     `Title is unset.`,
 	}
+	TimingSet = `Timing is %s.`
+	TimingDesc = `Time: %0.3f ms`
 )
 
 func init() {

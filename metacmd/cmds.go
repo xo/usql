@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,6 +34,11 @@ var cmdMap map[string]Metacmd
 
 // sectMap is the map of sections to its respective commands.
 var sectMap map[Section][]Metacmd
+
+var (
+	onRE  = regexp.MustCompile(`(?i)^(t|tr|tru|true|on)$`)
+	offRE = regexp.MustCompile(`(?i)^(f|fa|fal|fals|false|of|off)$`)
+)
 
 func init() {
 	cmds = []Cmd{
@@ -287,6 +293,34 @@ func init() {
 					return os.Unsetenv(n)
 				}
 				return os.Setenv(n, strings.Join(p.GetAll(), ""))
+			},
+		},
+		Timing: {
+			Section: SectionOperatingSystem,
+			Name:    "timing",
+			Desc:    "toggle timing of commands",
+			Process: func(p *Params) error {
+				out, l := p.Handler.IO().Stdout(), len(p.Params)
+				switch {
+				case l == 0:
+					p.Handler.SetTiming(!p.Handler.GetTiming())
+				case l >= 1:
+					switch {
+					case onRE.MatchString(p.Get()):
+						p.Handler.SetTiming(true)
+					case offRE.MatchString(p.Get()):
+						p.Handler.SetTiming(false)
+					default:
+						return fmt.Errorf(text.FormatFieldInvalidValue, p.Get(), "timing", "Boolean")
+					}
+				}
+				v := "off"
+				if p.Handler.GetTiming() {
+					v = "on"
+				}
+				fmt.Fprintf(out, text.TimingSet, v)
+				fmt.Fprintln(out)
+				return nil
 			},
 		},
 		ShellExec: {
