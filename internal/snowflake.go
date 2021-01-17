@@ -1,4 +1,4 @@
-// +build all,!no_snowflake most,!no_snowflake snowflake,!no_snowflake
+// +build all,!no_snowflake snowflake,!no_snowflake
 
 package internal
 

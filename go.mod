@@ -63,6 +63,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sijms/go-ora v0.0.0-20201230204601-9c6316265b76
+	github.com/sirupsen/logrus v1.7.0
 	github.com/snowflakedb/gosnowflake v1.3.13
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
