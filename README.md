@@ -826,61 +826,13 @@ pg:booktest@=> \g
 Any [Go supported time format][go-time] or const name (for example, `Kitchen`,
 in the above) can be used for `TIME_FORMAT`.
 
-## TODO
+## Contributing
 
-`usql` aims to eventually provide a drop-in replacement for PostgreSQL's `psql`
-command. This is on-going -- an attempt has been made in good-faith to provide
-support for the most frequently used aspects/features of `psql`. Compatibility
-(where possible) with `psql`, takes general development priority.
+`usql` is currently a WIP, and is aiming towards a 1.0 release soon.
+Well-written PRs are always welcome -- and there is a clear backlog of issues
+marked `help wanted` on the GitHub issue tracker!
 
-##### General
-
-0.  updated asciinema demo
-1.  support more prompt configuration, colored prompt by default
-2.  add window title / status output
-2.  change `drivers.Convert*` to drivers.Marshal style interfaces
-3.  allow configuration for JSON encoding/decoding output
-4.  return single 'driver' type handling marshaling / scanning of types / columns
-5.  implement better environment variable handling
-6.  implement proper readline
-7.  tab-completion of queries
-8.  show hidden (client) queries (`\set SHOW_HIDDEN`)
-9.  fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
-10. proper `PAGER` support
-11. `\qecho` + `\o` support
-12. context-based completion (WIP)
-13. full `\if` `\elif` `\else` `\endif` support
-14. fix `WITH ... DELETE` queries (postgresql)
-15. better `--help` / man pages
-16. translations
-17. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
-
-##### Command Processing + `psql` compatibility
-
-1. all `\d*` commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
-2. `\ef` and `\ev` commands from `psql` (WIP, need to finish work extracting stored procs / funcs / views for all the major databases)
-2. `\watch`
-3. `\errverbose` (show verbose info for last error)
-4. remaining `psql` cli parameters
-5. `\j*` commands (WIP)
-6. `\copy` (add support for copying between two different databases ...?)
-
-##### Testing
-
-1. test suite for databases, doing minimal of `SELECT`, `INSERT`, `UPDATE`, `DELETE` for every database
-
-##### Future Database Support
-
-1. Redis CLI
-2. InfluxDB
-3. CSV via SQLite3 vtable
-4. Google Sheets via SQLite3 vtable
-5. InfluxDB IQL
-6. Aerospike AQL
-7. ArrangoDB AQL
-8. OrientDB SQL
-9. Cypher / SparQL
-10. Atlassian JIRA JQL
+*Please pick up an issue today, and submit a PR tomorrow!*
 
 ## Related Projects
 
