@@ -38,6 +38,7 @@ var (
 	CouldNotSetVariable   = `could not set variable %q`
 	// PasswordChangeSucceeded = `\password succeeded for %q`
 	HelpDesc          string
+	HelpDescShort     = `Use \? for help or press control-C to clear the input buffer.`
 	HelpBanner        = `You are using ` + CommandName + ", " + Banner + `.`
 	HelpCommandPrefix = `Type:  `
 	HelpCommands      = [][]string{
@@ -47,6 +48,7 @@ var (
 		{`g`, `or terminate with semicolon to execute query`},
 		{`q`, `to quit`},
 	}
+	QuitDesc                = `Use \q to quit.`
 	UnknownFormatFieldName  = `unknown option: %s`
 	FormatFieldInvalid      = `unrecognized value %q for "%s"`
 	FormatFieldInvalidValue = `unrecognized value %q for "%s": %s expected`

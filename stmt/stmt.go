@@ -7,10 +7,8 @@ import (
 	"github.com/xo/usql/env"
 )
 
-const (
-	// MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
-	MinCapIncrease = 512
-)
+// MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
+const MinCapIncrease = 512
 
 // Var holds information about a variable.
 type Var struct {
@@ -90,12 +88,14 @@ func (b *Stmt) RawString() string {
 			continue
 		}
 		z.WriteString(s[i:v.I])
-		z.WriteRune(':')
+		if v.Quote != '\\' {
+			z.WriteRune(':')
+		}
 		if v.Quote != 0 {
 			z.WriteRune(v.Quote)
 		}
 		z.WriteString(v.Name)
-		if v.Quote != 0 {
+		if v.Quote != 0 && v.Quote != '\\' {
 			z.WriteRune(v.Quote)
 		}
 		i = v.I + v.Len
@@ -245,9 +245,22 @@ parse:
 		// continue processing
 		case b.quote || b.multilineComment || b.balanceCount != 0:
 			continue
-		// skip escaped backslash
-		case c == '\\' && next == '\\':
-			i++
+		// skip escaped backslash, semicolon, colon
+		case c == '\\' && (next == '\\' || next == ';' || next == ':'):
+			// FIXME: the below works, but it may not make sense to keep this enabled.
+			// FIXME: also, the behavior is slightly different than psql
+			v := &Var{
+				I:     i,
+				End:   i + 2,
+				Quote: '\\',
+				Name:  string(next),
+				Len:   1,
+			}
+			b.Vars = append(b.Vars, v)
+			b.r, b.rlen = substituteVar(b.r, v, string(next))
+			if b.Len != 0 {
+				v.I += b.Len + 1
+			}
 		// start of command
 		case c == '\\':
 			// extract command from r
@@ -352,4 +365,39 @@ func (b *Stmt) State() string {
 		return "-"
 	}
 	return "="
+}
+
+// Option is a statement buffer option.
+type Option func(*Stmt)
+
+// WithAllowDollar is a statement buffer option to set allowing dollar strings (ie,
+// $$text$$ or $tag$text$tag$).
+func WithAllowDollar(enable bool) Option {
+	return func(b *Stmt) {
+		b.allowDollar = enable
+	}
+}
+
+// WithAllowMultilineComments is a statement buffer option to set allowing multiline comments
+// (ie, /* ... */).
+func WithAllowMultilineComments(enable bool) Option {
+	return func(b *Stmt) {
+		b.allowMultilineComments = enable
+	}
+}
+
+// WithAllowCComments is a statement buffer option to set allowing C-style comments
+// (ie, // ...).
+func WithAllowCComments(enable bool) Option {
+	return func(b *Stmt) {
+		b.allowCComments = enable
+	}
+}
+
+// WithAllowHashComments is a statement buffer option to set allowing hash comments
+// (ie, # ...).
+func WithAllowHashComments(enable bool) Option {
+	return func(b *Stmt) {
+		b.allowHashComments = enable
+	}
 }

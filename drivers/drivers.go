@@ -147,18 +147,18 @@ func stmtOpts(u *dburl.URL) []stmt.Option {
 	if u != nil {
 		if d, ok := drivers[u.Driver]; ok {
 			return []stmt.Option{
-				stmt.AllowDollar(d.AllowDollar),
-				stmt.AllowMultilineComments(d.AllowMultilineComments),
-				stmt.AllowCComments(d.AllowCComments),
-				stmt.AllowHashComments(d.AllowHashComments),
+				stmt.WithAllowDollar(d.AllowDollar),
+				stmt.WithAllowMultilineComments(d.AllowMultilineComments),
+				stmt.WithAllowCComments(d.AllowCComments),
+				stmt.WithAllowHashComments(d.AllowHashComments),
 			}
 		}
 	}
 	return []stmt.Option{
-		stmt.AllowDollar(true),
-		stmt.AllowMultilineComments(true),
-		stmt.AllowCComments(true),
-		stmt.AllowHashComments(true),
+		stmt.WithAllowDollar(true),
+		stmt.WithAllowMultilineComments(true),
+		stmt.WithAllowCComments(true),
+		stmt.WithAllowHashComments(true),
 	}
 }
 

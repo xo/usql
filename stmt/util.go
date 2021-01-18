@@ -25,3 +25,14 @@ func min(a, b int) int {
 func IsSpace(r rune) bool {
 	return unicode.IsSpace(r) || unicode.IsControl(r)
 }
+
+// RunesLastIndex returns the last index in r of needle, or -1 if not found.
+func RunesLastIndex(r []rune, needle rune) int {
+	i := len(r) - 1
+	for ; i >= 0; i-- {
+		if r[i] == needle {
+			return i
+		}
+	}
+	return i
+}

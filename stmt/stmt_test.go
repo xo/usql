@@ -184,7 +184,7 @@ func TestNextResetState(t *testing.T) {
 		// },
 	}
 	for i, test := range tests {
-		b := New(sp(test.s, "\n"), AllowDollar(true), AllowMultilineComments(true), AllowCComments(true))
+		b := New(sp(test.s, "\n"), WithAllowDollar(true), WithAllowMultilineComments(true), WithAllowCComments(true))
 		var stmts, cmds []string
 		var aparams [][]string
 		var vars []*Var

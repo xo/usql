@@ -56,22 +56,24 @@ func isEmptyLine(r []rune, i, end int) bool {
 }
 
 // StartsWith determines if r starts with s, ignoring case, and skipping
-// initial whitespace and returning -1 if r does not start with s.
+// initial whitespace and returning false if r does not start with s.
+//
+// When line starts with the prefix, will also return whether or not the
+// remaining line is empty (all whitespace).
 //
 // Note: assumes s contains at least one non space.
-func StartsWith(r []rune, i, end int, s string) bool {
+func StartsWith(r []rune, i, end int, s string) (bool, bool) {
 	slen := len(s)
 	// find start
 	var found bool
 	i, found = findNonSpace(r, i, end)
 	if !found || i+slen > end {
-		return false
+		return false, false
 	}
-	// check
 	if strings.ToLower(string(r[i:i+slen])) == s {
-		return true
+		return true, isEmptyLine(r, i+slen, end)
 	}
-	return false
+	return false, false
 }
 
 // trimSplit splits r by whitespace into a string slice.

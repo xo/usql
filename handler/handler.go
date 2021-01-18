@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -56,7 +57,6 @@ type Handler struct {
 
 // New creates a new input handler.
 func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
-	// set help intercept
 	f, iactive := l.Next, l.Interactive()
 	if iactive {
 		f = func() ([]rune, error) {
@@ -65,26 +65,6 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 			if err != nil {
 				return nil, err
 			}
-			// check if line starts with help
-			if rlen := len(r); rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
-				fmt.Fprintln(l.Stdout(), text.HelpDesc)
-				return nil, nil
-			}
-			/*
-				if rlen := len(r); rlen >= 4 {
-					var st, empty bool
-					if st, empty = stmt.StartsWith(r, 0, rlen, text.HelpPrefix); st && empty {
-						fmt.Fprintln(l.Stdout(), text.HelpDesc)
-						return nil, nil
-					}
-					if st, empty = stmt.StartsWith(r, 0, rlen, text.ExitPrefix); st && empty {
-						return nil, io.EOF
-					}
-					if st, empty := stmt.StartsWith(r, 0, rlen, text.QuitPrefix); st && empty {
-						return nil, io.EOF
-					}
-				}
-			*/
 			// save history
 			_ = l.Save(string(r))
 			return r, nil
@@ -217,6 +197,9 @@ loop:
 	return lastcolor(colored) + ss[len(ss)-1] + remaining + endl
 }
 
+// helpQuitExitRE is a regexp to use to match help, quit, or exit messages.
+var helpQuitExitRE = regexp.MustCompile(fmt.Sprintf(`(?im)^(%s|%s|%s)\s*$`, text.HelpPrefix, text.QuitPrefix, text.ExitPrefix))
+
 // Run executes queries and commands.
 func (h *Handler) Run() error {
 	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
@@ -277,6 +260,29 @@ func (h *Handler) Run() error {
 			for i := res.Processed; i < len(params); i++ {
 				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, params[i])
 				fmt.Fprintln(stdout)
+			}
+		}
+		// help, exit, quit intercept
+		if iactive && len(h.buf.Buf) >= 4 {
+			i, first := stmt.RunesLastIndex(h.buf.Buf, '\n'), false
+			if i == -1 {
+				i, first = 0, true
+			}
+			if s := strings.ToLower(helpQuitExitRE.FindString(string(h.buf.Buf[i:]))); s != "" {
+				switch s {
+				case "help":
+					s = text.HelpDescShort
+					if first {
+						s = text.HelpDesc
+						h.buf.Reset(nil)
+					}
+				case "quit", "exit":
+					s = text.QuitDesc
+					if first {
+						return nil
+					}
+				}
+				fmt.Fprintln(stdout, s)
 			}
 		}
 		// quit

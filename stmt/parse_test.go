@@ -118,20 +118,34 @@ func TestStartsWith(t *testing.T) {
 	tests := []struct {
 		s   string
 		i   int
+		pre string
+		st  bool
 		exp bool
 	}{
-		{"", 0, false},
-		{" ", 0, false},
-		{" help", 0, true},
-		{"     helpfoo", 0, true},
-		{"     help foo", 1, true},
-		{"     foo help", 1, false},
+		{"", 0, "help", false, false},
+		{" ", 0, "help", false, false},
+		{" help", 0, "help", true, true},
+		{"     helpfoo", 0, "help", true, false},
+		{"     help foo", 1, "help", true, false},
+		{"     foo help", 1, "help", false, false},
+		{"help   ", 0, "help", true, true},
+		{"helpa   ", 0, "help", true, false},
+		{"quit     ", 0, "quit", true, true},
+		{"quitb     ", 0, "quit", true, false},
+		{"exit     ", 0, "exit", true, true},
+		{"exita   ", 0, "exit", true, false},
+		{"exit  h   ", 0, "exit", true, false},
+		{"   exit     ", 0, "exit", true, true},
+		{"   exit  h   ", 0, "exit", true, false},
 	}
 	for i, test := range tests {
 		z := []rune(test.s)
-		b := StartsWith(z, test.i, len(z), "help")
+		st, b := StartsWith(z, test.i, len(z), test.pre)
 		if b != test.exp {
 			t.Errorf("test %d expected %t, got: %t", i, test.exp, b)
+		}
+		if st != test.st {
+			t.Errorf("test %d expected st %t, got: %t", i, test.st, st)
 		}
 	}
 }
