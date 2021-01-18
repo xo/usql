@@ -66,19 +66,25 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 				return nil, err
 			}
 			// check if line starts with help
-			if rlen := len(r); rlen >= 4 {
-				var st, empty bool
-				if st, empty = stmt.StartsWith(r, 0, rlen, text.HelpPrefix); st && empty {
-					fmt.Fprintln(l.Stdout(), text.HelpDesc)
-					return nil, nil
-				}
-				if st, empty = stmt.StartsWith(r, 0, rlen, text.ExitPrefix); st && empty {
-					return nil, io.EOF
-				}
-				if st, empty := stmt.StartsWith(r, 0, rlen, text.QuitPrefix); st && empty {
-					return nil, io.EOF
-				}
+			if rlen := len(r); rlen >= 4 && stmt.StartsWith(r, 0, rlen, text.HelpPrefix) {
+				fmt.Fprintln(l.Stdout(), text.HelpDesc)
+				return nil, nil
 			}
+			/*
+				if rlen := len(r); rlen >= 4 {
+					var st, empty bool
+					if st, empty = stmt.StartsWith(r, 0, rlen, text.HelpPrefix); st && empty {
+						fmt.Fprintln(l.Stdout(), text.HelpDesc)
+						return nil, nil
+					}
+					if st, empty = stmt.StartsWith(r, 0, rlen, text.ExitPrefix); st && empty {
+						return nil, io.EOF
+					}
+					if st, empty := stmt.StartsWith(r, 0, rlen, text.QuitPrefix); st && empty {
+						return nil, io.EOF
+					}
+				}
+			*/
 			// save history
 			_ = l.Save(string(r))
 			return r, nil
