@@ -3,11 +3,12 @@
 \set ORACLE_SVC xe
 \set ORACLE_HOST `docker port oracle 1521`
 
-\prompt 'Database user:' NAME
-
-\set DATNAME :NAME.dat
+\prompt NAME 'Create database user: '
+\prompt -password PASS 'Password for "':NAME'": '
 
 \connect 'oracle://':ORACLE_USER':':ORACLE_PASS'@':ORACLE_HOST'/':ORACLE_SVC
+
+\set DATNAME :NAME.dat
 
 CREATE
   TABLESPACE :NAME

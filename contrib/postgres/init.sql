@@ -3,8 +3,8 @@
 \set POSTGRES_DB   postgres
 \set POSTGRES_HOST `docker port postgres 5432`
 
-\prompt 'Database user: ' NAME
-\prompt 'Database pass: ' PASS
+\prompt NAME 'Create database user: '
+\prompt -password PASS 'Password for "':NAME'": '
 
 \connect 'postgres://':POSTGRES_USER':':POSTGRES_PASS'@':POSTGRES_HOST'/':POSTGRES_DB
 
