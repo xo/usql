@@ -2,14 +2,11 @@ package stmt
 
 import (
 	"regexp"
-	"strings"
 	"unicode"
 )
 
-const (
-	// prefixWords is the number of words to extract from a prefix.
-	prefixWords = 6
-)
+// prefixCount is the number of words to extract from a prefix.
+const prefixCount = 6
 
 // grab grabs i from r, or returns 0 if i >= end.
 func grab(r []rune, i, end int) rune {
@@ -53,27 +50,6 @@ func findRune(r []rune, i, end int, c rune) (int, bool) {
 func isEmptyLine(r []rune, i, end int) bool {
 	_, ok := findNonSpace(r, i, end)
 	return !ok
-}
-
-// StartsWith determines if r starts with s, ignoring case, and skipping
-// initial whitespace and returning false if r does not start with s.
-//
-// When line starts with the prefix, will also return whether or not the
-// remaining line is empty (all whitespace).
-//
-// Note: assumes s contains at least one non space.
-func StartsWith(r []rune, i, end int, s string) (bool, bool) {
-	slen := len(s)
-	// find start
-	var found bool
-	i, found = findNonSpace(r, i, end)
-	if !found || i+slen > end {
-		return false, false
-	}
-	if strings.ToLower(string(r[i:i+slen])) == s {
-		return true, isEmptyLine(r, i+slen, end)
-	}
-	return false, false
 }
 
 // trimSplit splits r by whitespace into a string slice.
@@ -130,18 +106,18 @@ func readDollarAndTag(r []rune, i, end int) (string, int, bool) {
 //
 // If the string's terminator was not found, then the result will be the passed
 // end.
-func readString(r []rune, i, end int, b *Stmt) (int, bool) {
+func readString(r []rune, i, end int, allowDollar, quoteDouble, quoteDollar bool, quoteDollarTag string) (int, bool) {
 	var prev, c rune
 	for ; i < end; i++ {
 		c = r[i]
 		switch {
-		case b.allowDollar && b.quoteDollar && c == '$':
-			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.quoteDollarTag == id {
+		case allowDollar && quoteDollar && c == '$':
+			if id, pos, ok := readDollarAndTag(r, i, end); ok && quoteDollarTag == id {
 				return pos, true
 			}
-		case b.quoteDouble && c == '"':
+		case quoteDouble && c == '"':
 			return i, true
-		case !b.quoteDouble && !b.quoteDollar && c == '\'' && prev != '\'':
+		case !quoteDouble && !quoteDollar && c == '\'' && prev != '\'':
 			return i, true
 		}
 		prev = r[i]
@@ -186,7 +162,7 @@ func readStringVar(r []rune, i, end int) *Var {
 	return nil
 }
 
-// readVar reads the variable.
+// readVar reads variable from r.
 func readVar(r []rune, i, end int) *Var {
 	if grab(r, i, end) != ':' || grab(r, i+1, end) == ':' {
 		return nil
@@ -307,7 +283,7 @@ loop:
 
 // FindPrefix finds the first 6 prefix words in s.
 func FindPrefix(s string) string {
-	return findPrefix([]rune(s), prefixWords)
+	return findPrefix([]rune(s), prefixCount)
 }
 
 // substituteVar substitutes part of r, based on v, with s.

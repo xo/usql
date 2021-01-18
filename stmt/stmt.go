@@ -188,6 +188,7 @@ func (b *Stmt) Next() (string, []string, error) {
 	}
 	var cmd string
 	var params []string
+	var ok bool
 parse:
 	for ; i < b.rlen; i++ {
 		// log.Printf(">> (%c) %d", b.r[i], i)
@@ -196,15 +197,14 @@ parse:
 		switch {
 		// find end of string quote
 		case b.quote:
-			pos, ok := readString(b.r, i, b.rlen, b)
-			i = pos
+			i, ok = readString(b.r, i, b.rlen, b.allowDollar, b.quoteDouble, b.quoteDollar, b.quoteDollarTag)
 			if ok {
 				b.quote, b.quoteDouble, b.quoteDollar, b.quoteDollarTag = false, false, false, ""
 			}
 		// find end of multiline comment
 		case b.multilineComment:
-			pos, ok := readMultilineComment(b.r, i, b.rlen)
-			i, b.multilineComment = pos, !ok
+			i, ok = readMultilineComment(b.r, i, b.rlen)
+			b.multilineComment = !ok
 		// start of single quoted string
 		case c == '\'':
 			b.quote = true
@@ -213,11 +213,11 @@ parse:
 			b.quote, b.quoteDouble = true, true
 		// start of dollar quoted string literal (postgres)
 		case b.allowDollar && c == '$':
-			id, pos, ok := readDollarAndTag(b.r, i, b.rlen)
+			var id string
+			id, i, ok = readDollarAndTag(b.r, i, b.rlen)
 			if ok {
 				b.quote, b.quoteDollar, b.quoteDollarTag = true, true, id
 			}
-			i = pos
 		// start of sql comment, skip to end of line
 		case c == '-' && next == '-':
 			i = b.rlen
@@ -312,7 +312,7 @@ parse:
 		b.Append(b.r[st:i], lineend)
 	}
 	// set prefix
-	b.Prefix = findPrefix(b.Buf, prefixWords)
+	b.Prefix = findPrefix(b.Buf, prefixCount)
 	// reset r
 	b.r = b.r[i:]
 	b.rlen = len(b.r)
