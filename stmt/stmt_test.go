@@ -168,6 +168,20 @@ func TestNextResetState(t *testing.T) {
 		{"select :''\n:'foo':\"bar\"\\g", []string{"select :''\n:'foo':\"bar\""}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
 		{"select :''\n:'foo' :\"bar\"\\g", []string{"select :''\n:'foo' :\"bar\""}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
 		{"select :''\n :'foo' :\"bar\" \\g", []string{"select :''\n :'foo' :\"bar\" "}, []string{"", `\g`}, "=", []string{"foo", "bar"}},
+		// TODO: parsing code for metacommands needs to be fixed to correctly handle this
+		// {
+		//         `\connect  'oracle://':ORACLE_USER':':ORACLE_PASS'@':ORACLE_HOST'/':ORACLE_SVC`,
+		//
+		//         //\set ORACLE_USER system
+		//         //\set ORACLE_PASS oracle
+		//         //\set ORACLE_SVC xe
+		//         //\set ORACLE_HOST `docker port oracle 1521`
+		//         //
+		//         //\prompt 'Database user:' NAME
+		//         //
+		//         //\set DATNAME :NAME.dat
+		//
+		// },
 	}
 	for i, test := range tests {
 		b := New(sp(test.s, "\n"), AllowDollar(true), AllowMultilineComments(true), AllowCComments(true))

@@ -54,12 +54,12 @@ usual way with the [`brew` command][homebrew]:
 $ brew install xo/xo/usql
 ```
 
-Additional support for [Oracle and ODBC databases][Database Support] can be
+Additional support for [Oracle (godror) and ODBC databases][Database Support] can be
 installed by passing `--with-*` parameters during install:
 
 ```sh
-# install usql with oracle and odbc support
-$ brew install --with-oracle --with-odbc usql
+# install usql with oracle (godror) and odbc support
+$ brew install --with-godror --with-odbc usql
 ```
 
 Please note that Oracle Database support requires using the [`xo/xo`
@@ -91,7 +91,7 @@ scoop install usql
 `usql` can be installed in the usual Go fashion:
 
 ```sh
-# install usql with basic database support (includes PosgreSQL, Oracle Database, MySQL, MS SQL, and SQLite3 drivers)
+# install usql with basic database support (includes PostgreSQL, Oracle Database, MySQL, MS SQL, and SQLite3 drivers)
 $ GO111MODULE=on go get github.com/xo/usql
 ```
 
@@ -829,7 +829,7 @@ in the above) can be used for `TIME_FORMAT`.
 
 `usql` aims to eventually provide a drop-in replacement for PostgreSQL's `psql`
 command. This is on-going -- an attempt has been made in good-faith to provide
-support for the most frequently used aspects/features of `psql`. Compatability
+support for the most frequently used aspects/features of `psql`. Compatibility
 (where possible) with `psql`, takes general development priority.
 
 ##### General
@@ -854,6 +854,7 @@ support for the most frequently used aspects/features of `psql`. Compatability
 16. better `--help` / man pages
 17. translations
 18. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
+19. allow `\;` to escape semi-colons
 
 ##### Command Processing + `psql` compatibility
 

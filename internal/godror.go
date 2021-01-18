@@ -1,4 +1,4 @@
-// +build all,!no_godror most,!no_godror godror,!no_godror
+// +build all,!no_godror godror,!no_godror
 
 package internal
 

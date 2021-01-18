@@ -12,6 +12,8 @@ var (
 	Banner                = `the universal command-line interface for SQL databases`
 	NotConnected          = `(not connected)`
 	HelpPrefix            = `help`
+	QuitPrefix            = `quit`
+	ExitPrefix            = `exit`
 	WelcomeDesc           = `Type "` + HelpPrefix + `" for help.`
 	QueryBufferEmpty      = `Query buffer is empty.`
 	QueryBufferReset      = `Query buffer reset (cleared).`
