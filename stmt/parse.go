@@ -22,7 +22,7 @@ func grab(r []rune, i, end int) rune {
 // findSpace finds first space rune in r, returning end if not found.
 func findSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if IsSpace(r[i]) {
+		if IsSpaceOrControl(r[i]) {
 			return i, true
 		}
 	}
@@ -32,7 +32,7 @@ func findSpace(r []rune, i, end int) (int, bool) {
 // findNonSpace finds first non space rune in r, returning end if not found.
 func findNonSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if !IsSpace(r[i]) {
+		if !IsSpaceOrControl(r[i]) {
 			return i, true
 		}
 	}
@@ -219,7 +219,7 @@ func readCommand(r []rune, i, end int) (string, []string, int) {
 	// find end (either end of r, or the next command)
 	start, found := i, false
 	for ; i < end-1; i++ {
-		if IsSpace(r[i]) && r[i+1] == '\\' {
+		if IsSpaceOrControl(r[i]) && r[i+1] == '\\' {
 			found = true
 			break
 		}
@@ -280,7 +280,7 @@ loop:
 			}
 			// add space when remaining runes begin with space, and previous
 			// captured word did not
-			if sl := len(s); end > 0 && sl != 0 && IsSpace(r[0]) && !IsSpace(s[sl-1]) {
+			if sl := len(s); end > 0 && sl != 0 && IsSpaceOrControl(r[0]) && !IsSpaceOrControl(s[sl-1]) {
 				s = append(s, ' ')
 			}
 		// end of statement, max words, or punctuation that can be ignored

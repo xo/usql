@@ -122,7 +122,7 @@ func (h *Handler) outputHighlighter(s string) string {
 	} else {
 		// get leading whitespace
 		if i := strings.IndexFunc(s, func(r rune) bool {
-			return !stmt.IsSpace(r)
+			return !stmt.IsSpaceOrControl(r)
 		}); i != -1 {
 			leading = s[:i]
 		}
@@ -165,7 +165,7 @@ loop:
 			l := len(final)
 			// find first non empty character
 			if i := strings.IndexFunc(full[l:], func(r rune) bool {
-				return !stmt.IsSpace(r)
+				return !stmt.IsSpaceOrControl(r)
 			}); i != -1 {
 				final += full[l : l+i]
 			}
