@@ -832,7 +832,9 @@ in the above) can be used for `TIME_FORMAT`.
 Well-written PRs are always welcome -- and there is a clear backlog of issues
 marked `help wanted` on the GitHub issue tracker!
 
-*Please pick up an issue today, and submit a PR tomorrow!*
+<p style="text-align: center">
+[*Please pick up an issue today, and submit a PR tomorrow!*][help-wanted]
+</p>
 
 ## Related Projects
 
@@ -852,6 +854,7 @@ marked `help wanted` on the GitHub issue tracker!
 [chroma]: https://github.com/alecthomas/chroma
 [chroma-formatter]: https://github.com/alecthomas/chroma#formatters
 [chroma-style]: https://xyproto.github.io/splash/docs/all.html
+[help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
 
 [commands]: #backslash-commands (Commands)
 [backticks]: #backtick-d-parameters (Backtick Parameters)
