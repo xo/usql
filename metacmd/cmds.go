@@ -382,14 +382,13 @@ func init() {
 			Section: SectionVariables,
 			Name:    "prompt",
 			Min:     1,
-			Desc:    "prompt user to set variable,[-TYPE] [PROMPT] <VAR>",
+			Desc:    "prompt user to set variable,[-TYPE] <VAR> [PROMPT]",
 			Process: func(p *Params) error {
 				typ, n := p.GetOptional("string"), p.Get()
 				if n == "" {
 					return text.ErrMissingRequiredArgument
 				}
-				err := env.ValidIdentifier(n)
-				if err != nil {
+				if err := env.ValidIdentifier(n); err != nil {
 					return err
 				}
 				v, err := p.Handler.ReadVar(typ, strings.Join(p.GetAll(), " "))
