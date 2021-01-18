@@ -67,7 +67,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.3.13
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
-	github.com/trinodb/trino-go-client v0.0.0-20210115095943-f7fb3eab12b1
+	github.com/trinodb/trino-go-client v0.300.0
 	github.com/uber/athenadriver v1.1.12
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
