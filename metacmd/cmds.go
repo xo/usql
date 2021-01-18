@@ -163,12 +163,16 @@ func init() {
 			Aliases: map[string]string{
 				"gexec": "execute query and execute each value of the result",
 				"gset":  "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
+				"gx":    `as \g, but forces expanded output mode,`,
 			},
 			Process: func(p *Params) error {
 				p.Result.Exec = ExecOnly
 				switch p.Name {
 				case "g":
 					p.Result.ExecParam = p.Get()
+				case "gx":
+					p.Result.ExecParam = p.Get()
+					p.Result.Expanded = true
 				case "gexec":
 					p.Result.Exec = ExecExec
 				case "gset":

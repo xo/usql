@@ -556,6 +556,7 @@ General
   \g [FILE] or ;                  execute query (and send results to file or |pipe)
   \gexec                          execute query and execute each value of the result
   \gset [PREFIX]                  execute query and store results in usql variables
+  \gx                             as \g, but forces expanded output mode
 
 Help
   \? [commands]                   show help on backslash commands
@@ -580,8 +581,8 @@ Formatting
   \C [STRING]                     set table title, or unset if none
   \f [STRING]                     show or set field separator for unaligned query output
   \H                              toggle HTML output mode
-  \t [on|off]                     show only rows
   \T [STRING]                     set HTML <table> tag attributes, or unset if none
+  \t [on|off]                     show only rows
   \x [on|off|auto]                toggle expanded output
 
 Transaction
@@ -599,8 +600,8 @@ Connection
 Operating System
   \cd [DIR]                       change the current working directory
   \setenv NAME [VALUE]            set or unset environment variable
-  \timing [on|off]                toggle timing of commands
   \! [COMMAND]                    execute command in shell or start interactive shell
+  \timing [on|off]                toggle timing of commands
 
 Variables
   \prompt [-TYPE] [PROMPT] <VAR>  prompt user to set variable
@@ -840,32 +841,29 @@ support for the most frequently used aspects/features of `psql`. Compatibility
 2.  change `drivers.Convert*` to drivers.Marshal style interfaces
 3.  allow configuration for JSON encoding/decoding output
 4.  return single 'driver' type handling marshaling / scanning of types / columns
-5.  implement "extended" display for queries (for `\gx` / formatting)
-6.  implement better environment variable handling
-7.  implement proper readline
-8.  tab-completion of queries
-9. show hidden (client) queries (`\set SHOW_HIDDEN`)
-10. fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
-11. proper `PAGER` support
-12. `\qecho` + `\o` support
-13. context-based completion (WIP)
-14. full `\if` `\elif` `\else` `\endif` support
-15. fix `WITH ... DELETE` queries (postgresql)
-16. better `--help` / man pages
-17. translations
-18. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
-19. allow `\;` to escape semi-colons
+5.  implement better environment variable handling
+6.  implement proper readline
+7.  tab-completion of queries
+8.  show hidden (client) queries (`\set SHOW_HIDDEN`)
+9.  fix multiline behavior to mimic `psql` properly (on arrow up/down through history)
+10. proper `PAGER` support
+11. `\qecho` + `\o` support
+12. context-based completion (WIP)
+13. full `\if` `\elif` `\else` `\endif` support
+14. fix `WITH ... DELETE` queries (postgresql)
+15. better `--help` / man pages
+16. translations
+17. fix `\command` variable interpolation/parsing (`\set NAME test \echo :NAME.dat \echo :NAME:NAME`)
 
 ##### Command Processing + `psql` compatibility
 
-1. formatting settings (`\pset`, `\a`, etc)
-2. all `\d*` commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
-3. `\ef` and `\ev` commands from `psql` (WIP, need to finish work extracting stored procs / funcs / views for all the major databases)
-3. `\watch`
-4. `\errverbose` (show verbose info for last error)
-5. remaining `psql` cli parameters
-6. `\j*` commands (WIP)
-7. `\copy` (add support for copying between two different databases ...?)
+1. all `\d*` commands from `psql` (WIP, need to finish work extracting introspection code from `xo`)
+2. `\ef` and `\ev` commands from `psql` (WIP, need to finish work extracting stored procs / funcs / views for all the major databases)
+2. `\watch`
+3. `\errverbose` (show verbose info for last error)
+4. remaining `psql` cli parameters
+5. `\j*` commands (WIP)
+6. `\copy` (add support for copying between two different databases ...?)
 
 ##### Testing
 

@@ -93,6 +93,8 @@ type Result struct {
 	// ExecParam is an accompanying parameter for execution. For ExecPipe, it
 	// will be the name of a file. For ExecSet it will be the variable prefix.
 	ExecParam string
+	// Expanded forces expanded output.
+	Expanded bool
 	// Processed informs the handling code how many parameters went
 	// unprocessed. A value of 0 means that no parameters were processed.
 	Processed int

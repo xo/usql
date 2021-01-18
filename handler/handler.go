@@ -374,7 +374,7 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	case metacmd.ExecExec:
 		f = h.execExec
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam)); err != nil {
+	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam, res.Expanded)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -718,18 +718,18 @@ func (h *Handler) timefmt() string {
 }
 
 // execOnly executes a query against the database.
-func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string) error {
+func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string, expanded bool) error {
 	// exec or query
 	f := h.exec
 	if qtyp {
 		f = h.query
 	}
 	// exec
-	return f(w, prefix, qstr)
+	return f(w, prefix, qstr, expanded)
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix string) error {
+func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix string, _ bool) error {
 	// query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -769,7 +769,7 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 
 // execExec executes a query and re-executes all columns of all rows as if they
 // were their own queries.
-func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string) error {
+func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string, _ bool) error {
 	// query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -791,7 +791,7 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 }
 
 // query executes a query against the database.
-func (h *Handler) query(w io.Writer, _, qstr string) error {
+func (h *Handler) query(w io.Writer, _, qstr string, expanded bool) error {
 	start := time.Now()
 	// run query
 	q, err := h.DB().Query(qstr)
@@ -799,8 +799,11 @@ func (h *Handler) query(w io.Writer, _, qstr string) error {
 		return err
 	}
 	defer q.Close()
-	err = tblfmt.EncodeAll(w, q, map[string]string(env.Pall()))
-	if err != nil {
+	params := env.Pall()
+	if expanded {
+		params["expanded"] = "on"
+	}
+	if err = tblfmt.EncodeAll(w, q, params); err != nil {
 		return err
 	}
 	if h.timing {
@@ -898,7 +901,7 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 }
 
 // exec does a database exec.
-func (h *Handler) exec(w io.Writer, typ, qstr string) error {
+func (h *Handler) exec(w io.Writer, typ, qstr string, _ bool) error {
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err

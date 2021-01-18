@@ -117,12 +117,20 @@ func Unset(name string) error {
 
 // All returns all variables.
 func All() map[string]string {
-	return vars
+	m := make(map[string]string)
+	for k, v := range pvars {
+		m[k] = v
+	}
+	return m
 }
 
 // Pall returns all p variables.
 func Pall() map[string]string {
-	return pvars
+	m := make(map[string]string)
+	for k, v := range pvars {
+		m[k] = v
+	}
+	return m
 }
 
 var (
