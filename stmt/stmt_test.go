@@ -239,7 +239,7 @@ func TestNextResetState(t *testing.T) {
 		if b.Prefix != "" {
 			t.Fatalf("test %d after reset should have empty prefix, got: %s", i, b.Prefix)
 		}
-		if b.quote || b.quoteDouble || b.quoteDollar || b.quoteTagID != "" || b.multilineComment || b.balanceCount != 0 {
+		if b.quote || b.quoteDouble || b.quoteDollar || b.quoteDollarTag != "" || b.multilineComment || b.balanceCount != 0 {
 			t.Fatalf("test %d after reset should have a cleared parse state", i)
 		}
 		if st := b.State(); st != "=" {

@@ -136,7 +136,7 @@ func readString(r []rune, i, end int, b *Stmt) (int, bool) {
 		c = r[i]
 		switch {
 		case b.allowDollar && b.quoteDollar && c == '$':
-			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.quoteTagID == id {
+			if id, pos, ok := readDollarAndTag(r, i, end); ok && b.quoteDollarTag == id {
 				return pos, true
 			}
 		case b.quoteDouble && c == '"':

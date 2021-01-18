@@ -31,9 +31,15 @@ type Var struct {
 type Stmt struct {
 	// f is the rune source.
 	f func() ([]rune, error)
-	// parse settings
-	allowDollar, allowMultilineComments, allowCComments, allowHashComments bool
-	// Buf is the statement buffer.
+	// allowDollar allows dollar quoted strings (ie, $$ ... $$ or $tag$ ... $tag$).
+	allowDollar bool
+	// allowMultilineComments allows multiline comments (ie, /* ... */)
+	allowMultilineComments bool
+	// allowCComments allows C-style comments (ie, // ... )
+	allowCComments bool
+	// allowHashComments allows hash comments (ie, # ... )
+	allowHashComments bool
+	// Buf is the statement buffer
 	Buf []rune
 	// Len is the current len of any statement in Buf.
 	Len int
@@ -45,16 +51,21 @@ type Stmt struct {
 	r []rune
 	// rlen is the number of unprocessed runes.
 	rlen int
-	// quoted string state
-	quote       bool
+	// quote indicates currently parsing a quoted string.
+	quote bool
+	// quoteDouble indicates string type being parsed is a double (") quoted
+	// string
 	quoteDouble bool
+	// quoteDollar indicates string type being parsed is a dollar ($) quoted
+	// string
 	quoteDollar bool
-	quoteTagID  string
-	// multicomment state
+	// quoteDollarTag is the parsed tag of a dollar quoted string
+	quoteDollarTag string
+	// multilineComment is state of multiline comment processing
 	multilineComment bool
-	// balanced paren count
+	// balanceCount is the balanced paren count
 	balanceCount int
-	// ready is the state
+	// ready indicates that a complete statement has been parsed
 	ready bool
 }
 
@@ -116,7 +127,7 @@ func (b *Stmt) Reset(r []rune) {
 	// reset buf
 	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
 	// quote state
-	b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
+	b.quote, b.quoteDouble, b.quoteDollar, b.quoteDollarTag = false, false, false, ""
 	// multicomment state
 	b.multilineComment = false
 	// balance state
@@ -188,7 +199,7 @@ parse:
 			pos, ok := readString(b.r, i, b.rlen, b)
 			i = pos
 			if ok {
-				b.quote, b.quoteDouble, b.quoteDollar, b.quoteTagID = false, false, false, ""
+				b.quote, b.quoteDouble, b.quoteDollar, b.quoteDollarTag = false, false, false, ""
 			}
 		// find end of multiline comment
 		case b.multilineComment:
@@ -204,7 +215,7 @@ parse:
 		case b.allowDollar && c == '$':
 			id, pos, ok := readDollarAndTag(b.r, i, b.rlen)
 			if ok {
-				b.quote, b.quoteDollar, b.quoteTagID = true, true, id
+				b.quote, b.quoteDollar, b.quoteDollarTag = true, true, id
 			}
 			i = pos
 		// start of sql comment, skip to end of line
@@ -314,9 +325,9 @@ parse:
 
 // Append appends r to b.Buf separated by sep when b.Buf is not already empty.
 //
-// Append dynamically grows b.Buf as necessary to accommodate r and the
-// separator. Specifically, when b.Buf is not empty, b.Buf will grow by
-// increments of MinCapIncrease.
+// Dynamically grows b.Buf as necessary to accommodate r and the separator.
+// Specifically, when b.Buf is not empty, b.Buf will grow by increments of
+// MinCapIncrease.
 //
 // After a call to Append, b.Len will be len(b.Buf)+len(sep)+len(r). Call Reset
 // to reset the Buf.
