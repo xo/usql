@@ -6,7 +6,7 @@ including NoSQL and non-relational databases!
 
 [travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master "Travis CI"
 
-[Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][]
+[Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][] | [Contributing][]
 
 [Installing]: #installing (Installing)
 [Building]: #building (Building)
@@ -14,6 +14,7 @@ including NoSQL and non-relational databases!
 [Database Support]: #database-support (Database Support)
 [Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
 [Releases]: https://github.com/xo/usql/releases (Releases)
+[Contributing]: #contributing (Contributing)
 
 ## Overview
 
@@ -832,9 +833,7 @@ in the above) can be used for `TIME_FORMAT`.
 Well-written PRs are always welcome -- and there is a clear backlog of issues
 marked `help wanted` on the GitHub issue tracker!
 
-<p style="text-align: center">
 [*Please pick up an issue today, and submit a PR tomorrow!*][help-wanted]
-</p>
 
 ## Related Projects
 
