@@ -20,7 +20,6 @@ type Cmd struct {
 	Section Section
 	Name    string
 	Desc    string
-	Min     int
 	Aliases map[string]string
 	Process func(*Params) error
 }
@@ -124,9 +123,12 @@ func init() {
 				"c":       "connect to database with SQL driver and parameters,DRIVER PARAMS...",
 				"connect": "",
 			},
-			Min: 1,
 			Process: func(p *Params) error {
-				return p.Handler.Open(p.GetAll()...)
+				vals, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				return p.Handler.Open(vals...)
 			},
 		},
 		Disconnect: {
@@ -144,7 +146,11 @@ func init() {
 			Desc:    "change the password for a user,[USERNAME]",
 			Aliases: map[string]string{"passwd": ""},
 			Process: func(p *Params) error {
-				user, err := p.Handler.ChangePassword(p.Get())
+				username, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				user, err := p.Handler.ChangePassword(username)
 				switch {
 				case err == text.ErrPasswordNotSupportedByDriver || err == text.ErrNotConnected:
 					return err
@@ -169,14 +175,27 @@ func init() {
 				p.Result.Exec = ExecOnly
 				switch p.Name {
 				case "g":
-					p.Result.ExecParam = p.Get()
+					var err error
+					p.Result.ExecParam, err = p.Get(true)
+					if err != nil {
+						return err
+					}
 				case "gx":
-					p.Result.ExecParam = p.Get()
+					var err error
+					p.Result.ExecParam, err = p.Get(true)
+					if err != nil {
+						return err
+					}
 					p.Result.Expanded = true
 				case "gexec":
 					p.Result.Exec = ExecExec
 				case "gset":
-					p.Result.Exec, p.Result.ExecParam = ExecSet, p.Get()
+					p.Result.Exec = ExecSet
+					var err error
+					p.Result.ExecParam, err = p.Get(true)
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			},
@@ -192,12 +211,21 @@ func init() {
 				if buf.Len != 0 {
 					s = buf.String()
 				}
-				// reset if no error
-				n, err := env.EditFile(p.Handler.User(), p.Get(), p.Get(), s)
-				if err == nil {
-					buf.Reset(n)
+				path, err := p.Get(true)
+				if err != nil {
+					return err
 				}
-				return err
+				line, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				// reset if no error
+				n, err := env.EditFile(p.Handler.User(), path, line, s)
+				if err != nil {
+					return err
+				}
+				buf.Reset(n)
+				return nil
 			},
 		},
 		Print: {
@@ -253,14 +281,17 @@ func init() {
 			Name:    "echo",
 			Desc:    "write string to standard output,[STRING]",
 			Process: func(p *Params) error {
-				fmt.Fprintln(p.Handler.IO().Stdout(), strings.Join(p.GetAll(), " "))
+				vals, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintln(p.Handler.IO().Stdout(), strings.Join(vals, " "))
 				return nil
 			},
 		},
 		Write: {
 			Section: SectionQueryBuffer,
 			Name:    "w",
-			Min:     1,
 			Desc:    "write query buffer to file,FILE",
 			Aliases: map[string]string{"write": ""},
 			Process: func(p *Params) error {
@@ -269,7 +300,11 @@ func init() {
 				if buf.Len != 0 {
 					s = buf.String()
 				}
-				return ioutil.WriteFile(p.Get(), []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
+				file, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				return ioutil.WriteFile(file, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 			},
 		},
 		ChangeDir: {
@@ -277,20 +312,27 @@ func init() {
 			Name:    "cd",
 			Desc:    "change the current working directory,[DIR]",
 			Process: func(p *Params) error {
-				return env.Chdir(p.Handler.User(), p.Get())
+				dir, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				return env.Chdir(p.Handler.User(), dir)
 			},
 		},
 		SetEnv: {
 			Section: SectionOperatingSystem,
 			Name:    "setenv",
-			Min:     1,
 			Desc:    "set or unset environment variable,NAME [VALUE]",
 			Process: func(p *Params) error {
-				n := p.Get()
-				if len(p.Params) == 1 {
-					return os.Unsetenv(n)
+				n, err := p.Get(true)
+				if err != nil {
+					return err
 				}
-				return os.Setenv(n, strings.Join(p.GetAll(), ""))
+				v, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				return os.Setenv(n, v)
 			},
 		},
 		Timing: {
@@ -298,14 +340,18 @@ func init() {
 			Name:    "timing",
 			Desc:    "toggle timing of commands,[on|off]",
 			Process: func(p *Params) error {
-				out, l := p.Handler.IO().Stdout(), len(p.Params)
-				switch {
-				case l == 0:
+				v, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				if v != "" {
 					p.Handler.SetTiming(!p.Handler.GetTiming())
-				case l >= 1:
-					s, err := env.ParseBool(p.Get(), "\\timing")
+				} else {
+					s, err := env.ParseBool(v, "\\timing")
 					if err != nil {
-						fmt.Fprintln(p.Handler.IO().Stderr(), err.Error())
+						stderr := p.Handler.IO().Stderr()
+						fmt.Fprintf(stderr, "error: %v", err)
+						fmt.Fprintln(stderr)
 					}
 					var b bool
 					if s == "on" {
@@ -313,11 +359,12 @@ func init() {
 					}
 					p.Handler.SetTiming(b)
 				}
-				v := "off"
+				setting := "off"
 				if p.Handler.GetTiming() {
-					v = "on"
+					setting = "on"
 				}
-				fmt.Fprintf(out, text.TimingSet, v)
+				out := p.Handler.IO().Stdout()
+				fmt.Fprintf(out, text.TimingSet, setting)
 				fmt.Fprintln(out)
 				return nil
 			},
@@ -327,21 +374,22 @@ func init() {
 			Name:    "!",
 			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
 			Process: func(p *Params) error {
-				if len(p.Params) == 0 && !p.Handler.IO().Interactive() {
-					return text.ErrNotInteractive
-				}
-				p.Result.Processed = len(p.Params)
-				v, err := env.Exec(strings.TrimSpace(strings.Join(p.Params, " ")))
-				if err == nil && v != "" {
-					fmt.Fprintln(p.Handler.IO().Stdout(), v)
-				}
+				/*
+					if len(p.Params) == 0 && !p.Handler.IO().Interactive() {
+						return text.ErrNotInteractive
+					}
+					// p.Result.Processed = len(p.Params)
+					v, err := env.Exec(strings.TrimSpace(strings.Join(p.Params, " ")))
+					if err == nil && v != "" {
+						fmt.Fprintln(p.Handler.IO().Stdout(), v)
+					}
+				*/
 				return nil
 			},
 		},
 		Include: {
 			Section: SectionInputOutput,
 			Name:    "i",
-			Min:     1,
 			Desc:    "execute commands from file,FILE",
 			Aliases: map[string]string{
 				"ir":               `as \i, but relative to location of current script,FILE`,
@@ -349,12 +397,15 @@ func init() {
 				"include_relative": "",
 			},
 			Process: func(p *Params) error {
-				path := p.Get()
-				err := p.Handler.Include(path, p.Name == "ir" || p.Name == "include_relative")
+				path, err := p.Get(true)
 				if err != nil {
-					err = fmt.Errorf("%s: %v", path, err)
+					return err
 				}
-				return err
+				relative := p.Name == "ir" || p.Name == "include_relative"
+				if err := p.Handler.Include(path, relative); err != nil {
+					return fmt.Errorf("%s: %v", path, err)
+				}
+				return nil
 			},
 		},
 		Transact: {
@@ -381,17 +432,31 @@ func init() {
 		Prompt: {
 			Section: SectionVariables,
 			Name:    "prompt",
-			Min:     1,
 			Desc:    "prompt user to set variable,[-TYPE] <VAR> [PROMPT]",
 			Process: func(p *Params) error {
-				typ, n := p.GetOptional("string"), p.Get()
+				typ := "string"
+				ok, n, err := p.GetOptional(true)
+				if err != nil {
+					return err
+				}
+				if ok {
+					typ = n
+					n, err = p.Get(true)
+					if err != nil {
+						return err
+					}
+				}
 				if n == "" {
 					return text.ErrMissingRequiredArgument
 				}
 				if err := env.ValidIdentifier(n); err != nil {
 					return err
 				}
-				v, err := p.Handler.ReadVar(typ, strings.Join(p.GetAll(), " "))
+				vals, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				v, err := p.Handler.ReadVar(typ, strings.Join(vals, " "))
 				if err != nil {
 					return err
 				}
@@ -403,31 +468,42 @@ func init() {
 			Name:    "set",
 			Desc:    "set internal variable, or list all if no parameters,[NAME [VALUE]]",
 			Process: func(p *Params) error {
-				if len(p.Params) == 0 {
-					vars := env.All()
+				ok, n, err := p.GetOK(true)
+				if err != nil {
+					return err
+				}
+				if !ok {
+					vals := env.All()
 					out := p.Handler.IO().Stdout()
-					n := make([]string, len(vars))
+					n := make([]string, len(vals))
 					var i int
-					for k := range vars {
+					for k := range vals {
 						n[i] = k
 						i++
 					}
 					sort.Strings(n)
 					for _, k := range n {
-						fmt.Fprintln(out, k, "=", "'"+vars[k]+"'")
+						fmt.Fprintln(out, k, "=", "'"+vals[k]+"'")
 					}
 					return nil
 				}
-				return env.Set(p.Get(), strings.Join(p.GetAll(), ""))
+				vals, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				return env.Set(n, strings.Join(vals, ""))
 			},
 		},
 		Unset: {
 			Section: SectionVariables,
 			Name:    "unset",
-			Min:     1,
 			Desc:    "unset (delete) internal variable,NAME",
 			Process: func(p *Params) error {
-				return env.Unset(p.Get())
+				n, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				return env.Unset(n)
 			},
 		},
 		SetFormatVar: {
@@ -444,36 +520,29 @@ func init() {
 				"x": "toggle expanded output,[on|off|auto]",
 			},
 			Process: func(p *Params) error {
-				out, l := p.Handler.IO().Stdout(), len(p.Params)
+				var ok bool
+				var val string
+				var err error
+				switch p.Name {
+				case "a", "H":
+				default:
+					ok, val, err = p.GetOK(true)
+					if err != nil {
+						return err
+					}
+				}
 				// display variables
-				if p.Name == "pset" && l == 0 {
-					vars := env.Pall()
-					n := make([]string, len(vars))
-					var i, w int
-					for k := range vars {
-						n[i], w = k, max(len(k), w)
-						i++
-					}
-					sort.Strings(n)
-					for _, k := range n {
-						v := vars[k]
-						switch k {
-						case "fieldsep", "recordsep", "null":
-							v = strconv.QuoteToASCII(v)
-						case "tableattr", "title":
-							if v != "" {
-								v = strconv.QuoteToASCII(v)
-							}
-						}
-						fmt.Fprintln(out, k+strings.Repeat(" ", w-len(k)), v)
-					}
-					return nil
+				if p.Name == "pset" && !ok {
+					return env.Pwrite(p.Handler.IO().Stdout())
 				}
 				var field, extra string
 				switch p.Name {
 				case "pset":
-					field = p.Get()
-					l--
+					field = val
+					ok, val, err = p.GetOK(true)
+					if err != nil {
+						return err
+					}
 				case "a":
 					field = "format"
 				case "C":
@@ -489,38 +558,33 @@ func init() {
 				case "x":
 					field = "expanded"
 				}
-				v, err := env.Pget(field)
-				if err != nil {
-					return err
-				}
-				switch {
-				case l == 0:
-					if v, err = env.Ptoggle(field, extra); err != nil {
+				if !ok {
+					if val, err = env.Ptoggle(field, extra); err != nil {
 						return err
 					}
-				case l >= 1:
-					v, err = env.Pset(field, p.Get())
-					if err != nil {
+				} else {
+					if val, err = env.Pset(field, val); err != nil {
 						return err
 					}
 				}
 				// special replacement name for expanded field, when 'auto'
-				if field == "expanded" && v == "auto" {
+				if field == "expanded" && val == "auto" {
 					field = "expanded_auto"
 				}
 				// format output
 				mask := text.FormatFieldNameSetMap[field]
 				unsetMask := text.FormatFieldNameUnsetMap[field]
+				out := p.Handler.IO().Stdout()
 				switch {
 				case strings.Contains(mask, "%d"):
-					i, _ := strconv.Atoi(v)
+					i, _ := strconv.Atoi(val)
 					fmt.Fprintf(out, mask, i)
-				case unsetMask != "" && v == "":
+				case unsetMask != "" && val == "":
 					fmt.Fprint(out, unsetMask)
 				case !strings.Contains(mask, "%"):
 					fmt.Fprint(out, mask)
 				default:
-					fmt.Fprintf(out, mask, v)
+					fmt.Fprintf(out, mask, val)
 				}
 				fmt.Fprintln(out)
 				return nil

@@ -114,50 +114,51 @@ func TestIsEmptyLine(t *testing.T) {
 	}
 }
 
-func TestTrimSplit(t *testing.T) {
+func TestReadString(t *testing.T) {
 	tests := []struct {
 		s   string
 		i   int
 		exp string
+		ok  bool
 	}{
-		{``, 0, ``},
-		{`   `, 0, ``},
-		{" \t\n  ", 0, ``},
-		{`a`, 0, `a`},
-		{`a `, 0, `a`},
-		{` a`, 0, `a`},
-		{` a `, 0, `a`},
-		{`a b`, 0, `a b`},
-		{`a b `, 0, `a b`},
-		{` a b`, 0, `a b`},
-		{` a b `, 0, `a b`},
-		{`foo bar`, 0, `foo bar`},
-		{`foo bar `, 0, `foo bar`},
-		{` foo bar`, 0, `foo bar`},
-		{` foo bar `, 0, `foo bar`},
-		{`\c foo bar z`, 1, `c foo bar z`},
-		{`\c foo bar z `, 1, `c foo bar z`},
-		{`\c foo bar z  `, 1, `c foo bar z`},
-		{`\c    foo    bar    z  `, 1, `c foo bar z`},
-		{`\c    pg://blah    bar    z  `, 1, `c pg://blah bar z`},
-		{`\foo    pg://blah    bar    z  `, 1, `foo pg://blah bar z`},
-		{`\c 'foo bar' z`, 1, `c|'foo bar'|z`},
-		{`\c foo "bar " z `, 1, `c|foo|"bar "|z`},
-		{"\\c `foo bar z  `  ", 1, "c|`foo bar z  `"},
+		{`'`, 0, ``, false},
+		{` '`, 1, ``, false},
+		{`''`, 0, `''`, true},
+		{`'foo' `, 0, `'foo'`, true},
+		{` 'foo' `, 1, `'foo'`, true},
+		{`"foo"`, 0, `"foo"`, true},
+		{"`foo`", 0, "`foo`", true},
+		{"`'foo'`", 0, "`'foo'`", true},
+		{`'foo''foo'`, 0, `'foo''foo'`, true},
+		{` 'foo''foo' `, 1, `'foo''foo'`, true},
+		{` "foo''foo" `, 1, `"foo''foo"`, true},
+		// escaped \" aren't allowed in strings, so the second " would be next
+		// double quoted string
+		{`"foo\""`, 0, `"foo\"`, true},
+		{` "foo\"" `, 1, `"foo\"`, true},
 	}
 	for i, test := range tests {
-		z := []rune(test.s)
-		y := trimSplit(z, test.i, len(z))
-		sp := " "
-		if strings.Contains(test.exp, "|") {
-			sp = "|"
+		r := []rune(test.s)
+		c, end := rune(strings.TrimSpace(test.s)[0]), len(r)
+		if c != '\'' && c != '"' && c != '`' {
+			t.Fatalf("test %d incorrect!", i)
 		}
-		exp := strings.Split(test.exp, sp)
-		switch {
-		case test.exp == "" && len(y) != 0:
-			t.Errorf("test %d expected result to have length 0, has length: %d", i, len(y))
-		case test.exp != "" && !reflect.DeepEqual(y, exp):
-			t.Errorf("test %d expected %v, got: %v", i, exp, y)
+		pos, ok := readString(r, test.i+1, end, c, "")
+		if ok != test.ok {
+			t.Fatalf("test %d expected ok %t, got: %t", i, test.ok, ok)
+		}
+		if !test.ok {
+			continue
+		}
+		if r[pos] != c {
+			t.Fatalf("test %d expected last character to be %c, got: %c", i, c, r[pos])
+		}
+		v := string(r[test.i : pos+1])
+		if n := len(v); n < 2 {
+			t.Fatalf("test %d expected result of at least length 2, got: %d", i, n)
+		}
+		if v != test.exp {
+			t.Errorf("test %d expected %q, got: %q", i, test.exp, v)
 		}
 	}
 }
@@ -167,44 +168,64 @@ func TestReadCommand(t *testing.T) {
 		s   string
 		i   int
 		exp string
-		r   string
 	}{
-		{`\c foo bar z`, 0, `\c foo bar z`, ``},
-		{`\c foo bar z `, 0, `\c foo bar z`, ``},
-		{`\c foo bar z  `, 0, `\c foo bar z`, ``},
-		{`\c    foo    bar    z  `, 0, `\c foo bar z`, ``},
-		{`\c    pg://blah    bar    z  `, 0, `\c pg://blah bar z`, ``},
-		{`\foo    pg://blah    bar    z  `, 0, `\foo pg://blah bar z`, ``},
-		{`\p \p`, 0, `\p`, `\p`},
-		{`\p foo \p`, 0, `\p foo`, `\p`},
-		{`\p foo   \p bar`, 0, `\p foo`, `\p bar`},
-		{`\p\p`, 0, `\p\p`, ``},
-		{`\p \r foo`, 0, `\p`, `\r foo`},
-		{`\print   \reset    foo`, 0, `\print`, `\reset    foo`},
-		{`\print   \reset    foo`, 9, `\reset foo`, ``},
-		{`\print   \reset    foo  `, 9, `\reset foo`, ``},
-		{`\print   \reset    foo  bar  `, 9, `\reset foo bar`, ``},
-		{`\c 'foo bar' z`, 0, `\c|'foo bar'|z`, ``},
-		{`\c foo "bar " z `, 0, `\c|foo|"bar "|z`, ``},
-		{"\\c `foo bar z  `  ", 0, "\\c|`foo bar z  `", ``},
+		{`\c foo bar z`, 0, `\c| foo bar z|`}, // 0
+		{`\c foo bar z `, 0, `\c| foo bar z |`},
+		{`\c foo bar z  `, 0, `\c| foo bar z  |`},
+		{`\c    foo    bar    z  `, 0, `\c|    foo    bar    z  |`},
+		{`\c    pg://blah    bar    z  `, 0, `\c|    pg://blah    bar    z  |`},
+		{`\foo    pg://blah    bar    z  `, 0, `\foo|    pg://blah    bar    z  |`}, // 5
+		{`\a\b`, 0, `\a||\b`},
+		{`\a \b`, 0, `\a| |\b`},
+		{"\\a \n\\b", 0, "\\a| |\n\\b"},
+		{` \ab \bc \cd `, 5, `\bc| |\cd `},
+		{`\p foo \p`, 0, `\p| foo |\p`}, // 10
+		{`\p foo   \p bar`, 0, `\p| foo   |\p bar`},
+		{`\p\p`, 0, `\p||\p`},
+		{`\p \r foo`, 0, `\p| |\r foo`},
+		{`\print   \reset    foo`, 0, `\print|   |\reset    foo`},
+		{`\print   \reset    foo`, 9, `\reset|    foo|`}, // 15
+		{`\print   \reset    foo  `, 9, `\reset|    foo  |`},
+		{`\print   \reset    foo  bar  `, 9, `\reset|    foo  bar  |`},
+		{`\c 'foo bar' z`, 0, `\c| 'foo bar' z|`},
+		{`\c foo "bar " z `, 0, `\c| foo "bar " z |`},
+		{"\\c `foo bar z  `  ", 0, "\\c| `foo bar z  `  |"}, // 20
+		{`\c 'aoeu':foo:bar'test'  `, 0, `\c| 'aoeu':foo:bar'test'  |`},
+		{"\\a \n\\b\\c\n", 0, "\\a| |\n\\b\\c\n"},
+		{`\a'aoeu' \b`, 0, `\a'aoeu'| |\b`},
+		{`\foo 'test' "bar"\print`, 0, `\foo| 'test' "bar"|\print`}, // 25
+		{`\foo 'test' "bar"  \print`, 0, `\foo| 'test' "bar"  |\print`},
+		{`\aaoeu' \b`, 0, `\aaoeu'| |\b`},
+		{`\aaoeu' '\b  `, 0, `\aaoeu'| '\b  |`},
+		{`\aaoeu' '\b  '\print`, 0, `\aaoeu'| '\b  '|\print`},
+		{`\aaoeu' '\b  ' \print`, 0, `\aaoeu'| '\b  ' |\print`}, // 30
+		{`\aaoeu' '\b  ' \print `, 0, `\aaoeu'| '\b  ' |\print `},
+		{"\\foo `aoeu'aoeu'\\print", 0, "\\foo| `aoeu'aoeu'\\print|"},
+		{"\\foo `aoeu'aoeu'  \\print", 0, "\\foo| `aoeu'aoeu'  \\print|"},
+		{`\foo "aoeu'aoeu'\\print`, 0, `\foo| "aoeu'aoeu'\\print|`},
+		{`\foo "aoeu'aoeu'  \\print`, 0, `\foo| "aoeu'aoeu'  \\print|`}, // 35
+		{`\foo "\""\print`, 0, `\foo| "\""|\print`},
+		{`\foo "\"'"\print`, 0, `\foo| "\"'"|\print`},
+		{`\foo "\"''"\print`, 0, `\foo| "\"''"|\print`},
 	}
 	for i, test := range tests {
 		z := []rune(test.s)
-		sp := " "
-		if strings.Contains(test.exp, "|") {
-			sp = "|"
+		if !strings.Contains(test.exp, "|") {
+			t.Fatalf("test %d expected value is invalid (missing |): %q", i, test.exp)
 		}
-		a := strings.Split(test.exp, sp)
-		cmd, params, pos := readCommand(z, test.i, len(z))
-		if cmd != a[0] {
-			t.Errorf("test %d expected command to be `%s`, got: `%s`", i, a[0], cmd)
+		v := strings.Split(test.exp, "|")
+		if len(v) != 3 {
+			t.Fatalf("test %d should have 3 expected values, has: %d", i, len(v))
 		}
-		if !reflect.DeepEqual(params, a[1:]) {
-			t.Errorf("test %d expected %v, got: %v", i, a[1:], params)
+		cmd, params := readCommand(z, test.i, len(z))
+		if s := string(z[test.i:cmd]); s != v[0] {
+			t.Errorf("test %d expected command to be `%s`, got: `%s` [%d, %d]", i, v[0], s, cmd, params)
 		}
-		m := string(z[pos:])
-		if m != test.r {
-			t.Errorf("test %d expected remaining to be `%s`, got: `%s`", i, test.r, m)
+		if s := string(z[cmd:params]); s != v[1] {
+			t.Errorf("test %d expected params to be `%s`, got: `%s` [%d, %d]", i, v[1], s, cmd, params)
+		}
+		if s := string(z[params:]); s != v[2] {
+			t.Errorf("test %d expected remaining to be `%s`, got: `%s`", i, v[2], s)
 		}
 	}
 }
@@ -373,6 +394,40 @@ func TestReadVar(t *testing.T) {
 			if n != test.exp.Name {
 				t.Errorf("test %d expected var name of `%s`, got: `%s`", i, test.exp.Name, n)
 			}
+		}
+	}
+}
+
+func TestSubstitute(t *testing.T) {
+	a512 := sl(512, 'a')
+	b512 := sl(512, 'a')
+	b512 = b512[:1] + "b" + b512[2:]
+	if len(b512) != 512 {
+		t.Fatalf("b512 should be length 512, is: %d", len(b512))
+	}
+	tests := []struct {
+		s   string
+		i   int
+		n   int
+		t   string
+		exp string
+	}{
+		{"", 0, 0, "", ""},
+		{"a", 0, 1, "b", "b"},
+		{"ab", 1, 1, "cd", "acd"},
+		{"", 0, 0, "ab", "ab"},
+		{"abc", 1, 2, "d", "ad"},
+		{a512, 1, 1, "b", b512},
+		{"foo", 0, 1, "bar", "baroo"},
+	}
+	for i, test := range tests {
+		r := []rune(test.s)
+		r, rlen := substitute(r, test.i, len(r), test.n, test.t)
+		if rlen != len(test.exp) {
+			t.Errorf("test %d expected length %d, got: %d", i, len(test.exp), rlen)
+		}
+		if s := string(r); s != test.exp {
+			t.Errorf("test %d expected %q, got %q", i, test.exp, s)
 		}
 	}
 }

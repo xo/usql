@@ -1,6 +1,7 @@
 package metacmd
 
 import (
+	"github.com/xo/usql/stmt"
 	"github.com/xo/usql/text"
 )
 
@@ -8,17 +9,18 @@ import (
 type Metacmd uint
 
 // Decode converts a command name (or alias) into a Runner.
-func Decode(name string, params []string) (Runner, error) {
+func Decode(name string, params *stmt.Params) (Runner, error) {
 	mc, ok := cmdMap[name]
 	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
 	}
 	cmd := cmds[mc]
-	if cmd.Min > len(params) {
-		return nil, text.ErrMissingRequiredArgument
-	}
 	return RunnerFunc(func(h Handler) (Result, error) {
-		p := &Params{h, name, params, Result{}}
+		p := &Params{
+			Handler: h,
+			Name:    name,
+			Params:  params,
+		}
 		err := cmd.Process(p)
 		return p.Result, err
 	}), nil

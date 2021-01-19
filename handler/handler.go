@@ -151,7 +151,7 @@ func (h *Handler) outputHighlighter(s string) string {
 	var cmd, final string
 loop:
 	for {
-		cmd, _, err = st.Next()
+		cmd, _, err = st.Next(env.Unquote(h.user, false, env.All()))
 		switch {
 		case err != nil && err != io.EOF:
 			return s + endl
@@ -216,7 +216,7 @@ func (h *Handler) Run() error {
 			h.l.Prompt(h.Prompt())
 		}
 		// read next statement/command
-		cmd, params, err := h.buf.Next()
+		cmd, paramstr, err := h.buf.Next(env.Unquote(h.user, false, env.All()))
 		switch {
 		case h.singleLineMode && err == nil:
 			execute = h.buf.Len != 0
@@ -232,9 +232,9 @@ func (h *Handler) Run() error {
 		var res metacmd.Result
 		if cmd != "" {
 			cmd = strings.TrimPrefix(cmd, `\`)
+			params := stmt.DecodeParams(paramstr)
 			// decode
-			var r metacmd.Runner
-			r, err = metacmd.Decode(cmd, params)
+			r, err := metacmd.Decode(cmd, params)
 			if err != nil {
 				lastErr = WrapErr(cmd, err)
 				switch {
@@ -257,8 +257,18 @@ func (h *Handler) Run() error {
 				continue
 			}
 			// print unused command parameters
-			for i := res.Processed; i < len(params); i++ {
-				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, params[i])
+			for {
+				ok, arg, err := params.Get(func(s string, isvar bool) (bool, string, error) {
+					return true, s, nil
+				})
+				if err != nil {
+					fmt.Fprintf(stderr, "error: %v", err)
+					fmt.Fprintln(stderr)
+				}
+				if !ok {
+					break
+				}
+				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, arg)
 				fmt.Fprintln(stdout)
 			}
 		}
@@ -606,9 +616,6 @@ func (h *Handler) Close() error {
 // ReadVar reads a variable from the interactive prompt, saving it to
 // environment variables.
 func (h *Handler) ReadVar(typ, prompt string) (string, error) {
-	if !h.l.Interactive() {
-		return "", text.ErrNotInteractive
-	}
 	var masked bool
 	// check type
 	switch typ {

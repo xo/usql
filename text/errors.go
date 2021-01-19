@@ -31,8 +31,8 @@ var (
 	ErrDriverNotAvailable = errors.New("driver not available")
 	// ErrPasswordNotSupportedByDriver is the password not supported by driver error.
 	ErrPasswordNotSupportedByDriver = errors.New(`\password not supported by driver`)
-	// ErrUnterminatedString is the unterminated string error.
-	ErrUnterminatedString = errors.New("unterminated string")
+	// ErrUnterminatedQuotedString is the unterminated quoted string error.
+	ErrUnterminatedQuotedString = errors.New("unterminated quoted string")
 	// ErrNoShellAvailable is the no SHELL available error.
 	ErrNoShellAvailable = errors.New("no SHELL available")
 	// ErrNotInteractive is the not interactive error.
@@ -53,4 +53,6 @@ var (
 	ErrInvalidFormatLineStyle = errors.New(`\pset: allowed line styles are ascii, old-ascii, unicode`)
 	// ErrInvalidFormatBorderLineStyle is the invalid format border line style error.
 	ErrInvalidFormatBorderLineStyle = errors.New(`\pset: allowed Unicode border line styles are single, double`)
+	// ErrInvalidQuotedString is the invalid quoted string error.
+	ErrInvalidQuotedString = errors.New(`invalid quoted string`)
 )

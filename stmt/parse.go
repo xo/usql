@@ -52,28 +52,7 @@ func isEmptyLine(r []rune, i, end int) bool {
 	return !ok
 }
 
-// trimSplit splits r by whitespace into a string slice.
-func trimSplit(r []rune, i, end int) []string {
-	var a []string
-	for i < end {
-		n, found := findNonSpace(r, i, end)
-		if !found || n == end {
-			// empty
-			return a
-		}
-		var m int
-		if c := r[n]; c == '\'' || c == '"' || c == '`' {
-			m, _ = findRune(r, n+1, end, c)
-			m++
-		} else {
-			m, _ = findSpace(r, n, end)
-		}
-		a = append(a, string(r[n:min(m, end)]))
-		i = m
-	}
-	return a
-}
-
+// identifierRE is a regexp that matches dollar tag identifiers ($tag$).
 var identifierRE = regexp.MustCompile(`(?i)^[a-z][a-z0-9_]{0,127}$`)
 
 // readDollarAndTag reads a dollar style $tag$ in r, starting at i, returning
@@ -106,21 +85,22 @@ func readDollarAndTag(r []rune, i, end int) (string, int, bool) {
 //
 // If the string's terminator was not found, then the result will be the passed
 // end.
-func readString(r []rune, i, end int, allowDollar, quoteDouble, quoteDollar bool, quoteDollarTag string) (int, bool) {
-	var prev, c rune
+func readString(r []rune, i, end int, quote rune, tag string) (int, bool) {
+	var prev, c, next rune
 	for ; i < end; i++ {
-		c = r[i]
+		c, next = r[i], grab(r, i+1, end)
 		switch {
-		case allowDollar && quoteDollar && c == '$':
-			if id, pos, ok := readDollarAndTag(r, i, end); ok && quoteDollarTag == id {
+		case quote == '\'' && c == '\'' && next == '\'':
+		case quote == '\'' && c == '\'' && prev != '\'',
+			quote == '"' && c == '"',
+			quote == '`' && c == '`':
+			return i, true
+		case quote == '$' && c == '$':
+			if id, pos, ok := readDollarAndTag(r, i, end); ok && tag == id {
 				return pos, true
 			}
-		case quoteDouble && c == '"':
-			return i, true
-		case !quoteDouble && !quoteDollar && c == '\'' && prev != '\'':
-			return i, true
 		}
-		prev = r[i]
+		prev = c
 	}
 	return end, false
 }
@@ -151,7 +131,8 @@ func readStringVar(r []rune, i, end int) *Var {
 				Quote: q,
 				Name:  string(r[start+2 : i]),
 			}
-		} /*
+		}
+		/*
 			// this is commented out, because need to determine what should be
 			// the "right" behavior ... should we only allow "identifiers"?
 			else if c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
@@ -190,28 +171,48 @@ func readVar(r []rune, i, end int) *Var {
 	}
 }
 
-// readCommand reads the command and any parameters from r.
-func readCommand(r []rune, i, end int) (string, []string, int) {
-	// find end (either end of r, or the next command)
-	start, found := i, false
-	for ; i < end-1; i++ {
-		if IsSpaceOrControl(r[i]) && r[i+1] == '\\' {
-			found = true
-			break
+// readCommand reads the command and any parameters from r, returning the
+// offset from i for the end of command, and the end of the command parameters.
+//
+// A command is defined as the first non-blank text after \, followed by
+// parameters up to either the next \ or a control character (for example, \n):
+func readCommand(r []rune, i, end int) (int, int) {
+command:
+	// find end of command
+	for ; i < end; i++ {
+		next := grab(r, i+1, end)
+		switch {
+		case next == 0:
+			return end, end
+		case next == '\\' || unicode.IsControl(next):
+			i++
+			return i, i
+		case unicode.IsSpace(next):
+			i++
+			break command
 		}
 	}
-	// fix i
-	if found {
-		i++
-	} else {
-		i = end
+	cmd, quote := i, rune(0)
+params:
+	// find end of params
+	for ; i < end; i++ {
+		c, next := r[i], grab(r, i+1, end)
+		switch {
+		case next == 0:
+			return cmd, end
+		case quote == 0 && (c == '\'' || c == '"' || c == '`'):
+			quote = c
+		case quote != 0 && c == quote:
+			quote = 0
+		// skip escaped
+		case quote != 0 && c == '\\' && (next == quote || next == '\\'):
+			i++
+		case quote == 0 && (c == '\\' || unicode.IsControl(c)):
+			break params
+		}
 	}
-	// split values
-	a := trimSplit(r, start, i)
-	if len(a) == 0 {
-		return "", nil, i
-	}
-	return a[0], a[1:], i
+	// log.Printf(">>> params: %q remaining: %q", string(r[cmd:i]), string(r[i:end]))
+	return cmd, i
 }
 
 // findPrefix finds the prefix in r up to n words.
@@ -227,8 +228,8 @@ loop:
 		// grab current and next character
 		c, next := grab(r, i, end), grab(r, i+1, end)
 		switch {
+		// do nothing
 		case c == 0:
-			continue
 		// statement terminator
 		case c == ';':
 			break loop
@@ -284,6 +285,26 @@ loop:
 // FindPrefix finds the first 6 prefix words in s.
 func FindPrefix(s string) string {
 	return findPrefix([]rune(s), prefixCount)
+}
+
+// substitute substitutes n runes in r starting at i with the runes in s.
+// Dynamically grows r if necessary.
+func substitute(r []rune, i, end, n int, s string) ([]rune, int) {
+	sr, rcap := []rune(s), cap(r)
+	sn := len(sr)
+	// grow ...
+	tlen := len(r) + sn - n
+	if tlen > rcap {
+		z := make([]rune, tlen)
+		copy(z, r)
+		r = z
+	} else {
+		r = r[:rcap]
+	}
+	// substitute
+	copy(r[i+sn:], r[i+n:])
+	copy(r[i:], sr)
+	return r[:tlen], tlen
 }
 
 // substituteVar substitutes part of r, based on v, with s.

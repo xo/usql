@@ -29,9 +29,9 @@ func Getenv(keys ...string) string {
 	return ""
 }
 
-// expand expands the tilde (~) in the front of a path to a the supplied
+// Expand expands the tilde (~) in the front of a path to a the supplied
 // directory.
-func expand(u *user.User, path string) string {
+func Expand(u *user.User, path string) string {
 	switch {
 	case path == "~":
 		return u.HomeDir
@@ -41,34 +41,21 @@ func expand(u *user.User, path string) string {
 	return path
 }
 
-// unquote unquotes a string.
-func unquote(s string, c rune) (string, error) {
-	if len(s) < 2 || rune(s[len(s)-1]) != c {
-		return "", text.ErrUnterminatedString
+// Chdir changes the current working directory to the specified path, or to the
+// user's home directory if path is not specified.
+func Chdir(u *user.User, path string) error {
+	if path != "" {
+		path = Expand(u, path)
+	} else {
+		path = u.HomeDir
 	}
-	return s[1 : len(s)-1], nil
-}
-
-// Getvar retrieves a variable.
-func Getvar(s string) (bool, string, error) {
-	q, n := "", s
-	if c := rune(s[0]); c == '\'' || c == '"' {
-		var err error
-		if n, err = unquote(s, c); err != nil {
-			return false, "", err
-		}
-		q = string(c)
-	}
-	if v, ok := vars[n]; ok {
-		return true, q + v + q, nil
-	}
-	return false, s, nil
+	return os.Chdir(path)
 }
 
 // OpenFile opens a file for reading, returning the full, expanded path of the
 // file.  All callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
-	path, err := filepath.EvalSymlinks(expand(u, path))
+	path, err := filepath.EvalSymlinks(Expand(u, path))
 	switch {
 	case err != nil && os.IsNotExist(err):
 		return "", nil, text.ErrNoSuchFileOrDirectory
@@ -98,7 +85,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		return nil, text.ErrNoEditorDefined
 	}
 	if path != "" {
-		path = expand(u, path)
+		path = Expand(u, path)
 	} else {
 		f, err := temp.File("", text.CommandLower(), "sql")
 		if err != nil {
@@ -150,7 +137,7 @@ func HistoryFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-	return expand(u, path)
+	return Expand(u, path)
 }
 
 // RCFile returns the path to the RC file.
@@ -163,7 +150,7 @@ func RCFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-	return expand(u, path)
+	return Expand(u, path)
 }
 
 // PassFile returns the path to the password file.
@@ -176,7 +163,7 @@ func PassFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-	return expand(u, path)
+	return Expand(u, path)
 }
 
 // PassFileEntry determines if there is a password file entry for a specific
@@ -225,6 +212,7 @@ func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 	return nil, nil
 }
 
+// commentRE matches comment entries in a pass file.
 var commentRE = regexp.MustCompile(`#.*`)
 
 // readPassEntries reads the pass file entries from path.
@@ -271,20 +259,9 @@ func matchPassEntry(n, entry []string) (string, string, bool) {
 	return entry[4], entry[5], true
 }
 
-// Chdir changes the current working directory to the specified path, or to the
-// user's home directory if path is not specified.
-func Chdir(u *user.User, path string) error {
-	if path != "" {
-		path = expand(u, path)
-	} else {
-		path = u.HomeDir
-	}
-	return os.Chdir(path)
-}
-
-// getshell returns the user's defined SHELL, or system default (if found on
+// Getshell returns the user's defined SHELL, or system default (if found on
 // path).
-func getshell() (string, string) {
+func Getshell() (string, string) {
 	var shell, param string
 	shell, param = Getenv("SHELL"), "-c"
 	if shell == "" && runtime.GOOS == "windows" {
@@ -313,7 +290,7 @@ func getshell() (string, string) {
 // When SHELL or COMSPEC is not defined, then "sh" / "cmd.exe" will be used
 // instead, assuming it is found on the system's PATH.
 func Exec(s string) (string, error) {
-	shell, param := getshell()
+	shell, param := Getshell()
 	if shell == "" {
 		return "", text.ErrNoShellAvailable
 	}
@@ -330,35 +307,67 @@ func Exec(s string) (string, error) {
 	return "", cmd.Run()
 }
 
-// Unquote unquotes the string.
-func Unquote(u *user.User, s string, exec bool) (string, error) {
-	if s == "" {
-		return "", nil
+var cleanDoubleRE = regexp.MustCompile(`''`)
+
+// Dequote unquotes a string.
+func Dequote(s string, c byte) (string, error) {
+	if len(s) < 2 || s[len(s)-1] != c {
+		return "", text.ErrUnterminatedQuotedString
 	}
-	if len(s) > 1 {
-		c := rune(s[0])
-		switch {
-		case c == ':':
-			ok, v, err := Getvar(s[1:])
-			if err != nil {
-				return "", err
-			}
-			if ok {
-				return v, nil
-			}
-			return s, nil
-		case c == '\'' || c == '"':
-			return unquote(s, c)
-		case exec && c == '`':
-			var err error
-			if s, err = unquote(s, c); err != nil {
-				return "", err
-			}
-			if strings.TrimSpace(s) == "" {
-				return "", nil
-			}
-			return Exec(s)
+	s = s[1 : len(s)-1]
+	if c != '\'' {
+		return s, nil
+	}
+	return cleanDoubleRE.ReplaceAllString(s, "'"), nil
+}
+
+// Getvar retrieves an environment variable.
+func Getvar(s string, v Vars) (bool, string, error) {
+	q, n := "", s
+	if c := s[0]; c == '\'' || c == '"' {
+		var err error
+		if n, err = Dequote(s, c); err != nil {
+			return false, "", err
 		}
+		q = string(c)
 	}
-	return s, nil
+	if val, ok := v[n]; ok {
+		return true, q + val + q, nil
+	}
+	return false, s, nil
+}
+
+// Unquote returns a func that unquotes strings for the user.
+//
+// When exec is true, backtick'd strings (``) will be executed using the
+// provided user's shell (see Exec).
+func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, error) {
+	return func(s string, isvar bool) (bool, string, error) {
+		// log.Printf(">>> UNQUOTE: %q", s)
+		if isvar {
+			return Getvar(s, v)
+		}
+		if len(s) < 2 {
+			return false, "", text.ErrInvalidQuotedString
+		}
+		c := s[0]
+		z, err := Dequote(s, c)
+		if err != nil {
+			return false, "", err
+		}
+		if c == '\'' || c == '"' {
+			return true, z, nil
+		}
+		if c != '`' {
+			return false, "", text.ErrInvalidQuotedString
+		}
+		if !exec {
+			return true, z, nil
+		}
+		res, err := Exec(z)
+		if err != nil {
+			return false, "", err
+		}
+		return true, res, nil
+	}
 }

@@ -3,7 +3,6 @@ package metacmd
 import (
 	"io"
 	"os/user"
-	"strings"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -95,9 +94,6 @@ type Result struct {
 	ExecParam string
 	// Expanded forces expanded output.
 	Expanded bool
-	// Processed informs the handling code how many parameters went
-	// unprocessed. A value of 0 means that no parameters were processed.
-	Processed int
 }
 
 // Params wraps metacmd parameters.
@@ -107,43 +103,54 @@ type Params struct {
 	// Name is the name of the metacmd.
 	Name string
 	// Params are the passed parameters.
-	Params []string
+	Params *stmt.Params
 	// Result is the resulting state of the command execution.
 	Result Result
 }
 
-// Get returns the next parameter, increasing p.Result.Processed by 1.
-func (p *Params) Get() string {
-	if len(p.Params) > p.Result.Processed {
-		s, _ := env.Unquote(p.Handler.User(), p.Params[p.Result.Processed], true)
-		p.Result.Processed++
-		return s
+// Get returns the next parameter, using env.Unquote to decode quoted strings.
+func (p *Params) Get(exec bool) (string, error) {
+	_, v, err := p.Params.Get(env.Unquote(
+		p.Handler.User(),
+		exec,
+		env.All(),
+	))
+	if err != nil {
+		return "", err
 	}
-	return ""
+	return v, nil
 }
 
-// GetOptional returns the next parameter only if it is prefixed with a "-",
-// increasing p.Result.Processed by 1 when it does, otherwise returning
-// defaultVal.
-func (p *Params) GetOptional(defaultVal string) string {
-	if len(p.Params) > p.Result.Processed && strings.HasPrefix(p.Params[p.Result.Processed], "-") {
-		s := p.Params[p.Result.Processed][1:]
-		p.Result.Processed++
-		return s
-	}
-	return defaultVal
+// GetOK returns the next parameter, using env.Unquote to decode quoted
+// strings.
+func (p *Params) GetOK(exec bool) (bool, string, error) {
+	return p.Params.Get(env.Unquote(
+		p.Handler.User(),
+		exec,
+		env.All(),
+	))
 }
 
-// GetAll gets all remaining, unprocessed parameters, incrementing
-// p.Result.processed appropriately.
-func (p *Params) GetAll() []string {
-	x := make([]string, len(p.Params)-p.Result.Processed)
-	var j int
-	for i := p.Result.Processed; i < len(p.Params); i++ {
-		s, _ := env.Unquote(p.Handler.User(), p.Params[i], true)
-		x[j] = s
-		j++
+// GetOptional returns the next parameter, using env.Unquote to decode quoted
+// strings, returning the value if it is prefixed with a "-", otherwise
+// returning the retrieved value.
+func (p *Params) GetOptional(exec bool) (bool, string, error) {
+	v, err := p.Get(exec)
+	if err != nil {
+		return false, "", err
 	}
-	p.Result.Processed = len(p.Params)
-	return x
+	if len(v) > 0 && v[0] == '-' {
+		return true, v[1:], nil
+	}
+	return false, v, nil
+}
+
+// GetAll gets all remaining, unprocessed parameters using env.Getvar to decode
+// any variables.
+func (p *Params) GetAll(exec bool) ([]string, error) {
+	return p.Params.GetAll(env.Unquote(
+		p.Handler.User(),
+		exec,
+		env.All(),
+	))
 }

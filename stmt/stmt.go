@@ -3,8 +3,6 @@ package stmt
 
 import (
 	"bytes"
-
-	"github.com/xo/usql/env"
 )
 
 // MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
@@ -24,6 +22,18 @@ type Var struct {
 	Name string
 	// Len is the length of the replaced variable.
 	Len int
+}
+
+// String satisfies the fmt.Stringer interface.
+func (v *Var) String() string {
+	var q string
+	switch {
+	case v.Quote == '\\':
+		return "\\" + v.Name
+	case v.Quote != 0:
+		q = string(v.Quote)
+	}
+	return ":" + q + v.Name + q
 }
 
 // Stmt is a reusable statement buffer that handles reading and parsing
@@ -52,13 +62,7 @@ type Stmt struct {
 	// rlen is the number of unprocessed runes.
 	rlen int
 	// quote indicates currently parsing a quoted string.
-	quote bool
-	// quoteDouble indicates string type being parsed is a double (") quoted
-	// string
-	quoteDouble bool
-	// quoteDollar indicates string type being parsed is a dollar ($) quoted
-	// string
-	quoteDollar bool
+	quote rune
 	// quoteDollarTag is the parsed tag of a dollar quoted string
 	quoteDollarTag string
 	// multilineComment is state of multiline comment processing
@@ -127,7 +131,7 @@ func (b *Stmt) Reset(r []rune) {
 	// reset buf
 	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
 	// quote state
-	b.quote, b.quoteDouble, b.quoteDollar, b.quoteDollarTag = false, false, false, ""
+	b.quote, b.quoteDollarTag = 0, ""
 	// multicomment state
 	b.multilineComment = false
 	// balance state
@@ -154,7 +158,7 @@ var lineend = []rune{'\n'}
 // Example:
 //     buf := stmt.New(runeSrc)
 //     for {
-//         cmd, params, err := buf.Next()
+//         cmd, params, err := buf.Next(unquoteFunc)
 //         if err { /* ... */ }
 //
 //         execute, quit := buf.Ready() || cmd == "g", cmd == "q"
@@ -175,19 +179,18 @@ var lineend = []rune{'\n'}
 //            buf.Reset(nil)
 //         }
 //     }
-func (b *Stmt) Next() (string, []string, error) {
+func (b *Stmt) Next(unquote func(string, bool) (bool, string, error)) (string, string, error) {
 	var err error
 	var i int
 	// no runes to process, grab more
 	if b.rlen == 0 {
 		b.r, err = b.f()
 		if err != nil {
-			return "", nil, err
+			return "", "", err
 		}
 		b.rlen = len(b.r)
 	}
-	var cmd string
-	var params []string
+	var cmd, params string
 	var ok bool
 parse:
 	for ; i < b.rlen; i++ {
@@ -195,28 +198,25 @@ parse:
 		// grab c, next
 		c, next := b.r[i], grab(b.r, i+1, b.rlen)
 		switch {
-		// find end of string quote
-		case b.quote:
-			i, ok = readString(b.r, i, b.rlen, b.allowDollar, b.quoteDouble, b.quoteDollar, b.quoteDollarTag)
+		// find end of string
+		case b.quote != 0:
+			i, ok = readString(b.r, i, b.rlen, b.quote, b.quoteDollarTag)
 			if ok {
-				b.quote, b.quoteDouble, b.quoteDollar, b.quoteDollarTag = false, false, false, ""
+				b.quote, b.quoteDollarTag = 0, ""
 			}
 		// find end of multiline comment
 		case b.multilineComment:
 			i, ok = readMultilineComment(b.r, i, b.rlen)
 			b.multilineComment = !ok
-		// start of single quoted string
-		case c == '\'':
-			b.quote = true
-		// start of double quoted string
-		case c == '"':
-			b.quote, b.quoteDouble = true, true
+		// start of single or double quoted string
+		case c == '\'' || c == '"':
+			b.quote = c
 		// start of dollar quoted string literal (postgres)
 		case b.allowDollar && c == '$':
 			var id string
 			id, i, ok = readDollarAndTag(b.r, i, b.rlen)
 			if ok {
-				b.quote, b.quoteDollar, b.quoteDollarTag = true, true, id
+				b.quote, b.quoteDollarTag = '$', id
 			}
 		// start of sql comment, skip to end of line
 		case c == '-' && next == '-':
@@ -239,7 +239,7 @@ parse:
 					q = string(v.Quote)
 				}
 				b.Vars = append(b.Vars, v)
-				if ok, z, _ := env.Getvar(q + v.Name + q); ok {
+				if ok, z, _ := unquote(q+v.Name+q, true); ok {
 					b.r, b.rlen = substituteVar(b.r, v, z)
 					i--
 				}
@@ -253,9 +253,8 @@ parse:
 		// balance
 		case c == ')':
 			b.balanceCount = max(0, b.balanceCount-1)
-		// continue processing
-		case b.quote || b.multilineComment || b.balanceCount != 0:
-			continue
+		// continue processing quoted string, multiline comment, or unbalanced statements
+		case b.quote != 0 || b.multilineComment || b.balanceCount != 0:
 		// skip escaped backslash, semicolon, colon
 		case c == '\\' && (next == '\\' || next == ';' || next == ':'):
 			// FIXME: the below works, but it may not make sense to keep this enabled.
@@ -265,7 +264,6 @@ parse:
 				End:   i + 2,
 				Quote: '\\',
 				Name:  string(next),
-				Len:   1,
 			}
 			b.Vars = append(b.Vars, v)
 			b.r, b.rlen = substituteVar(b.r, v, string(next))
@@ -274,10 +272,11 @@ parse:
 			}
 		// start of command
 		case c == '\\':
-			// extract command from r
-			var pos int
-			cmd, params, pos = readCommand(b.r, i, b.rlen)
-			b.r = append(b.r[:i], b.r[pos:]...)
+			// parse command and params end positions
+			cend, pend := readCommand(b.r, i, b.rlen)
+			cmd, params = string(b.r[i:cend]), string(b.r[cend:pend])
+			// remove command and params from r
+			b.r = append(b.r[:i], b.r[pend:]...)
 			b.rlen = len(b.r)
 			break parse
 		// terminated
@@ -298,7 +297,7 @@ parse:
 	// DO NOT append to buf when:
 	// 1. line is empty/whitespace and not in a string/multiline comment
 	empty := isEmptyLine(b.r, 0, i)
-	appendLine := b.quote || b.multilineComment || !empty
+	appendLine := b.quote != 0 || b.multilineComment || !empty
 	if !b.multilineComment && cmd != "" && empty {
 		appendLine = false
 	}
@@ -362,12 +361,8 @@ func (b *Stmt) AppendString(s, sep string) {
 // State returns a string representing the state of statement parsing.
 func (b *Stmt) State() string {
 	switch {
-	case b.quote && b.quoteDollar:
-		return "$"
-	case b.quote && b.quoteDouble:
-		return `"`
-	case b.quote:
-		return "'"
+	case b.quote != 0:
+		return string(b.quote)
 	case b.multilineComment:
 		return "*"
 	case b.balanceCount != 0:

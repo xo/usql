@@ -2,7 +2,9 @@ package env
 
 import (
 	"fmt"
+	"io"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -116,8 +118,8 @@ func Unset(name string) error {
 }
 
 // All returns all variables.
-func All() map[string]string {
-	m := make(map[string]string)
+func All() Vars {
+	m := make(Vars)
 	for k, v := range vars {
 		m[k] = v
 	}
@@ -125,12 +127,36 @@ func All() map[string]string {
 }
 
 // Pall returns all p variables.
-func Pall() map[string]string {
-	m := make(map[string]string)
+func Pall() Vars {
+	m := make(Vars)
 	for k, v := range pvars {
 		m[k] = v
 	}
 	return m
+}
+
+// Pwrite writes the p variables to the writer.
+func Pwrite(w io.Writer) error {
+	keys := make([]string, len(pvars))
+	var i, width int
+	for k := range pvars {
+		keys[i], width = k, max(len(k), width)
+		i++
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		val := pvars[k]
+		switch k {
+		case "fieldsep", "recordsep", "null":
+			val = strconv.QuoteToASCII(val)
+		case "tableattr", "title":
+			if val != "" {
+				val = strconv.QuoteToASCII(val)
+			}
+		}
+		fmt.Fprintln(w, k+strings.Repeat(" ", width-len(k)), val)
+	}
+	return nil
 }
 
 var (
@@ -286,4 +312,12 @@ func Timefmt() string {
 		return s
 	}
 	return tfmt
+}
+
+// max returns maximum of a, b.
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
