@@ -1,14 +1,29 @@
 package postgres
 
 import (
+	"context"
+	"database/sql"
 	"github.com/lib/pq" // DRIVER: postgres
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+
+	"gocloud.dev/postgres"
+	_ "gocloud.dev/postgres/awspostgres"
+	_ "gocloud.dev/postgres/gcppostgres"
 )
 
 func init() {
 	drivers.Register("postgres", drivers.Driver{
-		Name:                   "pq",
+		Name: "pq",
+		Open: func(u *dburl.URL) (func(string, string) (*sql.DB, error), error) {
+			return func(_ string, params string) (*sql.DB, error) {
+				if u.Scheme == "gcppostgres" || u.Scheme == "awspostgres" {
+					return postgres.Open(context.Background(), u.String())
+				} else {
+					return sql.Open(u.Driver, u.DSN)
+				}
+			}, nil
+		},
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		LexerName:              "postgres",
