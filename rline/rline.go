@@ -183,8 +183,16 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	}
 	closers = append(closers, l.Close)
 	n := l.Operation.Runes
+	pw := func(prompt string) (string, error) {
+		buf, err := l.ReadPassword(prompt)
+		if err != nil {
+			return "", err
+		}
+		return string(buf), nil
+	}
 	if forceNonInteractive {
 		n = nil
+		pw = nil
 	}
 	return &Rline{
 		Inst: l,
@@ -201,12 +209,6 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		Cyg: cygwin,
 		P:   l.SetPrompt,
 		S:   l.SaveHistory,
-		Pw: func(prompt string) (string, error) {
-			buf, err := l.ReadPassword(prompt)
-			if err != nil {
-				return "", err
-			}
-			return string(buf), nil
-		},
+		Pw:  pw,
 	}, nil
 }

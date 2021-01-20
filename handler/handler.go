@@ -650,7 +650,7 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 		z, err = strconv.ParseBool(v)
 	}
 	if err != nil {
-		return "", text.ErrInvalidValue
+		return "", fmt.Errorf("error: invalid value, %w", err)
 	}
 	return fmt.Sprintf("%v", z), nil
 }
@@ -1005,7 +1005,8 @@ func (h *Handler) Include(path string, relative bool) error {
 		Err: h.l.Stderr(),
 		Pw:  h.l.Password,
 	}
-	p := New(l, h.user, filepath.Dir(path), h.nopw)
+	p := New(h.l, h.user, filepath.Dir(path), h.nopw)
+	p.buf = stmt.New(l.Next)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
 	err = p.Run()
