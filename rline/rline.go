@@ -191,8 +191,7 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		return string(buf), nil
 	}
 	if forceNonInteractive {
-		n = nil
-		pw = nil
+		n, pw = nil, nil
 	}
 	return &Rline{
 		Inst: l,

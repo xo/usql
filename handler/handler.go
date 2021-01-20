@@ -638,21 +638,28 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 		r, err = h.l.Next()
 		v = string(r)
 	}
-	var z interface{} = v
 	switch typ {
 	case "int":
-		z, err = strconv.ParseInt(v, 10, 64)
+		_, err = strconv.ParseInt(v, 10, 64)
 	case "uint":
-		z, err = strconv.ParseUint(v, 10, 64)
+		_, err = strconv.ParseUint(v, 10, 64)
 	case "float":
-		z, err = strconv.ParseFloat(v, 64)
+		_, err = strconv.ParseFloat(v, 64)
 	case "bool":
-		z, err = strconv.ParseBool(v)
+		var b bool
+		b, err = strconv.ParseBool(v)
+		if err == nil {
+			v = fmt.Sprintf("%v", b)
+		}
 	}
 	if err != nil {
-		return "", fmt.Errorf("error: invalid value, %w", err)
+		errstr := err.Error()
+		if i := strings.LastIndex(errstr, ":"); i != -1 {
+			errstr = strings.TrimSpace(errstr[i+1:])
+		}
+		return "", fmt.Errorf(text.InvalidValue, typ, v, errstr)
 	}
-	return fmt.Sprintf("%v", z), nil
+	return v, nil
 }
 
 // ChangePassword changes a password for the user.
