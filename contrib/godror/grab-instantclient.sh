@@ -85,3 +85,6 @@ Cflags: -I\${includedir}
 ENDSTR
 )
 echo "$DATA" > $DEST/oci8.pc
+rm -f /etc/ld.so.conf.d/oracle-instantclient.conf
+echo "$DEST/instantclient_$DVER" | tee -a /etc/ld.so.conf.d/oracle-instantclient.conf
+ldconfig -v
