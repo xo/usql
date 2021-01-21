@@ -21,7 +21,17 @@ func DecodeParams(params string) *Params {
 	}
 }
 
-// Get reads the next parameter using the provided substitution func.
+// GetRaw reads all remaining runes. No substitution or whitespace removal is
+// performed.
+func (p *Params) GetRaw() string {
+	s := string(p.R)
+	p.R, p.Len = p.R[:0], 0
+	return s
+}
+
+// Get reads the next command parameter using the provided substitution func.
+// True indicates there are runes remaining in the command parameters to
+// process.
 func (p *Params) Get(f func(string, bool) (bool, string, error)) (bool, string, error) {
 	var ok bool
 	var quote rune
@@ -79,7 +89,8 @@ loop:
 	return true, v, nil
 }
 
-// GetAll retrieves all params, returning the first encountered error.
+// GetAll retrieves all remaining command parameters using the provided
+// substitution func. Will return on the first encountered error.
 func (p *Params) GetAll(f func(string, bool) (bool, string, error)) ([]string, error) {
 	var s []string
 	for {

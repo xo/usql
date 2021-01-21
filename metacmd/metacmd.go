@@ -64,8 +64,8 @@ const (
 	ChangeDir
 	// SetEnv is the system set environment variable meta command (\setenv).
 	SetEnv
-	// ShellExec is the system shell exec meta command (\!).
-	ShellExec
+	// Shell is the system shell exec meta command (\!).
+	Shell
 	// Include is the system include file meta command (\i and variants).
 	Include
 	// Transact is the transaction meta command (\begin, \commit, \rollback).

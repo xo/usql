@@ -369,22 +369,12 @@ func init() {
 				return nil
 			},
 		},
-		ShellExec: {
+		Shell: {
 			Section: SectionOperatingSystem,
 			Name:    "!",
 			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
 			Process: func(p *Params) error {
-				/*
-					if len(p.Params) == 0 && !p.Handler.IO().Interactive() {
-						return text.ErrNotInteractive
-					}
-					// p.Result.Processed = len(p.Params)
-					v, err := env.Exec(strings.TrimSpace(strings.Join(p.Params, " ")))
-					if err == nil && v != "" {
-						fmt.Fprintln(p.Handler.IO().Stdout(), v)
-					}
-				*/
-				return nil
+				return env.Shell(p.GetRaw())
 			},
 		},
 		Include: {

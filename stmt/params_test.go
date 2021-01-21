@@ -9,6 +9,37 @@ import (
 	"github.com/xo/usql/text"
 )
 
+func TestDecodeParamsGetRaw(t *testing.T) {
+	const exp = `  'a string'  "another string"   `
+	p := DecodeParams(exp)
+	s := p.GetRaw()
+	if s != exp {
+		t.Errorf("expected %q, got: %q", exp, s)
+	}
+	u, err := user.Current()
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	unquote := testUnquote(u, t, 0, exp)
+	ok, s, err := p.Get(unquote)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if s != "" {
+		t.Errorf("expected empty string, got: %q", s)
+	}
+	if ok {
+		t.Errorf("expected ok=false, got: %t", ok)
+	}
+	v, err := p.GetAll(unquote)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if len(v) != 0 {
+		t.Errorf("expected v to have length 0, got: %d", len(v))
+	}
+}
+
 func TestDecodeParamsGetAll(t *testing.T) {
 	u, err := user.Current()
 	if err != nil {

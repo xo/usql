@@ -108,7 +108,8 @@ type Params struct {
 	Result Result
 }
 
-// Get returns the next parameter, using env.Unquote to decode quoted strings.
+// Get returns the next command parameter, using env.Unquote to decode quoted
+// strings.
 func (p *Params) Get(exec bool) (string, error) {
 	_, v, err := p.Params.Get(env.Unquote(
 		p.Handler.User(),
@@ -121,7 +122,7 @@ func (p *Params) Get(exec bool) (string, error) {
 	return v, nil
 }
 
-// GetOK returns the next parameter, using env.Unquote to decode quoted
+// GetOK returns the next command parameter, using env.Unquote to decode quoted
 // strings.
 func (p *Params) GetOK(exec bool) (bool, string, error) {
 	return p.Params.Get(env.Unquote(
@@ -131,9 +132,9 @@ func (p *Params) GetOK(exec bool) (bool, string, error) {
 	))
 }
 
-// GetOptional returns the next parameter, using env.Unquote to decode quoted
-// strings, returning the value if it is prefixed with a "-", otherwise
-// returning the retrieved value.
+// GetOptional returns the next command parameter, using env.Unquote to decode
+// quoted strings, returns true when the value is prefixed with a "-", along
+// with the value sans the "-" prefix. Otherwise returns false and the value.
 func (p *Params) GetOptional(exec bool) (bool, string, error) {
 	v, err := p.Get(exec)
 	if err != nil {
@@ -145,12 +146,20 @@ func (p *Params) GetOptional(exec bool) (bool, string, error) {
 	return false, v, nil
 }
 
-// GetAll gets all remaining, unprocessed parameters using env.Getvar to decode
-// any variables.
+// GetAll gets all remaining command parameters using env.Unquote to decode
+// quoted strings.
 func (p *Params) GetAll(exec bool) ([]string, error) {
 	return p.Params.GetAll(env.Unquote(
 		p.Handler.User(),
 		exec,
 		env.All(),
 	))
+}
+
+// GetRaw gets the remaining command parameters as a raw string.
+//
+// Note: no other processing is done to interpolate variables or to decode
+// string values.
+func (p *Params) GetRaw() string {
+	return p.Params.GetRaw()
 }

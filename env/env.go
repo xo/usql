@@ -260,7 +260,10 @@ func matchPassEntry(n, entry []string) (string, string, bool) {
 }
 
 // Getshell returns the user's defined SHELL, or system default (if found on
-// path).
+// path) and the appropriate command-line argument for the returned shell.
+//
+// Looks at the SHELL environment variable first, and then COMSPEC/ComSpec on
+// Windows. Defaults to sh on non-Windows systems, and to cmd.exe on Windows.
 func Getshell() (string, string) {
 	var shell, param string
 	shell, param = Getenv("SHELL"), "-c"
@@ -284,27 +287,48 @@ func Getshell() (string, string) {
 	return shell, param
 }
 
-// Exec runs s using the user's SHELL / COMSPEC (Windows, aka 'ComSpec'),
-// with -c (or /c).
+// Shell runs s as a shell. When s is empty the user's SHELL or COMSPEC is
+// used. See Getshell.
+func Shell(s string) error {
+	if s = strings.TrimSpace(s); s == "" {
+		s, _ = Getshell()
+		if s == "" {
+			return text.ErrNoShellAvailable
+		}
+	}
+	// drop to shell
+	cmd := exec.Command(s)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	_ = cmd.Run()
+	return nil
+}
+
+// Exec executes s using the user's SHELL / COMSPEC with -c (or /c) and
+// returning the captured output. See Getshell.
 //
 // When SHELL or COMSPEC is not defined, then "sh" / "cmd.exe" will be used
 // instead, assuming it is found on the system's PATH.
 func Exec(s string) (string, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", nil
+	}
 	shell, param := Getshell()
 	if shell == "" {
 		return "", text.ErrNoShellAvailable
 	}
-	if strings.TrimSpace(s) != "" {
-		buf, err := exec.Command(shell, param, s).CombinedOutput()
-		if err != nil {
-			return "", err
-		}
-		return strings.TrimSpace(string(buf)), nil
+	buf, err := exec.Command(shell, param, s).CombinedOutput()
+	if err != nil {
+		return "", err
 	}
-	// drop to shell
-	cmd := exec.Command(shell)
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-	return "", cmd.Run()
+	// remove ending \r\n
+	if n := len(buf); n != 0 && buf[n-1] == '\n' {
+		buf = buf[:n-1]
+	}
+	if n := len(buf); n != 0 && buf[n-1] == '\r' {
+		buf = buf[:n-1]
+	}
+	return string(buf), nil
 }
 
 var cleanDoubleRE = regexp.MustCompile(`''`)
