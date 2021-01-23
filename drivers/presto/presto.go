@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/prestodb/presto-go-client/presto" // DRIVER: presto
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -29,5 +30,6 @@ func init() {
 			}
 			return "Presto " + ver, nil
 		},
+		NewMetadataReader: informationschema.New,
 	})
 }

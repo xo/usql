@@ -580,6 +580,41 @@ func init() {
 				return nil
 			},
 		},
+		Describe: {
+			Section: SectionInformational,
+			Name:    "d",
+			Desc:    "list tables, views, and sequences or describe table, view, sequence, or index,[NAME]",
+			Aliases: map[string]string{
+				"da": "list aggregates,[PATTERN]",
+				"df": "list [only agg/normal/procedures/trigger/window] functions,[PATTERN]",
+				"dm": "list materialized views,[PATTERN]",
+				"dn": "list schemas,[PATTERN]",
+				"dt": "list tables,[PATTERN]",
+				"l":  "list databases",
+			},
+			Process: func(p *Params) error {
+				m, err := drivers.NewMetadataWriter(p.Handler.URL(), p.Handler.DB(), p.Handler.IO().Stdout())
+				if err != nil {
+					return err
+				}
+				switch p.Name {
+				case "d":
+					return m.DescribeTableDetails(p.Get(), false, false)
+				case "da":
+					return m.DescribeAggregates(p.Get(), false, false)
+				case "df":
+					return m.DescribeFunctions(p.Name, p.Get(), false, false)
+				case "dm":
+				case "dt":
+					return m.ListTables(p.Name, p.Get(), false, false)
+				case "dn":
+					return m.ListSchemas(p.Get(), false, false)
+				case "l":
+					return m.ListAllDbs(p.Get(), false)
+				}
+				return nil
+			},
+		},
 	}
 	// set up map
 	cmdMap = make(map[string]Metacmd, len(cmds))

@@ -84,6 +84,8 @@ var (
 	TimingSet    = `Timing is %s.`
 	TimingDesc   = `Time: %0.3f ms`
 	InvalidValue = `invalid -%s value %q: %s`
+
+	NotSupportedByDriver = `%s not supported by driver`
 )
 
 func init() {
