@@ -2,6 +2,7 @@ package env
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -322,12 +323,8 @@ func Exec(s string) (string, error) {
 		return "", err
 	}
 	// remove ending \r\n
-	if n := len(buf); n != 0 && buf[n-1] == '\n' {
-		buf = buf[:n-1]
-	}
-	if n := len(buf); n != 0 && buf[n-1] == '\r' {
-		buf = buf[:n-1]
-	}
+	buf = bytes.TrimSuffix(buf, []byte{'\n'})
+	buf = bytes.TrimSuffix(buf, []byte{'\r'})
 	return string(buf), nil
 }
 
