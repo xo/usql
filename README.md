@@ -576,6 +576,18 @@ Input/Output
   \i FILE                         execute commands from file
   \ir FILE                        as \i, but relative to location of current script
 
+Informational
+  \d[S+] [NAME]                   list tables, views, and sequences or describe table, view, sequence, or index
+  \da[S+] [PATTERN]               list aggregates
+  \df[S+] [PATTERN]               list functions
+  \di[S+] [PATTERN]               list indexes
+  \dm[S+] [PATTERN]               list materialized views
+  \dn[S+] [PATTERN]               list schemas
+  \ds[S+] [PATTERN]               list sequences
+  \dt[S+] [PATTERN]               list tables
+  \dv[S+] [PATTERN]               list views
+  \l[+]                           list databases
+
 Formatting
   \pset [NAME [VALUE]]            set table output option
   \a                              toggle between unaligned and aligned output mode

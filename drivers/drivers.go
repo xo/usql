@@ -6,11 +6,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"
 	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/stmt"
 	"github.com/xo/usql/text"
 )
@@ -82,6 +84,10 @@ type Driver struct {
 	BatchAsTransaction bool
 	// BatchQueryPrefixes will be used by BatchQueryPrefixes if defined.
 	BatchQueryPrefixes map[string]string
+	// NewMetadataReader returns a db metadata introspector.
+	NewMetadataReader func(db DB) metadata.Reader
+	// NewMetadataWriter returns a db metadata printer.
+	NewMetadataWriter func(db DB, w io.Writer) metadata.Writer
 }
 
 // drivers is the map of drivers funcs.
@@ -418,4 +424,29 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 // sql.Rows.NextResultSet call.
 func NextResultSet(q *sql.Rows) bool {
 	return q.NextResultSet()
+}
+
+// NewMetadataReader wraps creating a new database introspector for the specified driver.
+func NewMetadataReader(u *dburl.URL, db DB, w io.Writer) (metadata.Reader, error) {
+	d, ok := drivers[u.Driver]
+	if !ok || d.NewMetadataReader == nil {
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+	}
+	return d.NewMetadataReader(db), nil
+}
+
+// NewMetadataWriter wraps creating a new database metadata printer for the specified driver.
+func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer) (metadata.Writer, error) {
+	d, ok := drivers[u.Driver]
+	if !ok {
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+	}
+	if d.NewMetadataWriter != nil {
+		return d.NewMetadataWriter(db, w), nil
+	}
+	if d.NewMetadataReader == nil {
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+	}
+	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db))
+	return newMetadataWriter(db, w), nil
 }

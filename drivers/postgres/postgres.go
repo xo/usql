@@ -7,6 +7,7 @@ import (
 	"github.com/lib/pq" // DRIVER: postgres
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -46,5 +47,6 @@ func init() {
 			}
 			return false
 		},
+		NewMetadataReader: informationschema.New,
 	}, "cockroachdb", "redshift")
 }

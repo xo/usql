@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-sql-driver/mysql" // DRIVER: mysql
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -32,5 +33,6 @@ func init() {
 			}
 			return false
 		},
+		NewMetadataReader: informationschema.New,
 	}, "memsql", "vitess", "tidb")
 }
