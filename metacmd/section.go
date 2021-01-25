@@ -33,7 +33,7 @@ func (s Section) String() string {
 // SectionOrder is the order of sections to display via Listing.
 var SectionOrder = []Section{
 	SectionGeneral, SectionHelp, SectionQueryBuffer,
-	SectionInputOutput /*, SectionInformational */, SectionFormatting,
+	SectionInputOutput, SectionInformational, SectionFormatting,
 	SectionTransaction,
 	SectionConnection, SectionOperatingSystem, SectionVariables,
 }

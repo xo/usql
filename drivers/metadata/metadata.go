@@ -35,6 +35,7 @@ func NewColumnSet(v []Column) *ColumnSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
+		r[i].setVerbose(true)
 	}
 	return &ColumnSet{
 		resultSet: resultSet{
@@ -49,13 +50,6 @@ func (c ColumnSet) Columns() ([]string, error) {
 		return []string{"Name", "Type", "Nullable", "Default"}, nil
 	}
 	return []string{"Catalog", "Schema", "Table", "Name", "Type", "Nullable", "Default", "Size", "Decimal Digits", "Precision Radix", "Octet Length", "Generated", "Identity"}, nil
-}
-
-func (c *ColumnSet) SetVerbose(v bool) {
-	c.verbose = v
-	for _, r := range c.results {
-		r.setVerbose(v)
-	}
 }
 
 type Column struct {
@@ -124,6 +118,7 @@ func NewTableSet(v []Table) *TableSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
+		r[i].setVerbose(true)
 	}
 	return &TableSet{
 		resultSet: resultSet{
@@ -138,10 +133,6 @@ func (t TableSet) Columns() ([]string, error) {
 		return []string{"Schema", "Name", "Type"}, nil
 	}
 	return []string{"Catalog", "Schema", "Name", "Type", "Size", "Comment"}, nil
-}
-
-func (t *TableSet) SetVerbose(v bool) {
-	t.verbose = v
 }
 
 type Table struct {
@@ -174,6 +165,7 @@ func NewSchemaSet(v []Schema) *SchemaSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
+		r[i].setVerbose(true)
 	}
 	return &SchemaSet{
 		resultSet: resultSet{
@@ -185,10 +177,6 @@ func NewSchemaSet(v []Schema) *SchemaSet {
 
 func (s SchemaSet) Columns() ([]string, error) {
 	return []string{"Schema", "Catalog"}, nil
-}
-
-func (s *SchemaSet) SetVerbose(v bool) {
-	s.verbose = v
 }
 
 type Schema struct {
@@ -215,6 +203,13 @@ type resultSet struct {
 type Result interface {
 	values() []interface{}
 	setVerbose(bool)
+}
+
+func (r *resultSet) SetVerbose(v bool) {
+	r.verbose = v
+	for _, rec := range r.results {
+		rec.setVerbose(v)
+	}
 }
 
 func (r *resultSet) Next() bool {
