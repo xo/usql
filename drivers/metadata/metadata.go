@@ -53,6 +53,10 @@ func (c ColumnSet) Columns() ([]string, error) {
 	return []string{"Catalog", "Schema", "Table", "Name", "Type", "Nullable", "Default", "Size", "Decimal Digits", "Precision Radix", "Octet Length", "Generated", "Identity"}, nil
 }
 
+func (c ColumnSet) Get() *Column {
+	return c.results[c.current-1].(*Column)
+}
+
 type Column struct {
 	verbose bool
 
@@ -136,6 +140,10 @@ func (t TableSet) Columns() ([]string, error) {
 	return []string{"Catalog", "Schema", "Name", "Type", "Size", "Comment"}, nil
 }
 
+func (t TableSet) Get() *Table {
+	return t.results[t.current-1].(*Table)
+}
+
 type Table struct {
 	verbose bool
 
@@ -178,6 +186,10 @@ func NewSchemaSet(v []Schema) *SchemaSet {
 
 func (s SchemaSet) Columns() ([]string, error) {
 	return []string{"Schema", "Catalog"}, nil
+}
+
+func (s SchemaSet) Get() *Schema {
+	return s.results[s.current-1].(*Schema)
 }
 
 type Schema struct {
