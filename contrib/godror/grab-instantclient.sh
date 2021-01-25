@@ -88,3 +88,15 @@ echo "$DATA" > $DEST/oci8.pc
 rm -f /etc/ld.so.conf.d/oracle-instantclient.conf
 echo "$DEST/instantclient_$DVER" | tee -a /etc/ld.so.conf.d/oracle-instantclient.conf
 ldconfig -v
+
+# write sqlnet.ora
+DATA=$(cat <<ENDSTR
+DIAG_ADR_ENABLED = OFF
+TRACE_LEVEL_CLIENT = OFF
+TRACE_DIRECTORY_CLIENT = /dev/null
+LOG_DIRECTORY_CLIENT = /dev/null
+LOG_FILE_CLIENT = /dev/null
+LOG_LEVEL_CLIENT = OFF
+ENDSTR
+)
+echo "$DATA" > $DEST/instantclient_${DVER}/network/admin/sqlnet.ora
