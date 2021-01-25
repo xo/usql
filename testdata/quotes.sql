@@ -1,8 +1,5 @@
--- clear prompt output
+-- echo all
 \set ECHO all
-\set PROMPT1 '# '
-\set PROMPT2 '# '
-\set PROMPT3 '# '
 -- conditional variables display FALSE when name is not set
 \unset foo
 \echo :{?foo}

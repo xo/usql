@@ -33,13 +33,13 @@ func (p *Params) GetRaw() string {
 // True indicates there are runes remaining in the command parameters to
 // process.
 func (p *Params) Get(f func(string, bool) (bool, string, error)) (bool, string, error) {
-	var ok bool
-	var quote rune
-	start, _ := findNonSpace(p.R, 0, p.Len)
-	i := start
+	i, _ := findNonSpace(p.R, 0, p.Len)
 	if i >= p.Len {
 		return false, "", nil
 	}
+	var ok bool
+	var quote rune
+	start := i
 loop:
 	for ; i < p.Len; i++ {
 		c, next := p.R[i], grab(p.R, i+1, p.Len)
