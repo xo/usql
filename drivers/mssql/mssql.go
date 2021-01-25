@@ -9,7 +9,6 @@ import (
 
 	mssql "github.com/denisenkom/go-mssqldb" // DRIVER: mssql
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -44,6 +43,5 @@ func init() {
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
-		NewMetadataReader: informationschema.New,
 	})
 }

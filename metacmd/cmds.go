@@ -586,8 +586,10 @@ func init() {
 			Desc:    "list tables, views, and sequences or describe table, view, sequence, or index,[NAME]",
 			Aliases: map[string]string{
 				"da[S+]": "list aggregates,[PATTERN]",
-				"df[S+]": "list [only agg/normal/procedures/trigger/window] functions,[PATTERN]",
+				"df[S+]": "list functions,[PATTERN]",
 				"dm[S+]": "list materialized views,[PATTERN]",
+				"dv[S+]": "list views,[PATTERN]",
+				"ds[S+]": "list sequences,[PATTERN]",
 				"dn[S+]": "list schemas,[PATTERN]",
 				"dt[S+]": "list tables,[PATTERN]",
 				"l[+]":   "list databases",
@@ -602,13 +604,16 @@ func init() {
 				name := strings.TrimRight(p.Name, "S+")
 				switch name {
 				case "d":
-					return m.DescribeTableDetails(p.Get(), verbose, showSystem)
+					pattern := p.Get()
+					if pattern != "" {
+						return m.DescribeTableDetails(pattern, verbose, showSystem)
+					}
+					return m.ListTables("tvs", pattern, verbose, showSystem)
 				case "da":
 					return m.DescribeAggregates(p.Get(), verbose, showSystem)
 				case "df":
 					return m.DescribeFunctions(name, p.Get(), verbose, showSystem)
-				case "dm":
-				case "dt":
+				case "dt", "dv", "dm", "ds":
 					return m.ListTables(name, p.Get(), verbose, showSystem)
 				case "dn":
 					return m.ListSchemas(p.Get(), verbose, showSystem)

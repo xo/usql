@@ -7,7 +7,7 @@ import (
 	"github.com/lib/pq" // DRIVER: postgres
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/informationschema"
+	"github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {

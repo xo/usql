@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-sql-driver/mysql" // DRIVER: mysql
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/informationschema"
+	"github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {

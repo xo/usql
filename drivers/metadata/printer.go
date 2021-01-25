@@ -39,6 +39,7 @@ func NewDefaultWriter(r Reader) func(db DB, w io.Writer) Writer {
 			typesMap: map[rune][]string{
 				't': {"TABLE", "BASE TABLE"},
 				'v': {"VIEW"},
+				's': {"SEQUENCE"},
 			},
 		}
 	}
@@ -51,6 +52,7 @@ func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bo
 
 // DescribeFunctions matching pattern
 func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, showSystem bool) error {
+	// TODO implement
 	return fmt.Errorf(text.NotSupportedByDriver, `\df`)
 }
 
@@ -60,7 +62,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	if err != nil {
 		return err
 	}
-	// TODO also describe: views, indexes, sequences
+	// TODO also describe: indexes and sequences - as table footer?
 	r, err := w.r.Columns("", sp, tp)
 	if err != nil {
 		return err
@@ -121,7 +123,7 @@ func parsePattern(pattern string) (string, string, error) {
 	// TODO do proper escaping, quoting etc
 	if strings.ContainsRune(pattern, '.') {
 		parts := strings.SplitN(pattern, ".", 2)
-		return parts[0], parts[1], nil
+		return strings.ReplaceAll(parts[0], "*", "%"), strings.ReplaceAll(parts[1], "*", "%"), nil
 	}
-	return "", pattern, nil
+	return "", strings.ReplaceAll(pattern, "*", "%"), nil
 }

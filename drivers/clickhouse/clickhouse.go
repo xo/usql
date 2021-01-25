@@ -8,7 +8,6 @@ import (
 
 	_ "github.com/ClickHouse/clickhouse-go" // DRIVER: clickhouse
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -17,6 +16,5 @@ func init() {
 		RowsAffected: func(sql.Result) (int64, error) {
 			return 0, nil
 		},
-		NewMetadataReader: informationschema.New,
 	})
 }
