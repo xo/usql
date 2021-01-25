@@ -1012,8 +1012,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		Err: h.l.Stderr(),
 		Pw:  h.l.Password,
 	}
-	p := New(h.l, h.user, filepath.Dir(path), h.nopw)
-	p.buf = stmt.New(l.Next)
+	p := New(l, h.user, filepath.Dir(path), h.nopw)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
 	err = p.Run()
