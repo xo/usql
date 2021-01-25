@@ -33,6 +33,6 @@ func init() {
 			}
 			return false
 		},
-		NewMetadataReader: informationschema.New,
+		NewMetadataReader: informationschema.New(informationschema.WithPlaceholder(func(int) string { return "?" })),
 	}, "memsql", "vitess", "tidb")
 }
