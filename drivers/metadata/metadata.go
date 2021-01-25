@@ -73,8 +73,6 @@ type Column struct {
 	NumPrecRadix    int
 	CharOctetLength int
 	IsNullable      Bool
-	IsGenerated     Bool
-	IsIdentity      Bool
 }
 
 type Bool string
@@ -106,8 +104,6 @@ func (c Column) values() []interface{} {
 		c.DecimalDigits,
 		c.NumPrecRadix,
 		c.CharOctetLength,
-		c.IsGenerated,
-		c.IsIdentity,
 	}
 }
 

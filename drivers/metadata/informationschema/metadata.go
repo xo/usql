@@ -10,18 +10,36 @@ import (
 
 type InformationSchema struct {
 	db drivers.DB
+	pf func(int) string
 }
 
 var _ metadata.Reader = &InformationSchema{}
 
-func New(db drivers.DB) metadata.Reader {
-	// TODO add options to make it work with dbs other than PostgreSQL, like MySQL (? as placeholders), Presto/Trino, MSSQL, ClickHouse
-	return &InformationSchema{
-		db: db,
+func New(opts ...Option) func(db drivers.DB) metadata.Reader {
+	s := &InformationSchema{
+		pf: func(n int) string { return fmt.Sprintf("$%d", n) },
+	}
+	for _, o := range opts {
+		o(s)
+	}
+
+	return func(db drivers.DB) metadata.Reader {
+		s.db = db
+		return s
+	}
+}
+
+type Option func(*InformationSchema)
+
+func WithPlaceholder(pf func(int) string) Option {
+	return func(s *InformationSchema) {
+		s.pf = pf
 	}
 }
 
 func (s InformationSchema) Columns(catalog, schema, table string) (*metadata.ColumnSet, error) {
+	// column_size does not include interval_precision which doesn't exist in MySQL
+	// numeric_precision_radix doesn't exist in MySQL so assume 10
 	qstr := `SELECT
   table_catalog,
   table_schema,
@@ -30,28 +48,26 @@ func (s InformationSchema) Columns(catalog, schema, table string) (*metadata.Col
   ordinal_position,
   data_type,
   COALESCE(column_default, ''),
-  COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0) AS column_size,
+  COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0) AS column_size,
   COALESCE(numeric_scale, 0),
-  COALESCE(numeric_precision_radix, 0),
+  10 AS numeric_precision_radix,
   COALESCE(character_octet_length, 0),
-  COALESCE(is_nullable, '') AS is_nullable,
-  COALESCE(is_generated, '') AS is_generated,
-  COALESCE(is_identity, '') AS is_identity
+  COALESCE(is_nullable, '') AS is_nullable
 FROM information_schema.columns
 `
 	conds := []string{}
 	vals := []interface{}{}
 	if catalog != "" {
 		vals = append(vals, catalog)
-		conds = append(conds, fmt.Sprintf("table_catalog = $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_catalog = %s", s.pf(len(vals))))
 	}
 	if schema != "" {
 		vals = append(vals, schema)
-		conds = append(conds, fmt.Sprintf("table_schema LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_schema LIKE %s", s.pf(len(vals))))
 	}
 	if table != "" {
 		vals = append(vals, table)
-		conds = append(conds, fmt.Sprintf("table_name LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_name LIKE %s", s.pf(len(vals))))
 	}
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
@@ -80,8 +96,6 @@ ORDER BY table_catalog, table_schema, table_name, ordinal_position`
 			&rec.NumPrecRadix,
 			&rec.CharOctetLength,
 			&rec.IsNullable,
-			&rec.IsGenerated,
-			&rec.IsIdentity,
 		)
 		if err != nil {
 			return nil, err
@@ -106,15 +120,15 @@ FROM information_schema.tables
 	vals := []interface{}{}
 	if catalog != "" {
 		vals = append(vals, catalog)
-		conds = append(conds, fmt.Sprintf("table_catalog = $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_catalog = %s", s.pf(len(vals))))
 	}
 	if schemaPattern != "" {
 		vals = append(vals, schemaPattern)
-		conds = append(conds, fmt.Sprintf("table_schema LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_schema LIKE %s", s.pf(len(vals))))
 	}
 	if tableNamePattern != "" {
 		vals = append(vals, tableNamePattern)
-		conds = append(conds, fmt.Sprintf("table_name LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("table_name LIKE %s", s.pf(len(vals))))
 	}
 	addSequences := false
 	if len(types) != 0 {
@@ -125,7 +139,7 @@ FROM information_schema.tables
 				continue
 			}
 			vals = append(vals, t)
-			pholders = append(pholders, fmt.Sprintf("$%d", len(vals)))
+			pholders = append(pholders, s.pf(len(vals)))
 		}
 		if len(pholders) != 0 {
 			conds = append(conds, "table_type IN ("+strings.Join(pholders, ", ")+")")
@@ -147,15 +161,15 @@ FROM information_schema.sequences
 		conds = []string{}
 		if catalog != "" {
 			vals = append(vals, catalog)
-			conds = append(conds, fmt.Sprintf("sequence_catalog = $%d", len(vals)))
+			conds = append(conds, fmt.Sprintf("sequence_catalog = %s", s.pf(len(vals))))
 		}
 		if schemaPattern != "" {
 			vals = append(vals, schemaPattern)
-			conds = append(conds, fmt.Sprintf("sequence_schema LIKE $%d", len(vals)))
+			conds = append(conds, fmt.Sprintf("sequence_schema LIKE %s", s.pf(len(vals))))
 		}
 		if tableNamePattern != "" {
 			vals = append(vals, tableNamePattern)
-			conds = append(conds, fmt.Sprintf("sequence_name LIKE $%d", len(vals)))
+			conds = append(conds, fmt.Sprintf("sequence_name LIKE %s", s.pf(len(vals))))
 		}
 		if len(conds) != 0 {
 			qstr += " WHERE " + strings.Join(conds, " AND ")
