@@ -186,8 +186,8 @@ ORDER BY table_catalog, table_schema, table_type, table_name`
 
 func (s InformationSchema) Schemas() (*metadata.SchemaSet, error) {
 	qstr := `SELECT
-  catalog_name,
-  schema_name
+  schema_name,
+  catalog_name
 FROM information_schema.schemata
 ORDER BY catalog_name, schema_name`
 	rows, err := s.db.Query(qstr)
