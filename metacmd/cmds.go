@@ -582,35 +582,38 @@ func init() {
 		},
 		Describe: {
 			Section: SectionInformational,
-			Name:    "d",
+			Name:    "d[S+]",
 			Desc:    "list tables, views, and sequences or describe table, view, sequence, or index,[NAME]",
 			Aliases: map[string]string{
-				"da": "list aggregates,[PATTERN]",
-				"df": "list [only agg/normal/procedures/trigger/window] functions,[PATTERN]",
-				"dm": "list materialized views,[PATTERN]",
-				"dn": "list schemas,[PATTERN]",
-				"dt": "list tables,[PATTERN]",
-				"l":  "list databases",
+				"da[S+]": "list aggregates,[PATTERN]",
+				"df[S+]": "list [only agg/normal/procedures/trigger/window] functions,[PATTERN]",
+				"dm[S+]": "list materialized views,[PATTERN]",
+				"dn[S+]": "list schemas,[PATTERN]",
+				"dt[S+]": "list tables,[PATTERN]",
+				"l[+]":   "list databases",
 			},
 			Process: func(p *Params) error {
 				m, err := drivers.NewMetadataWriter(p.Handler.URL(), p.Handler.DB(), p.Handler.IO().Stdout())
 				if err != nil {
 					return err
 				}
-				switch p.Name {
+				verbose := strings.ContainsRune(p.Name, '+')
+				showSystem := strings.ContainsRune(p.Name, 'S')
+				name := strings.TrimRight(p.Name, "S+")
+				switch name {
 				case "d":
-					return m.DescribeTableDetails(p.Get(), false, false)
+					return m.DescribeTableDetails(p.Get(), verbose, showSystem)
 				case "da":
-					return m.DescribeAggregates(p.Get(), false, false)
+					return m.DescribeAggregates(p.Get(), verbose, showSystem)
 				case "df":
-					return m.DescribeFunctions(p.Name, p.Get(), false, false)
+					return m.DescribeFunctions(name, p.Get(), verbose, showSystem)
 				case "dm":
 				case "dt":
-					return m.ListTables(p.Name, p.Get(), false, false)
+					return m.ListTables(name, p.Get(), verbose, showSystem)
 				case "dn":
-					return m.ListSchemas(p.Get(), false, false)
+					return m.ListSchemas(p.Get(), verbose, showSystem)
 				case "l":
-					return m.ListAllDbs(p.Get(), false)
+					return m.ListAllDbs(p.Get(), verbose)
 				}
 				return nil
 			},
@@ -624,8 +627,29 @@ func init() {
 		if mc == None {
 			continue
 		}
-		cmdMap[c.Name] = mc
+		name := c.Name
+		if pos := strings.IndexRune(name, '['); pos != -1 {
+			mods := strings.TrimRight(name[pos+1:], "]")
+			name = name[:pos]
+			cmdMap[name+mods] = mc
+			if len(mods) > 1 {
+				for _, r := range mods {
+					cmdMap[name+string(r)] = mc
+				}
+			}
+		}
+		cmdMap[name] = mc
 		for alias := range c.Aliases {
+			if pos := strings.IndexRune(alias, '['); pos != -1 {
+				mods := strings.TrimRight(alias[pos+1:], "]")
+				alias = alias[:pos]
+				cmdMap[alias+mods] = mc
+				if len(mods) > 1 {
+					for _, r := range mods {
+						cmdMap[alias+string(r)] = mc
+					}
+				}
+			}
 			cmdMap[alias] = mc
 		}
 		sectMap[c.Section] = append(sectMap[c.Section], mc)
