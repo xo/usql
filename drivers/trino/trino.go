@@ -8,7 +8,6 @@ import (
 
 	_ "github.com/trinodb/trino-go-client/trino" // DRIVER: trino
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/informationschema"
 )
 
 func init() {
@@ -30,6 +29,5 @@ func init() {
 			}
 			return "Trino " + ver, nil
 		},
-		NewMetadataReader: informationschema.New,
 	})
 }

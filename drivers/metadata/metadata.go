@@ -6,6 +6,7 @@ import (
 
 // Reader of database metadata.
 type Reader interface {
+	// TODO implement Indexes, Functions, Sequences
 	Columns(catalog, schema, table string) (*ColumnSet, error)
 	Tables(catalog, schemaPattern, tableNamePattern string, types []string) (*TableSet, error)
 	Schemas() (*SchemaSet, error)
