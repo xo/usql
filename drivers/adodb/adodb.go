@@ -1,3 +1,6 @@
+// Package adodb defines and registers usql's ADODB driver. Requires CGO.
+//
+// See: https://github.com/mattn/go-adodb
 package adodb
 
 import (

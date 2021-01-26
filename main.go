@@ -1,3 +1,4 @@
+// Command usql is the universal command-line interface for SQL databases.
 package main
 
 //go:generate ./gen-license.sh

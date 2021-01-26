@@ -1,3 +1,6 @@
+// Package athena defines and registers usql's AWS Athena driver.
+//
+// See: https://github.com/uber/athenadriver
 package athena
 
 import (

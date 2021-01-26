@@ -1,3 +1,6 @@
+// Package avatica defines and registers usql's Apache Avatica driver.
+//
+// See: https://github.com/apache/calcite-avatica-go
 package avatica
 
 import (

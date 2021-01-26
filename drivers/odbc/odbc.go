@@ -1,3 +1,7 @@
+// Package odbc defines and registers usql's ODBC driver. Requires CGO. Uses
+// respective platform's standard ODBC packages.
+//
+// See: https://github.com/alexbrainman/odbc
 package odbc
 
 import (

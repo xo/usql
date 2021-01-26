@@ -1,3 +1,5 @@
+// Package drivers handles the registration, default implementation, and
+// handles hooks for registered usql database drivers.
 package drivers
 
 import (

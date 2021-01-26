@@ -1,3 +1,5 @@
+// Package metacmd contains meta information and implentation for usql's
+// backslash (\) commands.
 package metacmd
 
 import (

@@ -1,3 +1,6 @@
+// Package oracle defines and registers usql's Oracle Database driver.
+//
+// See: https://github.com/sijms/go-ora
 package oracle
 
 import (

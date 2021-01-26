@@ -1,3 +1,6 @@
+// Package postgres defines and registers usql's PostgreSQL driver.
+//
+// See: https://github.com/lib/pq
 package postgres
 
 import (

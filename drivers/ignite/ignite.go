@@ -1,3 +1,6 @@
+// Package ignite defines and registers usql's Apache Ignite driver.
+//
+// See: https://github.com/amsokol/ignite-go-client
 package ignite
 
 import (

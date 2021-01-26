@@ -1,3 +1,6 @@
+// Package mssql defines and registers usql's Microsoft SQL Server driver.
+//
+// See: https://github.com/denisenkom/go-mssqldb
 package mssql
 
 import (

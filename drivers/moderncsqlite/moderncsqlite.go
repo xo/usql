@@ -1,3 +1,7 @@
+// Package moderncsqlite defines and registers usql's ModernC SQLite3 driver, a
+// transpilation of SQLite3 to pure Go.
+//
+// See: https://gitlab.com/cznic/sqlite
 package moderncsqlite
 
 import (

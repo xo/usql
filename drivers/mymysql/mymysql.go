@@ -1,3 +1,6 @@
+// Package mymysql defines and registers usql's MySQL MyMySQL driver.
+//
+// See: https://github.com/ziutek/mymysql
 package mymysql
 
 import (

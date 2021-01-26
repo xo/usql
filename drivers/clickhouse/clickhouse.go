@@ -1,3 +1,6 @@
+// Package clickhouse defines and registers usql's ClickHouse driver.
+//
+// See: https://github.com/ClickHouse/clickhouse-go
 package clickhouse
 
 import (

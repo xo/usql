@@ -1,3 +1,4 @@
+// Package rline provides a readline implementation for usql.
 package rline
 
 import (

@@ -1,3 +1,5 @@
+// Package env contains runtime environment variables for usql, along with
+// various helper funcs to determine the user's configuration.
 package env
 
 import (

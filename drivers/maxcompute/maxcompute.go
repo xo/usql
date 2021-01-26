@@ -1,3 +1,6 @@
+// Package maxcompute defines and registers usql's Alibaba MaxCompute driver.
+//
+// See: https://github.com/sql-machine-learning/gomaxcompute
 package maxcompute
 
 import (

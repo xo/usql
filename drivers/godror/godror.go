@@ -1,3 +1,7 @@
+// Package godror defines and registers usql's GO DRiver for ORacle. Requires
+// CGO. Uses Oracle's ODPI-C (instant client) library.
+//
+// See: https://github.com/godror/godror
 package godror
 
 import (

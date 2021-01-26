@@ -1,3 +1,6 @@
+// Package ql defines and registers usql's Cznic QL driver.
+//
+// See: https://gitlab.com/cznic/ql
 package ql
 
 import (

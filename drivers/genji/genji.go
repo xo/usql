@@ -1,3 +1,6 @@
+// Package genji defines and registers usql's Genji driver.
+//
+// See: https://github.com/genjidb/genji
 package genji
 
 import (

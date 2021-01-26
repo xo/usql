@@ -1,3 +1,5 @@
+// Package text contains the text (and eventually translations) for the usql
+// application.
 package text
 
 import (

@@ -1,3 +1,6 @@
+// Package trino defines and registers usql's Trino driver.
+//
+// See: https://github.com/trinodb/trino-go-client
 package trino
 
 import (

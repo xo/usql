@@ -1,3 +1,6 @@
+// Package mysql defines and registers usql's MySQL driver.
+//
+// See: https://github.com/go-sql-driver/mysql
 package mysql
 
 import (

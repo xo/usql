@@ -1,3 +1,6 @@
+// Package pgx defines and registers usql's PostgreSQL PGX driver.
+//
+// See: https://github.com/jackc/pgx
 package pgx
 
 import (

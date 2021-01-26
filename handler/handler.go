@@ -1,3 +1,4 @@
+// Package handler provides a input process handler implementation for usql.
 package handler
 
 import (
@@ -31,6 +32,13 @@ import (
 )
 
 // Handler is a input process handler.
+//
+// Glues together usql's components to provide a "read-eval-print loop" (REPL)
+// for usql's interactive command-line and manages most of the core/high-level logic.
+//
+// Manages the active statement buffer, application IO, executing/querying SQL
+// statements, and handles backslash (\) commands encountered in the input
+// stream.
 type Handler struct {
 	l    rline.IO
 	user *user.User

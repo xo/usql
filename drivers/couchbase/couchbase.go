@@ -1,3 +1,6 @@
+// Package couchbase defines and registers usql's Couchbase (n1ql) driver.
+//
+// See: https://github.com/couchbase/go_n1ql
 package couchbase
 
 import (
