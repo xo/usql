@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/informationschema"
 	_ "github.com/xo/usql/drivers/postgres"
 )
@@ -125,7 +126,7 @@ func TestSchemas(t *testing.T) {
 		"my": "information_schema, mysql, performance_schema, sakila, sys",
 	}
 	for dbName, db := range dbs {
-		r := informationschema.New(db.Opts...)(db.DB)
+		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
 		result, err := r.Schemas()
 		if err != nil {
@@ -153,7 +154,7 @@ func TestTables(t *testing.T) {
 		"my": "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
 	}
 	for dbName, db := range dbs {
-		r := informationschema.New(db.Opts...)(db.DB)
+		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
 		result, err := r.Tables("", schemas[dbName], "", []string{"BASE TABLE", "TABLE", "VIEW"})
 		if err != nil {
@@ -181,7 +182,7 @@ func TestColumns(t *testing.T) {
 		"my": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
 	}
 	for dbName, db := range dbs {
-		r := informationschema.New(db.Opts...)(db.DB)
+		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
 		result, err := r.Columns("", schemas[dbName], "film%")
 		if err != nil {
