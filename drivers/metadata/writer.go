@@ -72,9 +72,7 @@ func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bo
 	defer res.Close()
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	return tblfmt.EncodeAll(w.w, res, params)
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 // DescribeFunctions matching pattern
@@ -116,9 +114,7 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	}
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	return tblfmt.EncodeAll(w.w, res, params)
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
@@ -185,9 +181,7 @@ func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem b
 	defer res.Close()
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	err = tblfmt.EncodeAll(w.w, res, params)
+	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
 	}
@@ -249,10 +243,8 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 		return nil
 	}
 
-	params := env.All()
-	params["format"] = "aligned"
 	// TODO footer should say which table this sequence belongs to
-	err = tblfmt.EncodeAll(w.w, res, params)
+	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
 	}
@@ -272,10 +264,8 @@ func (w DefaultWriter) describeIndexes(sp, tp string, verbose, showSystem bool) 
 		return nil
 	}
 
-	params := env.All()
-	params["format"] = "aligned"
 	// TODO footer should say if it's primary, index type and which table this index belongs to
-	err = tblfmt.EncodeAll(w.w, res, params)
+	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
 	}
@@ -315,9 +305,7 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 	}
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	return tblfmt.EncodeAll(w.w, res, params)
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 // ListSchemas matching pattern
@@ -334,9 +322,7 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	defer res.Close()
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	return tblfmt.EncodeAll(w.w, res, params)
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 // ListIndexes matching pattern
@@ -360,9 +346,7 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 	}
 
 	res.SetVerbose(verbose)
-	params := env.All()
-	params["format"] = "aligned"
-	return tblfmt.EncodeAll(w.w, res, params)
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 func parsePattern(pattern string) (string, string, error) {

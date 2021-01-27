@@ -319,6 +319,7 @@ ORDER BY routine_catalog, routine_schema, routine_type, routine_name`
 func (s InformationSchema) FunctionColumns(catalog, schema, function string) (*metadata.FunctionColumnSet, error) {
 	// column_size does not include interval_precision which doesn't exist in MySQL
 	// numeric_precision_radix doesn't exist in MySQL so assume 10
+	// TODO concat column size and numeric scale to data_type
 	qstr := `SELECT
   specific_catalog,
   specific_schema,
