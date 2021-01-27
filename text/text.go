@@ -86,6 +86,7 @@ var (
 	InvalidValue = `invalid -%s value %q: %s`
 
 	NotSupportedByDriver = `%s not supported by driver`
+	RelationNotFound     = `Did not find any relation named \"%s\".`
 )
 
 func init() {

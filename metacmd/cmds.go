@@ -592,6 +592,7 @@ func init() {
 				"ds[S+]": "list sequences,[PATTERN]",
 				"dn[S+]": "list schemas,[PATTERN]",
 				"dt[S+]": "list tables,[PATTERN]",
+				"di[S+]": "list indexes,[PATTERN]",
 				"l[+]":   "list databases",
 			},
 			Process: func(p *Params) error {
@@ -602,23 +603,28 @@ func init() {
 				verbose := strings.ContainsRune(p.Name, '+')
 				showSystem := strings.ContainsRune(p.Name, 'S')
 				name := strings.TrimRight(p.Name, "S+")
+				pattern, err := p.Get(false)
+				if err != nil {
+					return err
+				}
 				switch name {
 				case "d":
-					pattern := p.Get()
 					if pattern != "" {
 						return m.DescribeTableDetails(pattern, verbose, showSystem)
 					}
 					return m.ListTables("tvs", pattern, verbose, showSystem)
 				case "da":
-					return m.DescribeAggregates(p.Get(), verbose, showSystem)
+					return m.DescribeAggregates(pattern, verbose, showSystem)
 				case "df":
-					return m.DescribeFunctions(name, p.Get(), verbose, showSystem)
+					return m.DescribeFunctions(name, pattern, verbose, showSystem)
 				case "dt", "dv", "dm", "ds":
-					return m.ListTables(name, p.Get(), verbose, showSystem)
+					return m.ListTables(name, pattern, verbose, showSystem)
 				case "dn":
-					return m.ListSchemas(p.Get(), verbose, showSystem)
+					return m.ListSchemas(pattern, verbose, showSystem)
+				case "di":
+					return m.ListIndexes(pattern, verbose, showSystem)
 				case "l":
-					return m.ListAllDbs(p.Get(), verbose)
+					return m.ListAllDbs(pattern, verbose)
 				}
 				return nil
 			},

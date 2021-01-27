@@ -47,6 +47,8 @@ func init() {
 			}
 			return false
 		},
-		NewMetadataReader: informationschema.New(),
+		NewMetadataReader: informationschema.New(
+			informationschema.WithIndexes(false),
+		),
 	}, "cockroachdb", "redshift")
 }
