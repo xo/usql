@@ -22,11 +22,12 @@ type DB interface {
 
 // DefaultWriter using an existing db introspector
 type DefaultWriter struct {
-	r          Reader
-	db         DB
-	w          io.Writer
-	tableTypes map[rune][]string
-	funcTypes  map[rune][]string
+	r             Reader
+	db            DB
+	w             io.Writer
+	tableTypes    map[rune][]string
+	funcTypes     map[rune][]string
+	systemSchemas map[string]struct{}
 }
 
 var _ Writer = &DefaultWriter{}
@@ -55,6 +56,19 @@ func NewDefaultWriter(r Reader) func(db DB, w io.Writer) Writer {
 	}
 }
 
+// Option to configure the DefaultWriter
+type Option func(*DefaultWriter)
+
+// WithSystemSchemas that are ignored unless showSystem is true
+func WithSystemSchemas(schemas []string) Option {
+	return func(w *DefaultWriter) {
+		w.systemSchemas = make(map[string]struct{}, len(schemas))
+		for _, s := range schemas {
+			w.systemSchemas[s] = struct{}{}
+		}
+	}
+}
+
 // DescribeAggregates matching pattern
 func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(FunctionReader)
@@ -71,13 +85,15 @@ func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bo
 	}
 	defer res.Close()
 
+	res.SetFilter(func(r Result) bool {
+		_, ok := w.systemSchemas[r.(*Function).Schema]
+		return !ok
+	})
 	res.SetVerbose(verbose)
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 // DescribeFunctions matching pattern
-// TODO does it make sense to implement showSystem for DefaultWriter? it would require
-// pushing it down to readers, which definitely would require configuration
 func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(FunctionReader)
 	if !ok {
@@ -99,6 +115,10 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	}
 	defer res.Close()
 
+	res.SetFilter(func(r Result) bool {
+		_, ok := w.systemSchemas[r.(*Function).Schema]
+		return !ok
+	})
 	// this is inefficient but multiple databases supporting information_schema
 	// aggregate strings in different ways (GROUP_CONCAT() vs string_agg/array_to_string(array_agg))
 	// TODO work around by making such expression generator an option, same as placeholder
@@ -146,10 +166,25 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 		return err
 	}
 
-	if _, ok := w.r.(ColumnReader); ok {
-		err = w.describeTableDetails(sp, tp, verbose, showSystem)
+	tr, isTR := w.r.(TableReader)
+	_, isCR := w.r.(ColumnReader)
+	if isTR && isCR {
+		res, err := tr.Tables("", sp, tp, []string{})
 		if err != nil {
 			return err
+		}
+		defer res.Close()
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Table).Schema]
+			return !ok
+		})
+		for res.Next() {
+			t := res.Get()
+			fmt.Fprintf(w.w, "%s \"%s.%s\"\n", t.Type, t.Schema, t.Name)
+			err = w.describeTableDetails(t.Schema, t.Name, verbose, showSystem)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -160,19 +195,34 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 		}
 	}
 
-	if _, ok := w.r.(IndexColumnReader); ok {
-		err = w.describeIndexes(sp, tp, verbose, showSystem)
+	ir, isIR := w.r.(IndexReader)
+	_, isICR := w.r.(IndexColumnReader)
+	if isIR && isICR {
+		res, err := ir.Indexes("", sp, tp)
 		if err != nil {
 			return err
 		}
+		defer res.Close()
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Index).Schema]
+			return !ok
+		})
+		for res.Next() {
+			i := res.Get()
+			fmt.Fprintf(w.w, "Index \"%s.%s\"\n", i.Schema, i.Name)
+			err = w.describeIndexes(i.Schema, i.Name, verbose, showSystem)
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	// TODO if no table, seq or index were found, should return this:
 	// fmt.Fprintf(w.w, text.RelationNotFound, pattern)
 	return nil
 }
 
 func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem bool) error {
-	// TODO first use TableReader to match tables, then describe each one separately
 	r := w.r.(ColumnReader)
 	res, err := r.Columns("", sp, tp)
 	if err != nil {
@@ -239,14 +289,19 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 		return err
 	}
 	defer res.Close()
-	if res.Len() == 0 {
-		return nil
-	}
 
-	// TODO footer should say which table this sequence belongs to
-	err = tblfmt.EncodeAll(w.w, res, env.Pall())
-	if err != nil {
-		return err
+	for res.Next() {
+		s := res.Get()
+		fmt.Fprintf(w.w, "Sequence \"%s.%s\"\n", s.Schema, s.Name)
+		// wrap current record into a separate recordSet
+		rows := NewSequenceSet([]Sequence{*s})
+		params := env.Pall()
+		params["footer"] = "off"
+		err = tblfmt.EncodeAll(w.w, rows, params)
+		if err != nil {
+			return err
+		}
+		// TODO footer should say which table this sequence belongs to
 	}
 
 	return nil
@@ -299,12 +354,17 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 		return err
 	}
 	defer res.Close()
+	res.SetFilter(func(r Result) bool {
+		_, ok := w.systemSchemas[r.(*Table).Schema]
+		return !ok
+	})
 	if res.Len() == 0 {
 		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
 		return nil
 	}
 
 	res.SetVerbose(verbose)
+	fmt.Fprintln(w.w, "List or relations")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -320,6 +380,10 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	}
 	defer res.Close()
 
+	res.SetFilter(func(r Result) bool {
+		_, ok := w.systemSchemas[r.(*Schema).Schema]
+		return !ok
+	})
 	res.SetVerbose(verbose)
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
@@ -339,6 +403,11 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 		return err
 	}
 	defer res.Close()
+
+	res.SetFilter(func(r Result) bool {
+		_, ok := w.systemSchemas[r.(*Index).Schema]
+		return !ok
+	})
 	if res.Len() == 0 {
 		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
 		return nil

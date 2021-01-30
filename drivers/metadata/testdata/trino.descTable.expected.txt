@@ -1,0 +1,126 @@
+BASE TABLE "sf1.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf1    | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1    | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf100.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf100  | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100  | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf1000.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf1000 | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf1000 | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf10000.orders"
+ Catalog | Schema  | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+---------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf10000 | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf10000 | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf100000.orders"
+ Catalog | Schema   | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+----------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf100000 | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf100000 | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf300.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf300  | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf300  | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf3000.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf3000 | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf3000 | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "sf30000.orders"
+ Catalog | Schema  | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+---------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | sf30000 | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | sf30000 | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+
+BASE TABLE "tiny.orders"
+ Catalog | Schema | Table  | Name          | Type        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+---------+--------+--------+---------------+-------------+----------+---------+------+----------------+-----------------+--------------
+ tpch    | tiny   | orders | orderkey      | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | custkey       | bigint      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | orderstatus   | varchar(1)  | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | totalprice    | double      | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | orderdate     | date        | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | orderpriority | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | clerk         | varchar(15) | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | shippriority  | integer     | "YES"    |         |    0 |              0 |               0 |            0 
+ tpch    | tiny   | orders | comment       | varchar(79) | "YES"    |         |    0 |              0 |               0 |            0 
+(9 rows)
+

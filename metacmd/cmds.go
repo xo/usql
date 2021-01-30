@@ -612,7 +612,7 @@ func init() {
 					if pattern != "" {
 						return m.DescribeTableDetails(pattern, verbose, showSystem)
 					}
-					return m.ListTables("tvs", pattern, verbose, showSystem)
+					return m.ListTables("tvmsE", pattern, verbose, showSystem)
 				case "da":
 					return m.DescribeAggregates(pattern, verbose, showSystem)
 				case "df":

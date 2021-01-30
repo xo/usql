@@ -1,0 +1,10 @@
+List or relations
+ Catalog  | Schema | Name             | Type       | Size | Comment 
+----------+--------+------------------+------------+------+---------
+ postgres | public | film             | BASE TABLE |      |         
+ postgres | public | film_actor       | BASE TABLE |      |         
+ postgres | public | film_category    | BASE TABLE |      |         
+ postgres | public | film_film_id_seq | SEQUENCE   |      |         
+ postgres | public | film_list        | VIEW       |      |         
+(5 rows)
+
