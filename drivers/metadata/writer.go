@@ -314,11 +314,10 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\d`)
 	}
-	res, err := r.Schemas()
+	res, err := r.Schemas("", pattern)
 	if err != nil {
 		return err
 	}
-	// TODO do pattern matching locally or add paterns to Schemas()
 	defer res.Close()
 
 	res.SetVerbose(verbose)
