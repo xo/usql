@@ -28,31 +28,41 @@ type DefaultWriter struct {
 	tableTypes    map[rune][]string
 	funcTypes     map[rune][]string
 	systemSchemas map[string]struct{}
+
+	// custom functions for easier overloading
+	listAllDbs func(string, bool) error
 }
 
 var _ Writer = &DefaultWriter{}
 
-func NewDefaultWriter(r Reader) func(db DB, w io.Writer) Writer {
+func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer {
+	defaultWriter := &DefaultWriter{
+		r: r,
+		tableTypes: map[rune][]string{
+			't': {"TABLE", "BASE TABLE"},
+			'v': {"VIEW"},
+			'm': {"MATERIALIZED VIEW"},
+			's': {"SEQUENCE"},
+		},
+		funcTypes: map[rune][]string{
+			'a': {"AGGREGATE"},
+			'f': {"FUNCTION"},
+			'n': {"FUNCTION"},
+			'p': {"PROCEDURE"},
+			't': {"TRIGGER"},
+			'w': {"WINDOW"},
+		},
+		systemSchemas: map[string]struct{}{
+			"information_schema": struct{}{},
+		},
+	}
+	for _, o := range opts {
+		o(defaultWriter)
+	}
 	return func(db DB, w io.Writer) Writer {
-		return &DefaultWriter{
-			r:  r,
-			db: db,
-			w:  w,
-			tableTypes: map[rune][]string{
-				't': {"TABLE", "BASE TABLE"},
-				'v': {"VIEW"},
-				'm': {"MATERIALIZED VIEW"},
-				's': {"SEQUENCE"},
-			},
-			funcTypes: map[rune][]string{
-				'a': {"AGGREGATE"},
-				'f': {"FUNCTION"},
-				'n': {"FUNCTION"},
-				'p': {"PROCEDURE"},
-				't': {"TRIGGER"},
-				'w': {"WINDOW"},
-			},
-		}
+		defaultWriter.db = db
+		defaultWriter.w = w
+		return defaultWriter
 	}
 }
 
@@ -66,6 +76,13 @@ func WithSystemSchemas(schemas []string) Option {
 		for _, s := range schemas {
 			w.systemSchemas[s] = struct{}{}
 		}
+	}
+}
+
+// WithListAllDbs that lists all catalogs
+func WithListAllDbs(f func(string, bool) error) Option {
+	return func(w *DefaultWriter) {
+		w.listAllDbs = f
 	}
 }
 
@@ -330,7 +347,10 @@ func (w DefaultWriter) describeIndexes(sp, tp string, verbose, showSystem bool) 
 
 // ListAllDbs matching pattern
 func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
-	return fmt.Errorf(text.NotSupportedByDriver, `\l`)
+	if w.listAllDbs == nil {
+		return fmt.Errorf(text.NotSupportedByDriver, `\l`)
+	}
+	return w.listAllDbs(pattern, verbose)
 }
 
 // ListTables matching pattern
