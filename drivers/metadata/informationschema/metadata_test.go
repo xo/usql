@@ -1,7 +1,11 @@
+// Package informationschema_test runs integration tests for informationschema package
+// on real databases running in containers. During development, to avoid rebuilding
+// containers every run, add the `-cleanup=false` flags when calling `go test`.
 package informationschema_test
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +15,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
+	_ "github.com/trinodb/trino-go-client/trino"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/informationschema"
 	_ "github.com/xo/usql/drivers/postgres"
@@ -62,10 +67,29 @@ var (
 				informationschema.WithPlaceholder(func(int) string { return "?" }),
 			},
 		},
+		"tr": {
+			BuildArgs: []dc.BuildArg{
+				{Name: "BASE_IMAGE", Value: "trinodb/trino:351"},
+			},
+			RunOptions: &dt.RunOptions{
+				Name: "usql-trino",
+			},
+			Driver:     "trino",
+			URL:        "http://test@localhost:%s?catalog=tpch&schema=sf1",
+			DockerPort: "8080/tcp",
+			Opts: []informationschema.Option{
+				informationschema.WithTypeDetails(false),
+				informationschema.WithPlaceholder(func(int) string { return "?" }),
+			},
+		},
 	}
+	cleanup bool
 )
 
 func TestMain(m *testing.M) {
+	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
+	flag.Parse()
+
 	pool, err := dt.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -111,9 +135,11 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// You can't defer this because os.Exit doesn't care for defer
-	for _, db := range dbs {
-		if err := pool.Purge(db.Resource); err != nil {
-			log.Fatal("Could not purge resource: ", err)
+	if cleanup {
+		for _, db := range dbs {
+			if err := pool.Purge(db.Resource); err != nil {
+				log.Fatal("Could not purge resource: ", err)
+			}
 		}
 	}
 
@@ -124,11 +150,12 @@ func TestSchemas(t *testing.T) {
 	expected := map[string]string{
 		"pg": "information_schema, pg_catalog, pg_toast, public",
 		"my": "information_schema, mysql, performance_schema, sakila, sys",
+		"tr": "information_schema, sf1, sf100, sf1000, sf10000, sf100000, sf300, sf3000, sf30000, tiny",
 	}
 	for dbName, db := range dbs {
 		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
-		result, err := r.Schemas()
+		result, err := r.Schemas("", "")
 		if err != nil {
 			log.Fatalf("Could not read %s schemas: %v", dbName, err)
 		}
@@ -139,7 +166,7 @@ func TestSchemas(t *testing.T) {
 		}
 		actual := strings.Join(names, ", ")
 		if actual != expected[dbName] {
-			t.Errorf("Wrong %s schema names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
+			t.Errorf("Wrong %s schema names, expected:\n  %v\ngot:\n  %v", dbName, expected[dbName], names)
 		}
 	}
 }
@@ -148,10 +175,12 @@ func TestTables(t *testing.T) {
 	schemas := map[string]string{
 		"pg": "public",
 		"my": "sakila",
+		"tr": "sf1",
 	}
 	expected := map[string]string{
 		"pg": "actor, address, category, city, country, customer, film, film_actor, film_category, inventory, language, payment, payment_p2007_01, payment_p2007_02, payment_p2007_03, payment_p2007_04, payment_p2007_05, payment_p2007_06, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
 		"my": "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
+		"tr": "customer, lineitem, nation, orders, part, partsupp, region, supplier",
 	}
 	for dbName, db := range dbs {
 		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
@@ -167,7 +196,7 @@ func TestTables(t *testing.T) {
 		}
 		actual := strings.Join(names, ", ")
 		if actual != expected[dbName] {
-			t.Errorf("Wrong %s table names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
+			t.Errorf("Wrong %s table names, expected:\n  %v\ngot:\n  %v", dbName, expected[dbName], names)
 		}
 	}
 }
@@ -176,15 +205,22 @@ func TestColumns(t *testing.T) {
 	schemas := map[string]string{
 		"pg": "public",
 		"my": "sakila",
+		"tr": "sf1",
+	}
+	tables := map[string]string{
+		"pg": "film%",
+		"my": "film%",
+		"tr": "orders",
 	}
 	expected := map[string]string{
 		"pg": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update, special_features, fulltext, actor_id, film_id, last_update, film_id, category_id, last_update, fid, title, description, category, price, length, rating, actors",
 		"my": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
+		"tr": "orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority, clerk, shippriority, comment",
 	}
 	for dbName, db := range dbs {
 		r := informationschema.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
-		result, err := r.Columns("", schemas[dbName], "film%")
+		result, err := r.Columns("", schemas[dbName], tables[dbName])
 		if err != nil {
 			log.Fatalf("Could not read %s columns: %v", dbName, err)
 		}
@@ -195,7 +231,7 @@ func TestColumns(t *testing.T) {
 		}
 		actual := strings.Join(names, ", ")
 		if actual != expected[dbName] {
-			t.Errorf("Wrong %s column names, expected:\n  %v, got:\n  %v", expected[dbName], expected, names)
+			t.Errorf("Wrong %s column names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
 		}
 	}
 }

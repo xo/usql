@@ -26,49 +26,49 @@ type BasicReader interface {
 // SchemaReader lists database schemas.
 type SchemaReader interface {
 	Reader
-	Schemas() (*SchemaSet, error)
+	Schemas(catalog, schemaPattern string) (*SchemaSet, error)
 }
 
 // TableReader lists database tables.
 type TableReader interface {
 	Reader
-	Tables(catalog, schemaPattern, tableNamePattern string, types []string) (*TableSet, error)
+	Tables(catalog, schemaPattern, namePattern string, types []string) (*TableSet, error)
 }
 
 // ColumnReader lists table columns.
 type ColumnReader interface {
 	Reader
-	Columns(catalog, schema, table string) (*ColumnSet, error)
+	Columns(catalog, schemaPattern, tablePattern string) (*ColumnSet, error)
 }
 
 // IndexReader lists database indexes.
 type IndexReader interface {
 	Reader
-	Indexes(catalog, schema, namePattern string) (*IndexSet, error)
+	Indexes(catalog, schemaPattern, namePattern string) (*IndexSet, error)
 }
 
 // IndexColumnReader lists database indexes.
 type IndexColumnReader interface {
 	Reader
-	IndexColumns(catalog, schema, index string) (*IndexColumnSet, error)
+	IndexColumns(catalog, schemaPattern, indexPattern string) (*IndexColumnSet, error)
 }
 
 // FunctionReader lists database functions.
 type FunctionReader interface {
 	Reader
-	Functions(catalog, schema, namePattern string, types []string) (*FunctionSet, error)
+	Functions(catalog, schemaPattern, namePattern string, types []string) (*FunctionSet, error)
 }
 
 // FunctionColumnReader lists function parameters.
 type FunctionColumnReader interface {
 	Reader
-	FunctionColumns(catalog, schema, function string) (*FunctionColumnSet, error)
+	FunctionColumns(catalog, schemaPattern, functionPattern string) (*FunctionColumnSet, error)
 }
 
 // SequenceReader lists sequences.
 type SequenceReader interface {
 	Reader
-	Sequences(catalog, schema, function string) (*SequenceSet, error)
+	Sequences(catalog, schemaPattern, namePattern string) (*SequenceSet, error)
 }
 
 // Reader of any database metadata in a structured format.
