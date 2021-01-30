@@ -1,6 +1,7 @@
 /usql
 /usql.exe
 /build/
+/coverage.out
 
 .usql_history*
 .[a-f0-9]*
