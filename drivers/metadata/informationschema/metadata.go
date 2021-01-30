@@ -83,8 +83,8 @@ func WithSequences(seq bool) Option {
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
 func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) (*metadata.ColumnSet, error) {
-	// column_size does not include interval_precision which doesn't exist in MySQL
-	// numeric_precision_radix doesn't exist in MySQL so assume 10
+	// TODO column_size does not include interval_precision which doesn't exist in MySQL
+	// TODO numeric_precision_radix doesn't exist in MySQL so assume 10 - this is wrong!
 	columns := []string{
 		"table_catalog",
 		"table_schema",
@@ -311,7 +311,7 @@ func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string,
   routine_catalog,
   routine_schema,
   routine_name,
-  routine_type,
+  COALESCE(routine_type, ''),
   data_type,
   routine_definition,
   COALESCE(external_language, routine_body) AS language,
@@ -387,9 +387,8 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
 		return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
 	}
 
-	// column_size does not include interval_precision which doesn't exist in MySQL
-	// numeric_precision_radix doesn't exist in MySQL so assume 10
-	// TODO concat column size and numeric scale to data_type?
+	// TODO column_size does not include interval_precision which doesn't exist in MySQL
+	// TODO numeric_precision_radix doesn't exist in MySQL so assume 10 - this is wrong!
 	qstr := `SELECT
   specific_catalog,
   specific_schema,
@@ -532,7 +531,7 @@ func (s InformationSchema) IndexColumns(catalog, schemaPattern, indexPattern str
   i.index_name,
   i.column_name,
   c.data_type,
-  i.seq_in_index,
+  i.seq_in_index
 
 FROM information_schema.statistics i
 JOIN information_schema.columns c ON
