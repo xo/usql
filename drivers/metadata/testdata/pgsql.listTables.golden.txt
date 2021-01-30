@@ -1,0 +1,10 @@
+                List of relations
+ Schema |       Name       |   Type   |  Owner   
+--------+------------------+----------+----------
+ public | film             | table    | postgres
+ public | film_actor       | table    | postgres
+ public | film_category    | table    | postgres
+ public | film_film_id_seq | sequence | postgres
+ public | film_list        | view     | postgres
+(5 rows)
+

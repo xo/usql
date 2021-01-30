@@ -1,0 +1,53 @@
+BASE TABLE "public.film"
+ Catalog  | Schema | Table | Name                 | Type                        | Nullable | Default                               | Size | Decimal Digits | Precision Radix | Octet Length 
+----------+--------+-------+----------------------+-----------------------------+----------+---------------------------------------+------+----------------+-----------------+--------------
+ postgres | public | film  | film_id              | integer                     | "NO"     | nextval('film_film_id_seq'::regclass) |   32 |              0 |              10 |            0 
+ postgres | public | film  | title                | character varying           | "NO"     |                                       |  255 |              0 |              10 |         1020 
+ postgres | public | film  | description          | text                        | "YES"    |                                       |    0 |              0 |              10 |   1073741824 
+ postgres | public | film  | release_year         | integer                     | "YES"    |                                       |   32 |              0 |              10 |            0 
+ postgres | public | film  | language_id          | smallint                    | "NO"     |                                       |   16 |              0 |              10 |            0 
+ postgres | public | film  | original_language_id | smallint                    | "YES"    |                                       |   16 |              0 |              10 |            0 
+ postgres | public | film  | rental_duration      | smallint                    | "NO"     | 3                                     |   16 |              0 |              10 |            0 
+ postgres | public | film  | rental_rate          | numeric                     | "NO"     | 4.99                                  |    4 |              2 |              10 |            0 
+ postgres | public | film  | length               | smallint                    | "YES"    |                                       |   16 |              0 |              10 |            0 
+ postgres | public | film  | replacement_cost     | numeric                     | "NO"     | 19.99                                 |    5 |              2 |              10 |            0 
+ postgres | public | film  | rating               | USER-DEFINED                | "YES"    | 'G'::mpaa_rating                      |    0 |              0 |              10 |            0 
+ postgres | public | film  | last_update          | timestamp without time zone | "NO"     | now()                                 |    6 |              0 |              10 |            0 
+ postgres | public | film  | special_features     | ARRAY                       | "YES"    |                                       |    0 |              0 |              10 |            0 
+ postgres | public | film  | fulltext             | tsvector                    | "NO"     |                                       |    0 |              0 |              10 |            0 
+(14 rows)
+
+BASE TABLE "public.film_actor"
+ Catalog  | Schema | Table      | Name        | Type                        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+----------+--------+------------+-------------+-----------------------------+----------+---------+------+----------------+-----------------+--------------
+ postgres | public | film_actor | actor_id    | smallint                    | "NO"     |         |   16 |              0 |              10 |            0 
+ postgres | public | film_actor | film_id     | smallint                    | "NO"     |         |   16 |              0 |              10 |            0 
+ postgres | public | film_actor | last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |              10 |            0 
+(3 rows)
+
+BASE TABLE "public.film_category"
+ Catalog  | Schema | Table         | Name        | Type                        | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+----------+--------+---------------+-------------+-----------------------------+----------+---------+------+----------------+-----------------+--------------
+ postgres | public | film_category | film_id     | smallint                    | "NO"     |         |   16 |              0 |              10 |            0 
+ postgres | public | film_category | category_id | smallint                    | "NO"     |         |   16 |              0 |              10 |            0 
+ postgres | public | film_category | last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |              10 |            0 
+(3 rows)
+
+VIEW "public.film_list"
+ Catalog  | Schema | Table     | Name        | Type              | Nullable | Default | Size | Decimal Digits | Precision Radix | Octet Length 
+----------+--------+-----------+-------------+-------------------+----------+---------+------+----------------+-----------------+--------------
+ postgres | public | film_list | fid         | integer           | "YES"    |         |   32 |              0 |              10 |            0 
+ postgres | public | film_list | title       | character varying | "YES"    |         |  255 |              0 |              10 |         1020 
+ postgres | public | film_list | description | text              | "YES"    |         |    0 |              0 |              10 |   1073741824 
+ postgres | public | film_list | category    | character varying | "YES"    |         |   25 |              0 |              10 |          100 
+ postgres | public | film_list | price       | numeric           | "YES"    |         |    4 |              2 |              10 |            0 
+ postgres | public | film_list | length      | smallint          | "YES"    |         |   16 |              0 |              10 |            0 
+ postgres | public | film_list | rating      | USER-DEFINED      | "YES"    |         |    0 |              0 |              10 |            0 
+ postgres | public | film_list | actors      | text              | "YES"    |         |    0 |              0 |              10 |   1073741824 
+(8 rows)
+
+Sequence "public.film_film_id_seq"
+ Type   | Start | Min | Max                 | Increment | Cycles? 
+--------+-------+-----+---------------------+-----------+---------
+ bigint | 1     | 1   | 9223372036854775807 | 1         | "NO"    
+

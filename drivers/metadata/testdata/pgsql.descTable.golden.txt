@@ -1,0 +1,106 @@
+                                                Table "public.film"
+        Column        |            Type             | Collation | Nullable |                Default                
+----------------------+-----------------------------+-----------+----------+---------------------------------------
+ film_id              | integer                     |           | not null | nextval('film_film_id_seq'::regclass)
+ title                | character varying(255)      |           | not null | 
+ description          | text                        |           |          | 
+ release_year         | year                        |           |          | 
+ language_id          | smallint                    |           | not null | 
+ original_language_id | smallint                    |           |          | 
+ rental_duration      | smallint                    |           | not null | 3
+ rental_rate          | numeric(4,2)                |           | not null | 4.99
+ length               | smallint                    |           |          | 
+ replacement_cost     | numeric(5,2)                |           | not null | 19.99
+ rating               | mpaa_rating                 |           |          | 'G'::mpaa_rating
+ last_update          | timestamp without time zone |           | not null | now()
+ special_features     | text[]                      |           |          | 
+ fulltext             | tsvector                    |           | not null | 
+Indexes:
+    "film_pkey" PRIMARY KEY, btree (film_id)
+    "film_fulltext_idx" gist (fulltext)
+    "idx_fk_language_id" btree (language_id)
+    "idx_fk_original_language_id" btree (original_language_id)
+    "idx_title" btree (title)
+Foreign-key constraints:
+    "film_language_id_fkey" FOREIGN KEY (language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    "film_original_language_id_fkey" FOREIGN KEY (original_language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Referenced by:
+    TABLE "film_actor" CONSTRAINT "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    TABLE "film_category" CONSTRAINT "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    TABLE "inventory" CONSTRAINT "inventory_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+    film_fulltext_trigger BEFORE INSERT OR UPDATE ON film FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('fulltext', 'pg_catalog.english', 'title', 'description')
+    last_updated BEFORE UPDATE ON film FOR EACH ROW EXECUTE FUNCTION last_updated()
+
+                         Table "public.film_actor"
+   Column    |            Type             | Collation | Nullable | Default 
+-------------+-----------------------------+-----------+----------+---------
+ actor_id    | smallint                    |           | not null | 
+ film_id     | smallint                    |           | not null | 
+ last_update | timestamp without time zone |           | not null | now()
+Indexes:
+    "film_actor_pkey" PRIMARY KEY, btree (actor_id, film_id)
+    "idx_fk_film_id" btree (film_id)
+Foreign-key constraints:
+    "film_actor_actor_id_fkey" FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+    last_updated BEFORE UPDATE ON film_actor FOR EACH ROW EXECUTE FUNCTION last_updated()
+
+     Index "public.film_actor_pkey"
+  Column  |   Type   | Key? | Definition 
+----------+----------+------+------------
+ actor_id | smallint | yes  | actor_id
+ film_id  | smallint | yes  | film_id
+primary key, btree, for table "public.film_actor"
+
+                        Table "public.film_category"
+   Column    |            Type             | Collation | Nullable | Default 
+-------------+-----------------------------+-----------+----------+---------
+ film_id     | smallint                    |           | not null | 
+ category_id | smallint                    |           | not null | 
+ last_update | timestamp without time zone |           | not null | now()
+Indexes:
+    "film_category_pkey" PRIMARY KEY, btree (film_id, category_id)
+Foreign-key constraints:
+    "film_category_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+    last_updated BEFORE UPDATE ON film_category FOR EACH ROW EXECUTE FUNCTION last_updated()
+
+      Index "public.film_category_pkey"
+   Column    |   Type   | Key? | Definition  
+-------------+----------+------+-------------
+ film_id     | smallint | yes  | film_id
+ category_id | smallint | yes  | category_id
+primary key, btree, for table "public.film_category"
+
+                      Sequence "public.film_film_id_seq"
+  Type  | Start | Minimum |       Maximum       | Increment | Cycles? | Cache 
+--------+-------+---------+---------------------+-----------+---------+-------
+ bigint |     1 |       1 | 9223372036854775807 |         1 | no      |     1
+
+     Index "public.film_fulltext_idx"
+  Column  |   Type    | Key? | Definition 
+----------+-----------+------+------------
+ fulltext | gtsvector | yes  | fulltext
+gist, for table "public.film"
+
+                        View "public.film_list"
+   Column    |          Type          | Collation | Nullable | Default 
+-------------+------------------------+-----------+----------+---------
+ fid         | integer                |           |          | 
+ title       | character varying(255) |           |          | 
+ description | text                   |           |          | 
+ category    | character varying(25)  |           |          | 
+ price       | numeric(4,2)           |           |          | 
+ length      | smallint               |           |          | 
+ rating      | mpaa_rating            |           |          | 
+ actors      | text                   |           |          | 
+
+       Index "public.film_pkey"
+ Column  |  Type   | Key? | Definition 
+---------+---------+------+------------
+ film_id | integer | yes  | film_id
+primary key, btree, for table "public.film"
+

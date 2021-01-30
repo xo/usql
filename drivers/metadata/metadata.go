@@ -571,6 +571,7 @@ type resultSet struct {
 	results []Result
 	current int
 	verbose bool
+	filter  func(Result) bool
 }
 
 type Result interface {
@@ -585,8 +586,21 @@ func (r *resultSet) SetVerbose(v bool) {
 	}
 }
 
+func (r *resultSet) SetFilter(f func(Result) bool) {
+	r.filter = f
+}
+
 func (r *resultSet) Len() int {
-	return len(r.results)
+	if r.filter == nil {
+		return len(r.results)
+	}
+	len := 0
+	for _, rec := range r.results {
+		if r.filter(rec) {
+			len++
+		}
+	}
+	return len
 }
 
 func (r *resultSet) Reset() {
@@ -595,6 +609,11 @@ func (r *resultSet) Reset() {
 
 func (r *resultSet) Next() bool {
 	r.current++
+	if r.filter != nil {
+		for r.current <= len(r.results) && !r.filter(r.results[r.current-1]) {
+			r.current++
+		}
+	}
 	return r.current <= len(r.results)
 }
 

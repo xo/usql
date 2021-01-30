@@ -1,0 +1,10 @@
+List or relations
+ Catalog | Schema | Name          | Type       | Size | Comment 
+---------+--------+---------------+------------+------+---------
+ def     | sakila | film          | BASE TABLE |      |         
+ def     | sakila | film_actor    | BASE TABLE |      |         
+ def     | sakila | film_category | BASE TABLE |      |         
+ def     | sakila | film_text     | BASE TABLE |      |         
+ def     | sakila | film_list     | VIEW       |      |         
+(5 rows)
+
