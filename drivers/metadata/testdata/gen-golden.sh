@@ -18,8 +18,12 @@ export PGHOST PGPORT PGUSER PGPASSWORD
 
 declare -A queries
 queries=(
-    [descTable]="\d film*"
-    [listTables]="\dtvmsE film*"
+    [descTable]="\d+ film*"
+    [listTables]="\dtvmsE+ film*"
+    [listFuncs]="\df+"
+    [listIndexes]="\di+"
+    [listSchemas]="\dn+"
+    [listDbs]="\l+"
 )
 
 for q in "${!queries[@]}"; do
@@ -48,16 +52,17 @@ MYPASSWORD="${MYPASSWORD:-pw}"
 
 declare -A queries
 queries=(
-    [descTable]="DESC film; DESC film_actor; DESC film_category; DESC film_list; DESC film_text;"
+    [descTable]="DESC film; SHOW INDEX FROM film; DESC film_actor; SHOW INDEX FROM film_actor; DESC film_category; SHOW INDEX FROM film_category; DESC film_list; SHOW INDEX FROM film_list; DESC film_text; SHOW INDEX FROM film_text;"
     [listTables]="SHOW TABLES LIKE 'film%'"
+    [listSchemas]="SHOW DATABASES"
 )
 
 for q in "${!queries[@]}"; do
     query="${queries[$q]}"
     cmd=(mysql -h "$MYHOST" -P "$MYPORT" -u "$MYUSER" --password="$MYPASSWORD" --no-auto-rehash --database sakila --execute "$query")
     if [ "$mysql_in_docker" == true ]; then
-        docker run -it --rm --link "$mysql_container" mysql:8 "${cmd[@]}" >"mysql.$q.golden.txt"
+        docker run -it --rm --link "$mysql_container" mysql:8 "${cmd[@]}" 2>/dev/null >"mysql.$q.golden.txt"
     else
-        "${cmd[@]}" >"mysql.$q.golden.txt"
+        "${cmd[@]}" 2>/dev/null >"mysql.$q.golden.txt"
     fi
 done

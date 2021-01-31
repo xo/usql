@@ -32,6 +32,7 @@ type Database struct {
 	DB         *sql.DB
 	Opts       []informationschema.Option
 	Reader     metadata.Reader
+	WriterOpts []metadata.Option
 }
 
 var (
@@ -53,6 +54,9 @@ var (
 			Opts: []informationschema.Option{
 				informationschema.WithIndexes(false),
 			},
+			WriterOpts: []metadata.Option{
+				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
+			},
 		},
 		"mysql": {
 			BuildArgs: []dc.BuildArg{
@@ -71,6 +75,9 @@ var (
 			Opts: []informationschema.Option{
 				informationschema.WithPlaceholder(func(int) string { return "?" }),
 				informationschema.WithSequences(false),
+			},
+			WriterOpts: []metadata.Option{
+				metadata.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
 		},
 		"trino": {
@@ -170,6 +177,18 @@ func TestWriter(t *testing.T) {
 						return w.ListTables("tvmsE", "film*", true, false)
 					},
 				},
+				{
+					label: "listFuncs",
+					f: func(w metadata.Writer) error {
+						return w.DescribeFunctions("", "", false, false)
+					},
+				},
+				{
+					label: "listSchemas",
+					f: func(w metadata.Writer) error {
+						return w.ListSchemas("", true, false)
+					},
+				},
 			},
 		},
 		{
@@ -185,6 +204,24 @@ func TestWriter(t *testing.T) {
 					label: "listTables",
 					f: func(w metadata.Writer) error {
 						return w.ListTables("tvmsE", "film*", true, false)
+					},
+				},
+				{
+					label: "listFuncs",
+					f: func(w metadata.Writer) error {
+						return w.DescribeFunctions("", "", false, false)
+					},
+				},
+				{
+					label: "listIndexes",
+					f: func(w metadata.Writer) error {
+						return w.ListIndexes("", true, false)
+					},
+				},
+				{
+					label: "listSchemas",
+					f: func(w metadata.Writer) error {
+						return w.ListSchemas("", true, false)
 					},
 				},
 			},
@@ -204,6 +241,12 @@ func TestWriter(t *testing.T) {
 						return w.ListTables("tvmsE", "order*", true, false)
 					},
 				},
+				{
+					label: "listSchemas",
+					f: func(w metadata.Writer) error {
+						return w.ListSchemas("", true, false)
+					},
+				},
 			},
 		},
 	}
@@ -216,7 +259,7 @@ func TestWriter(t *testing.T) {
 			}
 
 			db := dbs[test.dbName]
-			w := metadata.NewDefaultWriter(db.Reader)(db.DB, fo)
+			w := metadata.NewDefaultWriter(db.Reader, db.WriterOpts...)(db.DB, fo)
 
 			err = testFunc.f(w)
 			if err != nil {

@@ -126,19 +126,20 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 		res.Reset()
 	}
 
-	columns := []string{"Name", "Result data type", "Argument data types", "Type"}
+	columns := []string{"Schema", "Name", "Result data type", "Argument data types", "Type"}
 	if verbose {
 		columns = append(columns, "Volatility", "Security", "Language", "Source code")
 	}
 	res.SetColumns(columns)
 	res.SetScanValues(func(r Result) []interface{} {
 		f := r.(*Function)
-		v := []interface{}{f.Name, f.ResultType, f.ArgTypes, f.Type}
+		v := []interface{}{f.Schema, f.Name, f.ResultType, f.ArgTypes, f.Type}
 		if verbose {
 			v = append(v, f.Volatility, f.Security, f.Language, f.Source)
 		}
 		return v
 	})
+	fmt.Fprintln(w.w, "List of functions")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -156,10 +157,14 @@ func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
 			continue
 		}
 		typ := ""
-		if c.Type != "IN" {
+		if c.Type != "IN" && c.Type != "" {
 			typ = c.Type + " "
 		}
-		args = append(args, fmt.Sprintf("%s%s %s", typ, c.Name, c.DataType))
+		name := c.Name
+		if name != "" {
+			name += " "
+		}
+		args = append(args, fmt.Sprintf("%s%s%s", typ, name, c.DataType))
 	}
 	return strings.Join(args, ", "), nil
 }
@@ -189,8 +194,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 		}
 		for res.Next() {
 			t := res.Get()
-			fmt.Fprintf(w.w, "%s \"%s.%s\"\n", t.Type, t.Schema, t.Name)
-			err = w.describeTableDetails(t.Schema, t.Name, verbose, showSystem)
+			err = w.describeTableDetails(t.Type, t.Schema, t.Name, verbose, showSystem)
 			if err != nil {
 				return err
 			}
@@ -223,7 +227,6 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			}
 			for res.Next() {
 				i := res.Get()
-				fmt.Fprintf(w.w, "Index \"%s.%s\"\n", i.Schema, i.Name)
 				err = w.describeIndexes(i.Schema, i.Table, i.Name)
 				if err != nil {
 					return err
@@ -240,7 +243,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	return nil
 }
 
-func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem bool) error {
+func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSystem bool) error {
 	r := w.r.(ColumnReader)
 	res, err := r.Columns("", sp, tp)
 	if err != nil {
@@ -261,6 +264,7 @@ func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem b
 		}
 		return v
 	})
+	fmt.Fprintf(w.w, "%s \"%s.%s\"\n", typ, sp, tp)
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
@@ -340,11 +344,11 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 	found := 0
 	for res.Next() {
 		s := res.Get()
-		fmt.Fprintf(w.w, "Sequence \"%s.%s\"\n", s.Schema, s.Name)
 		// wrap current record into a separate recordSet
 		rows := NewSequenceSet([]Sequence{*s})
 		params := env.Pall()
 		params["footer"] = "off"
+		fmt.Fprintf(w.w, "Sequence \"%s.%s\"\n", s.Schema, s.Name)
 		err = tblfmt.EncodeAll(w.w, rows, params)
 		if err != nil {
 			return 0, err
@@ -374,6 +378,7 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 	})
 
 	// TODO footer should say if it's primary, index type and which table this index belongs to
+	fmt.Fprintf(w.w, "Index \"%s.%s\"\n", sp, ip)
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
@@ -394,7 +399,7 @@ func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
 func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(TableReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\d`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\dt`)
 	}
 	types := []string{}
 	for k, v := range w.tableTypes {
@@ -436,7 +441,7 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 		return v
 	})
 
-	fmt.Fprintln(w.w, "List or relations")
+	fmt.Fprintln(w.w, "List of relations")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -458,6 +463,7 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 			return !ok
 		})
 	}
+	fmt.Fprintln(w.w, "List of schemas")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -503,6 +509,7 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 		return v
 	})
 
+	fmt.Fprintln(w.w, "List of indexes")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 

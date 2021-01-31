@@ -1,0 +1,49 @@
+                                         List of relations
+ Schema |                        Name                         | Type  |  Owner   |      Table       
+--------+-----------------------------------------------------+-------+----------+------------------
+ public | actor_pkey                                          | index | postgres | actor
+ public | address_pkey                                        | index | postgres | address
+ public | category_pkey                                       | index | postgres | category
+ public | city_pkey                                           | index | postgres | city
+ public | country_pkey                                        | index | postgres | country
+ public | customer_pkey                                       | index | postgres | customer
+ public | film_actor_pkey                                     | index | postgres | film_actor
+ public | film_category_pkey                                  | index | postgres | film_category
+ public | film_fulltext_idx                                   | index | postgres | film
+ public | film_pkey                                           | index | postgres | film
+ public | idx_actor_last_name                                 | index | postgres | actor
+ public | idx_fk_address_id                                   | index | postgres | customer
+ public | idx_fk_city_id                                      | index | postgres | address
+ public | idx_fk_country_id                                   | index | postgres | city
+ public | idx_fk_customer_id                                  | index | postgres | payment
+ public | idx_fk_film_id                                      | index | postgres | film_actor
+ public | idx_fk_inventory_id                                 | index | postgres | rental
+ public | idx_fk_language_id                                  | index | postgres | film
+ public | idx_fk_original_language_id                         | index | postgres | film
+ public | idx_fk_payment_p2007_01_customer_id                 | index | postgres | payment_p2007_01
+ public | idx_fk_payment_p2007_01_staff_id                    | index | postgres | payment_p2007_01
+ public | idx_fk_payment_p2007_02_customer_id                 | index | postgres | payment_p2007_02
+ public | idx_fk_payment_p2007_02_staff_id                    | index | postgres | payment_p2007_02
+ public | idx_fk_payment_p2007_03_customer_id                 | index | postgres | payment_p2007_03
+ public | idx_fk_payment_p2007_03_staff_id                    | index | postgres | payment_p2007_03
+ public | idx_fk_payment_p2007_04_customer_id                 | index | postgres | payment_p2007_04
+ public | idx_fk_payment_p2007_04_staff_id                    | index | postgres | payment_p2007_04
+ public | idx_fk_payment_p2007_05_customer_id                 | index | postgres | payment_p2007_05
+ public | idx_fk_payment_p2007_05_staff_id                    | index | postgres | payment_p2007_05
+ public | idx_fk_payment_p2007_06_customer_id                 | index | postgres | payment_p2007_06
+ public | idx_fk_payment_p2007_06_staff_id                    | index | postgres | payment_p2007_06
+ public | idx_fk_staff_id                                     | index | postgres | payment
+ public | idx_fk_store_id                                     | index | postgres | customer
+ public | idx_last_name                                       | index | postgres | customer
+ public | idx_store_id_film_id                                | index | postgres | inventory
+ public | idx_title                                           | index | postgres | film
+ public | idx_unq_manager_staff_id                            | index | postgres | store
+ public | idx_unq_rental_rental_date_inventory_id_customer_id | index | postgres | rental
+ public | inventory_pkey                                      | index | postgres | inventory
+ public | language_pkey                                       | index | postgres | language
+ public | payment_pkey                                        | index | postgres | payment
+ public | rental_pkey                                         | index | postgres | rental
+ public | staff_pkey                                          | index | postgres | staff
+ public | store_pkey                                          | index | postgres | store
+(44 rows)
+

@@ -194,7 +194,6 @@ FROM information_schema.tables
 		for _, t := range types {
 			if t == "SEQUENCE" && s.hasSequences {
 				addSequences = true
-				continue
 			}
 			vals = append(vals, t)
 			pholders = append(pholders, s.pf(len(vals)))
@@ -346,7 +345,7 @@ FROM information_schema.routines
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
 	qstr += `
-ORDER BY routine_catalog, routine_schema, routine_type, routine_name`
+ORDER BY routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')`
 	rows, err := s.db.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
@@ -393,7 +392,7 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
   specific_name,
   COALESCE(parameter_name, ''),
   ordinal_position,
-  parameter_mode,
+  COALESCE(parameter_mode, ''),
   data_type,
   COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0) AS column_size,
   COALESCE(numeric_scale, 0),
@@ -419,7 +418,7 @@ FROM information_schema.parameters
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
 	qstr += `
-ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, parameter_name`
+ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')`
 	rows, err := s.db.Query(qstr, vals...)
 	if err != nil {
 		return nil, err

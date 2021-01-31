@@ -59,7 +59,7 @@ func init() {
 		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
 			reader := newReader(db)
 			opts := []metadata.Option{
-				metadata.WithSystemSchemas([]string{"pg_catalog", "information_schema"}),
+				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 				metadata.WithListAllDbs(func(pattern string, verbose bool) error {
 					return listAllDbs(db, w, pattern, verbose)
 				}),

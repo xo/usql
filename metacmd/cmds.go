@@ -615,7 +615,7 @@ func init() {
 					return m.ListTables("tvmsE", pattern, verbose, showSystem)
 				case "df", "da":
 					return m.DescribeFunctions(name, pattern, verbose, showSystem)
-				case "dt", "dv", "dm", "ds":
+				case "dt", "dtv", "dtm", "dts", "dv", "dm", "ds":
 					return m.ListTables(name, pattern, verbose, showSystem)
 				case "dn":
 					return m.ListSchemas(pattern, verbose, showSystem)

@@ -247,8 +247,8 @@ func TestFunctions(t *testing.T) {
 		"mysql": "sakila",
 	}
 	expected := map[string]string{
-		"pgsql": "_group_concat, film_in_stock, film_not_in_stock, get_customer_balance, inventory_held_by_customer, inventory_in_stock, last_day, last_updated, rewards_report, group_concat",
-		"mysql": "get_customer_balance, inventory_held_by_customer, inventory_in_stock, film_in_stock, film_not_in_stock, rewards_report",
+		"pgsql": "_group_concat, film_in_stock, film_not_in_stock, get_customer_balance, group_concat, inventory_held_by_customer, inventory_in_stock, last_day, last_updated, rewards_report",
+		"mysql": "film_in_stock, film_not_in_stock, get_customer_balance, inventory_held_by_customer, inventory_in_stock, rewards_report",
 	}
 	for dbName, db := range dbs {
 		if schemas[dbName] == "" {

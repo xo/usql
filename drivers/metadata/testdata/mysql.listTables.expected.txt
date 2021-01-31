@@ -1,4 +1,4 @@
-List or relations
+List of relations
  Schema | Name          | Type       | Size | Comment 
 --------+---------------+------------+------+---------
  sakila | film          | BASE TABLE |      |         
