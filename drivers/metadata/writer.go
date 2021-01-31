@@ -53,7 +53,7 @@ func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer 
 			'w': {"WINDOW"},
 		},
 		systemSchemas: map[string]struct{}{
-			"information_schema": struct{}{},
+			"information_schema": {},
 		},
 	}
 	for _, o := range opts {
@@ -102,10 +102,12 @@ func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bo
 	}
 	defer res.Close()
 
-	res.SetFilter(func(r Result) bool {
-		_, ok := w.systemSchemas[r.(*Function).Schema]
-		return !ok
-	})
+	if !showSystem {
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Function).Schema]
+			return !ok
+		})
+	}
 	res.SetVerbose(verbose)
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
@@ -132,13 +134,12 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	}
 	defer res.Close()
 
-	res.SetFilter(func(r Result) bool {
-		_, ok := w.systemSchemas[r.(*Function).Schema]
-		return !ok
-	})
-	// this is inefficient but multiple databases supporting information_schema
-	// aggregate strings in different ways (GROUP_CONCAT() vs string_agg/array_to_string(array_agg))
-	// TODO work around by making such expression generator an option, same as placeholder
+	if !showSystem {
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Function).Schema]
+			return !ok
+		})
+	}
 	if _, ok := w.r.(FunctionColumnReader); ok {
 		for res.Next() {
 			f := res.Get()
@@ -183,6 +184,8 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 		return err
 	}
 
+	found := 0
+
 	tr, isTR := w.r.(TableReader)
 	_, isCR := w.r.(ColumnReader)
 	if isTR && isCR {
@@ -191,10 +194,12 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			return err
 		}
 		defer res.Close()
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Table).Schema]
-			return !ok
-		})
+		if !showSystem {
+			res.SetFilter(func(r Result) bool {
+				_, ok := w.systemSchemas[r.(*Table).Schema]
+				return !ok
+			})
+		}
 		for res.Next() {
 			t := res.Get()
 			fmt.Fprintf(w.w, "%s \"%s.%s\"\n", t.Type, t.Schema, t.Name)
@@ -202,40 +207,49 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			if err != nil {
 				return err
 			}
+			found++
 		}
 	}
 
 	if _, ok := w.r.(SequenceReader); ok {
-		err = w.describeSequences(sp, tp, verbose, showSystem)
+		foundSeq, err := w.describeSequences(sp, tp, verbose, showSystem)
 		if err != nil {
 			return err
 		}
+		found += foundSeq
 	}
 
 	ir, isIR := w.r.(IndexReader)
 	_, isICR := w.r.(IndexColumnReader)
 	if isIR && isICR {
-		res, err := ir.Indexes("", sp, tp)
-		if err != nil {
+		res, err := ir.Indexes("", sp, "", tp)
+		if err != nil && err != ErrNotSupported {
 			return err
 		}
-		defer res.Close()
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Index).Schema]
-			return !ok
-		})
-		for res.Next() {
-			i := res.Get()
-			fmt.Fprintf(w.w, "Index \"%s.%s\"\n", i.Schema, i.Name)
-			err = w.describeIndexes(i.Schema, i.Name, verbose, showSystem)
-			if err != nil {
-				return err
+		if res != nil {
+			defer res.Close()
+			if !showSystem {
+				res.SetFilter(func(r Result) bool {
+					_, ok := w.systemSchemas[r.(*Index).Schema]
+					return !ok
+				})
+			}
+			for res.Next() {
+				i := res.Get()
+				fmt.Fprintf(w.w, "Index \"%s.%s\"\n", i.Schema, i.Name)
+				err = w.describeIndexes(i.Schema, i.Table, i.Name, verbose, showSystem)
+				if err != nil {
+					return err
+				}
+				found++
 			}
 		}
 	}
 
-	// TODO if no table, seq or index were found, should return this:
-	// fmt.Fprintf(w.w, text.RelationNotFound, pattern)
+	if found == 0 {
+		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
+		fmt.Fprintln(w.w)
+	}
 	return nil
 }
 
@@ -253,42 +267,56 @@ func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem b
 		return err
 	}
 
-	if r, ok := w.r.(IndexReader); ok {
-		res, err := r.Indexes("", sp, tp)
-		if err != nil {
-			return err
-		}
-		defer res.Close()
-		indexes := []*Index{}
-		for res.Next() {
-			indexes = append(indexes, res.Get())
-		}
-		if len(indexes) != 0 {
-			fmt.Fprintln(w.w, "Indexes:")
-			for _, i := range indexes {
-				primary := ""
-				unique := ""
-				if i.IsPrimary == YES {
-					primary = "PRIMARY_KEY, "
-				}
-				if i.IsUnique == YES {
-					unique = "UNIQUE, "
-				}
-				i.Columns, err = w.getIndexColumns(i.Catalog, i.Schema, i.Name)
-				if err != nil {
-					return err
-				}
-				fmt.Fprintf(w.w, "\"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
-			}
-		}
+	err = w.describeTableIndexes(sp, tp)
+	if err != nil {
+		return err
 	}
+
 	// TODO also describe: FKs, references, triggers - using template encoder?
 	return nil
 }
 
-func (w DefaultWriter) getIndexColumns(c, s, i string) (string, error) {
+func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
+	r, ok := w.r.(IndexReader)
+	if !ok {
+		return nil
+	}
+	res, err := r.Indexes("", sp, tp, "")
+	if err != nil && err != ErrNotSupported {
+		return err
+	}
+	if res == nil {
+		return nil
+	}
+	defer res.Close()
+
+	if res.Len() == 0 {
+		return nil
+	}
+	fmt.Fprintln(w.w, "Indexes:")
+	for res.Next() {
+		i := res.Get()
+		primary := ""
+		unique := ""
+		if i.IsPrimary == YES {
+			primary = "PRIMARY_KEY, "
+		}
+		if i.IsUnique == YES {
+			unique = "UNIQUE, "
+		}
+		i.Columns, err = w.getIndexColumns(i.Catalog, i.Schema, i.Table, i.Name)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(w.w, "  \"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
+	}
+	fmt.Fprintln(w.w)
+	return nil
+}
+
+func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
 	r := w.r.(IndexColumnReader)
-	cols, err := r.IndexColumns(c, s, i)
+	cols, err := r.IndexColumns(c, s, t, i)
 	if err != nil {
 		return "", err
 	}
@@ -299,14 +327,18 @@ func (w DefaultWriter) getIndexColumns(c, s, i string) (string, error) {
 	return strings.Join(result, ", "), nil
 }
 
-func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) error {
+func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {
 	r := w.r.(SequenceReader)
 	res, err := r.Sequences("", sp, tp)
-	if err != nil {
-		return err
+	if err != nil && err != ErrNotSupported {
+		return 0, err
+	}
+	if res == nil {
+		return 0, nil
 	}
 	defer res.Close()
 
+	found := 0
 	for res.Next() {
 		s := res.Get()
 		fmt.Fprintf(w.w, "Sequence \"%s.%s\"\n", s.Schema, s.Name)
@@ -316,18 +348,18 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 		params["footer"] = "off"
 		err = tblfmt.EncodeAll(w.w, rows, params)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		// TODO footer should say which table this sequence belongs to
+		found++
 	}
 
-	return nil
+	return found, nil
 }
 
-func (w DefaultWriter) describeIndexes(sp, tp string, verbose, showSystem bool) error {
-	// TODO first use IndexReader to match indexes, then describe each one separately
+func (w DefaultWriter) describeIndexes(sp, tp, ip string, verbose, showSystem bool) error {
 	r := w.r.(IndexColumnReader)
-	res, err := r.IndexColumns("", sp, tp)
+	res, err := r.IndexColumns("", sp, tp, ip)
 	if err != nil {
 		return err
 	}
@@ -374,12 +406,15 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 		return err
 	}
 	defer res.Close()
-	res.SetFilter(func(r Result) bool {
-		_, ok := w.systemSchemas[r.(*Table).Schema]
-		return !ok
-	})
+	if !showSystem {
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Table).Schema]
+			return !ok
+		})
+	}
 	if res.Len() == 0 {
 		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
+		fmt.Fprintln(w.w)
 		return nil
 	}
 
@@ -400,10 +435,12 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	}
 	defer res.Close()
 
-	res.SetFilter(func(r Result) bool {
-		_, ok := w.systemSchemas[r.(*Schema).Schema]
-		return !ok
-	})
+	if !showSystem {
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Schema).Schema]
+			return !ok
+		})
+	}
 	res.SetVerbose(verbose)
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
@@ -418,18 +455,21 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 	if err != nil {
 		return err
 	}
-	res, err := r.Indexes("", sp, tp)
+	res, err := r.Indexes("", sp, "", tp)
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 
-	res.SetFilter(func(r Result) bool {
-		_, ok := w.systemSchemas[r.(*Index).Schema]
-		return !ok
-	})
+	if !showSystem {
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*Index).Schema]
+			return !ok
+		})
+	}
 	if res.Len() == 0 {
 		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
+		fmt.Fprintln(w.w)
 		return nil
 	}
 

@@ -4,14 +4,20 @@
 package mysql
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql" // DRIVER: mysql
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
+	newReader := informationschema.New(
+		informationschema.WithPlaceholder(func(int) string { return "?" }),
+		informationschema.WithSequences(false),
+	)
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
@@ -33,9 +39,13 @@ func init() {
 			}
 			return false
 		},
-		NewMetadataReader: informationschema.New(
-			informationschema.WithPlaceholder(func(int) string { return "?" }),
-			informationschema.WithSequences(false),
-		),
+		NewMetadataReader: newReader,
+		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
+			reader := newReader(db)
+			opts := []metadata.Option{
+				metadata.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema"}),
+			}
+			return metadata.NewDefaultWriter(reader, opts...)(db, w)
+		},
 	}, "memsql", "vitess", "tidb")
 }

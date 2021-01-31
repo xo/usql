@@ -4,8 +4,14 @@ import (
 	"errors"
 )
 
+var (
+	ErrNotSupported  = errors.New("error: not supported")
+	ErrScanArgsCount = errors.New("error: wrong number of arguments for Scan()")
+)
+
 // ExtendedReader of all database metadata in a structured format.
 type ExtendedReader interface {
+	CatalogReader
 	SchemaReader
 	TableReader
 	ColumnReader
@@ -21,6 +27,12 @@ type BasicReader interface {
 	SchemaReader
 	TableReader
 	ColumnReader
+}
+
+// CatalogReader lists database schemas.
+type CatalogReader interface {
+	Reader
+	Catalogs() (*CatalogSet, error)
 }
 
 // SchemaReader lists database schemas.
@@ -44,13 +56,13 @@ type ColumnReader interface {
 // IndexReader lists database indexes.
 type IndexReader interface {
 	Reader
-	Indexes(catalog, schemaPattern, namePattern string) (*IndexSet, error)
+	Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*IndexSet, error)
 }
 
 // IndexColumnReader lists database indexes.
 type IndexColumnReader interface {
 	Reader
-	IndexColumns(catalog, schemaPattern, indexPattern string) (*IndexColumnSet, error)
+	IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*IndexColumnSet, error)
 }
 
 // FunctionReader lists database functions.
@@ -92,6 +104,40 @@ type Writer interface {
 	ListIndexes(string, bool, bool) error
 }
 
+type CatalogSet struct {
+	resultSet
+}
+
+func NewCatalogSet(v []Catalog) *CatalogSet {
+	r := make([]Result, len(v))
+	for i := range v {
+		r[i] = &v[i]
+	}
+	return &CatalogSet{
+		resultSet: resultSet{
+			results: r,
+		},
+	}
+}
+
+func (s CatalogSet) Columns() ([]string, error) {
+	return []string{"Catalog"}, nil
+}
+
+func (s CatalogSet) Get() *Catalog {
+	return s.results[s.current-1].(*Catalog)
+}
+
+type Catalog struct {
+	Catalog string
+}
+
+func (s Catalog) values() []interface{} {
+	return []interface{}{s.Catalog}
+}
+
+func (s *Catalog) setVerbose(v bool) {}
+
 type SchemaSet struct {
 	resultSet
 }
@@ -100,12 +146,10 @@ func NewSchemaSet(v []Schema) *SchemaSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &SchemaSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
 		},
 	}
 }
@@ -119,8 +163,6 @@ func (s SchemaSet) Get() *Schema {
 }
 
 type Schema struct {
-	verbose bool
-
 	Schema  string
 	Catalog string
 }
@@ -129,9 +171,7 @@ func (s Schema) values() []interface{} {
 	return []interface{}{s.Schema, s.Catalog}
 }
 
-func (s *Schema) setVerbose(v bool) {
-	s.verbose = v
-}
+func (s *Schema) setVerbose(v bool) {}
 
 type TableSet struct {
 	resultSet
@@ -204,9 +244,28 @@ func NewColumnSet(v []Column) *ColumnSet {
 
 func (c ColumnSet) Columns() ([]string, error) {
 	if !c.verbose {
-		return []string{"Name", "Type", "Nullable", "Default"}, nil
+		return []string{
+				"Name",
+				"Type",
+				"Nullable",
+				"Default",
+			},
+			nil
 	}
-	return []string{"Catalog", "Schema", "Table", "Name", "Type", "Nullable", "Default", "Size", "Decimal Digits", "Precision Radix", "Octet Length"}, nil
+	return []string{
+			"Catalog",
+			"Schema",
+			"Table",
+			"Name",
+			"Type",
+			"Nullable",
+			"Default",
+			"Size",
+			"Decimal Digits",
+			"Precision Radix",
+			"Octet Length",
+		},
+		nil
 }
 
 func (c ColumnSet) Get() *Column {
@@ -342,7 +401,15 @@ func (c IndexColumnSet) Columns() ([]string, error) {
 	if !c.verbose {
 		return []string{"Name", "Data type"}, nil
 	}
-	return []string{"Catalog", "Schema", "Table", "Index name", "Name", "Data type"}, nil
+	return []string{
+			"Catalog",
+			"Schema",
+			"Table",
+			"Index name",
+			"Name",
+			"Data type",
+		},
+		nil
 }
 
 func (c IndexColumnSet) Get() *IndexColumn {
@@ -371,6 +438,7 @@ func (c IndexColumn) values() []interface{} {
 		c.Table,
 		c.IndexName,
 		c.Name,
+		c.DataType,
 	}
 }
 
@@ -398,9 +466,28 @@ func NewFunctionSet(v []Function) *FunctionSet {
 
 func (f FunctionSet) Columns() ([]string, error) {
 	if !f.verbose {
-		return []string{"Schema", "Name", "Result data type", "Argument data types", "Type"}, nil
+		return []string{
+				"Schema",
+				"Name",
+				"Result data type",
+				"Argument data types",
+				"Type",
+			},
+			nil
 	}
-	return []string{"Catalog", "Schema", "Name", "Result data type", "Argument data types", "Type", "Volatility", "Security", "Language", "Source code"}, nil
+	return []string{
+			"Catalog",
+			"Schema",
+			"Name",
+			"Result data type",
+			"Argument data types",
+			"Type",
+			"Volatility",
+			"Security",
+			"Language",
+			"Source code",
+		},
+		nil
 }
 
 func (f FunctionSet) Get() *Function {
@@ -426,7 +513,13 @@ type Function struct {
 
 func (f Function) values() []interface{} {
 	if !f.verbose {
-		return []interface{}{f.Schema, f.Name, f.ResultType, f.ArgTypes, f.Type}
+		return []interface{}{
+			f.Schema,
+			f.Name,
+			f.ResultType,
+			f.ArgTypes,
+			f.Type,
+		}
 	}
 	return []interface{}{
 		f.Catalog,
@@ -466,9 +559,26 @@ func NewFunctionColumnSet(v []FunctionColumn) *FunctionColumnSet {
 
 func (c FunctionColumnSet) Columns() ([]string, error) {
 	if !c.verbose {
-		return []string{"Name", "Type", "Data type"}, nil
+		return []string{
+				"Name",
+				"Type",
+				"Data type",
+			},
+			nil
 	}
-	return []string{"Catalog", "Schema", "Function name", "Name", "Type", "Data type", "Size", "Decimal Digits", "Precision Radix", "Octet Length"}, nil
+	return []string{
+			"Catalog",
+			"Schema",
+			"Function name",
+			"Name",
+			"Type",
+			"Data type",
+			"Size",
+			"Decimal Digits",
+			"Precision Radix",
+			"Octet Length",
+		},
+		nil
 }
 
 func (c FunctionColumnSet) Get() *FunctionColumn {
@@ -527,18 +637,24 @@ func NewSequenceSet(v []Sequence) *SequenceSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &SequenceSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
 		},
 	}
 }
 
 func (s SequenceSet) Columns() ([]string, error) {
-	return []string{"Type", "Start", "Min", "Max", "Increment", "Cycles?"}, nil
+	return []string{
+			"Type",
+			"Start",
+			"Min",
+			"Max",
+			"Increment",
+			"Cycles?",
+		},
+		nil
 }
 
 func (s SequenceSet) Get() *Sequence {
@@ -546,8 +662,6 @@ func (s SequenceSet) Get() *Sequence {
 }
 
 type Sequence struct {
-	verbose bool
-
 	Catalog   string
 	Schema    string
 	Name      string
@@ -560,12 +674,17 @@ type Sequence struct {
 }
 
 func (s Sequence) values() []interface{} {
-	return []interface{}{s.DataType, s.Start, s.Min, s.Max, s.Increment, s.Cycles}
+	return []interface{}{
+		s.DataType,
+		s.Start,
+		s.Min,
+		s.Max,
+		s.Increment,
+		s.Cycles,
+	}
 }
 
-func (s *Sequence) setVerbose(v bool) {
-	s.verbose = v
-}
+func (s *Sequence) setVerbose(v bool) {}
 
 type resultSet struct {
 	results []Result
@@ -620,7 +739,7 @@ func (r *resultSet) Next() bool {
 func (r resultSet) Scan(dest ...interface{}) error {
 	v := r.results[r.current-1].values()
 	if len(v) != len(dest) {
-		return errors.New("error: wrong number of arguments for Scan()")
+		return ErrScanArgsCount
 	}
 	for i, d := range dest {
 		p := d.(*interface{})

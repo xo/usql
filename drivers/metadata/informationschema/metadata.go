@@ -302,8 +302,7 @@ ORDER BY catalog_name, schema_name`
 // Functions from selected catalog (or all, if empty), matching schemas, names and types
 func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string, types []string) (*metadata.FunctionSet, error) {
 	if !s.hasFunctions {
-		// TODO return a non supported error and let callers figure out how to handle
-		return metadata.NewFunctionSet([]metadata.Function{}), nil
+		return nil, metadata.ErrNotSupported
 	}
 
 	qstr := `SELECT
@@ -383,8 +382,7 @@ ORDER BY routine_catalog, routine_schema, routine_type, routine_name`
 // FunctionColumns (arguments) from selected catalog (or all, if empty), matching schemas and functions
 func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPattern string) (*metadata.FunctionColumnSet, error) {
 	if !s.hasFunctions {
-		// TODO return a non supported error and let callers figure out how to handle
-		return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
+		return nil, metadata.ErrNotSupported
 	}
 
 	// TODO column_size does not include interval_precision which doesn't exist in MySQL
@@ -456,10 +454,9 @@ ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, par
 }
 
 // Indexes from selected catalog (or all, if empty), matching schemas and names
-func (s InformationSchema) Indexes(catalog, schemaPattern, namePattern string) (*metadata.IndexSet, error) {
+func (s InformationSchema) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*metadata.IndexSet, error) {
 	if !s.hasIndexes {
-		// TODO return a non supported error and let callers figure out how to handle
-		return metadata.NewIndexSet([]metadata.Index{}), nil
+		return nil, metadata.ErrNotSupported
 	}
 
 	qstr := `SELECT
@@ -481,6 +478,10 @@ FROM information_schema.statistics
 	if schemaPattern != "" {
 		vals = append(vals, schemaPattern)
 		conds = append(conds, fmt.Sprintf("index_schema LIKE %s", s.pf(len(vals))))
+	}
+	if tablePattern != "" {
+		vals = append(vals, tablePattern)
+		conds = append(conds, fmt.Sprintf("table_name LIKE %s", s.pf(len(vals))))
 	}
 	if namePattern != "" {
 		vals = append(vals, namePattern)
@@ -518,10 +519,9 @@ ORDER BY table_catalog, index_schema, table_name, index_name
 }
 
 // IndexColumns from selected catalog (or all, if empty), matching schemas and indexes
-func (s InformationSchema) IndexColumns(catalog, schemaPattern, indexPattern string) (*metadata.IndexColumnSet, error) {
+func (s InformationSchema) IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*metadata.IndexColumnSet, error) {
 	if !s.hasIndexes {
-		// TODO return a non supported error and let callers figure out how to handle
-		return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
+		return nil, metadata.ErrNotSupported
 	}
 
 	qstr := `SELECT
@@ -544,11 +544,15 @@ JOIN information_schema.columns c ON
 	vals := []interface{}{}
 	if catalog != "" {
 		vals = append(vals, catalog)
-		conds = append(conds, fmt.Sprintf("table_catalog = %s", s.pf(len(vals))))
+		conds = append(conds, fmt.Sprintf("i.table_catalog = %s", s.pf(len(vals))))
 	}
 	if schemaPattern != "" {
 		vals = append(vals, schemaPattern)
 		conds = append(conds, fmt.Sprintf("index_schema LIKE %s", s.pf(len(vals))))
+	}
+	if tablePattern != "" {
+		vals = append(vals, tablePattern)
+		conds = append(conds, fmt.Sprintf("i.table_name LIKE %s", s.pf(len(vals))))
 	}
 	if indexPattern != "" {
 		vals = append(vals, indexPattern)
@@ -558,7 +562,7 @@ JOIN information_schema.columns c ON
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
 	qstr += `
-ORDER BY table_catalog, index_schema, index_name, seq_in_index`
+ORDER BY i.table_catalog, index_schema, table_name, index_name, seq_in_index`
 	rows, err := s.db.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
@@ -583,8 +587,7 @@ ORDER BY table_catalog, index_schema, index_name, seq_in_index`
 // Sequences from selected catalog (or all, if empty), matching schemas and names
 func (s InformationSchema) Sequences(catalog, schemaPattern, namePattern string) (*metadata.SequenceSet, error) {
 	if !s.hasSequences {
-		// TODO return a non supported error and let callers figure out how to handle
-		return metadata.NewSequenceSet([]metadata.Sequence{}), nil
+		return nil, metadata.ErrNotSupported
 	}
 
 	qstr := `SELECT

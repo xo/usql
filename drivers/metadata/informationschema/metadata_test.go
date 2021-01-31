@@ -320,7 +320,7 @@ func TestIndexes(t *testing.T) {
 		}
 		r := informationschema.New(db.Opts...)(db.DB).(metadata.IndexReader)
 
-		result, err := r.Indexes("", schemas[dbName], "")
+		result, err := r.Indexes("", schemas[dbName], "", "")
 		if err != nil {
 			log.Fatalf("Could not read %s indexes: %v", dbName, err)
 		}
@@ -344,7 +344,7 @@ func TestIndexColumns(t *testing.T) {
 		"mysql": "idx%",
 	}
 	expected := map[string]string{
-		"mysql": "last_name, address_id, address_id, address_id, city_id, country_id, customer_id, customer_id, film_id, film_id, inventory_id, language_id, original_language_id, staff_id, staff_id, store_id, store_id, last_name, store_id, film_id, title, title, description, manager_staff_id",
+		"mysql": "last_name, city_id, country_id, address_id, store_id, last_name, language_id, original_language_id, title, film_id, title, description, film_id, store_id, film_id, customer_id, staff_id, customer_id, inventory_id, staff_id, address_id, store_id, address_id, manager_staff_id",
 	}
 	for dbName, db := range dbs {
 		if schemas[dbName] == "" {
@@ -352,7 +352,7 @@ func TestIndexColumns(t *testing.T) {
 		}
 		r := informationschema.New(db.Opts...)(db.DB).(metadata.IndexColumnReader)
 
-		result, err := r.IndexColumns("", schemas[dbName], tables[dbName])
+		result, err := r.IndexColumns("", schemas[dbName], "", tables[dbName])
 		if err != nil {
 			log.Fatalf("Could not read %s index columns: %v", dbName, err)
 		}

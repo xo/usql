@@ -1,0 +1,10 @@
+mysql: [Warning] Using a password on the command line interface can be insecure.
++--------------------------+
+| Tables_in_sakila (film%) |
++--------------------------+
+| film                     |
+| film_actor               |
+| film_category            |
+| film_list                |
+| film_text                |
++--------------------------+

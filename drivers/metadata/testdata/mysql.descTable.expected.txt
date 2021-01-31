@@ -16,6 +16,12 @@ BASE TABLE "sakila.film"
  def     | sakila | film  | last_update          | timestamp | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |              10 |            0 
 (13 rows)
 
+Indexes:
+  "idx_fk_language_id" BTREE (language_id)
+  "idx_fk_original_language_id" BTREE (original_language_id)
+  "idx_title" BTREE (title)
+  "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
+
 BASE TABLE "sakila.film_actor"
  Catalog | Schema | Table      | Name        | Type      | Nullable | Default           | Size | Decimal Digits | Precision Radix | Octet Length 
 ---------+--------+------------+-------------+-----------+----------+-------------------+------+----------------+-----------------+--------------
@@ -23,6 +29,10 @@ BASE TABLE "sakila.film_actor"
  def     | sakila | film_actor | film_id     | smallint  | "NO"     |                   |    5 |              0 |              10 |            0 
  def     | sakila | film_actor | last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |              10 |            0 
 (3 rows)
+
+Indexes:
+  "idx_fk_film_id" BTREE (film_id)
+  "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
 
 BASE TABLE "sakila.film_category"
  Catalog | Schema | Table         | Name        | Type      | Nullable | Default           | Size | Decimal Digits | Precision Radix | Octet Length 
@@ -32,6 +42,10 @@ BASE TABLE "sakila.film_category"
  def     | sakila | film_category | last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |              10 |            0 
 (3 rows)
 
+Indexes:
+  "fk_film_category_category" BTREE (category_id)
+  "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
+
 BASE TABLE "sakila.film_text"
  Catalog | Schema | Table     | Name        | Type     | Nullable | Default | Size  | Decimal Digits | Precision Radix | Octet Length 
 ---------+--------+-----------+-------------+----------+----------+---------+-------+----------------+-----------------+--------------
@@ -39,6 +53,10 @@ BASE TABLE "sakila.film_text"
  def     | sakila | film_text | title       | varchar  | "NO"     |         |   255 |              0 |              10 |          765 
  def     | sakila | film_text | description | text     | "YES"    |         | 65535 |              0 |              10 |        65535 
 (3 rows)
+
+Indexes:
+  "idx_title_description" FULLTEXT (title, description)
+  "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
 VIEW "sakila.film_list"
  Catalog | Schema | Table     | Name        | Type     | Nullable | Default | Size  | Decimal Digits | Precision Radix | Octet Length 
