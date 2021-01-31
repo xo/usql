@@ -389,10 +389,21 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 
 // ListAllDbs matching pattern
 func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
-	if w.listAllDbs == nil {
+	if w.listAllDbs != nil {
+		return w.listAllDbs(pattern, verbose)
+	}
+	r, ok := w.r.(CatalogReader)
+	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\l`)
 	}
-	return w.listAllDbs(pattern, verbose)
+	res, err := r.Catalogs()
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	fmt.Fprintln(w.w, "List of databases")
+	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
 // ListTables matching pattern
