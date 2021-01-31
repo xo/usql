@@ -88,8 +88,6 @@ type Reader interface{}
 
 // Writer of database metadata in a human readable format.
 type Writer interface {
-	// DescribeAggregates \da
-	DescribeAggregates(string, bool, bool) error
 	// DescribeFunctions \df, \dfa, \dfn, \dft, \dfw, etc.
 	DescribeFunctions(string, string, bool, bool) error
 	// DescribeTableDetails \d foo
@@ -116,12 +114,9 @@ func NewCatalogSet(v []Catalog) *CatalogSet {
 	return &CatalogSet{
 		resultSet: resultSet{
 			results: r,
+			columns: []string{"Catalog"},
 		},
 	}
-}
-
-func (s CatalogSet) Columns() ([]string, error) {
-	return []string{"Catalog"}, nil
 }
 
 func (s CatalogSet) Get() *Catalog {
@@ -136,8 +131,6 @@ func (s Catalog) values() []interface{} {
 	return []interface{}{s.Catalog}
 }
 
-func (s *Catalog) setVerbose(v bool) {}
-
 type SchemaSet struct {
 	resultSet
 }
@@ -150,12 +143,9 @@ func NewSchemaSet(v []Schema) *SchemaSet {
 	return &SchemaSet{
 		resultSet: resultSet{
 			results: r,
+			columns: []string{"Schema", "Catalog"},
 		},
 	}
-}
-
-func (s SchemaSet) Columns() ([]string, error) {
-	return []string{"Schema", "Catalog"}, nil
 }
 
 func (s SchemaSet) Get() *Schema {
@@ -171,8 +161,6 @@ func (s Schema) values() []interface{} {
 	return []interface{}{s.Schema, s.Catalog}
 }
 
-func (s *Schema) setVerbose(v bool) {}
-
 type TableSet struct {
 	resultSet
 }
@@ -181,21 +169,22 @@ func NewTableSet(v []Table) *TableSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &TableSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
+			columns: []string{
+				"Catalog",
+				"Schema",
+
+				"Name",
+				"Type",
+
+				"Size",
+				"Comment",
+			},
 		},
 	}
-}
-
-func (t TableSet) Columns() ([]string, error) {
-	if !t.verbose {
-		return []string{"Schema", "Name", "Type"}, nil
-	}
-	return []string{"Catalog", "Schema", "Name", "Type", "Size", "Comment"}, nil
 }
 
 func (t TableSet) Get() *Table {
@@ -203,8 +192,6 @@ func (t TableSet) Get() *Table {
 }
 
 type Table struct {
-	verbose bool
-
 	Catalog string
 	Schema  string
 	Name    string
@@ -214,14 +201,14 @@ type Table struct {
 }
 
 func (t Table) values() []interface{} {
-	if !t.verbose {
-		return []interface{}{t.Schema, t.Name, t.Type}
+	return []interface{}{
+		t.Catalog,
+		t.Schema,
+		t.Name,
+		t.Type,
+		t.Size,
+		t.Comment,
 	}
-	return []interface{}{t.Catalog, t.Schema, t.Name, t.Type, t.Size, t.Comment}
-}
-
-func (t *Table) setVerbose(v bool) {
-	t.verbose = v
 }
 
 type ColumnSet struct {
@@ -232,40 +219,27 @@ func NewColumnSet(v []Column) *ColumnSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &ColumnSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
-		},
-	}
-}
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Table",
 
-func (c ColumnSet) Columns() ([]string, error) {
-	if !c.verbose {
-		return []string{
 				"Name",
 				"Type",
 				"Nullable",
 				"Default",
+
+				"Size",
+				"Decimal Digits",
+				"Precision Radix",
+				"Octet Length",
 			},
-			nil
-	}
-	return []string{
-			"Catalog",
-			"Schema",
-			"Table",
-			"Name",
-			"Type",
-			"Nullable",
-			"Default",
-			"Size",
-			"Decimal Digits",
-			"Precision Radix",
-			"Octet Length",
 		},
-		nil
+	}
 }
 
 func (c ColumnSet) Get() *Column {
@@ -273,8 +247,6 @@ func (c ColumnSet) Get() *Column {
 }
 
 type Column struct {
-	verbose bool
-
 	Catalog         string
 	Schema          string
 	Table           string
@@ -299,14 +271,6 @@ var (
 )
 
 func (c Column) values() []interface{} {
-	if !c.verbose {
-		return []interface{}{
-			c.Name,
-			c.DataType,
-			c.IsNullable,
-			c.Default,
-		}
-	}
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -322,10 +286,6 @@ func (c Column) values() []interface{} {
 	}
 }
 
-func (c *Column) setVerbose(v bool) {
-	c.verbose = v
-}
-
 type IndexSet struct {
 	resultSet
 }
@@ -334,21 +294,23 @@ func NewIndexSet(v []Index) *IndexSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &IndexSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
+			columns: []string{
+				"Catalog",
+				"Schema",
+
+				"Name",
+				"Table",
+
+				"Is primary",
+				"Is unique",
+				"Type",
+			},
 		},
 	}
-}
-
-func (i IndexSet) Columns() ([]string, error) {
-	if !i.verbose {
-		return []string{"Schema", "Name", "Table"}, nil
-	}
-	return []string{"Catalog", "Schema", "Name", "Table", "Is primary", "Is unique", "Type"}, nil
 }
 
 func (i IndexSet) Get() *Index {
@@ -356,8 +318,6 @@ func (i IndexSet) Get() *Index {
 }
 
 type Index struct {
-	verbose bool
-
 	Catalog   string
 	Schema    string
 	Table     string
@@ -369,14 +329,15 @@ type Index struct {
 }
 
 func (i Index) values() []interface{} {
-	if !i.verbose {
-		return []interface{}{i.Schema, i.Name, i.Table}
+	return []interface{}{
+		i.Catalog,
+		i.Schema,
+		i.Name,
+		i.Table,
+		i.IsPrimary,
+		i.IsUnique,
+		i.Type,
 	}
-	return []interface{}{i.Catalog, i.Schema, i.Name, i.Table, i.IsPrimary, i.IsUnique, i.Type}
-}
-
-func (i *Index) setVerbose(v bool) {
-	i.verbose = v
 }
 
 type IndexColumnSet struct {
@@ -387,29 +348,21 @@ func NewIndexColumnSet(v []IndexColumn) *IndexColumnSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &IndexColumnSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
-		},
-	}
-}
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Table",
+				"Index name",
 
-func (c IndexColumnSet) Columns() ([]string, error) {
-	if !c.verbose {
-		return []string{"Name", "Data type"}, nil
-	}
-	return []string{
-			"Catalog",
-			"Schema",
-			"Table",
-			"Index name",
-			"Name",
-			"Data type",
+				"Name",
+				"Data type",
+			},
 		},
-		nil
+	}
 }
 
 func (c IndexColumnSet) Get() *IndexColumn {
@@ -417,8 +370,6 @@ func (c IndexColumnSet) Get() *IndexColumn {
 }
 
 type IndexColumn struct {
-	verbose bool
-
 	Catalog         string
 	Schema          string
 	Table           string
@@ -429,9 +380,6 @@ type IndexColumn struct {
 }
 
 func (c IndexColumn) values() []interface{} {
-	if !c.verbose {
-		return []interface{}{c.Name, c.DataType}
-	}
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -442,10 +390,6 @@ func (c IndexColumn) values() []interface{} {
 	}
 }
 
-func (c *IndexColumn) setVerbose(v bool) {
-	c.verbose = v
-}
-
 type FunctionSet struct {
 	resultSet
 }
@@ -454,40 +398,26 @@ func NewFunctionSet(v []Function) *FunctionSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &FunctionSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
-		},
-	}
-}
-
-func (f FunctionSet) Columns() ([]string, error) {
-	if !f.verbose {
-		return []string{
+			columns: []string{
+				"Catalog",
 				"Schema",
+
 				"Name",
 				"Result data type",
 				"Argument data types",
 				"Type",
+
+				"Volatility",
+				"Security",
+				"Language",
+				"Source code",
 			},
-			nil
-	}
-	return []string{
-			"Catalog",
-			"Schema",
-			"Name",
-			"Result data type",
-			"Argument data types",
-			"Type",
-			"Volatility",
-			"Security",
-			"Language",
-			"Source code",
 		},
-		nil
+	}
 }
 
 func (f FunctionSet) Get() *Function {
@@ -495,8 +425,6 @@ func (f FunctionSet) Get() *Function {
 }
 
 type Function struct {
-	verbose bool
-
 	Catalog    string
 	Schema     string
 	Name       string
@@ -512,15 +440,6 @@ type Function struct {
 }
 
 func (f Function) values() []interface{} {
-	if !f.verbose {
-		return []interface{}{
-			f.Schema,
-			f.Name,
-			f.ResultType,
-			f.ArgTypes,
-			f.Type,
-		}
-	}
 	return []interface{}{
 		f.Catalog,
 		f.Schema,
@@ -535,10 +454,6 @@ func (f Function) values() []interface{} {
 	}
 }
 
-func (f *Function) setVerbose(v bool) {
-	f.verbose = v
-}
-
 type FunctionColumnSet struct {
 	resultSet
 }
@@ -547,38 +462,26 @@ func NewFunctionColumnSet(v []FunctionColumn) *FunctionColumnSet {
 	r := make([]Result, len(v))
 	for i := range v {
 		r[i] = &v[i]
-		r[i].setVerbose(true)
 	}
 	return &FunctionColumnSet{
 		resultSet: resultSet{
 			results: r,
-			verbose: true,
-		},
-	}
-}
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Function name",
 
-func (c FunctionColumnSet) Columns() ([]string, error) {
-	if !c.verbose {
-		return []string{
 				"Name",
 				"Type",
 				"Data type",
+
+				"Size",
+				"Decimal Digits",
+				"Precision Radix",
+				"Octet Length",
 			},
-			nil
-	}
-	return []string{
-			"Catalog",
-			"Schema",
-			"Function name",
-			"Name",
-			"Type",
-			"Data type",
-			"Size",
-			"Decimal Digits",
-			"Precision Radix",
-			"Octet Length",
 		},
-		nil
+	}
 }
 
 func (c FunctionColumnSet) Get() *FunctionColumn {
@@ -586,8 +489,6 @@ func (c FunctionColumnSet) Get() *FunctionColumn {
 }
 
 type FunctionColumn struct {
-	verbose bool
-
 	Catalog         string
 	Schema          string
 	Table           string
@@ -604,13 +505,6 @@ type FunctionColumn struct {
 }
 
 func (c FunctionColumn) values() []interface{} {
-	if !c.verbose {
-		return []interface{}{
-			c.Name,
-			c.Type,
-			c.DataType,
-		}
-	}
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -625,10 +519,6 @@ func (c FunctionColumn) values() []interface{} {
 	}
 }
 
-func (c *FunctionColumn) setVerbose(v bool) {
-	c.verbose = v
-}
-
 type SequenceSet struct {
 	resultSet
 }
@@ -641,20 +531,16 @@ func NewSequenceSet(v []Sequence) *SequenceSet {
 	return &SequenceSet{
 		resultSet: resultSet{
 			results: r,
+			columns: []string{
+				"Type",
+				"Start",
+				"Min",
+				"Max",
+				"Increment",
+				"Cycles?",
+			},
 		},
 	}
-}
-
-func (s SequenceSet) Columns() ([]string, error) {
-	return []string{
-			"Type",
-			"Start",
-			"Min",
-			"Max",
-			"Increment",
-			"Cycles?",
-		},
-		nil
 }
 
 func (s SequenceSet) Get() *Sequence {
@@ -684,29 +570,28 @@ func (s Sequence) values() []interface{} {
 	}
 }
 
-func (s *Sequence) setVerbose(v bool) {}
-
 type resultSet struct {
-	results []Result
-	current int
-	verbose bool
-	filter  func(Result) bool
+	results    []Result
+	columns    []string
+	current    int
+	filter     func(Result) bool
+	scanValues func(Result) []interface{}
 }
 
 type Result interface {
 	values() []interface{}
-	setVerbose(bool)
-}
-
-func (r *resultSet) SetVerbose(v bool) {
-	r.verbose = v
-	for _, rec := range r.results {
-		rec.setVerbose(v)
-	}
 }
 
 func (r *resultSet) SetFilter(f func(Result) bool) {
 	r.filter = f
+}
+
+func (r *resultSet) SetColumns(c []string) {
+	r.columns = c
+}
+
+func (r *resultSet) SetScanValues(s func(Result) []interface{}) {
+	r.scanValues = s
 }
 
 func (r *resultSet) Len() int {
@@ -736,8 +621,17 @@ func (r *resultSet) Next() bool {
 	return r.current <= len(r.results)
 }
 
+func (r resultSet) Columns() ([]string, error) {
+	return r.columns, nil
+}
+
 func (r resultSet) Scan(dest ...interface{}) error {
-	v := r.results[r.current-1].values()
+	var v []interface{}
+	if r.scanValues == nil {
+		v = r.results[r.current-1].values()
+	} else {
+		v = r.scanValues(r.results[r.current-1])
+	}
 	if len(v) != len(dest) {
 		return ErrScanArgsCount
 	}

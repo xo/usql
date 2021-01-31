@@ -86,32 +86,6 @@ func WithListAllDbs(f func(string, bool) error) Option {
 	}
 }
 
-// DescribeAggregates matching pattern
-func (w DefaultWriter) DescribeAggregates(pattern string, verbose, showSystem bool) error {
-	r, ok := w.r.(FunctionReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\da`)
-	}
-	sp, tp, err := parsePattern(pattern)
-	if err != nil {
-		return err
-	}
-	res, err := r.Functions("", sp, tp, []string{"AGGREGATE"})
-	if err != nil {
-		return err
-	}
-	defer res.Close()
-
-	if !showSystem {
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Function).Schema]
-			return !ok
-		})
-	}
-	res.SetVerbose(verbose)
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
-}
-
 // DescribeFunctions matching pattern
 func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(FunctionReader)
@@ -140,6 +114,7 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 			return !ok
 		})
 	}
+
 	if _, ok := w.r.(FunctionColumnReader); ok {
 		for res.Next() {
 			f := res.Get()
@@ -151,7 +126,19 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 		res.Reset()
 	}
 
-	res.SetVerbose(verbose)
+	columns := []string{"Name", "Result data type", "Argument data types", "Type"}
+	if verbose {
+		columns = append(columns, "Volatility", "Security", "Language", "Source code")
+	}
+	res.SetColumns(columns)
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*Function)
+		v := []interface{}{f.Name, f.ResultType, f.ArgTypes, f.Type}
+		if verbose {
+			v = append(v, f.Volatility, f.Security, f.Language, f.Source)
+		}
+		return v
+	})
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -237,7 +224,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			for res.Next() {
 				i := res.Get()
 				fmt.Fprintf(w.w, "Index \"%s.%s\"\n", i.Schema, i.Name)
-				err = w.describeIndexes(i.Schema, i.Table, i.Name, verbose, showSystem)
+				err = w.describeIndexes(i.Schema, i.Table, i.Name)
 				if err != nil {
 					return err
 				}
@@ -261,7 +248,19 @@ func (w DefaultWriter) describeTableDetails(sp, tp string, verbose, showSystem b
 	}
 	defer res.Close()
 
-	res.SetVerbose(verbose)
+	columns := []string{"Name", "Type", "Nullable", "Default"}
+	if verbose {
+		columns = append(columns, "Size", "Decimal Digits", "Radix", "Octet Length")
+	}
+	res.SetColumns(columns)
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*Column)
+		v := []interface{}{f.Name, f.DataType, f.IsNullable, f.Default}
+		if verbose {
+			v = append(v, f.ColumnSize, f.DecimalDigits, f.NumPrecRadix, f.CharOctetLength)
+		}
+		return v
+	})
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
@@ -357,7 +356,7 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 	return found, nil
 }
 
-func (w DefaultWriter) describeIndexes(sp, tp, ip string, verbose, showSystem bool) error {
+func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 	r := w.r.(IndexColumnReader)
 	res, err := r.IndexColumns("", sp, tp, ip)
 	if err != nil {
@@ -367,6 +366,12 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string, verbose, showSystem bo
 	if res.Len() == 0 {
 		return nil
 	}
+
+	res.SetColumns([]string{"Name", "Type"})
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*IndexColumn)
+		return []interface{}{f.Name, f.DataType}
+	})
 
 	// TODO footer should say if it's primary, index type and which table this index belongs to
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
@@ -417,8 +422,20 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 		fmt.Fprintln(w.w)
 		return nil
 	}
+	columns := []string{"Schema", "Name", "Type"}
+	if verbose {
+		columns = append(columns, "Size", "Comment")
+	}
+	res.SetColumns(columns)
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*Table)
+		v := []interface{}{f.Schema, f.Name, f.Type}
+		if verbose {
+			v = append(v, f.Size, f.Comment)
+		}
+		return v
+	})
 
-	res.SetVerbose(verbose)
 	fmt.Fprintln(w.w, "List or relations")
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
@@ -441,7 +458,6 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 			return !ok
 		})
 	}
-	res.SetVerbose(verbose)
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
@@ -473,7 +489,20 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 		return nil
 	}
 
-	res.SetVerbose(verbose)
+	columns := []string{"Schema", "Name", "Type", "Table"}
+	if verbose {
+		columns = append(columns, "Primary?", "Unique?")
+	}
+	res.SetColumns(columns)
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*Index)
+		v := []interface{}{f.Schema, f.Name, f.Type, f.Table}
+		if verbose {
+			v = append(v, f.IsPrimary, f.IsUnique)
+		}
+		return v
+	})
+
 	return tblfmt.EncodeAll(w.w, res, env.Pall())
 }
 
