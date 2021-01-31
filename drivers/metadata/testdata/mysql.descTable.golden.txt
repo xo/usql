@@ -16,6 +16,14 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | special_features     | set('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') | YES  |     | NULL              |                                               |
 | last_update          | timestamp                                                           | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +----------------------+---------------------------------------------------------------------+------+-----+-------------------+-----------------------------------------------+
++-------+------------+-----------------------------+--------------+----------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name                    | Seq_in_index | Column_name          | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-----------------------------+--------------+----------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| film  |          0 | PRIMARY                     |            1 | film_id              | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film  |          1 | idx_title                   |            1 | title                | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film  |          1 | idx_fk_language_id          |            1 | language_id          | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film  |          1 | idx_fk_original_language_id |            1 | original_language_id | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-----------------------------+--------------+----------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
 | Field       | Type              | Null | Key | Default           | Extra                                         |
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
@@ -23,6 +31,13 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | film_id     | smallint unsigned | NO   | PRI | NULL              |                                               |
 | last_update | timestamp         | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
++------------+------------+----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table      | Non_unique | Key_name       | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++------------+------------+----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| film_actor |          0 | PRIMARY        |            1 | actor_id    | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film_actor |          0 | PRIMARY        |            2 | film_id     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film_actor |          1 | idx_fk_film_id |            1 | film_id     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++------------+------------+----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
 | Field       | Type              | Null | Key | Default           | Extra                                         |
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
@@ -30,6 +45,13 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | category_id | tinyint unsigned  | NO   | PRI | NULL              |                                               |
 | last_update | timestamp         | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
 +-------------+-------------------+------+-----+-------------------+-----------------------------------------------+
++---------------+------------+---------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table         | Non_unique | Key_name                  | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------------+------------+---------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| film_category |          0 | PRIMARY                   |            1 | film_id     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film_category |          0 | PRIMARY                   |            2 | category_id | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film_category |          1 | fk_film_category_category |            1 | category_id | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++---------------+------------+---------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
 +-------------+------------------------------------+------+-----+---------+-------+
 | Field       | Type                               | Null | Key | Default | Extra |
 +-------------+------------------------------------+------+-----+---------+-------+
@@ -49,3 +71,10 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | title       | varchar(255) | NO   | MUL | NULL    |       |
 | description | text         | YES  |     | NULL    |       |
 +-------------+--------------+------+-----+---------+-------+
++-----------+------------+-----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table     | Non_unique | Key_name              | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-----------+------------+-----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| film_text |          0 | PRIMARY               |            1 | film_id     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| film_text |          1 | idx_title_description |            1 | title       | NULL      |        NULL |     NULL |   NULL |      | FULLTEXT   |         |               | YES     | NULL       |
+| film_text |          1 | idx_title_description |            2 | description | NULL      |        NULL |     NULL |   NULL | YES  | FULLTEXT   |         |               | YES     | NULL       |
++-----------+------------+-----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+

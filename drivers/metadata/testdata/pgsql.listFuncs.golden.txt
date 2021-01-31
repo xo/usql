@@ -1,0 +1,15 @@
+                                                          List of functions
+ Schema |            Name            | Result data type |                         Argument data types                         | Type 
+--------+----------------------------+------------------+---------------------------------------------------------------------+------
+ public | _group_concat              | text             | text, text                                                          | func
+ public | film_in_stock              | SETOF integer    | p_film_id integer, p_store_id integer, OUT p_film_count integer     | func
+ public | film_not_in_stock          | SETOF integer    | p_film_id integer, p_store_id integer, OUT p_film_count integer     | func
+ public | get_customer_balance       | numeric          | p_customer_id integer, p_effective_date timestamp without time zone | func
+ public | group_concat               | text             | text                                                                | agg
+ public | inventory_held_by_customer | integer          | p_inventory_id integer                                              | func
+ public | inventory_in_stock         | boolean          | p_inventory_id integer                                              | func
+ public | last_day                   | date             | timestamp without time zone                                         | func
+ public | last_updated               | trigger          |                                                                     | func
+ public | rewards_report             | SETOF customer   | min_monthly_purchases integer, min_dollar_amount_purchased numeric  | func
+(10 rows)
+

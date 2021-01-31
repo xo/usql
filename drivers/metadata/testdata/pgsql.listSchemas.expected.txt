@@ -1,0 +1,6 @@
+List of schemas
+ Schema | Catalog  
+--------+----------
+ public | postgres 
+(1 row)
+
