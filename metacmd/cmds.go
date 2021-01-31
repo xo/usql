@@ -613,9 +613,7 @@ func init() {
 						return m.DescribeTableDetails(pattern, verbose, showSystem)
 					}
 					return m.ListTables("tvmsE", pattern, verbose, showSystem)
-				case "da":
-					return m.DescribeAggregates(pattern, verbose, showSystem)
-				case "df":
+				case "df", "da":
 					return m.DescribeFunctions(name, pattern, verbose, showSystem)
 				case "dt", "dv", "dm", "ds":
 					return m.ListTables(name, pattern, verbose, showSystem)

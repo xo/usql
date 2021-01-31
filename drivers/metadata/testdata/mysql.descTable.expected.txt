@@ -1,19 +1,19 @@
 BASE TABLE "sakila.film"
- Catalog | Schema | Table | Name                 | Type      | Nullable | Default           | Size  | Decimal Digits | Precision Radix | Octet Length 
----------+--------+-------+----------------------+-----------+----------+-------------------+-------+----------------+-----------------+--------------
- def     | sakila | film  | film_id              | smallint  | "NO"     |                   |     5 |              0 |              10 |            0 
- def     | sakila | film  | title                | varchar   | "NO"     |                   |   255 |              0 |              10 |          765 
- def     | sakila | film  | description          | text      | "YES"    |                   | 65535 |              0 |              10 |        65535 
- def     | sakila | film  | release_year         | year      | "YES"    |                   |     0 |              0 |              10 |            0 
- def     | sakila | film  | language_id          | tinyint   | "NO"     |                   |     3 |              0 |              10 |            0 
- def     | sakila | film  | original_language_id | tinyint   | "YES"    |                   |     3 |              0 |              10 |            0 
- def     | sakila | film  | rental_duration      | tinyint   | "NO"     | 3                 |     3 |              0 |              10 |            0 
- def     | sakila | film  | rental_rate          | decimal   | "NO"     | 4.99              |     4 |              2 |              10 |            0 
- def     | sakila | film  | length               | smallint  | "YES"    |                   |     5 |              0 |              10 |            0 
- def     | sakila | film  | replacement_cost     | decimal   | "NO"     | 19.99             |     5 |              2 |              10 |            0 
- def     | sakila | film  | rating               | enum      | "YES"    | G                 |     5 |              0 |              10 |           15 
- def     | sakila | film  | special_features     | set       | "YES"    |                   |    54 |              0 |              10 |          162 
- def     | sakila | film  | last_update          | timestamp | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |              10 |            0 
+ Name                 | Type      | Nullable | Default           | Size  | Decimal Digits | Radix | Octet Length 
+----------------------+-----------+----------+-------------------+-------+----------------+-------+--------------
+ film_id              | smallint  | "NO"     |                   |     5 |              0 |    10 |            0 
+ title                | varchar   | "NO"     |                   |   255 |              0 |    10 |          765 
+ description          | text      | "YES"    |                   | 65535 |              0 |    10 |        65535 
+ release_year         | year      | "YES"    |                   |     0 |              0 |    10 |            0 
+ language_id          | tinyint   | "NO"     |                   |     3 |              0 |    10 |            0 
+ original_language_id | tinyint   | "YES"    |                   |     3 |              0 |    10 |            0 
+ rental_duration      | tinyint   | "NO"     | 3                 |     3 |              0 |    10 |            0 
+ rental_rate          | decimal   | "NO"     | 4.99              |     4 |              2 |    10 |            0 
+ length               | smallint  | "YES"    |                   |     5 |              0 |    10 |            0 
+ replacement_cost     | decimal   | "NO"     | 19.99             |     5 |              2 |    10 |            0 
+ rating               | enum      | "YES"    | G                 |     5 |              0 |    10 |           15 
+ special_features     | set       | "YES"    |                   |    54 |              0 |    10 |          162 
+ last_update          | timestamp | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |    10 |            0 
 (13 rows)
 
 Indexes:
@@ -23,11 +23,11 @@ Indexes:
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
 BASE TABLE "sakila.film_actor"
- Catalog | Schema | Table      | Name        | Type      | Nullable | Default           | Size | Decimal Digits | Precision Radix | Octet Length 
----------+--------+------------+-------------+-----------+----------+-------------------+------+----------------+-----------------+--------------
- def     | sakila | film_actor | actor_id    | smallint  | "NO"     |                   |    5 |              0 |              10 |            0 
- def     | sakila | film_actor | film_id     | smallint  | "NO"     |                   |    5 |              0 |              10 |            0 
- def     | sakila | film_actor | last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |              10 |            0 
+ Name        | Type      | Nullable | Default           | Size | Decimal Digits | Radix | Octet Length 
+-------------+-----------+----------+-------------------+------+----------------+-------+--------------
+ actor_id    | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
+ film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
+ last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
 (3 rows)
 
 Indexes:
@@ -35,11 +35,11 @@ Indexes:
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
 
 BASE TABLE "sakila.film_category"
- Catalog | Schema | Table         | Name        | Type      | Nullable | Default           | Size | Decimal Digits | Precision Radix | Octet Length 
----------+--------+---------------+-------------+-----------+----------+-------------------+------+----------------+-----------------+--------------
- def     | sakila | film_category | film_id     | smallint  | "NO"     |                   |    5 |              0 |              10 |            0 
- def     | sakila | film_category | category_id | tinyint   | "NO"     |                   |    3 |              0 |              10 |            0 
- def     | sakila | film_category | last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |              10 |            0 
+ Name        | Type      | Nullable | Default           | Size | Decimal Digits | Radix | Octet Length 
+-------------+-----------+----------+-------------------+------+----------------+-------+--------------
+ film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
+ category_id | tinyint   | "NO"     |                   |    3 |              0 |    10 |            0 
+ last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
 (3 rows)
 
 Indexes:
@@ -47,11 +47,11 @@ Indexes:
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
 
 BASE TABLE "sakila.film_text"
- Catalog | Schema | Table     | Name        | Type     | Nullable | Default | Size  | Decimal Digits | Precision Radix | Octet Length 
----------+--------+-----------+-------------+----------+----------+---------+-------+----------------+-----------------+--------------
- def     | sakila | film_text | film_id     | smallint | "NO"     |         |     5 |              0 |              10 |            0 
- def     | sakila | film_text | title       | varchar  | "NO"     |         |   255 |              0 |              10 |          765 
- def     | sakila | film_text | description | text     | "YES"    |         | 65535 |              0 |              10 |        65535 
+ Name        | Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+-------------+----------+----------+---------+-------+----------------+-------+--------------
+ film_id     | smallint | "NO"     |         |     5 |              0 |    10 |            0 
+ title       | varchar  | "NO"     |         |   255 |              0 |    10 |          765 
+ description | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
 (3 rows)
 
 Indexes:
@@ -59,15 +59,15 @@ Indexes:
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
 VIEW "sakila.film_list"
- Catalog | Schema | Table     | Name        | Type     | Nullable | Default | Size  | Decimal Digits | Precision Radix | Octet Length 
----------+--------+-----------+-------------+----------+----------+---------+-------+----------------+-----------------+--------------
- def     | sakila | film_list | FID         | smallint | "YES"    | 0       |     5 |              0 |              10 |            0 
- def     | sakila | film_list | title       | varchar  | "YES"    |         |   255 |              0 |              10 |          765 
- def     | sakila | film_list | description | text     | "YES"    |         | 65535 |              0 |              10 |        65535 
- def     | sakila | film_list | category    | varchar  | "NO"     |         |    25 |              0 |              10 |           75 
- def     | sakila | film_list | price       | decimal  | "YES"    | 4.99    |     4 |              2 |              10 |            0 
- def     | sakila | film_list | length      | smallint | "YES"    |         |     5 |              0 |              10 |            0 
- def     | sakila | film_list | rating      | enum     | "YES"    | G       |     5 |              0 |              10 |           15 
- def     | sakila | film_list | actors      | text     | "YES"    |         | 65535 |              0 |              10 |        65535 
+ Name        | Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+-------------+----------+----------+---------+-------+----------------+-------+--------------
+ FID         | smallint | "YES"    | 0       |     5 |              0 |    10 |            0 
+ title       | varchar  | "YES"    |         |   255 |              0 |    10 |          765 
+ description | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
+ category    | varchar  | "NO"     |         |    25 |              0 |    10 |           75 
+ price       | decimal  | "YES"    | 4.99    |     4 |              2 |    10 |            0 
+ length      | smallint | "YES"    |         |     5 |              0 |    10 |            0 
+ rating      | enum     | "YES"    | G       |     5 |              0 |    10 |           15 
+ actors      | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
 (8 rows)
 
