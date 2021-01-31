@@ -8,17 +8,21 @@ import (
 
 	"github.com/lib/pq" // DRIVER: postgres
 	"github.com/xo/dburl"
-	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/informationschema"
-	"github.com/xo/usql/env"
 )
 
 func init() {
-	newReader := informationschema.New(
-		informationschema.WithIndexes(false),
-	)
+	newReader := func(db drivers.DB) metadata.Reader {
+		ir := informationschema.New(
+			informationschema.WithIndexes(false),
+		)(db)
+		mr := &metaReader{
+			db: db,
+		}
+		return metadata.NewPluginReader(ir, mr)
+	}
 	drivers.Register("postgres", drivers.Driver{
 		Name:                   "pq",
 		AllowDollar:            true,
@@ -60,31 +64,8 @@ func init() {
 			reader := newReader(db)
 			opts := []metadata.Option{
 				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
-				metadata.WithListAllDbs(func(pattern string, verbose bool) error {
-					return listAllDbs(db, w, pattern, verbose)
-				}),
 			}
 			return metadata.NewDefaultWriter(reader, opts...)(db, w)
 		},
 	}, "cockroachdb", "redshift")
-}
-
-func listAllDbs(db drivers.DB, w io.Writer, pattern string, verbose bool) error {
-	qstr := `
-SELECT d.datname as "Name",
-       pg_catalog.pg_get_userbyid(d.datdba) as "Owner",
-       pg_catalog.pg_encoding_to_char(d.encoding) as "Encoding",
-       d.datcollate as "Collate",
-       d.datctype as "Ctype",
-       pg_catalog.array_to_string(d.datacl, E'\n') AS "Access privileges"
-FROM pg_catalog.pg_database d
-ORDER BY 1;
-`
-	rows, err := db.Query(qstr)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	return tblfmt.EncodeAll(w, rows, env.Pall())
 }
