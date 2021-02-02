@@ -48,6 +48,11 @@ for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED; do
   fi
 done
 
+EXISTS=$(docker image ls -q $IMAGE)
+if [[ "$UPDATE" == "0" && -z "$EXISTS" ]]; then
+  UPDATE=1
+fi
+
 echo "IMAGE:      $IMAGE (update: $UPDATE)"
 echo "PUBLISH:    $PUBLISH"
 echo "ENV:        $ENV"
