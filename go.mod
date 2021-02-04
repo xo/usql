@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/spanner v1.16.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
+	github.com/IBM/nzgo v11.1.0+incompatible
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/Microsoft/hcsshim v0.8.15 // indirect
@@ -79,7 +80,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.1 // indirect
-	github.com/xo/dburl v0.4.0
+	github.com/xo/dburl v0.5.0
 	github.com/xo/tblfmt v0.4.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5

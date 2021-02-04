@@ -235,6 +235,7 @@ supports:
 | Genji (genji)                    | gj                                       |
 | Google BigQuery (bigquery)       | bq                                       |
 | Google Spanner (spanner)         | sp                                       |
+| IBM Netezza                      | nz, netezza                              |
 | Microsoft ADODB (adodb)          | ad, ado                                  |
 | ModernC SQLite (moderncsqlite)   | mq, modernsqlite                         |
 | ODBC (odbc)                      | od                                       |
@@ -281,6 +282,7 @@ associated Go build tag:
 | Genji                | genji         | [github.com/genjidb/genji/sql/driver][d-genji]                        |
 | Google BigQuery      | bigquery      | [gorm.io/driver/bigquery/driver][d-bigquery]                          |
 | Google Spanner       | spanner       | [github.com/rakyll/go-sql-driver-spanner][d-spanner]                  |
+| IBM Netezza          | netezza       | [github.com/IBM/nzgo][d-nzgo]                                         |
 | Microsoft ADODB      | adodb         | [github.com/mattn/go-adodb][d-adodb]                                  |
 | ModernC SQLite       | moderncsqlite | [modernc.org/sqlite][d-moderncsqlite]                                 |
 | ODBC                 | odbc          | [github.com/alexbrainman/odbc][d-odbc]                                |
@@ -288,7 +290,7 @@ associated Go build tag:
 | SAP ASE              | tds           | [github.com/thda/tds][d-tds]                                          |
 | SAP HANA             | hdb           | [github.com/SAP/go-hdb/driver][d-hdb]                                 |
 | Snowflake            | snowflake     | [github.com/snowflakedb/gosnowflake][d-snowflake]                     |
-| Trino                | trino         | [github.com/trinodb/trino-go-client/trino][d-trino]               |
+| Trino                | trino         | [github.com/trinodb/trino-go-client/trino][d-trino]                   |
 | Vertica              | vertica       | [github.com/vertica/vertica-sql-go][d-vertica]                        |
 | VoltDB               | voltdb        | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]           |
 |                      |               |                                                                       |
@@ -902,6 +904,7 @@ marked `help wanted` on the GitHub issue tracker!
 [d-moderncsqlite]: https://modernc.org/sqlite
 [d-mymysql]: https://github.com/ziutek/mymysql
 [d-mysql]: https://github.com/go-sql-driver/mysql
+[d-nzgo]: https://github.com/IBM/nzgo
 [d-odbc]: https://github.com/alexbrainman/odbc
 [d-oracle]: https://github.com/sijms/go-ora
 [d-pgx]: https://github.com/jackc/pgx

@@ -68,6 +68,8 @@ github.com/ClickHouse/clickhouse-go v1.4.3/go.mod h1:EaI/sW7Azgz9UATzd5ZdZHRUhHg
 github.com/DATA-DOG/go-sqlmock v1.4.1/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20OEh60=
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
+github.com/IBM/nzgo v11.1.0+incompatible h1:CaaDdlBodPo+ZiHuMMWBpfSQlSH88/nxCzsdCnQRbAA=
+github.com/IBM/nzgo v11.1.0+incompatible/go.mod h1:n1QK6KJjNa8fe+HQPynW+mJpRpkffLXMO8LR9Nja0JU=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
@@ -1053,8 +1055,8 @@ github.com/xeipuuv/gojsonschema v0.0.0-20180618132009-1d523034197f/go.mod h1:5yf
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0 h1:nrYFWDrB2F7VwYlNravXZS0nOtg9axlATH3Jns55/F0=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
-github.com/xo/dburl v0.4.0 h1:Cz0YN7v8XtYZMIU6DYQ/1Xt8qPai56hsln0VzltJolY=
-github.com/xo/dburl v0.4.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
+github.com/xo/dburl v0.5.0 h1:jQveGzIMQwFLNJbiKXbLhJ14Wd8RawEGeCtB9warjPM=
+github.com/xo/dburl v0.5.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.4.0 h1:ZVJDeSee7aTe3xfJJBAy2HKvQNvu9Zsq2YetAhgtjfg=
 github.com/xo/tblfmt v0.4.0/go.mod h1:y3FiUQCdOz8rY+kGwR9tfL3reuvwBQCfXcTuX4gRyFU=
