@@ -29,6 +29,7 @@ func KnownBuildTags() map[string]string {
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
+		"netezza":       "nzgo",          // github.com/IBM/nzgo
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora
 		"pgx":           "pgx",           // github.com/jackc/pgx/v4/stdlib
