@@ -39,14 +39,13 @@ func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer 
 	defaultWriter := &DefaultWriter{
 		r: r,
 		tableTypes: map[rune][]string{
-			't': {"TABLE", "BASE TABLE"},
+			't': {"TABLE", "BASE TABLE", "SYSTEM TABLE", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"},
 			'v': {"VIEW"},
 			'm': {"MATERIALIZED VIEW"},
 			's': {"SEQUENCE"},
 		},
 		funcTypes: map[rune][]string{
 			'a': {"AGGREGATE"},
-			'f': {"FUNCTION"},
 			'n': {"FUNCTION"},
 			'p': {"PROCEDURE"},
 			't': {"TRIGGER"},
@@ -264,7 +263,11 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 		}
 		return v
 	})
-	fmt.Fprintf(w.w, "%s \"%s.%s\"\n", typ, sp, tp)
+	if sp == "" {
+		fmt.Fprintf(w.w, "%s \"%s\"\n", typ, tp)
+	} else {
+		fmt.Fprintf(w.w, "%s \"%s.%s\"\n", typ, sp, tp)
+	}
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err
@@ -378,7 +381,11 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 	})
 
 	// TODO footer should say if it's primary, index type and which table this index belongs to
-	fmt.Fprintf(w.w, "Index \"%s.%s\"\n", sp, ip)
+	if sp == "" {
+		fmt.Fprintf(w.w, "Index \"%s\"\n", ip)
+	} else {
+		fmt.Fprintf(w.w, "Index \"%s.%s\"\n", sp, ip)
+	}
 	err = tblfmt.EncodeAll(w.w, res, env.Pall())
 	if err != nil {
 		return err

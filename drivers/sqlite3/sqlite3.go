@@ -9,10 +9,16 @@ import (
 
 	"github.com/mattn/go-sqlite3" // DRIVER: sqlite3
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/xoutil"
 )
 
 func init() {
+	newReader := func(db drivers.DB) metadata.Reader {
+		return &metaReader{
+			db: db,
+		}
+	}
 	drivers.Register("sqlite3", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: drivers.ForceQueryParameters([]string{
@@ -48,5 +54,6 @@ func init() {
 			}
 			return s, nil
 		},
+		NewMetadataReader: newReader,
 	})
 }
