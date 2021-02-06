@@ -55,8 +55,6 @@ FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
      LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
 WHERE c.relkind IN ('i','I','')
-      AND n.nspname <> 'pg_catalog'
-      AND n.nspname <> 'information_schema'
       AND n.nspname !~ '^pg_toast'
   AND pg_catalog.pg_table_is_visible(c.oid)
 `

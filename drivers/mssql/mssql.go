@@ -15,13 +15,19 @@ import (
 )
 
 func init() {
-	newReader := infos.New(
-		infos.WithIndexes(false),
-		infos.WithSequences(false),
-		infos.WithCustomColumns(map[infos.ColumnName]string{
-			infos.FunctionsSecurityType: "''",
-		}),
-	)
+	newReader := func(db drivers.DB) metadata.Reader {
+		ir := infos.New(
+			infos.WithIndexes(false),
+			infos.WithSequences(false),
+			infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.FunctionsSecurityType: "''",
+			}),
+		)(db)
+		mr := &metaReader{
+			db: db,
+		}
+		return metadata.NewPluginReader(ir, mr)
+	}
 	drivers.Register("mssql", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
