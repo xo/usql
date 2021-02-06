@@ -10,13 +10,17 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/drivers/metadata/informationschema"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
 	newReader := func(db drivers.DB) metadata.Reader {
-		ir := informationschema.New(
-			informationschema.WithIndexes(false),
+		ir := infos.New(
+			infos.WithIndexes(false),
+			infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+			}),
 		)(db)
 		mr := &metaReader{
 			db: db,

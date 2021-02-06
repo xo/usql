@@ -11,18 +11,23 @@ import (
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/drivers/metadata/informationschema"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 	"github.com/xo/usql/env"
 )
 
 func init() {
 	endRE := regexp.MustCompile(`;?\s*$`)
-	newReader := informationschema.New(
-		informationschema.WithPlaceholder(func(int) string { return "?" }),
-		informationschema.WithTypeDetails(false),
-		informationschema.WithFunctions(false),
-		informationschema.WithSequences(false),
-		informationschema.WithIndexes(false),
+	newReader := infos.New(
+		infos.WithPlaceholder(func(int) string { return "?" }),
+		infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.ColumnsColumnSize:       "0",
+			infos.ColumnsNumericScale:     "0",
+			infos.ColumnsNumericPrecRadix: "0",
+			infos.ColumnsCharOctetLength:  "0",
+		}),
+		infos.WithFunctions(false),
+		infos.WithSequences(false),
+		infos.WithIndexes(false),
 	)
 	drivers.Register("trino", drivers.Driver{
 		AllowMultilineComments: true,

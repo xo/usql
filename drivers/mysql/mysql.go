@@ -10,13 +10,17 @@ import (
 	"github.com/go-sql-driver/mysql" // DRIVER: mysql
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/drivers/metadata/informationschema"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
-	newReader := informationschema.New(
-		informationschema.WithPlaceholder(func(int) string { return "?" }),
-		informationschema.WithSequences(false),
+	newReader := infos.New(
+		infos.WithPlaceholder(func(int) string { return "?" }),
+		infos.WithSequences(false),
+		infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.ColumnsNumericPrecRadix:         "10",
+			infos.FunctionColumnsNumericPrecRadix: "10",
+		}),
 	)
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,

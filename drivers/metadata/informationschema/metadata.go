@@ -13,24 +13,50 @@ import (
 
 // InformationSchema metadata reader
 type InformationSchema struct {
-	db             drivers.DB
-	pf             func(int) string
-	hasTypeDetails bool
-	hasFunctions   bool
-	hasSequences   bool
-	hasIndexes     bool
+	db           drivers.DB
+	pf           func(int) string
+	hasFunctions bool
+	hasSequences bool
+	hasIndexes   bool
+	colExpr      map[ColumnName]string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
 
+type ColumnName string
+
+const (
+	ColumnsColumnSize       = ColumnName("columns.column_size")
+	ColumnsNumericScale     = ColumnName("columns.numeric_scale")
+	ColumnsNumericPrecRadix = ColumnName("columns.numeric_precision_radix")
+	ColumnsCharOctetLength  = ColumnName("columns.character_octet_length")
+
+	FunctionColumnsColumnSize       = ColumnName("function_columns.column_size")
+	FunctionColumnsNumericScale     = ColumnName("function_columns.numeric_scale")
+	FunctionColumnsNumericPrecRadix = ColumnName("function_columns.numeric_precision_radix")
+	FunctionColumnsCharOctetLength  = ColumnName("function_columns.character_octet_length")
+
+	FunctionsSecurityType = ColumnName("functions.security_type")
+)
+
 // New InformationSchema reader
 func New(opts ...Option) func(db drivers.DB) metadata.Reader {
 	s := &InformationSchema{
-		pf:             func(n int) string { return fmt.Sprintf("$%d", n) },
-		hasTypeDetails: true,
-		hasFunctions:   true,
-		hasSequences:   true,
-		hasIndexes:     true,
+		pf:           func(n int) string { return fmt.Sprintf("$%d", n) },
+		hasFunctions: true,
+		hasSequences: true,
+		hasIndexes:   true,
+		colExpr: map[ColumnName]string{
+			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
+			ColumnsNumericScale:             "COALESCE(numeric_scale, 0)",
+			ColumnsNumericPrecRadix:         "COALESCE(numeric_precision_radix, 10)",
+			ColumnsCharOctetLength:          "COALESCE(character_octet_length, 0)",
+			FunctionColumnsColumnSize:       "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
+			FunctionColumnsNumericScale:     "COALESCE(numeric_scale, 0)",
+			FunctionColumnsNumericPrecRadix: "COALESCE(numeric_precision_radix, 10)",
+			FunctionColumnsCharOctetLength:  "COALESCE(character_octet_length, 0)",
+			FunctionsSecurityType:           "security_type",
+		},
 	}
 	for _, o := range opts {
 		o(s)
@@ -53,10 +79,12 @@ func WithPlaceholder(pf func(int) string) Option {
 	}
 }
 
-// WithTypeDetails when the `columns` table contains size and scale columns
-func WithTypeDetails(typ bool) Option {
+// WithCustomColumns to use different expressions for some columns
+func WithCustomColumns(cols map[ColumnName]string) Option {
 	return func(s *InformationSchema) {
-		s.hasTypeDetails = typ
+		for k, v := range cols {
+			s.colExpr[k] = v
+		}
 	}
 }
 
@@ -83,8 +111,6 @@ func WithSequences(seq bool) Option {
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
 func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) (*metadata.ColumnSet, error) {
-	// TODO column_size does not include interval_precision which doesn't exist in MySQL
-	// TODO numeric_precision_radix doesn't exist in MySQL so assume 10 - this is wrong!
 	columns := []string{
 		"table_catalog",
 		"table_schema",
@@ -94,15 +120,10 @@ func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) 
 		"data_type",
 		"COALESCE(column_default, '')",
 		"COALESCE(is_nullable, '') AS is_nullable",
-	}
-	if s.hasTypeDetails {
-		extraColumns := []string{
-			"COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0) AS column_size",
-			"COALESCE(numeric_scale, 0)",
-			"10 AS numeric_precision_radix",
-			"COALESCE(character_octet_length, 0)",
-		}
-		columns = append(columns, extraColumns...)
+		s.colExpr[ColumnsColumnSize],
+		s.colExpr[ColumnsNumericScale],
+		s.colExpr[ColumnsNumericPrecRadix],
+		s.colExpr[ColumnsCharOctetLength],
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.columns\n"
@@ -134,7 +155,7 @@ ORDER BY table_catalog, table_schema, table_name, ordinal_position`
 	results := []metadata.Column{}
 	for rows.Next() {
 		rec := metadata.Column{}
-		targets := []interface{}{
+		err = rows.Scan(
 			&rec.Catalog,
 			&rec.Schema,
 			&rec.Table,
@@ -143,17 +164,11 @@ ORDER BY table_catalog, table_schema, table_name, ordinal_position`
 			&rec.DataType,
 			&rec.Default,
 			&rec.IsNullable,
-		}
-		if s.hasTypeDetails {
-			extraTargets := []interface{}{
-				&rec.ColumnSize,
-				&rec.DecimalDigits,
-				&rec.NumPrecRadix,
-				&rec.CharOctetLength,
-			}
-			targets = append(targets, extraTargets...)
-		}
-		err = rows.Scan(targets...)
+			&rec.ColumnSize,
+			&rec.DecimalDigits,
+			&rec.NumPrecRadix,
+			&rec.CharOctetLength,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -304,19 +319,20 @@ func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string,
 		return nil, metadata.ErrNotSupported
 	}
 
-	qstr := `SELECT
-  specific_name,
-  routine_catalog,
-  routine_schema,
-  routine_name,
-  COALESCE(routine_type, ''),
-  data_type,
-  routine_definition,
-  COALESCE(external_language, routine_body) AS language,
-  is_deterministic,
-  security_type
-FROM information_schema.routines
-`
+	columns := []string{
+		"specific_name",
+		"routine_catalog",
+		"routine_schema",
+		"routine_name",
+		"COALESCE(routine_type, '')",
+		"data_type",
+		"routine_definition",
+		"COALESCE(external_language, routine_body) AS language",
+		"is_deterministic",
+		s.colExpr[FunctionsSecurityType],
+	}
+
+	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.routines\n"
 	conds := []string{}
 	vals := []interface{}{}
 	if catalog != "" {
@@ -384,22 +400,22 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
 		return nil, metadata.ErrNotSupported
 	}
 
-	// TODO column_size does not include interval_precision which doesn't exist in MySQL
-	// TODO numeric_precision_radix doesn't exist in MySQL so assume 10 - this is wrong!
-	qstr := `SELECT
-  specific_catalog,
-  specific_schema,
-  specific_name,
-  COALESCE(parameter_name, ''),
-  ordinal_position,
-  COALESCE(parameter_mode, ''),
-  data_type,
-  COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0) AS column_size,
-  COALESCE(numeric_scale, 0),
-  10 AS numeric_precision_radix,
-  COALESCE(character_octet_length, 0)
-FROM information_schema.parameters
-`
+	columns := []string{
+		"specific_catalog",
+		"specific_schema",
+		"specific_name",
+		"COALESCE(parameter_name, '')",
+		"ordinal_position",
+		"COALESCE(parameter_mode, '')",
+		"data_type",
+		s.colExpr[FunctionColumnsColumnSize],
+		s.colExpr[FunctionColumnsNumericScale],
+		s.colExpr[FunctionColumnsNumericPrecRadix],
+		s.colExpr[FunctionColumnsCharOctetLength],
+	}
+
+	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.parameters\n"
+
 	conds := []string{}
 	vals := []interface{}{}
 	if catalog != "" {

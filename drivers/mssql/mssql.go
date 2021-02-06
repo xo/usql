@@ -4,14 +4,24 @@
 package mssql
 
 import (
+	"io"
 	"strconv"
 	"strings"
 
 	mssql "github.com/denisenkom/go-mssqldb" // DRIVER: mssql
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
+	newReader := infos.New(
+		infos.WithIndexes(false),
+		infos.WithSequences(false),
+		infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.FunctionsSecurityType: "''",
+		}),
+	)
 	drivers.Register("mssql", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
@@ -42,6 +52,14 @@ func init() {
 		},
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
+		},
+		NewMetadataReader: newReader,
+		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
+			reader := newReader(db)
+			opts := []metadata.Option{
+				metadata.WithSystemSchemas([]string{"db_accessadmin", "db_backupoperator", "db_datareader", "db_datawriter", "db_ddladmin", "db_denydatareader", "db_denydatawriter", "db_owner", "db_securityadmin", "INFORMATION_SCHEMA", "sys"}),
+			}
+			return metadata.NewDefaultWriter(reader, opts...)(db, w)
 		},
 	})
 }

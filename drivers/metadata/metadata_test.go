@@ -18,7 +18,7 @@ import (
 	dc "github.com/ory/dockertest/v3/docker"
 	_ "github.com/trinodb/trino-go-client/trino"
 	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/drivers/metadata/informationschema"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 	_ "github.com/xo/usql/drivers/postgres"
 )
 
@@ -30,7 +30,7 @@ type Database struct {
 	DockerPort string
 	Resource   *dt.Resource
 	DB         *sql.DB
-	Opts       []informationschema.Option
+	Opts       []infos.Option
 	Reader     metadata.Reader
 	WriterOpts []metadata.Option
 }
@@ -42,6 +42,7 @@ var (
 				{Name: "BASE_IMAGE", Value: "postgres:13"},
 				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/postgres-sakila-db/postgres-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
+				{Name: "USER", Value: "root"},
 			},
 			RunOptions: &dt.RunOptions{
 				Name: "usql-pgsql",
@@ -51,8 +52,12 @@ var (
 			Driver:     "postgres",
 			URL:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
-			Opts: []informationschema.Option{
-				informationschema.WithIndexes(false),
+			Opts: []infos.Option{
+				infos.WithIndexes(false),
+				infos.WithCustomColumns(map[infos.ColumnName]string{
+					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+				}),
 			},
 			WriterOpts: []metadata.Option{
 				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
@@ -63,6 +68,7 @@ var (
 				{Name: "BASE_IMAGE", Value: "mysql:8"},
 				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/mysql-sakila-db/mysql-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
+				{Name: "USER", Value: "root"},
 			},
 			RunOptions: &dt.RunOptions{
 				Name: "usql-mysql",
@@ -72,9 +78,13 @@ var (
 			Driver:     "mysql",
 			URL:        "root:pw@(localhost:%s)/mysql?parseTime=true",
 			DockerPort: "3306/tcp",
-			Opts: []informationschema.Option{
-				informationschema.WithPlaceholder(func(int) string { return "?" }),
-				informationschema.WithSequences(false),
+			Opts: []infos.Option{
+				infos.WithPlaceholder(func(int) string { return "?" }),
+				infos.WithSequences(false),
+				infos.WithCustomColumns(map[infos.ColumnName]string{
+					infos.ColumnsNumericPrecRadix:         "10",
+					infos.FunctionColumnsNumericPrecRadix: "10",
+				}),
 			},
 			WriterOpts: []metadata.Option{
 				metadata.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
@@ -90,12 +100,21 @@ var (
 			Driver:     "trino",
 			URL:        "http://test@localhost:%s?catalog=tpch&schema=sf1",
 			DockerPort: "8080/tcp",
-			Opts: []informationschema.Option{
-				informationschema.WithPlaceholder(func(int) string { return "?" }),
-				informationschema.WithTypeDetails(false),
-				informationschema.WithFunctions(false),
-				informationschema.WithSequences(false),
-				informationschema.WithIndexes(false),
+			Opts: []infos.Option{
+				infos.WithPlaceholder(func(int) string { return "?" }),
+				infos.WithFunctions(false),
+				infos.WithSequences(false),
+				infos.WithIndexes(false),
+				infos.WithCustomColumns(map[infos.ColumnName]string{
+					infos.ColumnsColumnSize:               "0",
+					infos.ColumnsNumericScale:             "0",
+					infos.ColumnsNumericPrecRadix:         "0",
+					infos.ColumnsCharOctetLength:          "0",
+					infos.FunctionColumnsColumnSize:       "0",
+					infos.FunctionColumnsNumericScale:     "0",
+					infos.FunctionColumnsNumericPrecRadix: "0",
+					infos.FunctionColumnsCharOctetLength:  "0",
+				}),
 			},
 		},
 	}
@@ -127,16 +146,17 @@ func TestMain(m *testing.M) {
 
 		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 		if err := pool.Retry(func() error {
+			hostPort := db.Resource.GetPort(db.DockerPort)
 			var err error
-			db.DB, err = sql.Open(db.Driver, fmt.Sprintf(db.URL, db.Resource.GetPort(db.DockerPort)))
+			db.DB, err = sql.Open(db.Driver, fmt.Sprintf(db.URL, hostPort))
 			if err != nil {
 				return err
 			}
 			return db.DB.Ping()
 		}); err != nil {
-			log.Fatal("Could not connect to docker: ", err)
+			log.Fatal("Timed out waiting for db: ", err)
 		}
-		db.Reader = informationschema.New(db.Opts...)(db.DB)
+		db.Reader = infos.New(db.Opts...)(db.DB)
 	}
 
 	code := m.Run()
