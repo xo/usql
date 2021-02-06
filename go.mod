@@ -26,11 +26,14 @@ require (
 	github.com/btnguyen2k/consu/semita v0.1.5 // indirect
 	github.com/btnguyen2k/gocosmos v0.1.3
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/goutils v0.0.0-20210118111533-e33d3ffb5401 // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/dlclark/regexp2 v1.4.0 // indirect
+	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/genjidb/genji v0.9.0
@@ -41,6 +44,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.2 // indirect
 	github.com/gocql/gocql v0.0.0-20210125064827-43a8f9bf6605
 	github.com/godror/godror v0.23.1
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
@@ -55,6 +59,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/nakagami/firebirdsql v0.9.0
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
