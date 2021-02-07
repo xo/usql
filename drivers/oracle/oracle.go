@@ -6,12 +6,17 @@ package oracle
 import (
 	"database/sql"
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"regexp"
 	"strings"
 
 	_ "github.com/sijms/go-ora" // DRIVER: oracle
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
+	orameta "github.com/xo/usql/drivers/metadata/oracle"
 	"github.com/xo/usql/env"
 	"golang.org/x/xerrors"
 )
@@ -103,6 +108,24 @@ func init() {
 			sqlstr = endRE.ReplaceAllString(sqlstr, "")
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil
+		},
+		NewMetadataReader: orameta.NewReader(),
+		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
+			// TODO if options would be common to all readers, this could be moved
+			// to the caller and passed in an argument
+			envs := env.All()
+			opts := []orameta.Option{}
+			if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
+				if envs["ECHO_HIDDEN"] == "noexec" {
+					opts = append(opts, orameta.WithDryRun(true))
+				}
+				opts = append(opts, orameta.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)))
+			}
+			newReader := orameta.NewReader(opts...)
+			writerOpts := []metadata.Option{
+				metadata.WithSystemSchemas([]string{"ctxsys", "flows_files", "mdsys", "outln", "sys", "system", "xdb", "xs$null"}),
+			}
+			return metadata.NewDefaultWriter(newReader(db), writerOpts...)(db, w)
 		},
 	})
 }
