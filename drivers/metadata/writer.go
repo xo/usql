@@ -39,7 +39,7 @@ func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer 
 	defaultWriter := &DefaultWriter{
 		r: r,
 		tableTypes: map[rune][]string{
-			't': {"TABLE", "BASE TABLE", "SYSTEM TABLE", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"},
+			't': {"TABLE", "BASE TABLE", "SYSTEM TABLE", "SYNONYM", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"},
 			'v': {"VIEW"},
 			'm': {"MATERIALIZED VIEW"},
 			's': {"SEQUENCE"},
@@ -47,7 +47,7 @@ func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer 
 		funcTypes: map[rune][]string{
 			'a': {"AGGREGATE"},
 			'n': {"FUNCTION"},
-			'p': {"PROCEDURE"},
+			'p': {"PROCEDURE", "PACKAGE"},
 			't': {"TRIGGER"},
 			'w': {"WINDOW"},
 		},

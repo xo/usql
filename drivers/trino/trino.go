@@ -5,6 +5,8 @@ package trino
 
 import (
 	"io"
+	"log"
+	"os"
 	"regexp"
 
 	_ "github.com/trinodb/trino-go-client/trino" // DRIVER: trino
@@ -17,7 +19,7 @@ import (
 
 func init() {
 	endRE := regexp.MustCompile(`;?\s*$`)
-	newReader := infos.New(
+	readerOpts := []infos.Option{
 		infos.WithPlaceholder(func(int) string { return "?" }),
 		infos.WithCustomColumns(map[infos.ColumnName]string{
 			infos.ColumnsColumnSize:       "0",
@@ -28,7 +30,7 @@ func init() {
 		infos.WithFunctions(false),
 		infos.WithSequences(false),
 		infos.WithIndexes(false),
-	)
+	}
 	drivers.Register("trino", drivers.Driver{
 		AllowMultilineComments: true,
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
@@ -46,15 +48,25 @@ func init() {
 			}
 			return "Trino " + ver, nil
 		},
-		NewMetadataReader: newReader,
+		NewMetadataReader: infos.New(readerOpts...),
 		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
-			reader := newReader(db)
-			opts := []metadata.Option{
+			opts := append([]infos.Option{}, readerOpts...)
+			// TODO if options would be common to all readers, this could be moved
+			// to the caller and passed in an argument
+			envs := env.All()
+			if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
+				if envs["ECHO_HIDDEN"] == "noexec" {
+					opts = append(opts, infos.WithDryRun(true))
+				}
+				opts = append(opts, infos.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)))
+			}
+			reader := infos.New(opts...)(db)
+			writerOpts := []metadata.Option{
 				metadata.WithListAllDbs(func(pattern string, verbose bool) error {
 					return listAllDbs(db, w, pattern, verbose)
 				}),
 			}
-			return metadata.NewDefaultWriter(reader, opts...)(db, w)
+			return metadata.NewDefaultWriter(reader, writerOpts...)(db, w)
 		},
 	})
 }

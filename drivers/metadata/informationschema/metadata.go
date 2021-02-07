@@ -4,6 +4,7 @@
 package informationschema
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -13,15 +14,22 @@ import (
 
 // InformationSchema metadata reader
 type InformationSchema struct {
-	db           drivers.DB
-	pf           func(int) string
-	hasFunctions bool
-	hasSequences bool
-	hasIndexes   bool
-	colExpr      map[ColumnName]string
+	db             drivers.DB
+	logger         Logger
+	dryRun         bool
+	pf             func(int) string
+	hasTypeDetails bool
+	hasFunctions   bool
+	hasSequences   bool
+	hasIndexes     bool
+	colExpr        map[ColumnName]string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
+
+type Logger interface {
+	Println(...interface{})
+}
 
 type ColumnName string
 
@@ -70,6 +78,20 @@ func New(opts ...Option) func(db drivers.DB) metadata.Reader {
 
 // Option to configure the InformationSchema reader
 type Option func(*InformationSchema)
+
+// WithLogger used to log queries before executing them
+func WithLogger(l Logger) Option {
+	return func(s *InformationSchema) {
+		s.logger = l
+	}
+}
+
+// WithDryRun allows to avoid running any queries
+func WithDryRun(d bool) Option {
+	return func(s *InformationSchema) {
+		s.dryRun = d
+	}
+}
 
 // WithPlaceholder generator function, that usually returns either `?` or `$n`,
 // where `n` is the argument.
@@ -146,8 +168,11 @@ func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) 
 	}
 	qstr += `
 ORDER BY table_catalog, table_schema, table_name, ordinal_position`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewColumnSet([]metadata.Column{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -249,8 +274,11 @@ FROM information_schema.sequences
 	}
 	qstr += `
 ORDER BY table_catalog, table_schema, table_type, table_name`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewTableSet([]metadata.Table{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -292,8 +320,11 @@ FROM information_schema.schemata
 	}
 	qstr += `
 ORDER BY catalog_name, schema_name`
-	rows, err := s.db.Query(qstr)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewSchemaSet([]metadata.Schema{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -362,8 +393,11 @@ func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string,
 	}
 	qstr += `
 ORDER BY routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewFunctionSet([]metadata.Function{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -435,8 +469,11 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
 	}
 	qstr += `
 ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -512,8 +549,11 @@ GROUP BY table_catalog, index_schema, table_name, index_name,
   index_type
 ORDER BY table_catalog, index_schema, table_name, index_name
 `
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewIndexSet([]metadata.Index{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -578,8 +618,11 @@ JOIN information_schema.columns c ON
 	}
 	qstr += `
 ORDER BY i.table_catalog, index_schema, table_name, index_name, seq_in_index`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -636,8 +679,11 @@ FROM information_schema.sequences
 	}
 	qstr += `
 ORDER BY sequence_catalog, sequence_schema, sequence_name`
-	rows, err := s.db.Query(qstr, vals...)
+	rows, err := s.query(qstr, vals...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewSequenceSet([]metadata.Sequence{}), nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -655,4 +701,15 @@ ORDER BY sequence_catalog, sequence_schema, sequence_name`
 		return nil, rows.Err()
 	}
 	return metadata.NewSequenceSet(results), nil
+}
+
+func (s InformationSchema) query(q string, v ...interface{}) (*sql.Rows, error) {
+	if s.logger != nil {
+		s.logger.Println(q)
+		s.logger.Println(v)
+	}
+	if s.dryRun {
+		return nil, sql.ErrNoRows
+	}
+	return s.db.Query(q, v...)
 }
