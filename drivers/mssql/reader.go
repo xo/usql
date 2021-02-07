@@ -3,12 +3,11 @@ package mssql
 import (
 	"strings"
 
-	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
 
 type metaReader struct {
-	db drivers.DB
+	metadata.LoggingReader
 }
 
 func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
@@ -18,7 +17,7 @@ FROM sys.databases
 ORDER BY name
 `
 
-	rows, err := r.db.Query(qstr)
+	rows, err := r.Query(qstr)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +72,7 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 	qstr += `
 ORDER BY s.name, t.name, i.name`
 
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +129,7 @@ JOIN sys.types ty ON ty.user_type_id = c.user_type_id
 	}
 	qstr += `
 ORDER BY s.name, t.name, i.name, ic.index_column_id`
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}

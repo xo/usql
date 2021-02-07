@@ -59,7 +59,7 @@ var (
 					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				}),
 			},
-			WriterOpts: []metadata.Option{
+			WriterOpts: []metadata.WriterOption{
 				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 			},
 		},
@@ -86,7 +86,7 @@ var (
 					infos.FunctionColumnsNumericPrecRadix: "10",
 				}),
 			},
-			WriterOpts: []metadata.Option{
+			WriterOpts: []metadata.WriterOption{
 				metadata.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
 		},

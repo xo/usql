@@ -14,9 +14,9 @@ import (
 )
 
 func init() {
-	newReader := func(db drivers.DB) metadata.Reader {
+	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		return &metaReader{
-			db: db,
+			LoggingReader: metadata.NewLoggingReader(db, opts...),
 		}
 	}
 	drivers.Register("sqlite3", drivers.Driver{

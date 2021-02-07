@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
@@ -596,7 +598,16 @@ func init() {
 				"l[+]":   "list databases",
 			},
 			Process: func(p *Params) error {
-				m, err := drivers.NewMetadataWriter(p.Handler.URL(), p.Handler.DB(), p.Handler.IO().Stdout())
+				opts := []metadata.ReaderOption{}
+				envs := env.All()
+				if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
+					if envs["ECHO_HIDDEN"] == "noexec" {
+						opts = append(opts, metadata.WithDryRun(true))
+					}
+					opts = append(opts, metadata.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)))
+				}
+
+				m, err := drivers.NewMetadataWriter(p.Handler.URL(), p.Handler.DB(), p.Handler.IO().Stdout(), opts...)
 				if err != nil {
 					return err
 				}

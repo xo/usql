@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	newReader := func(db drivers.DB) metadata.Reader {
+	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		ir := infos.New(
 			infos.WithIndexes(false),
 			infos.WithSequences(false),
@@ -24,7 +24,7 @@ func init() {
 			}),
 		)(db)
 		mr := &metaReader{
-			db: db,
+			LoggingReader: metadata.NewLoggingReader(db, opts...),
 		}
 		return metadata.NewPluginReader(ir, mr)
 	}
@@ -60,12 +60,12 @@ func init() {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
 		NewMetadataReader: newReader,
-		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
-			reader := newReader(db)
-			opts := []metadata.Option{
+		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
+			reader := newReader(db, opts...)
+			writerOpts := []metadata.WriterOption{
 				metadata.WithSystemSchemas([]string{"db_accessadmin", "db_backupoperator", "db_datareader", "db_datawriter", "db_ddladmin", "db_denydatareader", "db_denydatawriter", "db_owner", "db_securityadmin", "INFORMATION_SCHEMA", "sys"}),
 			}
-			return metadata.NewDefaultWriter(reader, opts...)(db, w)
+			return metadata.NewDefaultWriter(reader, writerOpts...)(db, w)
 		},
 	})
 }

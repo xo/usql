@@ -1,5 +1,7 @@
 package metadata
 
+import "database/sql"
+
 // PluginReader allows to be easily composed from other readers
 type PluginReader struct {
 	catalogs        func() (*CatalogSet, error)
@@ -111,4 +113,65 @@ func (p PluginReader) Sequences(catalog, schemaPattern, namePattern string) (*Se
 		return nil, ErrNotSupported
 	}
 	return p.sequences(catalog, schemaPattern, namePattern)
+}
+
+type LoggingReader struct {
+	db     DB
+	logger logger
+	dryRun bool
+}
+
+type logger interface {
+	Println(...interface{})
+}
+
+func NewLoggingReader(db DB, opts ...ReaderOption) LoggingReader {
+	r := LoggingReader{
+		db: db,
+	}
+	for _, o := range opts {
+		o(&r)
+	}
+	return r
+}
+
+// ReaderOption to configure the reader
+type ReaderOption func(Reader)
+
+// WithLogger used to log queries before executing them
+func WithLogger(l logger) ReaderOption {
+	return func(r Reader) {
+		r.(loggerSetter).setLogger(l)
+	}
+}
+
+// WithDryRun allows to avoid running any queries
+func WithDryRun(d bool) ReaderOption {
+	return func(r Reader) {
+		r.(loggerSetter).setDryRun(d)
+	}
+}
+
+type loggerSetter interface {
+	setLogger(logger)
+	setDryRun(bool)
+}
+
+func (r *LoggingReader) setLogger(l logger) {
+	r.logger = l
+}
+
+func (r *LoggingReader) setDryRun(d bool) {
+	r.dryRun = d
+}
+
+func (r LoggingReader) Query(q string, v ...interface{}) (*sql.Rows, error) {
+	if r.logger != nil {
+		r.logger.Println(q)
+		r.logger.Println(v)
+	}
+	if r.dryRun {
+		return nil, sql.ErrNoRows
+	}
+	return r.db.Query(q, v...)
 }

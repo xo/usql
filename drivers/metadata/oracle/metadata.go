@@ -11,38 +11,15 @@ import (
 )
 
 type metaReader struct {
-	db     drivers.DB
-	logger Logger
-	dryRun bool
+	metadata.LoggingReader
 }
 
-type Logger interface {
-	Println(...interface{})
-}
-
-func NewReader(opts ...Option) func(db drivers.DB) metadata.Reader {
-	r := &metaReader{}
-	for _, o := range opts {
-		o(r)
-	}
-	return func(db drivers.DB) metadata.Reader {
-		r.db = db
+func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
+	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
+		r := &metaReader{
+			LoggingReader: metadata.NewLoggingReader(db, opts...),
+		}
 		return r
-	}
-}
-
-// Option to configure the reader
-type Option func(*metaReader)
-
-func WithLogger(l Logger) Option {
-	return func(r *metaReader) {
-		r.logger = l
-	}
-}
-
-func WithDryRun(d bool) Option {
-	return func(r *metaReader) {
-		r.dryRun = d
 	}
 }
 
@@ -58,7 +35,7 @@ FROM dba_db_links
 ORDER BY catalog
 `
 
-	rows, err := r.query(qstr)
+	rows, err := r.Query(qstr)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewCatalogSet([]metadata.Catalog{}), nil
@@ -98,7 +75,7 @@ FROM all_users
 	}
 	qstr += `
 ORDER BY username`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSchemaSet([]metadata.Schema{}), nil
@@ -181,7 +158,7 @@ FROM all_synonyms s
 	}
 	qstr += `
 ORDER BY table_schem, table_name, table_type`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewTableSet([]metadata.Table{}), nil
@@ -239,7 +216,7 @@ FROM all_tab_columns c
 	}
 	qstr += `
 ORDER BY c.owner, c.table_name, c.column_id`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewColumnSet([]metadata.Column{}), nil
@@ -312,7 +289,7 @@ JOIN all_objects b ON b.object_id = a.object_id AND a.sequence  = 1
 	}
 	qstr += `
 ORDER BY procedure_schem, procedure_name, procedure_type`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionSet([]metadata.Function{}), nil
@@ -371,7 +348,7 @@ JOIN all_arguments a ON b.object_id = a.object_id AND a.data_level = 0
 	}
 	qstr += `
 ORDER BY procedure_schem, procedure_name, ordinal_position`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
@@ -433,7 +410,7 @@ FROM all_indexes o
 	qstr += `
 ORDER BY o.owner, o.table_name, o.index_name`
 
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexSet([]metadata.Index{}), nil
@@ -486,7 +463,7 @@ JOIN all_ind_columns b ON o.owner = b.index_owner AND o.index_name = b.index_nam
 	}
 	qstr += `
 ORDER BY o.owner, o.table_name, o.index_name, b.column_position`
-	rows, err := r.query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
@@ -508,15 +485,4 @@ ORDER BY o.owner, o.table_name, o.index_name, b.column_position`
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexColumnSet(results), nil
-}
-
-func (r metaReader) query(q string, v ...interface{}) (*sql.Rows, error) {
-	if r.logger != nil {
-		r.logger.Println(q)
-		r.logger.Println(v)
-	}
-	if r.dryRun {
-		return nil, sql.ErrNoRows
-	}
-	return r.db.Query(q, v...)
 }

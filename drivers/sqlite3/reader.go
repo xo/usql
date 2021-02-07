@@ -3,12 +3,11 @@ package sqlite3
 import (
 	"strings"
 
-	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
 
 type metaReader struct {
-	db drivers.DB
+	metadata.LoggingReader
 }
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
@@ -27,7 +26,7 @@ func (r metaReader) Columns(catalog, schemaPattern, tablePattern string) (*metad
   CASE WHEN "notnull" = 1 THEN 'NO' ELSE 'YES' END,
   COALESCE(dflt_value, '')
 FROM pragma_table_info(?)`
-		rows, err := r.db.Query(qstr, table.Name)
+		rows, err := r.Query(qstr, table.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +117,7 @@ FROM (
 	}
 	qstr += `
 ORDER BY table_type, table_name`
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +155,7 @@ FROM pragma_database_list
 	}
 	qstr += `
 ORDER BY seq`
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +204,7 @@ FROM pragma_function_list
 	}
 	qstr += `
 ORDER BY name, type`
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +258,7 @@ JOIN pragma_index_list(m.name) i
 	qstr += `
 ORDER BY m.name, i.seq`
 
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +305,7 @@ JOIN pragma_index_xinfo(i.name) ic
 	qstr += `
 ORDER BY m.name, i.seq, ic.seqno`
 
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}

@@ -35,7 +35,7 @@ type DefaultWriter struct {
 
 var _ Writer = &DefaultWriter{}
 
-func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer {
+func NewDefaultWriter(r Reader, opts ...WriterOption) func(db DB, w io.Writer) Writer {
 	defaultWriter := &DefaultWriter{
 		r: r,
 		tableTypes: map[rune][]string{
@@ -65,11 +65,11 @@ func NewDefaultWriter(r Reader, opts ...Option) func(db DB, w io.Writer) Writer 
 	}
 }
 
-// Option to configure the DefaultWriter
-type Option func(*DefaultWriter)
+// WriterOption to configure the DefaultWriter
+type WriterOption func(*DefaultWriter)
 
 // WithSystemSchemas that are ignored unless showSystem is true
-func WithSystemSchemas(schemas []string) Option {
+func WithSystemSchemas(schemas []string) WriterOption {
 	return func(w *DefaultWriter) {
 		w.systemSchemas = make(map[string]struct{}, len(schemas))
 		for _, s := range schemas {
@@ -79,7 +79,7 @@ func WithSystemSchemas(schemas []string) Option {
 }
 
 // WithListAllDbs that lists all catalogs
-func WithListAllDbs(f func(string, bool) error) Option {
+func WithListAllDbs(f func(string, bool) error) WriterOption {
 	return func(w *DefaultWriter) {
 		w.listAllDbs = f
 	}

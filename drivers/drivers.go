@@ -85,9 +85,9 @@ type Driver struct {
 	// BatchQueryPrefixes will be used by BatchQueryPrefixes if defined.
 	BatchQueryPrefixes map[string]string
 	// NewMetadataReader returns a db metadata introspector.
-	NewMetadataReader func(db DB) metadata.Reader
+	NewMetadataReader func(db DB, opts ...metadata.ReaderOption) metadata.Reader
 	// NewMetadataWriter returns a db metadata printer.
-	NewMetadataWriter func(db DB, w io.Writer) metadata.Writer
+	NewMetadataWriter func(db DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer
 }
 
 // drivers is the map of drivers funcs.
@@ -427,26 +427,26 @@ func NextResultSet(q *sql.Rows) bool {
 }
 
 // NewMetadataReader wraps creating a new database introspector for the specified driver.
-func NewMetadataReader(u *dburl.URL, db DB, w io.Writer) (metadata.Reader, error) {
+func NewMetadataReader(u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
 	d, ok := drivers[u.Driver]
 	if !ok || d.NewMetadataReader == nil {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
 	}
-	return d.NewMetadataReader(db), nil
+	return d.NewMetadataReader(db, opts...), nil
 }
 
 // NewMetadataWriter wraps creating a new database metadata printer for the specified driver.
-func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer) (metadata.Writer, error) {
+func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
 	}
 	if d.NewMetadataWriter != nil {
-		return d.NewMetadataWriter(db, w), nil
+		return d.NewMetadataWriter(db, w, opts...), nil
 	}
 	if d.NewMetadataReader == nil {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
 	}
-	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db))
+	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db, opts...))
 	return newMetadataWriter(db, w), nil
 }

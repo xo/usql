@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
 
 type metaReader struct {
-	db drivers.DB
+	metadata.LoggingReader
 }
 
 func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
@@ -19,7 +18,7 @@ FROM pg_catalog.pg_database d
 ORDER BY 1;
 `
 
-	rows, err := r.db.Query(qstr)
+	rows, err := r.Query(qstr)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +53,12 @@ FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
      LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
      LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
-WHERE c.relkind IN ('i','I','')
-      AND n.nspname !~ '^pg_toast'
-  AND pg_catalog.pg_table_is_visible(c.oid)
 `
-	conds := []string{}
+	conds := []string{"c.relkind IN ('i','I','')",
+		"n.nspname <> 'pg_catalog'",
+		"n.nspname <> 'information_schema'",
+		"n.nspname !~ '^pg_toast'",
+		"pg_catalog.pg_table_is_visible(c.oid)"}
 	vals := []interface{}{}
 	if schemaPattern != "" {
 		vals = append(vals, schemaPattern)
@@ -78,7 +78,7 @@ WHERE c.relkind IN ('i','I','')
 	qstr += `
 ORDER BY 1,2`
 
-	rows, err := r.db.Query(qstr, vals...)
+	rows, err := r.Query(qstr, vals...)
 	if err != nil {
 		return nil, err
 	}

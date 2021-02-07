@@ -7,8 +7,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
-	"os"
 	"regexp"
 	"strings"
 
@@ -110,22 +108,11 @@ func init() {
 			return typ, sqlstr, q, nil
 		},
 		NewMetadataReader: orameta.NewReader(),
-		NewMetadataWriter: func(db drivers.DB, w io.Writer) metadata.Writer {
-			// TODO if options would be common to all readers, this could be moved
-			// to the caller and passed in an argument
-			envs := env.All()
-			opts := []orameta.Option{}
-			if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
-				if envs["ECHO_HIDDEN"] == "noexec" {
-					opts = append(opts, orameta.WithDryRun(true))
-				}
-				opts = append(opts, orameta.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)))
-			}
-			newReader := orameta.NewReader(opts...)
-			writerOpts := []metadata.Option{
+		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
+			writerOpts := []metadata.WriterOption{
 				metadata.WithSystemSchemas([]string{"ctxsys", "flows_files", "mdsys", "outln", "sys", "system", "xdb", "xs$null"}),
 			}
-			return metadata.NewDefaultWriter(newReader(db), writerOpts...)(db, w)
+			return metadata.NewDefaultWriter(orameta.NewReader()(db, opts...), writerOpts...)(db, w)
 		},
 	})
 }

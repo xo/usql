@@ -14,15 +14,12 @@ import (
 
 // InformationSchema metadata reader
 type InformationSchema struct {
-	db             drivers.DB
-	logger         Logger
-	dryRun         bool
-	pf             func(int) string
-	hasTypeDetails bool
-	hasFunctions   bool
-	hasSequences   bool
-	hasIndexes     bool
-	colExpr        map[ColumnName]string
+	metadata.LoggingReader
+	pf           func(int) string
+	hasFunctions bool
+	hasSequences bool
+	hasIndexes   bool
+	colExpr      map[ColumnName]string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -48,7 +45,7 @@ const (
 )
 
 // New InformationSchema reader
-func New(opts ...Option) func(db drivers.DB) metadata.Reader {
+func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	s := &InformationSchema{
 		pf:           func(n int) string { return fmt.Sprintf("$%d", n) },
 		hasFunctions: true,
@@ -66,68 +63,52 @@ func New(opts ...Option) func(db drivers.DB) metadata.Reader {
 			FunctionsSecurityType:           "security_type",
 		},
 	}
+	// aply InformationSchema specific options
 	for _, o := range opts {
 		o(s)
 	}
 
-	return func(db drivers.DB) metadata.Reader {
-		s.db = db
+	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
+		s.LoggingReader = metadata.NewLoggingReader(db, opts...)
 		return s
-	}
-}
-
-// Option to configure the InformationSchema reader
-type Option func(*InformationSchema)
-
-// WithLogger used to log queries before executing them
-func WithLogger(l Logger) Option {
-	return func(s *InformationSchema) {
-		s.logger = l
-	}
-}
-
-// WithDryRun allows to avoid running any queries
-func WithDryRun(d bool) Option {
-	return func(s *InformationSchema) {
-		s.dryRun = d
 	}
 }
 
 // WithPlaceholder generator function, that usually returns either `?` or `$n`,
 // where `n` is the argument.
-func WithPlaceholder(pf func(int) string) Option {
-	return func(s *InformationSchema) {
-		s.pf = pf
+func WithPlaceholder(pf func(int) string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).pf = pf
 	}
 }
 
 // WithCustomColumns to use different expressions for some columns
-func WithCustomColumns(cols map[ColumnName]string) Option {
-	return func(s *InformationSchema) {
+func WithCustomColumns(cols map[ColumnName]string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
 		for k, v := range cols {
-			s.colExpr[k] = v
+			r.(*InformationSchema).colExpr[k] = v
 		}
 	}
 }
 
 // WithFunctions when the `routines` and `parameters` tables exists
-func WithFunctions(fun bool) Option {
-	return func(s *InformationSchema) {
-		s.hasFunctions = fun
+func WithFunctions(fun bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasFunctions = fun
 	}
 }
 
 // WithIndexes when the `statistics` table exists
-func WithIndexes(ind bool) Option {
-	return func(s *InformationSchema) {
-		s.hasIndexes = ind
+func WithIndexes(ind bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasIndexes = ind
 	}
 }
 
 // WithSequences when the `sequences` table exists
-func WithSequences(seq bool) Option {
-	return func(s *InformationSchema) {
-		s.hasSequences = seq
+func WithSequences(seq bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasSequences = seq
 	}
 }
 
@@ -168,7 +149,7 @@ func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) 
 	}
 	qstr += `
 ORDER BY table_catalog, table_schema, table_name, ordinal_position`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewColumnSet([]metadata.Column{}), nil
@@ -274,7 +255,7 @@ FROM information_schema.sequences
 	}
 	qstr += `
 ORDER BY table_catalog, table_schema, table_type, table_name`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewTableSet([]metadata.Table{}), nil
@@ -320,7 +301,7 @@ FROM information_schema.schemata
 	}
 	qstr += `
 ORDER BY catalog_name, schema_name`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSchemaSet([]metadata.Schema{}), nil
@@ -393,7 +374,7 @@ func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string,
 	}
 	qstr += `
 ORDER BY routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionSet([]metadata.Function{}), nil
@@ -469,7 +450,7 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
 	}
 	qstr += `
 ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
@@ -549,7 +530,7 @@ GROUP BY table_catalog, index_schema, table_name, index_name,
   index_type
 ORDER BY table_catalog, index_schema, table_name, index_name
 `
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexSet([]metadata.Index{}), nil
@@ -618,7 +599,7 @@ JOIN information_schema.columns c ON
 	}
 	qstr += `
 ORDER BY i.table_catalog, index_schema, table_name, index_name, seq_in_index`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
@@ -679,7 +660,7 @@ FROM information_schema.sequences
 	}
 	qstr += `
 ORDER BY sequence_catalog, sequence_schema, sequence_name`
-	rows, err := s.query(qstr, vals...)
+	rows, err := s.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSequenceSet([]metadata.Sequence{}), nil
@@ -701,15 +682,4 @@ ORDER BY sequence_catalog, sequence_schema, sequence_name`
 		return nil, rows.Err()
 	}
 	return metadata.NewSequenceSet(results), nil
-}
-
-func (s InformationSchema) query(q string, v ...interface{}) (*sql.Rows, error) {
-	if s.logger != nil {
-		s.logger.Println(q)
-		s.logger.Println(v)
-	}
-	if s.dryRun {
-		return nil, sql.ErrNoRows
-	}
-	return s.db.Query(q, v...)
 }
