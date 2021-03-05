@@ -1,4 +1,4 @@
-// +build all,!no_hive most,!no_hive hive,!no_hive
+// +build all,!no_hive hive,!no_hive
 
 package internal
 

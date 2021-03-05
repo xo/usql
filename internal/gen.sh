@@ -3,7 +3,7 @@
 BASE="mssql mysql oracle postgres sqlite3"
 
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
-ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort)
+ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|grep -v metadata|sort)
 
 NL=$'\n'
 
@@ -14,7 +14,7 @@ for i in $ALL; do
   TAGS="!no_base,!no_$NAME"
   if ! [[ "$BASE" =~ "$NAME" && "$NAME" != "ql" ]]; then
     TAGS="all,!no_$NAME"
-    if [[ "$NAME" != "odbc" && "$NAME" != "snowflake" && "$NAME" != "godror" ]]; then
+    if [[ "$NAME" != "odbc" && "$NAME" != "snowflake" && "$NAME" != "hive" && "$NAME" != "impala" && "$NAME" != "godror" ]]; then
       TAGS="$TAGS most,!no_$NAME"
     fi
     TAGS="$TAGS $NAME,!no_$NAME"
@@ -39,7 +39,7 @@ KNOWN=
 for i in $ALL; do
   NAME=$(basename $i)
   DRV=$(sed -n '/DRIVER: /p' $i/$NAME.go|sed -e 's/.*DRIVER:\s*//')
-  PKG=$(sed -n '/DRIVER: /p' $i/$NAME.go |sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/[a-z]\+\s\+"//' |sed -e 's/".*//')
+  PKG=$(sed -n '/DRIVER: /p' $i/$NAME.go|sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/[a-z]\+\s\+"//' |sed -e 's/".*//')
   KNOWN="$KNOWN$NL\"$NAME\": \"$DRV\", // $PKG"
 done
 

@@ -1,4 +1,4 @@
-// +build all,!no_impala most,!no_impala impala,!no_impala
+// +build all,!no_impala impala,!no_impala
 
 package internal
 
