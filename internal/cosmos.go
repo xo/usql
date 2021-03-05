@@ -1,4 +1,4 @@
-// +build all,!no_cosmos most,!no_cosmos cosmos,!no_cosmos
+// +build all,!no_cosmos cosmos,!no_cosmos
 
 package internal
 

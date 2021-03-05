@@ -14,7 +14,7 @@ for i in $ALL; do
   TAGS="!no_base,!no_$NAME"
   if ! [[ "$BASE" =~ "$NAME" && "$NAME" != "ql" ]]; then
     TAGS="all,!no_$NAME"
-    if [[ "$NAME" != "odbc" && "$NAME" != "snowflake" && "$NAME" != "hive" && "$NAME" != "impala" && "$NAME" != "godror" ]]; then
+    if [[ "$NAME" != "odbc" && "$NAME" != "snowflake" && "$NAME" != "hive" && "$NAME" != "impala" && "$NAME" != "cosmos" && "$NAME" != "godror" ]]; then
       TAGS="$TAGS most,!no_$NAME"
     fi
     TAGS="$TAGS $NAME,!no_$NAME"
