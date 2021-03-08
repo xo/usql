@@ -34,7 +34,7 @@ for other databases.
 `usql` can be installed [via Release][], [via Homebrew][], [via Scoop][] or [via Go][]:
 
 [via Release]: #installing-via-release
-[via Homebrew]: #installing-via-homebrew-macos
+[via Homebrew]: #installing-via-homebrew-macos-and-linux
 [via Scoop]: #installing-via-scoop-windows
 [via Go]: #installing-via-go
 
@@ -44,6 +44,27 @@ for other databases.
 2. Extract the `usql` or `usql.exe` file from the `.tar.bz2` or `.zip` file
 3. Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or
 `%PATH%` (Windows)
+
+#### macOS Notes
+
+The recommended installation method on macOS is [via `brew` (see below)][via Homebrew].
+If the following or similar error is encountered when attempting to run `usql`:
+
+```sh
+$ usql
+dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicuuc.68.dylib
+  Referenced from: /Users/user/.local/bin/usql
+  Reason: image not found
+Abort trap: 6
+```
+
+Then the [ICU lib][] needs to be installed. This can be accomplished using `brew`:
+
+```
+$ brew install icu4c
+```
+
+[ICU lib]: http://site.icu-project.org
 
 ### Installing via Homebrew (macOS and Linux)
 
@@ -55,25 +76,12 @@ usual way with the [`brew` command][homebrew]:
 $ brew install xo/xo/usql
 ```
 
-Additional support for [Oracle (godror) and ODBC databases][Database Support] can be
-installed by passing `--with-*` parameters during install:
+Additional support for [ODBC databases][Database Support] can be
+installed by passing `--with-odbc` option during install:
 
 ```sh
-# install usql with oracle (godror) and odbc support
-$ brew install --with-godror --with-odbc usql
-```
-
-Please note that Oracle Database support requires using the [`xo/xo`
-tap's][xo-tap] `instantclient-sdk` formula. Any other `instantclient-sdk`
-formulae or older versions of the Oracle Instant Client SDK [should be
-uninstalled][xo-tap-notes] prior to attempting the above:
-
-```sh
-# uninstall the instantclient-sdk formula
-$ brew uninstall InstantClientTap/instantclient/instantclient-sdk
-
-# remove conflicting tap
-$ brew untap InstantClientTap/instantclient
+# install usql with odbc support
+$ brew install --with-odbc usql
 ```
 
 ### Installing via Scoop (Windows)
