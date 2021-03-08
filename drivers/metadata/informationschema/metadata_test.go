@@ -32,7 +32,7 @@ type Database struct {
 	DockerPort string
 	Resource   *dt.Resource
 	DB         *sql.DB
-	Opts       []infos.Option
+	Opts       []metadata.ReaderOption
 	Reader     metadata.BasicReader
 }
 
@@ -57,7 +57,7 @@ var (
 			Driver:     "postgres",
 			URL:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
@@ -80,7 +80,7 @@ var (
 			Driver:     "mysql",
 			URL:        "root:pw@(localhost:%s)/mysql?parseTime=true",
 			DockerPort: "3306/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.ColumnsNumericPrecRadix:         "10",
@@ -103,7 +103,7 @@ var (
 			Driver:     "mssql",
 			URL:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
 			DockerPort: "1433/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.FunctionsSecurityType: "''",
@@ -120,7 +120,7 @@ var (
 			Driver:     "trino",
 			URL:        "http://test@localhost:%s?catalog=tpch&schema=sf1",
 			DockerPort: "8080/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{

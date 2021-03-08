@@ -30,9 +30,9 @@ type Database struct {
 	DockerPort string
 	Resource   *dt.Resource
 	DB         *sql.DB
-	Opts       []infos.Option
+	Opts       []metadata.ReaderOption
 	Reader     metadata.Reader
-	WriterOpts []metadata.Option
+	WriterOpts []metadata.WriterOption
 }
 
 var (
@@ -52,7 +52,7 @@ var (
 			Driver:     "postgres",
 			URL:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
@@ -78,7 +78,7 @@ var (
 			Driver:     "mysql",
 			URL:        "root:pw@(localhost:%s)/mysql?parseTime=true",
 			DockerPort: "3306/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithSequences(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
@@ -100,7 +100,7 @@ var (
 			Driver:     "trino",
 			URL:        "http://test@localhost:%s?catalog=tpch&schema=sf1",
 			DockerPort: "8080/tcp",
-			Opts: []infos.Option{
+			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithFunctions(false),
 				infos.WithSequences(false),
