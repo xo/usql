@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/xo/usql/drivers/metadata"
 )
 
 var (
@@ -32,7 +33,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not open the database: %s", err)
 	}
-	reader = &metaReader{db: db}
+	reader = &metaReader{LoggingReader: metadata.NewLoggingReader(db)}
 
 	code := m.Run()
 	os.Exit(code)
