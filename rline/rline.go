@@ -33,6 +33,8 @@ type IO interface {
 	Cygwin() bool
 	// Prompt sets the prompt for the next interactive line read.
 	Prompt(string)
+	// Completer sets the auto-completer.
+	Completer(readline.AutoCompleter)
 	// Save saves a line of history.
 	Save(string) error
 	// Password prompts for a password.
@@ -51,6 +53,7 @@ type Rline struct {
 	Int  bool
 	Cyg  bool
 	P    func(string)
+	A    func(readline.AutoCompleter)
 	S    func(string) error
 	Pw   func(string) (string, error)
 }
@@ -95,6 +98,13 @@ func (l *Rline) Cygwin() bool {
 func (l *Rline) Prompt(s string) {
 	if l.P != nil {
 		l.P(s)
+	}
+}
+
+// Completer sets the auto-completer.
+func (l *Rline) Completer(a readline.AutoCompleter) {
+	if l.A != nil {
+		l.A(a)
 	}
 }
 
@@ -208,7 +218,12 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		Int: interactive || cygwin,
 		Cyg: cygwin,
 		P:   l.SetPrompt,
-		S:   l.SaveHistory,
-		Pw:  pw,
+		A: func(a readline.AutoCompleter) {
+			cfg := l.Config.Clone()
+			cfg.AutoComplete = a
+			l.SetConfig(cfg)
+		},
+		S:  l.SaveHistory,
+		Pw: pw,
 	}, nil
 }

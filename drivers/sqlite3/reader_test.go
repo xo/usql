@@ -168,7 +168,7 @@ func TestColumns(t *testing.T) {
 		names = append(names, result.Get().Name)
 	}
 	actual := strings.Join(names, ", ")
-	expected := "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, film_id, title, description, FID, title, description, category, price, length, rating, actors"
+	expected := "description, film_id, language_id, last_update, length, original_language_id, rating, release_year, rental_duration, rental_rate, replacement_cost, special_features, title, actor_id, film_id, last_update, category_id, film_id, last_update, description, film_id, title, FID, actors, category, description, length, price, rating, title"
 	if actual != expected {
 		t.Errorf("Wrong column names, expected:\n  %v, got:\n  %v", expected, names)
 	}
