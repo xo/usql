@@ -544,6 +544,7 @@ func (h *Handler) Open(params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(h.u, h.db); err == nil {
+			h.l.Completer(drivers.NewCompleter(h.u, h.db))
 			return h.Version()
 		}
 	}

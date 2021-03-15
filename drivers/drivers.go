@@ -9,10 +9,13 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"
+	"github.com/gohxs/readline"
 	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/stmt"
 	"github.com/xo/usql/text"
@@ -93,6 +96,8 @@ type Driver struct {
 	NewMetadataReader func(db DB, opts ...metadata.ReaderOption) metadata.Reader
 	// NewMetadataWriter returns a db metadata printer.
 	NewMetadataWriter func(db DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer
+	// NewCompleter returns a db auto-completer.
+	NewCompleter func(db DB, opts ...metadata.ReaderOption) readline.AutoCompleter
 }
 
 // drivers is the map of drivers funcs.
@@ -454,4 +459,25 @@ func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.Reader
 	}
 	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db, opts...))
 	return newMetadataWriter(db, w), nil
+}
+
+func NewCompleter(u *dburl.URL, db DB, opts ...metadata.ReaderOption) readline.AutoCompleter {
+	d, ok := drivers[u.Driver]
+	if !ok {
+		return nil
+	}
+	if d.NewCompleter != nil {
+		return d.NewCompleter(db, opts...)
+	}
+	if d.NewMetadataReader == nil {
+		return nil
+	}
+	// prepend the limit option just in case its already in opts, so it'll be overridden
+	opts = append([]metadata.ReaderOption{
+		// this needs to be relatively low, since autocomplete is very interactive
+		metadata.WithTimeout(3 * time.Second),
+		metadata.WithLimit(1000),
+	}, opts...)
+	newCompleter := completer.NewDefaultCompleter(d.NewMetadataReader(db, opts...))
+	return newCompleter(db)
 }
