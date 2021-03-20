@@ -1,5 +1,5 @@
-List of schemas
- Schema   | Catalog 
+  List of schemas
+  Schema  | Catalog 
 ----------+---------
  sf1      | tpch    
  sf100    | tpch    

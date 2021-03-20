@@ -1,4 +1,4 @@
-List of schemas
+ List of schemas
  Schema | Catalog 
 --------+---------
  sakila | def     

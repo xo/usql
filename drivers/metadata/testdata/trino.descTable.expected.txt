@@ -1,5 +1,5 @@
-BASE TABLE "sf1.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                     BASE TABLE "sf1.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -12,8 +12,8 @@ BASE TABLE "sf1.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf100.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                    BASE TABLE "sf100.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -26,8 +26,8 @@ BASE TABLE "sf100.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf1000.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                   BASE TABLE "sf1000.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -40,8 +40,8 @@ BASE TABLE "sf1000.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf10000.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                   BASE TABLE "sf10000.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -54,8 +54,8 @@ BASE TABLE "sf10000.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf100000.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                  BASE TABLE "sf100000.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -68,8 +68,8 @@ BASE TABLE "sf100000.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf300.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                    BASE TABLE "sf300.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -82,8 +82,8 @@ BASE TABLE "sf300.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf3000.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                   BASE TABLE "sf3000.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -96,8 +96,8 @@ BASE TABLE "sf3000.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "sf30000.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                   BASE TABLE "sf30000.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
@@ -110,8 +110,8 @@ BASE TABLE "sf30000.orders"
  comment       | varchar(79) | "YES"    |         |    0 |              0 |     0 |            0 
 (9 rows)
 
-BASE TABLE "tiny.orders"
- Name          | Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                    BASE TABLE "tiny.orders"
+     Name      |    Type     | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 ---------------+-------------+----------+---------+------+----------------+-------+--------------
  orderkey      | bigint      | "YES"    |         |    0 |              0 |     0 |            0 
  custkey       | bigint      | "YES"    |         |    0 |              0 |     0 |            0 

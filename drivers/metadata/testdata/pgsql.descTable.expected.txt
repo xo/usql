@@ -1,5 +1,5 @@
-BASE TABLE "public.film"
- Name                 | Type                        | Nullable | Default                               | Size | Decimal Digits | Radix | Octet Length 
+                                                               BASE TABLE "public.film"
+         Name         |            Type             | Nullable |                Default                | Size | Decimal Digits | Radix | Octet Length 
 ----------------------+-----------------------------+----------+---------------------------------------+------+----------------+-------+--------------
  film_id              | integer                     | "NO"     | nextval('film_film_id_seq'::regclass) |   32 |              0 |     2 |            0 
  title                | character varying           | "NO"     |                                       |  255 |              0 |    10 |         1020 
@@ -17,24 +17,24 @@ BASE TABLE "public.film"
  fulltext             | tsvector                    | "NO"     |                                       |    0 |              0 |    10 |            0 
 (14 rows)
 
-BASE TABLE "public.film_actor"
- Name        | Type                        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                        BASE TABLE "public.film_actor"
+    Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 -------------+-----------------------------+----------+---------+------+----------------+-------+--------------
  actor_id    | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 (3 rows)
 
-BASE TABLE "public.film_category"
- Name        | Type                        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                       BASE TABLE "public.film_category"
+    Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 -------------+-----------------------------+----------+---------+------+----------------+-------+--------------
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  category_id | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 (3 rows)
 
-VIEW "public.film_list"
- Name        | Type              | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+                                       VIEW "public.film_list"
+    Name     |       Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 -------------+-------------------+----------+---------+------+----------------+-------+--------------
  fid         | integer           | "YES"    |         |   32 |              0 |     2 |            0 
  title       | character varying | "YES"    |         |  255 |              0 |    10 |         1020 
@@ -46,8 +46,8 @@ VIEW "public.film_list"
  actors      | text              | "YES"    |         |    0 |              0 |    10 |   1073741824 
 (8 rows)
 
-Sequence "public.film_film_id_seq"
- Type   | Start | Min | Max                 | Increment | Cycles? 
+                Sequence "public.film_film_id_seq"
+  Type  | Start | Min |         Max         | Increment | Cycles? 
 --------+-------+-----+---------------------+-----------+---------
  bigint | 1     | 1   | 9223372036854775807 | 1         | "NO"    
 

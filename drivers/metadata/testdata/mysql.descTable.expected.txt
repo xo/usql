@@ -1,5 +1,5 @@
-BASE TABLE "sakila.film"
- Name                 | Type      | Nullable | Default           | Size  | Decimal Digits | Radix | Octet Length 
+                                            BASE TABLE "sakila.film"
+         Name         |   Type    | Nullable |      Default      | Size  | Decimal Digits | Radix | Octet Length 
 ----------------------+-----------+----------+-------------------+-------+----------------+-------+--------------
  film_id              | smallint  | "NO"     |                   |     5 |              0 |    10 |            0 
  title                | varchar   | "NO"     |                   |   255 |              0 |    10 |          765 
@@ -22,8 +22,8 @@ Indexes:
   "idx_title" BTREE (title)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
-BASE TABLE "sakila.film_actor"
- Name        | Type      | Nullable | Default           | Size | Decimal Digits | Radix | Octet Length 
+                                    BASE TABLE "sakila.film_actor"
+    Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
 -------------+-----------+----------+-------------------+------+----------------+-------+--------------
  actor_id    | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
  film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
@@ -34,8 +34,8 @@ Indexes:
   "idx_fk_film_id" BTREE (film_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
 
-BASE TABLE "sakila.film_category"
- Name        | Type      | Nullable | Default           | Size | Decimal Digits | Radix | Octet Length 
+                                   BASE TABLE "sakila.film_category"
+    Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
 -------------+-----------+----------+-------------------+------+----------------+-------+--------------
  film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
  category_id | tinyint   | "NO"     |                   |    3 |              0 |    10 |            0 
@@ -46,8 +46,8 @@ Indexes:
   "fk_film_category_category" BTREE (category_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
 
-BASE TABLE "sakila.film_text"
- Name        | Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+                                BASE TABLE "sakila.film_text"
+    Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
 -------------+----------+----------+---------+-------+----------------+-------+--------------
  film_id     | smallint | "NO"     |         |     5 |              0 |    10 |            0 
  title       | varchar  | "NO"     |         |   255 |              0 |    10 |          765 
@@ -58,8 +58,8 @@ Indexes:
   "idx_title_description" FULLTEXT (title, description)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
-VIEW "sakila.film_list"
- Name        | Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+                                   VIEW "sakila.film_list"
+    Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
 -------------+----------+----------+---------+-------+----------------+-------+--------------
  FID         | smallint | "YES"    | 0       |     5 |              0 |    10 |            0 
  title       | varchar  | "YES"    |         |   255 |              0 |    10 |          765 

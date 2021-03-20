@@ -1,5 +1,5 @@
-List of relations
- Schema | Name          | Type       | Size | Comment 
+                  List of relations
+ Schema |     Name      |    Type    | Size | Comment 
 --------+---------------+------------+------+---------
  sakila | film          | BASE TABLE |      |         
  sakila | film_actor    | BASE TABLE |      |         
