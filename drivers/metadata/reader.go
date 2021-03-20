@@ -1,6 +1,10 @@
 package metadata
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"time"
+)
 
 // PluginReader allows to be easily composed from other readers
 type PluginReader struct {
@@ -116,9 +120,10 @@ func (p PluginReader) Sequences(catalog, schemaPattern, namePattern string) (*Se
 }
 
 type LoggingReader struct {
-	db     DB
-	logger logger
-	dryRun bool
+	db      DB
+	logger  logger
+	dryRun  bool
+	timeout time.Duration
 }
 
 type logger interface {
@@ -152,9 +157,30 @@ func WithDryRun(d bool) ReaderOption {
 	}
 }
 
+// WithTimeout for a single query
+func WithTimeout(t time.Duration) ReaderOption {
+	return func(r Reader) {
+		r.(loggerSetter).setTimeout(t)
+	}
+}
+
+// WithLimit for a single query, if the reader supports it
+func WithLimit(l int) ReaderOption {
+	return func(r Reader) {
+		if rl, ok := r.(limiter); ok {
+			rl.SetLimit(l)
+		}
+	}
+}
+
 type loggerSetter interface {
 	setLogger(logger)
 	setDryRun(bool)
+	setTimeout(t time.Duration)
+}
+
+type limiter interface {
+	SetLimit(l int)
 }
 
 func (r *LoggingReader) setLogger(l logger) {
@@ -165,13 +191,30 @@ func (r *LoggingReader) setDryRun(d bool) {
 	r.dryRun = d
 }
 
-func (r LoggingReader) Query(q string, v ...interface{}) (*sql.Rows, error) {
+func (r *LoggingReader) setTimeout(t time.Duration) {
+	_, ok := r.db.(DBContext)
+	if !ok {
+		panic("trying to set timeout for a logging reader with a non-contextual db")
+	}
+	r.timeout = t
+}
+
+func (r LoggingReader) Query(q string, v ...interface{}) (*sql.Rows, CloseFunc, error) {
 	if r.logger != nil {
 		r.logger.Println(q)
 		r.logger.Println(v)
 	}
 	if r.dryRun {
-		return nil, sql.ErrNoRows
+		return nil, nil, sql.ErrNoRows
 	}
-	return r.db.Query(q, v...)
+	if r.timeout != 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		rows, err := r.db.(DBContext).QueryContext(ctx, q, v...)
+		return rows, func() { cancel(); rows.Close() }, err
+	}
+	rows, err := r.db.Query(q, v...)
+	return rows, func() { rows.Close() }, err
 }
+
+// CloseFunc should be called when result wont be processed anymore
+type CloseFunc func()

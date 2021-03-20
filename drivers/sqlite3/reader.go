@@ -1,6 +1,8 @@
 package sqlite3
 
 import (
+	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/xo/usql/drivers/metadata"
@@ -8,6 +10,11 @@ import (
 
 type metaReader struct {
 	metadata.LoggingReader
+	limit int
+}
+
+func (r *metaReader) SetLimit(l int) {
+	r.limit = l
 }
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
@@ -26,11 +33,11 @@ func (r metaReader) Columns(catalog, schemaPattern, tablePattern string) (*metad
   CASE WHEN "notnull" = 1 THEN 'NO' ELSE 'YES' END,
   COALESCE(dflt_value, '')
 FROM pragma_table_info(?)`
-		rows, err := r.Query(qstr, table.Name)
+		rows, closeRows, err := r.query(qstr, []string{}, "name", table.Name)
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		defer closeRows()
 
 		rec := metadata.Column{
 			Catalog: table.Catalog,
@@ -86,8 +93,7 @@ FROM (
       name AS table_name,
       'SYSTEM TABLE' AS table_type
     FROM pragma_module_list
-)
-`
+)`
 	conds := []string{}
 	vals := []interface{}{}
 	if catalog != "" {
@@ -112,16 +118,11 @@ FROM (
 			conds = append(conds, "table_type IN ("+strings.Join(pholders, ", ")+")")
 		}
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY table_type, table_name`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "table_type, table_name", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Table{}
 	for rows.Next() {
@@ -142,24 +143,18 @@ func (r metaReader) Schemas(catalog, namePattern string) (*metadata.SchemaSet, e
 	qstr := `SELECT
   name AS schema_name,
   '' AS catalog_name
-FROM pragma_database_list
-`
+FROM pragma_database_list`
 	conds := []string{}
 	vals := []interface{}{}
 	if namePattern != "" {
 		vals = append(vals, namePattern)
 		conds = append(conds, "schema_name LIKE ?")
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY seq`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "seq", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Schema{}
 	for rows.Next() {
@@ -181,8 +176,7 @@ func (r metaReader) Functions(catalog, schemaPattern, namePattern string, types 
   name AS specific_name,
   name AS routine_name,
   type AS routine_type
-FROM pragma_function_list
-`
+FROM pragma_function_list`
 	conds := []string{}
 	vals := []interface{}{}
 	if namePattern != "" {
@@ -199,16 +193,11 @@ FROM pragma_function_list
 			conds = append(conds, "type IN ("+strings.Join(pholders, ", ")+")")
 		}
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY name, type`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "name, type", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Function{}
 	for rows.Next() {
@@ -240,8 +229,7 @@ func (r metaReader) Indexes(catalog, schemaPattern, tablePattern, namePattern st
   CASE WHEN i."unique" = 1 THEN 'YES' ELSE 'NO' END,
   CASE WHEN i.origin = 'pk' THEN 'YES' ELSE 'NO' END
 FROM sqlite_master m
-JOIN pragma_index_list(m.name) i
-`
+JOIN pragma_index_list(m.name) i`
 	conds := []string{"m.type = 'table'"}
 	vals := []interface{}{}
 	if tablePattern != "" {
@@ -252,17 +240,11 @@ JOIN pragma_index_list(m.name) i
 		vals = append(vals, namePattern)
 		conds = append(conds, "i.name LIKE ?")
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY m.name, i.seq`
-
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "m.name, i.seq", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Index{}
 	for rows.Next() {
@@ -287,8 +269,7 @@ func (r metaReader) IndexColumns(catalog, schemaPattern, tablePattern, indexPatt
   ic.seqno
 FROM sqlite_master m
 JOIN pragma_index_list(m.name) i
-JOIN pragma_index_xinfo(i.name) ic
-`
+JOIN pragma_index_xinfo(i.name) ic`
 	conds := []string{"m.type = 'table' AND ic.cid >= 0"}
 	vals := []interface{}{}
 	if tablePattern != "" {
@@ -299,17 +280,11 @@ JOIN pragma_index_xinfo(i.name) ic
 		vals = append(vals, indexPattern)
 		conds = append(conds, "i.name LIKE ?")
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY m.name, i.seq, ic.seqno`
-
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "m.name, i.seq, ic.seqno", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.IndexColumn{}
 	for rows.Next() {
@@ -324,4 +299,17 @@ ORDER BY m.name, i.seq, ic.seqno`
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexColumnSet(results), nil
+}
+
+func (r metaReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
+	if len(conds) != 0 {
+		qstr += "\nWHERE " + strings.Join(conds, " AND ")
+	}
+	if order != "" {
+		qstr += "\nORDER BY " + order
+	}
+	if r.limit != 0 {
+		qstr += fmt.Sprintf("\nLIMIT %d", r.limit)
+	}
+	return r.Query(qstr, vals...)
 }

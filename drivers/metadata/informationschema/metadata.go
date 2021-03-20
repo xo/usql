@@ -20,6 +20,7 @@ type InformationSchema struct {
 	hasSequences bool
 	hasIndexes   bool
 	colExpr      map[ColumnName]string
+	limit        int
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -112,6 +113,10 @@ func WithSequences(seq bool) metadata.ReaderOption {
 	}
 }
 
+func (s *InformationSchema) SetLimit(l int) {
+	s.limit = l
+}
+
 // Columns from selected catalog (or all, if empty), matching schemas and tables
 func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) (*metadata.ColumnSet, error) {
 	columns := []string{
@@ -144,19 +149,14 @@ func (s InformationSchema) Columns(catalog, schemaPattern, tablePattern string) 
 		vals = append(vals, tablePattern)
 		conds = append(conds, fmt.Sprintf("table_name LIKE %s", s.pf(len(vals))))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY table_catalog, table_schema, table_name, ordinal_position`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "table_catalog, table_schema, table_name, ordinal_position", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewColumnSet([]metadata.Column{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Column{}
 	for rows.Next() {
@@ -253,16 +253,14 @@ FROM information_schema.sequences
 			qstr += " WHERE " + strings.Join(conds, " AND ")
 		}
 	}
-	qstr += `
-ORDER BY table_catalog, table_schema, table_type, table_name`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, []string{}, "table_catalog, table_schema, table_type, table_name", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewTableSet([]metadata.Table{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Table{}
 	for rows.Next() {
@@ -296,19 +294,14 @@ FROM information_schema.schemata
 		vals = append(vals, namePattern)
 		conds = append(conds, fmt.Sprintf("schema_name LIKE %s", s.pf(len(vals))))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY catalog_name, schema_name`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "catalog_name, schema_name", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSchemaSet([]metadata.Schema{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Schema{}
 	for rows.Next() {
@@ -369,19 +362,14 @@ func (s InformationSchema) Functions(catalog, schemaPattern, namePattern string,
 			conds = append(conds, "routine_type IN ("+strings.Join(pholders, ", ")+")")
 		}
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionSet([]metadata.Function{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Function{}
 	for rows.Next() {
@@ -445,19 +433,14 @@ func (s InformationSchema) FunctionColumns(catalog, schemaPattern, functionPatte
 		vals = append(vals, functionPattern)
 		conds = append(conds, fmt.Sprintf("specific_name LIKE %s", s.pf(len(vals))))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.FunctionColumn{}
 	for rows.Next() {
@@ -527,17 +510,15 @@ FROM information_schema.statistics
 GROUP BY table_catalog, index_schema, table_name, index_name,
   CASE WHEN non_unique = 0 THEN 'YES' ELSE 'NO' END,
   CASE WHEN index_name = 'PRIMARY' THEN 'YES' ELSE 'NO' END,
-  index_type
-ORDER BY table_catalog, index_schema, table_name, index_name
-`
-	rows, err := s.Query(qstr, vals...)
+  index_type`
+	rows, closeRows, err := s.query(qstr, []string{}, "table_catalog, index_schema, table_name, index_name", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexSet([]metadata.Index{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Index{}
 	for rows.Next() {
@@ -594,19 +575,14 @@ JOIN information_schema.columns c ON
 		vals = append(vals, indexPattern)
 		conds = append(conds, fmt.Sprintf("index_name LIKE %s", s.pf(len(vals))))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY i.table_catalog, index_schema, table_name, index_name, seq_in_index`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "i.table_catalog, index_schema, table_name, index_name, seq_in_index", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.IndexColumn{}
 	for rows.Next() {
@@ -655,19 +631,14 @@ FROM information_schema.sequences
 		vals = append(vals, namePattern)
 		conds = append(conds, fmt.Sprintf("sequence_name LIKE %s", s.pf(len(vals))))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY sequence_catalog, sequence_schema, sequence_name`
-	rows, err := s.Query(qstr, vals...)
+	rows, closeRows, err := s.query(qstr, conds, "sequence_catalog, sequence_schema, sequence_name", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSequenceSet([]metadata.Sequence{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Sequence{}
 	for rows.Next() {
@@ -682,4 +653,17 @@ ORDER BY sequence_catalog, sequence_schema, sequence_name`
 		return nil, rows.Err()
 	}
 	return metadata.NewSequenceSet(results), nil
+}
+
+func (s InformationSchema) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
+	if len(conds) != 0 {
+		qstr += "\nWHERE " + strings.Join(conds, " AND ")
+	}
+	if order != "" {
+		qstr += "\nORDER BY " + order
+	}
+	if s.limit != 0 {
+		qstr += fmt.Sprintf("\nLIMIT %d", s.limit)
+	}
+	return s.Query(qstr, vals...)
 }

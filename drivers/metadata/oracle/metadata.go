@@ -35,14 +35,14 @@ FROM dba_db_links
 ORDER BY catalog
 `
 
-	rows, err := r.Query(qstr)
+	rows, closeRows, err := r.Query(qstr)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewCatalogSet([]metadata.Catalog{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Catalog{}
 	for rows.Next() {
@@ -75,14 +75,14 @@ FROM all_users
 	}
 	qstr += `
 ORDER BY username`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewSchemaSet([]metadata.Schema{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Schema{}
 	for rows.Next() {
@@ -158,14 +158,14 @@ FROM all_synonyms s
 	}
 	qstr += `
 ORDER BY table_schem, table_name, table_type`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewTableSet([]metadata.Table{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Table{}
 	for rows.Next() {
@@ -216,14 +216,14 @@ FROM all_tab_columns c
 	}
 	qstr += `
 ORDER BY c.owner, c.table_name, c.column_id`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewColumnSet([]metadata.Column{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Column{}
 	for rows.Next() {
@@ -289,14 +289,14 @@ JOIN all_objects b ON b.object_id = a.object_id AND a.sequence  = 1
 	}
 	qstr += `
 ORDER BY procedure_schem, procedure_name, procedure_type`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionSet([]metadata.Function{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Function{}
 	for rows.Next() {
@@ -348,14 +348,14 @@ JOIN all_arguments a ON b.object_id = a.object_id AND a.data_level = 0
 	}
 	qstr += `
 ORDER BY procedure_schem, procedure_name, ordinal_position`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewFunctionColumnSet([]metadata.FunctionColumn{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.FunctionColumn{}
 	for rows.Next() {
@@ -410,14 +410,14 @@ FROM all_indexes o
 	qstr += `
 ORDER BY o.owner, o.table_name, o.index_name`
 
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexSet([]metadata.Index{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Index{}
 	for rows.Next() {
@@ -463,14 +463,14 @@ JOIN all_ind_columns b ON o.owner = b.index_owner AND o.index_name = b.index_nam
 	}
 	qstr += `
 ORDER BY o.owner, o.table_name, o.index_name, b.column_position`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.Query(qstr, vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewIndexColumnSet([]metadata.IndexColumn{}), nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.IndexColumn{}
 	for rows.Next() {

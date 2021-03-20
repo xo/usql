@@ -6,6 +6,7 @@ import (
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/rline"
 	"github.com/xo/usql/stmt"
@@ -51,6 +52,8 @@ type Handler interface {
 	GetTiming() bool
 	// SetTiming mode.
 	SetTiming(bool)
+	// ReaderOptions returns default reader options.
+	ReaderOptions() []metadata.ReaderOption
 }
 
 // Runner is a runner interface type.
