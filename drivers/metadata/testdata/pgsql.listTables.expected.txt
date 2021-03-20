@@ -1,5 +1,5 @@
-List of relations
- Schema | Name             | Type       | Size | Comment 
+                    List of relations
+ Schema |       Name       |    Type    | Size | Comment 
 --------+------------------+------------+------+---------
  public | film             | BASE TABLE |      |         
  public | film_actor       | BASE TABLE |      |         

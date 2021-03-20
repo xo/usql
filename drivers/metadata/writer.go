@@ -138,8 +138,9 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 		}
 		return v
 	})
-	fmt.Fprintln(w.w, "List of functions")
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of functions"
+	return tblfmt.EncodeAll(w.w, res, params)
 }
 
 func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
@@ -263,12 +264,13 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 		}
 		return v
 	})
+	params := env.Pall()
 	if sp == "" {
-		fmt.Fprintf(w.w, "%s \"%s\"\n", typ, tp)
+		params["title"] = fmt.Sprintf("%s \"%s\"\n", typ, tp)
 	} else {
-		fmt.Fprintf(w.w, "%s \"%s.%s\"\n", typ, sp, tp)
+		params["title"] = fmt.Sprintf("%s \"%s.%s\"\n", typ, sp, tp)
 	}
-	err = tblfmt.EncodeAll(w.w, res, env.Pall())
+	err = tblfmt.EncodeAll(w.w, res, params)
 	if err != nil {
 		return err
 	}
@@ -351,7 +353,7 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 		rows := NewSequenceSet([]Sequence{*s})
 		params := env.Pall()
 		params["footer"] = "off"
-		fmt.Fprintf(w.w, "Sequence \"%s.%s\"\n", s.Schema, s.Name)
+		params["title"] = fmt.Sprintf("Sequence \"%s.%s\"\n", s.Schema, s.Name)
 		err = tblfmt.EncodeAll(w.w, rows, params)
 		if err != nil {
 			return 0, err
@@ -381,12 +383,13 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 	})
 
 	// TODO footer should say if it's primary, index type and which table this index belongs to
+	params := env.Pall()
 	if sp == "" {
-		fmt.Fprintf(w.w, "Index \"%s\"\n", ip)
+		params["title"] = fmt.Sprintf("Index \"%s\"\n", ip)
 	} else {
-		fmt.Fprintf(w.w, "Index \"%s.%s\"\n", sp, ip)
+		params["title"] = fmt.Sprintf("Index \"%s.%s\"\n", sp, ip)
 	}
-	err = tblfmt.EncodeAll(w.w, res, env.Pall())
+	err = tblfmt.EncodeAll(w.w, res, params)
 	if err != nil {
 		return err
 	}
@@ -409,8 +412,9 @@ func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
 	}
 	defer res.Close()
 
-	fmt.Fprintln(w.w, "List of databases")
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of databases"
+	return tblfmt.EncodeAll(w.w, res, params)
 }
 
 // ListTables matching pattern
@@ -459,8 +463,9 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 		return v
 	})
 
-	fmt.Fprintln(w.w, "List of relations")
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of relations"
+	return tblfmt.EncodeAll(w.w, res, params)
 }
 
 // ListSchemas matching pattern
@@ -481,8 +486,9 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 			return !ok
 		})
 	}
-	fmt.Fprintln(w.w, "List of schemas")
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of schemas"
+	return tblfmt.EncodeAll(w.w, res, params)
 }
 
 // ListIndexes matching pattern
@@ -527,8 +533,9 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 		return v
 	})
 
-	fmt.Fprintln(w.w, "List of indexes")
-	return tblfmt.EncodeAll(w.w, res, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of indexes"
+	return tblfmt.EncodeAll(w.w, res, params)
 }
 
 func parsePattern(pattern string) (string, string, error) {

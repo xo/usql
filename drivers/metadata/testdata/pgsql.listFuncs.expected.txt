@@ -1,5 +1,5 @@
-List of functions
- Schema | Name                       | Result data type | Argument data types                                                 | Type     
+                                                            List of functions
+ Schema |            Name            | Result data type |                         Argument data types                         |   Type   
 --------+----------------------------+------------------+---------------------------------------------------------------------+----------
  public | _group_concat              | text             | text, text                                                          | FUNCTION 
  public | film_in_stock              | integer          | p_film_id integer, p_store_id integer, OUT p_film_count integer     | FUNCTION 

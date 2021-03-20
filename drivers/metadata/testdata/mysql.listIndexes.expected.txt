@@ -1,5 +1,5 @@
-List of indexes
- Schema | Name                        | Type     | Table         | Primary? | Unique? 
+                                   List of indexes
+ Schema |            Name             |   Type   |     Table     | Primary? | Unique? 
 --------+-----------------------------+----------+---------------+----------+---------
  sakila | idx_actor_last_name         | BTREE    | actor         | "NO"     | "NO"    
  sakila | PRIMARY                     | BTREE    | actor         | "YES"    | "YES"   

@@ -65,5 +65,7 @@ func listAllDbs(db drivers.DB, w io.Writer, pattern string, verbose bool) error 
 	}
 	defer rows.Close()
 
-	return tblfmt.EncodeAll(w, rows, env.Pall())
+	params := env.Pall()
+	params["title"] = "List of databases"
+	return tblfmt.EncodeAll(w, rows, params)
 }

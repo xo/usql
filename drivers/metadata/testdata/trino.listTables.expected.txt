@@ -1,5 +1,5 @@
-List of relations
- Schema   | Name   | Type       | Size | Comment 
+                List of relations
+  Schema  |  Name  |    Type    | Size | Comment 
 ----------+--------+------------+------+---------
  sf1      | orders | BASE TABLE |      |         
  sf100    | orders | BASE TABLE |      |         

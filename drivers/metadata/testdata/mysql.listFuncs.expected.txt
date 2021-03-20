@@ -1,5 +1,5 @@
-List of functions
- Schema | Name                                | Result data type | Argument data types                                                                                                                                   | Type      
+                                                                                                          List of functions
+ Schema |                Name                 | Result data type |                                                                  Argument data types                                                                  |   Type    
 --------+-------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------+-----------
  sakila | film_in_stock                       |                  | p_film_id int, p_store_id int, OUT p_film_count int                                                                                                   | PROCEDURE 
  sakila | film_not_in_stock                   |                  | p_film_id int, p_store_id int, OUT p_film_count int                                                                                                   | PROCEDURE 
