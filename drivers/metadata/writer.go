@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -18,6 +19,14 @@ type DB interface {
 	Query(string, ...interface{}) (*sql.Rows, error)
 	QueryRow(string, ...interface{}) *sql.Row
 	Prepare(string) (*sql.Stmt, error)
+}
+
+type DBContext interface {
+	DB
+	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
+	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
+	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	PrepareContext(context.Context, string) (*sql.Stmt, error)
 }
 
 // DefaultWriter using an existing db introspector

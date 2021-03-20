@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
 	"os"
 	"os/user"
@@ -23,6 +24,7 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/rline"
@@ -1026,4 +1028,21 @@ func (h *Handler) Include(path string, relative bool) error {
 	err = p.Run()
 	h.db, h.u = p.db, p.u
 	return err
+}
+
+// ReaderOptions returns default reader options.
+func (h *Handler) ReaderOptions() []metadata.ReaderOption {
+	opts := []metadata.ReaderOption{}
+	envs := env.All()
+	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
+		if envs["ECHO_HIDDEN"] == "noexec" {
+			opts = append(opts, metadata.WithDryRun(true))
+		}
+		opts = append(
+			opts,
+			metadata.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)),
+			metadata.WithTimeout(30*time.Second),
+		)
+	}
+	return opts
 }

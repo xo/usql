@@ -1,6 +1,8 @@
 package sqlserver
 
 import (
+	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/xo/usql/drivers/metadata"
@@ -8,20 +10,21 @@ import (
 
 type metaReader struct {
 	metadata.LoggingReader
+	limit int
+}
+
+func (r *metaReader) SetLimit(l int) {
+	r.limit = l
 }
 
 func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
-	qstr := `
-SELECT name
-FROM sys.databases
-ORDER BY name
-`
-
-	rows, err := r.Query(qstr)
+	qstr := `SELECT name
+FROM sys.databases`
+	rows, closeRows, err := r.query(qstr, []string{}, "name")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Catalog{}
 	for rows.Next() {
@@ -66,17 +69,11 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 		vals = append(vals, namePattern)
 		conds = append(conds, "i.name LIKE ?")
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY s.name, t.name, i.name`
-
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Index{}
 	for rows.Next() {
@@ -124,16 +121,11 @@ JOIN sys.types ty ON ty.user_type_id = c.user_type_id
 		vals = append(vals, indexPattern)
 		conds = append(conds, "i.name LIKE ?")
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY s.name, t.name, i.name, ic.index_column_id`
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name, ic.index_column_id", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.IndexColumn{}
 	for rows.Next() {
@@ -148,4 +140,17 @@ ORDER BY s.name, t.name, i.name, ic.index_column_id`
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexColumnSet(results), nil
+}
+
+func (r metaReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
+	if len(conds) != 0 {
+		qstr += "\nWHERE " + strings.Join(conds, " AND ")
+	}
+	if order != "" {
+		qstr += "\nORDER BY " + order
+	}
+	if r.limit != 0 {
+		qstr += fmt.Sprintf("\nFETCH FIRST %d ROWS ONLY", r.limit)
+	}
+	return r.Query(qstr, vals...)
 }

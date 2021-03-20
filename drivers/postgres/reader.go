@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -9,20 +10,22 @@ import (
 
 type metaReader struct {
 	metadata.LoggingReader
+	limit int
+}
+
+func (r *metaReader) SetLimit(l int) {
+	r.limit = l
 }
 
 func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
 	qstr := `
 SELECT d.datname as "Name"
-FROM pg_catalog.pg_database d
-ORDER BY 1;
-`
-
-	rows, err := r.Query(qstr)
+FROM pg_catalog.pg_database d`
+	rows, closeRows, err := r.query(qstr, []string{}, "1")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Catalog{}
 	for rows.Next() {
@@ -52,8 +55,7 @@ SELECT
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
      LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
-     LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
-`
+     LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid`
 	conds := []string{"c.relkind IN ('i','I','')",
 		"n.nspname <> 'pg_catalog'",
 		"n.nspname <> 'information_schema'",
@@ -72,17 +74,11 @@ FROM pg_catalog.pg_class c
 		vals = append(vals, namePattern)
 		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
 	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
-	qstr += `
-ORDER BY 1,2`
-
-	rows, err := r.Query(qstr, vals...)
+	rows, closeRows, err := r.query(qstr, conds, "1, 2", vals...)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows()
 
 	results := []metadata.Index{}
 	for rows.Next() {
@@ -97,4 +93,17 @@ ORDER BY 1,2`
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexSet(results), nil
+}
+
+func (r metaReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
+	if len(conds) != 0 {
+		qstr += "\nWHERE " + strings.Join(conds, " AND ")
+	}
+	if order != "" {
+		qstr += "\nORDER BY " + order
+	}
+	if r.limit != 0 {
+		qstr += fmt.Sprintf("\nLIMIT %d", r.limit)
+	}
+	return r.Query(qstr, vals...)
 }
