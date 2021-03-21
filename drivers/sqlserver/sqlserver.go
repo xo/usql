@@ -1,14 +1,14 @@
-// Package mssql defines and registers usql's Microsoft SQL Server driver.
+// Package sqlserver defines and registers usql's Microsoft SQL Server driver.
 //
 // See: https://github.com/denisenkom/go-mssqldb
-package mssql
+package sqlserver
 
 import (
 	"io"
 	"strconv"
 	"strings"
 
-	mssql "github.com/denisenkom/go-mssqldb" // DRIVER: mssql
+	sqlserver "github.com/denisenkom/go-mssqldb" // DRIVER: sqlserver
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
@@ -28,7 +28,7 @@ func init() {
 		}
 		return metadata.NewPluginReader(ir, mr)
 	}
-	drivers.Register("mssql", drivers.Driver{
+	drivers.Register("sqlserver", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
 		LexerName:               "tsql",
@@ -47,11 +47,11 @@ func init() {
 			return err
 		},
 		Err: func(err error) (string, string) {
-			if e, ok := err.(mssql.Error); ok {
+			if e, ok := err.(sqlserver.Error); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
 			msg := err.Error()
-			if i := strings.LastIndex(msg, "mssql:"); i != -1 {
+			if i := strings.LastIndex(msg, "sqlserver:"); i != -1 {
 				msg = msg[i:]
 			}
 			return "", msg

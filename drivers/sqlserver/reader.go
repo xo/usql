@@ -1,4 +1,4 @@
-package mssql
+package sqlserver
 
 import (
 	"strings"

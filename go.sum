@@ -937,8 +937,8 @@ github.com/xeipuuv/gojsonschema v0.0.0-20180618132009-1d523034197f/go.mod h1:5yf
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0 h1:nrYFWDrB2F7VwYlNravXZS0nOtg9axlATH3Jns55/F0=
 github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
-github.com/xo/dburl v0.3.0 h1:KGkeJB/oQhY/DeeJoYl/1+pNE/JnF6ouAuA8nzpQEQ8=
-github.com/xo/dburl v0.3.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
+github.com/xo/dburl v0.4.0 h1:Cz0YN7v8XtYZMIU6DYQ/1Xt8qPai56hsln0VzltJolY=
+github.com/xo/dburl v0.4.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.2.0 h1:zITvCwwBWOhyQUOfNCNpH7zzEbgZ9vtpaqYmtHGeEyk=
 github.com/xo/tblfmt v0.2.0/go.mod h1:MMtP2RWkxw36O4MXUKmcgKKSo2WT1mwBmXggTtzeFX8=

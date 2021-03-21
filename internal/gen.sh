@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="mssql mysql oracle postgres sqlite3"
+BASE="mysql oracle postgres sqlite3 sqlserver"
 
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|grep -v metadata|sort)

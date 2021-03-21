@@ -81,7 +81,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.2.0 // indirect
-	github.com/xo/dburl v0.3.0
+	github.com/xo/dburl v0.4.0
 	github.com/xo/tblfmt v0.2.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5

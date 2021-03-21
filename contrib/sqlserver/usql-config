@@ -1,2 +1,2 @@
-DB="mssql://sa:Adm1nP@ssw0rd@localhost/"
+DB="sqlserver://sa:Adm1nP@ssw0rd@localhost/"
 VSQL="SELECT SERVERPROPERTY('productversion') AS version;"

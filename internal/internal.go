@@ -27,7 +27,6 @@ func KnownBuildTags() map[string]string {
 		"impala":        "impala",        // github.com/bippio/go-impala
 		"maxcompute":    "maxcompute",    // sqlflow.org/gomaxcompute
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
-		"mssql":         "mssql",         // github.com/denisenkom/go-mssqldb
 		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
@@ -41,6 +40,7 @@ func KnownBuildTags() map[string]string {
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
 		"spanner":       "spanner",       // github.com/rakyll/go-sql-driver-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
+		"sqlserver":     "sqlserver",     // github.com/denisenkom/go-mssqldb
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient

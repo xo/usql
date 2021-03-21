@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/denisenkom/go-mssqldb" // DRIVER: mssql
+	_ "github.com/denisenkom/go-mssqldb" // DRIVER: sqlserver
 	_ "github.com/go-sql-driver/mysql"
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
@@ -88,7 +88,7 @@ var (
 				}),
 			},
 		},
-		"mssql": {
+		"sqlserver": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
 				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/sql-server-sakila-db/sql-server-sakila-schema.sql"},
@@ -96,11 +96,11 @@ var (
 				{Name: "USER", Value: "mssql:0"},
 			},
 			RunOptions: &dt.RunOptions{
-				Name: "usql-mssql",
+				Name: "usql-sqlserver",
 				Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
 			},
 			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
-			Driver:     "mssql",
+			Driver:     "sqlserver",
 			URL:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
 			DockerPort: "1433/tcp",
 			Opts: []metadata.ReaderOption{
@@ -142,7 +142,7 @@ var (
 func TestMain(m *testing.M) {
 	var only string
 	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
-	flag.StringVar(&only, "dbs", "", "comma separated list of dbs to test: pgsql, mysql, mssql, trino")
+	flag.StringVar(&only, "dbs", "", "comma separated list of dbs to test: pgsql, mysql, sqlserver, trino")
 	flag.Parse()
 
 	if only != "" {
@@ -220,10 +220,10 @@ func TestMain(m *testing.M) {
 
 func TestSchemas(t *testing.T) {
 	expected := map[string]string{
-		"pgsql": "information_schema, pg_catalog, pg_toast, public",
-		"mysql": "information_schema, mysql, performance_schema, sakila, sys",
-		"mssql": "db_accessadmin, db_backupoperator, db_datareader, db_datawriter, db_ddladmin, db_denydatareader, db_denydatawriter, db_owner, db_securityadmin, dbo, guest, INFORMATION_SCHEMA, sys",
-		"trino": "information_schema, sf1, sf100, sf1000, sf10000, sf100000, sf300, sf3000, sf30000, tiny",
+		"pgsql":     "information_schema, pg_catalog, pg_toast, public",
+		"mysql":     "information_schema, mysql, performance_schema, sakila, sys",
+		"sqlserver": "db_accessadmin, db_backupoperator, db_datareader, db_datawriter, db_ddladmin, db_denydatareader, db_denydatawriter, db_owner, db_securityadmin, dbo, guest, INFORMATION_SCHEMA, sys",
+		"trino":     "information_schema, sf1, sf100, sf1000, sf10000, sf100000, sf300, sf3000, sf30000, tiny",
 	}
 	for dbName, db := range dbs {
 		r := db.Reader
@@ -246,16 +246,16 @@ func TestSchemas(t *testing.T) {
 
 func TestTables(t *testing.T) {
 	schemas := map[string]string{
-		"pgsql": "public",
-		"mysql": "sakila",
-		"mssql": "dbo",
-		"trino": "sf1",
+		"pgsql":     "public",
+		"mysql":     "sakila",
+		"sqlserver": "dbo",
+		"trino":     "sf1",
 	}
 	expected := map[string]string{
-		"pgsql": "actor, address, category, city, country, customer, film, film_actor, film_category, inventory, language, payment, payment_p2007_01, payment_p2007_02, payment_p2007_03, payment_p2007_04, payment_p2007_05, payment_p2007_06, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
-		"mysql": "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
-		"mssql": "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, customer_list, film_list, sales_by_film_category, sales_by_store, staff_list",
-		"trino": "customer, lineitem, nation, orders, part, partsupp, region, supplier",
+		"pgsql":     "actor, address, category, city, country, customer, film, film_actor, film_category, inventory, language, payment, payment_p2007_01, payment_p2007_02, payment_p2007_03, payment_p2007_04, payment_p2007_05, payment_p2007_06, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
+		"mysql":     "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list",
+		"sqlserver": "actor, address, category, city, country, customer, film, film_actor, film_category, film_text, inventory, language, payment, rental, staff, store, customer_list, film_list, sales_by_film_category, sales_by_store, staff_list",
+		"trino":     "customer, lineitem, nation, orders, part, partsupp, region, supplier",
 	}
 	for dbName, db := range dbs {
 		r := db.Reader
@@ -278,22 +278,22 @@ func TestTables(t *testing.T) {
 
 func TestColumns(t *testing.T) {
 	schemas := map[string]string{
-		"pgsql": "public",
-		"mysql": "sakila",
-		"mssql": "dbo",
-		"trino": "sf1",
+		"pgsql":     "public",
+		"mysql":     "sakila",
+		"sqlserver": "dbo",
+		"trino":     "sf1",
 	}
 	tables := map[string]string{
-		"pgsql": "film%",
-		"mysql": "film%",
-		"mssql": "film%",
-		"trino": "orders",
+		"pgsql":     "film%",
+		"mysql":     "film%",
+		"sqlserver": "film%",
+		"trino":     "orders",
 	}
 	expected := map[string]string{
-		"pgsql": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update, special_features, fulltext, actor_id, film_id, last_update, film_id, category_id, last_update, fid, title, description, category, price, length, rating, actors",
-		"mysql": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
-		"mssql": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
-		"trino": "orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority, clerk, shippriority, comment",
+		"pgsql":     "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update, special_features, fulltext, actor_id, film_id, last_update, film_id, category_id, last_update, fid, title, description, category, price, length, rating, actors",
+		"mysql":     "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
+		"sqlserver": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
+		"trino":     "orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority, clerk, shippriority, comment",
 	}
 	for dbName, db := range dbs {
 		r := db.Reader
