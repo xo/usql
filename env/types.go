@@ -54,6 +54,7 @@ func init() {
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"TIME_FORMAT":           timefmt,
+		"PAGER":                 Getenv("USQL_PAGER", "PAGER"),
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
@@ -71,7 +72,7 @@ func init() {
 		"linestyle":                "ascii",
 		"null":                     "",
 		"numericlocale":            "off",
-		"pager":                    "1",
+		"pager":                    "off",
 		"pager_min_lines":          "0",
 		"recordsep":                "\n",
 		"recordsep_zero":           "off",
@@ -175,14 +176,18 @@ func ParseBool(value, name string) (string, error) {
 	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
 }
 
-func ParseAutoBool(value, name string) (string, error) {
-	switch strings.ToLower(value) {
-	case "auto":
-		return "auto", nil
+func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
+	v := strings.ToLower(value)
+	switch v {
 	case "1", "t", "tr", "tru", "true", "on":
 		return "on", nil
 	case "0", "f", "fa", "fal", "fals", "false", "of", "off":
 		return "off", nil
+	}
+	for _, k := range keywords {
+		if v == k {
+			return v, nil
+		}
 	}
 	return "", fmt.Errorf(text.FormatFieldInvalid, value, name)
 }
@@ -202,7 +207,16 @@ func Ptoggle(name, extra string) (string, error) {
 		return "", fmt.Errorf(text.UnknownFormatFieldName, name)
 	}
 	switch name {
-	case "border", "columns", "pager", "pager_min_lines":
+	case "border", "columns", "pager_min_lines":
+	case "pager":
+		switch pvars[name] {
+		case "on", "always":
+			pvars[name] = "off"
+		case "off":
+			pvars[name] = "on"
+		default:
+			panic(fmt.Sprintf("invalid state for field %s", name))
+		}
 	case "expanded":
 		switch pvars[name] {
 		case "on", "auto":
@@ -248,11 +262,17 @@ func Pset(name, value string) (string, error) {
 		return "", fmt.Errorf(text.UnknownFormatFieldName, name)
 	}
 	switch name {
-	case "border", "columns", "pager", "pager_min_lines":
+	case "border", "columns", "pager_min_lines":
 		i, _ := strconv.Atoi(value)
 		pvars[name] = fmt.Sprintf("%d", i)
+	case "pager":
+		s, err := ParseKeywordBool(value, name, "always")
+		if err != nil {
+			return "", text.ErrInvalidFormatExpandedType
+		}
+		pvars[name] = s
 	case "expanded":
-		s, err := ParseAutoBool(value, name)
+		s, err := ParseKeywordBool(value, name, "auto")
 		if err != nil {
 			return "", text.ErrInvalidFormatExpandedType
 		}

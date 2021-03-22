@@ -53,7 +53,7 @@ require (
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
 	github.com/jmrobles/h2go v0.5.0
-	github.com/lib/pq v1.9.0
+	github.com/lib/pq v1.10.0
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
@@ -82,7 +82,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.2.0 // indirect
 	github.com/xo/dburl v0.4.0
-	github.com/xo/tblfmt v0.2.0
+	github.com/xo/tblfmt v0.3.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
