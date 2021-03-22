@@ -827,6 +827,7 @@ func (h *Handler) query(w io.Writer, _, qstr string, expanded bool) error {
 	if expanded {
 		params["expanded"] = "on"
 	}
+	params["pager_cmd"] = env.All()["PAGER"]
 	if err = tblfmt.EncodeAll(w, q, params); err != nil {
 		return err
 	}
