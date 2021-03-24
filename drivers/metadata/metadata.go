@@ -32,59 +32,80 @@ type BasicReader interface {
 // CatalogReader lists database schemas.
 type CatalogReader interface {
 	Reader
-	Catalogs() (*CatalogSet, error)
+	Catalogs(Filter) (*CatalogSet, error)
 }
 
 // SchemaReader lists database schemas.
 type SchemaReader interface {
 	Reader
-	Schemas(catalog, schemaPattern string) (*SchemaSet, error)
+	Schemas(Filter) (*SchemaSet, error)
 }
 
 // TableReader lists database tables.
 type TableReader interface {
 	Reader
-	Tables(catalog, schemaPattern, namePattern string, types []string) (*TableSet, error)
+	Tables(Filter) (*TableSet, error)
 }
 
 // ColumnReader lists table columns.
 type ColumnReader interface {
 	Reader
-	Columns(catalog, schemaPattern, tablePattern string) (*ColumnSet, error)
+	Columns(Filter) (*ColumnSet, error)
 }
 
 // IndexReader lists database indexes.
 type IndexReader interface {
 	Reader
-	Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*IndexSet, error)
+	Indexes(Filter) (*IndexSet, error)
 }
 
 // IndexColumnReader lists database indexes.
 type IndexColumnReader interface {
 	Reader
-	IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*IndexColumnSet, error)
+	IndexColumns(Filter) (*IndexColumnSet, error)
 }
 
 // FunctionReader lists database functions.
 type FunctionReader interface {
 	Reader
-	Functions(catalog, schemaPattern, namePattern string, types []string) (*FunctionSet, error)
+	Functions(Filter) (*FunctionSet, error)
 }
 
 // FunctionColumnReader lists function parameters.
 type FunctionColumnReader interface {
 	Reader
-	FunctionColumns(catalog, schemaPattern, functionPattern string) (*FunctionColumnSet, error)
+	FunctionColumns(Filter) (*FunctionColumnSet, error)
 }
 
 // SequenceReader lists sequences.
 type SequenceReader interface {
 	Reader
-	Sequences(catalog, schemaPattern, namePattern string) (*SequenceSet, error)
+	Sequences(Filter) (*SequenceSet, error)
 }
 
 // Reader of any database metadata in a structured format.
 type Reader interface{}
+
+// Filter objects returned by Readers
+type Filter struct {
+	// Catalog name pattern that objects must belong to;
+	// use Name to filter catalogs by name
+	Catalog string
+	// Schema name pattern that objects must belong to;
+	// use Name to filter schemas by name
+	Schema string
+	// Parent name pattern that objects must belong to;
+	// does not apply to schema and catalog containing matching objects
+	Parent string
+	// Name pattern that object name must match
+	Name string
+	// Types of the object
+	Types []string
+	// WithSystem objects
+	WithSystem bool
+	// WithNotVisible objects
+	WithNotVisible bool
+}
 
 // Writer of database metadata in a human readable format.
 type Writer interface {

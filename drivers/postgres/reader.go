@@ -13,11 +13,14 @@ type metaReader struct {
 	limit int
 }
 
+var _ metadata.CatalogReader = &metaReader{}
+var _ metadata.IndexReader = &metaReader{}
+
 func (r *metaReader) SetLimit(l int) {
 	r.limit = l
 }
 
-func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
+func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
 	qstr := `
 SELECT d.datname as "Name"
 FROM pg_catalog.pg_database d`
@@ -42,7 +45,7 @@ FROM pg_catalog.pg_database d`
 	return metadata.NewCatalogSet(results), nil
 }
 
-func (r metaReader) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*metadata.IndexSet, error) {
+func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `
 SELECT
   'postgres' as "Catalog",
@@ -62,16 +65,16 @@ FROM pg_catalog.pg_class c
 		"n.nspname !~ '^pg_toast'",
 		"pg_catalog.pg_table_is_visible(c.oid)"}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("n.nspname LIKE $%d", len(vals)))
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, fmt.Sprintf("c2.relname LIKE $%d", len(vals)))
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
 	}
 	rows, closeRows, err := r.query(qstr, conds, "1, 2", vals...)
