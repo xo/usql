@@ -4,6 +4,7 @@
 package sqlserver
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 func init() {
 	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		ir := infos.New(
+			infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 			infos.WithIndexes(false),
 			infos.WithSequences(false),
 			infos.WithCustomColumns(map[infos.ColumnName]string{

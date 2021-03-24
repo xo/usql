@@ -106,6 +106,7 @@ var (
 			URL:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
 			DockerPort: "1433/tcp",
 			Opts: []metadata.ReaderOption{
+				infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.FunctionsSecurityType: "''",
