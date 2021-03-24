@@ -192,10 +192,6 @@ func (r *LoggingReader) setDryRun(d bool) {
 }
 
 func (r *LoggingReader) setTimeout(t time.Duration) {
-	_, ok := r.db.(DBContext)
-	if !ok {
-		panic("trying to set timeout for a logging reader with a non-contextual db")
-	}
 	r.timeout = t
 }
 
@@ -209,7 +205,7 @@ func (r LoggingReader) Query(q string, v ...interface{}) (*sql.Rows, CloseFunc, 
 	}
 	if r.timeout != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-		rows, err := r.db.(DBContext).QueryContext(ctx, q, v...)
+		rows, err := r.db.QueryContext(ctx, q, v...)
 		return rows, func() { cancel(); rows.Close() }, err
 	}
 	rows, err := r.db.Query(q, v...)
