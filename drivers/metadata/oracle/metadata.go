@@ -23,7 +23,7 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		r := &metaReader{
 			LoggingReader: metadata.NewLoggingReader(db, opts...),
-			systemSchemas: "'ctxsys', 'flows_files', 'mdsys', 'outln', 'sys', 'system', 'xdb', 'xs$null'",
+			systemSchemas: "'CTXSYS', 'FLOWS_FILES', 'MDSYS', 'OUTLN', 'SYS', 'SYSTEM', 'XDB', 'XS$NULL'",
 		}
 		return r
 	}

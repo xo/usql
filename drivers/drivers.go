@@ -3,6 +3,7 @@
 package drivers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -21,9 +22,13 @@ import (
 // database/sql.DB and database/sql.Tx.
 type DB interface {
 	Exec(string, ...interface{}) (sql.Result, error)
+	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRow(string, ...interface{}) *sql.Row
+	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 	Prepare(string) (*sql.Stmt, error)
+	PrepareContext(context.Context, string) (*sql.Stmt, error)
 }
 
 // Driver holds funcs for a driver.
