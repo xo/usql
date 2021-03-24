@@ -21,6 +21,7 @@ func init() {
 			infos.ColumnsNumericPrecRadix:         "10",
 			infos.FunctionColumnsNumericPrecRadix: "10",
 		}),
+		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema"}),
 	)
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,
@@ -45,10 +46,7 @@ func init() {
 		},
 		NewMetadataReader: newReader,
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			writerOpts := []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema"}),
-			}
-			return metadata.NewDefaultWriter(newReader(db, opts...), writerOpts...)(db, w)
+			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
 		},
 	}, "memsql", "vitess", "tidb")
 }

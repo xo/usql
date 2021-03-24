@@ -110,10 +110,7 @@ func init() {
 		},
 		NewMetadataReader: orameta.NewReader(),
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			writerOpts := []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"ctxsys", "flows_files", "mdsys", "outln", "sys", "system", "xdb", "xs$null"}),
-			}
-			return metadata.NewDefaultWriter(orameta.NewReader()(db, opts...), writerOpts...)(db, w)
+			return metadata.NewDefaultWriter(orameta.NewReader()(db, opts...))(db, w)
 		},
 	})
 }

@@ -65,6 +65,9 @@ FROM pg_catalog.pg_class c
 		"n.nspname !~ '^pg_toast'",
 		"pg_catalog.pg_table_is_visible(c.oid)"}
 	vals := []interface{}{}
+	if !f.WithSystem {
+		conds = append(conds, "n.nspname NOT IN ('pg_catalog', 'pg_toast', 'information_schema')")
+	}
 	if f.Schema != "" {
 		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("n.nspname LIKE $%d", len(vals)))

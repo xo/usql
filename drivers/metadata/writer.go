@@ -110,13 +110,14 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	if err != nil {
 		return err
 	}
-	res, err := r.Functions(Filter{Schema: sp, Name: tp, Types: types})
+	res, err := r.Functions(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 
 	if !showSystem {
+		// in case the reader doesn't implement WithSystem
 		res.SetFilter(func(r Result) bool {
 			_, ok := w.systemSchemas[r.(*Function).Schema]
 			return !ok
@@ -190,12 +191,13 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	tr, isTR := w.r.(TableReader)
 	_, isCR := w.r.(ColumnReader)
 	if isTR && isCR {
-		res, err := tr.Tables(Filter{Schema: sp, Name: tp})
+		res, err := tr.Tables(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 		if err != nil {
 			return err
 		}
 		defer res.Close()
 		if !showSystem {
+			// in case the reader doesn't implement WithSystem
 			res.SetFilter(func(r Result) bool {
 				_, ok := w.systemSchemas[r.(*Table).Schema]
 				return !ok
@@ -222,13 +224,14 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	ir, isIR := w.r.(IndexReader)
 	_, isICR := w.r.(IndexColumnReader)
 	if isIR && isICR {
-		res, err := ir.Indexes(Filter{Schema: sp, Name: tp})
+		res, err := ir.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 		if err != nil && err != ErrNotSupported {
 			return err
 		}
 		if res != nil {
 			defer res.Close()
 			if !showSystem {
+				// in case the reader doesn't implement WithSystem
 				res.SetFilter(func(r Result) bool {
 					_, ok := w.systemSchemas[r.(*Index).Schema]
 					return !ok
@@ -254,7 +257,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 
 func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSystem bool) error {
 	r := w.r.(ColumnReader)
-	res, err := r.Columns(Filter{Schema: sp, Parent: tp})
+	res, err := r.Columns(Filter{Schema: sp, Parent: tp, WithSystem: showSystem})
 	if err != nil {
 		return err
 	}
@@ -346,7 +349,7 @@ func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
 
 func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {
 	r := w.r.(SequenceReader)
-	res, err := r.Sequences(Filter{Schema: sp, Name: tp})
+	res, err := r.Sequences(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 	if err != nil && err != ErrNotSupported {
 		return 0, err
 	}
@@ -442,12 +445,13 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 	if err != nil {
 		return err
 	}
-	res, err := r.Tables(Filter{Schema: sp, Name: tp, Types: types})
+	res, err := r.Tables(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 	if !showSystem {
+		// in case the reader doesn't implement WithSystem
 		res.SetFilter(func(r Result) bool {
 			_, ok := w.systemSchemas[r.(*Table).Schema]
 			return !ok
@@ -483,13 +487,14 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\d`)
 	}
-	res, err := r.Schemas(Filter{Name: pattern})
+	res, err := r.Schemas(Filter{Name: pattern, WithSystem: showSystem})
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 
 	if !showSystem {
+		// in case the reader doesn't implement WithSystem
 		res.SetFilter(func(r Result) bool {
 			_, ok := w.systemSchemas[r.(*Schema).Schema]
 			return !ok
@@ -510,13 +515,14 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 	if err != nil {
 		return err
 	}
-	res, err := r.Indexes(Filter{Schema: sp, Name: tp})
+	res, err := r.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 
 	if !showSystem {
+		// in case the reader doesn't implement WithSystem
 		res.SetFilter(func(r Result) bool {
 			_, ok := w.systemSchemas[r.(*Index).Schema]
 			return !ok

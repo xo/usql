@@ -58,6 +58,7 @@ var (
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				}),
+				infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 			},
 			WriterOpts: []metadata.WriterOption{
 				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
@@ -85,9 +86,7 @@ var (
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
 				}),
-			},
-			WriterOpts: []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
+				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
 		},
 		"trino": {
