@@ -63,6 +63,7 @@ var (
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				}),
+				infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 			},
 		},
 		"mysql": {
@@ -86,6 +87,7 @@ var (
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
 				}),
+				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
 		},
 		"sqlserver": {
@@ -107,6 +109,19 @@ var (
 				infos.WithIndexes(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.FunctionsSecurityType: "''",
+				}),
+				infos.WithSystemSchemas([]string{
+					"db_accessadmin",
+					"db_backupoperator",
+					"db_datareader",
+					"db_datawriter",
+					"db_ddladmin",
+					"db_denydatareader",
+					"db_denydatawriter",
+					"db_owner",
+					"db_securityadmin",
+					"INFORMATION_SCHEMA",
+					"sys",
 				}),
 			},
 		},
@@ -228,7 +243,7 @@ func TestSchemas(t *testing.T) {
 	for dbName, db := range dbs {
 		r := db.Reader
 
-		result, err := r.Schemas(metadata.Filter{})
+		result, err := r.Schemas(metadata.Filter{WithSystem: true})
 		if err != nil {
 			log.Fatalf("Could not read %s schemas: %v", dbName, err)
 		}

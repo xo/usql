@@ -21,6 +21,7 @@ func init() {
 				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			}),
+			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 		)
 		return metadata.NewPluginReader(
 			newIS(db, opts...),
@@ -67,10 +68,7 @@ func init() {
 		},
 		NewMetadataReader: newReader,
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			writerOpts := []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
-			}
-			return metadata.NewDefaultWriter(newReader(db, opts...), writerOpts...)(db, w)
+			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
 		},
 	}, "cockroachdb", "redshift")
 }

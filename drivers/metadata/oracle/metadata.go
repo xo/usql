@@ -12,6 +12,7 @@ import (
 
 type metaReader struct {
 	metadata.LoggingReader
+	systemSchemas string
 }
 
 var _ metadata.BasicReader = &metaReader{}
@@ -22,6 +23,7 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		r := &metaReader{
 			LoggingReader: metadata.NewLoggingReader(db, opts...),
+			systemSchemas: "'ctxsys', 'flows_files', 'mdsys', 'outln', 'sys', 'system', 'xdb', 'xs$null'",
 		}
 		return r
 	}
@@ -68,12 +70,10 @@ func (r metaReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
   username
 FROM all_users
 `
-	conds := []string{}
-	vals := []interface{}{}
-	if f.Name != "" {
-		vals = append(vals, f.Name)
-		conds = append(conds, "username LIKE %s")
-	}
+	conds, vals := r.conditions(f, formats{
+		name:       "username LIKE :%d",
+		notSchemas: "username NOT IN (%s)",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -111,32 +111,20 @@ o.object_name AS table_name,
 o.object_type AS table_type
 FROM all_objects o
 `
-	conds := []string{}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
-	}
-	if f.Name != "" {
-		vals = append(vals, f.Name)
-		conds = append(conds, fmt.Sprintf("o.object_name LIKE :%d", len(vals)))
-	}
-	addSynonyms := false
-	if len(f.Types) != 0 {
-		pholders := []string{}
-		for _, t := range f.Types {
-			if t == "SYNONYM" {
-				addSynonyms = true
-			}
-			vals = append(vals, t)
-			pholders = append(pholders, fmt.Sprintf(":%d", len(vals)))
-		}
-		if len(pholders) != 0 {
-			conds = append(conds, "o.object_type IN ("+strings.Join(pholders, ", ")+")")
-		}
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "o.owner LIKE :%d",
+		notSchemas: "o.owner NOT IN (%s)",
+		name:       "o.object_name LIKE :%d",
+		types:      "o.object_type IN (%s)",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
+	}
+	addSynonyms := false
+	for _, t := range f.Types {
+		if t == "SYNONYM" {
+			addSynonyms = true
+		}
 	}
 	if addSynonyms {
 		qstr += `
@@ -147,15 +135,12 @@ SELECT
   'SYNONYM' AS table_type
 FROM all_synonyms s
 `
-		conds = []string{}
-		if f.Schema != "" {
-			vals = append(vals, f.Schema)
-			conds = append(conds, fmt.Sprintf("s.owner LIKE :%d", len(vals)))
-		}
-		if f.Name != "" {
-			vals = append(vals, f.Name)
-			conds = append(conds, fmt.Sprintf("s.synonym_name LIKE :%d", len(vals)))
-		}
+		conds, seqVals := r.conditions(f, formats{
+			schema:     "s.owner LIKE :%d",
+			notSchemas: "s.owner NOT IN (%s)",
+			name:       "s.synonym_name LIKE :%d",
+		})
+		vals = append(vals, seqVals...)
 		if len(conds) != 0 {
 			qstr += " WHERE " + strings.Join(conds, " AND ")
 		}
@@ -205,16 +190,11 @@ func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
   COALESCE(c.char_col_decl_length, 0) as char_octet_length
 FROM all_tab_columns c
 `
-	conds := []string{}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("c.owner LIKE :%d", len(vals)))
-	}
-	if f.Parent != "" {
-		vals = append(vals, f.Parent)
-		conds = append(conds, fmt.Sprintf("c.table_name LIKE :%d", len(vals)))
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "c.owner LIKE :%d",
+		notSchemas: "c.owner NOT IN (%s)",
+		parent:     "c.table_name LIKE :%d",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -268,29 +248,14 @@ func (r metaReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) 
 FROM all_arguments a
 JOIN all_objects b ON b.object_id = a.object_id AND a.sequence  = 1
 `
-	conds := []string{"(b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION' OR b.object_type = 'PACKAGE')"}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("b.owner LIKE :%d", len(vals)))
-	}
-	if f.Name != "" {
-		vals = append(vals, f.Name)
-		conds = append(conds, fmt.Sprintf("b.object_name LIKE :%d", len(vals)))
-	}
-	if len(f.Types) != 0 {
-		pholders := []string{}
-		for _, t := range f.Types {
-			vals = append(vals, t)
-			pholders = append(pholders, fmt.Sprintf(":%d", len(vals)))
-		}
-		if len(pholders) != 0 {
-			conds = append(conds, "b.object_type IN ("+strings.Join(pholders, ", ")+")")
-		}
-	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "b.owner LIKE :%d",
+		notSchemas: "b.owner NOT IN (%s)",
+		name:       "b.object_name LIKE :%d",
+		types:      "b.object_type IN (%s)",
+	})
+	conds = append(conds, "(b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION' OR b.object_type = 'PACKAGE')")
+	qstr += " WHERE " + strings.Join(conds, " AND ")
 	qstr += `
 ORDER BY procedure_schem, procedure_name, procedure_type`
 	rows, closeRows, err := r.Query(qstr, vals...)
@@ -337,19 +302,13 @@ func (r metaReader) FunctionColumns(f metadata.Filter) (*metadata.FunctionColumn
 FROM all_objects b
 JOIN all_arguments a ON b.object_id = a.object_id AND a.data_level = 0
 `
-	conds := []string{"b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION'"}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("a.owner LIKE :%d", len(vals)))
-	}
-	if f.Parent != "" {
-		vals = append(vals, f.Parent)
-		conds = append(conds, fmt.Sprintf("b.object_name LIKE :%d", len(vals)))
-	}
-	if len(conds) != 0 {
-		qstr += " WHERE " + strings.Join(conds, " AND ")
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "a.owner LIKE :%d",
+		notSchemas: "a.owner NOT IN (%s)",
+		parent:     "b.object_name LIKE :%d",
+	})
+	conds = append(conds, "b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION'")
+	qstr += " WHERE " + strings.Join(conds, " AND ")
 	qstr += `
 ORDER BY procedure_schem, procedure_name, ordinal_position`
 	rows, closeRows, err := r.Query(qstr, vals...)
@@ -394,20 +353,12 @@ func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
   decode(o.uniqueness,'UNIQUE','NO','YES')
 FROM all_indexes o
 `
-	conds := []string{}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
-	}
-	if f.Parent != "" {
-		vals = append(vals, f.Parent)
-		conds = append(conds, fmt.Sprintf("o.table_name LIKE :%d", len(vals)))
-	}
-	if f.Name != "" {
-		vals = append(vals, f.Name)
-		conds = append(conds, fmt.Sprintf("o.index_name LIKE :%d", len(vals)))
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "o.owner LIKE :%d",
+		notSchemas: "o.owner NOT IN (%s)",
+		parent:     "o.table_name LIKE :%d",
+		name:       "o.index_name LIKE :%d",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -448,20 +399,12 @@ func (r metaReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, e
 FROM all_indexes o
 JOIN all_ind_columns b ON o.owner = b.index_owner AND o.index_name = b.index_name
 `
-	conds := []string{}
-	vals := []interface{}{}
-	if f.Schema != "" {
-		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
-	}
-	if f.Parent != "" {
-		vals = append(vals, f.Parent)
-		conds = append(conds, fmt.Sprintf("o.table_name LIKE :%d", len(vals)))
-	}
-	if f.Name != "" {
-		vals = append(vals, f.Name)
-		conds = append(conds, fmt.Sprintf("o.index_name LIKE :%d", len(vals)))
-	}
+	conds, vals := r.conditions(f, formats{
+		schema:     "o.owner LIKE :%d",
+		notSchemas: "o.owner NOT IN (%s)",
+		parent:     "o.table_name LIKE :%d",
+		name:       "o.index_name LIKE :%d",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -489,4 +432,50 @@ ORDER BY o.owner, o.table_name, o.index_name, b.column_position`
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexColumnSet(results), nil
+}
+
+func (r metaReader) conditions(filter metadata.Filter, formats formats) ([]string, []interface{}) {
+	baseParam := 1
+	conds := []string{}
+	vals := []interface{}{}
+	if filter.Schema != "" && formats.schema != "" {
+		vals = append(vals, filter.Schema)
+		conds = append(conds, fmt.Sprintf(formats.schema, baseParam))
+		baseParam++
+	}
+
+	if !filter.WithSystem && formats.notSchemas != "" {
+		conds = append(conds, fmt.Sprintf(formats.notSchemas, r.systemSchemas))
+	}
+	if filter.Parent != "" && formats.parent != "" {
+		vals = append(vals, filter.Parent)
+		conds = append(conds, fmt.Sprintf(formats.parent, baseParam))
+		baseParam++
+	}
+	if filter.Name != "" && formats.name != "" {
+		vals = append(vals, filter.Name)
+		conds = append(conds, fmt.Sprintf(formats.name, baseParam))
+		baseParam++
+	}
+	if len(filter.Types) != 0 && formats.types != "" {
+		pholders := []string{}
+		for _, t := range filter.Types {
+			vals = append(vals, t)
+			pholders = append(pholders, fmt.Sprintf(":%d", baseParam))
+			baseParam++
+		}
+		if len(pholders) != 0 {
+			conds = append(conds, fmt.Sprintf(formats.types, strings.Join(pholders, ", ")))
+		}
+	}
+
+	return conds, vals
+}
+
+type formats struct {
+	schema     string
+	notSchemas string
+	parent     string
+	name       string
+	types      string
 }

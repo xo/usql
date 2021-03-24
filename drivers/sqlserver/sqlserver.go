@@ -22,7 +22,20 @@ func init() {
 			infos.WithCustomColumns(map[infos.ColumnName]string{
 				infos.FunctionsSecurityType: "''",
 			}),
-		)(db)
+			infos.WithSystemSchemas([]string{
+				"db_accessadmin",
+				"db_backupoperator",
+				"db_datareader",
+				"db_datawriter",
+				"db_ddladmin",
+				"db_denydatareader",
+				"db_denydatawriter",
+				"db_owner",
+				"db_securityadmin",
+				"INFORMATION_SCHEMA",
+				"sys",
+			}),
+		)(db, opts...)
 		mr := &metaReader{
 			LoggingReader: metadata.NewLoggingReader(db, opts...),
 		}
@@ -61,11 +74,7 @@ func init() {
 		},
 		NewMetadataReader: newReader,
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			reader := newReader(db, opts...)
-			writerOpts := []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"db_accessadmin", "db_backupoperator", "db_datareader", "db_datawriter", "db_ddladmin", "db_denydatareader", "db_denydatawriter", "db_owner", "db_securityadmin", "INFORMATION_SCHEMA", "sys"}),
-			}
-			return metadata.NewDefaultWriter(reader, writerOpts...)(db, w)
+			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
 		},
 	})
 }

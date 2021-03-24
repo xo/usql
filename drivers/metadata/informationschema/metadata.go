@@ -15,12 +15,13 @@ import (
 // InformationSchema metadata reader
 type InformationSchema struct {
 	metadata.LoggingReader
-	pf           func(int) string
-	hasFunctions bool
-	hasSequences bool
-	hasIndexes   bool
-	colExpr      map[ColumnName]string
-	limit        int
+	pf            func(int) string
+	hasFunctions  bool
+	hasSequences  bool
+	hasIndexes    bool
+	colExpr       map[ColumnName]string
+	limit         int
+	systemSchemas []string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -63,6 +64,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 			FunctionColumnsCharOctetLength:  "COALESCE(character_octet_length, 0)",
 			FunctionsSecurityType:           "security_type",
 		},
+		systemSchemas: []string{"information_schema"},
 	}
 	// aply InformationSchema specific options
 	for _, o := range opts {
@@ -113,6 +115,13 @@ func WithSequences(seq bool) metadata.ReaderOption {
 	}
 }
 
+// WithSystemSchemas that are ignored unless WithSystem filter is true
+func WithSystemSchemas(schemas []string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).systemSchemas = schemas
+	}
+}
+
 func (s *InformationSchema) SetLimit(l int) {
 	s.limit = l
 }
@@ -135,10 +144,11 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.columns\n"
-	conds, vals := s.conditions(f, formats{
-		catalog: "table_catalog LIKE %s",
-		schema:  "table_schema LIKE %s",
-		parent:  "table_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "table_catalog LIKE %s",
+		schema:     "table_schema LIKE %s",
+		notSchemas: "table_schema NOT IN (%s)",
+		parent:     "table_name LIKE %s",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "table_catalog, table_schema, table_name, ordinal_position", vals...)
 	if err != nil {
@@ -186,11 +196,12 @@ func (s InformationSchema) Tables(f metadata.Filter) (*metadata.TableSet, error)
   table_type
 FROM information_schema.tables
 `
-	conds, vals := s.conditions(f, formats{
-		catalog: "table_catalog LIKE %s",
-		schema:  "table_schema LIKE %s",
-		name:    "table_name LIKE %s",
-		types:   "table_type IN (%s)",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "table_catalog LIKE %s",
+		schema:     "table_schema LIKE %s",
+		notSchemas: "table_schema NOT IN (%s)",
+		name:       "table_name LIKE %s",
+		types:      "table_type IN (%s)",
 	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
@@ -211,10 +222,11 @@ SELECT
   'SEQUENCE' AS table_type
 FROM information_schema.sequences
 `
-		conds, seqVals := s.conditions(f, formats{
-			catalog: "sequence_catalog LIKE %s",
-			schema:  "sequence_schema LIKE %s",
-			name:    "sequence_name LIKE %s",
+		conds, seqVals := s.conditions(len(vals)+1, f, formats{
+			catalog:    "sequence_catalog LIKE %s",
+			schema:     "sequence_schema LIKE %s",
+			notSchemas: "sequence_schema NOT IN (%s)",
+			name:       "sequence_name LIKE %s",
 		})
 		vals = append(vals, seqVals...)
 		if len(conds) != 0 {
@@ -252,9 +264,10 @@ func (s InformationSchema) Schemas(f metadata.Filter) (*metadata.SchemaSet, erro
   catalog_name
 FROM information_schema.schemata
 `
-	conds, vals := s.conditions(f, formats{
-		catalog: "catalog_name LIKE %s",
-		name:    "schema_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "catalog_name LIKE %s",
+		name:       "schema_name LIKE %s",
+		notSchemas: "schema_name NOT IN (%s)",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "catalog_name, schema_name", vals...)
 	if err != nil {
@@ -300,11 +313,12 @@ func (s InformationSchema) Functions(f metadata.Filter) (*metadata.FunctionSet, 
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.routines\n"
-	conds, vals := s.conditions(f, formats{
-		catalog: "routine_catalog LIKE %s",
-		schema:  "routine_schema LIKE %s",
-		name:    "routine_name LIKE %s",
-		types:   "routine_type IN (%s)",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "routine_catalog LIKE %s",
+		schema:     "routine_schema LIKE %s",
+		notSchemas: "routine_schema NOT IN (%s)",
+		name:       "routine_name LIKE %s",
+		types:      "routine_type IN (%s)",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "routine_catalog, routine_schema, routine_name, COALESCE(routine_type, '')", vals...)
 	if err != nil {
@@ -363,10 +377,11 @@ func (s InformationSchema) FunctionColumns(f metadata.Filter) (*metadata.Functio
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.parameters\n"
 
-	conds, vals := s.conditions(f, formats{
-		catalog: "specific_catalog LIKE %s",
-		schema:  "specific_schema LIKE %s",
-		parent:  "specific_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "specific_catalog LIKE %s",
+		schema:     "specific_schema LIKE %s",
+		notSchemas: "specific_schema NOT IN (%s)",
+		parent:     "specific_name LIKE %s",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "specific_catalog, specific_schema, specific_name, ordinal_position, COALESCE(parameter_name, '')", vals...)
 	if err != nil {
@@ -420,11 +435,12 @@ func (s InformationSchema) Indexes(f metadata.Filter) (*metadata.IndexSet, error
   index_type
 FROM information_schema.statistics
 `
-	conds, vals := s.conditions(f, formats{
-		catalog: "table_catalog LIKE %s",
-		schema:  "index_schema LIKE %s",
-		parent:  "table_name LIKE %s",
-		name:    "index_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "table_catalog LIKE %s",
+		schema:     "index_schema LIKE %s",
+		notSchemas: "index_schema NOT IN (%s)",
+		parent:     "table_name LIKE %s",
+		name:       "index_name LIKE %s",
 	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
@@ -480,11 +496,12 @@ JOIN information_schema.columns c ON
   i.table_name = c.table_name AND
   i.column_name = c.column_name
 `
-	conds, vals := s.conditions(f, formats{
-		catalog: "i.table_catalog LIKE %s",
-		schema:  "index_schema LIKE %s",
-		parent:  "i.table_name LIKE %s",
-		name:    "index_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "i.table_catalog LIKE %s",
+		schema:     "index_schema LIKE %s",
+		notSchemas: "index_schema NOT IN (%s)",
+		parent:     "i.table_name LIKE %s",
+		name:       "index_name LIKE %s",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "i.table_catalog, index_schema, table_name, index_name, seq_in_index", vals...)
 	if err != nil {
@@ -528,10 +545,11 @@ func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, 
   cycle_option
 FROM information_schema.sequences
 `
-	conds, vals := s.conditions(f, formats{
-		catalog: "sequence_catalog LIKE %s",
-		schema:  "sequence_schema LIKE %s",
-		name:    "sequence_name LIKE %s",
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "sequence_catalog LIKE %s",
+		schema:     "sequence_schema LIKE %s",
+		notSchemas: "sequence_schema NOT IN (%s)",
+		name:       "sequence_name LIKE %s",
 	})
 	rows, closeRows, err := s.query(qstr, conds, "sequence_catalog, sequence_schema, sequence_name", vals...)
 	if err != nil {
@@ -557,8 +575,7 @@ FROM information_schema.sequences
 	return metadata.NewSequenceSet(results), nil
 }
 
-func (s InformationSchema) conditions(filter metadata.Filter, formats formats) ([]string, []interface{}) {
-	baseParam := 1
+func (s InformationSchema) conditions(baseParam int, filter metadata.Filter, formats formats) ([]string, []interface{}) {
 	conds := []string{}
 	vals := []interface{}{}
 	if filter.Catalog != "" && formats.catalog != "" {
@@ -570,6 +587,21 @@ func (s InformationSchema) conditions(filter metadata.Filter, formats formats) (
 		vals = append(vals, filter.Schema)
 		conds = append(conds, fmt.Sprintf(formats.schema, s.pf(baseParam)))
 		baseParam++
+	}
+
+	if !filter.WithSystem && formats.notSchemas != "" && len(s.systemSchemas) != 0 {
+		pholders := []string{}
+		for _, v := range s.systemSchemas {
+			if v == filter.Schema {
+				continue
+			}
+			vals = append(vals, v)
+			pholders = append(pholders, s.pf(baseParam))
+			baseParam++
+		}
+		if len(pholders) != 0 {
+			conds = append(conds, fmt.Sprintf(formats.notSchemas, strings.Join(pholders, ", ")))
+		}
 	}
 	if filter.Parent != "" && formats.parent != "" {
 		vals = append(vals, filter.Parent)
@@ -597,11 +629,12 @@ func (s InformationSchema) conditions(filter metadata.Filter, formats formats) (
 }
 
 type formats struct {
-	catalog string
-	schema  string
-	parent  string
-	name    string
-	types   string
+	catalog    string
+	schema     string
+	notSchemas string
+	parent     string
+	name       string
+	types      string
 }
 
 func (s InformationSchema) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
