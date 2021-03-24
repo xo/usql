@@ -228,7 +228,7 @@ func TestSchemas(t *testing.T) {
 	for dbName, db := range dbs {
 		r := db.Reader
 
-		result, err := r.Schemas("", "")
+		result, err := r.Schemas(metadata.Filter{})
 		if err != nil {
 			log.Fatalf("Could not read %s schemas: %v", dbName, err)
 		}
@@ -260,7 +260,7 @@ func TestTables(t *testing.T) {
 	for dbName, db := range dbs {
 		r := db.Reader
 
-		result, err := r.Tables("", schemas[dbName], "", []string{"BASE TABLE", "TABLE", "VIEW"})
+		result, err := r.Tables(metadata.Filter{Schema: schemas[dbName], Types: []string{"BASE TABLE", "TABLE", "VIEW"}})
 		if err != nil {
 			log.Fatalf("Could not read %s tables: %v", dbName, err)
 		}
@@ -298,7 +298,7 @@ func TestColumns(t *testing.T) {
 	for dbName, db := range dbs {
 		r := db.Reader
 
-		result, err := r.Columns("", schemas[dbName], tables[dbName])
+		result, err := r.Columns(metadata.Filter{Schema: schemas[dbName], Parent: tables[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s columns: %v", dbName, err)
 		}
@@ -329,7 +329,7 @@ func TestFunctions(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.FunctionReader)
 
-		result, err := r.Functions("", schemas[dbName], "", []string{})
+		result, err := r.Functions(metadata.Filter{Schema: schemas[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s functions: %v", dbName, err)
 		}
@@ -364,7 +364,7 @@ func TestFunctionColumns(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.FunctionColumnReader)
 
-		result, err := r.FunctionColumns("", schemas[dbName], tables[dbName])
+		result, err := r.FunctionColumns(metadata.Filter{Schema: schemas[dbName], Parent: tables[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s function columns: %v", dbName, err)
 		}
@@ -393,7 +393,7 @@ func TestIndexes(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.IndexReader)
 
-		result, err := r.Indexes("", schemas[dbName], "", "")
+		result, err := r.Indexes(metadata.Filter{Schema: schemas[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s indexes: %v", dbName, err)
 		}
@@ -425,7 +425,7 @@ func TestIndexColumns(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.IndexColumnReader)
 
-		result, err := r.IndexColumns("", schemas[dbName], "", tables[dbName])
+		result, err := r.IndexColumns(metadata.Filter{Schema: schemas[dbName], Name: tables[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s index columns: %v", dbName, err)
 		}
@@ -454,7 +454,7 @@ func TestSequences(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.SequenceReader)
 
-		result, err := r.Sequences("", schemas[dbName], "")
+		result, err := r.Sequences(metadata.Filter{Schema: schemas[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s sequences: %v", dbName, err)
 		}

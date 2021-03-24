@@ -13,11 +13,15 @@ type metaReader struct {
 	limit int
 }
 
+var _ metadata.CatalogReader = &metaReader{}
+var _ metadata.IndexReader = &metaReader{}
+var _ metadata.IndexColumnReader = &metaReader{}
+
 func (r *metaReader) SetLimit(l int) {
 	r.limit = l
 }
 
-func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
+func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
 	qstr := `SELECT name
 FROM sys.databases`
 	rows, closeRows, err := r.query(qstr, []string{}, "name")
@@ -41,7 +45,7 @@ FROM sys.databases`
 	return metadata.NewCatalogSet(results), nil
 }
 
-func (r metaReader) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*metadata.IndexSet, error) {
+func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `
 SELECT
   db_name(),
@@ -57,16 +61,16 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, "s.name LIKE ?")
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, "t.name LIKE ?")
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "i.name LIKE ?")
 	}
 	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name", vals...)
@@ -90,7 +94,7 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 	return metadata.NewIndexSet(results), nil
 }
 
-func (r metaReader) IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*metadata.IndexColumnSet, error) {
+func (r metaReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
 	qstr := `
 SELECT
   db_name(),
@@ -109,16 +113,16 @@ JOIN sys.types ty ON ty.user_type_id = c.user_type_id
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, "s.name LIKE ?")
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, "t.name LIKE ?")
 	}
-	if indexPattern != "" {
-		vals = append(vals, indexPattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "i.name LIKE ?")
 	}
 	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name, ic.index_column_id", vals...)

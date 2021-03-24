@@ -13,13 +13,19 @@ type metaReader struct {
 	limit int
 }
 
+var _ metadata.BasicReader = &metaReader{}
+var _ metadata.FunctionReader = &metaReader{}
+var _ metadata.FunctionColumnReader = &metaReader{}
+var _ metadata.IndexReader = &metaReader{}
+var _ metadata.IndexColumnReader = &metaReader{}
+
 func (r *metaReader) SetLimit(l int) {
 	r.limit = l
 }
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
-func (r metaReader) Columns(catalog, schemaPattern, tablePattern string) (*metadata.ColumnSet, error) {
-	tables, err := r.Tables(catalog, schemaPattern, tablePattern, []string{})
+func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
+	tables, err := r.Tables(f)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +71,7 @@ FROM pragma_table_info(?)`
 	return metadata.NewColumnSet(results), nil
 }
 
-func (r metaReader) Tables(catalog, schemaPattern, namePattern string, types []string) (*metadata.TableSet, error) {
+func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT
   '' AS table_catalog,
   '' AS table_schem,
@@ -96,21 +102,21 @@ FROM (
 )`
 	conds := []string{}
 	vals := []interface{}{}
-	if catalog != "" {
-		vals = append(vals, catalog)
+	if f.Catalog != "" {
+		vals = append(vals, f.Catalog)
 		conds = append(conds, "table_catalog = ?")
 	}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, "table_schema LIKE ?")
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "table_name LIKE ?")
 	}
-	if len(types) != 0 {
+	if len(f.Types) != 0 {
 		pholders := []string{}
-		for _, t := range types {
+		for _, t := range f.Types {
 			vals = append(vals, t)
 			pholders = append(pholders, "?")
 		}
@@ -139,15 +145,15 @@ FROM (
 	return metadata.NewTableSet(results), nil
 }
 
-func (r metaReader) Schemas(catalog, namePattern string) (*metadata.SchemaSet, error) {
+func (r metaReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
 	qstr := `SELECT
   name AS schema_name,
   '' AS catalog_name
 FROM pragma_database_list`
 	conds := []string{}
 	vals := []interface{}{}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "schema_name LIKE ?")
 	}
 	rows, closeRows, err := r.query(qstr, conds, "seq", vals...)
@@ -171,7 +177,7 @@ FROM pragma_database_list`
 	return metadata.NewSchemaSet(results), nil
 }
 
-func (r metaReader) Functions(catalog, schemaPattern, namePattern string, types []string) (*metadata.FunctionSet, error) {
+func (r metaReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
 	qstr := `SELECT
   name AS specific_name,
   name AS routine_name,
@@ -179,13 +185,13 @@ func (r metaReader) Functions(catalog, schemaPattern, namePattern string, types 
 FROM pragma_function_list`
 	conds := []string{}
 	vals := []interface{}{}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "name LIKE ?")
 	}
-	if len(types) != 0 {
+	if len(f.Types) != 0 {
 		pholders := []string{}
-		for _, t := range types {
+		for _, t := range f.Types {
 			vals = append(vals, t)
 			pholders = append(pholders, "?")
 		}
@@ -218,11 +224,11 @@ FROM pragma_function_list`
 	return metadata.NewFunctionSet(results), nil
 }
 
-func (r metaReader) FunctionColumns(catalog, schemaPattern, functionPattern string) (*metadata.FunctionColumnSet, error) {
+func (r metaReader) FunctionColumns(metadata.Filter) (*metadata.FunctionColumnSet, error) {
 	return &metadata.FunctionColumnSet{}, nil
 }
 
-func (r metaReader) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*metadata.IndexSet, error) {
+func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `SELECT
   m.name,
   i.name,
@@ -232,12 +238,12 @@ FROM sqlite_master m
 JOIN pragma_index_list(m.name) i`
 	conds := []string{"m.type = 'table'"}
 	vals := []interface{}{}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, "m.name LIKE ?")
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "i.name LIKE ?")
 	}
 	rows, closeRows, err := r.query(qstr, conds, "m.name, i.seq", vals...)
@@ -261,7 +267,7 @@ JOIN pragma_index_list(m.name) i`
 	return metadata.NewIndexSet(results), nil
 }
 
-func (r metaReader) IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*metadata.IndexColumnSet, error) {
+func (r metaReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
 	qstr := `SELECT
   m.name,
   i.name,
@@ -272,12 +278,12 @@ JOIN pragma_index_list(m.name) i
 JOIN pragma_index_xinfo(i.name) ic`
 	conds := []string{"m.type = 'table' AND ic.cid >= 0"}
 	vals := []interface{}{}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, "m.name LIKE ?")
 	}
-	if indexPattern != "" {
-		vals = append(vals, indexPattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "i.name LIKE ?")
 	}
 	rows, closeRows, err := r.query(qstr, conds, "m.name, i.seq, ic.seqno", vals...)

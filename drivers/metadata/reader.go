@@ -8,15 +8,15 @@ import (
 
 // PluginReader allows to be easily composed from other readers
 type PluginReader struct {
-	catalogs        func() (*CatalogSet, error)
-	schemas         func(catalog, schemaPattern string) (*SchemaSet, error)
-	tables          func(catalog, schemaPattern, namePattern string, types []string) (*TableSet, error)
-	columns         func(catalog, schemaPattern, tablePattern string) (*ColumnSet, error)
-	indexes         func(catalog, schemaPattern, tablePattern, namePattern string) (*IndexSet, error)
-	indexColumns    func(catalog, schemaPattern, tablePattern, indexPattern string) (*IndexColumnSet, error)
-	functions       func(catalog, schemaPattern, namePattern string, types []string) (*FunctionSet, error)
-	functionColumns func(catalog, schemaPattern, functionPattern string) (*FunctionColumnSet, error)
-	sequences       func(catalog, schemaPattern, namePattern string) (*SequenceSet, error)
+	catalogs        func(Filter) (*CatalogSet, error)
+	schemas         func(Filter) (*SchemaSet, error)
+	tables          func(Filter) (*TableSet, error)
+	columns         func(Filter) (*ColumnSet, error)
+	indexes         func(Filter) (*IndexSet, error)
+	indexColumns    func(Filter) (*IndexColumnSet, error)
+	functions       func(Filter) (*FunctionSet, error)
+	functionColumns func(Filter) (*FunctionColumnSet, error)
+	sequences       func(Filter) (*SequenceSet, error)
 }
 
 var _ ExtendedReader = &PluginReader{}
@@ -56,67 +56,67 @@ func NewPluginReader(readers ...Reader) Reader {
 	return &p
 }
 
-func (p PluginReader) Catalogs() (*CatalogSet, error) {
+func (p PluginReader) Catalogs(f Filter) (*CatalogSet, error) {
 	if p.catalogs == nil {
 		return nil, ErrNotSupported
 	}
-	return p.catalogs()
+	return p.catalogs(f)
 }
 
-func (p PluginReader) Schemas(catalog, schemaPattern string) (*SchemaSet, error) {
+func (p PluginReader) Schemas(f Filter) (*SchemaSet, error) {
 	if p.schemas == nil {
 		return nil, ErrNotSupported
 	}
-	return p.schemas(catalog, schemaPattern)
+	return p.schemas(f)
 }
 
-func (p PluginReader) Tables(catalog, schemaPattern, namePattern string, types []string) (*TableSet, error) {
+func (p PluginReader) Tables(f Filter) (*TableSet, error) {
 	if p.tables == nil {
 		return nil, ErrNotSupported
 	}
-	return p.tables(catalog, schemaPattern, namePattern, types)
+	return p.tables(f)
 }
 
-func (p PluginReader) Columns(catalog, schemaPattern, tablePattern string) (*ColumnSet, error) {
+func (p PluginReader) Columns(f Filter) (*ColumnSet, error) {
 	if p.columns == nil {
 		return nil, ErrNotSupported
 	}
-	return p.columns(catalog, schemaPattern, tablePattern)
+	return p.columns(f)
 }
 
-func (p PluginReader) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*IndexSet, error) {
+func (p PluginReader) Indexes(f Filter) (*IndexSet, error) {
 	if p.indexes == nil {
 		return nil, ErrNotSupported
 	}
-	return p.indexes(catalog, schemaPattern, tablePattern, namePattern)
+	return p.indexes(f)
 }
 
-func (p PluginReader) IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*IndexColumnSet, error) {
+func (p PluginReader) IndexColumns(f Filter) (*IndexColumnSet, error) {
 	if p.indexColumns == nil {
 		return nil, ErrNotSupported
 	}
-	return p.indexColumns(catalog, schemaPattern, tablePattern, indexPattern)
+	return p.indexColumns(f)
 }
 
-func (p PluginReader) Functions(catalog, schemaPattern, namePattern string, types []string) (*FunctionSet, error) {
+func (p PluginReader) Functions(f Filter) (*FunctionSet, error) {
 	if p.functions == nil {
 		return nil, ErrNotSupported
 	}
-	return p.functions(catalog, schemaPattern, namePattern, types)
+	return p.functions(f)
 }
 
-func (p PluginReader) FunctionColumns(catalog, schemaPattern, functionPattern string) (*FunctionColumnSet, error) {
+func (p PluginReader) FunctionColumns(f Filter) (*FunctionColumnSet, error) {
 	if p.functionColumns == nil {
 		return nil, ErrNotSupported
 	}
-	return p.functionColumns(catalog, schemaPattern, functionPattern)
+	return p.functionColumns(f)
 }
 
-func (p PluginReader) Sequences(catalog, schemaPattern, namePattern string) (*SequenceSet, error) {
+func (p PluginReader) Sequences(f Filter) (*SequenceSet, error) {
 	if p.sequences == nil {
 		return nil, ErrNotSupported
 	}
-	return p.sequences(catalog, schemaPattern, namePattern)
+	return p.sequences(f)
 }
 
 type LoggingReader struct {

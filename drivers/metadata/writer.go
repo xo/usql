@@ -110,7 +110,7 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	if err != nil {
 		return err
 	}
-	res, err := r.Functions("", sp, tp, types)
+	res, err := r.Functions(Filter{Schema: sp, Name: tp, Types: types})
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 
 func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
 	r := w.r.(FunctionColumnReader)
-	cols, err := r.FunctionColumns(c, s, f)
+	cols, err := r.FunctionColumns(Filter{Catalog: c, Schema: s, Parent: f})
 	if err != nil {
 		return "", err
 	}
@@ -190,7 +190,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	tr, isTR := w.r.(TableReader)
 	_, isCR := w.r.(ColumnReader)
 	if isTR && isCR {
-		res, err := tr.Tables("", sp, tp, []string{})
+		res, err := tr.Tables(Filter{Schema: sp, Name: tp})
 		if err != nil {
 			return err
 		}
@@ -222,7 +222,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	ir, isIR := w.r.(IndexReader)
 	_, isICR := w.r.(IndexColumnReader)
 	if isIR && isICR {
-		res, err := ir.Indexes("", sp, "", tp)
+		res, err := ir.Indexes(Filter{Schema: sp, Name: tp})
 		if err != nil && err != ErrNotSupported {
 			return err
 		}
@@ -254,7 +254,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 
 func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSystem bool) error {
 	r := w.r.(ColumnReader)
-	res, err := r.Columns("", sp, tp)
+	res, err := r.Columns(Filter{Schema: sp, Parent: tp})
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
 	if !ok {
 		return nil
 	}
-	res, err := r.Indexes("", sp, tp, "")
+	res, err := r.Indexes(Filter{Schema: sp, Parent: tp})
 	if err != nil && err != ErrNotSupported {
 		return err
 	}
@@ -333,7 +333,7 @@ func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
 
 func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
 	r := w.r.(IndexColumnReader)
-	cols, err := r.IndexColumns(c, s, t, i)
+	cols, err := r.IndexColumns(Filter{Catalog: c, Schema: s, Parent: t, Name: i})
 	if err != nil {
 		return "", err
 	}
@@ -346,7 +346,7 @@ func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
 
 func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {
 	r := w.r.(SequenceReader)
-	res, err := r.Sequences("", sp, tp)
+	res, err := r.Sequences(Filter{Schema: sp, Name: tp})
 	if err != nil && err != ErrNotSupported {
 		return 0, err
 	}
@@ -376,7 +376,7 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 
 func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 	r := w.r.(IndexColumnReader)
-	res, err := r.IndexColumns("", sp, tp, ip)
+	res, err := r.IndexColumns(Filter{Schema: sp, Parent: tp, Name: ip})
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\l`)
 	}
-	res, err := r.Catalogs()
+	res, err := r.Catalogs(Filter{Name: pattern})
 	if err != nil {
 		return err
 	}
@@ -442,7 +442,7 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 	if err != nil {
 		return err
 	}
-	res, err := r.Tables("", sp, tp, types)
+	res, err := r.Tables(Filter{Schema: sp, Name: tp, Types: types})
 	if err != nil {
 		return err
 	}
@@ -483,7 +483,7 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\d`)
 	}
-	res, err := r.Schemas("", pattern)
+	res, err := r.Schemas(Filter{Name: pattern})
 	if err != nil {
 		return err
 	}
@@ -510,7 +510,7 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 	if err != nil {
 		return err
 	}
-	res, err := r.Indexes("", sp, "", tp)
+	res, err := r.Indexes(Filter{Schema: sp, Name: tp})
 	if err != nil {
 		return err
 	}

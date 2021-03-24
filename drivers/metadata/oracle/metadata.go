@@ -14,6 +14,10 @@ type metaReader struct {
 	metadata.LoggingReader
 }
 
+var _ metadata.BasicReader = &metaReader{}
+var _ metadata.IndexReader = &metaReader{}
+var _ metadata.IndexColumnReader = &metaReader{}
+
 func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		r := &metaReader{
@@ -23,7 +27,7 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	}
 }
 
-func (r metaReader) Catalogs() (*metadata.CatalogSet, error) {
+func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
 	qstr := `SELECT
   UPPER(Value) AS catalog
 FROM v$parameter o
@@ -59,15 +63,15 @@ ORDER BY catalog
 	return metadata.NewCatalogSet(results), nil
 }
 
-func (r metaReader) Schemas(catalog, namePattern string) (*metadata.SchemaSet, error) {
+func (r metaReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
 	qstr := `SELECT
   username
 FROM all_users
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, "username LIKE %s")
 	}
 	if len(conds) != 0 {
@@ -100,7 +104,7 @@ ORDER BY username`
 }
 
 // Tables from selected catalog (or all, if empty), matching schemas, names and types
-func (r metaReader) Tables(catalog, schemaPattern, namePattern string, types []string) (*metadata.TableSet, error) {
+func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT
 o.owner AS table_schem,
 o.object_name AS table_name,
@@ -109,18 +113,18 @@ FROM all_objects o
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("o.object_name LIKE :%d", len(vals)))
 	}
 	addSynonyms := false
-	if len(types) != 0 {
+	if len(f.Types) != 0 {
 		pholders := []string{}
-		for _, t := range types {
+		for _, t := range f.Types {
 			if t == "SYNONYM" {
 				addSynonyms = true
 			}
@@ -144,12 +148,12 @@ SELECT
 FROM all_synonyms s
 `
 		conds = []string{}
-		if schemaPattern != "" {
-			vals = append(vals, schemaPattern)
+		if f.Schema != "" {
+			vals = append(vals, f.Schema)
 			conds = append(conds, fmt.Sprintf("s.owner LIKE :%d", len(vals)))
 		}
-		if namePattern != "" {
-			vals = append(vals, namePattern)
+		if f.Name != "" {
+			vals = append(vals, f.Name)
 			conds = append(conds, fmt.Sprintf("s.synonym_name LIKE :%d", len(vals)))
 		}
 		if len(conds) != 0 {
@@ -182,7 +186,7 @@ ORDER BY table_schem, table_name, table_type`
 	return metadata.NewTableSet(results), nil
 }
 
-func (r metaReader) Columns(catalog, schemaPattern, tablePattern string) (*metadata.ColumnSet, error) {
+func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
 	qstr := `SELECT
   c.owner,
   c.table_name,
@@ -203,12 +207,12 @@ FROM all_tab_columns c
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("c.owner LIKE :%d", len(vals)))
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, fmt.Sprintf("c.table_name LIKE :%d", len(vals)))
 	}
 	if len(conds) != 0 {
@@ -252,7 +256,7 @@ ORDER BY c.owner, c.table_name, c.column_id`
 	return metadata.NewColumnSet(results), nil
 }
 
-func (r metaReader) Functions(catalog, schemaPattern, namePattern string, types []string) (*metadata.FunctionSet, error) {
+func (r metaReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
 	qstr := `SELECT
   decode (b.object_type,'PACKAGE',CONCAT(CONCAT(b.object_name,'.'), a.object_name)
          ,b.object_name) as specific_name,
@@ -266,17 +270,17 @@ JOIN all_objects b ON b.object_id = a.object_id AND a.sequence  = 1
 `
 	conds := []string{"(b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION' OR b.object_type = 'PACKAGE')"}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("b.owner LIKE :%d", len(vals)))
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("b.object_name LIKE :%d", len(vals)))
 	}
-	if len(types) != 0 {
+	if len(f.Types) != 0 {
 		pholders := []string{}
-		for _, t := range types {
+		for _, t := range f.Types {
 			vals = append(vals, t)
 			pholders = append(pholders, fmt.Sprintf(":%d", len(vals)))
 		}
@@ -318,7 +322,7 @@ ORDER BY procedure_schem, procedure_name, procedure_type`
 	return metadata.NewFunctionSet(results), nil
 }
 
-func (r metaReader) FunctionColumns(catalog, schemaPattern, functionPattern string) (*metadata.FunctionColumnSet, error) {
+func (r metaReader) FunctionColumns(f metadata.Filter) (*metadata.FunctionColumnSet, error) {
 	qstr := `SELECT
      a.owner   as procedure_schem,
      decode (b.object_type,'PACKAGE',CONCAT(CONCAT(b.object_name,'.'),a.object_name),
@@ -335,12 +339,12 @@ JOIN all_arguments a ON b.object_id = a.object_id AND a.data_level = 0
 `
 	conds := []string{"b.object_type = 'PROCEDURE' OR b.object_type = 'FUNCTION'"}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("a.owner LIKE :%d", len(vals)))
 	}
-	if functionPattern != "" {
-		vals = append(vals, functionPattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, fmt.Sprintf("b.object_name LIKE :%d", len(vals)))
 	}
 	if len(conds) != 0 {
@@ -382,7 +386,7 @@ ORDER BY procedure_schem, procedure_name, ordinal_position`
 	return metadata.NewFunctionColumnSet(results), nil
 }
 
-func (r metaReader) Indexes(catalog, schemaPattern, tablePattern, namePattern string) (*metadata.IndexSet, error) {
+func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `SELECT
   o.owner,
   o.table_name,
@@ -392,16 +396,16 @@ FROM all_indexes o
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, fmt.Sprintf("o.table_name LIKE :%d", len(vals)))
 	}
-	if namePattern != "" {
-		vals = append(vals, namePattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("o.index_name LIKE :%d", len(vals)))
 	}
 	if len(conds) != 0 {
@@ -434,7 +438,7 @@ ORDER BY o.owner, o.table_name, o.index_name`
 	return metadata.NewIndexSet(results), nil
 }
 
-func (r metaReader) IndexColumns(catalog, schemaPattern, tablePattern, indexPattern string) (*metadata.IndexColumnSet, error) {
+func (r metaReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
 	qstr := `SELECT
   o.owner,
   o.table_name,
@@ -446,16 +450,16 @@ JOIN all_ind_columns b ON o.owner = b.index_owner AND o.index_name = b.index_nam
 `
 	conds := []string{}
 	vals := []interface{}{}
-	if schemaPattern != "" {
-		vals = append(vals, schemaPattern)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
 		conds = append(conds, fmt.Sprintf("o.owner LIKE :%d", len(vals)))
 	}
-	if tablePattern != "" {
-		vals = append(vals, tablePattern)
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
 		conds = append(conds, fmt.Sprintf("o.table_name LIKE :%d", len(vals)))
 	}
-	if indexPattern != "" {
-		vals = append(vals, indexPattern)
+	if f.Name != "" {
+		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("o.index_name LIKE :%d", len(vals)))
 	}
 	if len(conds) != 0 {
