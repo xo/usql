@@ -124,7 +124,7 @@ func createDb(location, name string) error {
 }
 
 func TestSchemas(t *testing.T) {
-	result, err := reader.Schemas("", "")
+	result, err := reader.Schemas(metadata.Filter{})
 	if err != nil {
 		log.Fatalf("Could not read schemas: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestSchemas(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
-	result, err := reader.Tables("", "", "", []string{"BASE TABLE", "TABLE", "VIEW"})
+	result, err := reader.Tables(metadata.Filter{Types: []string{"BASE TABLE", "TABLE", "VIEW"}})
 	if err != nil {
 		log.Fatalf("Could not read tables: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestTables(t *testing.T) {
 }
 
 func TestColumns(t *testing.T) {
-	result, err := reader.Columns("", "", "film%")
+	result, err := reader.Columns(metadata.Filter{Parent: "film%"})
 	if err != nil {
 		log.Fatalf("Could not read columns: %v", err)
 	}
@@ -175,7 +175,7 @@ func TestColumns(t *testing.T) {
 }
 
 func TestFunctions(t *testing.T) {
-	result, err := reader.Functions("", "", "", []string{})
+	result, err := reader.Functions(metadata.Filter{})
 	if err != nil {
 		log.Fatalf("Could not read functions: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestFunctions(t *testing.T) {
 }
 
 func TestIndexes(t *testing.T) {
-	result, err := reader.Indexes("", "", "", "")
+	result, err := reader.Indexes(metadata.Filter{})
 	if err != nil {
 		log.Fatalf("Could not read indexes: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestIndexes(t *testing.T) {
 }
 
 func TestIndexColumns(t *testing.T) {
-	result, err := reader.IndexColumns("", "", "", "idx%")
+	result, err := reader.IndexColumns(metadata.Filter{Name: "idx%"})
 	if err != nil {
 		log.Fatalf("Could not read index columns: %v", err)
 	}

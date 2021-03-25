@@ -25,7 +25,7 @@ func (r *metaReader) SetLimit(l int) {
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
 func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
-	tables, err := r.Tables(f)
+	tables, err := r.Tables(metadata.Filter{Catalog: f.Catalog, Schema: f.Schema, Name: f.Parent})
 	if err != nil {
 		return nil, err
 	}
