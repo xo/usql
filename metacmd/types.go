@@ -54,6 +54,10 @@ type Handler interface {
 	SetTiming(bool)
 	// ReaderOptions returns default reader options.
 	ReaderOptions() []metadata.ReaderOption
+	// GetOutput writer.
+	GetOutput() io.WriteCloser
+	// SetOutput writer.
+	SetOutput(io.WriteCloser)
 }
 
 // Runner is a runner interface type.

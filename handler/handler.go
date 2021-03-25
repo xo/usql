@@ -63,6 +63,8 @@ type Handler struct {
 	u  *dburl.URL
 	db *sql.DB
 	tx *sql.Tx
+	// out file or pipe
+	out io.WriteCloser
 }
 
 // New creates a new input handler.
@@ -307,6 +309,9 @@ func (h *Handler) Run() error {
 		}
 		// quit
 		if res.Quit {
+			if h.out != nil {
+				h.out.Close()
+			}
 			return nil
 		}
 		// execute buf
@@ -361,7 +366,11 @@ func (h *Handler) Run() error {
 					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
 				}
 				// execute
-				if err = h.Execute(stdout, res, h.lastPrefix, h.last, forceBatch); err != nil {
+				out := stdout
+				if h.out != nil {
+					out = h.out
+				}
+				if err = h.Execute(out, res, h.lastPrefix, h.last, forceBatch); err != nil {
 					lastErr = WrapErr(h.last, err)
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
@@ -743,14 +752,14 @@ func (h *Handler) timefmt() string {
 }
 
 // execOnly executes a query against the database.
-func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, _ string, expanded bool) error {
+func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, pipeName string, expanded bool) error {
 	// exec or query
 	f := h.exec
 	if qtyp {
 		f = h.query
 	}
 	// exec
-	return f(w, prefix, qstr, expanded)
+	return f(w, prefix, qstr, pipeName, expanded)
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
@@ -816,7 +825,7 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 }
 
 // query executes a query against the database.
-func (h *Handler) query(w io.Writer, _, qstr string, expanded bool) error {
+func (h *Handler) query(w io.Writer, _, qstr, pipeName string, expanded bool) error {
 	start := time.Now()
 	// run query
 	q, err := h.DB().Query(qstr)
@@ -828,7 +837,26 @@ func (h *Handler) query(w io.Writer, _, qstr string, expanded bool) error {
 	if expanded {
 		params["expanded"] = "on"
 	}
-	params["pager_cmd"] = env.All()["PAGER"]
+	var pipe io.WriteCloser
+	if pipeName != "" || h.out != nil {
+		if params["expanded"] == "auto" && params["columns"] == "" {
+			// don't rely on terminal size when piping output to a file or cmd
+			params["expanded"] = "off"
+		}
+		if pipeName != "" {
+			if pipeName[0] == '|' {
+				pipe, err = env.Pipe(pipeName[1:])
+			} else {
+				pipe, err = os.OpenFile(pipeName, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+			}
+			if err != nil {
+				return err
+			}
+			w = pipe
+		}
+	} else {
+		params["pager_cmd"] = env.All()["PAGER"]
+	}
 	if err = tblfmt.EncodeAll(w, q, params); err != nil {
 		return err
 	}
@@ -839,6 +867,9 @@ func (h *Handler) query(w io.Writer, _, qstr string, expanded bool) error {
 			fmt.Fprintf(h.l.Stdout(), " (%v)", d.Round(1*time.Millisecond))
 		}
 		fmt.Fprintln(h.l.Stdout())
+	}
+	if pipe != nil {
+		return pipe.Close()
 	}
 	return err
 }
@@ -927,7 +958,7 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 }
 
 // exec does a database exec.
-func (h *Handler) exec(w io.Writer, typ, qstr string, _ bool) error {
+func (h *Handler) exec(w io.Writer, typ, qstr, _ string, _ bool) error {
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err
@@ -1047,4 +1078,14 @@ func (h *Handler) ReaderOptions() []metadata.ReaderOption {
 		)
 	}
 	return opts
+}
+
+// GetOutput gets the output writer.
+func (h *Handler) GetOutput() io.WriteCloser {
+	return h.out
+}
+
+// SetOutput sets the output writer.
+func (h *Handler) SetOutput(o io.WriteCloser) {
+	h.out = o
 }

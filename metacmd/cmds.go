@@ -3,6 +3,7 @@ package metacmd
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -289,6 +290,23 @@ func init() {
 				return nil
 			},
 		},
+		Qecho: {
+			Section: SectionInputOutput,
+			Name:    "qecho",
+			Desc:    "write string to \\o output stream,[STRING]",
+			Process: func(p *Params) error {
+				vals, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				var out io.Writer = p.Handler.GetOutput()
+				if out == nil {
+					out = p.Handler.IO().Stdout()
+				}
+				fmt.Fprintln(out, strings.Join(vals, " "))
+				return nil
+			},
+		},
 		Write: {
 			Section: SectionQueryBuffer,
 			Name:    "w",
@@ -375,6 +393,37 @@ func init() {
 			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
 			Process: func(p *Params) error {
 				return env.Shell(p.GetRaw())
+			},
+		},
+		Out: {
+			Section: SectionInputOutput,
+			Name:    "o",
+			Desc:    "send all query results to file or |pipe,[FILE]",
+			Aliases: map[string]string{"out": ""},
+			Process: func(p *Params) error {
+				if out := p.Handler.GetOutput(); out != nil {
+					out.Close()
+					p.Handler.SetOutput(nil)
+				}
+				params, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				pipe := strings.Join(params, " ")
+				if pipe == "" {
+					return nil
+				}
+				var out io.WriteCloser
+				if pipe[0] == '|' {
+					out, err = env.Pipe(pipe[1:])
+				} else {
+					out, err = os.OpenFile(pipe, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+				}
+				if err != nil {
+					return err
+				}
+				p.Handler.SetOutput(out)
+				return nil
 			},
 		},
 		Include: {

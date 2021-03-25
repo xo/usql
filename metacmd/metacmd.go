@@ -60,6 +60,8 @@ const (
 	Reset
 	// Echo is the echo meta command (\echo).
 	Echo
+	// Qecho is the qecho meta command (\qecho).
+	Qecho
 	// Write is the write meta command (\w).
 	Write
 	// ChangeDir is the system change directory meta command (\cd).
@@ -68,6 +70,8 @@ const (
 	SetEnv
 	// Shell is the system shell exec meta command (\!).
 	Shell
+	// Out is the switch output meta command (\o).
+	Out
 	// Include is the system include file meta command (\i and variants).
 	Include
 	// Transact is the transaction meta command (\begin, \commit, \rollback).
