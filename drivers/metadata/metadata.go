@@ -103,8 +103,8 @@ type Filter struct {
 	Types []string
 	// WithSystem objects
 	WithSystem bool
-	// WithNotVisible objects
-	WithNotVisible bool
+	// OnlyVisible objects
+	OnlyVisible bool
 }
 
 // Writer of database metadata in a human readable format.

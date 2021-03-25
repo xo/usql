@@ -22,6 +22,7 @@ type InformationSchema struct {
 	colExpr       map[ColumnName]string
 	limit         int
 	systemSchemas []string
+	currentSchema string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -119,6 +120,13 @@ func WithSequences(seq bool) metadata.ReaderOption {
 func WithSystemSchemas(schemas []string) metadata.ReaderOption {
 	return func(r metadata.Reader) {
 		r.(*InformationSchema).systemSchemas = schemas
+	}
+}
+
+// WithCurrentSchema expression to filter by when OnlyVisible filter is true
+func WithCurrentSchema(expr string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).currentSchema = expr
 	}
 }
 
@@ -602,6 +610,9 @@ func (s InformationSchema) conditions(baseParam int, filter metadata.Filter, for
 		if len(pholders) != 0 {
 			conds = append(conds, fmt.Sprintf(formats.notSchemas, strings.Join(pholders, ", ")))
 		}
+	}
+	if filter.OnlyVisible && formats.schema != "" && s.currentSchema != "" {
+		conds = append(conds, fmt.Sprintf(formats.schema, s.currentSchema))
 	}
 	if filter.Parent != "" && formats.parent != "" {
 		vals = append(vals, filter.Parent)

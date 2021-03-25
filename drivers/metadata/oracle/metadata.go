@@ -447,6 +447,9 @@ func (r metaReader) conditions(filter metadata.Filter, formats formats) ([]strin
 	if !filter.WithSystem && formats.notSchemas != "" {
 		conds = append(conds, fmt.Sprintf(formats.notSchemas, r.systemSchemas))
 	}
+	if filter.OnlyVisible && formats.schema != "" {
+		conds = append(conds, fmt.Sprintf(formats.schema, "user"))
+	}
 	if filter.Parent != "" && formats.parent != "" {
 		vals = append(vals, filter.Parent)
 		conds = append(conds, fmt.Sprintf(formats.parent, baseParam))

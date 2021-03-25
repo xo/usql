@@ -59,11 +59,15 @@ FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
      LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
      LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid`
-	conds := []string{"c.relkind IN ('i','I','')",
+	conds := []string{
+		"c.relkind IN ('i','I','')",
 		"n.nspname <> 'pg_catalog'",
 		"n.nspname <> 'information_schema'",
 		"n.nspname !~ '^pg_toast'",
-		"pg_catalog.pg_table_is_visible(c.oid)"}
+	}
+	if f.OnlyVisible {
+		conds = append(conds, "pg_catalog.pg_table_is_visible(c.oid)")
+	}
 	vals := []interface{}{}
 	if !f.WithSystem {
 		conds = append(conds, "n.nspname NOT IN ('pg_catalog', 'pg_toast', 'information_schema')")
