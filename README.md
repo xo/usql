@@ -585,6 +585,8 @@ Input/Output
   \echo [STRING]                  write string to standard output
   \i FILE                         execute commands from file
   \ir FILE                        as \i, but relative to location of current script
+  \o [FILE]                       send all query results to file or |pipe
+  \qecho [STRING]                 write string to \o output stream
 
 Informational
   \d[S+] [NAME]                   list tables, views, and sequences or describe table, view, sequence, or index

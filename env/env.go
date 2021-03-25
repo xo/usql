@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -304,6 +305,21 @@ func Shell(s string) error {
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	_ = cmd.Run()
 	return nil
+}
+
+// Pipe starts a command and returns its input for writing.
+func Pipe(c string) (io.WriteCloser, error) {
+	shell, param := Getshell()
+	if shell == "" {
+		return nil, text.ErrNoShellAvailable
+	}
+	cmd := exec.Command(shell, param, c)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	out, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+	return out, cmd.Start()
 }
 
 // Exec executes s using the user's SHELL / COMSPEC with -c (or /c) and
