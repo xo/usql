@@ -22,6 +22,7 @@ func init() {
 				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			}),
 			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
+			infos.WithCurrentSchema("CURRENT_SCHEMA"),
 		)
 		return metadata.NewPluginReader(
 			newIS(db, opts...),

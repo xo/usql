@@ -22,6 +22,7 @@ func init() {
 			infos.FunctionColumnsNumericPrecRadix: "10",
 		}),
 		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema"}),
+		infos.WithCurrentSchema("DATABASE()"),
 	)
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,

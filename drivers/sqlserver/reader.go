@@ -61,6 +61,9 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 `
 	conds := []string{}
 	vals := []interface{}{}
+	if f.OnlyVisible {
+		conds = append(conds, "s.name = schema_name()")
+	}
 	if !f.WithSystem {
 		conds = append(conds, "s.name NOT IN ('db_accessadmin', 'db_backupoperator', 'db_datareader', 'db_datawriter', 'db_ddladmin', 'db_denydatareader', 'db_denydatawriter', 'db_owner', 'db_securityadmin', 'INFORMATION_SCHEMA', 'sys')")
 	}
@@ -116,6 +119,9 @@ JOIN sys.types ty ON ty.user_type_id = c.user_type_id
 `
 	conds := []string{}
 	vals := []interface{}{}
+	if f.OnlyVisible {
+		conds = append(conds, "s.name = schema_name()")
+	}
 	if !f.WithSystem {
 		conds = append(conds, "s.name NOT IN ('db_accessadmin', 'db_backupoperator', 'db_datareader', 'db_datawriter', 'db_ddladmin', 'db_denydatareader', 'db_denydatawriter', 'db_owner', 'db_securityadmin', 'INFORMATION_SCHEMA', 'sys')")
 	}

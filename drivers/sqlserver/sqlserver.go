@@ -37,6 +37,7 @@ func init() {
 				"INFORMATION_SCHEMA",
 				"sys",
 			}),
+			infos.WithCurrentSchema("schema_name()"),
 		)(db, opts...)
 		mr := &metaReader{
 			LoggingReader: metadata.NewLoggingReader(db, opts...),
