@@ -176,27 +176,27 @@ func init() {
 				p.Result.Exec = ExecOnly
 				switch p.Name {
 				case "g":
-					var err error
-					p.Result.ExecParam, err = p.Get(true)
+					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
+					p.Result.ParseExecParams(params, "pipe")
 				case "gx":
-					var err error
-					p.Result.ExecParam, err = p.Get(true)
+					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
-					p.Result.Expanded = true
+					p.Result.ParseExecParams(params, "pipe")
+					p.Result.ExecParams["expanded"] = "on"
 				case "gexec":
 					p.Result.Exec = ExecExec
 				case "gset":
 					p.Result.Exec = ExecSet
-					var err error
-					p.Result.ExecParam, err = p.Get(true)
+					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
+					p.Result.ParseExecParams(params, "prefix")
 				}
 				return nil
 			},

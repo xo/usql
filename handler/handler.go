@@ -403,7 +403,7 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	case metacmd.ExecExec:
 		f = h.execExec
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParam, res.Expanded)); err != nil {
+	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParams)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -752,18 +752,18 @@ func (h *Handler) timefmt() string {
 }
 
 // execOnly executes a query against the database.
-func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, pipeName string, expanded bool) error {
+func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
 	// exec or query
 	f := h.exec
 	if qtyp {
 		f = h.query
 	}
 	// exec
-	return f(w, prefix, qstr, pipeName, expanded)
+	return f(w, prefix, qstr, execParams)
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix string, _ bool) error {
+func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, execParams map[string]string) error {
 	// query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -792,7 +792,7 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 	}
 	// set vars
 	for i, c := range cols {
-		n := namePrefix + c
+		n := execParams["prefix"] + c
 		if err = env.ValidIdentifier(n); err != nil {
 			return fmt.Errorf(text.CouldNotSetVariable, n)
 		}
@@ -803,7 +803,7 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, namePrefix s
 
 // execExec executes a query and re-executes all columns of all rows as if they
 // were their own queries.
-func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string, _ bool) error {
+func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ map[string]string) error {
 	// query
 	q, err := h.DB().Query(qstr)
 	if err != nil {
@@ -825,7 +825,7 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ string
 }
 
 // query executes a query against the database.
-func (h *Handler) query(w io.Writer, _, qstr, pipeName string, expanded bool) error {
+func (h *Handler) query(w io.Writer, _, qstr string, execParams map[string]string) error {
 	start := time.Now()
 	// run query
 	q, err := h.DB().Query(qstr)
@@ -834,11 +834,11 @@ func (h *Handler) query(w io.Writer, _, qstr, pipeName string, expanded bool) er
 	}
 	defer q.Close()
 	params := env.Pall()
-	if expanded {
-		params["expanded"] = "on"
+	for k, v := range execParams {
+		params[k] = v
 	}
 	var pipe io.WriteCloser
-	if pipeName != "" || h.out != nil {
+	if pipeName := params["pipe"]; pipeName != "" || h.out != nil {
 		if params["expanded"] == "auto" && params["columns"] == "" {
 			// don't rely on terminal size when piping output to a file or cmd
 			params["expanded"] = "off"
@@ -958,7 +958,7 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 }
 
 // exec does a database exec.
-func (h *Handler) exec(w io.Writer, typ, qstr, _ string, _ bool) error {
+func (h *Handler) exec(w io.Writer, typ, qstr string, _ map[string]string) error {
 	res, err := h.DB().Exec(qstr)
 	if err != nil {
 		return err

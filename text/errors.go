@@ -55,4 +55,6 @@ var (
 	ErrInvalidFormatBorderLineStyle = errors.New(`\pset: allowed Unicode border line styles are single, double`)
 	// ErrInvalidQuotedString is the invalid quoted string error.
 	ErrInvalidQuotedString = errors.New(`invalid quoted string`)
+	// ErrInvalidFormatOption is the invalid format option error.
+	ErrInvalidFormatOption = errors.New("invalid format option")
 )

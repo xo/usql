@@ -3,6 +3,7 @@ package metacmd
 import (
 	"io"
 	"os/user"
+	"strings"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -10,6 +11,7 @@ import (
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/rline"
 	"github.com/xo/usql/stmt"
+	"github.com/xo/usql/text"
 )
 
 // Handler is the shared interface for a command handler.
@@ -96,11 +98,41 @@ type Result struct {
 	Quit bool
 	// Exec informs the handling code of the type of execution.
 	Exec ExecType
-	// ExecParam is an accompanying parameter for execution. For ExecPipe, it
-	// will be the name of a file. For ExecSet it will be the variable prefix.
-	ExecParam string
-	// Expanded forces expanded output.
-	Expanded bool
+	// ExecParams are accompanying parameters for execution. For ExecPipe, it
+	// will contain the key pipe with a filename and/or a command.
+	// For ExecSet it will contain the variable prefix.
+	ExecParams map[string]string
+}
+
+func (r *Result) ParseExecParams(params []string, defaultKey string) error {
+	if r.ExecParams == nil {
+		r.ExecParams = make(map[string]string, len(params))
+	}
+	formatOptions := false
+	for i, param := range params {
+		if len(param) == 0 {
+			continue
+		}
+		if !formatOptions {
+			if param[0] == '(' {
+				formatOptions = true
+			} else {
+				r.ExecParams[defaultKey] = strings.Join(params[i:], " ")
+				return nil
+			}
+		}
+
+		parts := strings.SplitN(param, "=", 2)
+		if len(parts) == 1 {
+			return text.ErrInvalidFormatOption
+		}
+		r.ExecParams[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
+
+		if formatOptions && param[len(param)-1] == ')' {
+			formatOptions = false
+		}
+	}
+	return nil
 }
 
 // Params wraps metacmd parameters.
