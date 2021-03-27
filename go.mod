@@ -57,7 +57,6 @@ require (
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
@@ -82,7 +81,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.2.0 // indirect
 	github.com/xo/dburl v0.4.0
-	github.com/xo/tblfmt v0.3.0
+	github.com/xo/tblfmt v0.4.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345

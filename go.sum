@@ -942,6 +942,8 @@ github.com/xo/dburl v0.4.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.3.0 h1:OFAMaSleFo4N9ohosn2pmmauXuB5iftovJYRPn+cdrM=
 github.com/xo/tblfmt v0.3.0/go.mod h1:MMtP2RWkxw36O4MXUKmcgKKSo2WT1mwBmXggTtzeFX8=
+github.com/xo/tblfmt v0.4.0 h1:ZVJDeSee7aTe3xfJJBAy2HKvQNvu9Zsq2YetAhgtjfg=
+github.com/xo/tblfmt v0.4.0/go.mod h1:y3FiUQCdOz8rY+kGwR9tfL3reuvwBQCfXcTuX4gRyFU=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 h1:QldyIu/L63oPpyvQmHgvgickp1Yw510KJOqX7H24mg8=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
 github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5 h1:3ANIpg9VQB91yCAyY+5dobfm30xQNOG3sCjPoPQo5i8=
