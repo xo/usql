@@ -362,7 +362,7 @@ func init() {
 				if err != nil {
 					return err
 				}
-				if v != "" {
+				if v == "" {
 					p.Handler.SetTiming(!p.Handler.GetTiming())
 				} else {
 					s, err := env.ParseBool(v, "\\timing")
@@ -377,6 +377,7 @@ func init() {
 					}
 					p.Handler.SetTiming(b)
 				}
+
 				setting := "off"
 				if p.Handler.GetTiming() {
 					setting = "on"
