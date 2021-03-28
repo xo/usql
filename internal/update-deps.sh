@@ -1,15 +1,18 @@
 #!/bin/bash
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../)
-ALL=$(find $SRC/drivers/ -mindepth 1 -maxdepth 1 -type d|sort|grep -v genji)
 
-PKGS=
-for i in $ALL; do
-  NAME=$(basename $i)
-  PKG=$(sed -n '/DRIVER: /p' $i/$NAME.go |sed -e 's/^\(\s\|"\|_\)\+//'|sed -e 's/[a-z]\+\s\+"//' |sed -e 's/".*//')
-  PKGS="$PKGS $PKG"
-done
+set -e
 
-set -e -x
-
-go get $@ $PKGS
+pushd $SRC &> /dev/null
+(set -x;
+  go get -u $@ $(go list -tags most -f '{{ join .Imports "\n" }}' ./internal/...)
+)
+PKGS=$(go list -tags most -f '{{ join .Imports "\n" }}'|grep 'github.com/xo/usql'|grep -v drivers|grep -v internal)
+(set -x;
+  go get -u $@ $PKGS
+)
+(set -x;
+  go mod tidy
+)
+popd &> /dev/null

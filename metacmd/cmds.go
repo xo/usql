@@ -168,9 +168,10 @@ func init() {
 			Name:    "g",
 			Desc:    "execute query (and send results to file or |pipe),[FILE] or ;",
 			Aliases: map[string]string{
-				"gexec": "execute query and execute each value of the result",
-				"gset":  "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
-				"gx":    `as \g, but forces expanded output mode,`,
+				"gexec":        "execute query and execute each value of the result",
+				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
+				"gx":           `as \g, but forces expanded output mode,`,
+				"crosstabview": "execute query and display results in crosstab,[COLUMNS]",
 			},
 			Process: func(p *Params) error {
 				p.Result.Exec = ExecOnly
@@ -181,13 +182,6 @@ func init() {
 						return err
 					}
 					p.Result.ParseExecParams(params, "pipe")
-				case "gx":
-					params, err := p.GetAll(true)
-					if err != nil {
-						return err
-					}
-					p.Result.ParseExecParams(params, "pipe")
-					p.Result.ExecParams["expanded"] = "on"
 				case "gexec":
 					p.Result.Exec = ExecExec
 				case "gset":
@@ -197,6 +191,25 @@ func init() {
 						return err
 					}
 					p.Result.ParseExecParams(params, "prefix")
+				case "gx":
+					params, err := p.GetAll(true)
+					if err != nil {
+						return err
+					}
+					p.Result.ParseExecParams(params, "pipe")
+					p.Result.ExecParams["expanded"] = "on"
+				case "crosstabview":
+					p.Result.Exec = ExecCrosstab
+					for i := 0; i < 4; i++ {
+						ok, col, err := p.GetOK(true)
+						if err != nil {
+							return err
+						}
+						p.Result.Crosstab = append(p.Result.Crosstab, col)
+						if !ok {
+							break
+						}
+					}
 				}
 				return nil
 			},

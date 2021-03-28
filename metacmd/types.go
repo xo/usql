@@ -90,6 +90,8 @@ const (
 	ExecSet
 	// ExecExec indicates execution and executing the resulting rows (\gexec).
 	ExecExec
+	// ExecCrosstab indicates execution using crosstabview (\crosstabview).
+	ExecCrosstab
 )
 
 // Result is the result of metacmd execution.
@@ -99,9 +101,11 @@ type Result struct {
 	// Exec informs the handling code of the type of execution.
 	Exec ExecType
 	// ExecParams are accompanying parameters for execution. For ExecPipe, it
-	// will contain the key pipe with a filename and/or a command.
-	// For ExecSet it will contain the variable prefix.
+	// will contain the key pipe with a filename and/or a command. For ExecSet
+	// it will contain the variable prefix.
 	ExecParams map[string]string
+	// Crosstab are the crosstab column parameters.
+	Crosstab []string
 }
 
 func (r *Result) ParseExecParams(params []string, defaultKey string) error {
@@ -121,13 +125,11 @@ func (r *Result) ParseExecParams(params []string, defaultKey string) error {
 				return nil
 			}
 		}
-
 		parts := strings.SplitN(param, "=", 2)
 		if len(parts) == 1 {
 			return text.ErrInvalidFormatOption
 		}
 		r.ExecParams[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
-
 		if formatOptions && param[len(param)-1] == ')' {
 			formatOptions = false
 		}
