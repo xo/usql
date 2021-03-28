@@ -1,10 +1,11 @@
-# usql [![Build Status][travis-ci]](https://travis-ci.org/xo/usql)
+# usql [![Go Reference][goref-usql-status]][goref-usql]
 
-A universal command-line interface for PostgreSQL, MySQL, Oracle Database,
-SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
+`usql` is a universal command-line interface for PostgreSQL, MySQL,
+Oracle Database, SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
 including NoSQL and non-relational databases!
 
-[travis-ci]: https://travis-ci.org/xo/usql.svg?branch=master "Travis CI"
+[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
+[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
 
 [Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][] | [Contributing][]
 
@@ -154,8 +155,8 @@ possible to embed or create a SQL command-line interface (e.g, for use by some
 other project as an "official" client) using the core `usql` source tree.
 
 Please refer to [main.go](main.go) to see how `usql` puts together its
-packages. `usql`'s code is also well-documented -- please refer to the [GoDoc
-listing][godoc] for an overview of the various packages and APIs.
+packages. `usql`'s code is also well-documented -- please refer to the
+[Go reference][goref-usql] for an overview of the various packages and APIs.
 
 ## Database Support
 
@@ -200,51 +201,51 @@ The following is a table of all drivers, schemes, and aliases that `usql`
 supports:
 
 <!-- START SCHEME TABLE -->
-| Database (scheme/driver)          | Protocol Aliases [real driver]           |
-|-----------------------------------|------------------------------------------|
-| MySQL (mysql)                     | my, mariadb, maria, percona, aurora      |
-| Oracle Database (oracle)          | or, ora, oracle, oci, oci8, odpi, odpi-c |
-| PostgreSQL (postgres)             | pg, postgresql, pgsql                    |
-| SQLite3 (sqlite3)                 | sq, sqlite, file                         |
-| Microsoft SQL Server (sqlserver ) | ms, mssql                                |
-|                                   |                                          |
-| Amazon Redshift (redshift)        | rs [postgres]                            |
-| CockroachDB (cockroachdb)         | cr, cockroach, crdb, cdb [postgres]      |
-| MemSQL (memsql)                   | me [mysql]                               |
-| TiDB (tidb)                       | ti [mysql]                               |
-| Vitess (vitess)                   | vt [mysql]                               |
-|                                   |                                          |
-| MySQL (mymysql)                   | zm, mymy                                 |
-| Oracle Database (godror)          | gr                                       |
-| PostgreSQL (pgx)                  | px                                       |
-|                                   |                                          |
-| Alibaba MaxCompute (maxcompute)   | mc                                       |
-| Apache Avatica (avatica)          | av, phoenix                              |
-| Apache H2 (h2)                    | h2                                       |
-| Apache Hive (hive)                | hi                                       |
-| Apache Ignite (ignite)            | ig, gridgain                             |
-| Apache Impala (impala)            | im                                       |
-| AWS Athena (athena)               | s3                                       |
-| Azure Cosmos (cosmos)             | cm                                       |
-| Cassandra (cql)                   | ca, cassandra, datastax, scy, scylla     |
-| ClickHouse (clickhouse)           | ch                                       |
-| Couchbase (n1ql)                  | n1, couchbase                            |
-| Cznic QL (ql)                     | ql, cznic, cznicql                       |
-| Firebird SQL (firebirdsql)        | fb, firebird                             |
-| Genji (genji)                     | gj                                       |
-| Google BigQuery (bigquery)        | bq                                       |
-| Google Spanner (spanner)          | sp                                       |
-| Microsoft ADODB (adodb)           | ad, ado                                  |
-| ModernC SQLite (moderncsqlite)    | mq, modernsqlite                         |
-| ODBC (odbc)                       | od                                       |
-| OLE ODBC (oleodbc)                | oo, ole, oleodbc [adodb]                 |
-| Presto (presto)                   | pr, prestodb, prestos, prs, prestodbs    |
-| SAP ASE (tds)                     | ax, ase, sapase                          |
-| SAP HANA (hdb)                    | sa, saphana, sap, hana                   |
-| Snowflake (snowflake)             | sf                                       |
-| Trino (trino)                     | tr, trino, trinos, trs                   |
-| Vertica (vertica)                 | ve                                       |
-| VoltDB (voltdb)                   | vo, volt, vdb                            |
+| Database (scheme/driver)         | Protocol Aliases [real driver]           |
+|----------------------------------|------------------------------------------|
+| MySQL (mysql)                    | my, mariadb, maria, percona, aurora      |
+| Oracle Database (oracle)         | or, ora, oracle, oci, oci8, odpi, odpi-c |
+| PostgreSQL (postgres)            | pg, postgresql, pgsql                    |
+| SQLite3 (sqlite3)                | sq, sqlite, file                         |
+| Microsoft SQL Server (sqlserver) | ms, mssql                                |
+|                                  |                                          |
+| Amazon Redshift (redshift)       | rs [postgres]                            |
+| CockroachDB (cockroachdb)        | cr, cockroach, crdb, cdb [postgres]      |
+| MemSQL (memsql)                  | me [mysql]                               |
+| TiDB (tidb)                      | ti [mysql]                               |
+| Vitess (vitess)                  | vt [mysql]                               |
+|                                  |                                          |
+| MySQL (mymysql)                  | zm, mymy                                 |
+| Oracle Database (godror)         | gr                                       |
+| PostgreSQL (pgx)                 | px                                       |
+|                                  |                                          |
+| Alibaba MaxCompute (maxcompute)  | mc                                       |
+| Apache Avatica (avatica)         | av, phoenix                              |
+| Apache H2 (h2)                   | h2                                       |
+| Apache Hive (hive)               | hi                                       |
+| Apache Ignite (ignite)           | ig, gridgain                             |
+| Apache Impala (impala)           | im                                       |
+| AWS Athena (athena)              | s3                                       |
+| Azure Cosmos (cosmos)            | cm                                       |
+| Cassandra (cql)                  | ca, cassandra, datastax, scy, scylla     |
+| ClickHouse (clickhouse)          | ch                                       |
+| Couchbase (n1ql)                 | n1, couchbase                            |
+| Cznic QL (ql)                    | ql, cznic, cznicql                       |
+| Firebird SQL (firebirdsql)       | fb, firebird                             |
+| Genji (genji)                    | gj                                       |
+| Google BigQuery (bigquery)       | bq                                       |
+| Google Spanner (spanner)         | sp                                       |
+| Microsoft ADODB (adodb)          | ad, ado                                  |
+| ModernC SQLite (moderncsqlite)   | mq, modernsqlite                         |
+| ODBC (odbc)                      | od                                       |
+| OLE ODBC (oleodbc)               | oo, ole, oleodbc [adodb]                 |
+| Presto (presto)                  | pr, prestodb, prestos, prs, prestodbs    |
+| SAP ASE (tds)                    | ax, ase, sapase                          |
+| SAP HANA (hdb)                   | sa, saphana, sap, hana                   |
+| Snowflake (snowflake)            | sf                                       |
+| Trino (trino)                    | tr, trino, trinos, trs                   |
+| Vertica (vertica)                | ve                                       |
+| VoltDB (voltdb)                  | vo, volt, vdb                            |
 <!-- END SCHEME TABLE -->
 
 #### Go Drivers and Build Tags
@@ -866,7 +867,6 @@ marked `help wanted` on the GitHub issue tracker!
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
-[godoc]: https://godoc.org/github.com/xo/usql
 [go-project]: https://golang.org/project
 [go-time]: https://golang.org/pkg/time/#pkg-constants
 [go-sql]: https://golang.org/pkg/database/sql/
