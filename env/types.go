@@ -64,6 +64,7 @@ func init() {
 	pvars = Vars{
 		"border":                   "1",
 		"columns":                  "0",
+		"csv_fieldsep":             ",",
 		"expanded":                 "off",
 		"fieldsep":                 "|",
 		"fieldsep_zero":            "off",
@@ -148,7 +149,7 @@ func Pwrite(w io.Writer) error {
 	for _, k := range keys {
 		val := pvars[k]
 		switch k {
-		case "fieldsep", "recordsep", "null":
+		case "csv_fieldsep", "fieldsep", "recordsep", "null":
 			val = strconv.QuoteToASCII(val)
 		case "tableattr", "title":
 			if val != "" {
@@ -245,7 +246,7 @@ func Ptoggle(name, extra string) (string, error) {
 			pvars[name] = "aligned"
 		}
 	case "linestyle":
-	case "fieldsep", "null", "recordsep":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep":
 	case "tableattr", "title":
 		pvars[name] = ""
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
@@ -293,7 +294,7 @@ func Pset(name, value string) (string, error) {
 			return "", text.ErrInvalidFormatLineStyle
 		}
 		pvars[name] = value
-	case "fieldsep", "null", "recordsep", "tableattr", "title":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "title":
 		pvars[name] = value
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
 		if !borderRE.MatchString(value) {

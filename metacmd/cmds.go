@@ -604,10 +604,10 @@ func init() {
 					field = "fieldsep"
 				case "H":
 					field, extra = "format", "html"
-				case "T":
-					field = "tableattr"
 				case "t":
 					field = "tuples_only"
+				case "T":
+					field = "tableattr"
 				case "x":
 					field = "expanded"
 				}
