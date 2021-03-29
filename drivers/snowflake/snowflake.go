@@ -24,6 +24,9 @@ func init() {
 	gosnowflake.SetLogger(&l)
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
+		infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.SequenceColumnsIncrement: "''",
+		}),
 		infos.WithFunctions(false),
 		infos.WithIndexes(false),
 	)

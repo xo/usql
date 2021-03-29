@@ -45,6 +45,8 @@ const (
 	FunctionColumnsCharOctetLength  = ColumnName("function_columns.character_octet_length")
 
 	FunctionsSecurityType = ColumnName("functions.security_type")
+
+	SequenceColumnsIncrement = ColumnName("sequence_columns.increment")
 )
 
 // New InformationSchema reader
@@ -64,6 +66,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 			FunctionColumnsNumericPrecRadix: "COALESCE(numeric_precision_radix, 10)",
 			FunctionColumnsCharOctetLength:  "COALESCE(character_octet_length, 0)",
 			FunctionsSecurityType:           "security_type",
+			SequenceColumnsIncrement:        "increment",
 		},
 		systemSchemas: []string{"information_schema"},
 	}
@@ -541,18 +544,20 @@ func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, 
 		return nil, metadata.ErrNotSupported
 	}
 
-	qstr := `SELECT
-  sequence_catalog,
-  sequence_schema,
-  sequence_name,
-  data_type,
-  start_value,
-  minimum_value,
-  maximum_value,
-  increment,
-  cycle_option
-FROM information_schema.sequences
-`
+	columns := []string{
+		"sequence_catalog",
+		"sequence_schema",
+		"sequence_name",
+		"data_type",
+		"start_value",
+		"minimum_value",
+		"maximum_value",
+		s.colExpr[SequenceColumnsIncrement],
+		"cycle_option",
+	}
+
+	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.sequences\n"
+
 	conds, vals := s.conditions(1, f, formats{
 		catalog:    "sequence_catalog LIKE %s",
 		schema:     "sequence_schema LIKE %s",
