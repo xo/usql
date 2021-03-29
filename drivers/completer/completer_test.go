@@ -47,6 +47,16 @@ func TestCompleter(t *testing.T) {
 			3,
 		},
 		{
+			"files",
+			`\i comp`,
+			7,
+			[]string{
+				"leter.go",
+				"leter_test.go",
+			},
+			4,
+		},
+		{
 			"3rd word",
 			"SELECT * F",
 			10,

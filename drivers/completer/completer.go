@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"unicode"
@@ -350,6 +351,9 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if tailMatches(IGNORE_CASE, previousWords, "FROM|JOIN") {
 		return c.completeWithSelectables(text)
 	}
+	if tailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
+		return completeFromFiles(text)
+	}
 	// is suggesting basic sql commands better than nothing?
 	return completeFromList(text, c.sqlCommands...)
 }
@@ -477,9 +481,13 @@ func wordMatches(ct caseType, pattern, word string) bool {
 	for _, p := range strings.Split(pattern, "|") {
 		star := strings.IndexByte(p, '*')
 		if star == -1 {
-			return cmp(p, word)
+			if cmp(p, word) {
+				return true
+			}
 		} else {
-			return len(word) >= len(p)-1 && cmp(p[0:star], word[0:star]) && (star >= len(p) || cmp(p[star+1:], word[len(word)-len(p)+star+1:]))
+			if len(word) >= len(p)-1 && cmp(p[0:star], word[0:star]) && (star >= len(p) || cmp(p[star+1:], word[len(word)-len(p)+star+1:])) {
+				return true
+			}
 		}
 	}
 
@@ -746,4 +754,30 @@ func (c completer) getNames(query func() (iterator, error), mapper func(interfac
 type iterator interface {
 	Next() bool
 	Close() error
+}
+
+func completeFromFiles(text []rune) [][]rune {
+	// TODO handle quotes properly
+	dir := filepath.Dir(string(text))
+	dirs, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	matches := make([]string, 0, len(dirs))
+	switch dir {
+	case ".":
+		dir = ""
+	case "/":
+		// pass
+	default:
+		dir += "/"
+	}
+	for _, entry := range dirs {
+		name := entry.Name()
+		if entry.IsDir() {
+			name += "/"
+		}
+		matches = append(matches, dir+name)
+	}
+	return completeFromList(text, matches...)
 }
