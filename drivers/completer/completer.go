@@ -26,177 +26,224 @@ var (
 	MATCH_CASE  = caseType(false)
 )
 
-func NewDefaultCompleter(r metadata.Reader) func(db metadata.DB) readline.AutoCompleter {
-	return func(db metadata.DB) readline.AutoCompleter {
-		return completer{
-			db:     db,
-			reader: r,
-			logger: log.New(os.Stdout, "ERROR: ", log.LstdFlags),
-			sqlStartCommands: []string{
-				"ABORT",
-				"ALTER",
-				"ANALYZE",
-				"BEGIN",
-				"CALL",
-				"CHECKPOINT",
-				"CLOSE",
-				"CLUSTER",
-				"COMMENT",
-				"COMMIT",
-				"COPY",
-				"CREATE",
-				"DEALLOCATE",
-				"DECLARE",
-				"DELETE FROM",
-				"DESC",
-				"DESCRIBE",
-				"DISCARD",
-				"DO",
-				"DROP",
-				"END",
-				"EXEC",
-				"EXECUTE",
-				"EXPLAIN",
-				"FETCH",
-				"GRANT",
-				"IMPORT",
-				"INSERT",
-				"LIST",
-				"LISTEN",
-				"LOAD",
-				"LOCK",
-				"MOVE",
-				"NOTIFY",
-				"PRAGMA",
-				"PREPARE",
-				"REASSIGN",
-				"REFRESH MATERIALIZED VIEW",
-				"REINDEX",
-				"RELEASE",
-				"RESET",
-				"REVOKE",
-				"ROLLBACK",
-				"SAVEPOINT",
-				"SECURITY LABEL",
-				"SELECT",
-				"SET",
-				"SHOW",
-				"START",
-				"TABLE",
-				"TRUNCATE",
-				"UNLISTEN",
-				"UPDATE",
-				"VACUUM",
-				"VALUES",
-				"WITH",
-			},
-			// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
-			sqlCommands: []string{
-				"AND",
-				"CASE",
-				"CROSS JOIN",
-				"ELSE",
-				"END",
-				"FETCH",
-				"FROM",
-				"FULL OUTER JOIN",
-				"GROUP BY",
-				"HAVING",
-				"IN",
-				"INNER JOIN",
-				"IS NOT NULL",
-				"IS NULL",
-				"JOIN",
-				"LEFT JOIN",
-				"LIMIT",
-				"NOT",
-				"ON",
-				"OR",
-				"ORDER BY",
-				"THEN",
-				"WHEN",
-				"WHERE",
-			},
-			backslashCommands: []string{
-				`\!`,
-				`\?`,
-				`\a`,
-				`\begin`,
-				`\c`,
-				`\c`,
-				`\C`,
-				`\cd`,
-				`\commit`,
-				`\conninfo`,
-				`\copyright`,
-				`\d+`,
-				`\da+`,
-				`\da`,
-				`\daS+`,
-				`\daS`,
-				`\df+`,
-				`\df`,
-				`\dfS+`,
-				`\dfS`,
-				`\di+`,
-				`\di`,
-				`\diS+`,
-				`\diS`,
-				`\dm+`,
-				`\dm`,
-				`\dmS+`,
-				`\dmS`,
-				`\dn+`,
-				`\dn`,
-				`\dnS+`,
-				`\dnS`,
-				`\drivers`,
-				`\ds+`,
-				`\ds`,
-				`\dS+`,
-				`\dS`,
-				`\dsS+`,
-				`\dsS`,
-				`\dt+`,
-				`\dt`,
-				`\dtS+`,
-				`\dtS`,
-				`\dv+`,
-				`\dv`,
-				`\dvS+`,
-				`\dvS`,
-				`\e`,
-				`\echo`,
-				`\f`,
-				`\g`,
-				`\gexec`,
-				`\gset`,
-				`\gx`,
-				`\H`,
-				`\i`,
-				`\ir`,
-				`\l+`,
-				`\l`,
-				`\p`,
-				`\password`,
-				`\prompt`,
-				`\pset`,
-				`\q`,
-				`\r`,
-				`\raw`,
-				`\rollback`,
-				`\set`,
-				`\setenv`,
-				`\t`,
-				`\T`,
-				`\timing`,
-				`\unset`,
-				`\w`,
-				`\watch`,
-				`\x`,
-				`\Z`,
-			},
-		}
+func NewDefaultCompleter(opts ...Option) readline.AutoCompleter {
+	c := completer{
+		// an empty struct satisfies the metadata.Reader interface, because it is actually empty
+		reader: struct{}{},
+		logger: log.New(os.Stdout, "ERROR: ", log.LstdFlags),
+		sqlStartCommands: []string{
+			"ABORT",
+			"ALTER",
+			"ANALYZE",
+			"BEGIN",
+			"CALL",
+			"CHECKPOINT",
+			"CLOSE",
+			"CLUSTER",
+			"COMMENT",
+			"COMMIT",
+			"COPY",
+			"CREATE",
+			"DEALLOCATE",
+			"DECLARE",
+			"DELETE FROM",
+			"DESC",
+			"DESCRIBE",
+			"DISCARD",
+			"DO",
+			"DROP",
+			"END",
+			"EXEC",
+			"EXECUTE",
+			"EXPLAIN",
+			"FETCH",
+			"GRANT",
+			"IMPORT",
+			"INSERT",
+			"LIST",
+			"LISTEN",
+			"LOAD",
+			"LOCK",
+			"MOVE",
+			"NOTIFY",
+			"PRAGMA",
+			"PREPARE",
+			"REASSIGN",
+			"REFRESH MATERIALIZED VIEW",
+			"REINDEX",
+			"RELEASE",
+			"RESET",
+			"REVOKE",
+			"ROLLBACK",
+			"SAVEPOINT",
+			"SECURITY LABEL",
+			"SELECT",
+			"SET",
+			"SHOW",
+			"START",
+			"TABLE",
+			"TRUNCATE",
+			"UNLISTEN",
+			"UPDATE",
+			"VACUUM",
+			"VALUES",
+			"WITH",
+		},
+		// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
+		sqlCommands: []string{
+			"AND",
+			"CASE",
+			"CROSS JOIN",
+			"ELSE",
+			"END",
+			"FETCH",
+			"FROM",
+			"FULL OUTER JOIN",
+			"GROUP BY",
+			"HAVING",
+			"IN",
+			"INNER JOIN",
+			"IS NOT NULL",
+			"IS NULL",
+			"JOIN",
+			"LEFT JOIN",
+			"LIMIT",
+			"NOT",
+			"ON",
+			"OR",
+			"ORDER BY",
+			"THEN",
+			"WHEN",
+			"WHERE",
+		},
+		backslashCommands: []string{
+			`\!`,
+			`\?`,
+			`\a`,
+			`\begin`,
+			`\c`,
+			`\connect`,
+			`\C`,
+			`\cd`,
+			`\commit`,
+			`\conninfo`,
+			`\copyright`,
+			`\d+`,
+			`\da+`,
+			`\da`,
+			`\daS+`,
+			`\daS`,
+			`\df+`,
+			`\df`,
+			`\dfS+`,
+			`\dfS`,
+			`\di+`,
+			`\di`,
+			`\diS+`,
+			`\diS`,
+			`\dm+`,
+			`\dm`,
+			`\dmS+`,
+			`\dmS`,
+			`\dn+`,
+			`\dn`,
+			`\dnS+`,
+			`\dnS`,
+			`\drivers`,
+			`\ds+`,
+			`\ds`,
+			`\dS+`,
+			`\dS`,
+			`\dsS+`,
+			`\dsS`,
+			`\dt+`,
+			`\dt`,
+			`\dtS+`,
+			`\dtS`,
+			`\dv+`,
+			`\dv`,
+			`\dvS+`,
+			`\dvS`,
+			`\e`,
+			`\echo`,
+			`\f`,
+			`\g`,
+			`\gexec`,
+			`\gset`,
+			`\gx`,
+			`\H`,
+			`\i`,
+			`\ir`,
+			`\l+`,
+			`\l`,
+			`\p`,
+			`\password`,
+			`\prompt`,
+			`\pset`,
+			`\q`,
+			`\r`,
+			`\raw`,
+			`\rollback`,
+			`\set`,
+			`\setenv`,
+			`\t`,
+			`\T`,
+			`\timing`,
+			`\unset`,
+			`\w`,
+			`\watch`,
+			`\x`,
+			`\Z`,
+		},
+	}
+	for _, o := range opts {
+		o(&c)
+	}
+	return c
+}
+
+// Option to configure the reader
+type Option func(*completer)
+
+// WithDB option
+func WithDB(db metadata.DB) Option {
+	return func(c *completer) {
+		c.db = db
+	}
+}
+
+// WithReader option
+func WithReader(r metadata.Reader) Option {
+	return func(c *completer) {
+		c.reader = r
+	}
+}
+
+// WithLogger option
+func WithLogger(l logger) Option {
+	return func(c *completer) {
+		c.logger = l
+	}
+}
+
+// WithSQLStartCommands that can begin a query
+func WithSQLStartCommands(commands []string) Option {
+	return func(c *completer) {
+		c.sqlStartCommands = commands
+	}
+}
+
+// WithSQLCommands that can be any part of a query
+func WithSQLCommands(commands []string) Option {
+	return func(c *completer) {
+		c.sqlCommands = commands
+	}
+}
+
+// WithConnStrings option
+func WithConnStrings(connStrings []string) Option {
+	return func(c *completer) {
+		c.connStrings = connStrings
 	}
 }
 
@@ -208,6 +255,7 @@ type completer struct {
 	sqlStartCommands  []string
 	sqlCommands       []string
 	backslashCommands []string
+	connStrings       []string
 }
 
 type logger interface {
@@ -355,6 +403,9 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if tailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
 		return completeFromFiles(text)
 	}
+	if tailMatches(MATCH_CASE, previousWords, `\c|\connect`) {
+		return completeFromList(text, c.connStrings...)
+	}
 	// is suggesting basic sql commands better than nothing?
 	return completeFromList(text, c.sqlCommands...)
 }
@@ -500,6 +551,9 @@ func completeFromList(text []rune, options ...string) [][]rune {
 }
 
 func completeFromListCase(ct caseType, text []rune, options ...string) [][]rune {
+	if len(options) == 0 {
+		return nil
+	}
 	isLower := false
 	if len(text) > 0 {
 		isLower = unicode.IsLower(text[0])

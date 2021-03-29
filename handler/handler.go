@@ -16,6 +16,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/metacmd"
@@ -512,7 +514,11 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 // an appropriate driver (mysql, postgres, sqlite3) depending on the type (unix
 // domain socket, directory, or regular file, respectively).
 func (h *Handler) Open(params ...string) error {
+	// build a list of all possible connStrings for the completer
+	connStrings := h.connStrings()
+
 	if len(params) == 0 || params[0] == "" {
+		h.l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(connStrings)))
 		return nil
 	}
 	if h.tx != nil {
@@ -559,7 +565,7 @@ func (h *Handler) Open(params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(h.u, h.db); err == nil {
-			h.l.Completer(drivers.NewCompleter(h.u, h.db))
+			h.l.Completer(drivers.NewCompleter(h.u, h.db, completer.WithConnStrings(connStrings)))
 			return h.Version()
 		}
 	}
@@ -582,6 +588,50 @@ func (h *Handler) Open(params ...string) error {
 	return h.Open(dsn)
 }
 
+func (h *Handler) connStrings() []string {
+	available := drivers.Available()
+	entries, err := env.PassFileEntries(h.user)
+	if err != nil {
+		// ignore the error as this is only used for completer
+		// and it'll be reported again when trying to force params before opening a conn
+		entries = nil
+	}
+	names := make([]string, 0, len(available)+len(entries))
+
+	for schema := range available {
+		_, aliases := dburl.SchemeDriverAndAliases(schema)
+		// TODO should we create all combinations of space, :, :// and +transport ?
+		names = append(names, schema)
+		names = append(names, aliases...)
+	}
+
+	for _, e := range entries {
+		if e.Protocol == "*" {
+			continue
+		}
+		user := ""
+		host := ""
+		port := ""
+		dbname := ""
+		if e.Username != "*" {
+			user = e.Username + "@"
+			if e.Host != "*" {
+				host = e.Host
+				if e.Port != "*" {
+					port = ":" + e.Port
+				}
+				if e.DBName != "*" {
+					dbname = "/" + e.DBName
+				}
+			}
+		}
+		names = append(names, fmt.Sprintf("%s://%s%s%s%s", e.Protocol, user, host, port, dbname))
+	}
+
+	sort.Strings(names)
+	return names
+}
+
 // forceParams forces connection parameters on a database URL, adding any
 // driver specific required parameters, and the username/password when a
 // matching entry exists in the PASS file.
@@ -589,7 +639,7 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	// force driver parameters
 	drivers.ForceParams(u)
 	// see if password entry is present
-	user, err := env.PassFileEntry(h.user, u)
+	user, err := env.PassFileMatch(h.user, u)
 	switch {
 	case err != nil:
 		errout := h.l.Stderr()
