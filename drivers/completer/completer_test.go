@@ -57,6 +57,15 @@ func TestCompleter(t *testing.T) {
 			4,
 		},
 		{
+			"connections",
+			`\c p`,
+			4,
+			[]string{
+				"g://",
+			},
+			1,
+		},
+		{
 			"3rd word",
 			"SELECT * F",
 			10,
@@ -214,7 +223,7 @@ func TestCompleter(t *testing.T) {
 		},
 	}
 
-	completer := NewDefaultCompleter(mockReader{})(nil)
+	completer := NewDefaultCompleter(WithReader(mockReader{}), WithConnStrings([]string{"pg://"}))
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			suggestions, length := completer.Do([]rune(test.line), test.start)

@@ -97,7 +97,7 @@ type Driver struct {
 	// NewMetadataWriter returns a db metadata printer.
 	NewMetadataWriter func(db DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer
 	// NewCompleter returns a db auto-completer.
-	NewCompleter func(db DB, opts ...metadata.ReaderOption) readline.AutoCompleter
+	NewCompleter func(db DB, opts ...completer.Option) readline.AutoCompleter
 }
 
 // drivers is the map of drivers funcs.
@@ -461,7 +461,7 @@ func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.Reader
 	return newMetadataWriter(db, w), nil
 }
 
-func NewCompleter(u *dburl.URL, db DB, opts ...metadata.ReaderOption) readline.AutoCompleter {
+func NewCompleter(u *dburl.URL, db DB, opts ...completer.Option) readline.AutoCompleter {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil
@@ -472,12 +472,15 @@ func NewCompleter(u *dburl.URL, db DB, opts ...metadata.ReaderOption) readline.A
 	if d.NewMetadataReader == nil {
 		return nil
 	}
-	// prepend the limit option just in case its already in opts, so it'll be overridden
-	opts = append([]metadata.ReaderOption{
+	r := d.NewMetadataReader(db,
 		// this needs to be relatively low, since autocomplete is very interactive
-		metadata.WithTimeout(3 * time.Second),
+		metadata.WithTimeout(3*time.Second),
 		metadata.WithLimit(1000),
+	)
+	// prepend to allow to override both reader and db
+	opts = append([]completer.Option{
+		completer.WithReader(r),
+		completer.WithDB(db),
 	}, opts...)
-	newCompleter := completer.NewDefaultCompleter(d.NewMetadataReader(db, opts...))
-	return newCompleter(db)
+	return completer.NewDefaultCompleter(opts...)
 }

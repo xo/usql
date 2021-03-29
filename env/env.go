@@ -170,9 +170,9 @@ func PassFile(u *user.User) string {
 	return Expand(u, path)
 }
 
-// PassFileEntry determines if there is a password file entry for a specific
-// database URL.
-func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
+// PassFileMatch returns a Userinfo from a passfile entry matching
+// the database URL.
+func PassFileMatch(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 	// check if v already has password defined ...
 	var username string
 	if v.User != nil {
@@ -181,8 +181,38 @@ func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 			return nil, nil
 		}
 	}
+	entries, err := readPassEntries(PassFile(u))
+	if err != nil || entries == nil {
+		return nil, err
+	}
+	// find matching entry
+	n := strings.SplitN(v.Normalize(":", "", 3), ":", 6)
+	if len(n) < 3 {
+		return nil, errors.New("unknown error encountered normalizing URL")
+	}
+	m := newPassFileEntry(n)
+	for _, entry := range entries {
+		if entry.equal(m) {
+			u := entry.Username
+			if entry.Username == "*" {
+				u = username
+			}
+			return url.UserPassword(u, entry.Password), nil
+		}
+	}
+	return nil, nil
+}
+
+func PassFileEntries(u *user.User) ([]PassFileEntry, error) {
+	return readPassEntries(PassFile(u))
+}
+
+// commentRE matches comment entries in a pass file.
+var commentRE = regexp.MustCompile(`#.*`)
+
+// readPassEntries reads the pass file entries from path.
+func readPassEntries(path string) ([]PassFileEntry, error) {
 	// check if pass file exists
-	path := PassFile(u)
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -195,38 +225,13 @@ func PassFileEntry(u *user.User, v *dburl.URL) (*url.Userinfo, error) {
 	if runtime.GOOS != "windows" && fi.Mode()&0x3f != 0 {
 		return nil, fmt.Errorf(text.BadPassFileMode, path)
 	}
-	// read pass file entries
-	entries, err := readPassEntries(path)
-	if err != nil {
-		return nil, err
-	}
-	// find matching entry
-	n := strings.Split(v.Normalize(":", "", 3), ":")
-	if len(n) < 3 {
-		return nil, errors.New("unknown error encountered normalizing URL")
-	}
-	for _, entry := range entries {
-		if u, p, ok := matchPassEntry(n, entry); ok {
-			if u == "*" {
-				u = username
-			}
-			return url.UserPassword(u, p), nil
-		}
-	}
-	return nil, nil
-}
 
-// commentRE matches comment entries in a pass file.
-var commentRE = regexp.MustCompile(`#.*`)
-
-// readPassEntries reads the pass file entries from path.
-func readPassEntries(path string) ([][]string, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	var entries [][]string
+	var entries []PassFileEntry
 	s := bufio.NewScanner(f)
 	i := 0
 	for s.Scan() {
@@ -247,20 +252,32 @@ func readPassEntries(path string) ([][]string, error) {
 				return nil, fmt.Errorf(text.BadPassFileFieldEmpty, i, j)
 			}
 		}
-		entries = append(entries, v)
+		entries = append(entries, newPassFileEntry(v))
 	}
 	return entries, nil
 }
 
-// matchPassEntry takes a normalized n, and a password entry along with the
-// read username and pass, and determines if all of the components in n match entry.
-func matchPassEntry(n, entry []string) (string, string, bool) {
-	for i := 0; i < len(n); i++ {
-		if entry[i] != "*" && entry[i] != n[i] {
-			return "", "", false
-		}
+type PassFileEntry struct {
+	Protocol, Host, Port, DBName, Username, Password string
+}
+
+func newPassFileEntry(v []string) PassFileEntry {
+	// make sure there's always at least 6 elements
+	v = append(v, "", "", "", "", "", "")
+	return PassFileEntry{
+		Protocol: v[0],
+		Host:     v[1],
+		Port:     v[2],
+		DBName:   v[3],
+		Username: v[4],
+		Password: v[5],
 	}
-	return entry[4], entry[5], true
+}
+
+func (e PassFileEntry) equal(b PassFileEntry) bool {
+	return (e.Protocol == "*" || e.Protocol == b.Protocol) &&
+		(e.Host == "*" || e.Host == b.Host) &&
+		(e.Port == "*" || e.Port == b.Port)
 }
 
 // Getshell returns the user's defined SHELL, or system default (if found on
