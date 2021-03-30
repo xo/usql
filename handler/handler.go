@@ -4,6 +4,7 @@ package handler
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -370,18 +372,20 @@ func (h *Handler) Run() error {
 				if h.out != nil {
 					out = h.out
 				}
-				if err = h.Execute(out, res, h.lastPrefix, h.last, forceBatch); err != nil {
+				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+				if err = h.Execute(ctx, out, res, h.lastPrefix, h.last, forceBatch); err != nil {
 					lastErr = WrapErr(h.last, err)
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
 				}
+				stop()
 			}
 		}
 	}
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, forceTrans bool) error {
+func (h *Handler) Execute(ctx context.Context, w io.Writer, res metacmd.Result, prefix, qstr string, forceTrans bool) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -392,7 +396,7 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	}
 	// start a transaction if forced
 	if forceTrans {
-		if err = h.Begin(); err != nil {
+		if err = h.BeginTx(ctx); err != nil {
 			return err
 		}
 	}
@@ -403,7 +407,7 @@ func (h *Handler) Execute(w io.Writer, res metacmd.Result, prefix, qstr string, 
 	case metacmd.ExecExec:
 		f = h.execExec
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(w, prefix, qstr, qtyp, res.ExecParams)); err != nil {
+	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, prefix, qstr, qtyp, res.ExecParams)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -752,20 +756,20 @@ func (h *Handler) timefmt() string {
 }
 
 // execOnly executes a query against the database.
-func (h *Handler) execOnly(w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
+func (h *Handler) execOnly(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
 	// exec or query
 	f := h.exec
 	if qtyp {
 		f = h.query
 	}
 	// exec
-	return f(w, prefix, qstr, execParams)
+	return f(ctx, w, prefix, qstr, execParams)
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, execParams map[string]string) error {
+func (h *Handler) execSet(ctx context.Context, w io.Writer, prefix, qstr string, _ bool, execParams map[string]string) error {
 	// query
-	q, err := h.DB().Query(qstr)
+	q, err := h.DB().QueryContext(ctx, qstr)
 	if err != nil {
 		return err
 	}
@@ -803,20 +807,20 @@ func (h *Handler) execSet(w io.Writer, prefix, qstr string, _ bool, execParams m
 
 // execExec executes a query and re-executes all columns of all rows as if they
 // were their own queries.
-func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ map[string]string) error {
+func (h *Handler) execExec(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, _ map[string]string) error {
 	// query
-	q, err := h.DB().Query(qstr)
+	q, err := h.DB().QueryContext(ctx, qstr)
 	if err != nil {
 		return err
 	}
 	// execRows
-	err = h.execRows(w, q)
+	err = h.execRows(ctx, w, q)
 	if err != nil {
 		return err
 	}
 	// check for additional result sets ...
 	for drivers.NextResultSet(q) {
-		err = h.execRows(w, q)
+		err = h.execRows(ctx, w, q)
 		if err != nil {
 			return err
 		}
@@ -825,10 +829,10 @@ func (h *Handler) execExec(w io.Writer, prefix, qstr string, qtyp bool, _ map[st
 }
 
 // query executes a query against the database.
-func (h *Handler) query(w io.Writer, _, qstr string, execParams map[string]string) error {
+func (h *Handler) query(ctx context.Context, w io.Writer, _, qstr string, execParams map[string]string) error {
 	start := time.Now()
 	// run query
-	q, err := h.DB().Query(qstr)
+	q, err := h.DB().QueryContext(ctx, qstr)
 	if err != nil {
 		return err
 	}
@@ -875,7 +879,7 @@ func (h *Handler) query(w io.Writer, _, qstr string, execParams map[string]strin
 }
 
 // execRows executes all the columns in the row.
-func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
+func (h *Handler) execRows(ctx context.Context, w io.Writer, q *sql.Rows) error {
 	// get columns
 	cols, err := drivers.Columns(h.u, q)
 	if err != nil {
@@ -892,7 +896,7 @@ func (h *Handler) execRows(w io.Writer, q *sql.Rows) error {
 			}
 			// execute
 			for _, qstr := range row {
-				if err = h.Execute(w, res, stmt.FindPrefix(qstr), qstr, false); err != nil {
+				if err = h.Execute(ctx, w, res, stmt.FindPrefix(qstr), qstr, false); err != nil {
 					return err
 				}
 			}
@@ -958,8 +962,8 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 }
 
 // exec does a database exec.
-func (h *Handler) exec(w io.Writer, typ, qstr string, _ map[string]string) error {
-	res, err := h.DB().Exec(qstr)
+func (h *Handler) exec(ctx context.Context, w io.Writer, typ, qstr string, _ map[string]string) error {
+	res, err := h.DB().ExecContext(ctx, qstr)
 	if err != nil {
 		return err
 	}
@@ -980,6 +984,11 @@ func (h *Handler) exec(w io.Writer, typ, qstr string, _ map[string]string) error
 
 // Begin begins a transaction.
 func (h *Handler) Begin() error {
+	return h.BeginTx(context.Background())
+}
+
+// Begin begins a transaction in a context.
+func (h *Handler) BeginTx(ctx context.Context) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -987,7 +996,7 @@ func (h *Handler) Begin() error {
 		return text.ErrPreviousTransactionExists
 	}
 	var err error
-	h.tx, err = h.db.Begin()
+	h.tx, err = h.db.BeginTx(ctx, nil)
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
