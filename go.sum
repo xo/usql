@@ -137,10 +137,8 @@ github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508/go.mod h1:c9
 github.com/apache/calcite-avatica-go/v5 v5.0.0 h1:B0l4O6KGR/sRHDaAgFT+AdGFouvp5Y/B9/82ag5rhds=
 github.com/apache/calcite-avatica-go/v5 v5.0.0/go.mod h1:mbmgGJJQk6WZfh7U9z0QOa2OjS4L9w5bVMj2LD6wwVM=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
+github.com/apache/thrift v0.13.0 h1:5hryIiq9gtn+MiLVn0wP37kb/uTeRZgN08WoCsAhIhI=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
-github.com/apache/thrift v0.14.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
-github.com/apache/thrift v0.14.1 h1:Yh8v0hpCj63p5edXOLaqTJW0IJ1p+eMW6+YSOqw1d6s=
-github.com/apache/thrift v0.14.1/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
@@ -157,8 +155,8 @@ github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/
 github.com/aws/aws-sdk-go v1.38.12 h1:khtODkUna3iF53Cg3dCF4e6oWgrAEbZDU4x1aq+G0WY=
 github.com/aws/aws-sdk-go v1.38.12/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/beltran/gohive v1.4.0 h1:aACOAXFo1ok3D4eRXmKxWuqxJ/1aje7mzUhAADgPq0A=
-github.com/beltran/gohive v1.4.0/go.mod h1:RqPxURAuG21Rw5dfT6+nh67nNsPTVs+Mwahbrp20Ft0=
+github.com/beltran/gohive v1.3.0 h1:7e1TGJ/F/mMpoZ1JLevHkoqc0iQnxwEN9y8gn9uKoqU=
+github.com/beltran/gohive v1.3.0/go.mod h1:TcPLlZLQbom57zWZpiG25iG9DFbyJgl/W4NbYlqMD5E=
 github.com/beltran/gosasl v0.0.0-20200715011608-d5475aebb293/go.mod h1:Qx8cW6jkI8riyzmklj80kAIkv+iezFUTBiGU0qHhHes=
 github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 h1:6VIHWP+Cpgmp3/Owpd+G4cu7K1XxKixgP7Gihcsy+SM=
 github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386/go.mod h1:Qx8cW6jkI8riyzmklj80kAIkv+iezFUTBiGU0qHhHes=
