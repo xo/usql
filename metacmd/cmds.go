@@ -172,6 +172,7 @@ func init() {
 				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
 				"gx":           `as \g, but forces expanded output mode,`,
 				"crosstabview": "execute query and display results in crosstab,[COLUMNS]",
+				"watch":        "execute query every SEC seconds,[SEC]",
 			},
 			Process: func(p *Params) error {
 				p.Result.Exec = ExecOnly
@@ -210,6 +211,13 @@ func init() {
 							break
 						}
 					}
+				case "watch":
+					p.Result.Exec = ExecWatch
+					params, err := p.GetAll(true)
+					if err != nil {
+						return err
+					}
+					p.Result.ParseExecParams(params, "interval")
 				}
 				return nil
 			},

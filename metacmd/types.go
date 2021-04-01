@@ -92,6 +92,8 @@ const (
 	ExecExec
 	// ExecCrosstab indicates execution using crosstabview (\crosstabview).
 	ExecCrosstab
+	// ExecWatch indicates repeated execution with a fixed time interval.
+	ExecWatch
 )
 
 // Result is the result of metacmd execution.
@@ -102,7 +104,8 @@ type Result struct {
 	Exec ExecType
 	// ExecParams are accompanying parameters for execution. For ExecPipe, it
 	// will contain the key pipe with a filename and/or a command. For ExecSet
-	// it will contain the variable prefix.
+	// it will contain the variable prefix. For ExecWatch, it will contain
+	// the time interval value.
 	ExecParams map[string]string
 	// Crosstab are the crosstab column parameters.
 	Crosstab []string

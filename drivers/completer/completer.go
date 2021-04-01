@@ -192,6 +192,7 @@ func NewDefaultCompleter(r metadata.Reader) func(db metadata.DB) readline.AutoCo
 				`\timing`,
 				`\unset`,
 				`\w`,
+				`\watch`,
 				`\x`,
 				`\Z`,
 			},
