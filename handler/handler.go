@@ -402,6 +402,8 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, res metacmd.Result, 
 	}
 	f := h.execOnly
 	switch res.Exec {
+	case metacmd.ExecWatch:
+		f = h.execWatch
 	case metacmd.ExecSet:
 		f = h.execSet
 	case metacmd.ExecExec:
@@ -764,6 +766,34 @@ func (h *Handler) execOnly(ctx context.Context, w io.Writer, prefix, qstr string
 	}
 	// exec
 	return f(ctx, w, prefix, qstr, execParams)
+}
+
+// execWatch repeatedly executes a query against the database.
+func (h *Handler) execWatch(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
+	sec := 2
+	if a, ok := execParams["interval"]; ok {
+		var err error
+		sec, err = strconv.Atoi(a)
+		if err != nil {
+			return text.ErrInvalidValue
+		}
+	}
+	for {
+		fmt.Fprintf(w, "%s (every %ds)\n", time.Now().Format(time.RFC1123), sec)
+		err := h.execOnly(ctx, w, prefix, qstr, qtyp, execParams)
+		if err != nil {
+			return err
+		}
+		watchCtx, cancel := context.WithTimeout(ctx, time.Duration(sec)*time.Second)
+		<-watchCtx.Done()
+		cancel()
+		if err := watchCtx.Err(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, context.Canceled) {
+				return nil
+			}
+			return err
+		}
+	}
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.

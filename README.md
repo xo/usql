@@ -564,13 +564,14 @@ Type "help" for help.
 
 (not connected)=> \?
 General
-  \q                              quit usql
   \copyright                      show usql usage and distribution terms
   \drivers                        display information about available database drivers
-  \g [FILE] or ;                  execute query (and send results to file or |pipe)
   \gexec                          execute query and execute each value of the result
+  \g [FILE] or ;                  execute query (and send results to file or |pipe)
   \gset [PREFIX]                  execute query and store results in usql variables
   \gx                             as \g, but forces expanded output mode
+  \q                              quit usql
+  \watch [SEC]                    execute query every SEC seconds
 
 Help
   \? [commands]                   show help on backslash commands
