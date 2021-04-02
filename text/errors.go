@@ -57,4 +57,6 @@ var (
 	ErrInvalidQuotedString = errors.New(`invalid quoted string`)
 	// ErrInvalidFormatOption is the invalid format option error.
 	ErrInvalidFormatOption = errors.New("invalid format option")
+	// ErrInvalidWatchDuration is the invalid watch duration error.
+	ErrInvalidWatchDuration = errors.New("invalid watch duration")
 )

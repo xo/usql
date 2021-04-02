@@ -243,7 +243,7 @@ func (h *Handler) Run() error {
 			}
 			return err
 		}
-		var res metacmd.Result
+		var opt metacmd.Option
 		if cmd != "" {
 			cmd = strings.TrimPrefix(cmd, `\`)
 			params := stmt.DecodeParams(paramstr)
@@ -263,7 +263,7 @@ func (h *Handler) Run() error {
 				continue
 			}
 			// run
-			res, err = r.Run(h)
+			opt, err = r.Run(h)
 			if err != nil && err != rline.ErrInterrupt {
 				lastErr = WrapErr(cmd, err)
 				fmt.Fprintf(stderr, "error: %v", err)
@@ -310,14 +310,14 @@ func (h *Handler) Run() error {
 			}
 		}
 		// quit
-		if res.Quit {
+		if opt.Quit {
 			if h.out != nil {
 				h.out.Close()
 			}
 			return nil
 		}
 		// execute buf
-		if execute || h.buf.Ready() || res.Exec != metacmd.ExecNone {
+		if execute || h.buf.Ready() || opt.Exec != metacmd.ExecNone {
 			// intercept batch query
 			if h.u != nil {
 				typ, end, batch := drivers.IsBatchQueryPrefix(h.u, h.buf.Prefix)
@@ -329,7 +329,7 @@ func (h *Handler) Run() error {
 					fmt.Fprintln(stderr)
 					continue
 				// cannot use \g* while accumulating statements for batch queries
-				case h.batch && typ != h.batchEnd && res.Exec != metacmd.ExecNone:
+				case h.batch && typ != h.batchEnd && opt.Exec != metacmd.ExecNone:
 					err = errors.New("cannot force batch execution")
 					lastErr = WrapErr(h.buf.String(), err)
 					fmt.Fprintf(stderr, "error: %v", err)
@@ -373,7 +373,7 @@ func (h *Handler) Run() error {
 					out = h.out
 				}
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				if err = h.Execute(ctx, out, res, h.lastPrefix, h.last, forceBatch); err != nil {
+				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch); err != nil {
 					lastErr = WrapErr(h.last, err)
 					fmt.Fprintf(stderr, "error: %v", err)
 					fmt.Fprintln(stderr)
@@ -385,7 +385,7 @@ func (h *Handler) Run() error {
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(ctx context.Context, w io.Writer, res metacmd.Result, prefix, qstr string, forceTrans bool) error {
+func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, qstr string, forceTrans bool) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -401,15 +401,15 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, res metacmd.Result, 
 		}
 	}
 	f := h.execOnly
-	switch res.Exec {
-	case metacmd.ExecWatch:
-		f = h.execWatch
-	case metacmd.ExecSet:
-		f = h.execSet
+	switch opt.Exec {
 	case metacmd.ExecExec:
 		f = h.execExec
+	case metacmd.ExecSet:
+		f = h.execSet
+	case metacmd.ExecWatch:
+		f = h.execWatch
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, prefix, qstr, qtyp, res.ExecParams)); err != nil {
+	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, opt, prefix, qstr, qtyp)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -757,47 +757,39 @@ func (h *Handler) timefmt() string {
 	return s
 }
 
+// execWatch repeatedly executes a query against the database.
+func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, qstr string, qtyp bool) error {
+	for {
+		// this is the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST"
+		// fmt.Fprintf(w, "%s (every %fs)\n\n", time.Now().Format("Mon Jan 2006 3:04:05 PM MST"), float64(opt.Watch)/float64(time.Second))
+		fmt.Fprintf(w, "%s (every %v)\n\n", time.Now().Format(time.RFC1123), opt.Watch)
+		if err := h.execOnly(ctx, w, opt, prefix, qstr, qtyp); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			if err := ctx.Err(); err != nil && !errors.Is(err, context.Canceled) {
+				return err
+			}
+			return nil
+		case <-time.After(opt.Watch):
+		}
+	}
+}
+
 // execOnly executes a query against the database.
-func (h *Handler) execOnly(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
+func (h *Handler) execOnly(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, qstr string, qtyp bool) error {
 	// exec or query
 	f := h.exec
 	if qtyp {
 		f = h.query
 	}
 	// exec
-	return f(ctx, w, prefix, qstr, execParams)
-}
-
-// execWatch repeatedly executes a query against the database.
-func (h *Handler) execWatch(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, execParams map[string]string) error {
-	sec := 2
-	if a, ok := execParams["interval"]; ok {
-		var err error
-		sec, err = strconv.Atoi(a)
-		if err != nil {
-			return text.ErrInvalidValue
-		}
-	}
-	for {
-		fmt.Fprintf(w, "%s (every %ds)\n", time.Now().Format(time.RFC1123), sec)
-		err := h.execOnly(ctx, w, prefix, qstr, qtyp, execParams)
-		if err != nil {
-			return err
-		}
-		watchCtx, cancel := context.WithTimeout(ctx, time.Duration(sec)*time.Second)
-		<-watchCtx.Done()
-		cancel()
-		if err := watchCtx.Err(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-			if errors.Is(err, context.Canceled) {
-				return nil
-			}
-			return err
-		}
-	}
+	return f(ctx, w, opt, prefix, qstr)
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) execSet(ctx context.Context, w io.Writer, prefix, qstr string, _ bool, execParams map[string]string) error {
+func (h *Handler) execSet(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, qstr string, _ bool) error {
 	// query
 	q, err := h.DB().QueryContext(ctx, qstr)
 	if err != nil {
@@ -826,7 +818,7 @@ func (h *Handler) execSet(ctx context.Context, w io.Writer, prefix, qstr string,
 	}
 	// set vars
 	for i, c := range cols {
-		n := execParams["prefix"] + c
+		n := opt.Params["prefix"] + c
 		if err = env.ValidIdentifier(n); err != nil {
 			return fmt.Errorf(text.CouldNotSetVariable, n)
 		}
@@ -837,7 +829,7 @@ func (h *Handler) execSet(ctx context.Context, w io.Writer, prefix, qstr string,
 
 // execExec executes a query and re-executes all columns of all rows as if they
 // were their own queries.
-func (h *Handler) execExec(ctx context.Context, w io.Writer, prefix, qstr string, qtyp bool, _ map[string]string) error {
+func (h *Handler) execExec(ctx context.Context, w io.Writer, _ metacmd.Option, prefix, qstr string, qtyp bool) error {
 	// query
 	q, err := h.DB().QueryContext(ctx, qstr)
 	if err != nil {
@@ -859,7 +851,7 @@ func (h *Handler) execExec(ctx context.Context, w io.Writer, prefix, qstr string
 }
 
 // query executes a query against the database.
-func (h *Handler) query(ctx context.Context, w io.Writer, _, qstr string, execParams map[string]string) error {
+func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _, qstr string) error {
 	start := time.Now()
 	// run query
 	q, err := h.DB().QueryContext(ctx, qstr)
@@ -868,7 +860,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, _, qstr string, execPa
 	}
 	defer q.Close()
 	params := env.Pall()
-	for k, v := range execParams {
+	for k, v := range opt.Params {
 		params[k] = v
 	}
 	var pipe io.WriteCloser
@@ -916,7 +908,7 @@ func (h *Handler) execRows(ctx context.Context, w io.Writer, q *sql.Rows) error 
 		return err
 	}
 	// process rows
-	res := metacmd.Result{Exec: metacmd.ExecOnly}
+	res := metacmd.Option{Exec: metacmd.ExecOnly}
 	clen, tfmt := len(cols), h.timefmt()
 	for q.Next() {
 		if clen != 0 {
@@ -992,7 +984,7 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 }
 
 // exec does a database exec.
-func (h *Handler) exec(ctx context.Context, w io.Writer, typ, qstr string, _ map[string]string) error {
+func (h *Handler) exec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, qstr string) error {
 	res, err := h.DB().ExecContext(ctx, qstr)
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"io"
 	"os/user"
 	"strings"
+	"time"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -64,14 +65,14 @@ type Handler interface {
 
 // Runner is a runner interface type.
 type Runner interface {
-	Run(Handler) (Result, error)
+	Run(Handler) (Option, error)
 }
 
 // RunnerFunc is a type wrapper for a single func satisfying Runner.Run.
-type RunnerFunc func(Handler) (Result, error)
+type RunnerFunc func(Handler) (Option, error)
 
 // Run satisfies the Runner interface.
-func (f RunnerFunc) Run(h Handler) (Result, error) {
+func (f RunnerFunc) Run(h Handler) (Option, error) {
 	return f(h)
 }
 
@@ -96,24 +97,23 @@ const (
 	ExecWatch
 )
 
-// Result is the result of metacmd execution.
-type Result struct {
+// Option contains parsed result options of a metacmd.
+type Option struct {
 	// Quit instructs the handling code to quit.
 	Quit bool
 	// Exec informs the handling code of the type of execution.
 	Exec ExecType
-	// ExecParams are accompanying parameters for execution. For ExecPipe, it
-	// will contain the key pipe with a filename and/or a command. For ExecSet
-	// it will contain the variable prefix. For ExecWatch, it will contain
-	// the time interval value.
-	ExecParams map[string]string
+	// Params are accompanying string parameters for execution.
+	Params map[string]string
 	// Crosstab are the crosstab column parameters.
 	Crosstab []string
+	// Watch is the watch duration interval.
+	Watch time.Duration
 }
 
-func (r *Result) ParseExecParams(params []string, defaultKey string) error {
-	if r.ExecParams == nil {
-		r.ExecParams = make(map[string]string, len(params))
+func (opt *Option) ParseParams(params []string, defaultKey string) error {
+	if opt.Params == nil {
+		opt.Params = make(map[string]string, len(params))
 	}
 	formatOptions := false
 	for i, param := range params {
@@ -124,7 +124,7 @@ func (r *Result) ParseExecParams(params []string, defaultKey string) error {
 			if param[0] == '(' {
 				formatOptions = true
 			} else {
-				r.ExecParams[defaultKey] = strings.Join(params[i:], " ")
+				opt.Params[defaultKey] = strings.Join(params[i:], " ")
 				return nil
 			}
 		}
@@ -132,7 +132,7 @@ func (r *Result) ParseExecParams(params []string, defaultKey string) error {
 		if len(parts) == 1 {
 			return text.ErrInvalidFormatOption
 		}
-		r.ExecParams[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
+		opt.Params[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
 		if formatOptions && param[len(param)-1] == ')' {
 			formatOptions = false
 		}
@@ -146,10 +146,10 @@ type Params struct {
 	Handler Handler
 	// Name is the name of the metacmd.
 	Name string
-	// Params are the passed parameters.
+	// Params are the actual statement parameters.
 	Params *stmt.Params
-	// Result is the resulting state of the command execution.
-	Result Result
+	// Option contains resulting command execution options.
+	Option Option
 }
 
 // Get returns the next command parameter, using env.Unquote to decode quoted

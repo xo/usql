@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
@@ -55,7 +56,7 @@ func init() {
 			Desc:    "quit " + text.CommandName,
 			Aliases: map[string]string{"quit": ""},
 			Process: func(p *Params) error {
-				p.Result.Quit = true
+				p.Option.Quit = true
 				return nil
 			},
 		},
@@ -172,52 +173,64 @@ func init() {
 				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
 				"gx":           `as \g, but forces expanded output mode,`,
 				"crosstabview": "execute query and display results in crosstab,[COLUMNS]",
-				"watch":        "execute query every SEC seconds,[SEC]",
+				"watch":        "execute query every specified interval,[DURATION]",
 			},
 			Process: func(p *Params) error {
-				p.Result.Exec = ExecOnly
+				p.Option.Exec = ExecOnly
 				switch p.Name {
 				case "g":
 					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
-					p.Result.ParseExecParams(params, "pipe")
+					p.Option.ParseParams(params, "pipe")
 				case "gexec":
-					p.Result.Exec = ExecExec
+					p.Option.Exec = ExecExec
 				case "gset":
-					p.Result.Exec = ExecSet
+					p.Option.Exec = ExecSet
 					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
-					p.Result.ParseExecParams(params, "prefix")
+					p.Option.ParseParams(params, "prefix")
 				case "gx":
 					params, err := p.GetAll(true)
 					if err != nil {
 						return err
 					}
-					p.Result.ParseExecParams(params, "pipe")
-					p.Result.ExecParams["expanded"] = "on"
+					p.Option.ParseParams(params, "pipe")
+					p.Option.Params["expanded"] = "on"
 				case "crosstabview":
-					p.Result.Exec = ExecCrosstab
+					p.Option.Exec = ExecCrosstab
 					for i := 0; i < 4; i++ {
 						ok, col, err := p.GetOK(true)
 						if err != nil {
 							return err
 						}
-						p.Result.Crosstab = append(p.Result.Crosstab, col)
+						p.Option.Crosstab = append(p.Option.Crosstab, col)
 						if !ok {
 							break
 						}
 					}
 				case "watch":
-					p.Result.Exec = ExecWatch
-					params, err := p.GetAll(true)
-					if err != nil {
+					p.Option.Exec = ExecWatch
+					p.Option.Watch = 2 * time.Second
+					ok, s, err := p.GetOK(true)
+					switch {
+					case err != nil:
 						return err
+					case ok:
+						d, err := time.ParseDuration(s)
+						if err != nil {
+							if f, err := strconv.ParseFloat(s, 64); err == nil {
+								d = time.Duration(f * float64(time.Second))
+							}
+						}
+						if d == 0 {
+							return text.ErrInvalidWatchDuration
+						}
+						p.Option.Watch = d
 					}
-					p.Result.ParseExecParams(params, "interval")
 				}
 				return nil
 			},

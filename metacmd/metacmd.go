@@ -17,14 +17,14 @@ func Decode(name string, params *stmt.Params) (Runner, error) {
 		return nil, text.ErrUnknownCommand
 	}
 	cmd := cmds[mc]
-	return RunnerFunc(func(h Handler) (Result, error) {
+	return RunnerFunc(func(h Handler) (Option, error) {
 		p := &Params{
 			Handler: h,
 			Name:    name,
 			Params:  params,
 		}
 		err := cmd.Process(p)
-		return p.Result, err
+		return p.Option, err
 	}), nil
 }
 
