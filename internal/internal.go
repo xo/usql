@@ -18,6 +18,7 @@ func KnownBuildTags() map[string]string {
 		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
+		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"genji":         "genji",         // github.com/genjidb/genji/sql/driver
 		"godror":        "godror",        // github.com/godror/godror
