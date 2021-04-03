@@ -933,7 +933,16 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	} else {
 		params["pager_cmd"] = env.All()["PAGER"]
 	}
-	if err = tblfmt.EncodeAll(w, q, params); err != nil {
+	// wrap query with crosstab
+	resultSet := tblfmt.ResultSet(q)
+	if opt.Exec == metacmd.ExecCrosstab {
+		var err error
+		resultSet, err = tblfmt.NewCrosstabView(q, tblfmt.WithParams(opt.Crosstab...))
+		if err != nil {
+			return err
+		}
+	}
+	if err = tblfmt.EncodeAll(w, resultSet, params); err != nil {
 		return err
 	}
 	if h.timing {
