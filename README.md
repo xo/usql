@@ -863,6 +863,8 @@ marked `help wanted` on the GitHub issue tracker!
 
 [*Please pick up an issue today, and submit a PR tomorrow!*][help-wanted]
 
+For more technical details, see [CONTRIBUTING.md](https://github.com/xo/usql/blob/master/CONTRIBUTING.md).
+
 ## Related Projects
 
 * [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing and opening database connection URLs
