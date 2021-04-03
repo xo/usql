@@ -1,9 +1,9 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.80.0 // indirect
+	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/bigquery v1.16.0 // indirect
-	cloud.google.com/go/spanner v1.16.0 // indirect
+	cloud.google.com/go/spanner v1.17.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v11.1.0+incompatible
@@ -22,13 +22,13 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.14.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.7 // indirect
+	github.com/aws/aws-sdk-go v1.38.12 // indirect
 	github.com/beltran/gohive v1.4.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/consu/semita v0.1.5 // indirect
 	github.com/btnguyen2k/gocosmos v0.1.3
-	github.com/couchbase/go-couchbase v0.0.0-20210323165529-9e59ca6b464b // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20210330201927-1d32284da76d // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.1.2 // indirect
 	github.com/couchbase/goutils v0.0.0-20210118111533-e33d3ffb5401 // indirect
@@ -39,12 +39,14 @@ require (
 	github.com/genjidb/genji v0.11.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
-	github.com/go-openapi/strfmt v0.20.0 // indirect
-	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-openapi/strfmt v0.20.1 // indirect
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2 // indirect
-	github.com/gocql/gocql v0.0.0-20210326125648-0cb4787106be
+	github.com/gocql/gocql v0.0.0-20210401103645-80ab1e13e309
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
@@ -57,6 +59,7 @@ require (
 	github.com/lib/pq v1.10.0
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
+	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
@@ -70,7 +73,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/sijms/go-ora v0.0.0-20210325120518-15015e6bf592
+	github.com/sijms/go-ora v0.0.0-20210330204626-a5397c596024
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -86,17 +89,14 @@ require (
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	go.mongodb.org/mongo-driver v1.5.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210326220855-61e056675ecf // indirect
-	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
-	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
+	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
+	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
+	golang.org/x/sys v0.0.0-20210402192133-700132347e07 // indirect
+	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	google.golang.org/api v0.43.0 // indirect
-	google.golang.org/genproto v0.0.0-20210325224202-eed09b1b5210 // indirect
-	google.golang.org/grpc v1.36.1 // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
 	modernc.org/ccgo/v3 v3.9.1 // indirect
