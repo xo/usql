@@ -6,17 +6,18 @@ import (
 
 // queryMap is the map of SQL prefixes use as queries.
 var queryMap = map[string]bool{
-	"WITH":     true,
-	"PRAGMA":   true,
-	"EXPLAIN":  true, // show the execution plan of a statement
-	"DESCRIBE": true, // describe (mysql)
-	"DESC":     true, // describe (mysql)
-	"FETCH":    true, // retrieve rows from a query using a cursor
-	"SELECT":   true, // retrieve rows from a table or view
-	"SHOW":     true, // show the value of a run-time parameter
-	"VALUES":   true, // compute a set of rows
-	"LIST":     true, //  list permissions, roles, users [cassandra]
-	"EXEC":     true, // execute a stored procedure that returns rows (not postgres)
+	"WITH":       true,
+	"PRAGMA":     true,
+	"EXPLAIN":    true, // show the execution plan of a statement
+	"DESCRIBE":   true, // describe (mysql)
+	"DESC":       true, // describe (mysql)
+	"FETCH":      true, // retrieve rows from a query using a cursor
+	"SELECT":     true, // retrieve rows from a table or view
+	"SHOW":       true, // show the value of a run-time parameter
+	"ADMIN SHOW": true,
+	"VALUES":     true, // compute a set of rows
+	"LIST":       true, // list permissions, roles, users (cassandra])
+	"EXEC":       true, // execute a stored procedure that returns rows (not postgres)
 }
 
 // execMap is the map of SQL prefixes to execute.
