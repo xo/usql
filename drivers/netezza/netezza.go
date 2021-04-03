@@ -6,7 +6,7 @@ package netezza
 import (
 	"io"
 
-	"github.com/IBM/nzgo" // DRIVER: netezza
+	"github.com/IBM/nzgo" // DRIVER: nzgo
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"

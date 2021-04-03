@@ -62,6 +62,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/mithrandie/csvq v1.15.0 // indirect
+	github.com/mithrandie/csvq-driver v1.4.1
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/nakagami/firebirdsql v0.9.0
@@ -83,7 +85,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.1 // indirect
-	github.com/xo/dburl v0.5.0
+	github.com/xo/dburl v0.6.0
 	github.com/xo/tblfmt v0.4.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5

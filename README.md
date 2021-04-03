@@ -231,6 +231,7 @@ supports:
 | ClickHouse (clickhouse)          | ch                                       |
 | Couchbase (n1ql)                 | n1, couchbase                            |
 | Cznic QL (ql)                    | ql, cznic, cznicql                       |
+| CSVQ (csvq)                      | csv, tsv, json                           |
 | Firebird SQL (firebirdsql)       | fb, firebird                             |
 | Genji (genji)                    | gj                                       |
 | Google BigQuery (bigquery)       | bq                                       |
@@ -278,6 +279,7 @@ associated Go build tag:
 | ClickHouse           | clickhouse    | [github.com/kshvakov/clickhouse][d-clickhouse]                        |
 | Couchbase            | couchbase     | [github.com/couchbase/go_n1ql][d-couchbase]                           |
 | Cznic QL             | ql            | [modernc.org/ql][d-ql]                                                |
+| CSVQ                 | csvq          | [github.com/mithrandie/csqv][d-csvq]                                  |
 | Firebird SQL         | firebird      | [github.com/nakagami/firebirdsql][d-firebird]                         |
 | Genji                | genji         | [github.com/genjidb/genji/sql/driver][d-genji]                        |
 | Google BigQuery      | bigquery      | [gorm.io/driver/bigquery/driver][d-bigquery]                          |
@@ -896,6 +898,7 @@ For more technical details, see [CONTRIBUTING.md](https://github.com/xo/usql/blo
 [d-clickhouse]: https://github.com/kshvakov/clickhouse
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
 [d-couchbase]: https://github.com/couchbase/go_n1ql
+[d-csvq]: https://github.com/mithrandie/csvq
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-genji]: https://github.com/genjidb/genji
 [d-godror]: https://github.com/godror/godror
