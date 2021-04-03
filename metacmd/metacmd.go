@@ -58,10 +58,8 @@ const (
 	Print
 	// Reset is the reset query buffer meta command (\r, \reset).
 	Reset
-	// Echo is the echo meta command (\echo).
+	// Echo is the echo meta command (\echo, \warn, \qecho).
 	Echo
-	// Qecho is the qecho meta command (\qecho).
-	Qecho
 	// Write is the write meta command (\w).
 	Write
 	// ChangeDir is the system change directory meta command (\cd).

@@ -167,13 +167,13 @@ func init() {
 		Exec: {
 			Section: SectionGeneral,
 			Name:    "g",
-			Desc:    "execute query (and send results to file or |pipe),[FILE] or ;",
+			Desc:    "execute query (and send results to file or |pipe),[(OPTIONS)] [FILE] or ;",
 			Aliases: map[string]string{
 				"gexec":        "execute query and execute each value of the result",
 				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
-				"gx":           `as \g, but forces expanded output mode,`,
-				"crosstabview": "execute query and display results in crosstab,[COLUMNS]",
-				"watch":        "execute query every specified interval,[DURATION]",
+				"gx":           `as \g, but forces expanded output mode,[(OPTIONS)] [FILE]`,
+				"crosstabview": "execute query and display results in crosstab,[(OPTIONS)] [COLUMNS]",
+				"watch":        "execute query every specified interval,[(OPTIONS)] [DURATION]",
 			},
 			Process: func(p *Params) error {
 				p.Option.Exec = ExecOnly
@@ -314,30 +314,36 @@ func init() {
 		Echo: {
 			Section: SectionInputOutput,
 			Name:    "echo",
-			Desc:    "write string to standard output,[STRING]",
-			Process: func(p *Params) error {
-				vals, err := p.GetAll(true)
-				if err != nil {
-					return err
-				}
-				fmt.Fprintln(p.Handler.IO().Stdout(), strings.Join(vals, " "))
-				return nil
+			Desc:    "write string to standard output (-n for no newline),[-n] [STRING]",
+			Aliases: map[string]string{
+				"qecho": "write string to \\o output stream (-n for no newline),[-n] [STRING]",
+				"warn":  "write string to standard error (-n for no newline),[-n] [STRING]",
 			},
-		},
-		Qecho: {
-			Section: SectionInputOutput,
-			Name:    "qecho",
-			Desc:    "write string to \\o output stream,[STRING]",
 			Process: func(p *Params) error {
-				vals, err := p.GetAll(true)
+				nl := "\n"
+				var vals []string
+				ok, n, err := p.GetOptional(true)
 				if err != nil {
 					return err
 				}
-				var out io.Writer = p.Handler.GetOutput()
-				if out == nil {
-					out = p.Handler.IO().Stdout()
+				if ok && n == "n" {
+					nl = ""
+				} else if ok {
+					vals = append(vals, "-"+n)
+				} else {
+					vals = append(vals, n)
 				}
-				fmt.Fprintln(out, strings.Join(vals, " "))
+				v, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				out := io.Writer(p.Handler.IO().Stdout())
+				if o := p.Handler.GetOutput(); p.Name == "qecho" && o != nil {
+					out = o
+				} else if p.Name == "warn" {
+					out = p.Handler.IO().Stderr()
+				}
+				fmt.Fprint(out, strings.Join(append(vals, v...), " ")+nl)
 				return nil
 			},
 		},

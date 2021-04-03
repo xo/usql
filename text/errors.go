@@ -59,4 +59,6 @@ var (
 	ErrInvalidFormatOption = errors.New("invalid format option")
 	// ErrInvalidWatchDuration is the invalid watch duration error.
 	ErrInvalidWatchDuration = errors.New("invalid watch duration")
+	// ErrUnableToNormalizeURL is the unable to normalize URL error.
+	ErrUnableToNormalizeURL = errors.New("unable to normalize URL")
 )
