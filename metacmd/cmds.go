@@ -694,8 +694,7 @@ func init() {
 				"l[+]":   "list databases",
 			},
 			Process: func(p *Params) error {
-				opts := p.Handler.ReaderOptions()
-				m, err := drivers.NewMetadataWriter(p.Handler.URL(), p.Handler.DB(), p.Handler.IO().Stdout(), opts...)
+				m, err := p.Handler.MetadataWriter()
 				if err != nil {
 					return err
 				}

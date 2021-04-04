@@ -1153,9 +1153,12 @@ func (h *Handler) Include(path string, relative bool) error {
 	return err
 }
 
-// ReaderOptions returns default reader options.
-func (h *Handler) ReaderOptions() []metadata.ReaderOption {
-	opts := []metadata.ReaderOption{}
+// MetadataWriter loads the metadata writer for the
+func (h *Handler) MetadataWriter() (metadata.Writer, error) {
+	if h.db == nil {
+		return nil, text.ErrNotConnected
+	}
+	var opts []metadata.ReaderOption
 	envs := env.All()
 	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
 		if envs["ECHO_HIDDEN"] == "noexec" {
@@ -1167,7 +1170,7 @@ func (h *Handler) ReaderOptions() []metadata.ReaderOption {
 			metadata.WithTimeout(30*time.Second),
 		)
 	}
-	return opts
+	return drivers.NewMetadataWriter(h.u, h.db, h.l.Stdout(), opts...)
 }
 
 // GetOutput gets the output writer.
