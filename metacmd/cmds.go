@@ -165,7 +165,7 @@ func init() {
 			},
 		},
 		Exec: {
-			Section: SectionGeneral,
+			Section: SectionQueryExecute,
 			Name:    "g",
 			Desc:    "execute query (and send results to file or |pipe),[(OPTIONS)] [FILE] or ;",
 			Aliases: map[string]string{

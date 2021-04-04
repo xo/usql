@@ -13,8 +13,9 @@ type Section string
 // Meta command section types.
 const (
 	SectionGeneral         Section = "General"
-	SectionHelp            Section = "Help"
+	SectionQueryExecute    Section = "Query Execute"
 	SectionQueryBuffer     Section = "Query Buffer"
+	SectionHelp            Section = "Help"
 	SectionTransaction     Section = "Transaction"
 	SectionInputOutput     Section = "Input/Output"
 	SectionInformational   Section = "Informational"
@@ -32,7 +33,7 @@ func (s Section) String() string {
 
 // SectionOrder is the order of sections to display via Listing.
 var SectionOrder = []Section{
-	SectionGeneral, SectionHelp, SectionQueryBuffer,
+	SectionGeneral, SectionQueryExecute, SectionQueryBuffer, SectionHelp,
 	SectionInputOutput, SectionInformational, SectionFormatting,
 	SectionTransaction,
 	SectionConnection, SectionOperatingSystem, SectionVariables,
