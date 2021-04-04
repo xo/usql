@@ -566,78 +566,83 @@ Type "help" for help.
 
 (not connected)=> \?
 General
-  \copyright                      show usql usage and distribution terms
-  \drivers                        display information about available database drivers
-  \gexec                          execute query and execute each value of the result
-  \g [FILE] or ;                  execute query (and send results to file or |pipe)
-  \gset [PREFIX]                  execute query and store results in usql variables
-  \gx                             as \g, but forces expanded output mode
-  \q                              quit usql
-  \watch [SEC]                    execute query every SEC seconds
+  \q                                   quit usql
+  \copyright                           show usql usage and distribution terms
+  \drivers                             display information about available database drivers
 
-Help
-  \? [commands]                   show help on backslash commands
-  \? options                      show help on usql command-line options
-  \? variables                    show help on special variables
+Query Execute
+  \g [(OPTIONS)] [FILE] or ;           execute query (and send results to file or |pipe)
+  \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
+  \G [(OPTIONS)] [FILE]                as \g, but forces vertical output mode
+  \gexec                               execute query and execute each value of the result
+  \gset [PREFIX]                       execute query and store results in usql variables
+  \gx [(OPTIONS)] [FILE]               as \g, but forces expanded output mode
+  \watch [(OPTIONS)] [DURATION]        execute query every specified interval
 
 Query Buffer
-  \e [FILE] [LINE]                edit the query buffer (or file) with external editor
-  \p                              show the contents of the query buffer
-  \raw                            show the raw (non-interpolated) contents of the query buffer
-  \r                              reset (clear) the query buffer
-  \w FILE                         write query buffer to file
+  \e [FILE] [LINE]                     edit the query buffer (or file) with external editor
+  \p                                   show the contents of the query buffer
+  \raw                                 show the raw (non-interpolated) contents of the query buffer
+  \r                                   reset (clear) the query buffer
+  \w FILE                              write query buffer to file
+
+Help
+  \? [commands]                        show help on backslash commands
+  \? options                           show help on usql command-line options
+  \? variables                         show help on special variables
 
 Input/Output
-  \echo [STRING]                  write string to standard output
-  \i FILE                         execute commands from file
-  \ir FILE                        as \i, but relative to location of current script
-  \o [FILE]                       send all query results to file or |pipe
-  \qecho [STRING]                 write string to \o output stream
+  \echo [-n] [STRING]                  write string to standard output (-n for no newline)
+  \qecho [-n] [STRING]                 write string to \o output stream (-n for no newline)
+  \warn [-n] [STRING]                  write string to standard error (-n for no newline)
+  \o [FILE]                            send all query results to file or |pipe
+  \i FILE                              execute commands from file
+  \ir FILE                             as \i, but relative to location of current script
 
 Informational
-  \d[S+] [NAME]                   list tables, views, and sequences or describe table, view, sequence, or index
-  \da[S+] [PATTERN]               list aggregates
-  \df[S+] [PATTERN]               list functions
-  \di[S+] [PATTERN]               list indexes
-  \dm[S+] [PATTERN]               list materialized views
-  \dn[S+] [PATTERN]               list schemas
-  \ds[S+] [PATTERN]               list sequences
-  \dt[S+] [PATTERN]               list tables
-  \dv[S+] [PATTERN]               list views
-  \l[+]                           list databases
+  \d[S+] [NAME]                        list tables, views, and sequences or describe table, view, sequence, or index
+  \da[S+] [PATTERN]                    list aggregates
+  \df[S+] [PATTERN]                    list functions
+  \di[S+] [PATTERN]                    list indexes
+  \dm[S+] [PATTERN]                    list materialized views
+  \dn[S+] [PATTERN]                    list schemas
+  \ds[S+] [PATTERN]                    list sequences
+  \dt[S+] [PATTERN]                    list tables
+  \dv[S+] [PATTERN]                    list views
+  \l[+]                                list databases
 
 Formatting
-  \pset [NAME [VALUE]]            set table output option
-  \a                              toggle between unaligned and aligned output mode
-  \C [STRING]                     set table title, or unset if none
-  \f [STRING]                     show or set field separator for unaligned query output
-  \H                              toggle HTML output mode
-  \T [STRING]                     set HTML <table> tag attributes, or unset if none
-  \t [on|off]                     show only rows
-  \x [on|off|auto]                toggle expanded output
+  \pset [NAME [VALUE]]                 set table output option
+  \a                                   toggle between unaligned and aligned output mode
+  \C [STRING]                          set table title, or unset if none
+  \f [STRING]                          show or set field separator for unaligned query output
+  \H                                   toggle HTML output mode
+  \T [STRING]                          set HTML <table> tag attributes, or unset if none
+  \t [on|off]                          show only rows
+  \x [on|off|auto]                     toggle expanded output
 
 Transaction
-  \begin                          begin a transaction
-  \commit                         commit current transaction
-  \rollback                       rollback (abort) current transaction
+  \begin                               begin a transaction
+  \commit                              commit current transaction
+  \rollback                            rollback (abort) current transaction
 
 Connection
-  \c URL                          connect to database with url
-  \c DRIVER PARAMS...             connect to database with SQL driver and parameters
-  \Z                              close database connection
-  \password [USERNAME]            change the password for a user
-  \conninfo                       display information about the current database connection
+  \c URL                               connect to database with url
+  \c DRIVER PARAMS...                  connect to database with SQL driver and parameters
+  \Z                                   close database connection
+  \password [USERNAME]                 change the password for a user
+  \conninfo                            display information about the current database connection
 
 Operating System
-  \cd [DIR]                       change the current working directory
-  \setenv NAME [VALUE]            set or unset environment variable
-  \! [COMMAND]                    execute command in shell or start interactive shell
-  \timing [on|off]                toggle timing of commands
+  \cd [DIR]                            change the current working directory
+  \setenv NAME [VALUE]                 set or unset environment variable
+  \! [COMMAND]                         execute command in shell or start interactive shell
+  \timing [on|off]                     toggle timing of commands
 
 Variables
-  \prompt [-TYPE] [PROMPT] <VAR>  prompt user to set variable
-  \set [NAME [VALUE]]             set internal variable, or list all if no parameters
-  \unset NAME                     unset (delete) internal variable
+  \prompt [-TYPE] <VAR> [PROMPT]       prompt user to set variable
+  \set [NAME [VALUE]]                  set internal variable, or list all if no parameters
+  \unset NAME                          unset (delete) internal variable
 ```
 
 ## Features and Compatibility
