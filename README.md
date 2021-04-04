@@ -340,17 +340,21 @@ Options:
   -v, --set=, --variable=NAME=VALUE ...
                                set variable NAME to VALUE
   -P, --pset=VAR[=ARG] ...     set printing option VAR to ARG (see \pset command)
+  -F, --field-separator=FIELD-SEPARATOR ...
+                               field separator for unaligned output (default, "|")
+  -R, --record-separator=RECORD-SEPARATOR ...
+                               record separator for unaligned output (default, \n)
+  -T, --table-attr=TABLE-ATTR ...
+                               set HTML table tag attributes (e.g., width, border)
   -A, --no-align               unaligned table output mode
-  -F, --field-separator=TEXT   field separator for unaligned output (default, "|")
   -H, --html                   HTML table output mode
-  -R, --record-separator=TEXT  record separator for unaligned output (default, \n)
   -t, --tuples-only            print rows only
-  -T, --table-attr=TEXT        set HTML table tag attributes (e.g., width, border)
   -x, --expanded               turn on expanded table output
   -z, --field-separator-zero   set field separator for unaligned output to zero byte
   -0, --record-separator-zero  set record separator for unaligned output to zero byte
   -J, --json                   JSON output mode
   -C, --csv                    CSV output mode
+  -G, --vertical               vertical output mode
   -V, --version                display version and exit
 ```
 
