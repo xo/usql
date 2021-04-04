@@ -118,6 +118,7 @@ func NewArgs() *Args {
 		pc("record-separator-zero", '0', "set record separator for unaligned output to zero byte", "recordsep=''", "recordsep_zero=on"),
 		pc("json", 'J', "JSON output mode", "format=json"),
 		pc("csv", 'C', "CSV output mode", "format=csv"),
+		pc("vertical", 'G', "vertical output mode", "format=vertical"),
 	} {
 		// make copy of values for the callback closure (see https://stackoverflow.com/q/26692844)
 		vals := make([]string, len(c.vals))

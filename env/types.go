@@ -162,7 +162,7 @@ func Pwrite(w io.Writer) error {
 }
 
 var (
-	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json)$`)
+	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json|vertical)$`)
 	linestlyeRE = regexp.MustCompile(`^(ascii|old-ascii|unicode)$`)
 	borderRE    = regexp.MustCompile(`^(single|double)$`)
 )

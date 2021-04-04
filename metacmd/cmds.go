@@ -172,6 +172,7 @@ func init() {
 				"gexec":        "execute query and execute each value of the result",
 				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
 				"gx":           `as \g, but forces expanded output mode,[(OPTIONS)] [FILE]`,
+				"G":            `as \g, but forces vertical output mode,[(OPTIONS)] [FILE]`,
 				"crosstabview": "execute query and display results in crosstab,[(OPTIONS)] [COLUMNS]",
 				"watch":        "execute query every specified interval,[(OPTIONS)] [DURATION]",
 			},
@@ -193,6 +194,13 @@ func init() {
 						return err
 					}
 					p.Option.ParseParams(params, "prefix")
+				case "G":
+					params, err := p.GetAll(true)
+					if err != nil {
+						return err
+					}
+					p.Option.ParseParams(params, "pipe")
+					p.Option.Params["format"] = "vertical"
 				case "gx":
 					params, err := p.GetAll(true)
 					if err != nil {
