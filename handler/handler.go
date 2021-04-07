@@ -516,7 +516,6 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 func (h *Handler) Open(params ...string) error {
 	// build a list of all possible connStrings for the completer
 	connStrings := h.connStrings()
-
 	if len(params) == 0 || params[0] == "" {
 		h.l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(connStrings)))
 		return nil
@@ -528,7 +527,7 @@ func (h *Handler) Open(params ...string) error {
 	if len(params) < 2 {
 		urlstr := params[0]
 		// parse dsn
-		h.u, err = dburl.Parse(urlstr)
+		u, err := dburl.Parse(urlstr)
 		switch {
 		case err == dburl.ErrInvalidDatabaseScheme:
 			var fi os.FileInfo
@@ -546,6 +545,7 @@ func (h *Handler) Open(params ...string) error {
 		case err != nil:
 			return err
 		}
+		h.u = u
 		// force parameters
 		h.forceParams(h.u)
 	} else {
