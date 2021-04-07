@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql.png" width="345" height="120">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql.png" height="120">
 </p>
 
 <p align="center">
