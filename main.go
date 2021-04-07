@@ -4,6 +4,7 @@ package main
 //go:generate ./gen-license.sh
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -119,7 +120,7 @@ func run(args *Args, u *user.User) error {
 		}
 	}
 	// open dsn
-	if err = h.Open(dsn); err != nil {
+	if err = h.Open(context.Background(), dsn); err != nil {
 		return err
 	}
 	// start transaction

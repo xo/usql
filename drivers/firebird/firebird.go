@@ -4,6 +4,8 @@
 package firebird
 
 import (
+	"context"
+
 	_ "github.com/nakagami/firebirdsql" // DRIVER: firebirdsql
 	"github.com/xo/usql/drivers"
 )
@@ -11,9 +13,12 @@ import (
 func init() {
 	drivers.Register("firebirdsql", drivers.Driver{
 		AllowMultilineComments: true,
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') FROM rdb$database;`).Scan(&ver)
+			err := db.QueryRowContext(
+				ctx,
+				`SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') FROM rdb$database;`,
+			).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

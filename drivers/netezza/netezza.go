@@ -4,6 +4,7 @@
 package netezza
 
 import (
+	"context"
 	"io"
 
 	"github.com/IBM/nzgo" // DRIVER: nzgo
@@ -33,9 +34,9 @@ func init() {
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		LexerName:              "postgres",
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT version()`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SELECT version()`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

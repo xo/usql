@@ -5,6 +5,7 @@
 package moderncsqlite
 
 import (
+	"context"
 	"database/sql"
 	"strconv"
 	"strings"
@@ -23,9 +24,9 @@ func init() {
 				return sql.Open("sqlite", params)
 			}, nil
 		},
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT sqlite_version()`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

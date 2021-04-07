@@ -4,6 +4,7 @@
 package postgres
 
 import (
+	"context"
 	"io"
 
 	"github.com/lib/pq" // DRIVER: postgres
@@ -41,11 +42,11 @@ func init() {
 				drivers.ForceQueryParameters([]string{"sslmode", "disable"})(u)
 			}
 		},
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// numeric version
 			// SHOW server_version_num;
 			var ver string
-			err := db.QueryRow(`SHOW server_version`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SHOW server_version`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

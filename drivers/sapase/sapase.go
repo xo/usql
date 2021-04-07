@@ -4,6 +4,7 @@
 package sapase
 
 import (
+	"context"
 	"errors"
 	"regexp"
 	"strconv"
@@ -19,9 +20,9 @@ func init() {
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
 		LexerName:               "tsql",
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT @@version`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SELECT @@version`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}

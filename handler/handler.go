@@ -513,7 +513,7 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 // appears to be a file on disk, then an attempt will be made to open it with
 // an appropriate driver (mysql, postgres, sqlite3) depending on the type (unix
 // domain socket, directory, or regular file, respectively).
-func (h *Handler) Open(params ...string) error {
+func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// build a list of all possible connStrings for the completer
 	connStrings := h.connStrings()
 	if len(params) == 0 || params[0] == "" {
@@ -536,12 +536,12 @@ func (h *Handler) Open(params ...string) error {
 			}
 			switch {
 			case fi.IsDir():
-				return h.Open("postgres+unix:" + urlstr)
+				return h.Open(ctx, "postgres+unix:"+urlstr)
 			case fi.Mode()&os.ModeSocket != 0:
-				return h.Open("mysql+unix:" + urlstr)
+				return h.Open(ctx, "mysql+unix:"+urlstr)
 			}
 			// it is a file, so reattempt to open it with sqlite3
-			return h.Open("sqlite3:" + urlstr)
+			return h.Open(ctx, "sqlite3:"+urlstr)
 		case err != nil:
 			return err
 		}
@@ -564,9 +564,9 @@ func (h *Handler) Open(params ...string) error {
 	drivers.ConfigStmt(h.u, h.buf)
 	// force error/check connection
 	if err == nil {
-		if err = drivers.Ping(h.u, h.db); err == nil {
+		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
 			h.l.Completer(drivers.NewCompleter(h.u, h.db, completer.WithConnStrings(connStrings)))
-			return h.Version()
+			return h.Version(ctx)
 		}
 	}
 	// bail without getting password
@@ -585,7 +585,7 @@ func (h *Handler) Open(params ...string) error {
 		return err
 	}
 	// reconnect
-	return h.Open(dsn)
+	return h.Open(ctx, dsn)
 }
 
 func (h *Handler) connStrings() []string {
@@ -779,14 +779,14 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 }
 
 // Version prints the database version information after a successful connection.
-func (h *Handler) Version() error {
+func (h *Handler) Version(ctx context.Context) error {
 	if env.All()["SHOW_HOST_INFORMATION"] != "true" {
 		return nil
 	}
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-	ver, err := drivers.Version(h.u, h.DB())
+	ver, err := drivers.Version(ctx, h.u, h.DB())
 	if err != nil {
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
 	}

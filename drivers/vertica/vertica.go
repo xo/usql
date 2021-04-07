@@ -4,6 +4,7 @@
 package vertica
 
 import (
+	"context"
 	"os"
 	"regexp"
 	"strings"
@@ -22,9 +23,9 @@ func init() {
 	drivers.Register("vertica", drivers.Driver{
 		AllowDollar:            true,
 		AllowMultilineComments: true,
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			if err := db.QueryRow(`SELECT version()`).Scan(&ver); err != nil {
+			if err := db.QueryRowContext(ctx, `SELECT version()`).Scan(&ver); err != nil {
 				return "", err
 			}
 			return ver, nil
