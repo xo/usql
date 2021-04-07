@@ -59,9 +59,9 @@ type Driver struct {
 	// Open will be used by Open if defined.
 	Open func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
 	// Version will be used by Version if defined.
-	Version func(DB) (string, error)
+	Version func(context.Context, DB) (string, error)
 	// User will be used by User if defined.
-	User func(DB) (string, error)
+	User func(context.Context, DB) (string, error)
 	// ChangePassword will be used by ChangePassword if defined.
 	ChangePassword func(DB, string, string, string) error
 	// IsPasswordErr will be used by IsPasswordErr if defined.
@@ -197,13 +197,13 @@ func ConfigStmt(u *dburl.URL, s *stmt.Stmt) {
 
 // Version returns information about the database connection for the specified
 // URL's driver.
-func Version(u *dburl.URL, db DB) (string, error) {
+func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.Version != nil {
-		ver, err := d.Version(db)
+		ver, err := d.Version(ctx, db)
 		return ver, WrapErr(u.Driver, err)
 	}
 	var ver string
-	err := db.QueryRow(`select version();`).Scan(&ver)
+	err := db.QueryRowContext(ctx, `SELECT version();`).Scan(&ver)
 	if err != nil || ver == "" {
 		ver = "<unknown>"
 	}
@@ -211,13 +211,13 @@ func Version(u *dburl.URL, db DB) (string, error) {
 }
 
 // User returns the current database user for the specified URL's driver.
-func User(u *dburl.URL, db DB) (string, error) {
+func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 	if d, ok := drivers[u.Driver]; ok && d.User != nil {
-		user, err := d.User(db)
+		user, err := d.User(ctx, db)
 		return user, WrapErr(u.Driver, err)
 	}
 	var user string
-	_ = db.QueryRow(`select current_user`).Scan(&user)
+	_ = db.QueryRowContext(ctx, `SELECT current_user`).Scan(&user)
 	return user, nil
 }
 
@@ -269,7 +269,7 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
 		if user == "" {
 			var err error
-			if user, err = User(u, db); err != nil {
+			if user, err = User(context.Background(), u, db); err != nil {
 				return "", err
 			}
 		}
@@ -394,8 +394,8 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 }
 
 // Ping pings the database for a specified URL's driver.
-func Ping(u *dburl.URL, db *sql.DB) error {
-	return WrapErr(u.Driver, db.Ping())
+func Ping(ctx context.Context, u *dburl.URL, db *sql.DB) error {
+	return WrapErr(u.Driver, db.PingContext(ctx))
 }
 
 // Lexer returns the syntax lexer for a specified URL's driver.

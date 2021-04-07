@@ -4,6 +4,7 @@
 package sqlserver
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strconv"
@@ -48,9 +49,10 @@ func init() {
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
 		LexerName:               "tsql",
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver, level, edition string
-			err := db.QueryRow(
+			err := db.QueryRowContext(
+				ctx,
 				`SELECT SERVERPROPERTY('productversion'), SERVERPROPERTY ('productlevel'), SERVERPROPERTY ('edition')`,
 			).Scan(&ver, &level, &edition)
 			if err != nil {

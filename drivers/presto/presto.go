@@ -4,6 +4,7 @@
 package presto
 
 import (
+	"context"
 	"regexp"
 
 	_ "github.com/prestodb/presto-go-client/presto" // DRIVER: presto
@@ -19,9 +20,10 @@ func init() {
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil
 		},
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(
+			err := db.QueryRowContext(
+				ctx,
 				`SELECT node_version FROM system.runtime.nodes LIMIT 1`,
 			).Scan(&ver)
 			if err != nil {

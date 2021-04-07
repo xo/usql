@@ -4,6 +4,7 @@
 package cassandra
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -80,9 +81,10 @@ func init() {
 			gocql.Logger, cql.CqlDriver.Logger = l, log.New(l, "", 0)
 			return sql.Open, nil
 		},
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var release, protocol, cql string
-			err := db.QueryRow(
+			err := db.QueryRowContext(
+				ctx,
 				`SELECT release_version, cql_version, native_protocol_version FROM system.local WHERE key = 'local'`,
 			).Scan(&release, &cql, &protocol)
 			if err != nil {

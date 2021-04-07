@@ -2,10 +2,12 @@ package metacmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
@@ -130,7 +132,10 @@ func init() {
 				if err != nil {
 					return err
 				}
-				return p.Handler.Open(vals...)
+				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+				err = p.Handler.Open(ctx, vals...)
+				stop()
+				return err
 			},
 		},
 		Disconnect: {

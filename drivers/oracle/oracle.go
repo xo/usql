@@ -4,6 +4,7 @@
 package oracle
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -36,17 +37,17 @@ func init() {
 				}
 			}
 		},
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SELECT version FROM v$instance`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SELECT version FROM v$instance`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}
 			return "Oracle Database " + ver, nil
 		},
-		User: func(db drivers.DB) (string, error) {
+		User: func(ctx context.Context, db drivers.DB) (string, error) {
 			var user string
-			err := db.QueryRow(`SELECT user FROM dual`).Scan(&user)
+			err := db.QueryRowContext(ctx, `SELECT user FROM dual`).Scan(&user)
 			return user, err
 		},
 		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {

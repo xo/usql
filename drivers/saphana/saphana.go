@@ -4,6 +4,7 @@
 package saphana
 
 import (
+	"context"
 	"strconv"
 
 	_ "github.com/SAP/go-hdb/driver" // DRIVER: hdb
@@ -13,9 +14,9 @@ import (
 func init() {
 	drivers.Register("hdb", drivers.Driver{
 		AllowMultilineComments: true,
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			if err := db.QueryRow(`SELECT version FROM m_database`).Scan(&ver); err != nil {
+			if err := db.QueryRowContext(ctx, `SELECT version FROM m_database`).Scan(&ver); err != nil {
 				return "", err
 			}
 			return "SAP HANA " + ver, nil

@@ -1,6 +1,7 @@
 package metacmd
 
 import (
+	"context"
 	"io"
 	"os/user"
 	"strings"
@@ -34,7 +35,7 @@ type Handler interface {
 	// Reset resets the last and current query buffer.
 	Reset([]rune)
 	// Open opens a database connection.
-	Open(...string) error
+	Open(context.Context, ...string) error
 	// Close closes the current database connection.
 	Close() error
 	// ChangePassword changes the password for a user.

@@ -4,6 +4,7 @@
 package pgx
 
 import (
+	"context"
 	"errors"
 
 	"github.com/jackc/pgconn"
@@ -16,9 +17,9 @@ func init() {
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		LexerName:              "postgres",
-		Version: func(db drivers.DB) (string, error) {
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRow(`SHOW server_version`).Scan(&ver)
+			err := db.QueryRowContext(ctx, `SHOW server_version`).Scan(&ver)
 			if err != nil {
 				return "", err
 			}
