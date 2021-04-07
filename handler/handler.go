@@ -1046,11 +1046,13 @@ func (h *Handler) scan(q *sql.Rows, clen int, tfmt string) ([]string, error) {
 func (h *Handler) exec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, qstr string) error {
 	res, err := h.DB().ExecContext(ctx, qstr)
 	if err != nil {
+		_ = env.Set("ROW_COUNT", "0")
 		return err
 	}
 	// get affected
 	count, err := drivers.RowsAffected(h.u, res)
 	if err != nil {
+		_ = env.Set("ROW_COUNT", "0")
 		return err
 	}
 	// print name
@@ -1060,7 +1062,7 @@ func (h *Handler) exec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, 
 		fmt.Fprint(w, " ", count)
 	}
 	fmt.Fprintln(w)
-	return nil
+	return env.Set("ROW_COUNT", strconv.FormatInt(count, 10))
 }
 
 // Begin begins a transaction.
