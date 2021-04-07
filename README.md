@@ -1,23 +1,22 @@
-# usql [![Go Reference][goref-usql-status]][goref-usql]
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql.png" width="345" height="120">
+</p>
 
-`usql` is a universal command-line interface for PostgreSQL, MySQL,
-Oracle Database, SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
+<p align="center">
+  <a href="#installing" title="Installing">Installing</a> |
+  <a href="#building" title="Building">Building</a> |
+  <a href="#using" title="Using">Using</a> |
+  <a href="#database-support" title="Database Support">Database Support</a> |
+  <a href="#features-and-compatibility" title="Features and Compatibility">Features and Compatibility</a> |
+  <a href="https://github.com/xo/usql/releases" title="Releases">Releases</a> |
+  <a href="#contributing" title="Contributing">Contributing</a>
+</p>
+
+<br/>
+
+`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle
+Database, SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
 including NoSQL and non-relational databases!
-
-[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
-[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
-
-[Installing][] | [Building][] | [Using][] | [Database Support][] | [Features and Compatibility][] | [Releases][] | [Contributing][]
-
-[Installing]: #installing (Installing)
-[Building]: #building (Building)
-[Using]: #using (Using)
-[Database Support]: #database-support (Database Support)
-[Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
-[Releases]: https://github.com/xo/usql/releases (Releases)
-[Contributing]: #contributing (Contributing)
-
-## Overview
 
 `usql` provides a simple way to work with [SQL and NoSQL databases][Database Support]
 via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
@@ -29,6 +28,19 @@ Database administrators and developers that would prefer to work with a tool
 like `psql` with non-PostgreSQL databases, will find `usql` intuitive,
 easy-to-use, and a great replacement for the command-line clients/tools
 for other databases.
+
+[![Go Reference][goref-usql-status]][goref-usql]
+
+[Installing]: #installing (Installing)
+[Building]: #building (Building)
+[Using]: #using (Using)
+[Database Support]: #database-support (Database Support)
+[Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
+[Releases]: https://github.com/xo/usql/releases (Releases)
+[Contributing]: #contributing (Contributing)
+
+[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
+[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
 
 ## Installing
 
@@ -101,17 +113,18 @@ scoop install usql
 `usql` can be installed in the usual Go fashion:
 
 ```sh
-# install usql with basic database support (includes PostgreSQL, Oracle Database, MySQL, MS SQL, and SQLite3 drivers)
+# install usql with basic database support
+# includes PostgreSQL, Oracle Database, MySQL, MS SQL, and SQLite3 drivers
 $ GO111MODULE=on go get github.com/xo/usql
 ```
 
 Support for additional databases can be specified with [build tags][Database Support]:
 
 ```sh
-# install usql with most drivers (excludes drivers requiring CGO)
+# install usql with most drivers (excludes unsupported drivers)
 $ GO111MODULE=on go get -tags most github.com/xo/usql
 
-# install usql with all drivers (includes drivers requiring CGO, namely Oracle and ODBC drivers)
+# install usql with all drivers
 $ GO111MODULE=on go get -tags all github.com/xo/usql
 ```
 
@@ -127,10 +140,10 @@ drivers, respectively:
 # install all drivers
 $ GO111MODULE=on go get -tags all github.com/xo/usql
 
-# install with most drivers (same as all but excludes Oracle/ODBC)
+# install with most drivers
 $ GO111MODULE=on go get -tags most github.com/xo/usql
 
-# install with base drivers and Oracle Database (OCI)/ODBC support
+# install with base drivers and additional support for Oracle Database and ODBC
 $ GO111MODULE=on go get -tags 'godror odbc' github.com/xo/usql
 ```
 
