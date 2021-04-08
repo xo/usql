@@ -9,10 +9,10 @@ jobs:
       with:
         go-version: 1.16.x
     - name: Install Packages
-      run:
-        - sudo add-apt-repository ppa:duggan/bats --yes
-        - sudo apt-get -qq update
-        - sudo apt-get install -y unixodbc unixodbc-dev bats expect
+      run: |
+        sudo add-apt-repository ppa:duggan/bats --yes
+        sudo apt-get -qq update
+        sudo apt-get install -y unixodbc unixodbc-dev bats expect
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Unit Tests
