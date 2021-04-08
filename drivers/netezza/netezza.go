@@ -25,7 +25,7 @@ func init() {
 			infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 		}),
-		infos.WithSystemSchemas([]string{"definition_schema", "information_schema"}),
+		infos.WithSystemSchemas([]string{"DEFINITION_SCHEMA", "INFORMATION_SCHEMA"}),
 		infos.WithCurrentSchema("CURRENT_SCHEMA"),
 	)
 	drivers.Register("nzgo", drivers.Driver{
