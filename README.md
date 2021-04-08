@@ -29,7 +29,16 @@ like `psql` with non-PostgreSQL databases, will find `usql` intuitive,
 easy-to-use, and a great replacement for the command-line clients/tools
 for other databases.
 
+[![Unit Tests][tblfmt-ci-status]][tblfmt-ci]
 [![Go Reference][goref-usql-status]][goref-usql]
+[![Discord Discussion][discord-status]][discord]
+
+[tblfmt-ci]: https://github.com/xo/tblfmt/actions/workflows/test.yml (Test CI)
+[tblfmt-ci-status]: https://github.com/xo/tblfmt/actions/workflows/test.yml/badge.svg (Test CI)
+[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
+[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
+[discord]: https://discord.gg/yJKEzc7prt (Discord Discussion)
+[discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square (Discord Discussion)
 
 [Installing]: #installing (Installing)
 [Building]: #building (Building)
@@ -38,9 +47,6 @@ for other databases.
 [Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
 [Releases]: https://github.com/xo/usql/releases (Releases)
 [Contributing]: #contributing (Contributing)
-
-[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
-[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
 
 ## Installing
 
