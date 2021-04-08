@@ -1,3 +1,5 @@
+#!/usr/bin/env -S bats -t
+
 @test "run sqlite3 test script" {
   run rm -rf test.db
 

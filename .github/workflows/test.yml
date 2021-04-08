@@ -10,11 +10,8 @@ jobs:
         go-version: 1.16.x
     - name: Install Packages
       run: |
-        sudo apt-get install -y unixodbc unixodbc-dev expect
-    - name: Setup BATS
-      uses: mig4/setup-bats@v1
-      with:
-        bats-version: 1.2.1
+        sudo apt-get -qq update
+        sudo apt-get install -y  build-essential libicu-dev unixodbc unixodbc-dev expect
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Unit Tests
@@ -22,4 +19,8 @@ jobs:
     - name: Build with "most"
       run: ./most.sh -v
     - name: Shell Tests
-      run: bats -t ./contrib/tests.bats
+      run: |
+        rm -f test.db
+        export TERM=xterm-256color
+        ./usql file://test.db -c 'create table author (a text, b text);'
+        ./usql file://test.db -c 'select * from author;'

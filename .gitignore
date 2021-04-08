@@ -10,6 +10,7 @@
 *.csv
 *.db
 *.zip
+*.out
 
 *.sqlite3
 *.sqlite3-journal
