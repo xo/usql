@@ -14,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Unit Tests
-      run: go test -v ./...
+      run: go test -v ./stmt
     - name: Build with "most"
       run: ./most.sh -v
     - name: Shell Tests
