@@ -1,8 +1,7 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.81.0 // indirect
-	cloud.google.com/go/bigquery v1.16.0 // indirect
+	cloud.google.com/go/bigquery v1.17.0 // indirect
 	cloud.google.com/go/spanner v1.17.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
@@ -21,7 +20,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.12 // indirect
+	github.com/aws/aws-sdk-go v1.38.16 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -45,7 +44,6 @@ require (
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
@@ -92,19 +90,20 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
-	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
-	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57 // indirect
-	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/term v0.0.0-20210406210042-72f3dc4e9b72 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+	google.golang.org/api v0.44.0 // indirect
+	google.golang.org/grpc v1.37.0 // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
+	modernc.org/cc/v3 v3.32.2 // indirect
 	modernc.org/ccgo/v3 v3.9.1 // indirect
 	modernc.org/db v1.0.1 // indirect
 	modernc.org/file v1.0.2 // indirect
 	modernc.org/golex v1.0.1 // indirect
-	modernc.org/libc v1.9.2 // indirect
+	modernc.org/libc v1.9.4 // indirect
 	modernc.org/lldb v1.0.1 // indirect
 	modernc.org/ql v1.3.1
 	modernc.org/sqlite v1.10.0
