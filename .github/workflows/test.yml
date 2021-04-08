@@ -13,8 +13,8 @@ jobs:
         sudo apt-get install -y unixodbc unixodbc-dev expect
     - name: Setup BATS
       uses: mig4/setup-bats@v1
-        with:
-          bats-version: 1.2.1
+      with:
+        bats-version: 1.2.1
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Unit Tests
