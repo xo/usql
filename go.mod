@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/spanner v1.17.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
-	github.com/IBM/nzgo v11.1.0+incompatible
+	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/Microsoft/hcsshim v0.8.15 // indirect
