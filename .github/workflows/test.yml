@@ -11,7 +11,7 @@ jobs:
     - name: Install Packages
       run: |
         sudo apt-get -qq update
-        sudo apt-get install -y  build-essential libicu-dev unixodbc unixodbc-dev expect
+        sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Unit Tests
@@ -21,6 +21,4 @@ jobs:
     - name: Shell Tests
       run: |
         rm -f test.db
-        export TERM=xterm-256color
-        ./usql file://test.db -c 'create table author (a text, b text);'
-        ./usql file://test.db -c 'select * from author;'
+        go run testcli.go
