@@ -3,7 +3,7 @@
 \set
 
 \set SYNTAX_HL_FORMAT terminal16m
-\set SNYTAX_HL true
+\set SYNTAX_HL true
 
 help
 
