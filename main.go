@@ -85,7 +85,15 @@ func run(args *Args, u *user.User) error {
 	}
 	for _, v := range args.PVariables {
 		if i := strings.Index(v, "="); i != -1 {
-			if _, err = env.Pset(v[:i], v[i+1:]); err != nil {
+			vv := v[i+1:]
+			if c := vv[0]; c == '\'' || c == '"' {
+				var err error
+				vv, err = env.Dequote(vv, c)
+				if err != nil {
+					return err
+				}
+			}
+			if _, err = env.Pset(v[:i], vv); err != nil {
 				return err
 			}
 		} else {

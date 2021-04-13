@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/xo/usql/text"
@@ -66,7 +67,11 @@ type pset struct {
 }
 
 func (p pset) Set(value string) error {
-	p.vals[0] = fmt.Sprintf(p.vals[0], value[0])
+	for i, v := range p.vals {
+		if strings.ContainsRune(v, '%') {
+			p.vals[i] = fmt.Sprintf(v, value)
+		}
+	}
 	p.args.PVariables = append(p.args.PVariables, p.vals...)
 	return nil
 }
@@ -97,8 +102,8 @@ func NewArgs() *Args {
 	// pset
 	kingpin.Flag("pset", `set printing option VAR to ARG (see \pset command)`).Short('P').PlaceHolder("VAR[=ARG]").StringsVar(&args.PVariables)
 	// pset flags
-	kingpin.Flag("field-separator", `field separator for unaligned output (default, "|")`).Short('F').SetValue(pset{args, []string{"fieldsep=%q", "fieldsep_zero=off"}})
-	kingpin.Flag("record-separator", `record separator for unaligned output (default, \n)`).Short('R').SetValue(pset{args, []string{"recordsep=%q", "recordsep_zero=off"}})
+	kingpin.Flag("field-separator", `field separator for unaligned and CSV output (default "|" and ",")`).Short('F').SetValue(pset{args, []string{"fieldsep=%q", "csv_fieldsep=%q"}})
+	kingpin.Flag("record-separator", `record separator for unaligned and CSV output (default \n)`).Short('R').SetValue(pset{args, []string{"recordsep=%q"}})
 	kingpin.Flag("table-attr", "set HTML table tag attributes (e.g., width, border)").Short('T').SetValue(pset{args, []string{"tableattr=%q"}})
 	type psetconfig struct {
 		long  string
@@ -114,8 +119,8 @@ func NewArgs() *Args {
 		pc("html", 'H', "HTML table output mode", "format=html"),
 		pc("tuples-only", 't', "print rows only", "tuples_only=on"),
 		pc("expanded", 'x', "turn on expanded table output", "expanded=on"),
-		pc("field-separator-zero", 'z', "set field separator for unaligned output to zero byte", "fieldsep=''", "fieldsep_zero=on"),
-		pc("record-separator-zero", '0', "set record separator for unaligned output to zero byte", "recordsep=''", "recordsep_zero=on"),
+		pc("field-separator-zero", 'z', "set field separator for unaligned and CSV output to zero byte", "fieldsep_zero=on"),
+		pc("record-separator-zero", '0', "set record separator for unaligned and CSV output to zero byte", "recordsep_zero=on"),
 		pc("json", 'J', "JSON output mode", "format=json"),
 		pc("csv", 'C', "CSV output mode", "format=csv"),
 		pc("vertical", 'G', "vertical output mode", "format=vertical"),
