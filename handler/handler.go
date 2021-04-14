@@ -530,11 +530,10 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		u, err := dburl.Parse(urlstr)
 		switch {
 		case err == dburl.ErrInvalidDatabaseScheme:
-			var fi os.FileInfo
-			if fi, err = os.Stat(urlstr); err != nil {
-				return err
-			}
+			fi, err := os.Stat(urlstr)
 			switch {
+			case err != nil:
+				return err
 			case fi.IsDir():
 				return h.Open(ctx, "postgres+unix:"+urlstr)
 			case fi.Mode()&os.ModeSocket != 0:
