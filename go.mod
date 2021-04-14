@@ -20,7 +20,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.16 // indirect
+	github.com/aws/aws-sdk-go v1.38.19 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -30,7 +30,7 @@ require (
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
 	github.com/couchbase/gomemcached v0.1.2 // indirect
 	github.com/couchbase/goutils v0.0.0-20210118111533-e33d3ffb5401 // indirect
-	github.com/denisenkom/go-mssqldb v0.9.0
+	github.com/denisenkom/go-mssqldb v0.10.0
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.10.0 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/go-openapi/strfmt v0.20.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2 // indirect
-	github.com/gocql/gocql v0.0.0-20210401103645-80ab1e13e309
+	github.com/gocql/gocql v0.0.0-20210413161705-87a5d7a5ff74
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/sijms/go-ora v0.0.0-20210330204626-a5397c596024
+	github.com/sijms/go-ora v0.0.0-20210409183318-9a2e22fa22b0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -91,23 +91,24 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
+	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
+	golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750 // indirect
 	golang.org/x/term v0.0.0-20210406210042-72f3dc4e9b72 // indirect
-	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/api v0.44.0 // indirect
+	google.golang.org/genproto v0.0.0-20210413151531-c14fb6ef47c3 // indirect
 	google.golang.org/grpc v1.37.0 // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
-	modernc.org/cc/v3 v3.32.2 // indirect
+	modernc.org/cc/v3 v3.32.3 // indirect
 	modernc.org/ccgo/v3 v3.9.1 // indirect
 	modernc.org/db v1.0.1 // indirect
 	modernc.org/file v1.0.2 // indirect
 	modernc.org/golex v1.0.1 // indirect
-	modernc.org/libc v1.9.4 // indirect
 	modernc.org/lldb v1.0.1 // indirect
 	modernc.org/ql v1.3.1
-	modernc.org/sqlite v1.10.0
+	modernc.org/sqlite v1.10.2
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/zappy v1.0.3 // indirect
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
