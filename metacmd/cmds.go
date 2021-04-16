@@ -67,9 +67,7 @@ func init() {
 			Name:    "copyright",
 			Desc:    "show " + text.CommandName + " usage and distribution terms",
 			Process: func(p *Params) error {
-				out := p.Handler.IO().Stdout()
-				fmt.Fprintln(out, text.Copyright)
-				fmt.Fprintln(out)
+				p.Handler.Print(text.Copyright)
 				return nil
 			},
 		},
@@ -78,12 +76,10 @@ func init() {
 			Name:    "conninfo",
 			Desc:    "display information about the current database connection",
 			Process: func(p *Params) error {
-				out := p.Handler.IO().Stdout()
 				if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
-					fmt.Fprintf(out, text.ConnInfo, u.Driver, u.DSN)
-					fmt.Fprintln(out)
+					p.Handler.Print(text.ConnInfo, u.Driver, u.DSN)
 				} else {
-					fmt.Fprintln(out, text.NotConnected)
+					p.Handler.Print(text.NotConnected)
 				}
 				return nil
 			},
@@ -164,8 +160,7 @@ func init() {
 				case err != nil:
 					return fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
-				/*fmt.Fprintf(p.Handler.IO().Stdout(), text.PasswordChangeSucceeded, user)
-				fmt.Fprintln(p.Handler.IO().Stdout())*/
+				//p.Handler.Print(text.PasswordChangeSucceeded, user)
 				return nil
 			},
 		},
@@ -435,9 +430,7 @@ func init() {
 				if p.Handler.GetTiming() {
 					setting = "on"
 				}
-				out := p.Handler.IO().Stdout()
-				fmt.Fprintf(out, text.TimingSet, setting)
-				fmt.Fprintln(out)
+				p.Handler.Print(text.TimingSet, setting)
 				return nil
 			},
 		},
@@ -667,19 +660,17 @@ func init() {
 				// format output
 				mask := text.FormatFieldNameSetMap[field]
 				unsetMask := text.FormatFieldNameUnsetMap[field]
-				out := p.Handler.IO().Stdout()
 				switch {
 				case strings.Contains(mask, "%d"):
 					i, _ := strconv.Atoi(val)
-					fmt.Fprintf(out, mask, i)
+					p.Handler.Print(mask, i)
 				case unsetMask != "" && val == "":
-					fmt.Fprint(out, unsetMask)
+					p.Handler.Print(unsetMask)
 				case !strings.Contains(mask, "%"):
-					fmt.Fprint(out, mask)
+					p.Handler.Print(mask)
 				default:
-					fmt.Fprintf(out, mask, val)
+					p.Handler.Print(mask, val)
 				}
-				fmt.Fprintln(out)
 				return nil
 			},
 		},
