@@ -779,7 +779,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version(ctx context.Context) error {
-	if env.All()["SHOW_HOST_INFORMATION"] != "true" {
+	if env.Get("SHOW_HOST_INFORMATION") != "true" {
 		return nil
 	}
 	if h.db == nil {
@@ -790,11 +790,19 @@ func (h *Handler) Version(ctx context.Context) error {
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
 	}
 	if ver != "" {
-		out := h.l.Stdout()
-		fmt.Fprintf(out, text.ConnInfo, h.u.Driver, ver)
-		fmt.Fprintln(out)
+		h.Print(text.ConnInfo, h.u.Driver, ver)
 	}
 	return nil
+}
+
+// Print formats according to a format specifier and writes to handler's standard output.
+func (h *Handler) Print(format string, a ...interface{}) {
+	if env.Get("QUIET") == "on" {
+		return
+	}
+	out := h.l.Stdout()
+	fmt.Fprintf(out, format, a...)
+	fmt.Fprintln(out)
 }
 
 // timefmt returns the current time format setting.
@@ -946,11 +954,13 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	}
 	if h.timing {
 		d := time.Since(start)
-		fmt.Fprintf(h.l.Stdout(), text.TimingDesc, float64(d.Microseconds())/1000)
+		format := text.TimingDesc
+		a := []interface{}{float64(d.Microseconds()) / 1000}
 		if d > 1*time.Second {
-			fmt.Fprintf(h.l.Stdout(), " (%v)", d.Round(1*time.Millisecond))
+			format += " (%v)"
+			a = append(a, d.Round(1*time.Millisecond))
 		}
-		fmt.Fprintln(h.l.Stdout())
+		h.Print(format, a)
 	}
 	if pipe != nil {
 		return pipe.Close()

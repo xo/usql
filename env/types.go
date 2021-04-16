@@ -103,8 +103,20 @@ func ValidIdentifier(n string) error {
 
 // Set sets a variable.
 func Set(name, value string) error {
-	if err := ValidIdentifier(name); err != nil {
+	err := ValidIdentifier(name)
+	if err != nil {
 		return err
+	}
+	switch name {
+	case "QUIET":
+		if value == "" {
+			value = "on"
+		} else {
+			value, err = ParseBool(value, name)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	vars.Set(name, value)
 	return nil
@@ -191,6 +203,10 @@ func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf(text.FormatFieldInvalid, value, name)
+}
+
+func Get(name string) string {
+	return vars[name]
 }
 
 func Pget(name string) (string, error) {

@@ -133,6 +133,10 @@ func NewArgs() *Args {
 			return nil
 		}).Bool()
 	}
+	kingpin.Flag("quiet", "run quietly (no messages, only query output)").Short('q').PreAction(func(*kingpin.ParseContext) error {
+		args.Variables = append(args.Variables, "QUIET=on")
+		return nil
+	}).Bool()
 	// add --set as a hidden alias for --variable
 	kingpin.Flag("variable", "set variable NAME to VALUE").Hidden().StringsVar(&args.Variables)
 	// add --version flag

@@ -62,6 +62,8 @@ type Handler interface {
 	SetOutput(io.WriteCloser)
 	// MetadataWriter retrieves the metadata writer for the handler.
 	MetadataWriter() (metadata.Writer, error)
+	// Print formats according to a format specifier and writes to handler's standard output.
+	Print(string, ...interface{})
 }
 
 // Runner is a runner interface type.
