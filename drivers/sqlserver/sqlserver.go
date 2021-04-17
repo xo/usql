@@ -22,7 +22,8 @@ func init() {
 			infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 			infos.WithIndexes(false),
 			infos.WithSequences(false),
-			infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.WithConstraints(false),
+			infos.WithCustomClauses(map[infos.ClauseName]string{
 				infos.FunctionsSecurityType: "''",
 			}),
 			infos.WithSystemSchemas([]string{

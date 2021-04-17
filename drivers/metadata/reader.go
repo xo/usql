@@ -107,7 +107,7 @@ func (p PluginReader) IndexColumns(f Filter) (*IndexColumnSet, error) {
 }
 
 func (p PluginReader) Constraints(f Filter) (*ConstraintSet, error) {
-	if p.indexes == nil {
+	if p.constraints == nil {
 		return nil, ErrNotSupported
 	}
 	return p.constraints(f)

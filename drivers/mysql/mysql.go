@@ -17,9 +17,13 @@ func init() {
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
 		infos.WithSequences(false),
-		infos.WithCustomColumns(map[infos.ColumnName]string{
+		infos.WithCheckConstraints(false),
+		infos.WithCustomClauses(map[infos.ClauseName]string{
 			infos.ColumnsNumericPrecRadix:         "10",
 			infos.FunctionColumnsNumericPrecRadix: "10",
+			infos.ConstraintIsDeferrable:          "''",
+			infos.ConstraintInitiallyDeferred:     "''",
+			infos.ConstraintJoinCond:              "AND r.table_name = f.table_name",
 		}),
 		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema", "sys"}),
 		infos.WithCurrentSchema("DATABASE()"),

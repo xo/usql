@@ -14,13 +14,18 @@
  rating               | enum      | "YES"    | G                 |     5 |              0 |    10 |           15 
  special_features     | set       | "YES"    |                   |    54 |              0 |    10 |          162 
  last_update          | timestamp | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |    10 |            0 
-(13 rows)
-
 Indexes:
   "idx_fk_language_id" BTREE (language_id)
   "idx_fk_original_language_id" BTREE (original_language_id)
   "idx_title" BTREE (title)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
+Foreign-key constraints:
+  "fk_film_language" FOREIGN KEY (language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Referenced by:
+  TABLE "film" CONSTRAINT "fk_film_language" FOREIGN KEY (language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film" CONSTRAINT "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                     BASE TABLE "sakila.film_actor"
     Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
@@ -28,11 +33,16 @@ Indexes:
  actor_id    | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
  film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
  last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
-(3 rows)
-
 Indexes:
   "idx_fk_film_id" BTREE (film_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
+Foreign-key constraints:
+  "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Referenced by:
+  TABLE "film_actor" CONSTRAINT "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film_actor" CONSTRAINT "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                    BASE TABLE "sakila.film_category"
     Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
@@ -40,11 +50,16 @@ Indexes:
  film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
  category_id | tinyint   | "NO"     |                   |    3 |              0 |    10 |            0 
  last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
-(3 rows)
-
 Indexes:
   "fk_film_category_category" BTREE (category_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
+Foreign-key constraints:
+  "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Referenced by:
+  TABLE "film_category" CONSTRAINT "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film_category" CONSTRAINT "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                 BASE TABLE "sakila.film_text"
     Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
@@ -52,11 +67,10 @@ Indexes:
  film_id     | smallint | "NO"     |         |     5 |              0 |    10 |            0 
  title       | varchar  | "NO"     |         |   255 |              0 |    10 |          765 
  description | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
-(3 rows)
-
 Indexes:
   "idx_title_description" FULLTEXT (title, description)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
+
 
                                    VIEW "sakila.film_list"
     Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
@@ -69,5 +83,5 @@ Indexes:
  length      | smallint | "YES"    |         |     5 |              0 |    10 |            0 
  rating      | enum     | "YES"    | G       |     5 |              0 |    10 |           15 
  actors      | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
-(8 rows)
+
 

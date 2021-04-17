@@ -59,7 +59,7 @@ var (
 			DockerPort: "5432/tcp",
 			Opts: []metadata.ReaderOption{
 				infos.WithIndexes(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				}),
@@ -84,7 +84,7 @@ var (
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithCheckConstraints(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
 					infos.ConstraintIsDeferrable:          "''",
@@ -112,7 +112,7 @@ var (
 				infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 				infos.WithIndexes(false),
 				infos.WithConstraints(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.FunctionsSecurityType: "''",
 				}),
 				infos.WithSystemSchemas([]string{
@@ -144,7 +144,7 @@ var (
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithIndexes(false),
 				infos.WithConstraints(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsColumnSize:               "0",
 					infos.ColumnsNumericScale:             "0",
 					infos.ColumnsNumericPrecRadix:         "0",

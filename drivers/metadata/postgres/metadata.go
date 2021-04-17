@@ -23,7 +23,7 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		newIS := infos.New(
 			infos.WithIndexes(false),
-			infos.WithCustomColumns(map[infos.ColumnName]string{
+			infos.WithCustomClauses(map[infos.ClauseName]string{
 				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			}),
@@ -31,10 +31,10 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 			infos.WithCurrentSchema("CURRENT_SCHEMA"),
 		)
 		return metadata.NewPluginReader(
-			newIS(db, opts...),
 			&metaReader{
 				LoggingReader: metadata.NewLoggingReader(db, opts...),
 			},
+			newIS(db, opts...),
 		)
 	}
 }

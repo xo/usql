@@ -278,21 +278,93 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 	} else {
 		params["title"] = fmt.Sprintf("%s \"%s.%s\"\n", typ, sp, tp)
 	}
-	err = tblfmt.EncodeAll(w.w, res, params)
+
+	newEnc, opts := tblfmt.FromMap(params)
+	opts = append(opts, tblfmt.WithSummary(
+		map[int]func(io.Writer, int) (int, error){
+			-1: w.tableDetailsSummary(sp, tp),
+		},
+	))
+	enc, err := newEnc(res, opts...)
 	if err != nil {
 		return err
 	}
-
-	err = w.describeTableIndexes(sp, tp)
-	if err != nil {
-		return err
-	}
-
-	// TODO also describe: FKs, references, triggers - using template encoder?
-	return nil
+	return enc.EncodeAll(w.w)
 }
 
-func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
+func (w DefaultWriter) tableDetailsSummary(sp, tp string) func(io.Writer, int) (int, error) {
+	return func(out io.Writer, _ int) (int, error) {
+		err := w.describeTableIndexes(out, sp, tp)
+		if err != nil {
+			return 0, err
+		}
+		err = w.describeTableConstraints(
+			out,
+			Filter{Schema: sp, Parent: tp},
+			func(r Result) bool {
+				c := r.(*Constraint)
+				return c.Type == "CHECK" && c.CheckClause != "" && !strings.HasSuffix(c.CheckClause, " IS NOT NULL")
+			},
+			"Check constraints:",
+			func(out io.Writer, c *Constraint) error {
+				_, err := fmt.Fprintf(out, "  \"%s\" %s (%s)\n", c.Name, c.Type, c.CheckClause)
+				return err
+			},
+		)
+		if err != nil {
+			return 0, err
+		}
+		err = w.describeTableConstraints(
+			out,
+			Filter{Schema: sp, Parent: tp},
+			func(r Result) bool { return r.(*Constraint).Type == "FOREIGN KEY" },
+			"Foreign-key constraints:",
+			func(out io.Writer, c *Constraint) error {
+				columns, foreignColumns, err := w.getConstraintColumns(c.Catalog, c.Schema, c.Table, c.Name)
+				if err != nil {
+					return err
+				}
+				_, err = fmt.Fprintf(out, "  \"%s\" %s (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s\n",
+					c.Name,
+					c.Type,
+					columns,
+					c.ForeignTable,
+					foreignColumns,
+					c.UpdateRule,
+					c.DeleteRule)
+				return err
+			},
+		)
+		if err != nil {
+			return 0, err
+		}
+		err = w.describeTableConstraints(
+			out,
+			Filter{Schema: sp, Reference: tp},
+			func(r Result) bool { return r.(*Constraint).Type == "FOREIGN KEY" },
+			"Referenced by:",
+			func(out io.Writer, c *Constraint) error {
+				columns, foreignColumns, err := w.getConstraintColumns(c.Catalog, c.Schema, c.Table, c.Name)
+				if err != nil {
+					return err
+				}
+				_, err = fmt.Fprintf(out, "  TABLE \"%s\" CONSTRAINT \"%s\" %s (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s\n",
+					c.Table,
+					c.Name,
+					c.Type,
+					columns,
+					c.ForeignTable,
+					foreignColumns,
+					c.UpdateRule,
+					c.DeleteRule)
+				return err
+			},
+		)
+		return 0, err
+	}
+}
+
+func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error {
 	r, ok := w.r.(IndexReader)
 	if !ok {
 		return nil
@@ -309,7 +381,7 @@ func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
 	if res.Len() == 0 {
 		return nil
 	}
-	fmt.Fprintln(w.w, "Indexes:")
+	fmt.Fprintln(out, "Indexes:")
 	for res.Next() {
 		i := res.Get()
 		primary := ""
@@ -324,9 +396,8 @@ func (w DefaultWriter) describeTableIndexes(sp, tp string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(w.w, "  \"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
+		fmt.Fprintf(out, "  \"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
 	}
-	fmt.Fprintln(w.w)
 	return nil
 }
 
@@ -341,6 +412,50 @@ func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
 		result = append(result, cols.Get().Name)
 	}
 	return strings.Join(result, ", "), nil
+}
+
+func (w DefaultWriter) describeTableConstraints(out io.Writer, filter Filter, postFilter func(r Result) bool, label string, printer func(io.Writer, *Constraint) error) error {
+	r, ok := w.r.(ConstraintReader)
+	if !ok {
+		return nil
+	}
+	res, err := r.Constraints(filter)
+	if err != nil && err != ErrNotSupported {
+		return err
+	}
+	if res == nil {
+		return nil
+	}
+	defer res.Close()
+
+	res.SetFilter(postFilter)
+	if res.Len() == 0 {
+		return nil
+	}
+	fmt.Fprintln(out, label)
+	for res.Next() {
+		c := res.Get()
+		err := printer(out, c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (w DefaultWriter) getConstraintColumns(c, s, t, n string) (string, string, error) {
+	r := w.r.(ConstraintColumnReader)
+	cols, err := r.ConstraintColumns(Filter{Catalog: c, Schema: s, Parent: t, Name: n})
+	if err != nil {
+		return "", "", err
+	}
+	columns := []string{}
+	foreignColumns := []string{}
+	for cols.Next() {
+		columns = append(columns, cols.Get().Name)
+		foreignColumns = append(foreignColumns, cols.Get().ForeignName)
+	}
+	return strings.Join(columns, ", "), strings.Join(foreignColumns, ", "), nil
 }
 
 func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {

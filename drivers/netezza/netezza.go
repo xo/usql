@@ -22,7 +22,8 @@ func init() {
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
 		infos.WithIndexes(false),
-		infos.WithCustomColumns(map[infos.ColumnName]string{
+		infos.WithConstraints(false),
+		infos.WithCustomClauses(map[infos.ClauseName]string{
 			infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 		}),

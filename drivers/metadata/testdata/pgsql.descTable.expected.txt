@@ -15,7 +15,14 @@
  last_update          | timestamp without time zone | "NO"     | now()                                 |    6 |              0 |    10 |            0 
  special_features     | ARRAY                       | "YES"    |                                       |    0 |              0 |    10 |            0 
  fulltext             | tsvector                    | "NO"     |                                       |    0 |              0 |    10 |            0 
-(14 rows)
+Foreign-key constraints:
+  "film_language_id_fkey" FOREIGN KEY (language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "film_original_language_id_fkey" FOREIGN KEY (original_language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Referenced by:
+  TABLE "film_actor" CONSTRAINT "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film_category" CONSTRAINT "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "inventory" CONSTRAINT "inventory_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                         BASE TABLE "public.film_actor"
     Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
@@ -23,7 +30,10 @@
  actor_id    | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
-(3 rows)
+Foreign-key constraints:
+  "film_actor_actor_id_fkey" FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                        BASE TABLE "public.film_category"
     Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
@@ -31,7 +41,10 @@
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  category_id | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
-(3 rows)
+Foreign-key constraints:
+  "film_category_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+
 
                                        VIEW "public.film_list"
     Name     |       Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
@@ -44,7 +57,7 @@
  length      | smallint          | "YES"    |         |   16 |              0 |     2 |            0 
  rating      | USER-DEFINED      | "YES"    |         |    0 |              0 |    10 |            0 
  actors      | text              | "YES"    |         |    0 |              0 |    10 |   1073741824 
-(8 rows)
+
 
                 Sequence "public.film_film_id_seq"
   Type  | Start | Min |         Max         | Increment | Cycles? 
