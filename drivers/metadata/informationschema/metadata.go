@@ -15,14 +15,16 @@ import (
 // InformationSchema metadata reader
 type InformationSchema struct {
 	metadata.LoggingReader
-	pf            func(int) string
-	hasFunctions  bool
-	hasSequences  bool
-	hasIndexes    bool
-	colExpr       map[ColumnName]string
-	limit         int
-	systemSchemas []string
-	currentSchema string
+	pf                  func(int) string
+	hasFunctions        bool
+	hasSequences        bool
+	hasIndexes          bool
+	hasConstraints      bool
+	hasCheckConstraints bool
+	colExpr             map[ColumnName]string
+	limit               int
+	systemSchemas       []string
+	currentSchema       string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -46,16 +48,21 @@ const (
 
 	FunctionsSecurityType = ColumnName("functions.security_type")
 
+	ConstraintIsDeferrable      = ColumnName("constraint_columns.is_deferrable")
+	ConstraintInitiallyDeferred = ColumnName("constraint_columns.initially_deferred")
+
 	SequenceColumnsIncrement = ColumnName("sequence_columns.increment")
 )
 
 // New InformationSchema reader
 func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	s := &InformationSchema{
-		pf:           func(n int) string { return fmt.Sprintf("$%d", n) },
-		hasFunctions: true,
-		hasSequences: true,
-		hasIndexes:   true,
+		pf:                  func(n int) string { return fmt.Sprintf("$%d", n) },
+		hasFunctions:        true,
+		hasSequences:        true,
+		hasIndexes:          true,
+		hasConstraints:      true,
+		hasCheckConstraints: true,
 		colExpr: map[ColumnName]string{
 			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
 			ColumnsNumericScale:             "COALESCE(numeric_scale, 0)",
@@ -66,6 +73,8 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 			FunctionColumnsNumericPrecRadix: "COALESCE(numeric_precision_radix, 10)",
 			FunctionColumnsCharOctetLength:  "COALESCE(character_octet_length, 0)",
 			FunctionsSecurityType:           "security_type",
+			ConstraintIsDeferrable:          "t.is_deferrable",
+			ConstraintInitiallyDeferred:     "t.initially_deferred",
 			SequenceColumnsIncrement:        "increment",
 		},
 		systemSchemas: []string{"information_schema"},
@@ -109,6 +118,20 @@ func WithFunctions(fun bool) metadata.ReaderOption {
 func WithIndexes(ind bool) metadata.ReaderOption {
 	return func(r metadata.Reader) {
 		r.(*InformationSchema).hasIndexes = ind
+	}
+}
+
+// WithConstraints when the `statistics` table exists
+func WithConstraints(con bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasConstraints = con
+	}
+}
+
+// WithCheckConstraints when the `statistics` table exists
+func WithCheckConstraints(con bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasCheckConstraints = con
 	}
 }
 
@@ -536,6 +559,187 @@ JOIN information_schema.columns c ON
 		return nil, rows.Err()
 	}
 	return metadata.NewIndexColumnSet(results), nil
+}
+
+// Constraintes from selected catalog (or all, if empty), matching schemas and names
+func (s InformationSchema) Constraints(f metadata.Filter) (*metadata.ConstraintSet, error) {
+	if !s.hasConstraints {
+		return nil, metadata.ErrNotSupported
+	}
+
+	columns := []string{
+		"t.constraint_catalog",
+		"t.table_schema",
+		"t.table_name",
+		"t.constraint_name",
+		"t.constraint_type",
+		s.colExpr[ConstraintIsDeferrable],
+		s.colExpr[ConstraintInitiallyDeferred],
+		"COALESCE(r.unique_constraint_catalog, '') AS foreign_catalog",
+		"COALESCE(r.unique_constraint_schema, '') AS foreign_schema",
+		"COALESCE(f.table_name, '') AS foreign_table",
+		"COALESCE(r.unique_constraint_name, '') AS foreign_constraint",
+		"COALESCE(r.match_option, '') AS match_options",
+		"COALESCE(r.update_rule, '') AS update_rule",
+		"COALESCE(r.delete_rule, '') AS delete_rule",
+		"COALESCE(c.check_clause, '') AS check_clause",
+	}
+
+	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + `
+FROM information_schema.table_constraints t
+LEFT JOIN information_schema.referential_constraints r ON t.constraint_catalog = r.constraint_catalog
+  AND t.constraint_schema = r.constraint_schema
+  AND t.constraint_name = r.constraint_name
+LEFT JOIN information_schema.table_constraints f ON r.unique_constraint_catalog = f.constraint_catalog
+  AND r.unique_constraint_schema = f.constraint_schema
+  AND r.unique_constraint_name = f.constraint_name
+LEFT JOIN information_schema.check_constraints c ON t.constraint_catalog = c.constraint_catalog
+  AND t.constraint_schema = c.constraint_schema
+  AND t.constraint_name = c.constraint_name
+`
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "t.constraint_catalog LIKE %s",
+		schema:     "t.table_schema LIKE %s",
+		notSchemas: "t.table_schema NOT IN (%s)",
+		parent:     "t.table_name LIKE %s",
+		name:       "t.constraint_name LIKE %s",
+	})
+	if len(conds) != 0 {
+		qstr += " WHERE " + strings.Join(conds, " AND ")
+	}
+	rows, closeRows, err := s.query(qstr, []string{}, "t.constraint_catalog, t.table_schema, t.table_name, t.constraint_name", vals...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewConstraintSet([]metadata.Constraint{}), nil
+		}
+		return nil, err
+	}
+	defer closeRows()
+
+	results := []metadata.Constraint{}
+	for rows.Next() {
+		rec := metadata.Constraint{}
+		err = rows.Scan(
+			&rec.Catalog,
+			&rec.Schema,
+			&rec.Table,
+			&rec.Name,
+			&rec.Type,
+			&rec.IsDeferrable,
+			&rec.IsInitiallyDeferred,
+			&rec.ForeignCatalog,
+			&rec.ForeignSchema,
+			&rec.ForeignTable,
+			&rec.ForeignName,
+			&rec.MatchType,
+			&rec.UpdateRule,
+			&rec.DeleteRule,
+			&rec.CheckClause,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewConstraintSet(results), nil
+}
+
+// ConstraintColumns from selected catalog (or all, if empty), matching schemas and constraints
+func (s InformationSchema) ConstraintColumns(f metadata.Filter) (*metadata.ConstraintColumnSet, error) {
+	if !s.hasConstraints {
+		return nil, metadata.ErrNotSupported
+	}
+
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "c.constraint_catalog LIKE %s",
+		schema:     "c.table_schema LIKE %s",
+		notSchemas: "c.table_schema NOT IN (%s)",
+		parent:     "c.table_name LIKE %s",
+		name:       "c.constraint_name LIKE %s",
+	})
+	qstr := ""
+	if s.hasCheckConstraints {
+		qstr = `SELECT
+	  c.constraint_catalog,
+	  c.table_schema,
+	  c.table_name,
+	  c.constraint_name,
+	  c.column_name,
+	  1 AS ordinal_position,
+	  '' AS foreign_catalog,
+	  '' AS foreign_schema,
+	  '' AS foreign_table,
+	  '' AS foreign_name
+	FROM information_schema.constraint_column_usage c
+	`
+		if len(conds) != 0 {
+			qstr += " WHERE " + strings.Join(conds, " AND ")
+		}
+		qstr += `
+UNION ALL
+`
+	}
+	qstr += `SELECT
+  c.constraint_catalog,
+  c.table_schema,
+  c.table_name,
+  c.constraint_name,
+  c.column_name,
+  c.ordinal_position,
+  COALESCE(f.constraint_catalog, '') AS foreign_catalog,
+  COALESCE(f.table_schema, '') AS foreign_schema,
+  COALESCE(f.table_name, '') AS foreign_table,
+  COALESCE(f.column_name, '') AS foreign_name
+FROM information_schema.key_column_usage c
+LEFT JOIN information_schema.referential_constraints r ON c.constraint_catalog = r.constraint_catalog
+  AND c.constraint_schema = r.constraint_schema
+  AND c.constraint_name = r.constraint_name
+LEFT JOIN information_schema.key_column_usage f ON r.unique_constraint_catalog = f.constraint_catalog
+  AND r.unique_constraint_schema = f.constraint_schema
+  AND r.unique_constraint_name = f.constraint_name
+  AND c.ordinal_position = f.position_in_unique_constraint
+`
+	if len(conds) != 0 {
+		qstr += " WHERE " + strings.Join(conds, " AND ")
+	}
+	rows, closeRows, err := s.query(qstr, []string{}, "constraint_catalog, table_schema, table_name, constraint_name, ordinal_position, column_name", vals...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewConstraintColumnSet([]metadata.ConstraintColumn{}), nil
+		}
+		return nil, err
+	}
+	defer closeRows()
+
+	results := []metadata.ConstraintColumn{}
+	i := 1
+	for rows.Next() {
+		rec := metadata.ConstraintColumn{OrdinalPosition: i}
+		i++
+		err = rows.Scan(
+			&rec.Catalog,
+			&rec.Schema,
+			&rec.Table,
+			&rec.Constraint,
+			&rec.Name,
+			&rec.OrdinalPosition,
+			&rec.ForeignCatalog,
+			&rec.ForeignSchema,
+			&rec.ForeignTable,
+			&rec.ForeignName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewConstraintColumnSet(results), nil
 }
 
 // Sequences from selected catalog (or all, if empty), matching schemas and names

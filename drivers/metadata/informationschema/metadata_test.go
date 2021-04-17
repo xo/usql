@@ -83,9 +83,12 @@ var (
 			DockerPort: "3306/tcp",
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
+				infos.WithCheckConstraints(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
+					infos.ConstraintIsDeferrable:          "''",
+					infos.ConstraintInitiallyDeferred:     "''",
 				}),
 				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
@@ -108,6 +111,7 @@ var (
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 				infos.WithIndexes(false),
+				infos.WithConstraints(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.FunctionsSecurityType: "''",
 				}),
@@ -139,6 +143,7 @@ var (
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithIndexes(false),
+				infos.WithConstraints(false),
 				infos.WithCustomColumns(map[infos.ColumnName]string{
 					infos.ColumnsColumnSize:               "0",
 					infos.ColumnsNumericScale:             "0",
@@ -453,6 +458,76 @@ func TestIndexColumns(t *testing.T) {
 		actual := strings.Join(names, ", ")
 		if actual != expected[dbName] {
 			t.Errorf("Wrong %s index column names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
+		}
+	}
+}
+
+func TestConstraints(t *testing.T) {
+	schemas := map[string]string{
+		"pgsql": "public",
+		"mysql": "sakila",
+	}
+	constraints := map[string]string{
+		"pgsql": "film%",
+		"mysql": "film%",
+	}
+	expected := map[string]string{
+		"pgsql": "film.film_language_id_fkey, film.film_original_language_id_fkey, film.film_pkey, film_actor.film_actor_actor_id_fkey, film_actor.film_actor_film_id_fkey, film_actor.film_actor_pkey, film_category.film_category_category_id_fkey, film_category.film_category_film_id_fkey, film_category.film_category_pkey",
+		"mysql": "",
+	}
+	for dbName, db := range dbs {
+		if schemas[dbName] == "" {
+			continue
+		}
+		r := infos.New(db.Opts...)(db.DB).(metadata.ConstraintReader)
+
+		result, err := r.Constraints(metadata.Filter{Schema: schemas[dbName], Name: constraints[dbName]})
+		if err != nil {
+			log.Fatalf("Could not read %s constraints: %v", dbName, err)
+		}
+
+		names := []string{}
+		for result.Next() {
+			names = append(names, result.Get().Table+"."+result.Get().Name)
+		}
+		actual := strings.Join(names, ", ")
+		if actual != expected[dbName] {
+			t.Errorf("Wrong %s constraint names, expected:\n  %v\ngot:\n  %v", dbName, expected[dbName], names)
+		}
+	}
+}
+
+func TestConstraintColumns(t *testing.T) {
+	schemas := map[string]string{
+		"pgsql": "public",
+		"mysql": "sakila",
+	}
+	constraints := map[string]string{
+		"pgsql": "film%",
+		"mysql": "film%",
+	}
+	expected := map[string]string{
+		"pgsql": "actor_id, category_id, film_id, film_id, language_id, original_language_id, film_id, film_id, actor_id, film_id, actor_id, actor_id, film_id, film_id, category_id, film_id, category_id, film_id, film_id, category_id, language_id, language_id",
+		"mysql": "",
+	}
+	for dbName, db := range dbs {
+		if schemas[dbName] == "" {
+			continue
+		}
+		r := infos.New(db.Opts...)(db.DB).(metadata.ConstraintColumnReader)
+
+		result, err := r.ConstraintColumns(metadata.Filter{Schema: schemas[dbName], Name: constraints[dbName]})
+		if err != nil {
+			log.Fatalf("Could not read %s constraint columns: %v", dbName, err)
+		}
+
+		names := []string{}
+		for result.Next() {
+			names = append(names, result.Get().Name)
+		}
+		actual := strings.Join(names, ", ")
+		if actual != expected[dbName] {
+			t.Errorf("Wrong %s constraint column names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
 		}
 	}
 }
