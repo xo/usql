@@ -11,27 +11,10 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	infos "github.com/xo/usql/drivers/metadata/informationschema"
+	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
 )
 
 func init() {
-	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
-		newIS := infos.New(
-			infos.WithIndexes(false),
-			infos.WithCustomColumns(map[infos.ColumnName]string{
-				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
-				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
-			}),
-			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
-			infos.WithCurrentSchema("CURRENT_SCHEMA"),
-		)
-		return metadata.NewPluginReader(
-			newIS(db, opts...),
-			&metaReader{
-				LoggingReader: metadata.NewLoggingReader(db, opts...),
-			},
-		)
-	}
 	drivers.Register("postgres", drivers.Driver{
 		Name:                   "pq",
 		AllowDollar:            true,
@@ -68,9 +51,9 @@ func init() {
 			}
 			return false
 		},
-		NewMetadataReader: newReader,
+		NewMetadataReader: pgmeta.NewReader(),
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
+			return metadata.NewDefaultWriter(pgmeta.NewReader()(db, opts...))(db, w)
 		},
 	}, "cockroachdb", "redshift")
 }
