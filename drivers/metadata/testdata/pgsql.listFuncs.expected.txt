@@ -5,7 +5,7 @@
  public | film_in_stock              | integer          | p_film_id integer, p_store_id integer, OUT p_film_count integer     | FUNCTION 
  public | film_not_in_stock          | integer          | p_film_id integer, p_store_id integer, OUT p_film_count integer     | FUNCTION 
  public | get_customer_balance       | numeric          | p_customer_id integer, p_effective_date timestamp without time zone | FUNCTION 
- public | group_concat               | text             | text                                                                |          
+ public | group_concat               | text             | text                                                                |  
  public | inventory_held_by_customer | integer          | p_inventory_id integer                                              | FUNCTION 
  public | inventory_in_stock         | boolean          | p_inventory_id integer                                              | FUNCTION 
  public | last_day                   | date             | timestamp without time zone                                         | FUNCTION 

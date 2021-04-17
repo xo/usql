@@ -1080,8 +1080,8 @@ github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363v
 github.com/xo/dburl v0.6.0 h1:bHmA12HZVODJiGxwgSAOG/x+BSVYeWs8rkzNiK2BSE8=
 github.com/xo/dburl v0.6.0/go.mod h1:TM8VMBT+LWqC3MBOulZjb8FAthcvZq0t/qvDLwS6skU=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
-github.com/xo/tblfmt v0.6.2 h1:j95fqW7p9aQKtQMT9jXEMGyt41bDKFZRLH09gfxrYYg=
-github.com/xo/tblfmt v0.6.2/go.mod h1:2fh9mXteiVnG68zzU2TS+CsCCU9lq3mgLi/EYw7ljrM=
+github.com/xo/tblfmt v0.6.3 h1:jKWjc6MfRfSJAnr4v2pypdcDDT1AY8de2Eib2RPfmDE=
+github.com/xo/tblfmt v0.6.3/go.mod h1:2fh9mXteiVnG68zzU2TS+CsCCU9lq3mgLi/EYw7ljrM=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 h1:QldyIu/L63oPpyvQmHgvgickp1Yw510KJOqX7H24mg8=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
 github.com/xo/xoutil v0.0.0-20171112033149-46189f4026a5 h1:3ANIpg9VQB91yCAyY+5dobfm30xQNOG3sCjPoPQo5i8=

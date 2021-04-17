@@ -1,10 +1,10 @@
                     List of relations
  Schema |       Name       |    Type    | Size | Comment 
 --------+------------------+------------+------+---------
- public | film             | BASE TABLE |      |         
- public | film_actor       | BASE TABLE |      |         
- public | film_category    | BASE TABLE |      |         
- public | film_film_id_seq | SEQUENCE   |      |         
- public | film_list        | VIEW       |      |         
+ public | film             | BASE TABLE |      |  
+ public | film_actor       | BASE TABLE |      |  
+ public | film_category    | BASE TABLE |      |  
+ public | film_film_id_seq | SEQUENCE   |      |  
+ public | film_list        | VIEW       |      |  
 (5 rows)
 

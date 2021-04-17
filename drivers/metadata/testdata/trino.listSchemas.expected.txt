@@ -1,14 +1,14 @@
   List of schemas
   Schema  | Catalog 
 ----------+---------
- sf1      | tpch    
- sf100    | tpch    
- sf1000   | tpch    
- sf10000  | tpch    
- sf100000 | tpch    
- sf300    | tpch    
- sf3000   | tpch    
- sf30000  | tpch    
- tiny     | tpch    
+ sf1      | tpch 
+ sf100    | tpch 
+ sf1000   | tpch 
+ sf10000  | tpch 
+ sf100000 | tpch 
+ sf300    | tpch 
+ sf3000   | tpch 
+ sf30000  | tpch 
+ tiny     | tpch 
 (9 rows)
 
