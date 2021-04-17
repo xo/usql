@@ -21,7 +21,7 @@ func init() {
 			infos.ColumnsNumericPrecRadix:         "10",
 			infos.FunctionColumnsNumericPrecRadix: "10",
 		}),
-		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema"}),
+		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema", "sys"}),
 		infos.WithCurrentSchema("DATABASE()"),
 	)
 	drivers.Register("mysql", drivers.Driver{
