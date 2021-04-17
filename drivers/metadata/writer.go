@@ -45,7 +45,7 @@ func NewDefaultWriter(r Reader, opts ...WriterOption) func(db DB, w io.Writer) W
 		r: r,
 		tableTypes: map[rune][]string{
 			't': {"TABLE", "BASE TABLE", "SYSTEM TABLE", "SYNONYM", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"},
-			'v': {"VIEW"},
+			'v': {"VIEW", "SYSTEM VIEW"},
 			'm': {"MATERIALIZED VIEW"},
 			's': {"SEQUENCE"},
 		},
