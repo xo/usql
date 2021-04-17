@@ -8,15 +8,17 @@ import (
 
 // PluginReader allows to be easily composed from other readers
 type PluginReader struct {
-	catalogs        func(Filter) (*CatalogSet, error)
-	schemas         func(Filter) (*SchemaSet, error)
-	tables          func(Filter) (*TableSet, error)
-	columns         func(Filter) (*ColumnSet, error)
-	indexes         func(Filter) (*IndexSet, error)
-	indexColumns    func(Filter) (*IndexColumnSet, error)
-	functions       func(Filter) (*FunctionSet, error)
-	functionColumns func(Filter) (*FunctionColumnSet, error)
-	sequences       func(Filter) (*SequenceSet, error)
+	catalogs          func(Filter) (*CatalogSet, error)
+	schemas           func(Filter) (*SchemaSet, error)
+	tables            func(Filter) (*TableSet, error)
+	columns           func(Filter) (*ColumnSet, error)
+	indexes           func(Filter) (*IndexSet, error)
+	indexColumns      func(Filter) (*IndexColumnSet, error)
+	constraints       func(Filter) (*ConstraintSet, error)
+	constraintColumns func(Filter) (*ConstraintColumnSet, error)
+	functions         func(Filter) (*FunctionSet, error)
+	functionColumns   func(Filter) (*FunctionColumnSet, error)
+	sequences         func(Filter) (*SequenceSet, error)
 }
 
 var _ ExtendedReader = &PluginReader{}
@@ -42,6 +44,12 @@ func NewPluginReader(readers ...Reader) Reader {
 		}
 		if r, ok := i.(IndexColumnReader); ok {
 			p.indexColumns = r.IndexColumns
+		}
+		if r, ok := i.(ConstraintReader); ok {
+			p.constraints = r.Constraints
+		}
+		if r, ok := i.(ConstraintColumnReader); ok {
+			p.constraintColumns = r.ConstraintColumns
 		}
 		if r, ok := i.(FunctionReader); ok {
 			p.functions = r.Functions
@@ -96,6 +104,20 @@ func (p PluginReader) IndexColumns(f Filter) (*IndexColumnSet, error) {
 		return nil, ErrNotSupported
 	}
 	return p.indexColumns(f)
+}
+
+func (p PluginReader) Constraints(f Filter) (*ConstraintSet, error) {
+	if p.indexes == nil {
+		return nil, ErrNotSupported
+	}
+	return p.constraints(f)
+}
+
+func (p PluginReader) ConstraintColumns(f Filter) (*ConstraintColumnSet, error) {
+	if p.constraintColumns == nil {
+		return nil, ErrNotSupported
+	}
+	return p.constraintColumns(f)
 }
 
 func (p PluginReader) Functions(f Filter) (*FunctionSet, error) {
