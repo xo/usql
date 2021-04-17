@@ -20,7 +20,7 @@ func init() {
 	endRE := regexp.MustCompile(`;?\s*$`)
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
-		infos.WithCustomColumns(map[infos.ColumnName]string{
+		infos.WithCustomClauses(map[infos.ClauseName]string{
 			infos.ColumnsColumnSize:       "0",
 			infos.ColumnsNumericScale:     "0",
 			infos.ColumnsNumericPrecRadix: "0",
@@ -29,6 +29,7 @@ func init() {
 		infos.WithFunctions(false),
 		infos.WithSequences(false),
 		infos.WithIndexes(false),
+		infos.WithConstraints(false),
 	)
 	drivers.Register("trino", drivers.Driver{
 		AllowMultilineComments: true,

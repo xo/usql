@@ -54,7 +54,7 @@ var (
 			DockerPort: "5432/tcp",
 			Opts: []metadata.ReaderOption{
 				infos.WithIndexes(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				}),
@@ -82,9 +82,13 @@ var (
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithSequences(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithCheckConstraints(false),
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
+					infos.ConstraintIsDeferrable:          "''",
+					infos.ConstraintInitiallyDeferred:     "''",
+					infos.ConstraintJoinCond:              "AND r.table_name = f.table_name",
 				}),
 				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
 			},
@@ -104,7 +108,8 @@ var (
 				infos.WithFunctions(false),
 				infos.WithSequences(false),
 				infos.WithIndexes(false),
-				infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.WithConstraints(false),
+				infos.WithCustomClauses(map[infos.ClauseName]string{
 					infos.ColumnsColumnSize:               "0",
 					infos.ColumnsNumericScale:             "0",
 					infos.ColumnsNumericPrecRadix:         "0",

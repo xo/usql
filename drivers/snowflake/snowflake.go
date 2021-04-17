@@ -24,11 +24,12 @@ func init() {
 	gosnowflake.SetLogger(&l)
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
-		infos.WithCustomColumns(map[infos.ColumnName]string{
+		infos.WithCustomClauses(map[infos.ClauseName]string{
 			infos.SequenceColumnsIncrement: "''",
 		}),
 		infos.WithFunctions(false),
 		infos.WithIndexes(false),
+		infos.WithConstraints(false),
 	)
 	drivers.Register("snowflake", drivers.Driver{
 		Err: func(err error) (string, string) {

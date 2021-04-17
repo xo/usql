@@ -111,6 +111,8 @@ type Filter struct {
 	// Parent name pattern that objects must belong to;
 	// does not apply to schema and catalog containing matching objects
 	Parent string
+	// Reference name pattern of other objects referencing this one,
+	Reference string
 	// Name pattern that object name must match
 	Name string
 	// Types of the object

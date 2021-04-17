@@ -21,7 +21,7 @@ type InformationSchema struct {
 	hasIndexes          bool
 	hasConstraints      bool
 	hasCheckConstraints bool
-	colExpr             map[ColumnName]string
+	clauses             map[ClauseName]string
 	limit               int
 	systemSchemas       []string
 	currentSchema       string
@@ -33,25 +33,26 @@ type Logger interface {
 	Println(...interface{})
 }
 
-type ColumnName string
+type ClauseName string
 
 const (
-	ColumnsColumnSize       = ColumnName("columns.column_size")
-	ColumnsNumericScale     = ColumnName("columns.numeric_scale")
-	ColumnsNumericPrecRadix = ColumnName("columns.numeric_precision_radix")
-	ColumnsCharOctetLength  = ColumnName("columns.character_octet_length")
+	ColumnsColumnSize       = ClauseName("columns.column_size")
+	ColumnsNumericScale     = ClauseName("columns.numeric_scale")
+	ColumnsNumericPrecRadix = ClauseName("columns.numeric_precision_radix")
+	ColumnsCharOctetLength  = ClauseName("columns.character_octet_length")
 
-	FunctionColumnsColumnSize       = ColumnName("function_columns.column_size")
-	FunctionColumnsNumericScale     = ColumnName("function_columns.numeric_scale")
-	FunctionColumnsNumericPrecRadix = ColumnName("function_columns.numeric_precision_radix")
-	FunctionColumnsCharOctetLength  = ColumnName("function_columns.character_octet_length")
+	FunctionColumnsColumnSize       = ClauseName("function_columns.column_size")
+	FunctionColumnsNumericScale     = ClauseName("function_columns.numeric_scale")
+	FunctionColumnsNumericPrecRadix = ClauseName("function_columns.numeric_precision_radix")
+	FunctionColumnsCharOctetLength  = ClauseName("function_columns.character_octet_length")
 
-	FunctionsSecurityType = ColumnName("functions.security_type")
+	FunctionsSecurityType = ClauseName("functions.security_type")
 
-	ConstraintIsDeferrable      = ColumnName("constraint_columns.is_deferrable")
-	ConstraintInitiallyDeferred = ColumnName("constraint_columns.initially_deferred")
+	ConstraintIsDeferrable      = ClauseName("constraint_columns.is_deferrable")
+	ConstraintInitiallyDeferred = ClauseName("constraint_columns.initially_deferred")
+	ConstraintJoinCond          = ClauseName("constraint_join.fk")
 
-	SequenceColumnsIncrement = ColumnName("sequence_columns.increment")
+	SequenceColumnsIncrement = ClauseName("sequence_columns.increment")
 )
 
 // New InformationSchema reader
@@ -63,7 +64,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 		hasIndexes:          true,
 		hasConstraints:      true,
 		hasCheckConstraints: true,
-		colExpr: map[ColumnName]string{
+		clauses: map[ClauseName]string{
 			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
 			ColumnsNumericScale:             "COALESCE(numeric_scale, 0)",
 			ColumnsNumericPrecRadix:         "COALESCE(numeric_precision_radix, 10)",
@@ -98,11 +99,11 @@ func WithPlaceholder(pf func(int) string) metadata.ReaderOption {
 	}
 }
 
-// WithCustomColumns to use different expressions for some columns
-func WithCustomColumns(cols map[ColumnName]string) metadata.ReaderOption {
+// WithCustomClauses to use different expressions for some columns
+func WithCustomClauses(cols map[ClauseName]string) metadata.ReaderOption {
 	return func(r metadata.Reader) {
 		for k, v := range cols {
-			r.(*InformationSchema).colExpr[k] = v
+			r.(*InformationSchema).clauses[k] = v
 		}
 	}
 }
@@ -171,10 +172,10 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		"data_type",
 		"COALESCE(column_default, '')",
 		"COALESCE(is_nullable, '') AS is_nullable",
-		s.colExpr[ColumnsColumnSize],
-		s.colExpr[ColumnsNumericScale],
-		s.colExpr[ColumnsNumericPrecRadix],
-		s.colExpr[ColumnsCharOctetLength],
+		s.clauses[ColumnsColumnSize],
+		s.clauses[ColumnsNumericScale],
+		s.clauses[ColumnsNumericPrecRadix],
+		s.clauses[ColumnsCharOctetLength],
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.columns\n"
@@ -343,7 +344,7 @@ func (s InformationSchema) Functions(f metadata.Filter) (*metadata.FunctionSet, 
 		"routine_definition",
 		"COALESCE(external_language, routine_body) AS language",
 		"is_deterministic",
-		s.colExpr[FunctionsSecurityType],
+		s.clauses[FunctionsSecurityType],
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.routines\n"
@@ -403,10 +404,10 @@ func (s InformationSchema) FunctionColumns(f metadata.Filter) (*metadata.Functio
 		"ordinal_position",
 		"COALESCE(parameter_mode, '')",
 		"data_type",
-		s.colExpr[FunctionColumnsColumnSize],
-		s.colExpr[FunctionColumnsNumericScale],
-		s.colExpr[FunctionColumnsNumericPrecRadix],
-		s.colExpr[FunctionColumnsCharOctetLength],
+		s.clauses[FunctionColumnsColumnSize],
+		s.clauses[FunctionColumnsNumericScale],
+		s.clauses[FunctionColumnsNumericPrecRadix],
+		s.clauses[FunctionColumnsCharOctetLength],
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.parameters\n"
@@ -573,8 +574,8 @@ func (s InformationSchema) Constraints(f metadata.Filter) (*metadata.ConstraintS
 		"t.table_name",
 		"t.constraint_name",
 		"t.constraint_type",
-		s.colExpr[ConstraintIsDeferrable],
-		s.colExpr[ConstraintInitiallyDeferred],
+		s.clauses[ConstraintIsDeferrable],
+		s.clauses[ConstraintInitiallyDeferred],
 		"COALESCE(r.unique_constraint_catalog, '') AS foreign_catalog",
 		"COALESCE(r.unique_constraint_schema, '') AS foreign_schema",
 		"COALESCE(f.table_name, '') AS foreign_table",
@@ -590,9 +591,11 @@ FROM information_schema.table_constraints t
 LEFT JOIN information_schema.referential_constraints r ON t.constraint_catalog = r.constraint_catalog
   AND t.constraint_schema = r.constraint_schema
   AND t.constraint_name = r.constraint_name
+  AND t.constraint_type = 'FOREIGN KEY'
 LEFT JOIN information_schema.table_constraints f ON r.unique_constraint_catalog = f.constraint_catalog
   AND r.unique_constraint_schema = f.constraint_schema
   AND r.unique_constraint_name = f.constraint_name
+  ` + s.clauses[ConstraintJoinCond] + `
 LEFT JOIN information_schema.check_constraints c ON t.constraint_catalog = c.constraint_catalog
   AND t.constraint_schema = c.constraint_schema
   AND t.constraint_name = c.constraint_name
@@ -602,6 +605,7 @@ LEFT JOIN information_schema.check_constraints c ON t.constraint_catalog = c.con
 		schema:     "t.table_schema LIKE %s",
 		notSchemas: "t.table_schema NOT IN (%s)",
 		parent:     "t.table_name LIKE %s",
+		reference:  "f.table_name LIKE %s",
 		name:       "t.constraint_name LIKE %s",
 	})
 	if len(conds) != 0 {
@@ -653,13 +657,7 @@ func (s InformationSchema) ConstraintColumns(f metadata.Filter) (*metadata.Const
 		return nil, metadata.ErrNotSupported
 	}
 
-	conds, vals := s.conditions(1, f, formats{
-		catalog:    "c.constraint_catalog LIKE %s",
-		schema:     "c.table_schema LIKE %s",
-		notSchemas: "c.table_schema NOT IN (%s)",
-		parent:     "c.table_name LIKE %s",
-		name:       "c.constraint_name LIKE %s",
-	})
+	vals := []interface{}{}
 	qstr := ""
 	if s.hasCheckConstraints {
 		qstr = `SELECT
@@ -675,8 +673,16 @@ func (s InformationSchema) ConstraintColumns(f metadata.Filter) (*metadata.Const
 	  '' AS foreign_name
 	FROM information_schema.constraint_column_usage c
 	`
+		conds, checkVals := s.conditions(len(vals)+1, f, formats{
+			catalog:    "c.constraint_catalog LIKE %s",
+			schema:     "c.table_schema LIKE %s",
+			notSchemas: "c.table_schema NOT IN (%s)",
+			parent:     "c.table_name LIKE %s",
+			name:       "c.constraint_name LIKE %s",
+		})
 		if len(conds) != 0 {
 			qstr += " WHERE " + strings.Join(conds, " AND ")
+			vals = append(vals, checkVals...)
 		}
 		qstr += `
 UNION ALL
@@ -700,10 +706,20 @@ LEFT JOIN information_schema.referential_constraints r ON c.constraint_catalog =
 LEFT JOIN information_schema.key_column_usage f ON r.unique_constraint_catalog = f.constraint_catalog
   AND r.unique_constraint_schema = f.constraint_schema
   AND r.unique_constraint_name = f.constraint_name
-  AND c.ordinal_position = f.position_in_unique_constraint
+  ` + s.clauses[ConstraintJoinCond] + `
+  AND c.position_in_unique_constraint = f.ordinal_position
 `
+	conds, keyVals := s.conditions(len(vals)+1, f, formats{
+		catalog:    "c.constraint_catalog LIKE %s",
+		schema:     "c.table_schema LIKE %s",
+		notSchemas: "c.table_schema NOT IN (%s)",
+		parent:     "c.table_name LIKE %s",
+		reference:  "f.table_name LIKE %s",
+		name:       "c.constraint_name LIKE %s",
+	})
 	if len(conds) != 0 {
 		qstr += " WHERE " + strings.Join(conds, " AND ")
+		vals = append(vals, keyVals...)
 	}
 	rows, closeRows, err := s.query(qstr, []string{}, "constraint_catalog, table_schema, table_name, constraint_name, ordinal_position, column_name", vals...)
 	if err != nil {
@@ -756,7 +772,7 @@ func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, 
 		"start_value",
 		"minimum_value",
 		"maximum_value",
-		s.colExpr[SequenceColumnsIncrement],
+		s.clauses[SequenceColumnsIncrement],
 		"cycle_option",
 	}
 
@@ -828,6 +844,11 @@ func (s InformationSchema) conditions(baseParam int, filter metadata.Filter, for
 		conds = append(conds, fmt.Sprintf(formats.parent, s.pf(baseParam)))
 		baseParam++
 	}
+	if filter.Reference != "" && formats.reference != "" {
+		vals = append(vals, filter.Reference)
+		conds = append(conds, fmt.Sprintf(formats.reference, s.pf(baseParam)))
+		baseParam++
+	}
 	if filter.Name != "" && formats.name != "" {
 		vals = append(vals, filter.Name)
 		conds = append(conds, fmt.Sprintf(formats.name, s.pf(baseParam)))
@@ -853,6 +874,7 @@ type formats struct {
 	schema     string
 	notSchemas string
 	parent     string
+	reference  string
 	name       string
 	types      string
 }
