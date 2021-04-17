@@ -69,15 +69,15 @@ JOIN sys.indexes i ON i.object_id = t.object_id
 	}
 	if f.Schema != "" {
 		vals = append(vals, f.Schema)
-		conds = append(conds, "s.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("s.name LIKE @p%d", len(vals)))
 	}
 	if f.Parent != "" {
 		vals = append(vals, f.Parent)
-		conds = append(conds, "t.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("t.name LIKE @p%d", len(vals)))
 	}
 	if f.Name != "" {
 		vals = append(vals, f.Name)
-		conds = append(conds, "i.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("i.name LIKE @p%d", len(vals)))
 	}
 	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name", vals...)
 	if err != nil {
@@ -127,15 +127,15 @@ JOIN sys.types ty ON ty.user_type_id = c.user_type_id
 	}
 	if f.Schema != "" {
 		vals = append(vals, f.Schema)
-		conds = append(conds, "s.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("s.name LIKE @p%d", len(vals)))
 	}
 	if f.Parent != "" {
 		vals = append(vals, f.Parent)
-		conds = append(conds, "t.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("t.name LIKE @p%d", len(vals)))
 	}
 	if f.Name != "" {
 		vals = append(vals, f.Name)
-		conds = append(conds, "i.name LIKE ?")
+		conds = append(conds, fmt.Sprintf("i.name LIKE @p%d", len(vals)))
 	}
 	rows, closeRows, err := r.query(qstr, conds, "s.name, t.name, i.name, ic.index_column_id", vals...)
 	if err != nil {
