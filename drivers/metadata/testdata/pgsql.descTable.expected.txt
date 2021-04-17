@@ -49,5 +49,5 @@
                 Sequence "public.film_film_id_seq"
   Type  | Start | Min |         Max         | Increment | Cycles? 
 --------+-------+-----+---------------------+-----------+---------
- bigint | 1     | 1   | 9223372036854775807 | 1         | "NO"    
+ bigint | 1     | 1   | 9223372036854775807 | 1         | "NO" 
 
