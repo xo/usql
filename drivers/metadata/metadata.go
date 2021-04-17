@@ -17,6 +17,8 @@ type ExtendedReader interface {
 	ColumnReader
 	IndexReader
 	IndexColumnReader
+	ConstraintReader
+	ConstraintColumnReader
 	FunctionReader
 	FunctionColumnReader
 	SequenceReader
@@ -53,16 +55,28 @@ type ColumnReader interface {
 	Columns(Filter) (*ColumnSet, error)
 }
 
-// IndexReader lists database indexes.
+// IndexReader lists table indexes.
 type IndexReader interface {
 	Reader
 	Indexes(Filter) (*IndexSet, error)
 }
 
-// IndexColumnReader lists database indexes.
+// IndexColumnReader lists index columns.
 type IndexColumnReader interface {
 	Reader
 	IndexColumns(Filter) (*IndexColumnSet, error)
+}
+
+// ConstraintReader lists table constraints.
+type ConstraintReader interface {
+	Reader
+	Constraints(Filter) (*ConstraintSet, error)
+}
+
+// ConstraintColumnReader lists constraint columns.
+type ConstraintColumnReader interface {
+	Reader
+	ConstraintColumns(Filter) (*ConstraintColumnSet, error)
 }
 
 // FunctionReader lists database functions.
@@ -408,6 +422,148 @@ func (c IndexColumn) values() []interface{} {
 		c.IndexName,
 		c.Name,
 		c.DataType,
+	}
+}
+
+type ConstraintSet struct {
+	resultSet
+}
+
+func NewConstraintSet(v []Constraint) *ConstraintSet {
+	r := make([]Result, len(v))
+	for i := range v {
+		r[i] = &v[i]
+	}
+	return &ConstraintSet{
+		resultSet: resultSet{
+			results: r,
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Table",
+				"Name",
+
+				"Type",
+				"Is deferrable",
+				"Initially deferred",
+
+				"Foreign catalog",
+				"Foreign schema",
+				"Foreign table",
+				"Foreign name",
+				"Match type",
+				"Update rule",
+				"Delete rule",
+
+				"Check Clause",
+			},
+		},
+	}
+}
+
+func (i ConstraintSet) Get() *Constraint {
+	return i.results[i.current-1].(*Constraint)
+}
+
+type Constraint struct {
+	Catalog string
+	Schema  string
+	Table   string
+	Name    string
+	Type    string
+
+	IsDeferrable        Bool
+	IsInitiallyDeferred Bool
+
+	ForeignCatalog string
+	ForeignSchema  string
+	ForeignTable   string
+	ForeignName    string
+	MatchType      string
+	UpdateRule     string
+	DeleteRule     string
+
+	CheckClause string
+}
+
+func (i Constraint) values() []interface{} {
+	return []interface{}{
+		i.Catalog,
+		i.Schema,
+		i.Table,
+		i.Name,
+		i.Type,
+		i.IsDeferrable,
+		i.IsInitiallyDeferred,
+		i.ForeignCatalog,
+		i.ForeignSchema,
+		i.ForeignTable,
+		i.ForeignName,
+		i.MatchType,
+		i.UpdateRule,
+		i.DeleteRule,
+	}
+}
+
+type ConstraintColumnSet struct {
+	resultSet
+}
+
+func NewConstraintColumnSet(v []ConstraintColumn) *ConstraintColumnSet {
+	r := make([]Result, len(v))
+	for i := range v {
+		r[i] = &v[i]
+	}
+	return &ConstraintColumnSet{
+		resultSet: resultSet{
+			results: r,
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Table",
+				"Constraint",
+				"Name",
+				"Foreign Catalog",
+				"Foreign Schema",
+				"Foreign Table",
+				"Foreign Constraint",
+				"Foreign Name",
+			},
+		},
+	}
+}
+
+func (c ConstraintColumnSet) Get() *ConstraintColumn {
+	return c.results[c.current-1].(*ConstraintColumn)
+}
+
+type ConstraintColumn struct {
+	Catalog         string
+	Schema          string
+	Table           string
+	Constraint      string
+	Name            string
+	OrdinalPosition int
+
+	ForeignCatalog    string
+	ForeignSchema     string
+	ForeignTable      string
+	ForeignConstraint string
+	ForeignName       string
+}
+
+func (c ConstraintColumn) values() []interface{} {
+	return []interface{}{
+		c.Catalog,
+		c.Schema,
+		c.Table,
+		c.Constraint,
+		c.Name,
+		c.ForeignCatalog,
+		c.ForeignSchema,
+		c.ForeignTable,
+		c.ForeignConstraint,
+		c.ForeignName,
 	}
 }
 
