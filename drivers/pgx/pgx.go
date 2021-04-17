@@ -6,10 +6,13 @@ package pgx
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4/stdlib" // DRIVER: pgx
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
+	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
 )
 
 func init() {
@@ -42,6 +45,10 @@ func init() {
 				return e.Code == "28P01"
 			}
 			return false
+		},
+		NewMetadataReader: pgmeta.NewReader(),
+		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
+			return metadata.NewDefaultWriter(pgmeta.NewReader()(db, opts...))(db, w)
 		},
 	})
 }

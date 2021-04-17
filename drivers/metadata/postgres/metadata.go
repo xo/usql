@@ -1,3 +1,4 @@
+// Package postgres provides a metadata reader
 package postgres
 
 import (
@@ -5,7 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 type metaReader struct {
@@ -15,6 +18,26 @@ type metaReader struct {
 
 var _ metadata.CatalogReader = &metaReader{}
 var _ metadata.IndexReader = &metaReader{}
+
+func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
+	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
+		newIS := infos.New(
+			infos.WithIndexes(false),
+			infos.WithCustomColumns(map[infos.ColumnName]string{
+				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
+			}),
+			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
+			infos.WithCurrentSchema("CURRENT_SCHEMA"),
+		)
+		return metadata.NewPluginReader(
+			newIS(db, opts...),
+			&metaReader{
+				LoggingReader: metadata.NewLoggingReader(db, opts...),
+			},
+		)
+	}
+}
 
 func (r *metaReader) SetLimit(l int) {
 	r.limit = l
