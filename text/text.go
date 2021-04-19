@@ -81,12 +81,12 @@ var (
 		`tableattr`: `Table attributes unset.`,
 		`title`:     `Title is unset.`,
 	}
-	TimingSet    = `Timing is %s.`
-	TimingDesc   = `Time: %0.3f ms`
-	InvalidValue = `invalid -%s value %q: %s`
-
+	TimingSet            = `Timing is %s.`
+	TimingDesc           = `Time: %0.3f ms`
+	InvalidValue         = `invalid -%s value %q: %s`
 	NotSupportedByDriver = `%s not supported by driver`
 	RelationNotFound     = `Did not find any relation named "%s".`
+	InvalidOption        = `invalid option %q`
 )
 
 func init() {

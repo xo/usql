@@ -128,7 +128,7 @@ func run(args *Args, u *user.User) error {
 		if h.IO().Interactive() {
 			return text.ErrSingleTransactionCannotBeUsedWithInteractiveMode
 		}
-		if err = h.Begin(); err != nil {
+		if err = h.BeginTx(context.Background(), nil); err != nil {
 			return err
 		}
 	}

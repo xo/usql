@@ -3,6 +3,7 @@ package metacmd
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -160,7 +161,7 @@ func init() {
 				case err != nil:
 					return fmt.Errorf(text.PasswordChangeFailed, user, err)
 				}
-				//p.Handler.Print(text.PasswordChangeSucceeded, user)
+				// p.Handler.Print(text.PasswordChangeSucceeded, user)
 				return nil
 			},
 		},
@@ -499,20 +500,60 @@ func init() {
 			Name:    "begin",
 			Desc:    "begin a transaction",
 			Aliases: map[string]string{
+				"begin":    "begin a transaction with isolation level,[-read-only] [ISOLATION]",
 				"commit":   "commit current transaction",
 				"rollback": "rollback (abort) current transaction",
+				"abort":    "",
 			},
 			Process: func(p *Params) error {
-				var f func() error
 				switch p.Name {
-				case "begin":
-					f = p.Handler.Begin
 				case "commit":
-					f = p.Handler.Commit
-				case "rollback":
-					f = p.Handler.Rollback
+					return p.Handler.Commit()
+				case "rollback", "abort":
+					return p.Handler.Rollback()
 				}
-				return f()
+				// read begin params
+				readOnly := false
+				ok, n, err := p.GetOptional(true)
+				if ok {
+					if n != "read-only" {
+						return fmt.Errorf(text.InvalidOption, n)
+					}
+					readOnly = true
+					if n, err = p.Get(true); err != nil {
+						return err
+					}
+				}
+				// build tx options
+				var txOpts *sql.TxOptions
+				if readOnly || n != "" {
+					isolation := sql.LevelDefault
+					switch strings.ToLower(n) {
+					case "default", "":
+					case "read-uncommitted":
+						isolation = sql.LevelReadUncommitted
+					case "read-committed":
+						isolation = sql.LevelReadCommitted
+					case "write-committed":
+						isolation = sql.LevelWriteCommitted
+					case "repeatable-read":
+						isolation = sql.LevelRepeatableRead
+					case "snapshot":
+						isolation = sql.LevelSnapshot
+					case "serializable":
+						isolation = sql.LevelSerializable
+					case "linearizable":
+						isolation = sql.LevelLinearizable
+					default:
+						return text.ErrInvalidIsolationLevel
+					}
+					txOpts = &sql.TxOptions{
+						Isolation: isolation,
+						ReadOnly:  readOnly,
+					}
+				}
+				// begin
+				return p.Handler.Begin(txOpts)
 			},
 		},
 		Prompt: {

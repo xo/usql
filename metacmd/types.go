@@ -2,6 +2,7 @@ package metacmd
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"os/user"
 	"strings"
@@ -45,7 +46,7 @@ type Handler interface {
 	// Include includes a file.
 	Include(string, bool) error
 	// Begin begins a transaction.
-	Begin() error
+	Begin(*sql.TxOptions) error
 	// Commit commits the current transaction.
 	Commit() error
 	// Rollback aborts the current transaction.

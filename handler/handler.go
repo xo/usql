@@ -398,7 +398,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	}
 	// start a transaction if forced
 	if forceTrans {
-		if err = h.BeginTx(ctx); err != nil {
+		if err = h.BeginTx(ctx, nil); err != nil {
 			return err
 		}
 	}
@@ -1075,12 +1075,12 @@ func (h *Handler) exec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, 
 }
 
 // Begin begins a transaction.
-func (h *Handler) Begin() error {
-	return h.BeginTx(context.Background())
+func (h *Handler) Begin(txOpts *sql.TxOptions) error {
+	return h.BeginTx(context.Background(), txOpts)
 }
 
 // Begin begins a transaction in a context.
-func (h *Handler) BeginTx(ctx context.Context) error {
+func (h *Handler) BeginTx(ctx context.Context, txOpts *sql.TxOptions) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -1088,7 +1088,7 @@ func (h *Handler) BeginTx(ctx context.Context) error {
 		return text.ErrPreviousTransactionExists
 	}
 	var err error
-	h.tx, err = h.db.BeginTx(ctx, nil)
+	h.tx, err = h.db.BeginTx(ctx, txOpts)
 	if err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}

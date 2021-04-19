@@ -61,4 +61,6 @@ var (
 	ErrInvalidWatchDuration = errors.New("invalid watch duration")
 	// ErrUnableToNormalizeURL is the unable to normalize URL error.
 	ErrUnableToNormalizeURL = errors.New("unable to normalize URL")
+	// ErrInvalidIsolationLevel is the invalid isolation level error.
+	ErrInvalidIsolationLevel = errors.New("invalid isolation level")
 )
