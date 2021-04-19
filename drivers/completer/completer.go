@@ -406,6 +406,34 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if tailMatches(MATCH_CASE, previousWords, `\c|\connect`) {
 		return completeFromList(text, c.connStrings...)
 	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`) {
+		return completeFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
+			`footer`, `format`, `linestyle`, `null`, `numericlocale`, `pager`, `pager_min_lines`,
+			`recordsep`, `recordsep_zero`, `tableattr`, `title`, `title`, `tuples_only`,
+			`unicode_border_linestyle`, `unicode_column_linestyle`, `unicode_header_linestyle`)
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `expanded`) {
+		return completeFromList(text, "auto", "on", "off")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `pager`) {
+		return completeFromList(text, "always", "on", "off")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `fieldsep_zero|footer|numericlocale|pager|recordsep_zero|tuples_only`) {
+		return completeFromList(text, "on", "off")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `format`) {
+		return completeFromList(text, "unaligned", "aligned", "wrapped", "html", "asciidoc", "latex", "latex-longtable", "troff-ms", "csv", "json", "vertical")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `linestyle`) {
+		return completeFromList(text, "ascii", "old-ascii", "unicode")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `unicode_border_linestyle|unicode_column_linestyle|unicode_header_linestyle`) {
+		return completeFromList(text, "single", "double")
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\pset`, `*`) ||
+		tailMatches(MATCH_CASE, previousWords, `\pset`, `*`, `*`) {
+		return nil
+	}
 	// is suggesting basic sql commands better than nothing?
 	return completeFromList(text, c.sqlCommands...)
 }
