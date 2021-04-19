@@ -104,11 +104,11 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse search pattern: %w", err)
 	}
 	res, err := r.Functions(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list functions: %w", err)
 	}
 	defer res.Close()
 
@@ -125,7 +125,7 @@ func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, sho
 			f := res.Get()
 			f.ArgTypes, err = w.getFunctionColumns(f.Catalog, f.Schema, f.SpecificName)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get columns of function %s.%s: %w", f.Schema, f.SpecificName, err)
 			}
 		}
 		res.Reset()
@@ -179,7 +179,7 @@ func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
 func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem bool) error {
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse search pattern: %w", err)
 	}
 
 	found := 0
@@ -189,7 +189,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	if isTR && isCR {
 		res, err := tr.Tables(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to list tables: %w", err)
 		}
 		defer res.Close()
 		if !showSystem {
@@ -203,7 +203,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			t := res.Get()
 			err = w.describeTableDetails(t.Type, t.Schema, t.Name, verbose, showSystem)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to describe %s %s.%s: %w", t.Type, t.Schema, t.Name, err)
 			}
 			found++
 		}
@@ -212,7 +212,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	if _, ok := w.r.(SequenceReader); ok {
 		foundSeq, err := w.describeSequences(sp, tp, verbose, showSystem)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to describe sequences: %w", err)
 		}
 		found += foundSeq
 	}
@@ -222,7 +222,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	if isIR && isICR {
 		res, err := ir.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 		if err != nil && err != ErrNotSupported {
-			return err
+			return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
 		}
 		if res != nil {
 			defer res.Close()
@@ -235,9 +235,9 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 			}
 			for res.Next() {
 				i := res.Get()
-				err = w.describeIndexes(i.Schema, i.Table, i.Name)
+				err = w.describeIndex(i)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to describe index %s from table %s.%s: %w", i.Name, i.Schema, i.Table, err)
 				}
 				found++
 			}
@@ -255,7 +255,7 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 	r := w.r.(ColumnReader)
 	res, err := r.Columns(Filter{Schema: sp, Parent: tp, WithSystem: showSystem})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list columns for table %s: %w", tp, err)
 	}
 	defer res.Close()
 
@@ -273,16 +273,15 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 		return v
 	})
 	params := env.Pall()
-	if sp == "" {
-		params["title"] = fmt.Sprintf("%s \"%s\"\n", typ, tp)
-	} else {
-		params["title"] = fmt.Sprintf("%s \"%s.%s\"\n", typ, sp, tp)
-	}
+	params["title"] = fmt.Sprintf("%s %s\n", typ, qualifiedIdentifier(sp, tp))
+	return w.encodeWithSummary(res, params, w.tableDetailsSummary(sp, tp))
+}
 
+func (w DefaultWriter) encodeWithSummary(res tblfmt.ResultSet, params map[string]string, summary func(io.Writer, int) (int, error)) error {
 	newEnc, opts := tblfmt.FromMap(params)
 	opts = append(opts, tblfmt.WithSummary(
 		map[int]func(io.Writer, int) (int, error){
-			-1: w.tableDetailsSummary(sp, tp),
+			-1: summary,
 		},
 	))
 	enc, err := newEnc(res, opts...)
@@ -371,7 +370,7 @@ func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error 
 	}
 	res, err := r.Indexes(Filter{Schema: sp, Parent: tp})
 	if err != nil && err != ErrNotSupported {
-		return err
+		return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
 	}
 	if res == nil {
 		return nil
@@ -394,7 +393,7 @@ func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error 
 		}
 		i.Columns, err = w.getIndexColumns(i.Catalog, i.Schema, i.Table, i.Name)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get columns of index %s: %w", i.Name, err)
 		}
 		fmt.Fprintf(out, "  \"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
 	}
@@ -421,7 +420,7 @@ func (w DefaultWriter) describeTableConstraints(out io.Writer, filter Filter, po
 	}
 	res, err := r.Constraints(filter)
 	if err != nil && err != ErrNotSupported {
-		return err
+		return fmt.Errorf("failed to list constraints: %w", err)
 	}
 	if res == nil {
 		return nil
@@ -488,11 +487,11 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 	return found, nil
 }
 
-func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
+func (w DefaultWriter) describeIndex(i *Index) error {
 	r := w.r.(IndexColumnReader)
-	res, err := r.IndexColumns(Filter{Schema: sp, Parent: tp, Name: ip})
+	res, err := r.IndexColumns(Filter{Schema: i.Schema, Parent: i.Table, Name: i.Name})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get index columns: %w", err)
 	}
 	defer res.Close()
 	if res.Len() == 0 {
@@ -505,19 +504,16 @@ func (w DefaultWriter) describeIndexes(sp, tp, ip string) error {
 		return []interface{}{f.Name, f.DataType}
 	})
 
-	// TODO footer should say if it's primary, index type and which table this index belongs to
 	params := env.Pall()
-	if sp == "" {
-		params["title"] = fmt.Sprintf("Index \"%s\"\n", ip)
-	} else {
-		params["title"] = fmt.Sprintf("Index \"%s.%s\"\n", sp, ip)
-	}
-	err = tblfmt.EncodeAll(w.w, res, params)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	params["title"] = fmt.Sprintf("Index %s\n", qualifiedIdentifier(i.Schema, i.Name))
+	return w.encodeWithSummary(res, params, func(out io.Writer, _ int) (int, error) {
+		primary := ""
+		if i.IsPrimary == YES {
+			primary = "primary key, "
+		}
+		_, err := fmt.Fprintf(out, "%s%s, for table %s", primary, i.Type, i.Table)
+		return 0, err
+	})
 }
 
 // ListAllDbs matching pattern
@@ -531,7 +527,7 @@ func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
 	}
 	res, err := r.Catalogs(Filter{Name: pattern})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list catalogs: %w", err)
 	}
 	defer res.Close()
 
@@ -554,11 +550,11 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse search pattern: %w", err)
 	}
 	res, err := r.Tables(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list tables: %w", err)
 	}
 	defer res.Close()
 	if !showSystem {
@@ -600,7 +596,7 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 	}
 	res, err := r.Schemas(Filter{Name: pattern, WithSystem: showSystem})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list schemas: %w", err)
 	}
 	defer res.Close()
 
@@ -624,11 +620,11 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse search pattern: %w", err)
 	}
 	res, err := r.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list indexes: %w", err)
 	}
 	defer res.Close()
 
@@ -671,4 +667,11 @@ func parsePattern(pattern string) (string, string, error) {
 		return strings.ReplaceAll(parts[0], "*", "%"), strings.ReplaceAll(parts[1], "*", "%"), nil
 	}
 	return "", strings.ReplaceAll(pattern, "*", "%"), nil
+}
+
+func qualifiedIdentifier(schema, name string) string {
+	if schema == "" {
+		return fmt.Sprintf("\"%s\"", name)
+	}
+	return fmt.Sprintf("\"%s.%s\"", schema, name)
 }
