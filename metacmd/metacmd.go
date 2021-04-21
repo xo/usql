@@ -40,6 +40,8 @@ const (
 	Copyright
 	// Connect is the connect meta command (\c, \connect).
 	Connect
+	// Copy is the copy meta command (\copy).
+	Copy
 	// Disconnect is the disconnect meta command (\Z).
 	Disconnect
 	// Password is the change password meta command (\password).

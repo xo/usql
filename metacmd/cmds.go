@@ -762,6 +762,62 @@ func init() {
 				return nil
 			},
 		},
+		Copy: {
+			Section: SectionInputOutput,
+			Name:    "copy",
+			Desc:    "copy data from/to a table,[SRC_URL] [DST_URL] [SRC] [DST] ",
+			Process: func(p *Params) error {
+				srcURLstr, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				srcURL, err := dburl.Parse(srcURLstr)
+				if err != nil {
+					return err
+				}
+				dstURLstr, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				dstURL, err := dburl.Parse(dstURLstr)
+				if err != nil {
+					return err
+				}
+				src, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				dst, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+
+				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+				srcDB, err := drivers.Open(srcURL)
+				if err != nil {
+					return err
+				}
+				defer srcDB.Close()
+				dstDB, err := drivers.Open(dstURL)
+				if err != nil {
+					return err
+				}
+				defer dstDB.Close()
+				// get the result set
+				r, err := srcDB.QueryContext(ctx, src)
+				if err != nil {
+					return err
+				}
+				defer r.Close()
+				n, err := drivers.Copy(ctx, dstURL, r, dst)
+				if err != nil {
+					return err
+				}
+				stop()
+				p.Handler.Print("Copied %d rows", n)
+				return nil
+			},
+		},
 	}
 	// set up map
 	cmdMap = make(map[string]Metacmd, len(cmds))

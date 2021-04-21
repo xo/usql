@@ -128,6 +128,7 @@ func NewDefaultCompleter(opts ...Option) readline.AutoCompleter {
 			`\commit`,
 			`\conninfo`,
 			`\copyright`,
+			`\copy`,
 			`\d+`,
 			`\da+`,
 			`\da`,

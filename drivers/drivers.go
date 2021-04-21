@@ -98,6 +98,8 @@ type Driver struct {
 	NewMetadataWriter func(db DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer
 	// NewCompleter returns a db auto-completer.
 	NewCompleter func(db DB, opts ...completer.Option) readline.AutoCompleter
+	// Copy rows into the database table
+	Copy func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error)
 }
 
 // drivers is the map of drivers funcs.
@@ -483,4 +485,107 @@ func NewCompleter(u *dburl.URL, db DB, opts ...completer.Option) readline.AutoCo
 		completer.WithDB(db),
 	}, opts...)
 	return completer.NewDefaultCompleter(opts...)
+}
+
+// Copy the result set to the destination sql.DB.
+func Copy(ctx context.Context, u *dburl.URL, rows *sql.Rows, table string) (int64, error) {
+	d, ok := drivers[u.Driver]
+	if !ok {
+		return 0, WrapErr(u.Driver, text.ErrDriverNotAvailable)
+	}
+	if d.Copy == nil {
+		return 0, fmt.Errorf(text.NotSupportedByDriver, `copy`)
+	}
+	f := sql.Open
+	if d.Open != nil {
+		var err error
+		if f, err = d.Open(u); err != nil {
+			return 0, WrapErr(u.Driver, err)
+		}
+	}
+	db, err := f(u.Driver, u.DSN)
+	if err != nil {
+		return 0, WrapErr(u.Driver, err)
+	}
+	defer db.Close()
+
+	return d.Copy(ctx, db, rows, table)
+}
+
+func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
+	if placeholder == nil {
+		placeholder = func(n int) string { return fmt.Sprintf("$%d", n) }
+	}
+	return func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
+		columns, err := rows.Columns()
+		if err != nil {
+			return 0, fmt.Errorf("failed to fetch source rows columns: %w", err)
+		}
+		clen := len(columns)
+
+		query := table
+		if !strings.HasPrefix(strings.ToLower(query), "insert into") {
+			leftParen := strings.IndexRune(table, '(')
+			if leftParen == -1 {
+				colStmt, err := db.PrepareContext(ctx, "SELECT * FROM "+table+" WHERE 1=0")
+				if err != nil {
+					return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
+				}
+				colRows, err := colStmt.QueryContext(ctx)
+				if err != nil {
+					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
+				}
+				columns, err := colRows.Columns()
+				if err != nil {
+					return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
+				}
+				table += "(" + strings.Join(columns, ", ") + ")"
+			}
+			// TODO if the db supports multiple rows per insert, create batches of 100 rows
+			placeholders := make([]string, clen)
+			for i := 0; i < clen; i++ {
+				placeholders[i] = placeholder(i + 1)
+			}
+			query = "INSERT INTO " + table + " VALUES (" + strings.Join(placeholders, ", ") + ")"
+		}
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return 0, fmt.Errorf("failed to begin transaction: %w", err)
+		}
+		stmt, err := tx.PrepareContext(ctx, query)
+		if err != nil {
+			return 0, fmt.Errorf("failed to prepare insert query: %w", err)
+		}
+
+		values := make([]interface{}, clen)
+		for i := 0; i < clen; i++ {
+			values[i] = new(interface{})
+		}
+
+		var n int64
+		for rows.Next() {
+			err = rows.Scan(values...)
+			if err != nil {
+				return n, fmt.Errorf("failed to scan row: %w", err)
+			}
+			res, err := stmt.ExecContext(ctx, values...)
+			if err != nil {
+				return n, fmt.Errorf("failed to exec insert: %w", err)
+			}
+			rn, err := res.RowsAffected()
+			if err != nil {
+				return n, fmt.Errorf("failed to check rows affected: %w", err)
+			}
+			n += rn
+		}
+		// TODO if using batches, flush the last batch,
+		// TODO prepare another statement and count remaining rows
+
+		err = tx.Commit()
+		if err != nil {
+			return n, fmt.Errorf("failed to commit transaction: %w", err)
+		}
+
+		return n, rows.Err()
+	}
 }
