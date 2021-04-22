@@ -1,7 +1,7 @@
-// Package metadata_test runs integration tests for metadata package
+// Package drivers_test runs integration tests for drivers package
 // on real databases running in containers. During development, to avoid rebuilding
-// containers every run, add the `-cleanup=false` flags when calling `go test`.
-package metadata_test
+// containers every run, add the `-cleanup=false` flags when calling `go test github.com/xo/usql/drivers`.
+package drivers_test
 
 import (
 	"bytes"
@@ -13,26 +13,23 @@ import (
 	"os"
 	"testing"
 
-	_ "github.com/go-sql-driver/mysql"
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
-	_ "github.com/trinodb/trino-go-client/trino"
+	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	infos "github.com/xo/usql/drivers/metadata/informationschema"
-	_ "github.com/xo/usql/drivers/postgres"
+	_ "github.com/xo/usql/internal"
 )
 
 type Database struct {
 	BuildArgs  []dc.BuildArg
 	RunOptions *dt.RunOptions
-	Driver     string
-	URL        string
+	DSN        string
+	URL        *dburl.URL
+
 	DockerPort string
 	Resource   *dt.Resource
 	DB         *sql.DB
-	Opts       []metadata.ReaderOption
-	Reader     metadata.Reader
-	WriterOpts []metadata.WriterOption
 }
 
 var (
@@ -49,20 +46,8 @@ var (
 				Cmd:  []string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"},
 				Env:  []string{"POSTGRES_PASSWORD=pw"},
 			},
-			Driver:     "postgres",
-			URL:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
+			DSN:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
-			Opts: []metadata.ReaderOption{
-				infos.WithIndexes(false),
-				infos.WithCustomClauses(map[infos.ClauseName]string{
-					infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
-					infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
-				}),
-				infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
-			},
-			WriterOpts: []metadata.WriterOption{
-				metadata.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
-			},
 		},
 		"mysql": {
 			BuildArgs: []dc.BuildArg{
@@ -76,22 +61,8 @@ var (
 				Cmd:  []string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log"},
 				Env:  []string{"MYSQL_ROOT_PASSWORD=pw"},
 			},
-			Driver:     "mysql",
-			URL:        "root:pw@(localhost:%s)/mysql?parseTime=true",
+			DSN:        "mysql://root:pw@localhost:%s/mysql?parseTime=true",
 			DockerPort: "3306/tcp",
-			Opts: []metadata.ReaderOption{
-				infos.WithPlaceholder(func(int) string { return "?" }),
-				infos.WithSequences(false),
-				infos.WithCheckConstraints(false),
-				infos.WithCustomClauses(map[infos.ClauseName]string{
-					infos.ColumnsNumericPrecRadix:         "10",
-					infos.FunctionColumnsNumericPrecRadix: "10",
-					infos.ConstraintIsDeferrable:          "''",
-					infos.ConstraintInitiallyDeferred:     "''",
-					infos.ConstraintJoinCond:              "AND r.table_name = f.table_name",
-				}),
-				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
-			},
 		},
 		"trino": {
 			BuildArgs: []dc.BuildArg{
@@ -100,26 +71,8 @@ var (
 			RunOptions: &dt.RunOptions{
 				Name: "usql-trino",
 			},
-			Driver:     "trino",
-			URL:        "http://test@localhost:%s?catalog=tpch&schema=sf1",
+			DSN:        "trino://test@localhost:%s/tpch/sf1",
 			DockerPort: "8080/tcp",
-			Opts: []metadata.ReaderOption{
-				infos.WithPlaceholder(func(int) string { return "?" }),
-				infos.WithFunctions(false),
-				infos.WithSequences(false),
-				infos.WithIndexes(false),
-				infos.WithConstraints(false),
-				infos.WithCustomClauses(map[infos.ClauseName]string{
-					infos.ColumnsColumnSize:               "0",
-					infos.ColumnsNumericScale:             "0",
-					infos.ColumnsNumericPrecRadix:         "0",
-					infos.ColumnsCharOctetLength:          "0",
-					infos.FunctionColumnsColumnSize:       "0",
-					infos.FunctionColumnsNumericScale:     "0",
-					infos.FunctionColumnsNumericPrecRadix: "0",
-					infos.FunctionColumnsCharOctetLength:  "0",
-				}),
-			},
 		},
 	}
 	cleanup bool
@@ -148,11 +101,16 @@ func TestMain(m *testing.M) {
 			}
 		}
 
+		hostPort := db.Resource.GetPort(db.DockerPort)
+		db.URL, err = dburl.Parse(fmt.Sprintf(db.DSN, hostPort))
+		if err != nil {
+			log.Fatalf("Failed to parse db URL %s: %v", db.DSN, err)
+		}
+
 		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 		if err := pool.Retry(func() error {
-			hostPort := db.Resource.GetPort(db.DockerPort)
 			var err error
-			db.DB, err = sql.Open(db.Driver, fmt.Sprintf(db.URL, hostPort))
+			db.DB, err = drivers.Open(db.URL)
 			if err != nil {
 				return err
 			}
@@ -160,7 +118,6 @@ func TestMain(m *testing.M) {
 		}); err != nil {
 			log.Fatal("Timed out waiting for db: ", err)
 		}
-		db.Reader = infos.New(db.Opts...)(db.DB)
 	}
 
 	code := m.Run()
@@ -283,7 +240,10 @@ func TestWriter(t *testing.T) {
 			}
 
 			db := dbs[test.dbName]
-			w := metadata.NewDefaultWriter(db.Reader, db.WriterOpts...)(db.DB, fo)
+			w, err := drivers.NewMetadataWriter(db.URL, db.DB, fo)
+			if err != nil {
+				log.Fatalf("Could not create writer %s %s: %v", test.dbName, testFunc.label, err)
+			}
 
 			err = testFunc.f(w)
 			if err != nil {

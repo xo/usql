@@ -2,6 +2,5 @@
  Schema | Catalog 
 --------+---------
  sakila | def 
- sys    | def 
-(2 rows)
+(1 row)
 

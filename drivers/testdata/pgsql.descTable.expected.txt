@@ -15,6 +15,12 @@
  last_update          | timestamp without time zone | "NO"     | now()                                 |    6 |              0 |    10 |            0 
  special_features     | ARRAY                       | "YES"    |                                       |    0 |              0 |    10 |            0 
  fulltext             | tsvector                    | "NO"     |                                       |    0 |              0 |    10 |            0 
+Indexes:
+  "film_pkey" PRIMARY_KEY, UNIQUE, index (film_id)
+  "film_fulltext_idx" index (fulltext)
+  "idx_fk_language_id" index (language_id)
+  "idx_fk_original_language_id" index (original_language_id)
+  "idx_title" index (title)
 Foreign-key constraints:
   "film_language_id_fkey" FOREIGN KEY (language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
   "film_original_language_id_fkey" FOREIGN KEY (original_language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -30,6 +36,9 @@ Referenced by:
  actor_id    | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
+Indexes:
+  "film_actor_pkey" PRIMARY_KEY, UNIQUE, index (actor_id, film_id)
+  "idx_fk_film_id" index (film_id)
 Foreign-key constraints:
   "film_actor_actor_id_fkey" FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
   "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -41,6 +50,8 @@ Foreign-key constraints:
  film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  category_id | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
  last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
+Indexes:
+  "film_category_pkey" PRIMARY_KEY, UNIQUE, index (film_id, category_id)
 Foreign-key constraints:
   "film_category_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT
   "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -63,4 +74,30 @@ Foreign-key constraints:
   Type  | Start | Min |         Max         | Increment | Cycles? 
 --------+-------+-----+---------------------+-----------+---------
  bigint | 1     | 1   | 9223372036854775807 | 1         | "NO" 
+
+Index "public.film_actor_pkey"
+   Name   |   Type   
+----------+----------
+ actor_id | smallint 
+ film_id  | smallint 
+primary key, index, for table film_actor
+
+Index "public.film_category_pkey"
+    Name     |   Type   
+-------------+----------
+ film_id     | smallint 
+ category_id | smallint 
+primary key, index, for table film_category
+
+Index "public.film_fulltext_idx"
+   Name   |   Type    
+----------+-----------
+ fulltext | gtsvector 
+index, for table film
+
+Index "public.film_pkey"
+  Name   |  Type   
+---------+---------
+ film_id | integer 
+primary key, index, for table film
 

@@ -42,6 +42,5 @@
  sakila | idx_fk_address_id           | BTREE    | store         | "NO"     | "NO" 
  sakila | idx_unique_manager          | BTREE    | store         | "NO"     | "YES" 
  sakila | PRIMARY                     | BTREE    | store         | "YES"    | "YES" 
- sys    | PRIMARY                     | BTREE    | sys_config    | "YES"    | "YES" 
-(42 rows)
+(41 rows)
 
