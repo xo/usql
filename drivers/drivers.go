@@ -496,16 +496,9 @@ func Copy(ctx context.Context, u *dburl.URL, rows *sql.Rows, table string) (int6
 	if d.Copy == nil {
 		return 0, fmt.Errorf(text.NotSupportedByDriver, `copy`)
 	}
-	f := sql.Open
-	if d.Open != nil {
-		var err error
-		if f, err = d.Open(u); err != nil {
-			return 0, WrapErr(u.Driver, err)
-		}
-	}
-	db, err := f(u.Driver, u.DSN)
+	db, err := Open(u)
 	if err != nil {
-		return 0, WrapErr(u.Driver, err)
+		return 0, err
 	}
 	defer db.Close()
 
@@ -531,6 +524,7 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 				if err != nil {
 					return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
 				}
+				defer colStmt.Close()
 				colRows, err := colStmt.QueryContext(ctx)
 				if err != nil {
 					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
@@ -556,6 +550,7 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 		if err != nil {
 			return 0, fmt.Errorf("failed to prepare insert query: %w", err)
 		}
+		defer stmt.Close()
 
 		values := make([]interface{}, clen)
 		for i := 0; i < clen; i++ {

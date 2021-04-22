@@ -5,6 +5,7 @@ package drivers_test
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
@@ -49,6 +51,21 @@ var (
 			DSN:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
 		},
+		"pgx": {
+			BuildArgs: []dc.BuildArg{
+				{Name: "BASE_IMAGE", Value: "postgres:13"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/postgres-sakila-db/postgres-sakila-schema.sql"},
+				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
+				{Name: "USER", Value: "root"},
+			},
+			RunOptions: &dt.RunOptions{
+				Name: "usql-pgsql",
+				Cmd:  []string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"},
+				Env:  []string{"POSTGRES_PASSWORD=pw"},
+			},
+			DSN:        "pgx://postgres:pw@localhost:%s/postgres?sslmode=disable",
+			DockerPort: "5432/tcp",
+		},
 		"mysql": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mysql:8"},
@@ -61,7 +78,7 @@ var (
 				Cmd:  []string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log"},
 				Env:  []string{"MYSQL_ROOT_PASSWORD=pw"},
 			},
-			DSN:        "mysql://root:pw@localhost:%s/mysql?parseTime=true",
+			DSN:        "mysql://root:pw@localhost:%s/sakila?parseTime=true",
 			DockerPort: "3306/tcp",
 		},
 		"trino": {
@@ -259,6 +276,54 @@ func TestWriter(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+		}
+	}
+}
+
+func TestCopy(t *testing.T) {
+	// setup test data, ignoring errors, since there'll be duplicates
+	_, _ = dbs["pgsql"].DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_address_id_fkey")
+	_, _ = dbs["pgsql"].DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_store_id_fkey")
+	_, _ = dbs["pgsql"].DB.Exec("INSERT INTO staff VALUES (1, 'John', 'Doe', 1, 'john@invalid.com', 1, true, 'jdoe', 'abc', now(), 'abcd')")
+
+	testCases := []struct {
+		dbName string
+	}{
+		{
+			dbName: "pgsql",
+		},
+		{
+			dbName: "pgx",
+		},
+		{
+			dbName: "mysql",
+		},
+	}
+	for _, test := range testCases {
+		db := dbs[test.dbName]
+
+		// TODO test copy from a different DB, maybe csvq?
+		// TODO test copy from same DB
+
+		_, _ = db.DB.Exec("DROP TABLE staff_copy")
+		_, err := db.DB.Exec("CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1")
+		if err != nil {
+			log.Fatalf("Could not create staff_copy: %v", err)
+		}
+		rows, err := dbs["pgsql"].DB.Query("SELECT * FROM staff")
+		if err != nil {
+			log.Fatalf("Could not get rows to copy: %v", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var rlen int64 = 1
+		n, err := drivers.Copy(ctx, db.URL, rows, "staff_copy(staff_id, first_name, last_name, address_id, email, store_id, active, username, password, last_update, picture)")
+		if err != nil {
+			log.Fatalf("Could not copy: %v", err)
+		}
+		if n != rlen {
+			log.Fatalf("Expected to copy %d rows but got %d", rlen, n)
 		}
 	}
 }

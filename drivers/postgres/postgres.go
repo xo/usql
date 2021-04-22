@@ -77,6 +77,7 @@ func init() {
 				if err != nil {
 					return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
 				}
+				defer colStmt.Close()
 				colRows, err := colStmt.QueryContext(ctx)
 				if err != nil {
 					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
@@ -95,6 +96,7 @@ func init() {
 			if err != nil {
 				return 0, fmt.Errorf("failed to prepare insert query: %w", err)
 			}
+			defer stmt.Close()
 
 			values := make([]interface{}, clen)
 			for i := 0; i < clen; i++ {
@@ -107,16 +109,20 @@ func init() {
 				if err != nil {
 					return n, fmt.Errorf("failed to scan row: %w", err)
 				}
-				res, err := stmt.ExecContext(ctx, values...)
+				_, err := stmt.ExecContext(ctx, values...)
 				if err != nil {
-					return n, fmt.Errorf("failed to exec insert: %w", err)
+					return n, fmt.Errorf("failed to exec copy: %w", err)
 				}
-				rn, err := res.RowsAffected()
-				if err != nil {
-					return n, fmt.Errorf("failed to check rows affected: %w", err)
-				}
-				n += rn
 			}
+			res, err := stmt.ExecContext(ctx)
+			if err != nil {
+				return n, fmt.Errorf("failed to final exec copy: %w", err)
+			}
+			rn, err := res.RowsAffected()
+			if err != nil {
+				return n, fmt.Errorf("failed to check rows affected: %w", err)
+			}
+			n += rn
 
 			err = tx.Commit()
 			if err != nil {
