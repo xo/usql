@@ -20,5 +20,5 @@ jobs:
       run: ./most.sh -v
     - name: Shell Tests
       run: |
-        rm -f test.db
+        rm -f *.db
         go run testcli.go

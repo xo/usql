@@ -8,6 +8,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -62,6 +63,11 @@ func cliTests() ([]Test, error) {
 			[]string{"sqlite://test.db"},
 			env, buf,
 		},
+		{
+			"complex moderncsqlite test script",
+			[]string{"mq://test2.db"},
+			env, buf,
+		},
 	}, nil
 }
 
@@ -70,7 +76,7 @@ func (test Test) do(ctx context.Context, timeout time.Duration) error {
 		append([]string{"./usql"}, test.args...),
 		timeout,
 		gexpect.SetEnv(test.env),
-		gexpect.Tee(os.Stdout),
+		gexpect.Tee(&noopWriteCloser{os.Stdout}),
 	)
 	if err != nil {
 		return err
@@ -89,4 +95,12 @@ func (test Test) do(ctx context.Context, timeout time.Duration) error {
 		return err
 	}
 	return exp.Close()
+}
+
+type noopWriteCloser struct {
+	io.Writer
+}
+
+func (*noopWriteCloser) Close() error {
+	return nil
 }
