@@ -28,5 +28,6 @@ func init() {
 			}
 			return false
 		},
+		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

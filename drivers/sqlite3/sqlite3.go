@@ -59,6 +59,7 @@ func init() {
 			return s, nil
 		},
 		NewMetadataReader: newReader,
+		Copy:              drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }
 

@@ -58,6 +58,7 @@ func init() {
 			}
 			return metadata.NewDefaultWriter(newReader(db, opts...), writerOpts...)(db, w)
 		},
+		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }
 
