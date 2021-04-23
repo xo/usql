@@ -5,9 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       cassandra:
-        image: kenshaw/cassandra
+        image: usql/cassandra
       postgres:
-        image: postgres
+        image: usql/postgres
         env:
           POSTGRES_PASSWORD: P4ssw0rd
       mysql:
