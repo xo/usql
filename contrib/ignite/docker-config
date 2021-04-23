@@ -1,5 +1,3 @@
-# see https://github.com/apache/ignite/tree/master/modules/docker
-
 NAME=ignite
-IMAGE=ignite-x
+IMAGE=usql/ignite
 NETWORK=host

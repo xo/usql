@@ -3,6 +3,23 @@ name: Test
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      cassandra:
+        image: kenshaw/cassandra
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: P4ssw0rd
+      mysql:
+        image: mariadb
+        env:
+          MYSQL_ROOT_PASSWORD: P4ssw0rd
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Express
+          SA_PASSWORD: Adm1nP@ssw0rd
     steps:
     - name: Install Go
       uses: actions/setup-go@v2

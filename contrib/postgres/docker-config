@@ -1,5 +1,5 @@
 NAME=postgres
-IMAGE=postgres-x
+IMAGE=usql/postgres
 PUBLISH=5432:5432
 ENV="POSTGRES_PASSWORD=P4ssw0rd"
 EXTRA="-c ssl=on -c ssl_cert_file=/var/lib/postgresql/server.crt -c ssl_key_file=/var/lib/postgresql/server.key"
