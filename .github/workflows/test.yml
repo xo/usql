@@ -6,20 +6,28 @@ jobs:
     services:
       cassandra:
         image: usql/cassandra
+        ports:
+          - 9042:9042
       postgres:
         image: usql/postgres
         env:
           POSTGRES_PASSWORD: P4ssw0rd
+        ports:
+          - 5432:5432
       mysql:
         image: mariadb
         env:
           MYSQL_ROOT_PASSWORD: P4ssw0rd
+        ports:
+          - 3306:3306
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
           ACCEPT_EULA: Y
           MSSQL_PID: Express
           SA_PASSWORD: Adm1nP@ssw0rd
+        ports:
+          - 1433:1433
     steps:
     - name: Install Go
       uses: actions/setup-go@v2
@@ -36,6 +44,4 @@ jobs:
     - name: Build with "most"
       run: ./most.sh -v
     - name: Shell Tests
-      run: |
-        rm -f *.db
-        go run testcli.go
+      run: go run testcli.go

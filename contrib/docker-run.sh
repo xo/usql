@@ -27,7 +27,7 @@ docker_run() {
     echo "error: $BASE/docker-config doesn't exist"
     exit 1
   fi
-  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS EXTRA
+  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS
   source $BASE/docker-config
   if [[ "$TARGET" != "$NAME" ]]; then
     echo "error: $BASE/docker-config is invalid"
@@ -82,7 +82,7 @@ docker_run() {
     )
   fi
   (set -ex;
-    docker run --detach --rm ${PARAMS[@]} $IMAGE $EXTRA
+    docker run --detach --rm ${PARAMS[@]} $IMAGE
   )
 }
 
