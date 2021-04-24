@@ -885,6 +885,54 @@ pg:booktest@=> \g
 Any [Go supported time format][go-time] or const name (for example, `Kitchen`,
 in the above) can be used for `TIME_FORMAT`.
 
+#### Copy
+
+`usql` implements the `\copy` command that reads data from a database connection
+and writes it into another one. It requires 4 parameters:
+* source connection string
+* destination connection string
+* source query
+* destination table name, optionally with columns
+
+Connection strings support same syntax as in `\connect`. Source query needs to be quoted. Source query must
+select same number of columns and in same order as they're defined in the destination table, unless
+they're specified for the destination, as `table_name(column1, column2, ...)`. Quote the whole expression,
+if it contains spaces. `\copy` does not attempt to perform any data type conversion. Use `CAST` in the source query
+to ensure data types compatible with destination table. Some drivers may have limited data type support,
+and they might not work at all when combined with other limited drivers.
+
+Unlike `psql`, `\copy` in `usql` cannot read data directly from files. Drivers like `csvq` can help with this,
+since they support reading CSV and JSON files.
+
+```sh
+$ cat books.csv
+book_id,author_id,isbn,title,year,available,tags
+3,1,3,one,2018,"2018-06-01 00:00:00",{}
+4,2,4,two,2019,"2019-06-01 00:00:00",{}
+
+$ usql -c "\copy csvq://. sqlite3://test.db 'select * from books' 'books'"
+Copied 2 rows
+```
+
+Note that it might be a better idea to use tools dedicated to the destination database to load data in a robust way.
+
+`\copy` reads data from plain `SELECT` queries. Most drivers that have `\copy` enabled use `INSERT` statements,
+except for PostgreSQL ones, which use `COPY TO`. Because data needs to be downloaded from one database and uploaded
+into another, don't expect same performance as in `psql`. For loading large amount of data efficiently,
+use tools native to the destination database.
+
+You can use `\copy` with variables. Better yet, put those `\set` commands in your runtime configuration file
+at `$HOME/.usqlrc` and passwords at `$HOME/.usqlpass`.
+
+```sh
+$ usql
+Type "help" for help.
+
+(not connected)=> \set pglocal postgres://postgres@localhost:49153?sslmode=disable
+(not connected)=> \set oralocal godror://system@localhost:1521/orasid
+(not connected)=> \copy :pglocal :oralocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
+```
+
 ## Contributing
 
 `usql` is currently a WIP, and is aiming towards a 1.0 release soon.
