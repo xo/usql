@@ -11,7 +11,7 @@ require (
 	github.com/Microsoft/hcsshim v0.8.15 // indirect
 	github.com/SAP/go-hdb v0.103.2
 	github.com/VoltDB/voltdb-client-go v1.0.1
-	github.com/alecthomas/chroma v0.8.2
+	github.com/alecthomas/chroma v0.9.1
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
@@ -20,7 +20,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.23 // indirect
+	github.com/aws/aws-sdk-go v1.38.25 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -31,7 +31,6 @@ require (
 	github.com/couchbase/gomemcached v0.1.2 // indirect
 	github.com/couchbase/goutils v0.0.0-20210118111533-e33d3ffb5401 // indirect
 	github.com/denisenkom/go-mssqldb v0.10.0
-	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/genjidb/genji v0.11.0
@@ -91,20 +90,21 @@ require (
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210421230115-4e50805a0758 // indirect
-	golang.org/x/sys v0.0.0-20210421221651-33663a62ff08 // indirect
+	golang.org/x/net v0.0.0-20210423184538-5f58ad60dda6 // indirect
+	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/api v0.45.0 // indirect
-	google.golang.org/genproto v0.0.0-20210421164718-3947dc264843 // indirect
+	google.golang.org/genproto v0.0.0-20210423144448-3a41ef94ed2b // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
+	modernc.org/cc/v3 v3.33.0 // indirect
 	modernc.org/db v1.0.1 // indirect
 	modernc.org/file v1.0.2 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/lldb v1.0.1 // indirect
 	modernc.org/ql v1.3.1
-	modernc.org/sqlite v1.10.3
+	modernc.org/sqlite v1.10.4
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/zappy v1.0.3 // indirect
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
