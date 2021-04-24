@@ -311,14 +311,17 @@ func Getshell() (string, string) {
 // Shell runs s as a shell. When s is empty the user's SHELL or COMSPEC is
 // used. See Getshell.
 func Shell(s string) error {
-	if s = strings.TrimSpace(s); s == "" {
-		s, _ = Getshell()
-		if s == "" {
-			return text.ErrNoShellAvailable
-		}
+	shell, param := Getshell()
+	if shell == "" {
+		return text.ErrNoShellAvailable
+	}
+	s = strings.TrimSpace(s)
+	var params []string
+	if s != "" {
+		params = append(params, param, s)
 	}
 	// drop to shell
-	cmd := exec.Command(s)
+	cmd := exec.Command(shell, params...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	_ = cmd.Run()
 	return nil
