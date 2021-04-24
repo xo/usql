@@ -103,6 +103,12 @@ func cliTests() ([]Test, error) {
 			[]string{"ca://cassandra:cassandra@localhost"},
 			env,
 		},
+		{
+			"copy/a_bit_of_everything",
+			"./testdata/copy.sql",
+			nil,
+			env,
+		},
 	}, nil
 }
 
