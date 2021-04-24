@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	WORD_BREAKS = "\t\n@$><=;|&{() "
+	WORD_BREAKS = "\t\n$><=;|&{() "
 )
 
 type caseType bool
@@ -404,8 +404,12 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if tailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
 		return completeFromFiles(text)
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\c|\connect`) {
+	if tailMatches(MATCH_CASE, previousWords, `\c|\connect|\copy`) ||
+		tailMatches(MATCH_CASE, previousWords, `\copy`, `*`) {
 		return completeFromList(text, c.connStrings...)
+	}
+	if tailMatches(MATCH_CASE, previousWords, `\copy`, `*`, `*`) {
+		return nil
 	}
 	if tailMatches(MATCH_CASE, previousWords, `\pset`) {
 		return completeFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
