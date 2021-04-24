@@ -26,7 +26,7 @@ func init() {
 			infos.ConstraintJoinCond:              "AND r.table_name = f.table_name",
 		}),
 		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema", "sys"}),
-		infos.WithCurrentSchema("DATABASE()"),
+		infos.WithCurrentSchema("COALESCE(DATABASE(), '%')"),
 	)
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,
