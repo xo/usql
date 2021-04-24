@@ -1,0 +1,7 @@
+ List of schemas
+ Schema | Catalog 
+--------+---------
+ dbo    | sakila 
+ guest  | sakila 
+(2 rows)
+

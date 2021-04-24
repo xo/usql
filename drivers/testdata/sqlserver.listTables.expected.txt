@@ -1,0 +1,10 @@
+                  List of relations
+ Schema |     Name      |    Type    | Size | Comment 
+--------+---------------+------------+------+---------
+ dbo    | film          | BASE TABLE |      |  
+ dbo    | film_actor    | BASE TABLE |      |  
+ dbo    | film_category | BASE TABLE |      |  
+ dbo    | film_text     | BASE TABLE |      |  
+ dbo    | film_list     | VIEW       |      |  
+(5 rows)
+

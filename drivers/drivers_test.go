@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -26,6 +27,7 @@ import (
 type Database struct {
 	BuildArgs  []dc.BuildArg
 	RunOptions *dt.RunOptions
+	Exec       []string
 	DSN        string
 	URL        *dburl.URL
 
@@ -33,6 +35,10 @@ type Database struct {
 	Resource   *dt.Resource
 	DB         *sql.DB
 }
+
+const (
+	pw = "yourStrong123_Password"
+)
 
 var (
 	dbs = map[string]*Database{
@@ -80,6 +86,21 @@ var (
 			},
 			DSN:        "mysql://root:pw@localhost:%s/sakila?parseTime=true",
 			DockerPort: "3306/tcp",
+		},
+		"sqlserver": {
+			BuildArgs: []dc.BuildArg{
+				{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/sql-server-sakila-db/sql-server-sakila-schema.sql"},
+				{Name: "TARGET", Value: "/schema"},
+				{Name: "USER", Value: "mssql:0"},
+			},
+			RunOptions: &dt.RunOptions{
+				Name: "usql-sqlserver",
+				Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
+			},
+			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
+			DSN:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
+			DockerPort: "1433/tcp",
 		},
 		"trino": {
 			BuildArgs: []dc.BuildArg{
@@ -135,6 +156,18 @@ func TestMain(m *testing.M) {
 		}); err != nil {
 			log.Fatal("Timed out waiting for db: ", err)
 		}
+
+		if len(db.Exec) != 0 {
+			exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{
+				StdIn:  os.Stdin,
+				StdOut: os.Stdout,
+				StdErr: os.Stderr,
+				TTY:    true,
+			})
+			if err != nil || exitCode != 0 {
+				log.Fatal("Could not load schema: ", err)
+			}
+		}
 	}
 
 	code := m.Run()
@@ -182,6 +215,12 @@ func TestWriter(t *testing.T) {
 					},
 				},
 				{
+					label: "listIndexes",
+					f: func(w metadata.Writer) error {
+						return w.ListIndexes("", true, false)
+					},
+				},
+				{
 					label: "listSchemas",
 					f: func(w metadata.Writer) error {
 						return w.ListSchemas("", true, false)
@@ -191,6 +230,41 @@ func TestWriter(t *testing.T) {
 		},
 		{
 			dbName: "mysql",
+			funcs: []testFunc{
+				{
+					label: "descTable",
+					f: func(w metadata.Writer) error {
+						return w.DescribeTableDetails("film*", true, false)
+					},
+				},
+				{
+					label: "listTables",
+					f: func(w metadata.Writer) error {
+						return w.ListTables("tvmsE", "film*", true, false)
+					},
+				},
+				{
+					label: "listFuncs",
+					f: func(w metadata.Writer) error {
+						return w.DescribeFunctions("", "", false, false)
+					},
+				},
+				{
+					label: "listIndexes",
+					f: func(w metadata.Writer) error {
+						return w.ListIndexes("", true, false)
+					},
+				},
+				{
+					label: "listSchemas",
+					f: func(w metadata.Writer) error {
+						return w.ListSchemas("", true, false)
+					},
+				},
+			},
+		},
+		{
+			dbName: "sqlserver",
 			funcs: []testFunc{
 				{
 					label: "descTable",
@@ -286,17 +360,52 @@ func TestCopy(t *testing.T) {
 	_, _ = dbs["pgsql"].DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_store_id_fkey")
 	_, _ = dbs["pgsql"].DB.Exec("INSERT INTO staff VALUES (1, 'John', 'Doe', 1, 'john@invalid.com', 1, true, 'jdoe', 'abc', now(), 'abcd')")
 
+	type setupQuery struct {
+		query string
+		check bool
+	}
+
 	testCases := []struct {
-		dbName string
+		dbName       string
+		setupQueries []setupQuery
+		src          string
+		dest         string
 	}{
 		{
 			dbName: "pgsql",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select * from staff",
+			dest: "staff_copy",
 		},
 		{
 			dbName: "pgx",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select * from staff",
+			dest: "staff_copy",
 		},
 		{
 			dbName: "mysql",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update from staff",
+			dest: "staff_copy(staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update)",
+		},
+		{
+			dbName: "sqlserver",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "SELECT * INTO staff_copy FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update from staff",
+			dest: "staff_copy(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update)",
 		},
 	}
 	for _, test := range testCases {
@@ -305,12 +414,13 @@ func TestCopy(t *testing.T) {
 		// TODO test copy from a different DB, maybe csvq?
 		// TODO test copy from same DB
 
-		_, _ = db.DB.Exec("DROP TABLE staff_copy")
-		_, err := db.DB.Exec("CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1")
-		if err != nil {
-			log.Fatalf("Could not create staff_copy: %v", err)
+		for _, q := range test.setupQueries {
+			_, err := db.DB.Exec(q.query)
+			if q.check && err != nil {
+				log.Fatalf("Failed to run setup query `%s`: %v", q.query, err)
+			}
 		}
-		rows, err := dbs["pgsql"].DB.Query("SELECT * FROM staff")
+		rows, err := dbs["pgsql"].DB.Query(test.src)
 		if err != nil {
 			log.Fatalf("Could not get rows to copy: %v", err)
 		}
@@ -318,7 +428,7 @@ func TestCopy(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		var rlen int64 = 1
-		n, err := drivers.Copy(ctx, db.URL, rows, "staff_copy(staff_id, first_name, last_name, address_id, email, store_id, active, username, password, last_update, picture)")
+		n, err := drivers.Copy(ctx, db.URL, rows, test.dest)
 		if err != nil {
 			log.Fatalf("Could not copy: %v", err)
 		}
