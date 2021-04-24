@@ -463,7 +463,7 @@ func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.Reader
 	return newMetadataWriter(db, w), nil
 }
 
-func NewCompleter(u *dburl.URL, db DB, opts ...completer.Option) readline.AutoCompleter {
+func NewCompleter(u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts ...completer.Option) readline.AutoCompleter {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil
@@ -474,14 +474,14 @@ func NewCompleter(u *dburl.URL, db DB, opts ...completer.Option) readline.AutoCo
 	if d.NewMetadataReader == nil {
 		return nil
 	}
-	r := d.NewMetadataReader(db,
+	// prepend to allow to override default options
+	readerOpts = append([]metadata.ReaderOption{
 		// this needs to be relatively low, since autocomplete is very interactive
-		metadata.WithTimeout(3*time.Second),
+		metadata.WithTimeout(3 * time.Second),
 		metadata.WithLimit(1000),
-	)
-	// prepend to allow to override both reader and db
+	}, readerOpts...)
 	opts = append([]completer.Option{
-		completer.WithReader(r),
+		completer.WithReader(d.NewMetadataReader(db, readerOpts...)),
 		completer.WithDB(db),
 	}, opts...)
 	return completer.NewDefaultCompleter(opts...)
