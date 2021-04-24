@@ -113,5 +113,6 @@ func init() {
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
 			return metadata.NewDefaultWriter(orameta.NewReader()(db, opts...))(db, w)
 		},
+		Copy: drivers.CopyWithInsert(func(n int) string { return fmt.Sprintf(":%d", n) }),
 	})
 }
