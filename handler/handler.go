@@ -564,7 +564,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
-			h.l.Completer(drivers.NewCompleter(h.u, h.db, completer.WithConnStrings(connStrings)))
+			h.l.Completer(drivers.NewCompleter(h.u, h.db, readerOptions(), completer.WithConnStrings(connStrings)))
 			return h.Version(ctx)
 		}
 	}
@@ -1169,6 +1169,11 @@ func (h *Handler) MetadataWriter() (metadata.Writer, error) {
 	if h.db == nil {
 		return nil, text.ErrNotConnected
 	}
+	opts := readerOptions()
+	return drivers.NewMetadataWriter(h.u, h.db, h.l.Stdout(), opts...)
+}
+
+func readerOptions() []metadata.ReaderOption {
 	var opts []metadata.ReaderOption
 	envs := env.All()
 	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
@@ -1181,7 +1186,7 @@ func (h *Handler) MetadataWriter() (metadata.Writer, error) {
 			metadata.WithTimeout(30*time.Second),
 		)
 	}
-	return drivers.NewMetadataWriter(h.u, h.db, h.l.Stdout(), opts...)
+	return opts
 }
 
 // GetOutput gets the output writer.
