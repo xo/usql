@@ -426,7 +426,6 @@ func init() {
 					}
 					p.Handler.SetTiming(b)
 				}
-
 				setting := "off"
 				if p.Handler.GetTiming() {
 					setting = "on"
@@ -738,7 +737,7 @@ func init() {
 				verbose := strings.ContainsRune(p.Name, '+')
 				showSystem := strings.ContainsRune(p.Name, 'S')
 				name := strings.TrimRight(p.Name, "S+")
-				pattern, err := p.Get(false)
+				pattern, err := p.Get(true)
 				if err != nil {
 					return err
 				}
@@ -791,7 +790,6 @@ func init() {
 				if err != nil {
 					return err
 				}
-
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 				srcDB, err := drivers.Open(srcURL)
 				if err != nil {
