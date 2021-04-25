@@ -102,7 +102,9 @@ func (b *Stmt) RawString() string {
 		if v.Len == 0 {
 			continue
 		}
-		z.WriteString(s[i:v.I])
+		if len(s) > i {
+			z.WriteString(s[i:v.I])
+		}
 		if v.Quote != '\\' {
 			z.WriteRune(':')
 		}
@@ -116,7 +118,9 @@ func (b *Stmt) RawString() string {
 		i = v.I + v.Len
 	}
 	// add remaining
-	z.WriteString(s[i:])
+	if len(s) > i {
+		z.WriteString(s[i:])
+	}
 	return z.String()
 }
 
