@@ -129,10 +129,9 @@ func init() {
 				if err != nil {
 					return err
 				}
-				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				err = p.Handler.Open(ctx, vals...)
-				stop()
-				return err
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				defer cancel()
+				return p.Handler.Open(ctx, vals...)
 			},
 		},
 		Disconnect: {
@@ -764,7 +763,7 @@ func init() {
 		Copy: {
 			Section: SectionInputOutput,
 			Name:    "copy",
-			Desc:    "copy data from/to a table,[SRC_URL] [DST_URL] [SRC] [DST] ",
+			Desc:    "copy data from/to a table,[SRC_URL] [DST_URL] [SRC] [DST]",
 			Process: func(p *Params) error {
 				srcURLstr, err := p.Get(true)
 				if err != nil {
@@ -790,7 +789,6 @@ func init() {
 				if err != nil {
 					return err
 				}
-				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 				srcDB, err := drivers.Open(srcURL)
 				if err != nil {
 					return err
@@ -801,6 +799,8 @@ func init() {
 					return err
 				}
 				defer dstDB.Close()
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				defer cancel()
 				// get the result set
 				r, err := srcDB.QueryContext(ctx, src)
 				if err != nil {
@@ -811,8 +811,7 @@ func init() {
 				if err != nil {
 					return err
 				}
-				stop()
-				p.Handler.Print("Copied %d rows", n)
+				p.Handler.Print("COPY %d", n)
 				return nil
 			},
 		},

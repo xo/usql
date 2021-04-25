@@ -501,7 +501,6 @@ func Copy(ctx context.Context, u *dburl.URL, rows *sql.Rows, table string) (int6
 		return 0, err
 	}
 	defer db.Close()
-
 	return d.Copy(ctx, db, rows, table)
 }
 
@@ -515,7 +514,6 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			return 0, fmt.Errorf("failed to fetch source rows columns: %w", err)
 		}
 		clen := len(columns)
-
 		query := table
 		if !strings.HasPrefix(strings.ToLower(query), "insert into") {
 			leftParen := strings.IndexRune(table, '(')
@@ -551,12 +549,10 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			return 0, fmt.Errorf("failed to prepare insert query: %w", err)
 		}
 		defer stmt.Close()
-
 		values := make([]interface{}, clen)
 		for i := 0; i < clen; i++ {
 			values[i] = new(interface{})
 		}
-
 		var n int64
 		for rows.Next() {
 			err = rows.Scan(values...)
@@ -575,12 +571,10 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 		}
 		// TODO if using batches, flush the last batch,
 		// TODO prepare another statement and count remaining rows
-
 		err = tx.Commit()
 		if err != nil {
 			return n, fmt.Errorf("failed to commit transaction: %w", err)
 		}
-
 		return n, rows.Err()
 	}
 }
