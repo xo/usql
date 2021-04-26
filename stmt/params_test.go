@@ -48,50 +48,53 @@ func TestDecodeParamsGetAll(t *testing.T) {
 	tests := []struct {
 		s   string
 		exp []string
-		err bool
+		err error
 	}{
-		{``, nil, false},
-		{` `, nil, false},
-		{` :foo`, []string{`bar`}, false},
-		{` :'foo`, nil, true},
-		{`:'foo'`, []string{`'bar'`}, false},
-		{`:'foo':foo`, []string{`'bar'bar`}, false},
-		{`:'foo':foo:"foo"`, []string{`'bar'bar"bar"`}, false},
-		{`:'foo':foo:foo`, []string{`'bar'barbar`}, false},
-		{` :'foo':foo:foo`, []string{`'bar'barbar`}, false},
-		{` :'foo':yes:foo`, []string{`'bar':yesbar`}, false},
-		{` :foo `, []string{`bar`}, false},
-		{`:foo:foo`, []string{`barbar`}, false},
-		{` :foo:foo `, []string{`barbar`}, false},
-		{`  :foo:foo  `, []string{`barbar`}, false},
-		{`'hello'`, []string{`hello`}, false}, // 14
-		{`  'hello''yes'  `, []string{`hello'yes`}, false},
-		{`  'hello':'yes'  `, []string{`hello:'yes'`}, false},
-		{` :'foo `, nil, true},
-		{` :'foo bar`, nil, true},
-		{` :'foo  bar`, nil, true},
-		{` :'foo  bar `, nil, true},
-		{" `foo", nil, true},
-		{" `foo bar`", []string{"foo bar"}, false},
-		{" `foo  :foo`", []string{"foo  :foo"}, false},
-		{` :'foo':"foo"`, []string{`'bar'"bar"`}, false},
-		{` :'foo' :"foo" `, []string{`'bar'`, `"bar"`}, false},
-		{` :'foo' :"foo"`, []string{`'bar'`, `"bar"`}, false},
-		{` :'foo'  :"foo"`, []string{`'bar'`, `"bar"`}, false},
-		{` :'foo'  :"foo" `, []string{`'bar'`, `"bar"`}, false},
-		{` :'foo'  :"foo"  :foo `, []string{`'bar'`, `"bar"`, `bar`}, false},
-		{` :'foo':foo:"foo" `, []string{`'bar'bar"bar"`}, false}, // 30
-		{` :'foo''yes':'foo' `, []string{`'bar'yes'bar'`}, false},
-		{` :'foo' 'yes' :'foo' `, []string{`'bar'`, `yes`, `'bar'`}, false},
-		{` 'yes':'foo':"foo"'blah''no' "\ntest" `, []string{`yes'bar'"bar"blah'no`, `\ntest`}, false},
+		{``, nil, nil},
+		{` `, nil, nil},
+		{` :foo`, []string{`bar`}, nil},
+		{` :'foo`, nil, text.ErrUnterminatedQuotedString},
+		{`:'foo'`, []string{`'bar'`}, nil},
+		{`:'foo':foo`, []string{`'bar'bar`}, nil},
+		{`:'foo':foo:"foo"`, []string{`'bar'bar"bar"`}, nil},
+		{`:'foo':foo:foo`, []string{`'bar'barbar`}, nil},
+		{` :'foo':foo:foo`, []string{`'bar'barbar`}, nil},
+		{` :'foo':yes:foo`, []string{`'bar':yesbar`}, nil},
+		{` :foo `, []string{`bar`}, nil},
+		{`:foo:foo`, []string{`barbar`}, nil},
+		{` :foo:foo `, []string{`barbar`}, nil},
+		{`  :foo:foo  `, []string{`barbar`}, nil},
+		{`'hello'`, []string{`hello`}, nil}, // 14
+		{`  'hello''yes'  `, []string{`hello'yes`}, nil},
+		{`  'hello\'...\'yes'  `, []string{`hello'...'yes`}, nil},
+		{`  "hello\'...\'yes"  `, nil, text.ErrInvalidQuotedString},
+		{`  "hello\"...\"yes"  `, nil, text.ErrInvalidQuotedString},
+		{`  'hello':'yes'  `, []string{`hello:'yes'`}, nil},
+		{` :'foo `, nil, text.ErrUnterminatedQuotedString},
+		{` :'foo bar`, nil, text.ErrUnterminatedQuotedString},
+		{` :'foo  bar`, nil, text.ErrUnterminatedQuotedString},
+		{` :'foo  bar `, nil, text.ErrUnterminatedQuotedString},
+		{" `foo", nil, text.ErrUnterminatedQuotedString},
+		{" `foo bar`", []string{"foo bar"}, nil},
+		{" `foo  :foo`", []string{"foo  :foo"}, nil},
+		{` :'foo':"foo"`, []string{`'bar'"bar"`}, nil},
+		{` :'foo' :"foo" `, []string{`'bar'`, `"bar"`}, nil},
+		{` :'foo' :"foo"`, []string{`'bar'`, `"bar"`}, nil},
+		{` :'foo'  :"foo"`, []string{`'bar'`, `"bar"`}, nil},
+		{` :'foo'  :"foo" `, []string{`'bar'`, `"bar"`}, nil},
+		{` :'foo'  :"foo"  :foo `, []string{`'bar'`, `"bar"`, `bar`}, nil},
+		{` :'foo':foo:"foo" `, []string{`'bar'bar"bar"`}, nil}, // 30
+		{` :'foo''yes':'foo' `, []string{`'bar'yes'bar'`}, nil},
+		{` :'foo' 'yes' :'foo' `, []string{`'bar'`, `yes`, `'bar'`}, nil},
+		{` 'yes':'foo':"foo"'blah''no' "\ntest" `, []string{`yes'bar'"bar"blah'no`, "\ntest"}, nil},
 	}
 	for i, test := range tests {
 		vals, err := DecodeParams(test.s).GetAll(testUnquote(u, t, i, test.s))
-		if test.err && err != text.ErrUnterminatedQuotedString {
-			t.Fatalf("test %d expected unterminated quoted string error, got: %v", i, err)
+		if err != test.err {
+			t.Fatalf("test %d for %q expected err %v, got: %v", i, test.s, test.err, err)
 		}
 		if !reflect.DeepEqual(vals, test.exp) {
-			t.Errorf("test %d expected %v, got: %v", i, test.exp, vals)
+			t.Errorf("test %d for %q expected %v, got: %v", i, test.s, test.exp, vals)
 		}
 	}
 }

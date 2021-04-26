@@ -90,6 +90,10 @@ func readString(r []rune, i, end int, quote rune, tag string) (int, bool) {
 	for ; i < end; i++ {
 		c, next = r[i], grab(r, i+1, end)
 		switch {
+		case quote == '\'' && c == '\\':
+			i++
+			prev = 0
+			continue
 		case quote == '\'' && c == '\'' && next == '\'':
 		case quote == '\'' && c == '\'' && prev != '\'',
 			quote == '"' && c == '"',

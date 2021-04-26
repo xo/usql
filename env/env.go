@@ -16,7 +16,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/text"
@@ -366,18 +368,38 @@ func Exec(s string) (string, error) {
 	return string(buf), nil
 }
 
-var cleanDoubleRE = regexp.MustCompile(`''`)
+var cleanDoubleRE = regexp.MustCompile(`(^|[^\\])''`)
 
 // Dequote unquotes a string.
-func Dequote(s string, c byte) (string, error) {
-	if len(s) < 2 || s[len(s)-1] != c {
+func Dequote(s string, quote byte) (string, error) {
+	if len(s) < 2 || s[len(s)-1] != quote {
 		return "", text.ErrUnterminatedQuotedString
 	}
 	s = s[1 : len(s)-1]
-	if c != '\'' {
-		return s, nil
+	if quote == '\'' {
+		s = cleanDoubleRE.ReplaceAllString(s, "$1\\'")
 	}
-	return cleanDoubleRE.ReplaceAllString(s, "'"), nil
+
+	// this is the last part of strconv.Unquote
+	var runeTmp [utf8.UTFMax]byte
+	buf := make([]byte, 0, 3*len(s)/2) // Try to avoid more allocations.
+	for len(s) > 0 {
+		c, multibyte, ss, err := strconv.UnquoteChar(s, quote)
+		switch {
+		case err != nil && err == strconv.ErrSyntax:
+			return "", text.ErrInvalidQuotedString
+		case err != nil:
+			return "", err
+		}
+		s = ss
+		if c < utf8.RuneSelf || !multibyte {
+			buf = append(buf, byte(c))
+		} else {
+			n := utf8.EncodeRune(runeTmp[:], c)
+			buf = append(buf, runeTmp[:n]...)
+		}
+	}
+	return string(buf), nil
 }
 
 // Getvar retrieves an environment variable.
