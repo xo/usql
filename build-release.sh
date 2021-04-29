@@ -2,9 +2,14 @@
 
 set -e
 
-SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 TAGS="most sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_stat4 sqlite_userauth sqlite_vtable"
-VER=$(git tag -l v* $SRC|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1||:)
+
+SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
+
+pushd $SRC &> /dev/null
+VER=$(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1||:)
+popd &> /dev/null
+
 BUILD=$SRC/build
 
 OPTIND=1
@@ -77,3 +82,4 @@ case $EXT in
 esac
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
 popd &> /dev/null
+
