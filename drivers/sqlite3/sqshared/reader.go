@@ -1,30 +1,40 @@
-package sqlite3
+package sqshared
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
 
+	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
 
-type metaReader struct {
+type MetadataReader struct {
 	metadata.LoggingReader
 	limit int
 }
 
-var _ metadata.BasicReader = &metaReader{}
-var _ metadata.FunctionReader = &metaReader{}
-var _ metadata.FunctionColumnReader = &metaReader{}
-var _ metadata.IndexReader = &metaReader{}
-var _ metadata.IndexColumnReader = &metaReader{}
+// NewMetadataReader creates the metadata reader for sqlite3 databases.
+func NewMetadataReader(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
+	return &MetadataReader{
+		LoggingReader: metadata.NewLoggingReader(db, opts...),
+	}
+}
 
-func (r *metaReader) SetLimit(l int) {
+var (
+	_ metadata.BasicReader          = &MetadataReader{}
+	_ metadata.FunctionReader       = &MetadataReader{}
+	_ metadata.FunctionColumnReader = &MetadataReader{}
+	_ metadata.IndexReader          = &MetadataReader{}
+	_ metadata.IndexColumnReader    = &MetadataReader{}
+)
+
+func (r *MetadataReader) SetLimit(l int) {
 	r.limit = l
 }
 
 // Columns from selected catalog (or all, if empty), matching schemas and tables
-func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
+func (r MetadataReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
 	tables, err := r.Tables(metadata.Filter{Catalog: f.Catalog, Schema: f.Schema, Name: f.Parent})
 	if err != nil {
 		return nil, err
@@ -71,7 +81,7 @@ FROM pragma_table_info(?)`
 	return metadata.NewColumnSet(results), nil
 }
 
-func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
+func (r MetadataReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT
   '' AS table_catalog,
   '' AS table_schem,
@@ -145,7 +155,7 @@ FROM (
 	return metadata.NewTableSet(results), nil
 }
 
-func (r metaReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
+func (r MetadataReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
 	qstr := `SELECT
   name AS schema_name,
   '' AS catalog_name
@@ -177,7 +187,7 @@ FROM pragma_database_list`
 	return metadata.NewSchemaSet(results), nil
 }
 
-func (r metaReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
+func (r MetadataReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
 	qstr := `SELECT
   name AS specific_name,
   name AS routine_name,
@@ -224,11 +234,11 @@ FROM pragma_function_list`
 	return metadata.NewFunctionSet(results), nil
 }
 
-func (r metaReader) FunctionColumns(metadata.Filter) (*metadata.FunctionColumnSet, error) {
+func (r MetadataReader) FunctionColumns(metadata.Filter) (*metadata.FunctionColumnSet, error) {
 	return &metadata.FunctionColumnSet{}, nil
 }
 
-func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
+func (r MetadataReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `SELECT
   m.name,
   i.name,
@@ -267,7 +277,7 @@ JOIN pragma_index_list(m.name) i`
 	return metadata.NewIndexSet(results), nil
 }
 
-func (r metaReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
+func (r MetadataReader) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
 	qstr := `SELECT
   m.name,
   i.name,
@@ -307,7 +317,7 @@ JOIN pragma_index_xinfo(i.name) ic`
 	return metadata.NewIndexColumnSet(results), nil
 }
 
-func (r metaReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
+func (r MetadataReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
 	if len(conds) != 0 {
 		qstr += "\nWHERE " + strings.Join(conds, " AND ")
 	}

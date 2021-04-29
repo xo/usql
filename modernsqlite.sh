@@ -1,5 +1,5 @@
 #!/bin/bash
 
-TAGS="no_base moderncsqlite"
+TAGS="most no_sqlite3 moderncsqlite"
 
-go build -tags "$TAGS" $@
+CGO_ENABLED=0 go build -tags "$TAGS" $@
