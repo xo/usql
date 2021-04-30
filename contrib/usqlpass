@@ -2,6 +2,15 @@
 # 
 # format is:
 # protocol:host:port:dbname:user:pass
-postgres:*:*:*:booktest:booktest
+postgres:*:*:*:postgres:P4ssw0rd
 
 mysql:localhost:*:testdb:user:pass
+cql:*:*:*:cassandra:cassandra
+godror:*:*:orasid:system:P4ssw0rd
+ignite:*:*:ExampleDB:ignite:ignite
+mymysql:*:*:*:root:P4ssw0rd
+mysql:*:*:*:root:P4ssw0rd
+oracle:*:*:orasid:system:P4ssw0rd
+pgx:*:*:*:postgres:P4ssw0rd
+sqlserver:*:*:*:sa:Adm1nP@ssw0rd
+vertica:*:*:*:dbadmin:P4ssw0rd
