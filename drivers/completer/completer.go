@@ -271,6 +271,9 @@ func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
 			break
 		}
 	}
+	if i == -1 {
+		i = 0
+	}
 	text := line[i:start]
 
 	result := c.complete(getPreviousWords(start, line), text)
