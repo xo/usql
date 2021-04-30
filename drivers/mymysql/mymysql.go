@@ -16,6 +16,7 @@ func init() {
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
 		LexerName:              "mysql",
+		UseColumnTypes:         true,
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*mysql.Error); ok {
 				return strconv.Itoa(int(e.Code)), string(e.Msg)

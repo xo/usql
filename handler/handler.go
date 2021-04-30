@@ -917,6 +917,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	}
 	defer q.Close()
 	params := env.Pall()
+	params["time_format"] = env.Timefmt()
 	for k, v := range opt.Params {
 		params[k] = v
 	}
@@ -940,14 +941,19 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	} else {
 		params["pager_cmd"] = env.All()["PAGER"]
 	}
+	useColumnTypes := drivers.UseColumnTypes(h.u)
 	// wrap query with crosstab
 	resultSet := tblfmt.ResultSet(q)
 	if opt.Exec == metacmd.ExecCrosstab {
 		var err error
-		resultSet, err = tblfmt.NewCrosstabView(q, tblfmt.WithParams(opt.Crosstab...))
+		resultSet, err = tblfmt.NewCrosstabView(q, tblfmt.WithParams(opt.Crosstab...), tblfmt.WithUseColumnTypes(useColumnTypes))
 		if err != nil {
 			return err
 		}
+		useColumnTypes = false
+	}
+	if useColumnTypes {
+		params["use_column_types"] = "true"
 	}
 	if err = tblfmt.EncodeAll(w, resultSet, params); err != nil {
 		return err

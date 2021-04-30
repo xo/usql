@@ -54,6 +54,9 @@ type Driver struct {
 	RequirePreviousPassword bool
 	// LexerName is the name of the syntax lexer to use.
 	LexerName string
+	// UseColumnTypes will cause the driver's ColumnTypes func to be used for
+	// types.
+	UseColumnTypes bool
 	// ForceParams will be used to force parameters if defined.
 	ForceParams func(*dburl.URL)
 	// Open will be used by Open if defined.
@@ -132,6 +135,14 @@ func Register(name string, d Driver, aliases ...string) {
 func Registered(name string) bool {
 	_, ok := drivers[name]
 	return ok
+}
+
+// UseColumnTypes returns whether or not a specific driver uses column types.
+func UseColumnTypes(u *dburl.URL) bool {
+	if d, ok := drivers[u.Driver]; ok {
+		return d.UseColumnTypes
+	}
+	return false
 }
 
 // ForceParams forces parameters on the supplied DSN for the registered driver.

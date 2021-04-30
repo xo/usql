@@ -32,6 +32,7 @@ func init() {
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
 		LexerName:              "mysql",
+		UseColumnTypes:         true,
 		ForceParams: drivers.ForceQueryParameters([]string{
 			"parseTime", "true",
 			"loc", "Local",
