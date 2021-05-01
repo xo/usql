@@ -14,9 +14,6 @@ TAGS=(
   sqlite_stat4
   sqlite_userauth
   sqlite_vtable
-  osusergo
-  netgo
-  static_build
 )
 
 # get latest tag version
@@ -65,11 +62,11 @@ echo "BUILDING:    $BIN"
 # build parameters
 TAGS="${TAGS[@]}"
 EXTLDFLAGS=(
-  -fno-PIC
   -static
   -licuuc
   -licui18n
   -licudata
+  -lm
   -ldl
 )
 EXTLDFLAGS="${EXTLDFLAGS[@]}"
@@ -94,8 +91,6 @@ log() {
 (set -x;
   go build \
     -tags="$TAGS" \
-    -gccgoflags="all=-DU_STATIC_IMPLEMENTATION" \
-    -buildmode=pie \
     -ldflags="$LDFLAGS" \
     -o $BIN
 ) 2>&1 | log 'BUILDING:    '
