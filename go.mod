@@ -2,8 +2,7 @@ module github.com/xo/usql
 
 require (
 	cloud.google.com/go/bigquery v1.17.0 // indirect
-	cloud.google.com/go/spanner v1.17.0 // indirect
-	github.com/ClickHouse/clickhouse-go v1.4.3
+	github.com/ClickHouse/clickhouse-go v1.4.4
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
 	github.com/Masterminds/semver v1.5.0 // indirect
@@ -20,29 +19,28 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.25 // indirect
+	github.com/aws/aws-sdk-go v1.38.30 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/consu/semita v0.1.5 // indirect
 	github.com/btnguyen2k/gocosmos v0.1.3
-	github.com/couchbase/go-couchbase v0.0.0-20210420172948-f4fae5e85239 // indirect
+	github.com/couchbase/go-couchbase v0.1.0 // indirect
 	github.com/couchbase/go_n1ql v0.0.0-20160215142504-6cf4e348b127
-	github.com/couchbase/gomemcached v0.1.2 // indirect
-	github.com/couchbase/goutils v0.0.0-20210118111533-e33d3ffb5401 // indirect
+	github.com/couchbase/gomemcached v0.1.3 // indirect
+	github.com/couchbase/goutils v0.1.0 // indirect
 	github.com/denisenkom/go-mssqldb v0.10.0
 	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.10.0 // indirect
-	github.com/genjidb/genji v0.11.0
+	github.com/genjidb/genji v0.12.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
 	github.com/go-openapi/strfmt v0.20.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2 // indirect
-	github.com/gocql/gocql v0.0.0-20210413161705-87a5d7a5ff74
+	github.com/gocql/gocql v0.0.0-20210425135552-909f2a77f46e
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/goexpect v0.0.0-20210330220015-096e5d1cbd97
@@ -56,7 +54,7 @@ require (
 	github.com/lib/pq v1.10.1
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/mithrandie/csvq v1.15.0
@@ -82,23 +80,19 @@ require (
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.1 // indirect
 	github.com/xo/dburl v0.6.1
-	github.com/xo/tblfmt v0.7.2
+	github.com/xo/tblfmt v0.7.3
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
-	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210423184538-5f58ad60dda6 // indirect
-	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
-	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed // indirect
+	golang.org/x/net v0.0.0-20210501142056-aec3718b3fa0 // indirect
+	golang.org/x/term v0.0.0-20210429154555-c04ba851c2a4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	google.golang.org/api v0.45.0 // indirect
-	google.golang.org/genproto v0.0.0-20210423144448-3a41ef94ed2b // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
-	modernc.org/cc/v3 v3.33.0 // indirect
+	modernc.org/cc/v3 v3.33.1 // indirect
 	modernc.org/db v1.0.1 // indirect
 	modernc.org/file v1.0.2 // indirect
 	modernc.org/golex v1.0.1 // indirect
@@ -110,5 +104,7 @@ require (
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
 	sqlflow.org/gomaxcompute v0.0.0-20200410041603-30fa752b7593
 )
+
+replace github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778 => github.com/kenshaw/go-sql-driver-spanner v0.0.0-20210501010231-e2b659aee25a
 
 go 1.16
