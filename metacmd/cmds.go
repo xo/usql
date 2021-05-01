@@ -708,6 +708,12 @@ func init() {
 				case !strings.Contains(mask, "%"):
 					p.Handler.Print(mask)
 				default:
+					if field == "time" {
+						val = fmt.Sprintf("%q", val)
+						if tfmt := env.GoTime(); tfmt != val {
+							val = fmt.Sprintf("%s (%q)", val, tfmt)
+						}
+					}
 					p.Handler.Print(mask, val)
 				}
 				return nil

@@ -805,15 +805,6 @@ func (h *Handler) Print(format string, a ...interface{}) {
 	fmt.Fprintln(out)
 }
 
-// timefmt returns the current time format setting.
-func (h *Handler) timefmt() string {
-	s := env.Timefmt()
-	if s == "" {
-		s = time.RFC3339Nano
-	}
-	return s
-}
-
 // execWatch repeatedly executes a query against the database.
 func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, qstr string, qtyp bool) error {
 	for {
@@ -860,7 +851,7 @@ func (h *Handler) execSet(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	// process row(s)
 	var i int
 	var row []string
-	clen, tfmt := len(cols), h.timefmt()
+	clen, tfmt := len(cols), env.GoTime()
 	for q.Next() {
 		if i == 0 {
 			row, err = h.scan(q, clen, tfmt)
@@ -917,7 +908,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	}
 	defer q.Close()
 	params := env.Pall()
-	params["time_format"] = env.Timefmt()
+	params["time"] = env.GoTime()
 	for k, v := range opt.Params {
 		params[k] = v
 	}
@@ -983,7 +974,7 @@ func (h *Handler) execRows(ctx context.Context, w io.Writer, q *sql.Rows) error 
 	}
 	// process rows
 	res := metacmd.Option{Exec: metacmd.ExecOnly}
-	clen, tfmt := len(cols), h.timefmt()
+	clen, tfmt := len(cols), env.GoTime()
 	for q.Next() {
 		if clen != 0 {
 			row, err := h.scan(q, clen, tfmt)

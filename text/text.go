@@ -71,6 +71,7 @@ var (
 		`recordsep`:                `Field separator is %q.`,
 		`recordsep_zero`:           `Record separator is zero byte.`,
 		`tableattr`:                `Table attributes are %q.`,
+		`time`:                     `Time display is %s.`,
 		`title`:                    `Title is %q.`,
 		`tuples_only`:              `Tuples only is %s.`,
 		`unicode_border_linestyle`: `Unicode border line style is %q.`,

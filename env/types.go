@@ -40,10 +40,6 @@ func init() {
 	if v := Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
 	}
-	timefmt := "RFC3339Nano"
-	if v := Getenv("USQL_TIME_FORMAT"); v != "" {
-		timefmt = v
-	}
 	// get color level
 	colorLevel, _ := terminfo.ColorLevelFromEnv()
 	enableSyntaxHL := "true"
@@ -53,7 +49,6 @@ func init() {
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
-		"TIME_FORMAT":           timefmt,
 		"PAGER":                 Getenv("USQL_PAGER", "PAGER"),
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
@@ -78,6 +73,7 @@ func init() {
 		"recordsep":                "\n",
 		"recordsep_zero":           "off",
 		"tableattr":                "",
+		"time":                     "RFC3339Nano",
 		"title":                    "",
 		"tuples_only":              "off",
 		"unicode_border_linestyle": "single",
@@ -262,7 +258,7 @@ func Ptoggle(name, extra string) (string, error) {
 			pvars[name] = "aligned"
 		}
 	case "linestyle":
-	case "csv_fieldsep", "fieldsep", "null", "recordsep":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time":
 	case "tableattr", "title":
 		pvars[name] = ""
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
@@ -310,7 +306,7 @@ func Pset(name, value string) (string, error) {
 			return "", text.ErrInvalidFormatLineStyle
 		}
 		pvars[name] = value
-	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "title":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "time", "title":
 		pvars[name] = value
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
 		if !borderRE.MatchString(value) {
@@ -342,9 +338,9 @@ var timeConstMap = map[string]string{
 	"StampNano":   time.StampNano,
 }
 
-// Timefmt returns the environment TIME_FORMAT.
-func Timefmt() string {
-	tfmt := vars["TIME_FORMAT"]
+// GoTime returns the user's time format converted to Go's time.Format value.
+func GoTime() string {
+	tfmt := pvars["time"]
 	if s, ok := timeConstMap[tfmt]; ok {
 		return s
 	}

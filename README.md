@@ -859,31 +859,54 @@ highlighting:
 
 Some databases support time/date columns that [support formatting][go-time]. By
 default, `usql` formats time/date columns as [RFC3339Nano][go-time], and can be
-set using the [`TIME_FORMAT` variable][variables]:
+set using `\pset time <FORMAT>`:
 
 ```sh
 $ usql pg://
-Connected with driver postgres (PostgreSQL 9.6.9)
+Connected with driver postgres (PostgreSQL 13.2 (Debian 13.2-1.pgdg100+1))
 Type "help" for help.
 
-pg:booktest@=> \set
-TIME_FORMAT = 'RFC3339Nano'
-pg:booktest@=> select now();
-                now
-+----------------------------------+
-  2018-06-14T03:24:12.481923+07:00
-(1 rows)
+pg:postgres@=> \pset
+time                     RFC3339Nano
+pg:postgres@=> select now();
+             now
+-----------------------------
+ 2021-05-01T22:21:44.710385Z
+(1 row)
 
-pg:booktest@=> \set TIME_FORMAT Kitchen
-pg:booktest@=> \g
+pg:postgres@=> \pset time Kitchen
+Time display is "Kitchen" ("3:04PM").
+pg:postgres@=> select now();
    now
-+--------+
-  3:24AM
-(1 rows)
+---------
+ 10:22PM
+(1 row)
+
+pg:postgres@=>
 ```
 
-Any [Go supported time format][go-time] or const name (for example, `Kitchen`,
-in the above) can be used for `TIME_FORMAT`.
+Any [Go supported time format][go-time] or the standard Go const name (for example,
+`Kitchen`, in the above).
+
+##### Constants
+
+| Constant Name | Value                                 |
+|---------------|---------------------------------------|
+| ANSIC         | `Mon Jan _2 15:04:05 2006`            |
+| UnixDate      | `Mon Jan _2 15:04:05 MST 2006`        |
+| RubyDate      | `Mon Jan 02 15:04:05 -0700 2006`      |
+| RFC822        | `02 Jan 06 15:04 MST`                 |
+| RFC822Z       | `02 Jan 06 15:04 -0700`               |
+| RFC850        | `Monday, 02-Jan-06 15:04:05 MST`      |
+| RFC1123       | `Mon, 02 Jan 2006 15:04:05 MST`       |
+| RFC1123Z      | `Mon, 02 Jan 2006 15:04:05 -0700`     |
+| RFC3339       | `2006-01-02T15:04:05Z07:00`           |
+| RFC3339Nano   | `2006-01-02T15:04:05.999999999Z07:00` |
+| Kitchen       | `3:04PM`                              |
+| Stamp         | `Jan _2 15:04:05`                     |
+| StampMilli    | `Jan _2 15:04:05.000`                 |
+| StampMicro    | `Jan _2 15:04:05.000000`              |
+| StampNano     | `Jan _2 15:04:05.000000000`           |
 
 #### Copy
 
