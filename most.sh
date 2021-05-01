@@ -13,18 +13,13 @@ TAGS=(
   sqlite_stat4
   sqlite_userauth
   sqlite_vtable
-  osusergo
-  netgo
-  static_build
 )
 TAGS="${TAGS[@]}"
 
 EXTLDFLAGS=(
-  -fno-PIC
   -static
-  -licuuc
-  -licui18n
-  -licudata
+  $(pkg-config --libs icu-i18n)
+  -lm
   -ldl
 )
 EXTLDFLAGS="${EXTLDFLAGS[@]}"
@@ -43,8 +38,6 @@ LDFLAGS="${LDFLAGS[@]}"
 (set -x;
   go build \
     -tags="$TAGS" \
-    -gccgoflags="all=-DU_STATIC_IMPLEMENTATION" \
-    -buildmode=pie \
     -ldflags="$LDFLAGS" \
     $@
 )
