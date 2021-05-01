@@ -13,6 +13,7 @@ TAGS=(
   sqlite_stat4
   sqlite_userauth
   sqlite_vtable
+  netgo
 )
 TAGS="${TAGS[@]}"
 
