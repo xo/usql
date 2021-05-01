@@ -79,7 +79,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.1 // indirect
-	github.com/xo/dburl v0.6.1
+	github.com/xo/dburl v0.7.0
 	github.com/xo/tblfmt v0.7.4
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
