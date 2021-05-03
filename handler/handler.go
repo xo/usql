@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
 	"os/user"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/alecthomas/chroma"
@@ -913,6 +915,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 		params[k] = v
 	}
 	var pipe io.WriteCloser
+	var cmd *exec.Cmd
 	if pipeName := params["pipe"]; pipeName != "" || h.out != nil {
 		if params["expanded"] == "auto" && params["columns"] == "" {
 			// don't rely on terminal size when piping output to a file or cmd
@@ -920,7 +923,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 		}
 		if pipeName != "" {
 			if pipeName[0] == '|' {
-				pipe, err = env.Pipe(pipeName[1:])
+				pipe, cmd, err = env.Pipe(pipeName[1:])
 			} else {
 				pipe, err = os.OpenFile(pipeName, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 			}
@@ -947,6 +950,10 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 		params["use_column_types"] = "true"
 	}
 	if err = tblfmt.EncodeAll(w, resultSet, params); err != nil {
+		if cmd != nil && errors.Is(err, syscall.EPIPE) {
+			// broken pipe means pager quit before consuming all data, which might be expected
+			return nil
+		}
 		return err
 	}
 	if h.timing {
@@ -960,7 +967,10 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 		h.Print(format, a)
 	}
 	if pipe != nil {
-		return pipe.Close()
+		pipe.Close()
+		if cmd != nil {
+			cmd.Wait()
+		}
 	}
 	return err
 }

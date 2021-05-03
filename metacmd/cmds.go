@@ -461,7 +461,7 @@ func init() {
 				}
 				var out io.WriteCloser
 				if pipe[0] == '|' {
-					out, err = env.Pipe(pipe[1:])
+					out, _, err = env.Pipe(pipe[1:])
 				} else {
 					out, err = os.OpenFile(pipe, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 				}

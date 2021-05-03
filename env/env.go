@@ -330,18 +330,18 @@ func Shell(s string) error {
 }
 
 // Pipe starts a command and returns its input for writing.
-func Pipe(c string) (io.WriteCloser, error) {
+func Pipe(c string) (io.WriteCloser, *exec.Cmd, error) {
 	shell, param := Getshell()
 	if shell == "" {
-		return nil, text.ErrNoShellAvailable
+		return nil, nil, text.ErrNoShellAvailable
 	}
 	cmd := exec.Command(shell, param, c)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	out, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return out, cmd.Start()
+	return out, cmd, cmd.Start()
 }
 
 // Exec executes s using the user's SHELL / COMSPEC with -c (or /c) and
