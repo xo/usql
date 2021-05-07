@@ -19,17 +19,18 @@ import (
 )
 
 func main() {
+	binpath := flag.String("binpath", "./usql", "bin path")
 	deadline := flag.Duration("deadline", 5*time.Minute, "total execution deadline")
 	timeout := flag.Duration("timeout", 2*time.Minute, "individual test timeout")
 	re := flag.String("run", "", "test name regexp to run")
 	flag.Parse()
-	if err := run(context.Background(), *deadline, *timeout, *re); err != nil {
+	if err := run(context.Background(), *binpath, *deadline, *timeout, *re); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, deadline, timeout time.Duration, re string) error {
+func run(ctx context.Context, binpath string, deadline, timeout time.Duration, re string) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(deadline))
 	defer cancel()
 	tests, err := cliTests()
@@ -49,7 +50,7 @@ func run(ctx context.Context, deadline, timeout time.Duration, re string) error 
 			continue
 		}
 		log.Printf(">>> RUNNING: %s", test.name)
-		if err := test.do(ctx, timeout); err != nil {
+		if err := test.do(ctx, binpath, timeout); err != nil {
 			return fmt.Errorf("test %s: %v", test.name, err)
 		}
 		log.Printf(">>> COMPLETED: %s", test.name)
@@ -112,9 +113,9 @@ func cliTests() ([]Test, error) {
 	}, nil
 }
 
-func (test Test) do(ctx context.Context, timeout time.Duration) error {
+func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) error {
 	exp, errch, err := gexpect.SpawnWithArgs(
-		append([]string{"./usql"}, test.args...),
+		append([]string{binpath}, test.args...),
 		timeout,
 		gexpect.SetEnv(test.env),
 		gexpect.Tee(&noopWriteCloser{os.Stdout}),

@@ -3,9 +3,10 @@
 NAME=usql
 VER="$(date +%y.%m.%d)-dev"
 
+PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
+
 TAGS=(
   most
-  sqlite_icu
   sqlite_app_armor
   sqlite_fts5
   sqlite_introspect
@@ -13,26 +14,20 @@ TAGS=(
   sqlite_stat4
   sqlite_userauth
   sqlite_vtable
-  netgo
 )
+
+case $PLATFORM in
+  darwin|linux)
+    TAGS+=(sqlite_icu no_adodb)
+  ;;
+esac
+
 TAGS="${TAGS[@]}"
-
-EXTLDFLAGS=(
-  -static
-  $(pkg-config --libs icu-i18n)
-  -lm
-  -ldl
-)
-EXTLDFLAGS="${EXTLDFLAGS[@]}"
-
 LDFLAGS=(
   -s
   -w
   -X github.com/xo/usql/text.CommandName=$NAME
   -X github.com/xo/usql/text.CommandVersion=$VER
-  -linkmode=external
-  -extldflags \'$EXTLDFLAGS\'
-  -extld g++
 )
 LDFLAGS="${LDFLAGS[@]}"
 
