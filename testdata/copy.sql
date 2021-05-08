@@ -1,6 +1,6 @@
 \set PGDB pg://postgres:P4ssw0rd@localhost
 \set MYDB my://root:P4ssw0rd@localhost
-\set SQDB sq://test3.db
+\set SQDB sq:./testdata/test3.db
 \set MSDB ms://sa:Adm1nP@ssw0rd@localhost/
 
 \connect :PGDB
@@ -40,7 +40,7 @@ create table a_bit_of_everything (
 \connect :MYDB/testdb
 select * from a_bit_of_everything;
 
-\! rm -f test3.db
+\! rm -f ./testdata/test3.db
 \connect :SQDB
 create table a_bit_of_everything (
   a_id integer primary key autoincrement,

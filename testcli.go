@@ -83,13 +83,13 @@ func cliTests() ([]Test, error) {
 		{
 			"complex/sqlite3",
 			"./contrib/sqlite3/test.sql",
-			[]string{"sqlite://test.db"},
+			[]string{"sqlite:./testdata/test.db"},
 			env,
 		},
 		{
 			"complex/moderncsqlite",
 			"./contrib/sqlite3/test.sql",
-			[]string{"mq://test2.db"},
+			[]string{"mq:./testdata/test2.db"},
 			env,
 		},
 		{
