@@ -1,14 +1,14 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go/bigquery v1.17.0 // indirect
-	github.com/ClickHouse/clickhouse-go v1.4.4
+	cloud.google.com/go/bigquery v1.18.0 // indirect
+	github.com/ClickHouse/clickhouse-go v1.4.5
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/Microsoft/hcsshim v0.8.15 // indirect
-	github.com/SAP/go-hdb v0.103.2
+	github.com/SAP/go-hdb v0.103.3
 	github.com/VoltDB/voltdb-client-go v1.0.1
 	github.com/alecthomas/chroma v0.9.1
 	github.com/alecthomas/kingpin v2.2.6+incompatible
@@ -19,7 +19,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.30 // indirect
+	github.com/aws/aws-sdk-go v1.38.36 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -38,7 +38,7 @@ require (
 	github.com/go-openapi/strfmt v0.20.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2 // indirect
-	github.com/gocql/gocql v0.0.0-20210425135552-909f2a77f46e
+	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/btree v1.0.1 // indirect
@@ -57,8 +57,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/mithrandie/csvq v1.15.0
-	github.com/mithrandie/csvq-driver v1.4.1
+	github.com/mithrandie/csvq v1.15.1
+	github.com/mithrandie/csvq-driver v1.4.2
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/nakagami/firebirdsql v0.9.0
@@ -84,21 +84,24 @@ require (
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
-	go.uber.org/multierr v1.6.0 // indirect
+	go.mongodb.org/mongo-driver v1.5.2 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
-	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
-	golang.org/x/net v0.0.0-20210501142056-aec3718b3fa0 // indirect
-	golang.org/x/term v0.0.0-20210429154555-c04ba851c2a4 // indirect
+	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf // indirect
+	golang.org/x/net v0.0.0-20210505214959-0714010a04ed // indirect
+	golang.org/x/sys v0.0.0-20210507161434-a76c4d0a0096 // indirect
+	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/b v1.0.1 // indirect
-	modernc.org/cc/v3 v3.33.1 // indirect
+	modernc.org/cc/v3 v3.33.5 // indirect
+	modernc.org/ccgo/v3 v3.9.3 // indirect
 	modernc.org/db v1.0.1 // indirect
 	modernc.org/file v1.0.2 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/lldb v1.0.1 // indirect
 	modernc.org/ql v1.3.1
-	modernc.org/sqlite v1.10.4
+	modernc.org/sqlite v1.10.6
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/zappy v1.0.3 // indirect
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
