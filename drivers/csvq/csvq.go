@@ -4,6 +4,7 @@
 package csvq
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -22,6 +23,14 @@ func init() {
 				q = false
 			}
 			return typ, sqlstr, q, nil
+		},
+		Version: func(ctx context.Context, db drivers.DB) (string, error) {
+			var ver string
+			err := db.QueryRowContext(ctx, `SELECT @#VERSION`).Scan(&ver)
+			if err != nil {
+				return "", err
+			}
+			return "CSVQ " + ver, nil
 		},
 	})
 }
