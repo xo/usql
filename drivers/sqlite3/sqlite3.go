@@ -7,7 +7,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/mattn/go-sqlite3" // DRIVER: sqlite3
+	"github.com/mattn/go-sqlite3" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/sqlite3/sqshared"
 )

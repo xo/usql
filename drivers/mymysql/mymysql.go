@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/xo/usql/drivers"
-	_ "github.com/ziutek/mymysql/godrv" // DRIVER: mymysql
+	_ "github.com/ziutek/mymysql/godrv" // DRIVER
 	"github.com/ziutek/mymysql/mysql"
 )
 

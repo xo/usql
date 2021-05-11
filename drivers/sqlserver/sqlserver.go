@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	sqlserver "github.com/denisenkom/go-mssqldb" // DRIVER: sqlserver
+	sqlserver "github.com/denisenkom/go-mssqldb" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"

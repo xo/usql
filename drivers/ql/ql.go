@@ -5,7 +5,7 @@ package ql
 
 import (
 	"github.com/xo/usql/drivers"
-	"modernc.org/ql" // DRIVER: ql
+	"modernc.org/ql" // DRIVER
 )
 
 func init() {

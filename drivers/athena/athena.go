@@ -7,7 +7,7 @@ import (
 	"context"
 	"regexp"
 
-	_ "github.com/uber/athenadriver/go" // DRIVER: athena
+	_ "github.com/uber/athenadriver/go" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

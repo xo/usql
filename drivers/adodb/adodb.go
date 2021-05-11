@@ -1,4 +1,7 @@
-// Package adodb defines and registers usql's ADODB driver. Requires CGO.
+// Package adodb defines and registers usql's Microsoft ADODB driver. Requires
+// CGO. Windows only.
+//
+// Alias: oleodbc, OLE ODBC
 //
 // See: https://github.com/mattn/go-adodb
 package adodb
@@ -6,7 +9,7 @@ package adodb
 import (
 	"database/sql"
 
-	_ "github.com/mattn/go-adodb" // DRIVER: adodb
+	_ "github.com/mattn/go-adodb" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

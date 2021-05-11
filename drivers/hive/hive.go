@@ -5,7 +5,7 @@ package hive
 
 import (
 	"github.com/xo/usql/drivers"
-	_ "sqlflow.org/gohive" // DRIVER: hive
+	_ "sqlflow.org/gohive" // DRIVER
 )
 
 func init() {

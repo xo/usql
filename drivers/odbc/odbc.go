@@ -7,7 +7,7 @@ package odbc
 import (
 	"strings"
 
-	"github.com/alexbrainman/odbc" // DRIVER: odbc
+	"github.com/alexbrainman/odbc" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

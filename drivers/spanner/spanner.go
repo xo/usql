@@ -4,7 +4,7 @@
 package spanner
 
 import (
-	_ "github.com/rakyll/go-sql-driver-spanner" // DRIVER: spanner
+	_ "github.com/rakyll/go-sql-driver-spanner" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

@@ -4,7 +4,7 @@
 package h2
 
 import (
-	_ "github.com/jmrobles/h2go" // DRIVER: h2
+	_ "github.com/jmrobles/h2go" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

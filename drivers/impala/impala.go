@@ -4,7 +4,7 @@
 package impala
 
 import (
-	_ "github.com/bippio/go-impala" // DRIVER: impala
+	_ "github.com/bippio/go-impala" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

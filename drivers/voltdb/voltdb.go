@@ -4,7 +4,7 @@
 package voltdb
 
 import (
-	_ "github.com/VoltDB/voltdb-client-go/voltdbclient" // DRIVER: voltdb
+	_ "github.com/VoltDB/voltdb-client-go/voltdbclient" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

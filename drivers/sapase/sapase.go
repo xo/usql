@@ -1,4 +1,4 @@
-// Package sapase defines and registers usql's SAP ASE (tds) driver.
+// Package sapase defines and registers usql's SAP ASE driver.
 //
 // See: https://github.com/thda/tds
 package sapase

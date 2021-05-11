@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/amsokol/ignite-go-client/binary/errors"
-	_ "github.com/amsokol/ignite-go-client/sql" // DRIVER: ignite
+	_ "github.com/amsokol/ignite-go-client/sql" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

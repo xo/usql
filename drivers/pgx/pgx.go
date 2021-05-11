@@ -13,7 +13,7 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/stdlib" // DRIVER: pgx
+	"github.com/jackc/pgx/v4/stdlib" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	pgmeta "github.com/xo/usql/drivers/metadata/postgres"

@@ -6,7 +6,7 @@ package avatica
 import (
 	"strconv"
 
-	_ "github.com/apache/calcite-avatica-go/v5" // DRIVER: avatica
+	_ "github.com/apache/calcite-avatica-go/v5" // DRIVER
 	avaticaerrors "github.com/apache/calcite-avatica-go/v5/errors"
 	"github.com/xo/usql/drivers"
 )

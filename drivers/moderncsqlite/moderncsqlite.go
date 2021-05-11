@@ -1,5 +1,5 @@
-// Package moderncsqlite defines and registers usql's ModernC SQLite3 driver, a
-// transpilation of SQLite3 to pure Go.
+// Package moderncsqlite defines and registers usql's ModernC SQLite3 driver.
+// Transpilation of SQLite3 to Go.
 //
 // See: https://gitlab.com/cznic/sqlite
 package moderncsqlite
@@ -12,7 +12,7 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/sqlite3/sqshared"
-	"modernc.org/sqlite" // DRIVER: moderncsqlite
+	"modernc.org/sqlite" // DRIVER
 )
 
 func init() {

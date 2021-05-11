@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	_ "github.com/sijms/go-ora" // DRIVER: oracle
+	_ "github.com/sijms/go-ora" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"

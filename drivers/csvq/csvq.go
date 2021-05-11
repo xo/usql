@@ -8,16 +8,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mithrandie/csvq-driver" // DRIVER: csvq
+	"github.com/mithrandie/csvq-driver" // DRIVER
 	"github.com/mithrandie/csvq/lib/query"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
+	csvq.SetStdout(query.NewDiscard())
 	drivers.Register("csvq", drivers.Driver{
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
-			csvq.SetStdout(query.NewDiscard())
 			if strings.HasPrefix(prefix, "SHOW") {
 				csvq.SetStdout(os.Stdout)
 				q = false

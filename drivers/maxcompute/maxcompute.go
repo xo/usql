@@ -5,7 +5,7 @@ package maxcompute
 
 import (
 	"github.com/xo/usql/drivers"
-	_ "sqlflow.org/gomaxcompute" // DRIVER: maxcompute
+	_ "sqlflow.org/gomaxcompute" // DRIVER
 )
 
 func init() {

@@ -1,5 +1,9 @@
 // Package mysql defines and registers usql's MySQL driver.
 //
+// Alias: memsql, SingleStore MemSQL
+// Alias: vitess, Vitess Database
+// Alias: tidb, TiDB
+//
 // See: https://github.com/go-sql-driver/mysql
 package mysql
 
@@ -7,7 +11,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/go-sql-driver/mysql" // DRIVER: mysql
+	"github.com/go-sql-driver/mysql" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"

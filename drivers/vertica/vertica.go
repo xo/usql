@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	_ "github.com/vertica/vertica-sql-go" // DRIVER: vertica
+	_ "github.com/vertica/vertica-sql-go" // DRIVER
 	"github.com/vertica/vertica-sql-go/logger"
 	"github.com/xo/usql/drivers"
 )

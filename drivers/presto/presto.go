@@ -7,7 +7,7 @@ import (
 	"context"
 	"regexp"
 
-	_ "github.com/prestodb/presto-go-client/presto" // DRIVER: presto
+	_ "github.com/prestodb/presto-go-client/presto" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

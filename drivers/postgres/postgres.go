@@ -1,5 +1,8 @@
 // Package postgres defines and registers usql's PostgreSQL driver.
 //
+// Alias: cockroachdb, CockroachDB
+// Alias: redshift, Amazon Redshift
+//
 // See: https://github.com/lib/pq
 package postgres
 
@@ -10,7 +13,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/lib/pq" // DRIVER: postgres
+	"github.com/lib/pq" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"

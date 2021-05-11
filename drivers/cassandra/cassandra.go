@@ -1,4 +1,4 @@
-// Package cassandra defines and registers usql's Cassandra (cql) driver.
+// Package cassandra defines and registers usql's Cassandra driver.
 //
 // See: https://github.com/MichaelS11/go-cql-driver
 package cassandra

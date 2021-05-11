@@ -8,7 +8,7 @@ import (
 	"io"
 	"regexp"
 
-	_ "github.com/trinodb/trino-go-client/trino" // DRIVER: trino
+	_ "github.com/trinodb/trino-go-client/trino" // DRIVER
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
