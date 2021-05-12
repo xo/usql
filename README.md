@@ -308,7 +308,7 @@ associated database, scheme / build tag, and scheme aliases:
 [f-cgo]: #f-cgo (Requires CGO)
 [f-wire]: #f-wire (Wire compatible)
 
-<p align="right">
+<p>
   <i>
     <a id="f-cgo"><sup>†</sup>Requires CGO</a><br>
     <a id="f-wire"><sup>‡</sup>Wire compatible (see respective driver)</a>
@@ -418,7 +418,7 @@ Where the above are:
 
 [f-path]: #f-path (URL Paths for Databases)
 
-<p align="right">
+<p>
   <i>
     <a id="f-path">
       <sup>±</sup>Some databases, such as Microsoft SQL Server, or Oracle
