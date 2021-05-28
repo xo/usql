@@ -1,4 +1,4 @@
-// +build all,!no_postgres most,!no_postgres postgres,!no_postgres
+// +build !no_base,!no_postgres
 
 package internal
 

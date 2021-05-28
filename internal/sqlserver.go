@@ -1,4 +1,4 @@
-// +build all,!no_sqlserver most,!no_sqlserver sqlserver,!no_sqlserver
+// +build !no_base,!no_sqlserver
 
 package internal
 

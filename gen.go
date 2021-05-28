@@ -124,7 +124,7 @@ func loadDrivers(wd string) error {
 			return err
 		}
 		if _, ok := baseDrivers[tag]; ok {
-			group, dest = "most", baseDrivers
+			group, dest = "base", baseDrivers
 		} else if _, ok := allDrivers[tag]; ok {
 			group, dest = "all", allDrivers
 		}
