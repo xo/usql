@@ -144,7 +144,7 @@ func NewArgs() *Args {
 		fmt.Fprintln(os.Stdout, text.CommandName, text.CommandVersion)
 		os.Exit(0)
 		return nil
-	}).Short('V').Bool()
+	}).Bool()
 	// hide help flag
 	kingpin.HelpFlag.Short('h').Hidden()
 	// parse
