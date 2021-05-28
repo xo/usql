@@ -74,6 +74,7 @@ if [ "$STATIC" = "1" ]; then
     linux)
       TAGS+=(
         netgo
+        osusergo
       )
       EXTLDFLAGS=(
         -static
