@@ -11,6 +11,7 @@ import (
 var (
 	CommandName           = `usql`
 	CommandVersion        = `0.0.0-dev`
+	PassfileName          = CommandName + `pass`
 	Banner                = `the universal command-line interface for SQL databases`
 	NotConnected          = `(not connected)`
 	HelpPrefix            = `help`
@@ -26,11 +27,6 @@ var (
 	RowCount              = `(%d rows)`
 	AvailableDrivers      = `Available Drivers:`
 	ConnInfo              = `Connected with driver %s (%s)`
-	BadPassFile           = `could not open %q, not a file`
-	BadPassFileMode       = `password file %q has group or world access`
-	BadPassFileLine       = `line %d of password file incorrectly formatted`
-	BadPassFileFieldEmpty = `line %d field %d of password file cannot be blank`
-	BadPassFileUsername   = `username in line %d of password file cannot contain *`
 	EnterPassword         = `Enter password: `
 	EnterPreviousPassword = `Enter previous password: `
 	PasswordsDoNotMatch   = `Passwords do not match, trying again ...`

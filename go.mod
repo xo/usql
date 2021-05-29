@@ -20,7 +20,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20210327225948-60011c081508 // indirect
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.47 // indirect
+	github.com/aws/aws-sdk-go v1.38.51 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -56,7 +56,7 @@ require (
 	github.com/jmrobles/h2go v0.5.0
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-adodb v0.0.1
-	github.com/mattn/go-isatty v0.0.12
+	github.com/mattn/go-isatty v0.0.13
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -80,19 +80,19 @@ require (
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.300.0
 	github.com/twmb/murmur3 v1.1.5 // indirect
-	github.com/uber-go/tally v3.4.0+incompatible // indirect
+	github.com/uber-go/tally v3.4.1+incompatible // indirect
 	github.com/uber/athenadriver v1.1.12
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
-	github.com/vmihailenco/msgpack/v5 v5.3.2 // indirect
-	github.com/xo/dburl v0.7.0
+	github.com/vmihailenco/msgpack/v5 v5.3.4 // indirect
+	github.com/xo/dburl v0.8.0
 	github.com/xo/tblfmt v0.7.4
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	go.mongodb.org/mongo-driver v1.5.2 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.16.0 // indirect
+	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea // indirect

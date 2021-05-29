@@ -27,6 +27,7 @@ import (
 	"github.com/alecthomas/chroma/formatters"
 	"github.com/alecthomas/chroma/styles"
 	"github.com/xo/dburl"
+	"github.com/xo/dburl/passfile"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/completer"
@@ -257,21 +258,19 @@ func (h *Handler) Run() error {
 				lastErr = WrapErr(cmd, err)
 				switch {
 				case err == text.ErrUnknownCommand:
-					fmt.Fprintf(stderr, text.InvalidCommand, cmd)
+					fmt.Fprintln(stderr, fmt.Sprintf(text.InvalidCommand, cmd))
 				case err == text.ErrMissingRequiredArgument:
-					fmt.Fprintf(stderr, text.MissingRequiredArg, cmd)
+					fmt.Fprintln(stderr, fmt.Sprintf(text.MissingRequiredArg, cmd))
 				default:
-					fmt.Fprintf(stderr, "error: %v", err)
+					fmt.Fprintln(stderr, "error:", err)
 				}
-				fmt.Fprintln(stderr)
 				continue
 			}
 			// run
 			opt, err = r.Run(h)
 			if err != nil && err != rline.ErrInterrupt {
 				lastErr = WrapErr(cmd, err)
-				fmt.Fprintf(stderr, "error: %v", err)
-				fmt.Fprintln(stderr)
+				fmt.Fprintln(stderr, "error:", err)
 				continue
 			}
 			// print unused command parameters
@@ -280,14 +279,12 @@ func (h *Handler) Run() error {
 					return true, s, nil
 				})
 				if err != nil {
-					fmt.Fprintf(stderr, "error: %v", err)
-					fmt.Fprintln(stderr)
+					fmt.Fprintln(stderr, "error:", err)
 				}
 				if !ok {
 					break
 				}
-				fmt.Fprintf(stdout, text.ExtraArgumentIgnored, cmd, arg)
-				fmt.Fprintln(stdout)
+				fmt.Fprintln(stdout, fmt.Sprintf(text.ExtraArgumentIgnored, cmd, arg))
 			}
 		}
 		// help, exit, quit intercept
@@ -329,15 +326,13 @@ func (h *Handler) Run() error {
 				case h.batch && batch:
 					err = fmt.Errorf("cannot perform %s in existing batch", typ)
 					lastErr = WrapErr(h.buf.String(), err)
-					fmt.Fprintf(stderr, "error: %v", err)
-					fmt.Fprintln(stderr)
+					fmt.Fprintln(stderr, "error:", err)
 					continue
 				// cannot use \g* while accumulating statements for batch queries
 				case h.batch && typ != h.batchEnd && opt.Exec != metacmd.ExecNone:
 					err = errors.New("cannot force batch execution")
 					lastErr = WrapErr(h.buf.String(), err)
-					fmt.Fprintf(stderr, "error: %v", err)
-					fmt.Fprintln(stderr)
+					fmt.Fprintln(stderr, "error:", err)
 					continue
 				case batch:
 					h.batch, h.batchEnd = true, end
@@ -379,8 +374,7 @@ func (h *Handler) Run() error {
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch); err != nil {
 					lastErr = WrapErr(h.last, err)
-					fmt.Fprintf(stderr, "error: %v", err)
-					fmt.Fprintln(stderr)
+					fmt.Fprintln(stderr, "error:", err)
 				}
 				stop()
 			}
@@ -576,8 +570,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		return err
 	}
 	// print the error
-	fmt.Fprintf(h.l.Stderr(), "error: %v", err)
-	fmt.Fprintln(h.l.Stderr())
+	fmt.Fprintln(h.l.Stderr(), "error:", err)
 	// otherwise, try to collect a password ...
 	dsn, err := h.Password(params[0])
 	if err != nil {
@@ -590,45 +583,39 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 }
 
 func (h *Handler) connStrings() []string {
-	available := drivers.Available()
-	entries, err := env.PassFileEntries(h.user)
+	entries, err := passfile.Entries(h.user, text.PassfileName)
 	if err != nil {
 		// ignore the error as this is only used for completer
 		// and it'll be reported again when trying to force params before opening a conn
 		entries = nil
 	}
+	available := drivers.Available()
 	names := make([]string, 0, len(available)+len(entries))
-
 	for schema := range available {
 		_, aliases := dburl.SchemeDriverAndAliases(schema)
 		// TODO should we create all combinations of space, :, :// and +transport ?
 		names = append(names, schema)
 		names = append(names, aliases...)
 	}
-
-	for _, e := range entries {
-		if e.Protocol == "*" {
+	for _, entry := range entries {
+		if entry.Protocol == "*" {
 			continue
 		}
-		user := ""
-		host := ""
-		port := ""
-		dbname := ""
-		if e.Username != "*" {
-			user = e.Username + "@"
-			if e.Host != "*" {
-				host = e.Host
-				if e.Port != "*" {
-					port = ":" + e.Port
+		user, host, port, dbname := "", "", "", ""
+		if entry.Username != "*" {
+			user = entry.Username + "@"
+			if entry.Host != "*" {
+				host = entry.Host
+				if entry.Port != "*" {
+					port = ":" + entry.Port
 				}
-				if e.DBName != "*" {
-					dbname = "/" + e.DBName
+				if entry.DBName != "*" {
+					dbname = "/" + entry.DBName
 				}
 			}
 		}
-		names = append(names, fmt.Sprintf("%s://%s%s%s%s", e.Protocol, user, host, port, dbname))
+		names = append(names, fmt.Sprintf("%s://%s%s%s%s", entry.Protocol, user, host, port, dbname))
 	}
-
 	sort.Strings(names)
 	return names
 }
@@ -640,12 +627,10 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	// force driver parameters
 	drivers.ForceParams(u)
 	// see if password entry is present
-	user, err := env.PassFileMatch(h.user, u)
+	user, err := passfile.Match(h.user, u, text.PassfileName)
 	switch {
 	case err != nil:
-		errout := h.l.Stderr()
-		fmt.Fprintf(errout, "error: %v", err)
-		fmt.Fprintln(errout)
+		fmt.Fprintln(h.l.Stderr(), "error:", err)
 	case user != nil:
 		u.User = user
 	}
@@ -802,9 +787,7 @@ func (h *Handler) Print(format string, a ...interface{}) {
 	if env.Get("QUIET") == "on" {
 		return
 	}
-	out := h.l.Stdout()
-	fmt.Fprintf(out, format, a...)
-	fmt.Fprintln(out)
+	fmt.Fprintln(h.l.Stdout(), fmt.Sprintf(format, a...))
 }
 
 // execWatch repeatedly executes a query against the database.
@@ -812,7 +795,8 @@ func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option
 	for {
 		// this is the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST"
 		// fmt.Fprintf(w, "%s (every %fs)\n\n", time.Now().Format("Mon Jan 2006 3:04:05 PM MST"), float64(opt.Watch)/float64(time.Second))
-		fmt.Fprintf(w, "%s (every %v)\n\n", time.Now().Format(time.RFC1123), opt.Watch)
+		fmt.Fprintln(w, fmt.Sprintf("%s (every %v)", time.Now().Format(time.RFC1123), opt.Watch))
+		fmt.Fprintln(w)
 		if err := h.execOnly(ctx, w, opt, prefix, qstr, qtyp); err != nil {
 			return err
 		}
