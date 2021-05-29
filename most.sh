@@ -14,6 +14,7 @@ VER="$(date +%y.%m.%d)-dev"
 PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
 
 CGO_ENABLED=1
+BUILDVERB=build
 TAGS=(
   most
 )
@@ -36,11 +37,12 @@ case $PLATFORM in
 esac
 
 OPTIND=1
-while getopts "mvx" opt; do
+while getopts "imvx" opt; do
 case "$opt" in
+  i) BUILDVERB=install ;;
   m)
-    SQLITE_TAGS=(no_sqlite3)
     CGO_ENABLED=0
+    SQLITE_TAGS=(no_sqlite3)
     ;;
   v) EXTRA+=(-v) ;;
   x) EXTRA+=(-x) ;;
@@ -57,7 +59,8 @@ LDFLAGS=(
 LDFLAGS="${LDFLAGS[@]}"
 
 (set -x;
-  CGO_ENABLED=$CGO_ENABLED go build \
+  CGO_ENABLED=$CGO_ENABLED \
+    go $BUILDVERB \
     -tags="$TAGS" \
     -ldflags="$LDFLAGS" \
     ${EXTRA[@]}
