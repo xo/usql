@@ -53,7 +53,7 @@ func isEmptyLine(r []rune, i, end int) bool {
 }
 
 // identifierRE is a regexp that matches dollar tag identifiers ($tag$).
-var identifierRE = regexp.MustCompile(`(?i)^[a-z][a-z0-9_]{0,127}$`)
+var identifierRE = regexp.MustCompile(`(?i)^[a-z_][a-z0-9_]{0,127}$`)
 
 // readDollarAndTag reads a dollar style $tag$ in r, starting at i, returning
 // the enclosed "tag" and position, or -1 if the dollar and tag was invalid.
