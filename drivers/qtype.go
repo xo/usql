@@ -124,6 +124,7 @@ var execMap = map[string]bool{
 	"CREATE USER MAPPING":              true, // define a new mapping of a user to a foreign server
 	"CREATE USER":                      true, // define a new database role
 	"CREATE VIEW":                      true, // define a new view
+	"DEALLOCATE ALL":                   true, // deallocate all prepared statements
 	"DEALLOCATE":                       true, // deallocate a prepared statement
 	"DECLARE":                          true, // define a cursor
 	"DELETE":                           true, // delete rows of a table
