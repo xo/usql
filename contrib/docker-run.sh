@@ -87,7 +87,11 @@ docker_run() {
 }
 
 if [ "$DIR" = "test" ]; then
-  for TARGET in mysql postgres sqlserver cassandra; do
+  TARGETS="mysql postgres sqlserver cassandra"
+  if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+    TARGETS+=" oracle"
+  fi
+  for TARGET in $TARGETS; do
     docker_run $TARGET
   done
 else
