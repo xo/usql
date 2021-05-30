@@ -3,6 +3,7 @@ package env
 import (
 	"fmt"
 	"io"
+	"os/exec"
 	"regexp"
 	"sort"
 	"strconv"
@@ -46,10 +47,22 @@ func init() {
 	if colorLevel < terminfo.ColorLevelBasic {
 		enableSyntaxHL = "false"
 	}
+	pager, pagerCmd := "off", Getenv("USQL_PAGER", "PAGER")
+	if pagerCmd == "" {
+		for _, s := range []string{"less", "more"} {
+			if _, err := exec.LookPath(s); err != nil {
+				pagerCmd = s
+				break
+			}
+		}
+	}
+	if pagerCmd != "" {
+		pager = "on"
+	}
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
-		"PAGER":                 Getenv("USQL_PAGER", "PAGER"),
+		"PAGER":                 pagerCmd,
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
@@ -68,7 +81,7 @@ func init() {
 		"linestyle":                "ascii",
 		"null":                     "",
 		"numericlocale":            "off",
-		"pager":                    "off",
+		"pager":                    pager,
 		"pager_min_lines":          "0",
 		"recordsep":                "\n",
 		"recordsep_zero":           "off",
