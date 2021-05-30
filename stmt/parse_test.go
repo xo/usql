@@ -136,6 +136,18 @@ func TestReadString(t *testing.T) {
 		// double quoted string
 		{`"foo\""`, 0, `"foo\"`, true},
 		{` "foo\"" `, 1, `"foo\"`, true},
+		{`''''`, 0, `''''`, true},
+		{` '''' `, 1, `''''`, true},
+		{`''''''`, 0, `''''''`, true},
+		{` '''''' `, 1, `''''''`, true},
+		{`'''`, 0, ``, false},
+		{` ''' `, 1, ``, false},
+		{`'''''`, 0, ``, false},
+		{` ''''' `, 1, ``, false},
+		{`"fo'o"`, 0, `"fo'o"`, true},
+		{` "fo'o" `, 1, `"fo'o"`, true},
+		{`"fo''o"`, 0, `"fo''o"`, true},
+		{` "fo''o" `, 1, `"fo''o"`, true},
 	}
 	for i, test := range tests {
 		r := []rune(test.s)
