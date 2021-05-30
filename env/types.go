@@ -50,7 +50,7 @@ func init() {
 	pager, pagerCmd := "off", Getenv("USQL_PAGER", "PAGER")
 	if pagerCmd == "" {
 		for _, s := range []string{"less", "more"} {
-			if _, err := exec.LookPath(s); err != nil {
+			if _, err := exec.LookPath(s); err == nil {
 				pagerCmd = s
 				break
 			}
