@@ -734,7 +734,9 @@ func init() {
 				"l[+]":   "list databases",
 			},
 			Process: func(p *Params) error {
-				m, err := p.Handler.MetadataWriter()
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				defer cancel()
+				m, err := p.Handler.MetadataWriter(ctx)
 				if err != nil {
 					return err
 				}

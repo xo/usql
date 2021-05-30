@@ -443,14 +443,8 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 	}
 }
 
-// NextResultSet is a wrapper around the go1.8 introduced
-// sql.Rows.NextResultSet call.
-func NextResultSet(q *sql.Rows) bool {
-	return q.NextResultSet()
-}
-
 // NewMetadataReader wraps creating a new database introspector for the specified driver.
-func NewMetadataReader(u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
+func NewMetadataReader(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
 	d, ok := drivers[u.Driver]
 	if !ok || d.NewMetadataReader == nil {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
@@ -459,7 +453,7 @@ func NewMetadataReader(u *dburl.URL, db DB, w io.Writer, opts ...metadata.Reader
 }
 
 // NewMetadataWriter wraps creating a new database metadata printer for the specified driver.
-func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
+func NewMetadataWriter(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
@@ -474,7 +468,7 @@ func NewMetadataWriter(u *dburl.URL, db DB, w io.Writer, opts ...metadata.Reader
 	return newMetadataWriter(db, w), nil
 }
 
-func NewCompleter(u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts ...completer.Option) readline.AutoCompleter {
+func NewCompleter(ctx context.Context, u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts ...completer.Option) readline.AutoCompleter {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil
