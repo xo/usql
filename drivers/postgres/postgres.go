@@ -18,6 +18,7 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
+	"github.com/xo/usql/text"
 )
 
 func init() {
@@ -30,6 +31,29 @@ func init() {
 			if u.Scheme == "cockroachdb" {
 				drivers.ForceQueryParameters([]string{"sslmode", "disable"})(u)
 			}
+		},
+		Open: func(u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
+			return func(typ, dsn string) (*sql.DB, error) {
+				conn, err := pq.NewConnector(dsn)
+				if err != nil {
+					return nil, err
+				}
+				noticeConn := pq.ConnectorWithNoticeHandler(conn, func(notice *pq.Error) {
+					out := stderr()
+					fmt.Fprintln(out, notice.Severity+": ", notice.Message)
+					if notice.Hint != "" {
+						fmt.Fprintln(out, "HINT: ", notice.Hint)
+					}
+				})
+				notificationConn := pq.ConnectorWithNotificationHandler(noticeConn, func(notification *pq.Notification) {
+					var payload string
+					if notification.Extra != "" {
+						payload = fmt.Sprintf(text.NotificationPayload, notification.Extra)
+					}
+					fmt.Fprintln(stdout(), fmt.Sprintf(text.NotificationReceived, notification.Channel, payload, notification.BePid))
+				})
+				return sql.OpenDB(notificationConn), nil
+			}, nil
 		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// numeric version

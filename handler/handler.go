@@ -550,7 +550,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		}
 	}
 	// open connection
-	h.db, err = drivers.Open(h.u)
+	h.db, err = drivers.Open(h.u, h.GetOutput, h.IO().Stderr)
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err
@@ -1181,11 +1181,17 @@ func readerOptions() []metadata.ReaderOption {
 }
 
 // GetOutput gets the output writer.
-func (h *Handler) GetOutput() io.WriteCloser {
+func (h *Handler) GetOutput() io.Writer {
+	if h.out == nil {
+		return h.l.Stdout()
+	}
 	return h.out
 }
 
 // SetOutput sets the output writer.
 func (h *Handler) SetOutput(o io.WriteCloser) {
+	if h.out != nil {
+		h.out.Close()
+	}
 	h.out = o
 }

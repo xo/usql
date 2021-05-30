@@ -58,7 +58,7 @@ type Handler interface {
 	// SetTiming mode.
 	SetTiming(bool)
 	// GetOutput writer.
-	GetOutput() io.WriteCloser
+	GetOutput() io.Writer
 	// SetOutput writer.
 	SetOutput(io.WriteCloser)
 	// MetadataWriter retrieves the metadata writer for the handler.

@@ -84,6 +84,8 @@ var (
 	NotSupportedByDriver = `%s not supported by driver`
 	RelationNotFound     = `Did not find any relation named "%s".`
 	InvalidOption        = `invalid option %q`
+	NotificationReceived = `Asynchronous notification %q %sreceived from server process with PID %d.`
+	NotificationPayload  = `with payload %q `
 )
 
 func init() {

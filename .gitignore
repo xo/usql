@@ -2,6 +2,8 @@
 /usql.exe
 /build/
 /coverage.out
+/*.sql
+/*.txt
 
 .usql_history*
 .[a-f0-9]*

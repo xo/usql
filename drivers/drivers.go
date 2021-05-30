@@ -60,7 +60,7 @@ type Driver struct {
 	// ForceParams will be used to force parameters if defined.
 	ForceParams func(*dburl.URL)
 	// Open will be used by Open if defined.
-	Open func(*dburl.URL) (func(string, string) (*sql.DB, error), error)
+	Open func(*dburl.URL, func() io.Writer, func() io.Writer) (func(string, string) (*sql.DB, error), error)
 	// Version will be used by Version if defined.
 	Version func(context.Context, DB) (string, error)
 	// User will be used by User if defined.
@@ -154,7 +154,7 @@ func ForceParams(u *dburl.URL) {
 }
 
 // Open opens a sql.DB connection for the registered driver.
-func Open(u *dburl.URL) (*sql.DB, error) {
+func Open(u *dburl.URL, stdout, stderr func() io.Writer) (*sql.DB, error) {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return nil, WrapErr(u.Driver, text.ErrDriverNotAvailable)
@@ -162,7 +162,7 @@ func Open(u *dburl.URL) (*sql.DB, error) {
 	f := sql.Open
 	if d.Open != nil {
 		var err error
-		if f, err = d.Open(u); err != nil {
+		if f, err = d.Open(u, stdout, stderr); err != nil {
 			return nil, WrapErr(u.Driver, err)
 		}
 	}
@@ -499,7 +499,7 @@ func NewCompleter(u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts 
 }
 
 // Copy the result set to the destination sql.DB.
-func Copy(ctx context.Context, u *dburl.URL, rows *sql.Rows, table string) (int64, error) {
+func Copy(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer, rows *sql.Rows, table string) (int64, error) {
 	d, ok := drivers[u.Driver]
 	if !ok {
 		return 0, WrapErr(u.Driver, text.ErrDriverNotAvailable)
@@ -507,7 +507,7 @@ func Copy(ctx context.Context, u *dburl.URL, rows *sql.Rows, table string) (int6
 	if d.Copy == nil {
 		return 0, fmt.Errorf(text.NotSupportedByDriver, `copy`)
 	}
-	db, err := Open(u)
+	db, err := Open(u, stdout, stderr)
 	if err != nil {
 		return 0, err
 	}

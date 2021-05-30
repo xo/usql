@@ -7,6 +7,7 @@ package moderncsqlite
 import (
 	"context"
 	"database/sql"
+	"io"
 	"strconv"
 
 	"github.com/xo/dburl"
@@ -18,7 +19,7 @@ import (
 func init() {
 	drivers.Register("moderncsqlite", drivers.Driver{
 		AllowMultilineComments: true,
-		Open: func(u *dburl.URL) (func(string, string) (*sql.DB, error), error) {
+		Open: func(u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_ string, params string) (*sql.DB, error) {
 				return sql.Open("sqlite", params)
 			}, nil

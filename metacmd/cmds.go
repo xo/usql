@@ -448,7 +448,6 @@ func init() {
 			Aliases: map[string]string{"out": ""},
 			Process: func(p *Params) error {
 				if out := p.Handler.GetOutput(); out != nil {
-					out.Close()
 					p.Handler.SetOutput(nil)
 				}
 				params, err := p.GetAll(true)
@@ -771,6 +770,7 @@ func init() {
 			Name:    "copy",
 			Desc:    "copy data from/to a table,[SRC_URL] [DST_URL] [SRC] [DST]",
 			Process: func(p *Params) error {
+				stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
 				srcURLstr, err := p.Get(true)
 				if err != nil {
 					return err
@@ -795,12 +795,12 @@ func init() {
 				if err != nil {
 					return err
 				}
-				srcDB, err := drivers.Open(srcURL)
+				srcDB, err := drivers.Open(srcURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
 				defer srcDB.Close()
-				dstDB, err := drivers.Open(dstURL)
+				dstDB, err := drivers.Open(dstURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
@@ -813,7 +813,7 @@ func init() {
 					return err
 				}
 				defer r.Close()
-				n, err := drivers.Copy(ctx, dstURL, r, dst)
+				n, err := drivers.Copy(ctx, dstURL, stdout, stderr, r, dst)
 				if err != nil {
 					return err
 				}
