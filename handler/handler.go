@@ -883,7 +883,7 @@ func (h *Handler) execExec(ctx context.Context, w io.Writer, _ metacmd.Option, p
 }
 
 // query executes a query against the database.
-func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _, sqlstr string) error {
+func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string) error {
 	start := time.Now()
 	// run query
 	rows, err := h.DB().QueryContext(ctx, sqlstr)
@@ -931,11 +931,16 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, _,
 	if useColumnTypes {
 		params["use_column_types"] = "true"
 	}
-	if err := tblfmt.EncodeAll(w, resultSet, params); err != nil {
-		if cmd != nil && errors.Is(err, syscall.EPIPE) {
-			// broken pipe means pager quit before consuming all data, which might be expected
-			return nil
-		}
+	// encode and handle error conditions
+	switch err := tblfmt.EncodeAll(w, resultSet, params); {
+	case err != nil && cmd != nil && errors.Is(err, syscall.EPIPE):
+		// broken pipe means pager quit before consuming all data, which might be expected
+		return nil
+	case err != nil && h.u.Driver == "sqlserver" && err == tblfmt.ErrResultSetHasNoColumns && strings.HasPrefix(typ, "EXEC"):
+		// sqlserver EXEC statements sometimes do not have results, fake that
+		// it was executed as a exec and not a query
+		fmt.Fprintln(w, typ)
+	case err != nil:
 		return err
 	}
 	if h.timing {

@@ -37,7 +37,7 @@ case $PLATFORM in
 esac
 
 OPTIND=1
-while getopts "imvx" opt; do
+while getopts "imvxt:" opt; do
 case "$opt" in
   i) BUILDVERB=install ;;
   m)
@@ -46,6 +46,7 @@ case "$opt" in
     ;;
   v) EXTRA+=(-v) ;;
   x) EXTRA+=(-x) ;;
+  t) TAGS+=($OPTARG) ;;
 esac
 done
 

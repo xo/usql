@@ -16,7 +16,7 @@ var queryMap = map[string]bool{
 	"SHOW":       true, // show the value of a run-time parameter
 	"ADMIN SHOW": true,
 	"VALUES":     true, // compute a set of rows
-	"LIST":       true, // list permissions, roles, users (cassandra])
+	"LIST":       true, // list permissions, roles, users (cassandra)
 	"EXEC":       true, // execute a stored procedure that returns rows (not postgres)
 }
 
@@ -34,6 +34,9 @@ var execMap = map[string]bool{
 	"DROP KEYSPACE":   true, // drop a keyspace
 	"BEGIN BATCH":     true, // begin batch
 	"APPLY BATCH":     true, // apply batch
+	// sqlserver
+	"CREATE LOGIN": true, // create login
+	"DROP LOGIN":   true, // drop login
 	// ql
 	"BEGIN TRANSACTION": true, // begin batch
 	// postgresql
