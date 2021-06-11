@@ -1,11 +1,25 @@
 #!/bin/bash
 
+# docker-run.sh: starts or restarts docker containers.
+#
+# Usage: docker-run.sh <TARGET> [-u]
+#
+# Where <target> is a name of a subdirectory containing docker-config,
+# 'all', or 'test'.
+#
+# all  -- starts all available database images.
+# test -- starts the primary testing images. The testing images are cassandra,
+#         mysql, postgres, sqlserver, and oracle [if available].
+# -u   -- perform docker pull for images prior to start.
+#
+# Will stop any running docker container prior to starting.
+
 DIR=$1
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}" )" && pwd))
 
 if [ -z "$DIR" ]; then
-  echo "usage: $0 <NAME>"
+  echo "usage: $0 <TARGET> [-u]"
   exit 1
 fi
 
@@ -60,12 +74,12 @@ docker_run() {
 
   if [ "$UPDATE" -eq "1" ]; then
     if [ ! -f $BASE/Dockerfile ]; then
-      (set -x;
+      (set -ex;
         docker pull $IMAGE
       )
     else
       pushd $BASE &> /dev/null
-      (set -x;
+      (set -ex;
         docker build --pull -t $IMAGE:latest .
       )
       popd &> /dev/null
@@ -86,14 +100,30 @@ docker_run() {
   )
 }
 
-if [ "$DIR" = "test" ]; then
-  TARGETS="mysql postgres sqlserver cassandra"
-  if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
-    TARGETS+=" oracle"
-  fi
-  for TARGET in $TARGETS; do
-    docker_run $TARGET
-  done
-else
-  docker_run $DIR
-fi
+pushd $SRC &> /dev/null
+TARGETS=()
+case $DIR in
+  all)
+    TARGETS+=($(find . -type f -name docker-config|awk -F'/' '{print $2}'|grep -v oracle|grep -v db2))
+    if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+      TARGETS+=(oracle)
+    fi
+    if [[ "$(docker image ls -q --filter 'reference=ibmcom/db2')" != "" && -d /media/src/opt/db2 ]]; then
+      TARGETS+=(db2)
+    fi
+  ;;
+  test)
+    TARGETS+=(mysql postgres sqlserver cassandra)
+    if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+      TARGETS+=(oracle)
+    fi
+  ;;
+  *)
+    TARGETS+=($DIR)
+  ;;
+esac
+
+for TARGET in ${TARGETS[@]}; do
+  docker_run $TARGET
+done
+popd &> /dev/null
