@@ -35,8 +35,10 @@ var execMap = map[string]bool{
 	"BEGIN BATCH":     true, // begin batch
 	"APPLY BATCH":     true, // apply batch
 	// sqlserver
-	"CREATE LOGIN": true, // create login
-	"DROP LOGIN":   true, // drop login
+	"CREATE LOGIN":     true, // create login
+	"CREATE PROCEDURE": true, // create procedure
+	"DROP LOGIN":       true, // drop login
+	"DROP PROCEDURE":   true, // drop procedure
 	// ql
 	"BEGIN TRANSACTION": true, // begin batch
 	// postgresql
