@@ -24,6 +24,7 @@ import (
 func init() {
 	allCapsRE := regexp.MustCompile(`^[A-Z][A-Z0-9_]+$`)
 	endRE := regexp.MustCompile(`;?\s*$`)
+	endAnchorRE := regexp.MustCompile(`(?i)\send\s*;\s*$`)
 	drivers.Register("godror", drivers.Driver{
 		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {
@@ -105,7 +106,10 @@ func init() {
 			return cols, nil
 		},
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
-			sqlstr = endRE.ReplaceAllString(sqlstr, "")
+			if !endAnchorRE.MatchString(sqlstr) {
+				// trim last ; but only when not END;
+				sqlstr = endRE.ReplaceAllString(sqlstr, "")
+			}
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil
 		},
