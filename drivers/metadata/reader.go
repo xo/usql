@@ -12,6 +12,7 @@ type PluginReader struct {
 	schemas           func(Filter) (*SchemaSet, error)
 	tables            func(Filter) (*TableSet, error)
 	columns           func(Filter) (*ColumnSet, error)
+	columnStats       func(Filter) (*ColumnStatSet, error)
 	indexes           func(Filter) (*IndexSet, error)
 	indexColumns      func(Filter) (*IndexColumnSet, error)
 	triggers          func(Filter) (*TriggerSet, error)
@@ -39,6 +40,9 @@ func NewPluginReader(readers ...Reader) Reader {
 		}
 		if r, ok := i.(ColumnReader); ok {
 			p.columns = r.Columns
+		}
+		if r, ok := i.(ColumnStatReader); ok {
+			p.columnStats = r.ColumnStats
 		}
 		if r, ok := i.(IndexReader); ok {
 			p.indexes = r.Indexes
@@ -94,6 +98,13 @@ func (p PluginReader) Columns(f Filter) (*ColumnSet, error) {
 		return nil, ErrNotSupported
 	}
 	return p.columns(f)
+}
+
+func (p PluginReader) ColumnStats(f Filter) (*ColumnStatSet, error) {
+	if p.columnStats == nil {
+		return nil, ErrNotSupported
+	}
+	return p.columnStats(f)
 }
 
 func (p PluginReader) Indexes(f Filter) (*IndexSet, error) {

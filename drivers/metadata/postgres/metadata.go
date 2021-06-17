@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
@@ -17,6 +18,8 @@ type metaReader struct {
 }
 
 var _ metadata.CatalogReader = &metaReader{}
+var _ metadata.TableReader = &metaReader{}
+var _ metadata.ColumnStatReader = &metaReader{}
 var _ metadata.IndexReader = &metaReader{}
 var _ metadata.IndexColumnReader = &metaReader{}
 var _ metadata.TriggerReader = &metaReader{}
@@ -70,6 +73,144 @@ FROM pg_catalog.pg_database d`
 	return metadata.NewCatalogSet(results), nil
 }
 
+func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
+	qstr := `SELECT n.nspname as "Schema",
+  c.relname as "Name",
+  CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' END as "Type",
+  COALESCE((c.reltuples / NULLIF(c.relpages, 0)) * (pg_catalog.pg_relation_size(c.oid) / current_setting('block_size')::int), 0)::bigint as "Rows",
+  pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as "Size",
+  COALESCE(pg_catalog.obj_description(c.oid, 'pg_class'), '') as "Description"
+FROM pg_catalog.pg_class c
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+`
+	conds := []string{"n.nspname !~ '^pg_toast'"}
+	vals := []interface{}{}
+	if f.OnlyVisible {
+		conds = append(conds, "pg_catalog.pg_table_is_visible(c.oid)")
+	}
+	if !f.WithSystem {
+		conds = append(conds, "n.nspname NOT IN ('pg_catalog', 'information_schema')")
+	}
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
+		conds = append(conds, fmt.Sprintf("n.nspname LIKE $%d", len(vals)))
+	}
+	if f.Name != "" {
+		vals = append(vals, f.Name)
+		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
+	}
+	if len(f.Types) != 0 {
+		tableTypes := map[string][]rune{
+			"TABLE":             {'r', 'p', 's', 'f'},
+			"VIEW":              {'v'},
+			"MATERIALIZED VIEW": {'m'},
+			"SEQUENCE":          {'S'},
+		}
+		pholders := []string{"''"}
+		for _, t := range f.Types {
+			for _, k := range tableTypes[t] {
+				vals = append(vals, string(k))
+				pholders = append(pholders, fmt.Sprintf("$%d", len(vals)))
+			}
+		}
+		conds = append(conds, fmt.Sprintf("c.relkind IN (%s)", strings.Join(pholders, ", ")))
+	}
+	rows, closeRows, err := r.query(qstr, conds, "1, 2", vals...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewTableSet([]metadata.Table{}), nil
+		}
+		return nil, err
+	}
+	defer closeRows()
+
+	results := []metadata.Table{}
+	for rows.Next() {
+		rec := metadata.Table{}
+		err = rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Rows, &rec.Size, &rec.Comment)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewTableSet(results), nil
+}
+
+func (r metaReader) ColumnStats(f metadata.Filter) (*metadata.ColumnStatSet, error) {
+	tables, err := r.Tables(metadata.Filter{Schema: f.Schema, Name: f.Parent, WithSystem: true})
+	if err != nil {
+		return nil, err
+	}
+	rowNum := int64(0)
+	if tables.Next() {
+		rowNum = tables.Get().Rows
+	}
+
+	qstr := `
+SELECT
+  s.schemaname,
+  s.tablename,
+  s.attname,
+  s.avg_width,
+  s.null_frac,
+  CASE WHEN n_distinct >= 0 THEN n_distinct ELSE (-n_distinct * $1)::bigint END,
+  COALESCE((histogram_bounds::text::text[])[1], ''),
+  COALESCE((histogram_bounds::text::text[])[array_length(histogram_bounds::text::text[], 1)], ''),
+  most_common_vals::text::text[],
+  most_common_freqs::text::text[]
+FROM pg_catalog.pg_stats s
+JOIN pg_catalog.pg_namespace n ON n.nspname = s.schemaname
+JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid AND c.relname = s.tablename
+JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attname = s.attname`
+	conds := []string{}
+	vals := []interface{}{rowNum}
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
+		conds = append(conds, fmt.Sprintf("s.schemaname LIKE $%d", len(vals)))
+	}
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
+		conds = append(conds, fmt.Sprintf("s.tablename LIKE $%d", len(vals)))
+	}
+	if f.Name != "" {
+		vals = append(vals, f.Name)
+		conds = append(conds, fmt.Sprintf("s.attname LIKE $%d", len(vals)))
+	}
+	rows, closeRows, err := r.query(qstr, conds, "a.attnum", vals...)
+	if err != nil {
+		return nil, err
+	}
+	defer closeRows()
+
+	results := []metadata.ColumnStat{}
+	for rows.Next() {
+		rec := metadata.ColumnStat{}
+		err = rows.Scan(
+			&rec.Schema,
+			&rec.Table,
+			&rec.Name,
+			&rec.AvgWidth,
+			&rec.NullFrac,
+			&rec.NumDistinct,
+			&rec.Min,
+			&rec.Max,
+			pq.Array(&rec.TopN),
+			pq.Array(&rec.TopNFreqs),
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewColumnStatSet(results), nil
+}
+
 func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	qstr := `
 SELECT
@@ -86,8 +227,6 @@ FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid`
 	conds := []string{
 		"c.relkind IN ('i','I','')",
-		"n.nspname <> 'pg_catalog'",
-		"n.nspname <> 'information_schema'",
 		"n.nspname !~ '^pg_toast'",
 	}
 	if f.OnlyVisible {
@@ -95,7 +234,7 @@ FROM pg_catalog.pg_class c
 	}
 	vals := []interface{}{}
 	if !f.WithSystem {
-		conds = append(conds, "n.nspname NOT IN ('pg_catalog', 'pg_toast', 'information_schema')")
+		conds = append(conds, "n.nspname NOT IN ('pg_catalog', 'information_schema')")
 	}
 	if f.Schema != "" {
 		vals = append(vals, f.Schema)

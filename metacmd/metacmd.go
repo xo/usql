@@ -86,4 +86,6 @@ const (
 	SetFormatVar
 	// Timing is the timing meta command (\timing).
 	Timing
+	// Stats is the show stats meta command (\ss and variants).
+	Stats
 )
