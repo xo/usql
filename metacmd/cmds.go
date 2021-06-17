@@ -769,6 +769,44 @@ func init() {
 				return nil
 			},
 		},
+		Stats: {
+			Section: SectionInformational,
+			Name:    "ss[+]",
+			Desc:    "show stats for a table or a query,[TABLE|QUERY] [k]",
+			Process: func(p *Params) error {
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				defer cancel()
+				m, err := p.Handler.MetadataWriter(ctx)
+				if err != nil {
+					return err
+				}
+				verbose := strings.ContainsRune(p.Name, '+')
+				name := strings.TrimRight(p.Name, "+")
+				pattern, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				k := 0
+				if verbose {
+					k = 3
+				}
+				if name == "ss" {
+					name = "sswnulhmkf"
+				}
+				ok, val, err := p.GetOK(true)
+				if err != nil {
+					return err
+				}
+				if ok {
+					verbose = true
+					k, err = strconv.Atoi(val)
+					if err != nil {
+						return err
+					}
+				}
+				return m.ShowStats(name, pattern, verbose, k)
+			},
+		},
 		Copy: {
 			Section: SectionInputOutput,
 			Name:    "copy",

@@ -15,6 +15,7 @@ type ExtendedReader interface {
 	SchemaReader
 	TableReader
 	ColumnReader
+	ColumnStatReader
 	IndexReader
 	IndexColumnReader
 	TriggerReader
@@ -54,6 +55,12 @@ type TableReader interface {
 type ColumnReader interface {
 	Reader
 	Columns(Filter) (*ColumnSet, error)
+}
+
+// ColumnStatsReader lists table column statistics.
+type ColumnStatReader interface {
+	Reader
+	ColumnStats(Filter) (*ColumnStatSet, error)
 }
 
 // IndexReader lists table indexes.
@@ -144,6 +151,8 @@ type Writer interface {
 	ListSchemas(string, bool, bool) error
 	// ListIndexes \di
 	ListIndexes(string, bool, bool) error
+	// ShowStats \ss
+	ShowStats(string, string, bool, int) error
 }
 
 type CatalogSet struct {
@@ -224,6 +233,7 @@ func NewTableSet(v []Table) *TableSet {
 				"Name",
 				"Type",
 
+				"Rows",
 				"Size",
 				"Comment",
 			},
@@ -240,6 +250,7 @@ type Table struct {
 	Schema  string
 	Name    string
 	Type    string
+	Rows    int64
 	Size    string
 	Comment string
 }
@@ -250,6 +261,7 @@ func (t Table) values() []interface{} {
 		t.Schema,
 		t.Name,
 		t.Type,
+		t.Rows,
 		t.Size,
 		t.Comment,
 	}
@@ -327,6 +339,73 @@ func (c Column) values() []interface{} {
 		c.DecimalDigits,
 		c.NumPrecRadix,
 		c.CharOctetLength,
+	}
+}
+
+type ColumnStatSet struct {
+	resultSet
+}
+
+func NewColumnStatSet(v []ColumnStat) *ColumnStatSet {
+	r := make([]Result, len(v))
+	for i := range v {
+		r[i] = &v[i]
+	}
+	return &ColumnStatSet{
+		resultSet: resultSet{
+			results: r,
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Table",
+				"Name",
+
+				"Average width",
+				"Nulls fraction",
+				"Distinct values",
+				"Minimum value",
+				"Maximum value",
+				"Mean value",
+				"Top N common values",
+				"Top N values freqs",
+			},
+		},
+	}
+}
+
+func (c ColumnStatSet) Get() *ColumnStat {
+	return c.results[c.current-1].(*ColumnStat)
+}
+
+type ColumnStat struct {
+	Catalog     string
+	Schema      string
+	Table       string
+	Name        string
+	AvgWidth    int
+	NullFrac    float64
+	NumDistinct int64
+	Min         string
+	Max         string
+	Mean        string
+	TopN        []string
+	TopNFreqs   []float64
+}
+
+func (c ColumnStat) values() []interface{} {
+	return []interface{}{
+		c.Catalog,
+		c.Schema,
+		c.Table,
+		c.Name,
+		c.AvgWidth,
+		c.NullFrac,
+		c.NumDistinct,
+		c.Min,
+		c.Max,
+		c.Mean,
+		c.TopN,
+		c.TopNFreqs,
 	}
 }
 

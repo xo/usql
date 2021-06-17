@@ -653,6 +653,7 @@ Informational
   \dt[S+] [PATTERN]                    list tables
   \dv[S+] [PATTERN]                    list views
   \l[+]                                list databases
+  \ss[+] [TABLE|QUERY] [k]             show stats for a table or a query
 
 Formatting
   \pset [NAME [VALUE]]                 set table output option

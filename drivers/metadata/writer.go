@@ -599,14 +599,14 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 	}
 	columns := []string{"Schema", "Name", "Type"}
 	if verbose {
-		columns = append(columns, "Size", "Comment")
+		columns = append(columns, "Rows", "Size", "Comment")
 	}
 	res.SetColumns(columns)
 	res.SetScanValues(func(r Result) []interface{} {
 		f := r.(*Table)
 		v := []interface{}{f.Schema, f.Name, f.Type}
 		if verbose {
-			v = append(v, f.Size, f.Comment)
+			v = append(v, f.Rows, f.Size, f.Comment)
 		}
 		return v
 	})
@@ -685,6 +685,90 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 
 	params := env.Pall()
 	params["title"] = "List of indexes"
+	return tblfmt.EncodeAll(w.w, res, params)
+}
+
+// ShowStats of columns for tables matching pattern
+func (w DefaultWriter) ShowStats(statTypes, pattern string, verbose bool, k int) error {
+	r, ok := w.r.(ColumnStatReader)
+	if !ok {
+		return fmt.Errorf(text.NotSupportedByDriver, `\ss`)
+	}
+	sp, tp, err := parsePattern(pattern)
+	if err != nil {
+		return fmt.Errorf("failed to parse search pattern: %w", err)
+	}
+
+	rows := int64(0)
+	tr, ok := w.r.(TableReader)
+	if ok {
+		tables, err := tr.Tables(Filter{Schema: sp, Name: tp})
+		if err != nil {
+			return fmt.Errorf("failed to get table entry: %w", err)
+		}
+		defer tables.Close()
+		if tables.Next() {
+			rows = tables.Get().Rows
+		}
+	}
+
+	types := []string{"basic"}
+	if verbose {
+		types = append(types, "extended")
+	}
+	res, err := r.ColumnStats(Filter{Schema: sp, Parent: tp, Types: types})
+	if err != nil {
+		return fmt.Errorf("failed to get column stats: %w", err)
+	}
+	defer res.Close()
+
+	if res.Len() == 0 {
+		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
+		fmt.Fprintln(w.w)
+		return nil
+	}
+	columns := []string{"Schema", "Table", "Name", "Average width", "Nulls fraction", "Distinct values", "Dist. fraction"}
+	if verbose {
+		columns = append(columns, "Minimum value", "Maximum value", "Mean value", "Top N common values", "Top N values freqs")
+	}
+	res.SetColumns(columns)
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*ColumnStat)
+		freqs := []string{}
+		for _, freq := range f.TopNFreqs {
+			freqs = append(freqs, fmt.Sprintf("%.4f", freq))
+		}
+		n := k
+		if n > len(freqs) {
+			n = len(freqs)
+		}
+		distFrac := 1.0
+		if rows != 0 && f.NumDistinct != rows {
+			distFrac = float64(f.NumDistinct) / float64(rows)
+		}
+		v := []interface{}{
+			f.Schema,
+			f.Table,
+			f.Name,
+			f.AvgWidth,
+			f.NullFrac,
+			f.NumDistinct,
+			fmt.Sprintf("%.4f", distFrac),
+		}
+		if verbose {
+			v = append(v,
+				f.Min,
+				f.Max,
+				f.Mean,
+				strings.Join(f.TopN[:n], ", "),
+				strings.Join(freqs[:n], ", "),
+			)
+		}
+		return v
+	})
+
+	params := env.Pall()
+	params["title"] = "Column stats"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
 
