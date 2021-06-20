@@ -72,7 +72,7 @@ docker_run() {
   echo "NETWORK:    $NETWORK"
   echo "PRIVILEGED: $PRIVILEGED"
 
-  if [ "$UPDATE" -eq "1" ]; then
+  if [[ "$UPDATE" == "1" && "$TARGET" != "oracle" ]]; then
     if [ ! -f $BASE/Dockerfile ]; then
       (set -ex;
         docker pull $IMAGE
