@@ -267,6 +267,8 @@ func init() {
 				if err != nil {
 					return err
 				}
+				// save edited buffer to history
+				p.Handler.IO().Save(string(n))
 				buf.Reset(n)
 				return nil
 			},
