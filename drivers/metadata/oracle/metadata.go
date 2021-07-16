@@ -112,7 +112,7 @@ o.object_type AS table_type
 FROM all_objects o
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "o.owner LIKE :%d",
+		schema:     "o.owner LIKE %s",
 		notSchemas: "o.owner NOT IN (%s)",
 		name:       "o.object_name LIKE :%d",
 		types:      "o.object_type IN (%s)",
@@ -136,7 +136,7 @@ SELECT
 FROM all_synonyms s
 `
 		conds, seqVals := r.conditions(f, formats{
-			schema:     "s.owner LIKE :%d",
+			schema:     "s.owner LIKE %s",
 			notSchemas: "s.owner NOT IN (%s)",
 			name:       "s.synonym_name LIKE :%d",
 		})
@@ -191,7 +191,7 @@ func (r metaReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
 FROM all_tab_columns c
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "c.owner LIKE :%d",
+		schema:     "c.owner LIKE %s",
 		notSchemas: "c.owner NOT IN (%s)",
 		parent:     "c.table_name LIKE :%d",
 	})
@@ -249,7 +249,7 @@ FROM all_arguments a
 JOIN all_objects b ON b.object_id = a.object_id AND a.sequence  = 1
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "b.owner LIKE :%d",
+		schema:     "b.owner LIKE %s",
 		notSchemas: "b.owner NOT IN (%s)",
 		name:       "b.object_name LIKE :%d",
 		types:      "b.object_type IN (%s)",
@@ -303,7 +303,7 @@ FROM all_objects b
 JOIN all_arguments a ON b.object_id = a.object_id AND a.data_level = 0
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "a.owner LIKE :%d",
+		schema:     "a.owner LIKE %s",
 		notSchemas: "a.owner NOT IN (%s)",
 		parent:     "b.object_name LIKE :%d",
 	})
@@ -354,7 +354,7 @@ func (r metaReader) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 FROM all_indexes o
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "o.owner LIKE :%d",
+		schema:     "o.owner LIKE %s",
 		notSchemas: "o.owner NOT IN (%s)",
 		parent:     "o.table_name LIKE :%d",
 		name:       "o.index_name LIKE :%d",
@@ -400,7 +400,7 @@ FROM all_indexes o
 JOIN all_ind_columns b ON o.owner = b.index_owner AND o.index_name = b.index_name
 `
 	conds, vals := r.conditions(f, formats{
-		schema:     "o.owner LIKE :%d",
+		schema:     "o.owner LIKE %s",
 		notSchemas: "o.owner NOT IN (%s)",
 		parent:     "o.table_name LIKE :%d",
 		name:       "o.index_name LIKE :%d",
@@ -440,7 +440,7 @@ func (r metaReader) conditions(filter metadata.Filter, formats formats) ([]strin
 	vals := []interface{}{}
 	if filter.Schema != "" && formats.schema != "" {
 		vals = append(vals, filter.Schema)
-		conds = append(conds, fmt.Sprintf(formats.schema, baseParam))
+		conds = append(conds, fmt.Sprintf(formats.schema, fmt.Sprintf(":%d", baseParam)))
 		baseParam++
 	}
 
