@@ -439,7 +439,7 @@ func (r metaReader) conditions(filter metadata.Filter, formats formats) ([]strin
 	conds := []string{}
 	vals := []interface{}{}
 	if filter.Schema != "" && formats.schema != "" {
-		vals = append(vals, filter.Schema)
+		vals = append(vals, strings.ToUpper(filter.Schema))
 		conds = append(conds, fmt.Sprintf(formats.schema, fmt.Sprintf(":%d", baseParam)))
 		baseParam++
 	}
@@ -451,19 +451,19 @@ func (r metaReader) conditions(filter metadata.Filter, formats formats) ([]strin
 		conds = append(conds, fmt.Sprintf(formats.schema, "user"))
 	}
 	if filter.Parent != "" && formats.parent != "" {
-		vals = append(vals, filter.Parent)
+		vals = append(vals, strings.ToUpper(filter.Parent))
 		conds = append(conds, fmt.Sprintf(formats.parent, baseParam))
 		baseParam++
 	}
 	if filter.Name != "" && formats.name != "" {
-		vals = append(vals, filter.Name)
+		vals = append(vals, strings.ToUpper(filter.Name))
 		conds = append(conds, fmt.Sprintf(formats.name, baseParam))
 		baseParam++
 	}
 	if len(filter.Types) != 0 && formats.types != "" {
 		pholders := []string{}
 		for _, t := range filter.Types {
-			vals = append(vals, t)
+			vals = append(vals, strings.ToUpper(t))
 			pholders = append(pholders, fmt.Sprintf(":%d", baseParam))
 			baseParam++
 		}
