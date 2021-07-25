@@ -45,7 +45,7 @@ var (
 		"pgsql": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "postgres:13"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/postgres-sakila-db/postgres-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
 				{Name: "USER", Value: "root"},
 			},
@@ -69,7 +69,7 @@ var (
 		"mysql": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mysql:8"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/mysql-sakila-db/mysql-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
 				{Name: "USER", Value: "root"},
 			},
@@ -96,7 +96,7 @@ var (
 		"sqlserver": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/sql-server-sakila-db/sql-server-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/schema"},
 				{Name: "USER", Value: "mssql:0"},
 			},

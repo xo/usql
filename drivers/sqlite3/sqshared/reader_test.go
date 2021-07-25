@@ -51,7 +51,7 @@ func createDb(location, name string) error {
 		return err
 	}
 	baseImage := "centos:7"
-	schemaURL := "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/sqlite-sakila-db/sqlite-sakila-schema.sql"
+	schemaURL := "https://raw.githubusercontent.com/jOOQ/sakila/main/sqlite-sakila-db/sqlite-sakila-schema.sql"
 	target := "/schema"
 	buildOptions := types.ImageBuildOptions{
 		Tags: []string{"usql-sqlite"},

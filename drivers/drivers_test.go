@@ -27,12 +27,13 @@ import (
 type Database struct {
 	BuildArgs  []dc.BuildArg
 	RunOptions *dt.RunOptions
-	Exec       []string
 	DSN        string
-	URL        *dburl.URL
+	ReadyDSN   string
+	Exec       []string
 
 	DockerPort string
 	Resource   *dt.Resource
+	URL        *dburl.URL
 	DB         *sql.DB
 }
 
@@ -45,7 +46,7 @@ var (
 		"pgsql": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "postgres:13"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/postgres-sakila-db/postgres-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
 				{Name: "USER", Value: "root"},
 			},
@@ -60,7 +61,7 @@ var (
 		"pgx": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "postgres:13"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/postgres-sakila-db/postgres-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
 				{Name: "USER", Value: "root"},
 			},
@@ -75,7 +76,7 @@ var (
 		"mysql": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mysql:8"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/mysql-sakila-db/mysql-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
 				{Name: "USER", Value: "root"},
 			},
@@ -90,7 +91,7 @@ var (
 		"sqlserver": {
 			BuildArgs: []dc.BuildArg{
 				{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/jOOQ/main/jOOQ-examples/Sakila/sql-server-sakila-db/sql-server-sakila-schema.sql"},
+				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql"},
 				{Name: "TARGET", Value: "/schema"},
 				{Name: "USER", Value: "mssql:0"},
 			},
@@ -98,13 +99,14 @@ var (
 				Name: "usql-sqlserver",
 				Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
 			},
-			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
 			DSN:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
+			ReadyDSN:   "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=master",
+			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
 			DockerPort: "1433/tcp",
 		},
 		"trino": {
 			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "trinodb/trino:351"},
+				{Name: "BASE_IMAGE", Value: "trinodb/trino:359"},
 			},
 			RunOptions: &dt.RunOptions{
 				Name: "usql-trino",
@@ -145,19 +147,23 @@ func TestMain(m *testing.M) {
 			log.Fatalf("Failed to parse db URL %s: %v", db.DSN, err)
 		}
 
-		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-		if err := pool.Retry(func() error {
-			var err error
-			db.DB, err = drivers.Open(db.URL)
-			if err != nil {
-				return err
-			}
-			return db.DB.Ping()
-		}); err != nil {
-			log.Fatal("Timed out waiting for db: ", err)
-		}
-
 		if len(db.Exec) != 0 {
+			if db.ReadyDSN == "" {
+				db.ReadyDSN = db.DSN
+			}
+			readyURL, err := dburl.Parse(fmt.Sprintf(db.ReadyDSN, hostPort))
+			if err != nil {
+				log.Fatalf("Failed to parse db ready URL %s: %v", db.ReadyDSN, err)
+			}
+			if err := pool.Retry(func() error {
+				readyDB, err := drivers.Open(readyURL, nil, nil)
+				if err != nil {
+					return err
+				}
+				return readyDB.Ping()
+			}); err != nil {
+				log.Fatal("Timed out waiting for db to be ready: ", err)
+			}
 			exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{
 				StdIn:  os.Stdin,
 				StdOut: os.Stdout,
@@ -167,6 +173,18 @@ func TestMain(m *testing.M) {
 			if err != nil || exitCode != 0 {
 				log.Fatal("Could not load schema: ", err)
 			}
+		}
+
+		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+		if err := pool.Retry(func() error {
+			var err error
+			db.DB, err = drivers.Open(db.URL, nil, nil)
+			if err != nil {
+				return err
+			}
+			return db.DB.Ping()
+		}); err != nil {
+			log.Fatal("Timed out waiting for db: ", err)
 		}
 	}
 
@@ -331,7 +349,7 @@ func TestWriter(t *testing.T) {
 			}
 
 			db := dbs[test.dbName]
-			w, err := drivers.NewMetadataWriter(db.URL, db.DB, fo)
+			w, err := drivers.NewMetadataWriter(context.Background(), db.URL, db.DB, fo)
 			if err != nil {
 				log.Fatalf("Could not create writer %s %s: %v", test.dbName, testFunc.label, err)
 			}
@@ -428,7 +446,7 @@ func TestCopy(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		var rlen int64 = 1
-		n, err := drivers.Copy(ctx, db.URL, rows, test.dest)
+		n, err := drivers.Copy(ctx, db.URL, nil, nil, rows, test.dest)
 		if err != nil {
 			log.Fatalf("Could not copy: %v", err)
 		}
