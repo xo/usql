@@ -18,7 +18,7 @@ func KnownBuildTags() map[string]string {
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
-		"genji":         "genji",         // github.com/genjidb/genji/sql/driver
+		"genji":         "genji",         // github.com/genjidb/genji/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // sqlflow.org/gohive
@@ -30,7 +30,7 @@ func KnownBuildTags() map[string]string {
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"netezza":       "nzgo",          // github.com/IBM/nzgo
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
-		"oracle":        "oracle",        // github.com/sijms/go-ora
+		"oracle":        "oracle",        // github.com/sijms/go-ora/v2
 		"pgx":           "pgx",           // github.com/jackc/pgx/v4/stdlib
 		"postgres":      "postgres",      // github.com/lib/pq
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/presto

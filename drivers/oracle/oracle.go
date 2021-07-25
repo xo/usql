@@ -6,18 +6,18 @@ package oracle
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
 	"strings"
 
-	_ "github.com/sijms/go-ora" // DRIVER
+	_ "github.com/sijms/go-ora/v2" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	orameta "github.com/xo/usql/drivers/metadata/oracle"
 	"github.com/xo/usql/env"
-	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -56,7 +56,7 @@ func init() {
 			return err
 		},
 		Err: func(err error) (string, string) {
-			if e := xerrors.Unwrap(err); e != nil {
+			if e := errors.Unwrap(err); e != nil {
 				err = e
 			}
 			code, msg := "", err.Error()
@@ -82,15 +82,10 @@ func init() {
 			return code, strings.TrimSpace(msg)
 		},
 		IsPasswordErr: func(err error) bool {
-			if e := xerrors.Unwrap(err); e != nil {
+			if e := errors.Unwrap(err); e != nil {
 				err = e
 			}
-			if e, ok := err.(interface {
-				Code() int
-			}); ok {
-				return e.Code() == 1017 || e.Code() == 1005
-			}
-			return false
+			return strings.Contains(err.Error(), "empty password")
 		},
 		Columns: func(rows *sql.Rows) ([]string, error) {
 			cols, err := rows.Columns()

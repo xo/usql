@@ -218,7 +218,7 @@ associated database, scheme / build tag, and scheme aliases:
 |----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------|
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`                                   | [github.com/denisenkom/go-mssqldb][d-sqlserver]                 |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                       |
-| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`    | [github.com/sijms/go-ora][d-oracle]                             |
+| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`    | [github.com/sijms/go-ora/v2][d-oracle]                          |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                 |
 | SQLite3              | `sqlite3`       | `sq`, `file`, `sqlite`                          | [github.com/mattn/go-sqlite3][d-sqlite3]<sup>[†][f-cgo]</sup>   |
 |                      |                 |                                                 |                                                                 |
@@ -233,7 +233,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                     |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                          |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                   |
-| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/sql/driver][d-genji]                  |
+| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                      |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                    |
 | Google Spanner       | `spanner`       | `sp`                                            | [github.com/rakyll/go-sql-driver-spanner][d-spanner]            |
 | Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                            |

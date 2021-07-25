@@ -6,9 +6,9 @@ set -e
 
 pushd $SRC &> /dev/null
 (set -x;
-  go get -u $@ $(go list -tags most -f '{{ join .Imports "\n" }}' ./internal/...)
+  go get -u $@ $(go list -tags 'most test' -f '{{ join .Imports "\n" }}' ./internal/...)
 )
-PKGS=$(go list -tags most -f '{{ join .Imports "\n" }}'|grep 'github.com/xo/usql'|grep -v drivers|grep -v internal)
+PKGS=$(go list -tags 'most test' -f '{{ join .Imports "\n" }}'|grep 'github.com/xo/usql'|grep -v drivers|grep -v internal)
 (set -x;
   go get -u $@ $PKGS
 )
