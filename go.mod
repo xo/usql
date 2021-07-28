@@ -22,7 +22,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.7 // indirect
+	github.com/aws/aws-sdk-go v1.40.10 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -33,7 +33,7 @@ require (
 	github.com/couchbase/gomemcached v0.1.3 // indirect
 	github.com/couchbase/goutils v0.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/creack/pty v1.1.13 // indirect
+	github.com/creack/pty v1.1.14 // indirect
 	github.com/denisenkom/go-mssqldb v0.10.0
 	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.12.0 // indirect
@@ -95,10 +95,10 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.18.1 // indirect
-	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
+	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	google.golang.org/api v0.51.0 // indirect
-	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect
+	google.golang.org/genproto v0.0.0-20210728212813-7823e685a01f // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/cc/v3 v3.33.9 // indirect
 	modernc.org/memory v1.0.5 // indirect
