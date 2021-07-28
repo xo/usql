@@ -983,6 +983,8 @@ github.com/xo/dburl v0.8.4/go.mod h1:W68zXnBfTb4zcKLI1yEYRyYIQjcjoyCRn4YMD/QzcpE
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.7.4 h1:i8kyQFBVVqLkl6T4nX76axFNCSYf2w5ARsCScryPU0Q=
 github.com/xo/tblfmt v0.7.4/go.mod h1:2fh9mXteiVnG68zzU2TS+CsCCU9lq3mgLi/EYw7ljrM=
+github.com/xo/tblfmt v0.7.5 h1:Tm/IBvoCfM8hr1S2ZuqrEFIt82NYLKPI0VTtokI/e2Q=
+github.com/xo/tblfmt v0.7.5/go.mod h1:2fh9mXteiVnG68zzU2TS+CsCCU9lq3mgLi/EYw7ljrM=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 h1:QldyIu/L63oPpyvQmHgvgickp1Yw510KJOqX7H24mg8=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=

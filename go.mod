@@ -86,7 +86,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.4 // indirect
 	github.com/xo/dburl v0.8.4
-	github.com/xo/tblfmt v0.7.4
+	github.com/xo/tblfmt v0.7.5
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4

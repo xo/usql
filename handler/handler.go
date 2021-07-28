@@ -928,6 +928,9 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 		}
 		useColumnTypes = false
 	}
+	if drivers.LowerColumnNames(h.u) {
+		params["lower_column_names"] = "true"
+	}
 	if useColumnTypes {
 		params["use_column_types"] = "true"
 	}
