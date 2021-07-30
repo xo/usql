@@ -221,6 +221,28 @@ func TestCompleter(t *testing.T) {
 			[]string{},
 			2,
 		},
+		{
+			"type on create",
+			"CREATE ",
+			7,
+			[]string{
+				"DATABASE",
+				"TABLE",
+				"SEQUENCE",
+				"VIEW",
+				"TEMPORARY",
+			},
+			0,
+		},
+		{
+			"brackets on create table",
+			"CREATE TABLE p ",
+			15,
+			[]string{
+				"(",
+			},
+			0,
+		},
 	}
 
 	completer := NewDefaultCompleter(WithReader(mockReader{}), WithConnStrings([]string{"pg://"}))
