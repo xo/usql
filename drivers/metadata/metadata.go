@@ -843,6 +843,7 @@ func (r resultSet) NextResultSet() bool {
 type Trigger struct {
 	Catalog    string
 	Schema     string
+	Table      string
 	Name       string
 	Definition string
 }
@@ -851,6 +852,7 @@ func (t Trigger) values() []interface{} {
 	return []interface{}{
 		t.Catalog,
 		t.Schema,
+		t.Table,
 		t.Name,
 		t.Definition,
 	}
@@ -871,6 +873,7 @@ func NewTriggerSet(t []Trigger) *TriggerSet {
 			columns: []string{
 				"Catalog",
 				"Schema",
+				"Table",
 				"Name",
 				"Definition",
 			},

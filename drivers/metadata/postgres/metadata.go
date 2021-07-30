@@ -195,7 +195,9 @@ FROM pg_catalog.pg_class c
 }
 
 func (r metaReader) Triggers(f metadata.Filter) (*metadata.TriggerSet, error) {
-	qstr := `SELECT 
+	qstr := `SELECT
+	n.nspname,
+	c.relname,
     t.tgname, 
     pg_catalog.pg_get_triggerdef(t.oid, true)
 FROM 
@@ -232,6 +234,8 @@ FROM
 	for rows.Next() {
 		rec := metadata.Trigger{}
 		err = rows.Scan(
+			&rec.Schema,
+			&rec.Table,
 			&rec.Name,
 			&rec.Definition,
 		)
