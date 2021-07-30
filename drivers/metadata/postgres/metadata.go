@@ -193,6 +193,50 @@ FROM pg_catalog.pg_class c
 	return metadata.NewIndexColumnSet(results), nil
 }
 
+func (r metaReader) Triggers(f metadata.Filter) (*metadata.TriggerSet, error) {
+	qstr := `SELECT 
+    t.tgname, 
+    pg_catalog.pg_get_triggerdef(t.oid, true)
+FROM 
+    pg_catalog.pg_trigger t 
+    JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
+WHERE 
+    c.relname LIKE $1 
+	AND
+	(
+	NOT t.tgisinternal OR (t.tgisinternal AND t.tgenabled = 'D') 
+    	OR 
+        	EXISTS (SELECT 1 FROM pg_catalog.pg_depend WHERE objid = t.oid 
+    	AND 
+        	refclassid = 'pg_catalog.pg_trigger'::pg_catalog.regclass)
+	)`
+	conds := []string{}
+	vals := []interface{}{}
+	vals = append(vals, f.Parent)
+	rows, closeRows, err := r.query(qstr, conds, "1", vals...)
+	if err != nil {
+		return nil, err
+	}
+	defer closeRows()
+
+	results := []metadata.Trigger{}
+	for rows.Next() {
+		rec := metadata.Trigger{}
+		err = rows.Scan(
+			&rec.Name,
+			&rec.Definition,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewTriggerSet(results), nil
+}
+
 func (r metaReader) query(qstr string, conds []string, order string, vals ...interface{}) (*sql.Rows, func(), error) {
 	if len(conds) != 0 {
 		qstr += "\nWHERE " + strings.Join(conds, " AND ")
