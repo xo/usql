@@ -14,6 +14,7 @@ type PluginReader struct {
 	columns           func(Filter) (*ColumnSet, error)
 	indexes           func(Filter) (*IndexSet, error)
 	indexColumns      func(Filter) (*IndexColumnSet, error)
+	triggers          func(Filter) (*TriggerSet, error)
 	constraints       func(Filter) (*ConstraintSet, error)
 	constraintColumns func(Filter) (*ConstraintColumnSet, error)
 	functions         func(Filter) (*FunctionSet, error)
@@ -44,6 +45,9 @@ func NewPluginReader(readers ...Reader) Reader {
 		}
 		if r, ok := i.(IndexColumnReader); ok {
 			p.indexColumns = r.IndexColumns
+		}
+		if r, ok := i.(TriggerReader); ok {
+			p.triggers = r.Triggers
 		}
 		if r, ok := i.(ConstraintReader); ok {
 			p.constraints = r.Constraints
@@ -104,6 +108,13 @@ func (p PluginReader) IndexColumns(f Filter) (*IndexColumnSet, error) {
 		return nil, ErrNotSupported
 	}
 	return p.indexColumns(f)
+}
+
+func (p PluginReader) Triggers(f Filter) (*TriggerSet, error) {
+	if p.triggers == nil {
+		return nil, ErrNotSupported
+	}
+	return p.triggers(f)
 }
 
 func (p PluginReader) Constraints(f Filter) (*ConstraintSet, error) {

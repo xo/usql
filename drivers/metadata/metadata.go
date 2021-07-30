@@ -17,6 +17,7 @@ type ExtendedReader interface {
 	ColumnReader
 	IndexReader
 	IndexColumnReader
+	TriggerReader
 	ConstraintReader
 	ConstraintColumnReader
 	FunctionReader
@@ -65,6 +66,12 @@ type IndexReader interface {
 type IndexColumnReader interface {
 	Reader
 	IndexColumns(Filter) (*IndexColumnSet, error)
+}
+
+// TriggerReader lists table triggers.
+type TriggerReader interface {
+	Reader
+	Triggers(Filter) (*TriggerSet, error)
 }
 
 // ConstraintReader lists table constraints.
@@ -831,4 +838,46 @@ func (r resultSet) Err() error {
 
 func (r resultSet) NextResultSet() bool {
 	return false
+}
+
+type Trigger struct {
+	Catalog    string
+	Schema     string
+	Name       string
+	Definition string
+}
+
+func (t Trigger) values() []interface{} {
+	return []interface{}{
+		t.Catalog,
+		t.Schema,
+		t.Name,
+		t.Definition,
+	}
+}
+
+type TriggerSet struct {
+	resultSet
+}
+
+func NewTriggerSet(t []Trigger) *TriggerSet {
+	r := make([]Result, len(t))
+	for i := range t {
+		r[i] = &t[i]
+	}
+	return &TriggerSet{
+		resultSet: resultSet{
+			results: r,
+			columns: []string{
+				"Catalog",
+				"Schema",
+				"Name",
+				"Definition",
+			},
+		},
+	}
+}
+
+func (t TriggerSet) Get() *Trigger {
+	return t.results[t.current-1].(*Trigger)
 }

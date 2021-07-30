@@ -359,8 +359,36 @@ func (w DefaultWriter) tableDetailsSummary(sp, tp string) func(io.Writer, int) (
 				return err
 			},
 		)
+		err = w.describeTableTriggers(out, sp, tp)
+		if err != nil {
+			return 0, err
+		}
 		return 0, err
 	}
+}
+func (w DefaultWriter) describeTableTriggers(out io.Writer, sp, tp string) error {
+	r, ok := w.r.(TriggerReader)
+	if !ok {
+		return nil
+	}
+	res, err := r.Triggers(Filter{Schema: sp, Parent: tp})
+	if err != nil && err != ErrNotSupported {
+		return fmt.Errorf("failed to list triggers for table %s: %w", tp, err)
+	}
+	if res == nil {
+		return nil
+	}
+	defer res.Close()
+
+	if res.Len() == 0 {
+		return nil
+	}
+	fmt.Fprintln(out, "Triggers:")
+	for res.Next() {
+		t := res.Get()
+		fmt.Fprintf(out, "  \"%s\" %s\n", t.Name, t.Definition)
+	}
+	return nil
 }
 
 func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error {
