@@ -19,6 +19,7 @@ type metaReader struct {
 var _ metadata.CatalogReader = &metaReader{}
 var _ metadata.IndexReader = &metaReader{}
 var _ metadata.IndexColumnReader = &metaReader{}
+var _ metadata.TriggerReader = &metaReader{}
 
 func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 	return func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
@@ -200,20 +201,28 @@ func (r metaReader) Triggers(f metadata.Filter) (*metadata.TriggerSet, error) {
 FROM 
     pg_catalog.pg_trigger t 
     JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
-WHERE 
-    c.relname LIKE $1 
-	AND
-	(
+	LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace`
+	conds := []string{`(
 	NOT t.tgisinternal OR (t.tgisinternal AND t.tgenabled = 'D') 
-    	OR 
-        	EXISTS (SELECT 1 FROM pg_catalog.pg_depend WHERE objid = t.oid 
-    	AND 
-        	refclassid = 'pg_catalog.pg_trigger'::pg_catalog.regclass)
-	)`
-	conds := []string{}
+			OR 
+				EXISTS (SELECT 1 FROM pg_catalog.pg_depend WHERE objid = t.oid 
+			AND 
+				refclassid = 'pg_catalog.pg_trigger'::pg_catalog.regclass)
+	)`}
 	vals := []interface{}{}
-	vals = append(vals, f.Parent)
-	rows, closeRows, err := r.query(qstr, conds, "1", vals...)
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
+		conds = append(conds, fmt.Sprintf("n.nspname LIKE $%d", len(vals)))
+	}
+	if f.Parent != "" {
+		vals = append(vals, f.Parent)
+		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
+	}
+	if f.Name != "" {
+		vals = append(vals, f.Name)
+		conds = append(conds, fmt.Sprintf("t.tgname LIKE $%d", len(vals)))
+	}
+	rows, closeRows, err := r.query(qstr, conds, "t.tgname", vals...)
 	if err != nil {
 		return nil, err
 	}
