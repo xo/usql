@@ -322,6 +322,13 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	/* XXX: implement tab completion for DELETE ... USING */
 
+	/* Complete CREATE */
+	if tailMatches(IGNORE_CASE, previousWords, "CREATE") || tailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY") {
+		return completeFromList(text, "DATABASE", "SEQUENCE", "TABLE", "VIEW", "TEMPORARY")
+	}
+	if tailMatches(IGNORE_CASE, previousWords, "CREATE", "TABLE", "*") || tailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY", "TABLE", "*") {
+		return completeFromList(text, "(")
+	}
 	/* INSERT --- can be inside EXPLAIN, RULE, etc */
 	/* Complete INSERT with "INTO" */
 	if tailMatches(IGNORE_CASE, previousWords, "INSERT") {
