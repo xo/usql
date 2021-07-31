@@ -251,7 +251,7 @@ func WithConnStrings(connStrings []string) Option {
 }
 
 // WithBeforeComplete option
-func WithBeforeComplete(f completeFunc) Option {
+func WithBeforeComplete(f CompleteFunc) Option {
 	return func(c *completer) {
 		c.beforeComplete = f
 	}
@@ -266,10 +266,11 @@ type completer struct {
 	sqlCommands       []string
 	backslashCommands []string
 	connStrings       []string
-	beforeComplete    completeFunc
+	beforeComplete    CompleteFunc
 }
 
-type completeFunc func([]string, []rune) [][]rune
+// CompleteFunc returns patterns completing current text, using previous words as context
+type CompleteFunc func(previousWords []string, text []rune) [][]rune
 
 type logger interface {
 	Println(...interface{})
