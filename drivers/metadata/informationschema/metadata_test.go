@@ -189,7 +189,7 @@ func TestMain(m *testing.M) {
 		db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
 		if !ok {
 			buildOpts := &dt.BuildOptions{
-				ContextDir: "../testdata/docker",
+				ContextDir: "../../testdata/docker",
 				BuildArgs:  db.BuildArgs,
 			}
 			db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)

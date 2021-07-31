@@ -4,9 +4,12 @@
 package mymysql
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
+	mymeta "github.com/xo/usql/drivers/metadata/mysql"
 	_ "github.com/ziutek/mymysql/godrv" // DRIVER
 	"github.com/ziutek/mymysql/mysql"
 )
@@ -29,6 +32,11 @@ func init() {
 			}
 			return false
 		},
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
+		NewMetadataReader: mymeta.NewReader,
+		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
+			return metadata.NewDefaultWriter(mymeta.NewReader(db, opts...))(db, w)
+		},
+		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
+		NewCompleter: mymeta.NewCompleter,
 	})
 }
