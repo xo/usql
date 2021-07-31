@@ -22,100 +22,102 @@ const (
 type caseType bool
 
 var (
-	IGNORE_CASE = caseType(true)
-	MATCH_CASE  = caseType(false)
+	IGNORE_CASE            = caseType(true)
+	MATCH_CASE             = caseType(false)
+	CommonSqlStartCommands = []string{
+		"ABORT",
+		"ALTER",
+		"ANALYZE",
+		"BEGIN",
+		"CALL",
+		"CHECKPOINT",
+		"CLOSE",
+		"CLUSTER",
+		"COMMENT",
+		"COMMIT",
+		"COPY",
+		"CREATE",
+		"DEALLOCATE",
+		"DECLARE",
+		"DELETE FROM",
+		"DESC",
+		"DESCRIBE",
+		"DISCARD",
+		"DO",
+		"DROP",
+		"END",
+		"EXEC",
+		"EXECUTE",
+		"EXPLAIN",
+		"FETCH",
+		"GRANT",
+		"IMPORT",
+		"INSERT",
+		"LIST",
+		"LISTEN",
+		"LOAD",
+		"LOCK",
+		"MOVE",
+		"NOTIFY",
+		"PRAGMA",
+		"PREPARE",
+		"REASSIGN",
+		"REFRESH MATERIALIZED VIEW",
+		"REINDEX",
+		"RELEASE",
+		"RESET",
+		"REVOKE",
+		"ROLLBACK",
+		"SAVEPOINT",
+		"SECURITY LABEL",
+		"SELECT",
+		"SET",
+		"SHOW",
+		"START",
+		"TABLE",
+		"TRUNCATE",
+		"UNLISTEN",
+		"UPDATE",
+		"VACUUM",
+		"VALUES",
+		"WITH",
+	}
+	CommonSqlCommands = []string{
+		"AND",
+		"CASE",
+		"CROSS JOIN",
+		"ELSE",
+		"END",
+		"FETCH",
+		"FROM",
+		"FULL OUTER JOIN",
+		"GROUP BY",
+		"HAVING",
+		"IN",
+		"INNER JOIN",
+		"IS NOT NULL",
+		"IS NULL",
+		"JOIN",
+		"LEFT JOIN",
+		"LIMIT",
+		"NOT",
+		"ON",
+		"OR",
+		"ORDER BY",
+		"THEN",
+		"WHEN",
+		"WHERE",
+	}
 )
 
 func NewDefaultCompleter(opts ...Option) readline.AutoCompleter {
 	c := completer{
 		// an empty struct satisfies the metadata.Reader interface, because it is actually empty
-		reader: struct{}{},
-		logger: log.New(os.Stdout, "ERROR: ", log.LstdFlags),
-		sqlStartCommands: []string{
-			"ABORT",
-			"ALTER",
-			"ANALYZE",
-			"BEGIN",
-			"CALL",
-			"CHECKPOINT",
-			"CLOSE",
-			"CLUSTER",
-			"COMMENT",
-			"COMMIT",
-			"COPY",
-			"CREATE",
-			"DEALLOCATE",
-			"DECLARE",
-			"DELETE FROM",
-			"DESC",
-			"DESCRIBE",
-			"DISCARD",
-			"DO",
-			"DROP",
-			"END",
-			"EXEC",
-			"EXECUTE",
-			"EXPLAIN",
-			"FETCH",
-			"GRANT",
-			"IMPORT",
-			"INSERT",
-			"LIST",
-			"LISTEN",
-			"LOAD",
-			"LOCK",
-			"MOVE",
-			"NOTIFY",
-			"PRAGMA",
-			"PREPARE",
-			"REASSIGN",
-			"REFRESH MATERIALIZED VIEW",
-			"REINDEX",
-			"RELEASE",
-			"RESET",
-			"REVOKE",
-			"ROLLBACK",
-			"SAVEPOINT",
-			"SECURITY LABEL",
-			"SELECT",
-			"SET",
-			"SHOW",
-			"START",
-			"TABLE",
-			"TRUNCATE",
-			"UNLISTEN",
-			"UPDATE",
-			"VACUUM",
-			"VALUES",
-			"WITH",
-		},
+		reader:           struct{}{},
+		logger:           log.New(os.Stdout, "ERROR: ", log.LstdFlags),
+		sqlStartCommands: CommonSqlStartCommands,
 		// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
-		sqlCommands: []string{
-			"AND",
-			"CASE",
-			"CROSS JOIN",
-			"ELSE",
-			"END",
-			"FETCH",
-			"FROM",
-			"FULL OUTER JOIN",
-			"GROUP BY",
-			"HAVING",
-			"IN",
-			"INNER JOIN",
-			"IS NOT NULL",
-			"IS NULL",
-			"JOIN",
-			"LEFT JOIN",
-			"LIMIT",
-			"NOT",
-			"ON",
-			"OR",
-			"ORDER BY",
-			"THEN",
-			"WHEN",
-			"WHERE",
-		},
+		sqlCommands: CommonSqlCommands,
 		backslashCommands: []string{
 			`\!`,
 			`\?`,
@@ -248,6 +250,13 @@ func WithConnStrings(connStrings []string) Option {
 	}
 }
 
+// WithBeforeComplete option
+func WithBeforeComplete(f completeFunc) Option {
+	return func(c *completer) {
+		c.beforeComplete = f
+	}
+}
+
 // completer based on https://github.com/postgres/postgres/blob/9f3665fbfc34b963933e51778c7feaa8134ac885/src/bin/psql/tab-complete.c
 type completer struct {
 	db                metadata.DB
@@ -257,7 +266,10 @@ type completer struct {
 	sqlCommands       []string
 	backslashCommands []string
 	connStrings       []string
+	beforeComplete    completeFunc
 }
+
+type completeFunc func([]string, []rune) [][]rune
 
 type logger interface {
 	Println(...interface{})
@@ -274,20 +286,27 @@ func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
 	if i == -1 {
 		i = 0
 	}
+	previousWords := getPreviousWords(start, line)
 	text := line[i:start]
 
-	result := c.complete(getPreviousWords(start, line), text)
-	if result == nil {
-		return nil, 0
+	if c.beforeComplete != nil {
+		result := c.beforeComplete(previousWords, text)
+		if result != nil {
+			return result, len(text)
+		}
 	}
-	return result, len(text)
+	result := c.complete(previousWords, text)
+	if result != nil {
+		return result, len(text)
+	}
+	return nil, 0
 }
 
 func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if len(text) > 0 {
 		if len(previousWords) == 0 && text[0] == '\\' {
 			/* If current word is a backslash command, offer completions for that */
-			return completeFromListCase(MATCH_CASE, text, c.backslashCommands...)
+			return CompleteFromListCase(MATCH_CASE, text, c.backslashCommands...)
 		}
 		if text[0] == ':' {
 			if len(text) == 1 || text[1] == ':' {
@@ -305,44 +324,44 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	if len(previousWords) == 0 {
 		/* If no previous word, suggest one of the basic sql commands */
-		return completeFromList(text, c.sqlStartCommands...)
+		return CompleteFromList(text, c.sqlStartCommands...)
 	}
 	/* DELETE --- can be inside EXPLAIN, RULE, etc */
 	/* ... despite which, only complete DELETE with FROM at start of line */
 	if matches(IGNORE_CASE, previousWords, "DELETE") {
-		return completeFromList(text, "FROM")
+		return CompleteFromList(text, "FROM")
 	}
 	/* Complete DELETE FROM with a list of tables */
-	if tailMatches(IGNORE_CASE, previousWords, "DELETE", "FROM") {
+	if TailMatches(IGNORE_CASE, previousWords, "DELETE", "FROM") {
 		return c.completeWithUpdatables(text)
 	}
 	/* Complete DELETE FROM <table> */
-	if tailMatches(IGNORE_CASE, previousWords, "DELETE", "FROM", "*") {
-		return completeFromList(text, "USING", "WHERE")
+	if TailMatches(IGNORE_CASE, previousWords, "DELETE", "FROM", "*") {
+		return CompleteFromList(text, "USING", "WHERE")
 	}
 	/* XXX: implement tab completion for DELETE ... USING */
 
 	/* Complete CREATE */
-	if tailMatches(IGNORE_CASE, previousWords, "CREATE") {
-		return completeFromList(text, "DATABASE", "SEQUENCE", "TABLE", "VIEW", "TEMPORARY")
+	if TailMatches(IGNORE_CASE, previousWords, "CREATE") {
+		return CompleteFromList(text, "DATABASE", "SEQUENCE", "TABLE", "VIEW", "TEMPORARY")
 	}
-	if tailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY") {
-		return completeFromList(text, "TABLE", "VIEW")
+	if TailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY") {
+		return CompleteFromList(text, "TABLE", "VIEW")
 	}
-	if tailMatches(IGNORE_CASE, previousWords, "CREATE", "TABLE", "*") || tailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY", "TABLE", "*") {
-		return completeFromList(text, "(")
+	if TailMatches(IGNORE_CASE, previousWords, "CREATE", "TABLE", "*") || TailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY", "TABLE", "*") {
+		return CompleteFromList(text, "(")
 	}
 	/* INSERT --- can be inside EXPLAIN, RULE, etc */
 	/* Complete INSERT with "INTO" */
-	if tailMatches(IGNORE_CASE, previousWords, "INSERT") {
-		return completeFromList(text, "INTO")
+	if TailMatches(IGNORE_CASE, previousWords, "INSERT") {
+		return CompleteFromList(text, "INTO")
 	}
 	/* Complete INSERT INTO with table names */
-	if tailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO") {
+	if TailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO") {
 		return c.completeWithUpdatables(text)
 	}
 	/* Complete "INSERT INTO <table> (" with attribute names */
-	if tailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*", "(") {
+	if TailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*", "(") {
 		return c.completeWithAttributes(IGNORE_CASE, previousWords[1], text)
 	}
 
@@ -350,53 +369,53 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	 * Complete INSERT INTO <table> with "(" or "VALUES" or "SELECT" or
 	 * "TABLE" or "DEFAULT VALUES" or "OVERRIDING"
 	 */
-	if tailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*") {
-		return completeFromList(text, "(", "DEFAULT VALUES", "SELECT", "TABLE", "VALUES", "OVERRIDING")
+	if TailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*") {
+		return CompleteFromList(text, "(", "DEFAULT VALUES", "SELECT", "TABLE", "VALUES", "OVERRIDING")
 	}
 
 	/*
 	 * Complete INSERT INTO <table> (attribs) with "VALUES" or "SELECT" or
 	 * "TABLE" or "OVERRIDING"
 	 */
-	if tailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*", "*") &&
+	if TailMatches(IGNORE_CASE, previousWords, "INSERT", "INTO", "*", "*") &&
 		strings.HasSuffix(previousWords[0], ")") {
-		return completeFromList(text, "SELECT", "TABLE", "VALUES", "OVERRIDING")
+		return CompleteFromList(text, "SELECT", "TABLE", "VALUES", "OVERRIDING")
 	}
 
 	/* Complete OVERRIDING */
-	if tailMatches(IGNORE_CASE, previousWords, "OVERRIDING") {
-		return completeFromList(text, "SYSTEM VALUE", "USER VALUE")
+	if TailMatches(IGNORE_CASE, previousWords, "OVERRIDING") {
+		return CompleteFromList(text, "SYSTEM VALUE", "USER VALUE")
 	}
 
 	/* Complete after OVERRIDING clause */
-	if tailMatches(IGNORE_CASE, previousWords, "OVERRIDING", "*", "VALUE") {
-		return completeFromList(text, "SELECT", "TABLE", "VALUES")
+	if TailMatches(IGNORE_CASE, previousWords, "OVERRIDING", "*", "VALUE") {
+		return CompleteFromList(text, "SELECT", "TABLE", "VALUES")
 	}
 
 	/* Insert an open parenthesis after "VALUES" */
-	if tailMatches(IGNORE_CASE, previousWords, "VALUES") && !tailMatches(IGNORE_CASE, previousWords, "DEFAULT", "VALUES") {
-		return completeFromList(text, "(")
+	if TailMatches(IGNORE_CASE, previousWords, "VALUES") && !TailMatches(IGNORE_CASE, previousWords, "DEFAULT", "VALUES") {
+		return CompleteFromList(text, "(")
 	}
 	/* UPDATE --- can be inside EXPLAIN, RULE, etc */
 	/* If prev. word is UPDATE suggest a list of tables */
-	if tailMatches(IGNORE_CASE, previousWords, "UPDATE") {
+	if TailMatches(IGNORE_CASE, previousWords, "UPDATE") {
 		return c.completeWithUpdatables(text)
 	}
 	/* Complete UPDATE <table> with "SET" */
-	if tailMatches(IGNORE_CASE, previousWords, "UPDATE", "*") {
-		return completeFromList(text, "SET")
+	if TailMatches(IGNORE_CASE, previousWords, "UPDATE", "*") {
+		return CompleteFromList(text, "SET")
 	}
 	/* Complete UPDATE <table> SET with list of attributes */
-	if tailMatches(IGNORE_CASE, previousWords, "UPDATE", "*", "SET") {
+	if TailMatches(IGNORE_CASE, previousWords, "UPDATE", "*", "SET") {
 		return c.completeWithAttributes(IGNORE_CASE, previousWords[1], text)
 	}
 	/* UPDATE <table> SET <attr> = */
-	if tailMatches(IGNORE_CASE, previousWords, "UPDATE", "*", "SET", "!*=") {
-		return completeFromList(text, "=")
+	if TailMatches(IGNORE_CASE, previousWords, "UPDATE", "*", "SET", "!*=") {
+		return CompleteFromList(text, "=")
 	}
 	/* WHERE */
 	/* Simple case of the word before the where being the table name */
-	if tailMatches(IGNORE_CASE, previousWords, "*", "WHERE") {
+	if TailMatches(IGNORE_CASE, previousWords, "*", "WHERE") {
 		// TODO would be great to _try_ to parse the (incomplete) query
 		// and get a list of possible selectables to filter by
 		return c.completeWithAttributes(IGNORE_CASE, previousWords[1], text,
@@ -411,49 +430,49 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 
 	/* ... FROM | JOIN ... */
-	if tailMatches(IGNORE_CASE, previousWords, "FROM|JOIN") {
+	if TailMatches(IGNORE_CASE, previousWords, "FROM|JOIN") {
 		return c.completeWithSelectables(text)
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
+	if TailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
 		return completeFromFiles(text)
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\c|\connect|\copy`) ||
-		tailMatches(MATCH_CASE, previousWords, `\copy`, `*`) {
-		return completeFromList(text, c.connStrings...)
+	if TailMatches(MATCH_CASE, previousWords, `\c|\connect|\copy`) ||
+		TailMatches(MATCH_CASE, previousWords, `\copy`, `*`) {
+		return CompleteFromList(text, c.connStrings...)
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\copy`, `*`, `*`) {
+	if TailMatches(MATCH_CASE, previousWords, `\copy`, `*`, `*`) {
 		return nil
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`) {
-		return completeFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
+	if TailMatches(MATCH_CASE, previousWords, `\pset`) {
+		return CompleteFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
 			`footer`, `format`, `linestyle`, `null`, `numericlocale`, `pager`, `pager_min_lines`,
 			`recordsep`, `recordsep_zero`, `tableattr`, `title`, `title`, `tuples_only`,
 			`unicode_border_linestyle`, `unicode_column_linestyle`, `unicode_header_linestyle`)
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `expanded`) {
-		return completeFromList(text, "auto", "on", "off")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `expanded`) {
+		return CompleteFromList(text, "auto", "on", "off")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `pager`) {
-		return completeFromList(text, "always", "on", "off")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `pager`) {
+		return CompleteFromList(text, "always", "on", "off")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `fieldsep_zero|footer|numericlocale|pager|recordsep_zero|tuples_only`) {
-		return completeFromList(text, "on", "off")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `fieldsep_zero|footer|numericlocale|pager|recordsep_zero|tuples_only`) {
+		return CompleteFromList(text, "on", "off")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `format`) {
-		return completeFromList(text, "unaligned", "aligned", "wrapped", "html", "asciidoc", "latex", "latex-longtable", "troff-ms", "csv", "json", "vertical")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `format`) {
+		return CompleteFromList(text, "unaligned", "aligned", "wrapped", "html", "asciidoc", "latex", "latex-longtable", "troff-ms", "csv", "json", "vertical")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `linestyle`) {
-		return completeFromList(text, "ascii", "old-ascii", "unicode")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `linestyle`) {
+		return CompleteFromList(text, "ascii", "old-ascii", "unicode")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `unicode_border_linestyle|unicode_column_linestyle|unicode_header_linestyle`) {
-		return completeFromList(text, "single", "double")
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `unicode_border_linestyle|unicode_column_linestyle|unicode_header_linestyle`) {
+		return CompleteFromList(text, "single", "double")
 	}
-	if tailMatches(MATCH_CASE, previousWords, `\pset`, `*`) ||
-		tailMatches(MATCH_CASE, previousWords, `\pset`, `*`, `*`) {
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `*`) ||
+		TailMatches(MATCH_CASE, previousWords, `\pset`, `*`, `*`) {
 		return nil
 	}
 	// is suggesting basic sql commands better than nothing?
-	return completeFromList(text, c.sqlCommands...)
+	return CompleteFromList(text, c.sqlCommands...)
 }
 
 func getPreviousWords(point int, buf []rune) []string {
@@ -538,7 +557,8 @@ func getPreviousWords(point int, buf []rune) []string {
 	return previousWords
 }
 
-func tailMatches(ct caseType, words []string, patterns ...string) bool {
+// TailMatches when last words match all patterns
+func TailMatches(ct caseType, words []string, patterns ...string) bool {
 	if len(words) < len(patterns) {
 		return false
 	}
@@ -592,11 +612,13 @@ func wordMatches(ct caseType, pattern, word string) bool {
 	return false
 }
 
-func completeFromList(text []rune, options ...string) [][]rune {
-	return completeFromListCase(IGNORE_CASE, text, options...)
+// CompleteFromList where items starts with text, ignoring case
+func CompleteFromList(text []rune, options ...string) [][]rune {
+	return CompleteFromListCase(IGNORE_CASE, text, options...)
 }
 
-func completeFromListCase(ct caseType, text []rune, options ...string) [][]rune {
+// CompleteFromList where items starts with text
+func CompleteFromListCase(ct caseType, text []rune, options ...string) [][]rune {
 	if len(options) == 0 {
 		return nil
 	}
@@ -632,7 +654,7 @@ func completeFromVariables(text []rune, prefix, suffix string, needValue bool) [
 		}
 		names = append(names, fmt.Sprintf("%s%s%s", prefix, name, suffix))
 	}
-	return completeFromListCase(MATCH_CASE, text, names...)
+	return CompleteFromListCase(MATCH_CASE, text, names...)
 }
 
 func (c completer) completeWithSelectables(text []rune) [][]rune {
@@ -675,8 +697,8 @@ func (c completer) completeWithSelectables(text []rune) [][]rune {
 		names = append(names, sequences...)
 	}
 	sort.Strings(names)
-	// TODO make sure completeFromList would properly handle quoted identifiers
-	return completeFromList(text, names...)
+	// TODO make sure CompleteFromList would properly handle quoted identifiers
+	return CompleteFromList(text, names...)
 }
 
 func (c completer) completeWithUpdatables(text []rune) [][]rune {
@@ -697,8 +719,8 @@ func (c completer) completeWithUpdatables(text []rune) [][]rune {
 		names = append(names, tables...)
 	}
 	sort.Strings(names)
-	// TODO make sure completeFromList would properly handle quoted identifiers
-	return completeFromList(text, names...)
+	// TODO make sure CompleteFromList would properly handle quoted identifiers
+	return CompleteFromList(text, names...)
 }
 
 func (c completer) getNamespaces(f metadata.Filter) []string {
@@ -766,7 +788,7 @@ func (c completer) completeWithAttributes(ct caseType, selectable string, text [
 		names = append(names, functions...)
 	}
 	names = append(names, options...)
-	return completeFromList(text, names...)
+	return CompleteFromList(text, names...)
 }
 
 // parseIdentifier into catalog, schema and name
@@ -880,5 +902,5 @@ func completeFromFiles(text []rune) [][]rune {
 		}
 		matches = append(matches, dir+name)
 	}
-	return completeFromList(text, matches...)
+	return CompleteFromList(text, matches...)
 }
