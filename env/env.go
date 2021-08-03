@@ -42,8 +42,8 @@ func Chdir(u *user.User, path string) error {
 	return os.Chdir(path)
 }
 
-// OpenFile opens a file for reading, returning the full, expanded path of the
-// file.  All callers are responsible for closing the returned file.
+// OpenFile opens a file for read (os.O_RDONLY), returning the full, expanded
+// path of the file. Callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
 	path, err := filepath.EvalSymlinks(passfile.Expand(u, path))
 	switch {

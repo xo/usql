@@ -1,6 +1,6 @@
 \set PGDB pg://postgres:P4ssw0rd@localhost
 \set MYDB my://root:P4ssw0rd@localhost
-\set SQDB sq:./testdata/test3.db
+\set SQDB sq:./testdata/copy_test.db
 \set MSDB ms://sa:Adm1nP@ssw0rd@localhost/
 
 \connect :PGDB

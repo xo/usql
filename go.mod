@@ -1,9 +1,9 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.88.0 // indirect
-	cloud.google.com/go/bigquery v1.19.0 // indirect
-	cloud.google.com/go/spanner v1.23.0 // indirect
+	cloud.google.com/go v0.90.0 // indirect
+	cloud.google.com/go/bigquery v1.20.0 // indirect
+	cloud.google.com/go/spanner v1.24.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.5
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
@@ -22,7 +22,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.10 // indirect
+	github.com/aws/aws-sdk-go v1.40.14 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -80,7 +80,7 @@ require (
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.300.0
 	github.com/twmb/murmur3 v1.1.5 // indirect
-	github.com/uber-go/tally v3.4.1+incompatible // indirect
+	github.com/uber-go/tally v3.4.2+incompatible // indirect
 	github.com/uber/athenadriver v1.1.13
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
@@ -91,14 +91,14 @@ require (
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	go.etcd.io/bbolt v1.3.6 // indirect
-	go.mongodb.org/mongo-driver v1.7.0 // indirect
+	go.mongodb.org/mongo-driver v1.7.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.18.1 // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
-	google.golang.org/api v0.51.0 // indirect
-	google.golang.org/genproto v0.0.0-20210728212813-7823e685a01f // indirect
+	google.golang.org/api v0.52.0 // indirect
+	google.golang.org/genproto v0.0.0-20210803142424-70bd63adacf2 // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/cc/v3 v3.33.9 // indirect
 	modernc.org/memory v1.0.5 // indirect
