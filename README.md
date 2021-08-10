@@ -422,9 +422,9 @@ Where the above are:
   <i>
     <a id="f-path">
       <sup>±</sup>Some databases, such as Microsoft SQL Server, or Oracle
-      Database support a path component (ie, `/dbname`) in the form of
-      `/instance/dbname`, where `/instance` is the optional service identifier
-      (aka "SID") or database instance
+      Database support a path component (ie, <code>/dbname</code>) in the form
+      of <code>/instance/dbname</code>, where <code>/instance</code> is the
+      optional service identifier (aka "SID") or database instance
     </a>
   </i>
 </p>
