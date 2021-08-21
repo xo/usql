@@ -1,9 +1,10 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.90.0 // indirect
-	cloud.google.com/go/bigquery v1.20.1 // indirect
-	cloud.google.com/go/spanner v1.24.0 // indirect
+	cloud.google.com/go v0.93.3 // indirect
+	cloud.google.com/go/bigquery v1.21.0 // indirect
+	cloud.google.com/go/datacatalog v0.1.0 // indirect
+	cloud.google.com/go/spanner v1.24.1 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.5
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
@@ -22,7 +23,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.18 // indirect
+	github.com/aws/aws-sdk-go v1.40.27 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -33,17 +34,18 @@ require (
 	github.com/couchbase/gomemcached v0.1.3 // indirect
 	github.com/couchbase/goutils v0.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/creack/pty v1.1.14 // indirect
+	github.com/creack/pty v1.1.15 // indirect
 	github.com/denisenkom/go-mssqldb v0.10.0
 	github.com/docker/docker v20.10.3+incompatible
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/genjidb/genji v0.13.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
-	github.com/go-openapi/strfmt v0.20.1 // indirect
+	github.com/go-openapi/strfmt v0.20.2 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-zookeeper/zk v1.0.2 // indirect
-	github.com/gocql/gocql v0.0.0-20210707082121-9a3953d1826d
+	github.com/gocql/gocql v0.0.0-20210817081954-bc256bbb90de
 	github.com/godror/godror v0.24.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/golang/snappy v0.0.4 // indirect
@@ -72,13 +74,13 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20201204133205-8958eb37e584
 	github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778
-	github.com/sijms/go-ora/v2 v2.1.22
+	github.com/sijms/go-ora/v2 v2.2.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.300.0
-	github.com/twmb/murmur3 v1.1.5 // indirect
+	github.com/twmb/murmur3 v1.1.6 // indirect
 	github.com/uber-go/tally v3.4.2+incompatible // indirect
 	github.com/uber/athenadriver v1.1.13
 	github.com/urfave/cli v1.22.5 // indirect
@@ -94,15 +96,17 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
-	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a // indirect
-	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/mod v0.5.0 // indirect
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
+	golang.org/x/sys v0.0.0-20210820121016-41cdb8703e55 // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
-	google.golang.org/genproto v0.0.0-20210809142519-0135a39c2737 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/genproto v0.0.0-20210821163610-241b8fcbd6c8 // indirect
 	gorm.io/driver/bigquery v1.0.16
-	modernc.org/cc/v3 v3.33.11 // indirect
-	modernc.org/ccgo/v3 v3.10.0 // indirect
-	modernc.org/memory v1.0.5 // indirect
+	modernc.org/ccgo/v3 v3.10.1 // indirect
+	modernc.org/libc v1.10.0 // indirect
 	modernc.org/ql v1.4.0
 	modernc.org/sqlite v1.12.0
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
