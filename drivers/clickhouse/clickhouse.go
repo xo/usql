@@ -16,6 +16,7 @@ func init() {
 		RowsAffected: func(sql.Result) (int64, error) {
 			return 0, nil
 		},
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
+		Copy:              drivers.CopyWithInsert(func(int) string { return "?" }),
+		NewMetadataReader: NewMetadataReader,
 	})
 }
