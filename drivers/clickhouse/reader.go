@@ -19,27 +19,22 @@ func NewMetadataReader(db drivers.DB, opts ...metadata.ReaderOption) metadata.Re
 	}
 }
 
-var (
-	_ metadata.BasicReader    = &MetadataReader{}
-	_ metadata.FunctionReader = &MetadataReader{}
-)
-
 func (r MetadataReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT 
-	database AS Schema,
-	name AS Name,
-	COALESCE(
-		IF(database LIKE 'system', 'SYSTEM TABLE', null),
-		IF(is_temporary,'LOCAL TEMPORARY', null),
-		IF(engine LIKE 'View', 'VIEW', null), 
-		'TABLE'
-	) AS Type,
-	COALESCE(total_bytes, 0) AS Size,
-	comment as Comment 
+  database AS Schema,
+  name AS Name,
+  COALESCE(
+    IF(database LIKE 'system', 'SYSTEM TABLE', null),
+    IF(is_temporary,'LOCAL TEMPORARY', null),
+    IF(engine LIKE 'View', 'VIEW', null), 
+    'TABLE'
+  ) AS Type,
+  COALESCE(total_bytes, 0) AS Size,
+  comment as Comment 
 FROM 
-	system.tables`
-	conds := []string{}
-	vals := []interface{}{}
+  system.tables`
+	var conds []string
+	var vals []interface{}
 	if !f.WithSystem {
 		conds = append(conds, "database NOT LIKE 'system'")
 	}
@@ -52,7 +47,7 @@ FROM
 		conds = append(conds, "name LIKE ?")
 	}
 	if len(f.Types) != 0 {
-		pholders := []string{}
+		var pholders []string
 		for _, t := range f.Types {
 			vals = append(vals, t)
 			pholders = append(pholders, "?")
@@ -66,12 +61,10 @@ FROM
 		return nil, err
 	}
 	defer closeRows()
-
-	results := []metadata.Table{}
+	var results []metadata.Table
 	for rows.Next() {
-		rec := metadata.Table{}
-		err = rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Size, &rec.Comment)
-		if err != nil {
+		var rec metadata.Table
+		if err := rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Size, &rec.Comment); err != nil {
 			return nil, err
 		}
 		results = append(results, rec)
@@ -84,34 +77,33 @@ FROM
 
 func (r MetadataReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
 	qstr := `SELECT
-  	position,
-  	database as schema,
-  	name,
-  	type,
-  	COALESCE(default_expression, '')
+  position,
+  database as schema,
+  name,
+  type,
+  COALESCE(default_expression, '')
 FROM 
-	system.columns 
+  system.columns 
 WHERE 
-	table LIKE ?`
-	rows, closeRows, err := r.query(qstr, []string{}, "name", f.Parent)
+  table LIKE ?`
+	rows, closeRows, err := r.query(qstr, nil, "name", f.Parent)
 	if err != nil {
 		return nil, err
 	}
 	defer closeRows()
-	results := []metadata.Column{}
+	var results []metadata.Column
 	for rows.Next() {
 		rec := metadata.Column{
 			Catalog: f.Catalog,
 			Table:   f.Parent,
 		}
-		err = rows.Scan(
+		if err := rows.Scan(
 			&rec.OrdinalPosition,
 			&rec.Schema,
 			&rec.Name,
 			&rec.DataType,
 			&rec.Default,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
 		results = append(results, rec)
@@ -119,17 +111,16 @@ WHERE
 	if rows.Err() != nil {
 		return nil, rows.Err()
 	}
-
 	return metadata.NewColumnSet(results), nil
 }
 
 func (r MetadataReader) Schemas(f metadata.Filter) (*metadata.SchemaSet, error) {
 	qstr := `SELECT
-	name
+  name
 FROM
-	system.databases`
-	conds := []string{}
-	vals := []interface{}{}
+  system.databases`
+	var conds []string
+	var vals []interface{}
 	if f.Name != "" {
 		vals = append(vals, f.Name)
 		conds = append(conds, "name LIKE ?")
@@ -139,13 +130,10 @@ FROM
 		return nil, err
 	}
 	defer closeRows()
-
-	results := []metadata.Schema{}
-
+	var results []metadata.Schema
 	for rows.Next() {
-		rec := metadata.Schema{}
-		err = rows.Scan(&rec.Schema)
-		if err != nil {
+		var rec metadata.Schema
+		if err := rows.Scan(&rec.Schema); err != nil {
 			return nil, err
 		}
 		results = append(results, rec)
@@ -155,21 +143,22 @@ FROM
 	}
 	return metadata.NewSchemaSet(results), nil
 }
+
 func (r MetadataReader) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
 	qstr := `SELECT
-  	name AS specific_name,
-  	name AS routine_name,
-  	(IF(is_aggregate = 1,'AGGREGATE','FUNCTION')) AS type
+  name AS specific_name,
+  name AS routine_name,
+  (IF(is_aggregate = 1,'AGGREGATE','FUNCTION')) AS type
 FROM 
-	system.functions`
-	conds := []string{}
-	vals := []interface{}{}
+  system.functions`
+	var conds []string
+	var vals []interface{}
 	if f.Name != "" {
-		vals = append(vals, f.Name)
 		conds = append(conds, "name LIKE ?")
+		vals = append(vals, f.Name)
 	}
 	if len(f.Types) != 0 {
-		pholders := []string{}
+		var pholders []string
 		for _, t := range f.Types {
 			vals = append(vals, t)
 			pholders = append(pholders, "?")
@@ -183,16 +172,14 @@ FROM
 		return nil, err
 	}
 	defer closeRows()
-
-	results := []metadata.Function{}
+	var results []metadata.Function
 	for rows.Next() {
-		rec := metadata.Function{}
-		err = rows.Scan(
+		var rec metadata.Function
+		if err := rows.Scan(
 			&rec.SpecificName,
 			&rec.Name,
 			&rec.Type,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
 		results = append(results, rec)

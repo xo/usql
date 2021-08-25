@@ -1,8 +1,7 @@
 -- https://clickhouse.tech/docs/en/getting-started/tutorial/#create-tables
 CREATE DATABASE tutorial;
 
-CREATE TABLE tutorial.hits_v1
-(
+CREATE TABLE tutorial.hits_v1 (
     `WatchID` UInt64,
     `JavaEnable` UInt8,
     `Title` String,
@@ -143,8 +142,7 @@ PARTITION BY toYYYYMM(EventDate)
 ORDER BY (CounterID, EventDate, intHash32(UserID))
 SAMPLE BY intHash32(UserID);
 
-CREATE TABLE tutorial.visits_v1
-(
+CREATE TABLE tutorial.visits_v1 (
     `CounterID` UInt32,
     `StartDate` Date,
     `Sign` Int8,

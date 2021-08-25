@@ -1,10 +1,9 @@
 module github.com/xo/usql
 
 require (
-	cloud.google.com/go v0.93.3 // indirect
 	cloud.google.com/go/bigquery v1.21.0 // indirect
 	cloud.google.com/go/datacatalog v0.1.0 // indirect
-	cloud.google.com/go/spanner v1.24.1 // indirect
+	cloud.google.com/go/spanner v1.25.0 // indirect
 	github.com/ClickHouse/clickhouse-go v1.4.5
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
@@ -23,7 +22,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.27 // indirect
+	github.com/aws/aws-sdk-go v1.40.30 // indirect
 	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210215125809-4fa075701386 // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -40,7 +39,7 @@ require (
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/genjidb/genji v0.13.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
-	github.com/go-openapi/errors v0.20.0 // indirect
+	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/strfmt v0.20.2 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-stack/stack v1.8.1 // indirect
@@ -51,6 +50,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/goexpect v0.0.0-20210330220015-096e5d1cbd97
+	github.com/googleapis/gax-go/v2 v2.1.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jackc/pgconn v1.10.0
 	github.com/jackc/pgx/v4 v4.13.0
@@ -74,7 +74,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20201204133205-8958eb37e584
 	github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778
-	github.com/sijms/go-ora/v2 v2.2.2
+	github.com/sijms/go-ora/v2 v2.2.3
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -89,6 +89,7 @@ require (
 	github.com/xo/dburl v0.8.4
 	github.com/xo/tblfmt v0.7.5
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
+	github.com/yookoala/realpath v1.0.0
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	go.etcd.io/bbolt v1.3.6 // indirect
@@ -98,12 +99,12 @@ require (
 	go.uber.org/zap v1.19.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/mod v0.5.0 // indirect
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
+	golang.org/x/net v0.0.0-20210825183410-e898025ed96a // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
-	golang.org/x/sys v0.0.0-20210820121016-41cdb8703e55 // indirect
+	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20210821163610-241b8fcbd6c8 // indirect
+	google.golang.org/genproto v0.0.0-20210825212027-de86158e7fda // indirect
 	gorm.io/driver/bigquery v1.0.16
 	modernc.org/ccgo/v3 v3.10.1 // indirect
 	modernc.org/libc v1.10.0 // indirect
