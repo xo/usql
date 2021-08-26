@@ -1,4 +1,4 @@
-// +build all,!no_snowflake snowflake,!no_snowflake
+//go:build (all || snowflake) && !no_snowflake
 
 package internal
 

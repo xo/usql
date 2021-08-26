@@ -9,7 +9,6 @@ require (
 	github.com/IBM/nzgo v0.0.0-20210406171630-186d127e2795
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/Microsoft/hcsshim v0.8.15 // indirect
 	github.com/SAP/go-hdb v0.105.2
 	github.com/VoltDB/voltdb-client-go v1.0.1
 	github.com/alecthomas/chroma v0.9.2
@@ -35,7 +34,8 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/creack/pty v1.1.15 // indirect
 	github.com/denisenkom/go-mssqldb v0.10.0
-	github.com/docker/docker v20.10.3+incompatible
+	github.com/docker/docker v20.10.6+incompatible
+	github.com/exasol/exasol-driver-go v0.0.0-20210823115457-bc7df4ac05ae
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/genjidb/genji v0.13.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
@@ -66,7 +66,6 @@ require (
 	github.com/mithrandie/csvq v1.15.2
 	github.com/mithrandie/csvq-driver v1.4.3
 	github.com/mithrandie/go-text v1.4.2 // indirect
-	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/nakagami/firebirdsql v0.9.1
 	github.com/ory/dockertest/v3 v3.6.3
@@ -74,7 +73,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20201204133205-8958eb37e584
 	github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778
-	github.com/sijms/go-ora/v2 v2.2.3
+	github.com/sijms/go-ora/v2 v2.2.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -86,7 +85,7 @@ require (
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	github.com/vmihailenco/msgpack/v5 v5.3.4 // indirect
-	github.com/xo/dburl v0.8.4
+	github.com/xo/dburl v0.8.5
 	github.com/xo/tblfmt v0.7.5
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/yookoala/realpath v1.0.0

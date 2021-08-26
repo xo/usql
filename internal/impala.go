@@ -1,4 +1,4 @@
-// +build all,!no_impala impala,!no_impala
+//go:build (all || impala) && !no_impala
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build all,!no_couchbase most,!no_couchbase couchbase,!no_couchbase
+//go:build (all || most || couchbase) && !no_couchbase
 
 package internal
 

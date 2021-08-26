@@ -1,4 +1,4 @@
-// +build all,!no_athena most,!no_athena athena,!no_athena
+//go:build (all || most || athena) && !no_athena
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build !no_base,!no_mysql
+//go:build (!no_base || mysql) && !no_mysql
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build all,!no_cassandra most,!no_cassandra cassandra,!no_cassandra
+//go:build (all || most || cassandra) && !no_cassandra
 
 package internal
 

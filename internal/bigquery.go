@@ -1,4 +1,4 @@
-// +build all,!no_bigquery most,!no_bigquery bigquery,!no_bigquery
+//go:build (all || most || bigquery) && !no_bigquery
 
 package internal
 

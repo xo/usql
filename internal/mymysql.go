@@ -1,4 +1,4 @@
-// +build all,!no_mymysql most,!no_mymysql mymysql,!no_mymysql
+//go:build (all || most || mymysql) && !no_mymysql
 
 package internal
 

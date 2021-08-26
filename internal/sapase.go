@@ -1,4 +1,4 @@
-// +build all,!no_sapase most,!no_sapase sapase,!no_sapase
+//go:build (all || most || sapase) && !no_sapase
 
 package internal
 

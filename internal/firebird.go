@@ -1,4 +1,4 @@
-// +build all,!no_firebird most,!no_firebird firebird,!no_firebird
+//go:build (all || most || firebird) && !no_firebird
 
 package internal
 

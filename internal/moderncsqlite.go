@@ -1,4 +1,4 @@
-// +build all,!no_moderncsqlite most,!no_moderncsqlite moderncsqlite,!no_moderncsqlite
+//go:build (all || most || moderncsqlite) && !no_moderncsqlite
 
 package internal
 

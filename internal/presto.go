@@ -1,4 +1,4 @@
-// +build all,!no_presto most,!no_presto presto,!no_presto
+//go:build (all || most || presto) && !no_presto
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build all,!no_genji most,!no_genji genji,!no_genji
+//go:build (all || most || genji) && !no_genji
 
 package internal
 

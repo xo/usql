@@ -1,4 +1,4 @@
-// +build all,!no_pgx most,!no_pgx pgx,!no_pgx
+//go:build (all || most || pgx) && !no_pgx
 
 package internal
 

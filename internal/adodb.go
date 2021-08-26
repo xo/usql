@@ -1,4 +1,4 @@
-// +build all,!no_adodb most,!no_adodb adodb,!no_adodb
+//go:build (all || most || adodb) && !no_adodb
 
 package internal
 

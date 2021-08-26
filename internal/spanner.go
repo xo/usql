@@ -1,4 +1,4 @@
-// +build all,!no_spanner most,!no_spanner spanner,!no_spanner
+//go:build (all || most || spanner) && !no_spanner
 
 package internal
 

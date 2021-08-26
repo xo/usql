@@ -1,4 +1,4 @@
-// +build all,!no_voltdb most,!no_voltdb voltdb,!no_voltdb
+//go:build (all || most || voltdb) && !no_voltdb
 
 package internal
 

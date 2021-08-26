@@ -232,6 +232,7 @@ associated database, scheme / build tag, and scheme aliases:
 | ClickHouse           | `clickhouse`    | `ch`                                            | [github.com/ClickHouse/clickhouse-go][d-clickhouse]             |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                     |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                          |
+| Exasol               | `exasol`        | `ex`, `exa`                                     | [github.com/exasol/exasol-driver-go][d-exasol]                  |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                   |
 | Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                      |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                    |
@@ -276,6 +277,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
 [d-couchbase]: https://github.com/couchbase/go_n1ql
 [d-csvq]: https://github.com/mithrandie/csvq-driver
+[d-exasol]: https://github.com/exasol/exasol-driver-go
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-genji]: https://github.com/genjidb/genji
 [d-godror]: https://github.com/godror/godror

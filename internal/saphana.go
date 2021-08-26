@@ -1,4 +1,4 @@
-// +build all,!no_saphana most,!no_saphana saphana,!no_saphana
+//go:build (all || most || saphana) && !no_saphana
 
 package internal
 

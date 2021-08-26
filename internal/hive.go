@@ -1,4 +1,4 @@
-// +build all,!no_hive hive,!no_hive
+//go:build (all || hive) && !no_hive
 
 package internal
 

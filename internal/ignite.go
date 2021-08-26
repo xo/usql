@@ -1,4 +1,4 @@
-// +build all,!no_ignite most,!no_ignite ignite,!no_ignite
+//go:build (all || most || ignite) && !no_ignite
 
 package internal
 

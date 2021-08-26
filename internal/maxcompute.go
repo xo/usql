@@ -1,4 +1,4 @@
-// +build all,!no_maxcompute most,!no_maxcompute maxcompute,!no_maxcompute
+//go:build (all || most || maxcompute) && !no_maxcompute
 
 package internal
 

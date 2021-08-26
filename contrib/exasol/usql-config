@@ -1,0 +1,2 @@
+DB="exasol://sys:exasol@localhost/?encryption=0"
+VSQL="SELECT param_value AS version FROM exa_metadata WHERE param_name = 'databaseProductVersion';"

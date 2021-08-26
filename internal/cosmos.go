@@ -1,4 +1,4 @@
-// +build all,!no_cosmos cosmos,!no_cosmos
+//go:build (all || cosmos) && !no_cosmos
 
 package internal
 

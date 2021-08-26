@@ -1,4 +1,4 @@
-// +build all,!no_clickhouse most,!no_clickhouse clickhouse,!no_clickhouse
+//go:build (all || most || clickhouse) && !no_clickhouse
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build all,!no_godror godror,!no_godror
+//go:build (all || godror) && !no_godror
 
 package internal
 

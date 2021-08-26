@@ -1,4 +1,4 @@
-// +build all,!no_netezza most,!no_netezza netezza,!no_netezza
+//go:build (all || most || netezza) && !no_netezza
 
 package internal
 

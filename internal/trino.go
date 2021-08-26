@@ -1,4 +1,4 @@
-// +build all,!no_trino most,!no_trino trino,!no_trino
+//go:build (all || most || trino) && !no_trino
 
 package internal
 

@@ -1,4 +1,4 @@
-// +build all,!no_avatica most,!no_avatica avatica,!no_avatica
+//go:build (all || most || avatica) && !no_avatica
 
 package internal
 

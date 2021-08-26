@@ -1,4 +1,4 @@
-// +build all,!no_vertica most,!no_vertica vertica,!no_vertica
+//go:build (all || most || vertica) && !no_vertica
 
 package internal
 

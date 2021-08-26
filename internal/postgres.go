@@ -1,4 +1,4 @@
-// +build !no_base,!no_postgres
+//go:build (!no_base || postgres) && !no_postgres
 
 package internal
 

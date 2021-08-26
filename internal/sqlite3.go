@@ -1,4 +1,4 @@
-// +build !no_base,!no_sqlite3
+//go:build (!no_base || sqlite3) && !no_sqlite3
 
 package internal
 
