@@ -1,4 +1,4 @@
-// +build ignore
+//go:build ignore
 
 // Command testcli runs goexpect tests against a built usql binary.
 package main
