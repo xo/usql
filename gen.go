@@ -1,5 +1,3 @@
-//go:build ignore
-
 package main
 
 import (
@@ -23,55 +21,42 @@ import (
 	"github.com/xo/dburl"
 )
 
-type driver struct {
-	// tag is the build tag / name of the directory the driver lives in.
-	tag string
-	// driver is the Go SQL driver driver (parsed from the import tagged with //
-	// DRIVER: <driver>), otherwise same as the tag / directory driver.
-	driver string
-	// pkg is the imported driver package, taken from the import tagged with
+type DriverInfo struct {
+	// Tag is the build Tag / name of the directory the driver lives in.
+	Tag string
+	// Driver is the Go SQL Driver Driver (parsed from the import tagged with //
+	// DRIVER: <Driver>), otherwise same as the tag / directory Driver.
+	Driver string
+	// Pkg is the imported driver package, taken from the import tagged with
 	// DRIVER.
-	pkg string
-	// desc is the descriptive text of the driver, parsed from doc comment, ie,
-	// "Package <tag> defines and registers usql's <desc>."
-	desc string
-	// url is the driver's reference URL, parsed from doc comment's "See: <url>".
-	url string
-	// cgo is whether or not the driver requires CGO, based on presence of
+	Pkg string
+	// Desc is the descriptive text of the driver, parsed from doc comment, ie,
+	// "Package <tag> defines and registers usql's <Desc>."
+	Desc string
+	// URL is the driver's reference URL, parsed from doc comment's "See: <URL>".
+	URL string
+	// CGO is whether or not the driver requires CGO, based on presence of
 	// 'Requires CGO.' in the comment
-	cgo bool
-	// aliases are the parsed Alias: entries.
-	aliases [][]string
-	// wire indicates it is a wire compatible driver.
-	wire bool
-	// group is the build group
-	group string
+	CGO bool
+	// Aliases are the parsed Alias: entries.
+	Aliases [][]string
+	// Wire indicates it is a Wire compatible driver.
+	Wire bool
+	// Group is the build Group
+	Group string
 }
 
 // baseDrivers are drivers included in a build with no build tags listed.
-var baseDrivers = map[string]driver{
-	"mysql":     driver{},
-	"oracle":    driver{},
-	"postgres":  driver{},
-	"sqlite3":   driver{},
-	"sqlserver": driver{},
-}
+var baseDrivers = map[string]DriverInfo{}
 
 // mostDrivers are drivers included with the most tag. Populated below.
-var mostDrivers = map[string]driver{}
+var mostDrivers = map[string]DriverInfo{}
 
 // allDrivers are drivers forced to 'all' build tag.
-var allDrivers = map[string]driver{
-	"cosmos":    driver{},
-	"godror":    driver{},
-	"hive":      driver{},
-	"impala":    driver{},
-	"odbc":      driver{},
-	"snowflake": driver{},
-}
+var allDrivers = map[string]DriverInfo{}
 
 // wireDrivers are the wire compatible drivers.
-var wireDrivers = map[string]driver{}
+var wireDrivers = map[string]DriverInfo{}
 
 func main() {
 	licenseStart := flag.Int("license-start", 2016, "license start year")
@@ -119,27 +104,28 @@ func loadDrivers(wd string) error {
 		if m == nil || m[0][1] != m[0][2] || contains(skipDirs, m[0][1]) {
 			return nil
 		}
-		tag, group, dest := m[0][1], "most", mostDrivers
-		if err != nil {
+		tag, dest := m[0][1], mostDrivers
+		driver, err := parseDriverInfo(tag, filepath.Join(wd, n))
+		switch {
+		case err != nil:
 			return err
+		case driver.Group == "base":
+			dest = baseDrivers
+		case driver.Group == "most":
+		case driver.Group == "all":
+			dest = allDrivers
+		default:
+			return fmt.Errorf("driver %s has invalid group %q", tag, driver.Group)
 		}
-		if _, ok := baseDrivers[tag]; ok {
-			group, dest = "base", baseDrivers
-		} else if _, ok := allDrivers[tag]; ok {
-			group, dest = "all", allDrivers
-		}
-		dest[tag], err = parseDriver(tag, group, filepath.Join(wd, n))
-		if err != nil {
-			return err
-		}
-		if dest[tag].aliases != nil {
-			for _, alias := range dest[tag].aliases {
-				wireDrivers[alias[0]] = driver{
-					tag:    tag,
-					driver: alias[0],
-					pkg:    dest[tag].pkg,
-					desc:   alias[1],
-					wire:   true,
+		dest[tag] = driver
+		if dest[tag].Aliases != nil {
+			for _, alias := range dest[tag].Aliases {
+				wireDrivers[alias[0]] = DriverInfo{
+					Tag:    tag,
+					Driver: alias[0],
+					Pkg:    dest[tag].Pkg,
+					Desc:   alias[1],
+					Wire:   true,
 				}
 			}
 		}
@@ -151,16 +137,10 @@ func loadDrivers(wd string) error {
 	return nil
 }
 
-var (
-	aliasRE = regexp.MustCompile(`(?m)^Alias:\s+(.*)$`)
-	seeRE   = regexp.MustCompile(`(?m)^See:\s+(.*)$`)
-	cleanRE = regexp.MustCompile(`[\r\n]`)
-)
-
-func parseDriver(tag, group, filename string) (driver, error) {
+func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	f, err := parser.ParseFile(token.NewFileSet(), filename, nil, parser.ParseComments)
 	if err != nil {
-		return driver{}, err
+		return DriverInfo{}, err
 	}
 	name := tag
 	var pkg string
@@ -178,16 +158,16 @@ func parseDriver(tag, group, filename string) (driver, error) {
 	comment := f.Doc.Text()
 	prefix := "Package " + tag + " defines and registers usql's "
 	if !strings.HasPrefix(comment, prefix) {
-		return driver{}, fmt.Errorf("invalid doc comment prefix for driver %q", tag)
+		return DriverInfo{}, fmt.Errorf("invalid doc comment prefix for driver %q", tag)
 	}
 	desc := strings.TrimPrefix(comment, prefix)
 	i := strings.Index(desc, " driver.")
 	if i == -1 {
-		return driver{}, fmt.Errorf("cannot find description suffix for driver %q", tag)
+		return DriverInfo{}, fmt.Errorf("cannot find description suffix for driver %q", tag)
 	}
 	desc = strings.TrimSpace(desc[:i])
 	if desc == "" {
-		return driver{}, fmt.Errorf("unable to parse description for driver %q", tag)
+		return DriverInfo{}, fmt.Errorf("unable to parse description for driver %q", tag)
 	}
 	// parse alias:
 	var aliases [][]string
@@ -202,34 +182,46 @@ func parseDriver(tag, group, filename string) (driver, error) {
 	// parse see: url
 	urlm := seeRE.FindAllStringSubmatch(comment, -1)
 	if urlm == nil {
-		return driver{}, fmt.Errorf("missing See: <URL> for driver %q", tag)
+		return DriverInfo{}, fmt.Errorf("missing See: <URL> for driver %q", tag)
 	}
-	return driver{
-		tag:     tag,
-		driver:  name,
-		pkg:     pkg,
-		desc:    cleanRE.ReplaceAllString(desc, ""),
-		url:     strings.TrimSpace(urlm[0][1]),
-		cgo:     strings.Contains(cleanRE.ReplaceAllString(comment, ""), "Requires CGO."),
-		aliases: aliases,
-		group:   group,
+	// parse group:
+	group := "most"
+	if groupm := groupRE.FindAllStringSubmatch(comment, -1); groupm != nil {
+		group = strings.TrimSpace(groupm[0][1])
+	}
+	return DriverInfo{
+		Tag:     tag,
+		Driver:  name,
+		Pkg:     pkg,
+		Desc:    cleanRE.ReplaceAllString(desc, ""),
+		URL:     strings.TrimSpace(urlm[0][1]),
+		CGO:     strings.Contains(cleanRE.ReplaceAllString(comment, ""), "Requires CGO."),
+		Aliases: aliases,
+		Group:   group,
 	}, nil
 }
 
-func writeInternal(wd string, drivers ...map[string]driver) error {
+var (
+	aliasRE = regexp.MustCompile(`(?m)^Alias:\s+(.*)$`)
+	seeRE   = regexp.MustCompile(`(?m)^See:\s+(.*)$`)
+	groupRE = regexp.MustCompile(`(?m)^Group:\s+(.*)$`)
+	cleanRE = regexp.MustCompile(`[\r\n]`)
+)
+
+func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	// build known build tags
-	var known []driver
+	var known []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
 			known = append(known, v)
 		}
 	}
 	sort.Slice(known, func(i, j int) bool {
-		return known[i].tag < known[j].tag
+		return known[i].Tag < known[j].Tag
 	})
 	knownStr := ""
 	for _, v := range known {
-		knownStr += fmt.Sprintf("\n%q: %q, // %s", v.tag, v.driver, v.pkg)
+		knownStr += fmt.Sprintf("\n%q: %q, // %s", v.Tag, v.Driver, v.Pkg)
 	}
 	// format and write internal.go
 	buf, err := format.Source([]byte(fmt.Sprintf(internalGo, knownStr)))
@@ -242,22 +234,22 @@ func writeInternal(wd string, drivers ...map[string]driver) error {
 	// write <tag>.go
 	for _, v := range known {
 		var tags string
-		switch v.group {
+		switch v.Group {
 		case "base":
-			tags = "(!no_base || " + v.tag + ")"
+			tags = "(!no_base || " + v.Tag + ")"
 		case "most":
-			tags = "(all || most || " + v.tag + ")"
+			tags = "(all || most || " + v.Tag + ")"
 		case "all":
-			tags = "(all || " + v.tag + ")"
+			tags = "(all || " + v.Tag + ")"
 		default:
-			panic(v.tag)
+			panic(v.Tag)
 		}
-		tags += " && !no_" + v.tag
-		buf, err := format.Source([]byte(fmt.Sprintf(internalTagGo, tags, "github.com/xo/usql/drivers/"+v.tag, v.desc)))
+		tags += " && !no_" + v.Tag
+		buf, err := format.Source([]byte(fmt.Sprintf(internalTagGo, tags, "github.com/xo/usql/drivers/"+v.Tag, v.Desc)))
 		if err != nil {
 			return err
 		}
-		if err := ioutil.WriteFile(filepath.Join(wd, v.tag+".go"), buf, 0644); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(wd, v.Tag+".go"), buf, 0644); err != nil {
 			return err
 		}
 	}
@@ -341,28 +333,28 @@ func buildDriverTable() string {
 	return s + "\n" + buildTableLinks(baseDrivers, mostDrivers, allDrivers)
 }
 
-func buildRows(m map[string]driver, widths []int) ([][]string, []int) {
-	var drivers []driver
+func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
+	var drivers []DriverInfo
 	for _, v := range m {
 		drivers = append(drivers, v)
 	}
 	sort.Slice(drivers, func(i, j int) bool {
-		return drivers[i].desc < drivers[j].desc
+		return drivers[i].Desc < drivers[j].Desc
 	})
 	var rows [][]string
 	for i, v := range drivers {
 		notes := ""
-		if v.cgo {
+		if v.CGO {
 			notes = "<sup>[†][f-cgo]</sup>"
 		}
-		if v.wire {
+		if v.Wire {
 			notes = "<sup>[‡][f-wire]</sup>"
 		}
 		rows = append(rows, []string{
-			v.desc,
-			"`" + v.tag + "`",
+			v.Desc,
+			"`" + v.Tag + "`",
 			buildAliases(v),
-			fmt.Sprintf("[%s][d-%s]%s", v.pkg, v.tag, notes),
+			fmt.Sprintf("[%s][d-%s]%s", v.Pkg, v.Tag, notes),
 		})
 		// calc max
 		for j := 0; j < len(rows[i]); j++ {
@@ -372,18 +364,18 @@ func buildRows(m map[string]driver, widths []int) ([][]string, []int) {
 	return rows, widths
 }
 
-func buildAliases(v driver) string {
-	name := v.tag
-	if v.wire {
-		name = v.driver
+func buildAliases(v DriverInfo) string {
+	name := v.Tag
+	if v.Wire {
+		name = v.Driver
 	}
 	_, aliases := dburl.SchemeDriverAndAliases(name)
-	if v.wire {
+	if v.Wire {
 		aliases = append(aliases, name)
 	}
 	for i := 0; i < len(aliases); i++ {
-		if !v.wire && aliases[i] == v.tag {
-			aliases[i] = v.driver
+		if !v.Wire && aliases[i] == v.Tag {
+			aliases[i] = v.Driver
 		}
 	}
 	if len(aliases) > 0 {
@@ -407,19 +399,19 @@ func tableRows(widths []int, c rune, rows ...[]string) string {
 	return s
 }
 
-func buildTableLinks(drivers ...map[string]driver) string {
-	var d []driver
+func buildTableLinks(drivers ...map[string]DriverInfo) string {
+	var d []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
 			d = append(d, v)
 		}
 	}
 	sort.Slice(d, func(i, j int) bool {
-		return d[i].tag < d[j].tag
+		return d[i].Tag < d[j].Tag
 	})
 	var s string
 	for _, v := range d {
-		s += fmt.Sprintf("[d-%s]: %s\n", v.tag, v.url)
+		s += fmt.Sprintf("[d-%s]: %s\n", v.Tag, v.URL)
 	}
 	return s
 }

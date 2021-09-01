@@ -2,6 +2,7 @@
 // respective platform's standard ODBC packages.
 //
 // See: https://github.com/alexbrainman/odbc
+// Group: all
 package odbc
 
 import (

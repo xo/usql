@@ -2,6 +2,7 @@
 // Requires CGO. Uses Oracle's ODPI-C (instant client) library.
 //
 // See: https://github.com/godror/godror
+// Group: all
 package godror
 
 import (

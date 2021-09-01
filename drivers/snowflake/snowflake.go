@@ -1,6 +1,7 @@
 // Package snowflake defines and registers usql's Snowflake driver.
 //
 // See: https://github.com/snowflakedb/gosnowflake
+// Group: all
 package snowflake
 
 import (

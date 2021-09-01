@@ -5,6 +5,7 @@
 // Alias: tidb, TiDB
 //
 // See: https://github.com/go-sql-driver/mysql
+// Group: base
 package mysql
 
 import (

@@ -4,6 +4,7 @@
 // Alias: redshift, Amazon Redshift
 //
 // See: https://github.com/lib/pq
+// Group: base
 package postgres
 
 import (
