@@ -583,7 +583,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 }
 
 func (h *Handler) connStrings() []string {
-	entries, err := passfile.Entries(h.user, text.PassfileName)
+	entries, err := passfile.Entries(h.user.HomeDir, text.PassfileName)
 	if err != nil {
 		// ignore the error as this is only used for completer
 		// and it'll be reported again when trying to force params before opening a conn
@@ -627,7 +627,7 @@ func (h *Handler) forceParams(u *dburl.URL) {
 	// force driver parameters
 	drivers.ForceParams(u)
 	// see if password entry is present
-	user, err := passfile.Match(h.user, u, text.PassfileName)
+	user, err := passfile.Match(u, h.user.HomeDir, text.PassfileName)
 	switch {
 	case err != nil:
 		fmt.Fprintln(h.l.Stderr(), "error:", err)

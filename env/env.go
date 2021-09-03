@@ -35,7 +35,7 @@ func Getenv(keys ...string) string {
 // user's home directory if path is not specified.
 func Chdir(u *user.User, path string) error {
 	if path != "" {
-		path = passfile.Expand(u, path)
+		path = passfile.Expand(u.HomeDir, path)
 	} else {
 		path = u.HomeDir
 	}
@@ -45,7 +45,7 @@ func Chdir(u *user.User, path string) error {
 // OpenFile opens a file for read (os.O_RDONLY), returning the full, expanded
 // path of the file. Callers are responsible for closing the returned file.
 func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error) {
-	path, err := filepath.EvalSymlinks(passfile.Expand(u, path))
+	path, err := filepath.EvalSymlinks(passfile.Expand(u.HomeDir, path))
 	switch {
 	case err != nil && os.IsNotExist(err):
 		return "", nil, text.ErrNoSuchFileOrDirectory
@@ -75,7 +75,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		return nil, text.ErrNoEditorDefined
 	}
 	if path != "" {
-		path = passfile.Expand(u, path)
+		path = passfile.Expand(u.HomeDir, path)
 	} else {
 		f, err := temp.File("", text.CommandLower(), "sql")
 		if err != nil {
@@ -127,7 +127,7 @@ func HistoryFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-	return passfile.Expand(u, path)
+	return passfile.Expand(u.HomeDir, path)
 }
 
 // RCFile returns the path to the RC file.
@@ -140,7 +140,7 @@ func RCFile(u *user.User) string {
 	if s := Getenv(n); s != "" {
 		path = s
 	}
-	return passfile.Expand(u, path)
+	return passfile.Expand(u.HomeDir, path)
 }
 
 // Getshell returns the user's defined SHELL, or system default (if found on
