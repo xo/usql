@@ -341,7 +341,7 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 		drivers = append(drivers, v)
 	}
 	sort.Slice(drivers, func(i, j int) bool {
-		return drivers[i].Desc < drivers[j].Desc
+		return strings.ToLower(drivers[i].Desc) < strings.ToLower(drivers[j].Desc)
 	})
 	var rows [][]string
 	for i, v := range drivers {
