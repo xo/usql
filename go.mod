@@ -20,7 +20,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.14.2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.37 // indirect
+	github.com/aws/aws-sdk-go v1.40.38 // indirect
 	github.com/beltran/gohive v1.5.1 // indirect
 	github.com/beltran/gosasl v0.0.0-20210629234946-b41ac5bb612a // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -57,7 +57,7 @@ require (
 	github.com/jmrobles/h2go v0.5.0
 	github.com/lib/pq v1.10.3
 	github.com/mattn/go-adodb v0.0.1
-	github.com/mattn/go-isatty v0.0.13
+	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210706143420-7d21f8c997e2 // indirect
 	github.com/prestodb/presto-go-client v0.0.0-20201204133205-8958eb37e584
 	github.com/rakyll/go-sql-driver-spanner v0.0.0-20200507191418-c013a6449778
-	github.com/sijms/go-ora/v2 v2.2.5
+	github.com/sijms/go-ora/v2 v2.2.8
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.6.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -104,10 +104,10 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210903162649-d08c68adba83 // indirect
 	gorm.io/driver/bigquery v1.0.16
-	modernc.org/ccgo/v3 v3.11.0 // indirect
-	modernc.org/libc v1.11.0 // indirect
+	modernc.org/ccgo/v3 v3.11.2 // indirect
+	modernc.org/libc v1.11.3 // indirect
 	modernc.org/ql v1.4.0
-	modernc.org/sqlite v1.12.0
+	modernc.org/sqlite v1.13.0
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
