@@ -1,10 +1,10 @@
 // Package spanner defines and registers usql's Google Spanner driver.
 //
-// See: https://github.com/rakyll/go-sql-driver-spanner
+// See: https://github.com/cloudspannerecosystem/go-sql-spanner
 package spanner
 
 import (
-	_ "github.com/rakyll/go-sql-driver-spanner" // DRIVER
+	_ "github.com/cloudspannerecosystem/go-sql-spanner" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

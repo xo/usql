@@ -236,7 +236,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                   |
 | Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                      |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                    |
-| Google Spanner       | `spanner`       | `sp`                                            | [github.com/rakyll/go-sql-driver-spanner][d-spanner]            |
+| Google Spanner       | `spanner`       | `sp`                                            | [github.com/cloudspannerecosystem/go-sql-spanner][d-spanner]    |
 | Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                            |
 | ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                            | [modernc.org/sqlite][d-moderncsqlite]                           |
 | MySQL MyMySQL        | `mymysql`       | `zm`, `mymy`                                    | [github.com/ziutek/mymysql/godrv][d-mymysql]                    |
@@ -299,7 +299,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-sapase]: https://github.com/thda/tds
 [d-saphana]: https://github.com/SAP/go-hdb
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
-[d-spanner]: https://github.com/rakyll/go-sql-driver-spanner
+[d-spanner]: https://github.com/cloudspannerecosystem/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/denisenkom/go-mssqldb
 [d-trino]: https://github.com/trinodb/trino-go-client

@@ -39,7 +39,7 @@ func KnownBuildTags() map[string]string {
 		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
-		"spanner":       "spanner",       // github.com/rakyll/go-sql-driver-spanner
+		"spanner":       "spanner",       // github.com/cloudspannerecosystem/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/denisenkom/go-mssqldb
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
