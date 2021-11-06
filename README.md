@@ -124,16 +124,6 @@ scoop install usql
 $ go install github.com/xo/usql@master
 ```
 
-Support for additional databases can be specified with [build tags][Database Support]:
-
-```sh
-# install usql with most drivers (excludes unsupported drivers)
-$ go install -tags most github.com/xo/usql
-
-# install usql with all drivers
-$ go install -tags all github.com/xo/usql
-```
-
 ## Building
 
 When building `usql` with [Go][go-project], only drivers for PostgreSQL, MySQL,
@@ -144,13 +134,13 @@ drivers, respectively:
 
 ```sh
 # install all drivers
-$ go install -tags all github.com/xo/usql
+$ go install -tags all github.com/xo/usql@master
 
-# install with most drivers
-$ go install -tags most github.com/xo/usql
+# install with most drivers (excludes unsupported drivers)
+$ go install -tags most github.com/xo/usql@master
 
 # install with base drivers and additional support for Oracle Database and ODBC
-$ go install -tags 'godror odbc' github.com/xo/usql
+$ go install -tags 'godror odbc' github.com/xo/usql@master
 ```
 
 For every build tag `<driver>`, there is also a `no_<driver>` build tag
@@ -158,7 +148,7 @@ disabling the driver:
 
 ```sh
 # install all drivers excluding avatica and couchbase
-$ go install -tags 'all no_avatica no_couchbase' github.com/xo/usql
+$ go install -tags 'all no_avatica no_couchbase' github.com/xo/usql@master
 ```
 
 ### Release Builds
