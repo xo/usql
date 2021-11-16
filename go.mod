@@ -11,7 +11,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v0.105.5
-	github.com/VoltDB/voltdb-client-go v1.0.4
+	github.com/VoltDB/voltdb-client-go v1.0.5
 	github.com/alecthomas/chroma v0.9.4
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
@@ -21,7 +21,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.14.2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.41.19 // indirect
+	github.com/aws/aws-sdk-go v1.42.6 // indirect
 	github.com/beltran/gohive v1.5.1 // indirect
 	github.com/beltran/gosasl v0.0.0-20210629234946-b41ac5bb612a // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -57,7 +57,7 @@ require (
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
 	github.com/jmrobles/h2go v0.5.0
-	github.com/lib/pq v1.10.3
+	github.com/lib/pq v1.10.4
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-runewidth v0.0.13
@@ -96,19 +96,19 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.0.0-20211115234514-b4de73f9ece8 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20211105192438-b53810dc28af // indirect
+	golang.org/x/net v0.0.0-20211116212703-e8b54dec6f95 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20211105183446-c75c47738b0c // indirect
+	golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211104193956-4c6863e31247 // indirect
+	google.golang.org/genproto v0.0.0-20211116182654-e63d96a377c4 // indirect
 	gorm.io/driver/bigquery v1.0.16
-	modernc.org/ccgo/v3 v3.12.54 // indirect
-	modernc.org/libc v1.11.53 // indirect
+	modernc.org/ccgo/v3 v3.12.67 // indirect
+	modernc.org/libc v1.11.75 // indirect
 	modernc.org/ql v1.4.0
-	modernc.org/sqlite v1.13.3
+	modernc.org/sqlite v1.14.1
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
@@ -149,7 +149,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/envoyproxy/go-control-plane v0.10.0 // indirect
+	github.com/envoyproxy/go-control-plane v0.10.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
 	github.com/exasol/error-reporting-go v0.1.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible // indirect
@@ -219,7 +219,7 @@ require (
 	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/b v1.0.2 // indirect
-	modernc.org/cc/v3 v3.35.16 // indirect
+	modernc.org/cc/v3 v3.35.18 // indirect
 	modernc.org/db v1.0.3 // indirect
 	modernc.org/file v1.0.3 // indirect
 	modernc.org/fileutil v1.0.0 // indirect
