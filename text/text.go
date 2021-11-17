@@ -81,7 +81,7 @@ var (
 	TimingSet            = `Timing is %s.`
 	TimingDesc           = `Time: %0.3f ms`
 	InvalidValue         = `invalid -%s value %q: %s`
-	NotSupportedByDriver = `%s not supported by driver`
+	NotSupportedByDriver = `%s not supported by %s driver`
 	RelationNotFound     = `Did not find any relation named "%s".`
 	InvalidOption        = `invalid option %q`
 	NotificationReceived = `Asynchronous notification %q %sreceived from server process with PID %d.`

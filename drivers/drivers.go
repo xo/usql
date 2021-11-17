@@ -449,7 +449,7 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 func NewMetadataReader(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
 	d, ok := drivers[u.Driver]
 	if !ok || d.NewMetadataReader == nil {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
 	}
 	return d.NewMetadataReader(db, opts...), nil
 }
@@ -458,13 +458,13 @@ func NewMetadataReader(ctx context.Context, u *dburl.URL, db DB, w io.Writer, op
 func NewMetadataWriter(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
 	d, ok := drivers[u.Driver]
 	if !ok {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
 	}
 	if d.NewMetadataWriter != nil {
 		return d.NewMetadataWriter(db, w, opts...), nil
 	}
 	if d.NewMetadataReader == nil {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
 	}
 	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db, opts...))
 	return newMetadataWriter(db, w), nil
@@ -503,7 +503,7 @@ func Copy(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer, ro
 		return 0, WrapErr(u.Driver, text.ErrDriverNotAvailable)
 	}
 	if d.Copy == nil {
-		return 0, fmt.Errorf(text.NotSupportedByDriver, "copy")
+		return 0, fmt.Errorf(text.NotSupportedByDriver, "copy", u.Driver)
 	}
 	db, err := Open(u, stdout, stderr)
 	if err != nil {

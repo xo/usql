@@ -13,6 +13,7 @@ import (
 	"github.com/gohxs/readline"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
+	"github.com/xo/usql/text"
 )
 
 const (
@@ -856,7 +857,7 @@ func qualifiedIdentifier(filter metadata.Filter, catalog, schema, name string) s
 func (c completer) getNames(query func() (iterator, error), mapper func(interface{}) string) []string {
 	res, err := query()
 	if err != nil {
-		if err != metadata.ErrNotSupported {
+		if err != text.ErrNotSupported {
 			c.logger.Println("Error getting selectables", err)
 		}
 		return nil

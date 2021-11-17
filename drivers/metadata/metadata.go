@@ -1,12 +1,8 @@
 package metadata
 
 import (
-	"errors"
-)
-
-var (
-	ErrNotSupported  = errors.New("error: not supported")
-	ErrScanArgsCount = errors.New("error: wrong number of arguments for Scan()")
+	"github.com/xo/dburl"
+	"github.com/xo/usql/text"
 )
 
 // ExtendedReader of all database metadata in a structured format.
@@ -140,19 +136,19 @@ type Filter struct {
 // Writer of database metadata in a human readable format.
 type Writer interface {
 	// DescribeFunctions \df, \dfa, \dfn, \dft, \dfw, etc.
-	DescribeFunctions(string, string, bool, bool) error
+	DescribeFunctions(*dburl.URL, string, string, bool, bool) error
 	// DescribeTableDetails \d foo
-	DescribeTableDetails(string, bool, bool) error
+	DescribeTableDetails(*dburl.URL, string, bool, bool) error
 	// ListAllDbs \l
-	ListAllDbs(string, bool) error
+	ListAllDbs(*dburl.URL, string, bool) error
 	// ListTables \dt, \dv, \dm, etc.
-	ListTables(string, string, bool, bool) error
+	ListTables(*dburl.URL, string, string, bool, bool) error
 	// ListSchemas \dn
-	ListSchemas(string, bool, bool) error
+	ListSchemas(*dburl.URL, string, bool, bool) error
 	// ListIndexes \di
-	ListIndexes(string, bool, bool) error
+	ListIndexes(*dburl.URL, string, bool, bool) error
 	// ShowStats \ss
-	ShowStats(string, string, bool, int) error
+	ShowStats(*dburl.URL, string, string, bool, int) error
 }
 
 type CatalogSet struct {
@@ -898,7 +894,7 @@ func (r resultSet) Scan(dest ...interface{}) error {
 		v = r.scanValues(r.results[r.current-1])
 	}
 	if len(v) != len(dest) {
-		return ErrScanArgsCount
+		return text.ErrWrongNumberOfArguments
 	}
 	for i, d := range dest {
 		p := d.(*interface{})

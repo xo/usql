@@ -63,4 +63,8 @@ var (
 	ErrUnableToNormalizeURL = errors.New("unable to normalize URL")
 	// ErrInvalidIsolationLevel is the invalid isolation level error.
 	ErrInvalidIsolationLevel = errors.New("invalid isolation level")
+	// ErrNotSupported is the not supported error.
+	ErrNotSupported = errors.New("not supported")
+	// ErrWrongNumberOfArguments is the wrong number of arguments error.
+	ErrWrongNumberOfArguments = errors.New("wrong number of arguments")
 )

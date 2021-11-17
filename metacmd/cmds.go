@@ -752,19 +752,19 @@ func init() {
 				switch name {
 				case "d":
 					if pattern != "" {
-						return m.DescribeTableDetails(pattern, verbose, showSystem)
+						return m.DescribeTableDetails(p.Handler.URL(), pattern, verbose, showSystem)
 					}
-					return m.ListTables("tvmsE", pattern, verbose, showSystem)
+					return m.ListTables(p.Handler.URL(), "tvmsE", pattern, verbose, showSystem)
 				case "df", "da":
-					return m.DescribeFunctions(name, pattern, verbose, showSystem)
+					return m.DescribeFunctions(p.Handler.URL(), name, pattern, verbose, showSystem)
 				case "dt", "dtv", "dtm", "dts", "dv", "dm", "ds":
-					return m.ListTables(name, pattern, verbose, showSystem)
+					return m.ListTables(p.Handler.URL(), name, pattern, verbose, showSystem)
 				case "dn":
-					return m.ListSchemas(pattern, verbose, showSystem)
+					return m.ListSchemas(p.Handler.URL(), pattern, verbose, showSystem)
 				case "di":
-					return m.ListIndexes(pattern, verbose, showSystem)
+					return m.ListIndexes(p.Handler.URL(), pattern, verbose, showSystem)
 				case "l":
-					return m.ListAllDbs(pattern, verbose)
+					return m.ListAllDbs(p.Handler.URL(), pattern, verbose)
 				}
 				return nil
 			},
@@ -804,7 +804,7 @@ func init() {
 						return err
 					}
 				}
-				return m.ShowStats(name, pattern, verbose, k)
+				return m.ShowStats(p.Handler.URL(), name, pattern, verbose, k)
 			},
 		},
 		Copy: {

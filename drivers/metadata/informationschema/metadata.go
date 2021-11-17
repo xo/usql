@@ -10,6 +10,7 @@ import (
 
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
+	"github.com/xo/usql/text"
 )
 
 // InformationSchema metadata reader
@@ -331,7 +332,7 @@ FROM information_schema.schemata
 // Functions from selected catalog (or all, if empty), matching schemas, names and types
 func (s InformationSchema) Functions(f metadata.Filter) (*metadata.FunctionSet, error) {
 	if !s.hasFunctions {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	columns := []string{
@@ -393,7 +394,7 @@ func (s InformationSchema) Functions(f metadata.Filter) (*metadata.FunctionSet, 
 // FunctionColumns (arguments) from selected catalog (or all, if empty), matching schemas and functions
 func (s InformationSchema) FunctionColumns(f metadata.Filter) (*metadata.FunctionColumnSet, error) {
 	if !s.hasFunctions {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	columns := []string{
@@ -457,7 +458,7 @@ func (s InformationSchema) FunctionColumns(f metadata.Filter) (*metadata.Functio
 // Indexes from selected catalog (or all, if empty), matching schemas and names
 func (s InformationSchema) Indexes(f metadata.Filter) (*metadata.IndexSet, error) {
 	if !s.hasIndexes {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	qstr := `SELECT
@@ -512,7 +513,7 @@ GROUP BY table_catalog, index_schema, table_name, index_name,
 // IndexColumns from selected catalog (or all, if empty), matching schemas and indexes
 func (s InformationSchema) IndexColumns(f metadata.Filter) (*metadata.IndexColumnSet, error) {
 	if !s.hasIndexes {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	qstr := `SELECT
@@ -565,7 +566,7 @@ JOIN information_schema.columns c ON
 // Constraintes from selected catalog (or all, if empty), matching schemas and names
 func (s InformationSchema) Constraints(f metadata.Filter) (*metadata.ConstraintSet, error) {
 	if !s.hasConstraints {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	columns := []string{
@@ -654,7 +655,7 @@ LEFT JOIN information_schema.check_constraints c ON t.constraint_catalog = c.con
 // ConstraintColumns from selected catalog (or all, if empty), matching schemas and constraints
 func (s InformationSchema) ConstraintColumns(f metadata.Filter) (*metadata.ConstraintColumnSet, error) {
 	if !s.hasConstraints {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
 
 	vals := []interface{}{}
@@ -761,9 +762,8 @@ LEFT JOIN information_schema.key_column_usage f ON r.unique_constraint_catalog =
 // Sequences from selected catalog (or all, if empty), matching schemas and names
 func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, error) {
 	if !s.hasSequences {
-		return nil, metadata.ErrNotSupported
+		return nil, text.ErrNotSupported
 	}
-
 	columns := []string{
 		"sequence_catalog",
 		"sequence_schema",

@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/xo/dburl"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
@@ -37,8 +38,6 @@ type DefaultWriter struct {
 	// custom functions for easier overloading
 	listAllDbs func(string, bool) error
 }
-
-var _ Writer = &DefaultWriter{}
 
 func NewDefaultWriter(r Reader, opts ...WriterOption) func(db DB, w io.Writer) Writer {
 	defaultWriter := &DefaultWriter{
@@ -91,10 +90,10 @@ func WithListAllDbs(f func(string, bool) error) WriterOption {
 }
 
 // DescribeFunctions matching pattern
-func (w DefaultWriter) DescribeFunctions(funcTypes, pattern string, verbose, showSystem bool) error {
+func (w DefaultWriter) DescribeFunctions(u *dburl.URL, funcTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(FunctionReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\df`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\df`, u.Driver)
 	}
 	types := []string{}
 	for k, v := range w.funcTypes {
@@ -176,7 +175,7 @@ func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
 }
 
 // DescribeTableDetails matching pattern
-func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem bool) error {
+func (w DefaultWriter) DescribeTableDetails(u *dburl.URL, pattern string, verbose, showSystem bool) error {
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
 		return fmt.Errorf("failed to parse search pattern: %w", err)
@@ -221,7 +220,7 @@ func (w DefaultWriter) DescribeTableDetails(pattern string, verbose, showSystem 
 	_, isICR := w.r.(IndexColumnReader)
 	if isIR && isICR {
 		res, err := ir.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
-		if err != nil && err != ErrNotSupported {
+		if err != nil && err != text.ErrNotSupported {
 			return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
 		}
 		if res != nil {
@@ -366,13 +365,14 @@ func (w DefaultWriter) tableDetailsSummary(sp, tp string) func(io.Writer, int) (
 		return 0, err
 	}
 }
+
 func (w DefaultWriter) describeTableTriggers(out io.Writer, sp, tp string) error {
 	r, ok := w.r.(TriggerReader)
 	if !ok {
 		return nil
 	}
 	res, err := r.Triggers(Filter{Schema: sp, Parent: tp})
-	if err != nil && err != ErrNotSupported {
+	if err != nil && err != text.ErrNotSupported {
 		return fmt.Errorf("failed to list triggers for table %s: %w", tp, err)
 	}
 	if res == nil {
@@ -397,7 +397,7 @@ func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error 
 		return nil
 	}
 	res, err := r.Indexes(Filter{Schema: sp, Parent: tp})
-	if err != nil && err != ErrNotSupported {
+	if err != nil && err != text.ErrNotSupported {
 		return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
 	}
 	if res == nil {
@@ -447,7 +447,7 @@ func (w DefaultWriter) describeTableConstraints(out io.Writer, filter Filter, po
 		return nil
 	}
 	res, err := r.Constraints(filter)
-	if err != nil && err != ErrNotSupported {
+	if err != nil && err != text.ErrNotSupported {
 		return fmt.Errorf("failed to list constraints: %w", err)
 	}
 	if res == nil {
@@ -488,7 +488,7 @@ func (w DefaultWriter) getConstraintColumns(c, s, t, n string) (string, string, 
 func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {
 	r := w.r.(SequenceReader)
 	res, err := r.Sequences(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
-	if err != nil && err != ErrNotSupported {
+	if err != nil && err != text.ErrNotSupported {
 		return 0, err
 	}
 	if res == nil {
@@ -545,13 +545,13 @@ func (w DefaultWriter) describeIndex(i *Index) error {
 }
 
 // ListAllDbs matching pattern
-func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
+func (w DefaultWriter) ListAllDbs(u *dburl.URL, pattern string, verbose bool) error {
 	if w.listAllDbs != nil {
 		return w.listAllDbs(pattern, verbose)
 	}
 	r, ok := w.r.(CatalogReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\l`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\l`, u.Driver)
 	}
 	res, err := r.Catalogs(Filter{Name: pattern})
 	if err != nil {
@@ -565,10 +565,10 @@ func (w DefaultWriter) ListAllDbs(pattern string, verbose bool) error {
 }
 
 // ListTables matching pattern
-func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSystem bool) error {
+func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(TableReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\dt`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\dt`, u.Driver)
 	}
 	types := []string{}
 	for k, v := range w.tableTypes {
@@ -617,10 +617,10 @@ func (w DefaultWriter) ListTables(tableTypes, pattern string, verbose, showSyste
 }
 
 // ListSchemas matching pattern
-func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) error {
+func (w DefaultWriter) ListSchemas(u *dburl.URL, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(SchemaReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\d`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\d`, u.Driver)
 	}
 	res, err := r.Schemas(Filter{Name: pattern, WithSystem: showSystem})
 	if err != nil {
@@ -641,10 +641,10 @@ func (w DefaultWriter) ListSchemas(pattern string, verbose, showSystem bool) err
 }
 
 // ListIndexes matching pattern
-func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) error {
+func (w DefaultWriter) ListIndexes(u *dburl.URL, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(IndexReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\di`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\di`, u.Driver)
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
@@ -689,10 +689,10 @@ func (w DefaultWriter) ListIndexes(pattern string, verbose, showSystem bool) err
 }
 
 // ShowStats of columns for tables matching pattern
-func (w DefaultWriter) ShowStats(statTypes, pattern string, verbose bool, k int) error {
+func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbose bool, k int) error {
 	r, ok := w.r.(ColumnStatReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\ss`)
+		return fmt.Errorf(text.NotSupportedByDriver, `\ss`, u.Driver)
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
