@@ -560,7 +560,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
-			h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOptions(), completer.WithConnStrings(connStrings)))
+			h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOpts(), completer.WithConnStrings(connStrings)))
 			return h.Version(ctx)
 		}
 	}
@@ -945,16 +945,18 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 		fmt.Fprintln(w, typ)
 	case err != nil:
 		return err
+	case params["format"] == "aligned":
+		fmt.Fprintln(w)
 	}
 	if h.timing {
 		d := time.Since(start)
 		format := text.TimingDesc
-		a := []interface{}{float64(d.Microseconds()) / 1000}
+		v := []interface{}{float64(d.Microseconds()) / 1000}
 		if d > 1*time.Second {
 			format += " (%v)"
-			a = append(a, d.Round(1*time.Millisecond))
+			v = append(v, d.Round(1*time.Millisecond))
 		}
-		h.Print(format, a)
+		h.Print(format, v...)
 	}
 	if pipe != nil {
 		pipe.Close()
@@ -1101,8 +1103,7 @@ func (h *Handler) Commit() error {
 	}
 	tx := h.tx
 	h.tx = nil
-	err := tx.Commit()
-	if err != nil {
+	if err := tx.Commit(); err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
 	return nil
@@ -1118,8 +1119,7 @@ func (h *Handler) Rollback() error {
 	}
 	tx := h.tx
 	h.tx = nil
-	err := tx.Rollback()
-	if err != nil {
+	if err := tx.Rollback(); err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
 	return nil
@@ -1185,24 +1185,7 @@ func (h *Handler) MetadataWriter(ctx context.Context) (metadata.Writer, error) {
 	if h.db == nil {
 		return nil, text.ErrNotConnected
 	}
-	opts := readerOptions()
-	return drivers.NewMetadataWriter(ctx, h.u, h.db, h.l.Stdout(), opts...)
-}
-
-func readerOptions() []metadata.ReaderOption {
-	var opts []metadata.ReaderOption
-	envs := env.All()
-	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
-		if envs["ECHO_HIDDEN"] == "noexec" {
-			opts = append(opts, metadata.WithDryRun(true))
-		}
-		opts = append(
-			opts,
-			metadata.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)),
-			metadata.WithTimeout(30*time.Second),
-		)
-	}
-	return opts
+	return drivers.NewMetadataWriter(ctx, h.u, h.db, h.l.Stdout(), readerOpts()...)
 }
 
 // GetOutput gets the output writer.
@@ -1219,6 +1202,22 @@ func (h *Handler) SetOutput(o io.WriteCloser) {
 		h.out.Close()
 	}
 	h.out = o
+}
+
+func readerOpts() []metadata.ReaderOption {
+	var opts []metadata.ReaderOption
+	envs := env.All()
+	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
+		if envs["ECHO_HIDDEN"] == "noexec" {
+			opts = append(opts, metadata.WithDryRun(true))
+		}
+		opts = append(
+			opts,
+			metadata.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)),
+			metadata.WithTimeout(30*time.Second),
+		)
+	}
+	return opts
 }
 
 // peekEnding peeks to see if the next successive bytes in r is \n or \r\n,
