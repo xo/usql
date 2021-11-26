@@ -11,7 +11,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v0.105.5
-	github.com/VoltDB/voltdb-client-go v1.0.8
+	github.com/VoltDB/voltdb-client-go v1.0.11
 	github.com/alecthomas/chroma v0.9.4
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
@@ -21,7 +21,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.0.0
 	github.com/apache/thrift v0.14.2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.42.9 // indirect
+	github.com/aws/aws-sdk-go v1.42.13 // indirect
 	github.com/beltran/gohive v1.5.1 // indirect
 	github.com/beltran/gosasl v0.0.0-20210629234946-b41ac5bb612a // indirect
 	github.com/bippio/go-impala v2.1.0+incompatible
@@ -41,7 +41,7 @@ require (
 	github.com/genjidb/genji v0.13.0
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
-	github.com/go-openapi/strfmt v0.21.0 // indirect
+	github.com/go-openapi/strfmt v0.21.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-zookeeper/zk v1.0.2 // indirect
@@ -53,8 +53,8 @@ require (
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/jackc/pgconn v1.10.0
-	github.com/jackc/pgx/v4 v4.13.0
+	github.com/jackc/pgconn v1.10.1
+	github.com/jackc/pgx/v4 v4.14.0
 	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
 	github.com/jmrobles/h2go v0.5.0
 	github.com/lib/pq v1.10.4
@@ -80,7 +80,7 @@ require (
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.300.0
 	github.com/twmb/murmur3 v1.1.6 // indirect
-	github.com/uber-go/tally v3.4.2+incompatible // indirect
+	github.com/uber-go/tally v3.4.3+incompatible // indirect
 	github.com/uber/athenadriver v1.1.13
 	github.com/urfave/cli v1.22.5 // indirect
 	github.com/vertica/vertica-sql-go v1.2.0
@@ -92,21 +92,21 @@ require (
 	github.com/zaf/temp v0.0.0-20170209143821-94e385923345
 	github.com/ziutek/mymysql v1.5.4
 	go.etcd.io/bbolt v1.3.6 // indirect
-	go.mongodb.org/mongo-driver v1.7.4 // indirect
+	go.mongodb.org/mongo-driver v1.8.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4 // indirect
+	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
+	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 // indirect
 	gorm.io/driver/bigquery v1.0.16
-	modernc.org/ccgo/v3 v3.12.67 // indirect
-	modernc.org/libc v1.11.75 // indirect
+	modernc.org/ccgo/v3 v3.12.73 // indirect
+	modernc.org/libc v1.11.83 // indirect
 	modernc.org/ql v1.4.0
 	modernc.org/sqlite v1.14.1
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
@@ -168,9 +168,9 @@ require (
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.1.1 // indirect
+	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
-	github.com/jackc/pgtype v1.8.1 // indirect
+	github.com/jackc/pgtype v1.9.0 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
@@ -181,7 +181,7 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/mattn/go-colorable v0.1.11 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
 	github.com/mithrandie/go-file/v2 v2.0.2 // indirect
 	github.com/mithrandie/readline-csvq v1.1.1 // indirect
