@@ -1,0 +1,3 @@
+NAME=h2
+IMAGE=buildo/h2database
+PUBLISH="8082:8082 9092:9092"
