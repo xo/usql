@@ -51,7 +51,7 @@ TAGS=(
 )
 case $PLATFORM in
   darwin|linux)
-    TAGS+=(sqlite_icu no_adodb)
+    TAGS+=(no_adodb)
   ;;
   windows)
     EXT=zip
@@ -78,9 +78,6 @@ if [ "$STATIC" = "1" ]; then
       )
       EXTLDFLAGS=(
         -static
-        -licuuc
-        -licui18n
-        -licudata
         -lm
         -ldl
       )

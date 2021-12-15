@@ -34,7 +34,6 @@ EXTRA=()
 case $PLATFORM in
   darwin|linux)
     TAGS+=(no_adodb)
-    SQLITE_TAGS+=(sqlite_icu)
   ;;
 esac
 
