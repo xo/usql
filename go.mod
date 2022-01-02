@@ -226,14 +226,14 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/b v1.0.2 // indirect
-	modernc.org/cc/v3 v3.35.20 // indirect
-	modernc.org/ccgo/v3 v3.13.1 // indirect
+	modernc.org/cc/v3 v3.35.22 // indirect
+	modernc.org/ccgo/v3 v3.14.0 // indirect
 	modernc.org/db v1.0.4 // indirect
 	modernc.org/file v1.0.3 // indirect
 	modernc.org/fileutil v1.0.0 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/internal v1.0.3 // indirect
-	modernc.org/libc v1.12.0 // indirect
+	modernc.org/libc v1.13.2 // indirect
 	modernc.org/lldb v1.0.3 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.0.5 // indirect
