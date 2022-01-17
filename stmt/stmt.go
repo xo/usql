@@ -22,8 +22,8 @@ type Var struct {
 	Name string
 	// Len is the length of the replaced variable.
 	Len int
-	// Exist indicates whether the variable has been defined.
-	Exist bool
+	// Defined indicates whether the variable has been defined.
+	Defined bool
 }
 
 // String satisfies the fmt.Stringer interface.
@@ -101,7 +101,7 @@ func (b *Stmt) RawString() string {
 	var i int
 	// deinterpolate vars
 	for _, v := range b.Vars {
-		if !v.Exist {
+		if !v.Defined {
 			continue
 		}
 		if len(s) > i {
@@ -246,7 +246,7 @@ parse:
 				}
 				b.Vars = append(b.Vars, v)
 				if ok, z, _ := unquote(q+v.Name+q, true); ok {
-					v.Exist = true
+					v.Defined = true
 					b.r, b.rlen = substituteVar(b.r, v, z)
 					i--
 				}

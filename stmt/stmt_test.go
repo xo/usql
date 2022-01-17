@@ -256,8 +256,7 @@ func TestNextResetState(t *testing.T) {
 
 func TestEmptyVariablesRawString(t *testing.T) {
 	stmt := new(Stmt)
-	stmt.Buf = []rune("select ")
-	stmt.Len = len(stmt.Buf)
+	stmt.AppendString("select ", "\n")
 	stmt.Prefix = "SELECT"
 	v := &Var{
 		I:    7,
@@ -267,13 +266,13 @@ func TestEmptyVariablesRawString(t *testing.T) {
 	}
 	stmt.Vars = append(stmt.Vars, v)
 
-	if expected, got := "select ", stmt.RawString(); expected != got {
-		t.Fatalf("Exist=false, expected: %s, got: %s", expected, got)
+	if exp, got := "select ", stmt.RawString(); exp != got {
+		t.Fatalf("Defined=false, expected: %s, got: %s", exp, got)
 	}
 
-	v.Exist = true
-	if expected, got := "select :a", stmt.RawString(); expected != got {
-		t.Fatalf("Exist=true, expected: %s, got: %s", expected, got)
+	v.Defined = true
+	if exp, got := "select :a", stmt.RawString(); exp != got {
+		t.Fatalf("Defined=true, expected: %s, got: %s", exp, got)
 	}
 }
 
