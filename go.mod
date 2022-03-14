@@ -39,14 +39,14 @@ require (
 	github.com/nakagami/firebirdsql v0.9.4
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/prestodb/presto-go-client v0.0.0-20211201125635-ad28cec17d6c
-	github.com/sijms/go-ora/v2 v2.4.10
+	github.com/sijms/go-ora/v2 v2.4.11
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.6.6
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.300.0
 	github.com/uber/athenadriver v1.1.13
 	github.com/vertica/vertica-sql-go v1.2.1
-	github.com/xo/dburl v0.9.0
+	github.com/xo/dburl v0.9.1
 	github.com/xo/tblfmt v0.8.0
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/yookoala/realpath v1.0.0
@@ -54,7 +54,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.0.18
 	modernc.org/ql v1.4.1
-	modernc.org/sqlite v1.14.8
+	modernc.org/sqlite v1.15.0
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
@@ -78,7 +78,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.43.16 // indirect
+	github.com/aws/aws-sdk-go v1.43.17 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
@@ -207,7 +207,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70 // indirect
+	golang.org/x/crypto v0.0.0-20220313003712-b769efc7c000 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a // indirect
@@ -230,13 +230,13 @@ require (
 	lukechampine.com/uint128 v1.2.0 // indirect
 	modernc.org/b v1.0.2 // indirect
 	modernc.org/cc/v3 v3.35.24 // indirect
-	modernc.org/ccgo/v3 v3.15.16 // indirect
+	modernc.org/ccgo/v3 v3.15.17 // indirect
 	modernc.org/db v1.0.4 // indirect
 	modernc.org/file v1.0.3 // indirect
 	modernc.org/fileutil v1.0.0 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/internal v1.0.4 // indirect
-	modernc.org/libc v1.14.9 // indirect
+	modernc.org/libc v1.14.11 // indirect
 	modernc.org/lldb v1.0.4 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.0.6 // indirect
