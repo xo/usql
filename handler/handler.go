@@ -363,7 +363,7 @@ func (h *Handler) Run() error {
 				// force a transaction for batched queries for certain drivers
 				var forceBatch bool
 				if h.u != nil {
-					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last))
+					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last, true, true, true))
 					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
 				}
 				// execute
@@ -985,7 +985,7 @@ func (h *Handler) execRows(ctx context.Context, w io.Writer, rows *sql.Rows) err
 			}
 			// execute
 			for _, sqlstr := range row {
-				if err = h.Execute(ctx, w, res, stmt.FindPrefix(sqlstr), sqlstr, false); err != nil {
+				if err = h.Execute(ctx, w, res, stmt.FindPrefix(sqlstr, true, true, true), sqlstr, false); err != nil {
 					return err
 				}
 			}

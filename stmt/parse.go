@@ -222,7 +222,7 @@ params:
 }
 
 // findPrefix finds the prefix in r up to n words.
-func findPrefix(r []rune, n int) string {
+func findPrefix(r []rune, n int, allowCComments, allowHashComments, allowMultilineComments bool) string {
 	var s []rune
 	var words int
 loop:
@@ -240,7 +240,7 @@ loop:
 		case c == ';':
 			break loop
 		// single line comments '--' and '//'
-		case c == '-' && next == '-', c == '/' && next == '/':
+		case c == '-' && next == '-', c == '/' && next == '/' && allowCComments, c == '#' && allowHashComments:
 			if i != 0 {
 				s, words = appendUpperRunes(s, r[:i], ' '), words+1
 			}
@@ -250,7 +250,7 @@ loop:
 			}
 			r, end, i = r[i+1:], end-i-1, -1
 		// multiline comments '/*' '*/'
-		case c == '/' && next == '*':
+		case c == '/' && next == '*' && allowMultilineComments:
 			if i != 0 {
 				s, words = appendUpperRunes(s, r[:i]), words+1
 			}
@@ -289,8 +289,8 @@ loop:
 }
 
 // FindPrefix finds the first 6 prefix words in s.
-func FindPrefix(s string) string {
-	return findPrefix([]rune(s), prefixCount)
+func FindPrefix(s string, allowCComments, allowHashComments, allowMultilineComments bool) string {
+	return findPrefix([]rune(s), prefixCount, allowCComments, allowHashComments, allowMultilineComments)
 }
 
 // substitute substitutes n runes in r starting at i with the runes in s.

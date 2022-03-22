@@ -304,9 +304,10 @@ func TestFindPrefix(t *testing.T) {
 		{"  TEST /*\n\t\b*/\b\t;aoeu", 10, "TEST"},
 		{"begin transaction\n\tinsert into x;\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
 		{"--\nbegin /* */transaction/* */\n/* */\tinsert into x;--/* */\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
+		{"#\nbegin /* */transaction/* */\n/* */\t#\ninsert into x;#\n--/* */\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
 	}
 	for i, test := range tests {
-		if p := findPrefix([]rune(test.s), test.w); p != test.exp {
+		if p := findPrefix([]rune(test.s), test.w, true, true, true); p != test.exp {
 			t.Errorf("test %d %q expected %q, got: %q", i, test.s, test.exp, p)
 		}
 	}

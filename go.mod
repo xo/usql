@@ -54,14 +54,14 @@ require (
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.0.18
 	modernc.org/ql v1.4.1
-	modernc.org/sqlite v1.15.1
+	modernc.org/sqlite v1.15.3
 	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
-	cloud.google.com/go/bigquery v1.29.0 // indirect
+	cloud.google.com/go/bigquery v1.30.0 // indirect
 	cloud.google.com/go/compute v1.5.0 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/spanner v1.30.0 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.43.18 // indirect
+	github.com/aws/aws-sdk-go v1.43.22 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
+	github.com/googleapis/gax-go/v2 v2.2.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
@@ -170,7 +170,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mithrandie/go-file/v2 v2.0.2 // indirect
-	github.com/mithrandie/go-text v1.5.2 // indirect
+	github.com/mithrandie/go-text v1.5.3 // indirect
 	github.com/mithrandie/readline-csvq v1.1.1 // indirect
 	github.com/mithrandie/ternary v1.1.1 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
@@ -207,18 +207,18 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220314234724-5d542ad81a58 // indirect
-	golang.org/x/mod v0.5.1 // indirect
+	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a // indirect
-	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5 // indirect
+	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.9 // indirect
+	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/api v0.72.0 // indirect
+	google.golang.org/api v0.73.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220314164441-57ef72a4c106 // indirect
+	google.golang.org/genproto v0.0.0-20220322021311-435b647f9ef2 // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -236,10 +236,10 @@ require (
 	modernc.org/fileutil v1.0.0 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/internal v1.0.4 // indirect
-	modernc.org/libc v1.14.11 // indirect
+	modernc.org/libc v1.14.12 // indirect
 	modernc.org/lldb v1.0.4 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.0.6 // indirect
+	modernc.org/memory v1.0.7 // indirect
 	modernc.org/opt v0.1.1 // indirect
 	modernc.org/sortutil v1.1.0 // indirect
 	modernc.org/strutil v1.1.1 // indirect

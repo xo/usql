@@ -315,7 +315,7 @@ parse:
 		b.Append(b.r[st:i], lineend)
 	}
 	// set prefix
-	b.Prefix = findPrefix(b.Buf, prefixCount)
+	b.Prefix = findPrefix(b.Buf, prefixCount, b.allowCComments, b.allowHashComments, b.allowMultilineComments)
 	// reset r
 	b.r = b.r[i:]
 	b.rlen = len(b.r)
