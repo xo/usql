@@ -3,19 +3,40 @@
 DEST=${1:-/opt/oracle}
 
 # available versions:
+# 21.6.0.0.0
 # 21.1.0.0.0
-# 19.9.0.0.0dbru
-# 18.5.0.0.0dbru
+# 19.9.0.0.0
+# 18.5.0.0.0
 # 12.2.0.1.0
 
-# https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip
-VERSION=21.1.0.0.0
+VERSION=
+
+OPTIND=1
+while getopts "v:" opt; do
+case "$opt" in
+  v) VERSION=$OPTARG ;;
+esac
+done
+
+if [ -z "$VERSION" ]; then
+  VERSION=$(
+    wget --quiet -O- https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html| \
+      sed -n -e 's/.*\/instantclient-basic-linux\.x64-\([^d]\+\)dbru\.zip.*/\1/p' | \
+      head -1
+    )
+fi
+
+if [[ ! "$VERSION" =~ ^[0-9\.]+$ ]]; then
+  echo "error: invalid VERSION"
+  exit 1
+fi
+
 BASE=https://download.oracle.com/otn_software/linux/instantclient/$(sed -e 's/[^0-9]//g' <<< "$VERSION")
 
 # build list of archives to retrieve
 declare -a ARCHIVES
 for i in basic sdk sqlplus; do
-  ARCHIVES+=("$BASE/instantclient-$i-linux.x64-$VERSION.zip")
+  ARCHIVES+=("$BASE/instantclient-$i-linux.x64-${VERSION}dbru.zip")
 done
 
 grab() {
