@@ -19,7 +19,7 @@ require (
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/denisenkom/go-mssqldb v0.12.0
 	github.com/docker/docker v20.10.14+incompatible
-	github.com/exasol/exasol-driver-go v0.3.2
+	github.com/exasol/exasol-driver-go v0.3.3
 	github.com/genjidb/genji v0.14.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gocql/gocql v1.0.0
@@ -78,7 +78,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.15.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.44.0 // indirect
+	github.com/aws/aws-sdk-go v1.44.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
@@ -139,7 +139,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/flatbuffers v2.0.5+incompatible // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -207,7 +207,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
@@ -216,9 +216,9 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
-	google.golang.org/api v0.75.0 // indirect
+	google.golang.org/api v0.76.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731 // indirect
+	google.golang.org/genproto v0.0.0-20220426171045-31bebdecfb46 // indirect
 	google.golang.org/grpc v1.46.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
