@@ -99,6 +99,8 @@ Additional support for [ODBC databases][Database Support] can be installed by
 passing `--with-odbc` option during install:
 
 ```sh
+# tap xo homebrew tap
+$ brew tap xo/xo
 # install usql with odbc support
 $ brew install --with-odbc usql
 ```
