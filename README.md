@@ -218,7 +218,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]            |
 | Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                |
 | Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]             |
-| AWS Athena           | `athena`        | `s3`, `aws`                                     | [github.com/uber/athenadriver/go][d-athena]                     |
+| AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                        | [github.com/uber/athenadriver/go][d-athena]                     |
 | Cassandra            | `cassandra`     | `ca`, `scy`, `scylla`, `datastax`, `cql`        | [github.com/MichaelS11/go-cql-driver][d-cassandra]              |
 | ClickHouse           | `clickhouse`    | `ch`                                            | [github.com/ClickHouse/clickhouse-go][d-clickhouse]             |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                     |

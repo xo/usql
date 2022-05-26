@@ -9,7 +9,7 @@ package internal
 func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"adodb":         "adodb",         // github.com/mattn/go-adodb
-		"athena":        "athena",        // github.com/uber/athenadriver/go
+		"athena":        "awsathena",     // github.com/uber/athenadriver/go
 		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
 		"cassandra":     "cql",           // github.com/MichaelS11/go-cql-driver
