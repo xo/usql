@@ -31,12 +31,14 @@ for other databases.
 
 [![Unit Tests][usql-ci-status]][usql-ci]
 [![Go Reference][goref-usql-status]][goref-usql]
+[![Releases][release-status]][Releases]
 [![Discord Discussion][discord-status]][discord]
 
 [usql-ci]: https://github.com/xo/usql/actions/workflows/test.yml (Test CI)
 [usql-ci-status]: https://github.com/xo/usql/actions/workflows/test.yml/badge.svg (Test CI)
 [goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
 [goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
+[release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag&sort=semver (Latest Release)
 [discord]: https://discord.gg/yJKEzc7prt (Discord Discussion)
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square (Discord Discussion)
 
