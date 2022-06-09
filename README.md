@@ -217,6 +217,7 @@ associated database, scheme / build tag, and scheme aliases:
 | SQLite3              | `sqlite3`       | `sq`, `file`, `sqlite`                          | [github.com/mattn/go-sqlite3][d-sqlite3]<sup>[†][f-cgo]</sup>   |
 |                      |                 |                                                 |                                                                 |
 | Alibaba MaxCompute   | `maxcompute`    | `mc`                                            | [sqlflow.org/gomaxcompute][d-maxcompute]                        |
+| Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                              | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots]      |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]            |
 | Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                |
 | Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]             |
@@ -286,6 +287,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-netezza]: https://github.com/IBM/nzgo
 [d-odbc]: https://github.com/alexbrainman/odbc
 [d-oracle]: https://github.com/sijms/go-ora
+[d-ots]: https://github.com/aliyun/aliyun-tablestore-go-sql-driver
 [d-pgx]: https://github.com/jackc/pgx
 [d-postgres]: https://github.com/lib/pq
 [d-presto]: https://github.com/prestodb/presto-go-client

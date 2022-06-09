@@ -32,6 +32,7 @@ func KnownBuildTags() map[string]string {
 		"netezza":       "nzgo",          // github.com/IBM/nzgo
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v2
+		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v4/stdlib
 		"postgres":      "postgres",      // github.com/lib/pq
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/presto
