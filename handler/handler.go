@@ -914,7 +914,7 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 			}
 			w = pipe
 		}
-	} else {
+	} else if opt.Exec != metacmd.ExecWatch {
 		params["pager_cmd"] = env.All()["PAGER"]
 	}
 	useColumnTypes := drivers.UseColumnTypes(h.u)
