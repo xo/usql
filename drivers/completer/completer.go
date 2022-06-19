@@ -435,6 +435,7 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(IGNORE_CASE, previousWords, "FROM|JOIN") {
 		return c.completeWithSelectables(text)
 	}
+	/* Backslash commands */
 	if TailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
 		return completeFromFiles(text)
 	}
@@ -444,6 +445,37 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\copy`, `*`, `*`) {
 		return nil
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\da*`) {
+		return c.completeWithFunctions(text, []string{"AGGREGATE"})
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\df*`) {
+		return c.completeWithFunctions(text, []string{})
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\di*`) {
+		return c.completeWithIndexes(text)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\dn*`) {
+		return c.completeWithSchemas(text)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\ds*`) {
+		return c.completeWithSequences(text)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\dt*`) {
+		return c.completeWithTables(text, []string{"TABLE", "BASE TABLE", "SYSTEM TABLE", "SYNONYM", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"})
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\dv*`) {
+		return c.completeWithTables(text, []string{"VIEW", "SYSTEM VIEW"})
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\dm*`) {
+		return c.completeWithTables(text, []string{"MATERIALIZED VIEW"})
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\d*`) {
+		return c.completeWithSelectables(text)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\l*`) ||
+		TailMatches(MATCH_CASE, previousWords, `\lo*`) {
+		return c.completeWithCatalogs(text)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`) {
 		return CompleteFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
@@ -700,6 +732,133 @@ func (c completer) completeWithSelectables(text []rune) [][]rune {
 	}
 	sort.Strings(names)
 	// TODO make sure CompleteFromList would properly handle quoted identifiers
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithTables(text []rune, types []string) [][]rune {
+	r, ok := c.reader.(metadata.TableReader)
+	if !ok {
+		return [][]rune{}
+	}
+
+	filter := parseIdentifier(string(text))
+	filter.Types = types
+	names := c.getNamespaces(filter)
+	tables := c.getNames(
+		func() (iterator, error) {
+			return r.Tables(filter)
+		},
+		func(res interface{}) string {
+			t := res.(*metadata.TableSet).Get()
+			return qualifiedIdentifier(filter, t.Catalog, t.Schema, t.Name)
+		},
+	)
+	names = append(names, tables...)
+	sort.Strings(names)
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithFunctions(text []rune, types []string) [][]rune {
+	r, ok := c.reader.(metadata.FunctionReader)
+	if !ok {
+		return [][]rune{}
+	}
+	filter := parseIdentifier(string(text))
+	filter.Types = types
+	names := c.getNamespaces(filter)
+	functions := c.getNames(
+		func() (iterator, error) {
+			return r.Functions(filter)
+		},
+		func(res interface{}) string {
+			f := res.(*metadata.FunctionSet).Get()
+			return qualifiedIdentifier(filter, f.Catalog, f.Schema, f.Name)
+		},
+	)
+	names = append(names, functions...)
+	sort.Strings(names)
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithIndexes(text []rune) [][]rune {
+	r, ok := c.reader.(metadata.IndexReader)
+	if !ok {
+		return [][]rune{}
+	}
+	filter := parseIdentifier(string(text))
+	names := c.getNamespaces(filter)
+	indexes := c.getNames(
+		func() (iterator, error) {
+			return r.Indexes(filter)
+		},
+		func(res interface{}) string {
+			f := res.(*metadata.IndexSet).Get()
+			return qualifiedIdentifier(filter, f.Catalog, f.Schema, f.Name)
+		},
+	)
+	names = append(names, indexes...)
+	sort.Strings(names)
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithSequences(text []rune) [][]rune {
+	r, ok := c.reader.(metadata.SequenceReader)
+	if !ok {
+		return [][]rune{}
+	}
+	filter := parseIdentifier(string(text))
+	names := c.getNamespaces(filter)
+	sequences := c.getNames(
+		func() (iterator, error) {
+			return r.Sequences(filter)
+		},
+		func(res interface{}) string {
+			s := res.(*metadata.SequenceSet).Get()
+			return qualifiedIdentifier(filter, s.Catalog, s.Schema, s.Name)
+		},
+	)
+	names = append(names, sequences...)
+	sort.Strings(names)
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithSchemas(text []rune) [][]rune {
+	r, ok := c.reader.(metadata.SchemaReader)
+	if !ok {
+		return [][]rune{}
+	}
+	filter := parseIdentifier(string(text))
+	names := c.getNames(
+		func() (iterator, error) {
+			if filter.Schema != "" {
+				// name should already have a wildcard appended
+				return r.Schemas(metadata.Filter{Catalog: filter.Schema, Name: filter.Name, WithSystem: true})
+			}
+			return r.Schemas(filter)
+		},
+		func(res interface{}) string {
+			s := res.(*metadata.SchemaSet).Get()
+			return qualifiedIdentifier(filter, "", s.Catalog, s.Schema)
+		},
+	)
+	return CompleteFromList(text, names...)
+}
+
+func (c completer) completeWithCatalogs(text []rune) [][]rune {
+	r, ok := c.reader.(metadata.CatalogReader)
+	if !ok {
+		return [][]rune{}
+	}
+	filter := parseIdentifier(string(text))
+	names := c.getNames(
+		func() (iterator, error) {
+			return r.Catalogs(filter)
+		},
+		func(res interface{}) string {
+			s := res.(*metadata.CatalogSet).Get()
+			return s.Catalog
+		},
+	)
 	return CompleteFromList(text, names...)
 }
 
