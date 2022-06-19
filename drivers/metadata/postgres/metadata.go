@@ -156,7 +156,7 @@ SELECT
   s.attname,
   s.avg_width,
   s.null_frac,
-  CASE WHEN n_distinct >= 0 THEN n_distinct ELSE (-n_distinct * $1)::bigint END,
+  CASE WHEN n_distinct >= 0 THEN n_distinct ELSE (-n_distinct * $1) END::bigint AS n_distinct,
   COALESCE((histogram_bounds::text::text[])[1], ''),
   COALESCE((histogram_bounds::text::text[])[array_length(histogram_bounds::text::text[], 1)], ''),
   most_common_vals::text::text[],
