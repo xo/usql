@@ -48,7 +48,7 @@ require (
 	github.com/uber/athenadriver v1.1.13
 	github.com/vertica/vertica-sql-go v1.2.2
 	github.com/xo/dburl v0.11.0
-	github.com/xo/tblfmt v0.9.0
+	github.com/xo/tblfmt v0.9.1
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/yookoala/realpath v1.0.0
 	github.com/zaf/temp v0.0.0-20220109203617-4b5a9e33e9d2
@@ -247,7 +247,7 @@ require (
 	modernc.org/fileutil v1.1.0 // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/internal v1.0.4 // indirect
-	modernc.org/libc v1.16.14 // indirect
+	modernc.org/libc v1.16.17 // indirect
 	modernc.org/lldb v1.0.4 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.1.1 // indirect
