@@ -31,8 +31,8 @@ if [ "$VER" = "" ]; then
   FORCE=1
 fi
 
-PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
-ARCH=amd64
+PLATFORM=$(go env GOOS)
+ARCH=$(go env GOARCH)
 NAME=$(basename $SRC)
 VER="${VER#v}"
 EXT=tar.bz2

@@ -15,7 +15,7 @@
 NAME=usql
 VER="$(date +%y.%m.%d)-dev"
 
-PLATFORM=$(uname|sed -e 's/_.*//'|tr '[:upper:]' '[:lower:]'|sed -e 's/^\(msys\|mingw\).*/windows/')
+PLATFORM=$(go env GOOS)
 
 CGO_ENABLED=1
 BUILDVERB=build
