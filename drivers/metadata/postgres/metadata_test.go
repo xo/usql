@@ -124,3 +124,94 @@ func TestTriggers(t *testing.T) {
 		t.Errorf("Wrong %s trigger names, expected:\n  %v\ngot:\n  %v", dbName, expected, names)
 	}
 }
+
+func TestColumns(t *testing.T) {
+	// Only testing postgres specific datatype formatting.
+	// The rest of the functionality is covered by informationschema/metadata_test.go:TestColumns
+	type test struct {
+		typeDef string
+		want    string
+	}
+	schema := "public"
+	table := "test_dtypes"
+	tests := []test{
+		{typeDef: "bit", want: "bit(1)"},
+		{typeDef: "bit(1)", want: "bit(1)"},
+		{typeDef: "bit varying", want: "bit varying"},
+		{typeDef: "bit varying(2)", want: "bit varying(2)"},
+		{typeDef: "character", want: "character(1)"},
+		{typeDef: "character(3)", want: "character(3)"},
+		{typeDef: "character varying", want: "character varying"},
+		{typeDef: "character varying(4)", want: "character varying(4)"},
+		{typeDef: "numeric", want: "numeric"},
+		{typeDef: "numeric(1,0)", want: "numeric(1,0)"},
+		{typeDef: "time", want: "time(6) without time zone"},
+		{typeDef: "time(4)", want: "time(4) without time zone"},
+		{typeDef: "time(6)", want: "time(6) without time zone"},
+		{typeDef: "time with time zone", want: "time(6) with time zone"},
+		{typeDef: "time(3) with time zone", want: "time(3) with time zone"},
+		{typeDef: "timestamp", want: "timestamp(6) without time zone"},
+		{typeDef: "timestamp(2)", want: "timestamp(2) without time zone"},
+		{typeDef: "timestamp with time zone", want: "timestamp(6) with time zone"},
+		{typeDef: "timestamp(1) with time zone", want: "timestamp(1) with time zone"},
+		{typeDef: "bigint", want: "bigint"},
+		{typeDef: "bigserial", want: "bigint"},
+		{typeDef: "boolean", want: "boolean"},
+		{typeDef: "box", want: "box"},
+		{typeDef: "bytea", want: "bytea"},
+		{typeDef: "cidr", want: "cidr"},
+		{typeDef: "circle", want: "circle"},
+		{typeDef: "date", want: "date"},
+		{typeDef: "double precision", want: "double precision"},
+		{typeDef: "inet", want: "inet"},
+		{typeDef: "integer", want: "integer"},
+		{typeDef: "json", want: "json"},
+		{typeDef: "jsonb", want: "jsonb"},
+		{typeDef: "line", want: "line"},
+		{typeDef: "lseg", want: "lseg"},
+		{typeDef: "macaddr", want: "macaddr"},
+		{typeDef: "macaddr8", want: "macaddr8"},
+		{typeDef: "money", want: "money"},
+		{typeDef: "path", want: "path"},
+		{typeDef: "pg_lsn", want: "pg_lsn"},
+		{typeDef: "pg_snapshot", want: "pg_snapshot"},
+		{typeDef: "point", want: "point"},
+		{typeDef: "polygon", want: "polygon"},
+		{typeDef: "real", want: "real"},
+		{typeDef: "smallint", want: "smallint"},
+		{typeDef: "smallserial", want: "smallint"},
+		{typeDef: "serial", want: "integer"},
+		{typeDef: "text", want: "text"},
+		{typeDef: "tsvector", want: "tsvector"},
+		{typeDef: "txid_snapshot", want: "txid_snapshot"},
+		{typeDef: "uuid", want: "uuid"},
+		{typeDef: "xml", want: "xml"},
+	}
+
+	// Create table
+	colExpressions := []string{}
+	for i, test := range tests {
+		colExpressions = append(colExpressions, fmt.Sprintf("column_%d %s", i, test.typeDef))
+	}
+	query := fmt.Sprintf("CREATE TABLE %s.%s (%s)", schema, table, strings.Join(colExpressions, ", "))
+	db.DB.Exec(query)
+	defer db.DB.Exec(fmt.Sprintf("DROP TABLE %s.%s", schema, table))
+
+	// Read data types
+	r := postgres.NewReader()(db.DB).(metadata.ColumnReader)
+	result, err := r.Columns(metadata.Filter{Schema: schema, Parent: table})
+	if err != nil {
+		log.Fatalf("Could not read %s columns: %v", dbName, err)
+	}
+	actualTypes := []string{}
+	for result.Next() {
+		actualTypes = append(actualTypes, result.Get().DataType)
+	}
+
+	// Compare
+	for i, test := range tests {
+		if actualTypes[i] != test.want {
+			t.Errorf("Wrong %s column data type, expected:\n  %s, got:\n  %s", dbName, test.want, actualTypes[i])
+		}
+	}
+}

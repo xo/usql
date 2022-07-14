@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
+	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 type metaReader struct {
@@ -16,6 +18,70 @@ type metaReader struct {
 var _ metadata.CatalogReader = &metaReader{}
 var _ metadata.IndexReader = &metaReader{}
 var _ metadata.IndexColumnReader = &metaReader{}
+
+func NewReader(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
+	ir := infos.New(
+		infos.WithPlaceholder(placeholder),
+		infos.WithIndexes(false),
+		infos.WithSequences(false),
+		infos.WithConstraints(false),
+		infos.WithCustomClauses(map[infos.ClauseName]string{
+			infos.FunctionsSecurityType: "''",
+		}),
+		infos.WithSystemSchemas([]string{
+			"db_accessadmin",
+			"db_backupoperator",
+			"db_datareader",
+			"db_datawriter",
+			"db_ddladmin",
+			"db_denydatareader",
+			"db_denydatawriter",
+			"db_owner",
+			"db_securityadmin",
+			"INFORMATION_SCHEMA",
+			"sys",
+		}),
+		infos.WithCurrentSchema("schema_name()"),
+		infos.WithDataTypeFormatter(dataTypeFormatter),
+	)(db, opts...)
+	mr := &metaReader{
+		LoggingReader: metadata.NewLoggingReader(db, opts...),
+	}
+	return metadata.NewPluginReader(ir, mr)
+}
+
+func dataTypeFormatter(col metadata.Column) string {
+	switch col.DataType {
+	case "numeric", "decimal":
+		if col.ColumnSize == 18 && col.DecimalDigits == 0 {
+			return col.DataType
+		} else {
+			return fmt.Sprintf("%s(%d,%d)", col.DataType, col.ColumnSize, col.DecimalDigits)
+		}
+	case "datetimeoffset", "datetime2", "time":
+		if col.ColumnSize == 7 {
+			return col.DataType
+		} else {
+			return fmt.Sprintf("%s(%d)", col.DataType, col.ColumnSize)
+		}
+	case "char", "nchar", "binary":
+		if col.ColumnSize == 1 {
+			return col.DataType
+		} else {
+			return fmt.Sprintf("%s(%d)", col.DataType, col.ColumnSize)
+		}
+	case "varchar", "nvarchar", "varbinary":
+		if col.ColumnSize == -1 {
+			return col.DataType + "(max)"
+		} else if col.ColumnSize == 1 {
+			return col.DataType
+		} else {
+			return fmt.Sprintf("%s(%d)", col.DataType, col.ColumnSize)
+		}
+	default:
+		return col.DataType
+	}
+}
 
 func (r *metaReader) SetLimit(l int) {
 	r.limit = l

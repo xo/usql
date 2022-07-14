@@ -34,13 +34,42 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 			}),
 			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 			infos.WithCurrentSchema("CURRENT_SCHEMA"),
-		)
+			infos.WithDataTypeFormatter(dataTypeFormatter))
 		return metadata.NewPluginReader(
 			newIS(db, opts...),
 			&metaReader{
 				LoggingReader: metadata.NewLoggingReader(db, opts...),
 			},
 		)
+	}
+}
+
+func dataTypeFormatter(col metadata.Column) string {
+	switch col.DataType {
+	case "bit", "character":
+		return fmt.Sprintf("%s(%d)", col.DataType, col.ColumnSize)
+	case "bit varying", "character varying":
+		if col.ColumnSize != 0 {
+			return fmt.Sprintf("%s(%d)", col.DataType, col.ColumnSize)
+		} else {
+			return col.DataType
+		}
+	case "numeric":
+		if col.ColumnSize != 0 {
+			return fmt.Sprintf("numeric(%d,%d)", col.ColumnSize, col.DecimalDigits)
+		} else {
+			return col.DataType
+		}
+	case "time without time zone":
+		return fmt.Sprintf("time(%d) without time zone", col.ColumnSize)
+	case "time with time zone":
+		return fmt.Sprintf("time(%d) with time zone", col.ColumnSize)
+	case "timestamp without time zone":
+		return fmt.Sprintf("timestamp(%d) without time zone", col.ColumnSize)
+	case "timestamp with time zone":
+		return fmt.Sprintf("timestamp(%d) with time zone", col.ColumnSize)
+	default:
+		return col.DataType
 	}
 }
 

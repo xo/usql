@@ -17,6 +17,7 @@ var (
 		infos.WithSequences(false),
 		infos.WithCheckConstraints(false),
 		infos.WithCustomClauses(map[infos.ClauseName]string{
+			infos.ColumnsDataType:                 "column_type",
 			infos.ColumnsNumericPrecRadix:         "10",
 			infos.FunctionColumnsNumericPrecRadix: "10",
 			infos.ConstraintIsDeferrable:          "''",
