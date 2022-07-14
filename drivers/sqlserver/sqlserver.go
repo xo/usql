@@ -14,40 +14,9 @@ import (
 	sqlserver "github.com/denisenkom/go-mssqldb" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
-	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
-	placeholder := func(n int) string { return fmt.Sprintf("@p%d", n) }
-	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
-		ir := infos.New(
-			infos.WithPlaceholder(placeholder),
-			infos.WithIndexes(false),
-			infos.WithSequences(false),
-			infos.WithConstraints(false),
-			infos.WithCustomClauses(map[infos.ClauseName]string{
-				infos.FunctionsSecurityType: "''",
-			}),
-			infos.WithSystemSchemas([]string{
-				"db_accessadmin",
-				"db_backupoperator",
-				"db_datareader",
-				"db_datawriter",
-				"db_ddladmin",
-				"db_denydatareader",
-				"db_denydatawriter",
-				"db_owner",
-				"db_securityadmin",
-				"INFORMATION_SCHEMA",
-				"sys",
-			}),
-			infos.WithCurrentSchema("schema_name()"),
-		)(db, opts...)
-		mr := &metaReader{
-			LoggingReader: metadata.NewLoggingReader(db, opts...),
-		}
-		return metadata.NewPluginReader(ir, mr)
-	}
 	drivers.Register("sqlserver", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
@@ -80,10 +49,14 @@ func init() {
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
-		NewMetadataReader: newReader,
+		NewMetadataReader: NewReader,
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
+			return metadata.NewDefaultWriter(NewReader(db, opts...))(db, w)
 		},
 		Copy: drivers.CopyWithInsert(placeholder),
 	})
+}
+
+func placeholder(n int) string {
+	return fmt.Sprintf("@p%d", n)
 }

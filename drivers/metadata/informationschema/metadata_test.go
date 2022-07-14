@@ -85,6 +85,7 @@ var (
 				infos.WithPlaceholder(func(int) string { return "?" }),
 				infos.WithCheckConstraints(false),
 				infos.WithCustomClauses(map[infos.ClauseName]string{
+					infos.ColumnsDataType:                 "column_type",
 					infos.ColumnsNumericPrecRadix:         "10",
 					infos.FunctionColumnsNumericPrecRadix: "10",
 					infos.ConstraintIsDeferrable:          "''",
@@ -184,7 +185,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	for _, db := range dbs {
+	for dbName, db := range dbs {
 		var ok bool
 		db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
 		if !ok {
@@ -208,7 +209,7 @@ func TestMain(m *testing.M) {
 			}
 			return db.DB.Ping()
 		}); err != nil {
-			log.Fatal("Timed out waiting for db: ", err)
+			log.Fatalf("Timed out waiting for %s: %s", dbName, err)
 		}
 		db.Reader = infos.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
@@ -310,11 +311,14 @@ func TestColumns(t *testing.T) {
 		"sqlserver": "film%",
 		"trino":     "orders",
 	}
-	expected := map[string]string{
+	expectedColumns := map[string]string{
 		"pgsql":     "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update, special_features, fulltext, actor_id, film_id, last_update, film_id, category_id, last_update, fid, title, description, category, price, length, rating, actors",
 		"mysql":     "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
 		"sqlserver": "film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update, actor_id, film_id, last_update, film_id, category_id, last_update, FID, title, description, category, price, length, rating, actors, film_id, title, description",
 		"trino":     "orderkey, custkey, orderstatus, totalprice, orderdate, orderpriority, clerk, shippriority, comment",
+	}
+	expectedTypes := map[string]string{
+		"mysql": "int unsigned, varchar(255), text, year, int unsigned, int unsigned, tinyint unsigned, decimal(4,2), smallint unsigned, decimal(5,2), enum('G','PG','PG-13','R','NC-17'), set('Trailers','Commentaries','Deleted Scenes','Behind the Scenes'), timestamp, int unsigned, int unsigned, timestamp, int unsigned, int unsigned, timestamp, int unsigned, varchar(255), text, varchar(25), decimal(4,2), smallint unsigned, enum('G','PG','PG-13','R','NC-17'), text, int, varchar(255), text",
 	}
 	for dbName, db := range dbs {
 		r := db.Reader
@@ -325,12 +329,18 @@ func TestColumns(t *testing.T) {
 		}
 
 		names := []string{}
+		types := []string{}
 		for result.Next() {
 			names = append(names, result.Get().Name)
+			types = append(types, result.Get().DataType)
 		}
-		actual := strings.Join(names, ", ")
-		if actual != expected[dbName] {
-			t.Errorf("Wrong %s column names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
+		actualColumns := strings.Join(names, ", ")
+		actualTypes := strings.Join(types, ", ")
+		if expected, ok := expectedColumns[dbName]; ok && actualColumns != expected {
+			t.Errorf("Wrong %s column names, expected:\n  %v, got:\n  %v", dbName, expected, names)
+		}
+		if expected, ok := expectedTypes[dbName]; ok && actualTypes != expected {
+			t.Errorf("Wrong %s column types, expected:\n  %v, got:\n  %v", dbName, expected, types)
 		}
 	}
 }

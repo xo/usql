@@ -26,6 +26,7 @@ type InformationSchema struct {
 	limit               int
 	systemSchemas       []string
 	currentSchema       string
+	dataTypeFormatter   func(metadata.Column) string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -37,6 +38,7 @@ type Logger interface {
 type ClauseName string
 
 const (
+	ColumnsDataType         = ClauseName("columns.data_type")
 	ColumnsColumnSize       = ClauseName("columns.column_size")
 	ColumnsNumericScale     = ClauseName("columns.numeric_scale")
 	ColumnsNumericPrecRadix = ClauseName("columns.numeric_precision_radix")
@@ -66,6 +68,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 		hasConstraints:      true,
 		hasCheckConstraints: true,
 		clauses: map[ClauseName]string{
+			ColumnsDataType:                 "data_type",
 			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
 			ColumnsNumericScale:             "COALESCE(numeric_scale, 0)",
 			ColumnsNumericPrecRadix:         "COALESCE(numeric_precision_radix, 10)",
@@ -79,7 +82,8 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 			ConstraintInitiallyDeferred:     "t.initially_deferred",
 			SequenceColumnsIncrement:        "increment",
 		},
-		systemSchemas: []string{"information_schema"},
+		systemSchemas:     []string{"information_schema"},
+		dataTypeFormatter: func(col metadata.Column) string { return col.DataType },
 	}
 	// aply InformationSchema specific options
 	for _, o := range opts {
@@ -158,6 +162,14 @@ func WithCurrentSchema(expr string) metadata.ReaderOption {
 	}
 }
 
+// WithDataTypeFormatter function to build updated string represenation of data type
+// from Column
+func WithDataTypeFormatter(f func(metadata.Column) string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).dataTypeFormatter = f
+	}
+}
+
 func (s *InformationSchema) SetLimit(l int) {
 	s.limit = l
 }
@@ -170,7 +182,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		"table_name",
 		"column_name",
 		"ordinal_position",
-		"data_type",
+		s.clauses[ColumnsDataType],
 		"COALESCE(column_default, '')",
 		"COALESCE(is_nullable, '') AS is_nullable",
 		s.clauses[ColumnsColumnSize],
@@ -215,6 +227,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		if err != nil {
 			return nil, err
 		}
+		rec.DataType = s.dataTypeFormatter(rec)
 		results = append(results, rec)
 	}
 	if rows.Err() != nil {
