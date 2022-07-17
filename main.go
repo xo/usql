@@ -154,7 +154,7 @@ func run(args *Args, u *user.User) error {
 	return nil
 }
 
-// runCommandOrFiles proccesses all the supplied commands or files.
+// runCommandOrFiles processes all the supplied commands or files.
 func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func() error {
 	return func() error {
 		for _, x := range commandsOrFiles {
