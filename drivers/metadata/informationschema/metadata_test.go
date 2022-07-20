@@ -24,16 +24,17 @@ import (
 )
 
 type Database struct {
-	BuildArgs  []dc.BuildArg
-	RunOptions *dt.RunOptions
-	Exec       []string
-	Driver     string
-	URL        string
-	DockerPort string
-	Resource   *dt.Resource
-	DB         *sql.DB
-	Opts       []metadata.ReaderOption
-	Reader     metadata.BasicReader
+	BuildArgs    []dc.BuildArg
+	RunOptions   *dt.RunOptions
+	Exec         []string
+	Driver       string
+	URL          string
+	ReadinessURL string
+	DockerPort   string
+	Resource     *dt.Resource
+	DB           *sql.DB
+	Opts         []metadata.ReaderOption
+	Reader       metadata.BasicReader
 }
 
 const (
@@ -105,10 +106,11 @@ var (
 				Name: "usql-sqlserver",
 				Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
 			},
-			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
-			Driver:     "sqlserver",
-			URL:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
-			DockerPort: "1433/tcp",
+			Exec:         []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
+			Driver:       "sqlserver",
+			URL:          "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
+			ReadinessURL: "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s",
+			DockerPort:   "1433/tcp",
 			Opts: []metadata.ReaderOption{
 				infos.WithPlaceholder(func(n int) string { return fmt.Sprintf("@p%d", n) }),
 				infos.WithIndexes(false),
@@ -199,19 +201,14 @@ func TestMain(m *testing.M) {
 			}
 		}
 
-		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-		if err := pool.Retry(func() error {
-			hostPort := db.Resource.GetPort(db.DockerPort)
-			var err error
-			db.DB, err = sql.Open(db.Driver, fmt.Sprintf(db.URL, hostPort))
-			if err != nil {
-				return err
-			}
-			return db.DB.Ping()
-		}); err != nil {
+		url := db.URL
+		if db.ReadinessURL != "" {
+			url = db.ReadinessURL
+		}
+		port := db.Resource.GetPort(db.DockerPort)
+		if db.DB, err = waitForDbConnection(db.Driver, pool, url, port); err != nil {
 			log.Fatalf("Timed out waiting for %s: %s", dbName, err)
 		}
-		db.Reader = infos.New(db.Opts...)(db.DB).(metadata.BasicReader)
 
 		if len(db.Exec) != 0 {
 			exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{
@@ -224,6 +221,14 @@ func TestMain(m *testing.M) {
 				log.Fatal("Could not load schema: ", err)
 			}
 		}
+
+		// Reconnect with actual URL if a separate URL for readiness checking was used
+		if db.ReadinessURL != "" {
+			if db.DB, err = waitForDbConnection(db.Driver, pool, db.URL, port); err != nil {
+				log.Fatalf("Timed out waiting for %s: %s", dbName, err)
+			}
+		}
+		db.Reader = infos.New(db.Opts...)(db.DB).(metadata.BasicReader)
 	}
 
 	code := m.Run()
@@ -238,6 +243,22 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
+}
+
+func waitForDbConnection(driver string, pool *dt.Pool, url string, port string) (*sql.DB, error) {
+	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	var db *sql.DB
+	if err := pool.Retry(func() error {
+		var err error
+		db, err = sql.Open(driver, fmt.Sprintf(url, port))
+		if err != nil {
+			return err
+		}
+		return db.Ping()
+	}); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func TestSchemas(t *testing.T) {
