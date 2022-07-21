@@ -19,7 +19,7 @@ require (
 	github.com/cloudspannerecosystem/go-sql-spanner v0.0.0-20220112050259-970f6ba5045e
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/denisenkom/go-mssqldb v0.12.2
-	github.com/docker/docker v20.10.14+incompatible
+	github.com/docker/docker v20.10.17+incompatible
 	github.com/exasol/exasol-driver-go v0.4.2
 	github.com/genjidb/genji v0.15.0
 	github.com/go-sql-driver/mysql v1.6.0
@@ -38,13 +38,13 @@ require (
 	github.com/mithrandie/csvq v1.17.7
 	github.com/mithrandie/csvq-driver v1.6.6
 	github.com/nakagami/firebirdsql v0.9.4
-	github.com/ory/dockertest/v3 v3.8.1
+	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prestodb/presto-go-client v0.0.0-20211201125635-ad28cec17d6c
 	github.com/sijms/go-ora/v2 v2.4.27
 	github.com/sirupsen/logrus v1.8.1
 	github.com/snowflakedb/gosnowflake v1.6.6
 	github.com/thda/tds v0.1.7
-	github.com/trinodb/trino-go-client v0.300.0
+	github.com/trinodb/trino-go-client v0.302.0
 	github.com/uber/athenadriver v1.1.13
 	github.com/vertica/vertica-sql-go v1.2.2
 	github.com/xo/dburl v0.11.0
@@ -102,7 +102,7 @@ require (
 	github.com/btnguyen2k/consu/reddo v0.1.7 // indirect
 	github.com/btnguyen2k/consu/semita v0.1.5 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
@@ -114,14 +114,14 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/cgroups v1.0.3 // indirect
 	github.com/containerd/containerd v1.6.2 // indirect
-	github.com/containerd/continuity v0.2.2 // indirect
+	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/couchbase/go-couchbase v0.1.1 // indirect
 	github.com/couchbase/gomemcached v0.1.4 // indirect
 	github.com/couchbase/goutils v0.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
-	github.com/docker/cli v20.10.11+incompatible // indirect
+	github.com/docker/cli v20.10.17+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -157,7 +157,7 @@ require (
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -191,7 +191,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.1.1 // indirect
+	github.com/opencontainers/runc v1.1.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -205,7 +205,7 @@ require (
 	github.com/uber-go/tally v3.5.0+incompatible // indirect
 	github.com/unchartedsoftware/witch v0.0.0-20200617171400-4f405404126f // indirect
 	github.com/urfave/cli v1.22.9 // indirect
-	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xinsnake/go-http-digest-auth-client v0.6.0 // indirect
