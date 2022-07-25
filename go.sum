@@ -197,9 +197,9 @@ github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 h1:q4dksr6IC
 github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40/go.mod h1:Q7yQnSMnLvcXlZ8RV+jwz/6y1rQTqbX6C82SndT52Zs=
 github.com/apache/calcite-avatica-go/v5 v5.1.0 h1:+2mv9w1l2FaCWT6HbmaKBJWdJpLkqkWsZHdbWLplk3Y=
 github.com/apache/calcite-avatica-go/v5 v5.1.0/go.mod h1:/yHT1MqQW4p9R9Mg6lGwW9x++e1jXP9LJBB4/dZAbN4=
-github.com/apache/thrift v0.14.1/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
-github.com/apache/thrift v0.15.0 h1:aGvdaR0v1t9XLgjtBYwxcBvBOTMqClzwE26CHOgjW1Y=
-github.com/apache/thrift v0.15.0/go.mod h1:PHK3hniurgQaNMZYaCLEqXKsYK8upmhPbmdP2FXSqgU=
+github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
+github.com/apache/thrift v0.13.1-0.20191017214740-b75e88a33d67 h1:gdjgDwFnVs0YChqQqet05nwhjBPwKTF2JVZv6wuCYQ4=
+github.com/apache/thrift v0.13.1-0.20191017214740-b75e88a33d67/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
 github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
@@ -258,8 +258,8 @@ github.com/aws/smithy-go v1.9.0/go.mod h1:SObp3lf9smib00L/v3U2eAKG8FyQ7iLrJnQiAm
 github.com/aws/smithy-go v1.10.0 h1:gsoZQMNHnX+PaghNw4ynPsyGP7aUCqx5sY2dlPQsZ0w=
 github.com/aws/smithy-go v1.10.0/go.mod h1:SObp3lf9smib00L/v3U2eAKG8FyQ7iLrJnQiAmR5n+E=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
-github.com/beltran/gohive v1.5.2 h1:ATUaxDCyARuG3hlF6vvrs8I6ADzzMokKTcAVpkdEfTM=
-github.com/beltran/gohive v1.5.2/go.mod h1:BJbXAhof7gWk5+kl0y6Ox8TFDJ1xv6gwDksF7l15LFI=
+github.com/beltran/gohive v1.3.0 h1:7e1TGJ/F/mMpoZ1JLevHkoqc0iQnxwEN9y8gn9uKoqU=
+github.com/beltran/gohive v1.3.0/go.mod h1:TcPLlZLQbom57zWZpiG25iG9DFbyJgl/W4NbYlqMD5E=
 github.com/beltran/gosasl v0.0.0-20200715011608-d5475aebb293/go.mod h1:Qx8cW6jkI8riyzmklj80kAIkv+iezFUTBiGU0qHhHes=
 github.com/beltran/gosasl v0.0.0-20210911111757-5492bdc6aee5 h1:X+D2DYL/MW0ZefpWcFtEfyNb5wdqmS2+bXOIxnwVW2s=
 github.com/beltran/gosasl v0.0.0-20210911111757-5492bdc6aee5/go.mod h1:Qx8cW6jkI8riyzmklj80kAIkv+iezFUTBiGU0qHhHes=
@@ -2296,7 +2296,7 @@ sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK
 sigs.k8s.io/structured-merge-diff/v4 v4.0.3/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
-sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84 h1:6Q27ES8FgvwwQssYYqyR7rFLisaDA1Iqqk9TSWpTHxw=
-sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84/go.mod h1:IudT38uGbK5q+Ztx2AsZDzjc04yBsIOUtIDMh/WSJkk=
+sqlflow.org/gohive v0.0.0-20220526054200-bf1c180bd17c h1:iJAWnc4ihupor8eaIzdlW+9AO0zuBQgHRjGI5xSwQBY=
+sqlflow.org/gohive v0.0.0-20220526054200-bf1c180bd17c/go.mod h1:aiktwgIR0id6PZHAQmHBsT846cfxq/F+uLrahpNCMO0=
 sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c h1:Zo3qlfUn/rlMx9vWHpGE/luEtweuXHwrYbrFZwTG978=
 sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c/go.mod h1:MxRFJp6UEk1OfnnVOIL3Jc7ROBH0dOpwF/J14A9LNdM=

@@ -56,7 +56,7 @@ require (
 	gorm.io/driver/bigquery v1.0.18
 	modernc.org/ql v1.4.1
 	modernc.org/sqlite v1.17.3
-	sqlflow.org/gohive v0.0.0-20200521083454-ed52ee669b84
+	sqlflow.org/gohive v0.0.0-20220526054200-bf1c180bd17c
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
 
@@ -80,7 +80,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/aliyun/aliyun-tablestore-go-sdk v1.7.6 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
-	github.com/apache/thrift v0.15.0 // indirect
+	github.com/apache/thrift v0.13.1-0.20191017214740-b75e88a33d67 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.44.51 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
@@ -94,7 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.24.1 // indirect
 	github.com/aws/smithy-go v1.10.0 // indirect
-	github.com/beltran/gohive v1.5.2 // indirect
+	github.com/beltran/gohive v1.3.0 // indirect
 	github.com/beltran/gosasl v0.0.0-20210911111757-5492bdc6aee5 // indirect
 	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/btnguyen2k/consu/gjrc v0.1.1 // indirect
