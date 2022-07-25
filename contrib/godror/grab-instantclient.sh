@@ -3,6 +3,7 @@
 DEST=${1:-/opt/oracle}
 
 # available versions:
+# 21.7.0.0.0
 # 21.6.0.0.0
 # 21.1.0.0.0
 # 19.9.0.0.0
