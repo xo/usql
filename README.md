@@ -157,8 +157,13 @@ $ go install -tags 'all no_avatica no_couchbase' github.com/xo/usql@master
 
 ### Release Builds
 
-[Release builds][Releases] are built with the `most` build tag. Additional
-[SQLite3 build tags](build-release.sh) are also specified for releases.
+[Release builds][Releases] are built with the `most` build tag.
+
+```bash
+make release
+```
+
+`usql` uses [GoReleaser](https://github.com/goreleaser/goreleaser) to build and release it on multiple platforms.
 
 ### Embedding
 

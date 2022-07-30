@@ -1,0 +1,160 @@
+project_name: usql
+
+env:
+  - CGO_ENABLED=1
+
+before:
+  hooks:
+    - go generate ./...
+
+builds:
+  - id: linux-amd64
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: usql
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - STRIP=x86_64-linux-gnu-strip
+    ldflags: &default-ldflags
+      - -s
+      - -w
+      - "-X github.com/xo/usql/text.CommandName={{ .ProjectName }}"
+      - "-X github.com/xo/usql/text.CommandVersion={{ .Version }}"
+    tags:
+      - most
+      - sqlite_app_armor
+      - sqlite_fts5
+      - sqlite_introspect
+      - sqlite_json1
+      - sqlite_stat4
+      - sqlite_userauth
+      - sqlite_vtable
+      - no_adodb
+    hooks: &default-hooks
+      post:
+        - "{{ .Env.STRIP }} {{ .Path }}"
+        - "upx {{ .Path }}"
+
+  - id: linux-amd64-static
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: usql_static
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - STRIP=x86_64-linux-gnu-strip
+      - EXTLDFLAGS="-static -lm -ldl"
+    ldflags:
+      - -s
+      - -w
+      - "-X github.com/xo/usql/text.CommandName={{ .ProjectName }}"
+      - "-X github.com/xo/usql/text.CommandVersion={{ .Version }}"
+      - -linkmode=external
+      - "-extldflags {{ .Env.EXTLDFLAGS }}"
+      - -extld g++
+    tags:
+      - most
+      - sqlite_app_armor
+      - sqlite_fts5
+      - sqlite_introspect
+      - sqlite_json1
+      - sqlite_stat4
+      - sqlite_userauth
+      - sqlite_vtable
+      - no_adodb
+      - netgo
+      - osusergo
+    hooks: *default-hooks
+
+  - id: darwin-amd64
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    binary: usql
+    env:
+      - CC=o64-clang
+      - STRIP=x86_64-apple-darwin21.1-strip
+    ldflags: *default-ldflags
+    tags:
+      - most
+      - sqlite_app_armor
+      - sqlite_fts5
+      - sqlite_introspect
+      - sqlite_json1
+      - sqlite_stat4
+      - sqlite_userauth
+      - sqlite_vtable
+      - no_adodb
+    hooks: *default-hooks
+
+  - id: darwin-arm64
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    binary: usql
+    env:
+      - CC=oa64-clang
+      - STRIP=arm64-apple-darwin21.1-strip
+    ldflags: *default-ldflags
+    tags:
+      - most
+      - sqlite_app_armor
+      - sqlite_fts5
+      - sqlite_introspect
+      - sqlite_json1
+      - sqlite_stat4
+      - sqlite_userauth
+      - sqlite_vtable
+      - no_adodb
+    hooks: *default-hooks
+
+  - id: windows-amd64
+    goos:
+      - windows
+    goarch:
+      - amd64
+    binary: usql
+    env:
+      - CC=x86_64-w64-mingw32-gcc
+      - STRIP=x86_64-w64-mingw32-strip
+    ldflags: *default-ldflags
+    tags:
+      - most
+      - sqlite_app_armor
+      - sqlite_fts5
+      - sqlite_introspect
+      - sqlite_json1
+      - sqlite_stat4
+      - sqlite_userauth
+      - sqlite_vtable
+    hooks: *default-hooks
+
+archives:
+  - id: "usql"
+    builds: ["linux-amd64", "darwin-amd64", "darwin-arm64", "windows-amd64"]
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+  - id: "usql-static"
+    builds: ["linux-amd64-static"]
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_static-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "{{ .ProjectName }}-{{ .Version }}_checksums.txt"
+
+release:
+  draft: true
