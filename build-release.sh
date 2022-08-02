@@ -8,14 +8,16 @@ VER=
 BUILD=$SRC/build
 STATIC=0
 FORCE=0
+CHECK=1
 
 OPTIND=1
-while getopts "b:v:sfr" opt; do
+while getopts "b:v:sfrn" opt; do
 case "$opt" in
   b) BUILD=$OPTARG ;;
   v) VER=$OPTARG ;;
   s) STATIC=1 ;;
   f) FORCE=1 ;;
+  n) CHECK=0 ;;
   r)
     # get latest tag version
     pushd $SRC &> /dev/null
@@ -36,8 +38,9 @@ ARCH=$(go env GOARCH)
 NAME=$(basename $SRC)
 VER="${VER#v}"
 EXT=tar.bz2
-DIR=$BUILD/$PLATFORM/$VER
+DIR=$BUILD/$PLATFORM/$ARCH/$VER
 BIN=$DIR/$NAME
+STRIP=${STRIP:-"strip"}
 
 TAGS=(
   most
@@ -138,7 +141,7 @@ echo "BUILD:"
 case $PLATFORM in
   linux|windows|darwin)
     echo "STRIPPING:   $BIN"
-    strip $BIN
+    $STRIP $BIN
   ;;
 esac
 
@@ -151,12 +154,14 @@ case $PLATFORM in
 esac
 
 # check build
-BUILT_VER=$($BIN --version)
-if [ "$BUILT_VER" != "$NAME ${VER#v}" ]; then
-  echo -e "\n\nerror: expected $NAME --version to report '$NAME ${VER#v}', got: '$BUILT_VER'"
-  exit 1
+if [[ "$CHECK" == "1" ]]; then
+  BUILT_VER=$($BIN --version)
+  if [ "$BUILT_VER" != "$NAME ${VER#v}" ]; then
+    echo -e "\n\nerror: expected $NAME --version to report '$NAME ${VER#v}', got: '$BUILT_VER'"
+    exit 1
+  fi
+  echo "REPORTED:    $BUILT_VER"
 fi
-echo "REPORTED:    $BUILT_VER"
 case $EXT in
   tar.bz2)
     tar -C $DIR -cjf $OUT $(basename $BIN)
