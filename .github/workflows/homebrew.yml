@@ -11,5 +11,5 @@ jobs:
       - uses: dawidd6/action-homebrew-bump-formula@v3
         with:
           token: ${{secrets.HOMEBREW_TOKEN}}
-          tap: xo/hombrew-xo
+          tap: xo/xo
           formula: usql
