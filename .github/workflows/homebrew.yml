@@ -1,0 +1,19 @@
+name: Homebrew Formula Update
+on:
+  push:
+    tags: 'v*'
+#  release:
+#    types: [published]
+jobs:
+  homebrew:
+    name: Bump Homebrew Formula version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v2
+          env:
+            COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+          with:
+            formula-name: usql
+            homebrew-tap: xo/homebrew-xo
+            commit-message: |
+              Updating usql formula to {{version}}
