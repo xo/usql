@@ -159,7 +159,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: usql ${{ env.GITHUB_REF_NAME }}
+          name: usql ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           generate_release_notes: true
