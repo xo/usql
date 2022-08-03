@@ -8,8 +8,18 @@ jobs:
   homebrew:
     runs-on: macos-latest
     steps:
-      - uses: dawidd6/action-homebrew-bump-formula@v3
-        with:
-          token: ${{secrets.HOMEBREW_TOKEN}}
-          tap: xo/xo
-          formula: usql
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: bump formula
+        env:
+          - HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+        run: |
+          brew update
+          brew tap xo/xo
+          brew bump-formula-pr \
+            --no-audit \
+            --no-browse \
+            --message="Update usql formula to ${{ git.ref_name }}" \
+            --version="${{ git.ref_name }}" \
+            --url="https://github.com/xo/usql/archive/${{ git.ref_name }}.tar.gz" \
+            xo/xo/usql
