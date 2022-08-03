@@ -148,7 +148,7 @@ jobs:
     needs:
       - build_for_linux
       - build_for_macos_amd64
-      - build_for_macos_arm64
+      # - build_for_macos_arm64
       - build_for_windows
     runs-on: ubuntu-latest
     steps:
