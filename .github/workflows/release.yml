@@ -1,10 +1,8 @@
 name: Release
 
 on:
-  workflow_dispatch:
   push:
-    tags:
-      - '*'
+    tags: 'v*'
 
 env:
   GO_VERSION: 1.18.x
