@@ -106,7 +106,7 @@ jobs:
         CGO_ENABLED: 1
         GOOS: darwin
         GOARCH: arm64
-      run: ./build-release.sh -r -n
+      run: ./build-release.sh -r -n -N
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v3

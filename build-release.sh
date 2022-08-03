@@ -9,15 +9,17 @@ BUILD=$SRC/build
 STATIC=0
 FORCE=0
 CHECK=1
+UPX=1
 
 OPTIND=1
-while getopts "b:v:sfrn" opt; do
+while getopts "b:v:sfrnN" opt; do
 case "$opt" in
   b) BUILD=$OPTARG ;;
   v) VER=$OPTARG ;;
   s) STATIC=1 ;;
   f) FORCE=1 ;;
   n) CHECK=0 ;;
+  N) UPX=0 ;;
   r)
     # get latest tag version
     pushd $SRC &> /dev/null
@@ -120,6 +122,7 @@ echo "BUILD TAGS:  $TAGS"
 echo "LDFLAGS:     $LDFLAGS"
 
 pushd $SRC &> /dev/null
+
 if [ -f $OUT ]; then
   echo "REMOVING:    $OUT"
   rm -rf $OUT
@@ -131,26 +134,21 @@ echo "BUILDING:    $BIN"
 echo "BUILD:"
 (set -x;
   go build \
-    -tags="$TAGS" \
     -ldflags="$LDFLAGS" \
+    -tags="$TAGS" \
+    -trimpath \
     -o $BIN
 ) 2>&1 | log '    '
 
-# strip
-case $PLATFORM in
-  linux|windows|darwin)
-    echo "STRIPPING:   $BIN"
-    strip $BIN
-  ;;
-esac
-
-# compress
-case $PLATFORM in
-  linux|windows|darwin)
-    COMPRESSED=$(upx -q -q $BIN|awk '{print $1 " -> " $3 " (" $4 ")"}')
-    echo "COMPRESSED:  $COMPRESSED"
-  ;;
-esac
+# upx
+if [[ "$UPX" == "1" ]]; then
+  case $PLATFORM in
+    linux|windows|darwin)
+      COMPRESSED=$(upx -q -q $BIN|awk '{print $1 " -> " $3 " (" $4 ")"}')
+      echo "COMPRESSED:  $COMPRESSED"
+    ;;
+  esac
+fi
 
 # check build
 if [[ "$CHECK" == "1" ]]; then
@@ -161,13 +159,27 @@ if [[ "$CHECK" == "1" ]]; then
   fi
   echo "REPORTED:    $BUILT_VER"
 fi
+
+# pack
+cp $SRC/LICENSE $DIR
 case $EXT in
   tar.bz2)
-    tar -C $DIR -cjf $OUT $(basename $BIN)
+    tar -C $DIR -cjf $OUT $(basename $BIN) LICENSE
   ;;
   zip)
-    zip $OUT -j $BIN
+    zip $OUT -j $BIN LICENSE
   ;;
 esac
+
+# report
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
+case $EXT in
+  tar.bz2)
+    tar -jvtf $OUT
+  ;;
+  zip)
+    unzip -l $OUT
+  ;;
+esac
+
 popd &> /dev/null
