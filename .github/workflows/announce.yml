@@ -1,0 +1,14 @@
+name: Discord Announce
+on:
+  release:
+    types: [published]
+jobs:
+  homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+        curl \
+          -H 'Content-Type: application/json' \
+          -d '{"username": "usql", "content": "> *usql ${{ github.ref_name }}* has been released!\n\nGet it here: https://github.com/xo/usql/releases/${{ github.ref_name }}"}' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+

@@ -1,9 +1,7 @@
-name: Homebrew Bump Formula
+name: Bump Homebrew Formula
 on:
   push:
     tags: 'v*'
-#  release:
-#    types: [published]
 jobs:
   homebrew:
     runs-on: macos-latest
