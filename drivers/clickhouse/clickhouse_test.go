@@ -85,7 +85,7 @@ func TestSchemas(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not read schemas: %v", err)
 	}
-	checkNames(t, "schema", res, "default", "system", "tutorial")
+	checkNames(t, "schema", false, res, "default", "system", "tutorial", "tutorial_unexpected")
 }
 
 func TestTables(t *testing.T) {
@@ -96,7 +96,7 @@ func TestTables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not read tables: %v", err)
 	}
-	checkNames(t, "table", res, "hits_v1", "visits_v1")
+	checkNames(t, "table", false, res, "hits_v1", "visits_v1")
 }
 
 func TestFunctions(t *testing.T) {
@@ -105,7 +105,7 @@ func TestFunctions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not read functions: %v", err)
 	}
-	checkNames(t, "function", res, funcNames()...)
+	checkNames(t, "function", false, res, funcNames()...)
 }
 
 func TestColumns(t *testing.T) {
@@ -116,10 +116,10 @@ func TestColumns(t *testing.T) {
 	if err != nil {
 		log.Fatalf("could not read columns: %v", err)
 	}
-	checkNames(t, "column", res, colNames()...)
+	checkNames(t, "column", true, res, colNames()...)
 }
 
-func checkNames(t *testing.T, typ string, res interface{ Next() bool }, exp ...string) {
+func checkNames(t *testing.T, typ string, checkForAdditional bool, res interface{ Next() bool }, exp ...string) {
 	n := make(map[string]bool)
 	for _, s := range exp {
 		n[s] = true
@@ -135,6 +135,13 @@ func checkNames(t *testing.T, typ string, res interface{ Next() bool }, exp ...s
 	for name := range n {
 		if _, ok := names[name]; !ok {
 			t.Errorf("missing %s %q", typ, name)
+		}
+	}
+	if checkForAdditional {
+		for name := range names {
+			if _, ok := n[name]; !ok {
+				t.Errorf("unexpected %s %q", typ, name)
+			}
 		}
 	}
 }

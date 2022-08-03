@@ -20,18 +20,18 @@ func NewMetadataReader(db drivers.DB, opts ...metadata.ReaderOption) metadata.Re
 }
 
 func (r MetadataReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
-	qstr := `SELECT 
+	qstr := `SELECT
   database AS Schema,
   name AS Name,
   COALESCE(
     IF(database LIKE 'system', 'SYSTEM TABLE', null),
     IF(is_temporary,'LOCAL TEMPORARY', null),
-    IF(engine LIKE 'View', 'VIEW', null), 
+    IF(engine LIKE 'View', 'VIEW', null),
     'TABLE'
   ) AS Type,
   COALESCE(total_bytes, 0) AS Size,
-  comment as Comment 
-FROM 
+  comment as Comment
+FROM
   system.tables`
 	var conds []string
 	var vals []interface{}
@@ -82,11 +82,29 @@ func (r MetadataReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) 
   name,
   type,
   COALESCE(default_expression, '')
-FROM 
-  system.columns 
-WHERE 
-  table LIKE ?`
-	rows, closeRows, err := r.query(qstr, nil, "name", f.Parent)
+FROM
+  system.columns`
+	vals := []interface{}{f.Parent}
+	conds := []string{"table LIKE ?"}
+	if f.Schema != "" {
+		vals = append(vals, f.Schema)
+		conds = append(conds, "database LIKE ?")
+	}
+	if f.Name != "" {
+		vals = append(vals, f.Name)
+		conds = append(conds, "name LIKE ?")
+	}
+	if len(f.Types) != 0 {
+		var pholders []string
+		for _, t := range f.Types {
+			vals = append(vals, t)
+			pholders = append(pholders, "?")
+		}
+		if len(pholders) != 0 {
+			conds = append(conds, "Type IN ("+strings.Join(pholders, ", ")+")")
+		}
+	}
+	rows, closeRows, err := r.query(qstr, conds, "name", vals...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +167,7 @@ func (r MetadataReader) Functions(f metadata.Filter) (*metadata.FunctionSet, err
   name AS specific_name,
   name AS routine_name,
   (IF(is_aggregate = 1,'AGGREGATE','FUNCTION')) AS type
-FROM 
+FROM
   system.functions`
 	var conds []string
 	var vals []interface{}
