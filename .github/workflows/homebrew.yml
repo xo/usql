@@ -1,4 +1,4 @@
-name: Homebrew Formula Update
+name: Homebrew Bump Formula
 on:
   push:
     tags: 'v*'
@@ -6,14 +6,10 @@ on:
 #    types: [published]
 jobs:
   homebrew:
-    name: Bump Homebrew Formula version
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
-      - uses: mislav/bump-homebrew-formula-action@v2
-        env:
-          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+      - uses: dawidd6/action-homebrew-bump-formula@v3
         with:
-          formula-name: usql
-          homebrew-tap: xo/homebrew-xo
-          commit-message: |
-            Updating usql formula to {{version}}
+          token: ${{secrets.HOMEBREW_TOKEN}}
+          tap: xo/hombrew-xo
+          formula: usql
