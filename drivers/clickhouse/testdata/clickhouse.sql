@@ -333,3 +333,10 @@ ENGINE = CollapsingMergeTree(Sign)
 PARTITION BY toYYYYMM(StartDate)
 ORDER BY (CounterID, StartDate, intHash32(UserID), VisitID)
 SAMPLE BY intHash32(UserID);
+
+CREATE DATABASE tutorial_unexpected;
+CREATE TABLE tutorial_unexpected.hits_v1 (
+    `Unexpected` String
+)
+ENGINE = MergeTree()
+ORDER BY (Unexpected);
