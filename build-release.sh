@@ -40,7 +40,6 @@ VER="${VER#v}"
 EXT=tar.bz2
 DIR=$BUILD/$PLATFORM/$ARCH/$VER
 BIN=$DIR/$NAME
-STRIP=${STRIP:-"strip"}
 
 TAGS=(
   most
@@ -100,7 +99,7 @@ fi
 
 # check not overwriting existing build artifacts
 if [[ -e $OUT && "$FORCE" != "1" ]]; then
-  echo "error: $OUT exists and FORCE!=1 (try $0 -f)"
+  echo "error: $OUT exists and FORCE != 1 (try $0 -f)"
   exit 1
 fi
 
@@ -141,7 +140,7 @@ echo "BUILD:"
 case $PLATFORM in
   linux|windows|darwin)
     echo "STRIPPING:   $BIN"
-    $STRIP $BIN
+    strip $BIN
   ;;
 esac
 
