@@ -17,6 +17,7 @@ jobs:
           brew bump-formula-pr \
             --no-audit \
             --no-browse \
+            --force \
             --message="Update usql formula to ${{ github.ref_name }}" \
             --version="${{ github.ref_name }}" \
             --url="https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz" \
