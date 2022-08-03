@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mislav/bump-homebrew-formula-action@v2
-          env:
-            COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-          with:
-            formula-name: usql
-            homebrew-tap: xo/homebrew-xo
-            commit-message: |
-              Updating usql formula to {{version}}
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+        with:
+          formula-name: usql
+          homebrew-tap: xo/homebrew-xo
+          commit-message: |
+            Updating usql formula to {{version}}
