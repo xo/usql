@@ -1,4 +1,4 @@
 NAME=vertica
-IMAGE=jbfavre/vertica:latest
+IMAGE=docker.io/jbfavre/vertica:latest
 PUBLISH=5433:5433
 ENV="DATABASE_PASSWORD=P4ssw0rd DATABASE_NAME=vertica"

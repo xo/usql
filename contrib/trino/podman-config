@@ -1,0 +1,3 @@
+NAME=trino
+IMAGE=docker.io/trinodb/trino
+PUBLISH=8080:8080

@@ -1,4 +1,4 @@
 NAME=postgres
-IMAGE=usql/postgres
+IMAGE=docker.io/usql/postgres
 PUBLISH=5432:5432
 ENV="POSTGRES_PASSWORD=P4ssw0rd"

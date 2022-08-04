@@ -1,0 +1,3 @@
+NAME=clickhouse
+IMAGE=docker.io/clickhouse/clickhouse-server
+PUBLISH=9000:9000

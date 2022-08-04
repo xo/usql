@@ -1,0 +1,3 @@
+NAME=ignite
+IMAGE=docker.io/usql/ignite
+NETWORK=host

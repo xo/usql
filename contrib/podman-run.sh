@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# docker-run.sh: starts or restarts docker containers.
+# podman-run.sh: starts or restarts podman containers.
 #
-# Usage: docker-run.sh <TARGET> [-u]
+# Usage: podman-run.sh <TARGET> [-u]
 #
-# Where <target> is a name of a subdirectory containing docker-config,
+# Where <target> is a name of a subdirectory containing podman-config,
 # 'all', or 'test'.
 #
 # all  -- starts all available database images.
 # test -- starts the primary testing images. The testing images are cassandra,
 #         mysql, postgres, sqlserver, and oracle [if available].
-# -u   -- perform docker pull for images prior to start.
+# -u   -- perform podman pull for images prior to start.
 #
-# Will stop any running docker container prior to starting.
+# Will stop any running podman container prior to starting.
 
 DIR=$1
 
@@ -34,18 +34,18 @@ case "$opt" in
 esac
 done
 
-docker_run() {
+podman_run() {
   TARGET=$1
   BASE=$SRC/$TARGET
-  if [ ! -e $BASE/docker-config ]; then
-    echo "error: $BASE/docker-config doesn't exist"
+  if [ ! -e $BASE/podman-config ]; then
+    echo "error: $BASE/podman-config doesn't exist"
     exit 1
   fi
   # load parameters from docer-config
   unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS
-  source $BASE/docker-config
+  source $BASE/podman-config
   if [[ "$TARGET" != "$NAME" ]]; then
-    echo "error: $BASE/docker-config is invalid"
+    echo "error: $BASE/podman-config is invalid"
     exit 1
   fi
   # setup params
@@ -60,7 +60,7 @@ docker_run() {
     fi
   done
   # determine if image exists
-  EXISTS=$(docker image ls -q $IMAGE)
+  EXISTS=$(podman image ls -q $IMAGE)
   if [[ "$UPDATE" == "0" && -z "$EXISTS" ]]; then
     UPDATE=1
   fi
@@ -77,37 +77,37 @@ docker_run() {
   if [[ "$UPDATE" == "1" && "$TARGET" != "oracle" ]]; then
     if [ ! -f $BASE/Dockerfile ]; then
       (set -ex;
-        docker pull $IMAGE
+        podman pull $IMAGE
       )
     else
       pushd $BASE &> /dev/null
       (set -ex;
-        docker build --pull -t $IMAGE:latest .
+        podman build --pull -t $IMAGE:latest .
       )
       popd &> /dev/null
     fi
     REF=$(awk -F: '{print $1}' <<< "$IMAGE")
-    REMOVE=$(docker image list --filter=dangling=true --filter=reference=$IMAGE -q)
+    REMOVE=$(podman image list --filter=dangling=true --filter=reference=$IMAGE -q)
     if [ ! -z "$REMOVE" ]; then
       (set -ex;
-        docker image rm -f $REMOVE
+        podman image rm -f $REMOVE
       )
     fi
   fi
   # stop any running images
-  if [ ! -z "$(docker ps -q --filter "name=$NAME")" ]; then
+  if [ ! -z "$(podman ps -q --filter "name=$NAME")" ]; then
     (set -x;
-      docker stop $NAME
+      podman stop $NAME
     )
   fi
 
-  if [ ! -z "$(docker ps -q -a --filter "name=$NAME")" ]; then
+  if [ ! -z "$(podman ps -q -a --filter "name=$NAME")" ]; then
     (set -x;
-      docker rm -f $NAME
+      podman rm -f $NAME
     )
   fi
   (set -ex;
-    docker run --detach --rm ${PARAMS[@]} $IMAGE
+    podman run --detach --rm ${PARAMS[@]} $IMAGE
   )
 }
 
@@ -115,17 +115,17 @@ pushd $SRC &> /dev/null
 TARGETS=()
 case $DIR in
   all)
-    TARGETS+=($(find . -type f -name docker-config|awk -F'/' '{print $2}'|grep -v oracle|grep -v db2))
-    if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+    TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'|grep -v oracle|grep -v db2))
+    if [[ "$(podman image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
       TARGETS+=(oracle)
     fi
-    if [[ "$(docker image ls -q --filter 'reference=ibmcom/db2')" != "" && -d /media/src/opt/db2 ]]; then
+    if [[ "$(podman image ls -q --filter 'reference=ibmcom/db2')" != "" && -d /media/src/opt/db2 ]]; then
       TARGETS+=(db2)
     fi
   ;;
   test)
     TARGETS+=(mysql postgres sqlserver cassandra)
-    if [[ "$(docker image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+    if [[ "$(podman image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
       TARGETS+=(oracle)
     fi
   ;;
@@ -135,6 +135,6 @@ case $DIR in
 esac
 
 for TARGET in ${TARGETS[@]}; do
-  docker_run $TARGET
+  podman_run $TARGET
 done
 popd &> /dev/null

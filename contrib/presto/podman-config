@@ -1,0 +1,3 @@
+NAME=presto
+IMAGE=docker.io/starburstdata/presto
+PUBLISH=8080:8080

@@ -1,3 +1,0 @@
-NAME=clickhouse
-IMAGE=clickhouse/clickhouse-server:22.7
-PUBLISH=9000:9000

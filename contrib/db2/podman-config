@@ -1,6 +1,6 @@
 NAME=db2
 PUBLISH="50000:50000 55000:55000"
-IMAGE=ibmcom/db2
+IMAGE=docker.io/ibmcom/db2
 ENV="LICENSE=accept DB2INSTANCE=db2inst1 DB2INST1_PASSWORD=P4ssw0rd DBNAME=testdb"
 PRIVILEGED=true
 VOLUME=/media/src/opt/db2:/database
