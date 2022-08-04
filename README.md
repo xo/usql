@@ -744,7 +744,7 @@ pg:booktest@localhost=>
 **Note:** variables contained within other strings **will not** be
 interpolated:
 
-> ⚠  Warning
+> :warning: Warning
 >
 > Do not feed the dragons
 ```sh
