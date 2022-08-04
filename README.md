@@ -741,7 +741,7 @@ pg:booktest@localhost-> \g
 pg:booktest@localhost=>
 ```
 
-> :information: Note
+> **Note**
 >
 > Variables contained within other strings <b><u>will not</b></u> be interpolated:
 
@@ -796,7 +796,7 @@ Type "help" for help.
 pg:booktest@=>
 ```
 
-> :information: Note
+> **Note**
 >
 > The `.usqlpass` file cannot be readable by other users, and the permissions
 > should be set accordingly:
@@ -844,9 +844,9 @@ $ usql
 (not connected)=> \copy :PGDSN :MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
 ```
 
-> :information: Note
+> **Note**
 >
-> `usql`'s `\copy is distinct from and <b><u>does not</u></b> function like
+> `usql`'s `\copy` is distinct from and <b><u>does not</u></b> function like
 > `psql`'s `\copy`.
 
 ##### Parameters
@@ -970,7 +970,7 @@ sq:booktest.db=> select * from books;
 (4 rows)
 ```
 
-> :information: Note
+> **Note**
 >
 > When importing large datasets (> 1GiB) from one database to another, it is
 > better to use a database's native clients and tools.
