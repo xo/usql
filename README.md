@@ -796,12 +796,14 @@ pg:booktest@=>
 ```
 
 <hr/>
+
 **Note:** the `.usqlpass` file cannot be readable by other users, and the
 permissions should be set accordingly:
 
 ```sh
-$ chmod 0600 ~/.usqlpass
+chmod 0600 ~/.usqlpass
 ```
+
 <hr/>
 
 #### Runtime Configuration (RC) File
@@ -844,8 +846,10 @@ $ usql
 ```
 
 <hr/>
+
 **Note:** `usql`'s `\copy` is distinct from and ***does not*** function like
 `psql`'s `\copy`.
+
 <hr/>
 
 ##### Parameters
@@ -970,8 +974,10 @@ sq:booktest.db=> select * from books;
 ```
 
 <hr/>
+
 **Note:** when importing large datasets (> 1GiB) from one database to another,
 it is better to use a database's native clients and tools.
+
 <hr/>
 
 ###### Reusing Connections with Copy
