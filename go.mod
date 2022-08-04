@@ -62,7 +62,7 @@ require (
 
 require (
 	cloud.google.com/go v0.103.0 // indirect
-	cloud.google.com/go/bigquery v1.36.0 // indirect
+	cloud.google.com/go/bigquery v1.37.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/spanner v1.36.0 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.13.1-0.20191017214740-b75e88a33d67 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.44.68 // indirect
+	github.com/aws/aws-sdk-go v1.44.70 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0 // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20220520190051-1e77728a1eaa // indirect
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20220802234154-04f9100f89f0 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20220804173514-a678bde720af // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.6 // indirect
@@ -151,7 +151,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
-	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.5.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -221,14 +221,14 @@ require (
 	golang.org/x/net v0.0.0-20220802222814-0bcc04d9c69b // indirect
 	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
+	golang.org/x/sys v0.0.0-20220804214406-8e32c043e418 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	google.golang.org/api v0.91.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78 // indirect
+	google.golang.org/genproto v0.0.0-20220804142021-4e6b2dfa6612 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
