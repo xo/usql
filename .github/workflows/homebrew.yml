@@ -14,10 +14,18 @@ jobs:
         run: |
           brew update
           brew tap xo/xo
+          git config --file $HOMEBREW_PREFIX/Library/Taps/xo/homebrew-xo/.git/config user.name 'Kenneth Shaw'
+          git config --file $HOMEBREW_PREFIX/Library/Taps/xo/homebrew-xo/.git/config user.email 'ken@usql.app'
           brew bump-formula-pr \
             --no-audit \
             --no-browse \
+            --write-only \
+            --commit \
+            --no-fork \
             --force \
             --message="Update usql formula to ${{ github.ref_name }}" \
             --url="https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz" \
             xo/xo/usql
+          cd $HOMEBREW_PREFIX/Library/Taps/xo/homebrew-xo
+          git remote set_url origin "https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git"
+          git push origin master
