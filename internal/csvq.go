@@ -1,4 +1,4 @@
-//go:build (all || most || csvq) && !no_csvq
+//go:build (!no_base || csvq) && !no_csvq
 
 package internal
 

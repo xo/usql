@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// Desc holds information about a command or alias description.
+type Desc struct {
+	Desc   string
+	Params string
+}
+
 // Section is a meta command section.
 type Section string
 
@@ -52,8 +58,8 @@ func Listing(w io.Writer) {
 			descs, plen = add(descs, `  \`+cmd.Name+opts, s, plen)
 			// sort aliases
 			var aliases []string
-			for alias, str := range cmd.Aliases {
-				if str == "" {
+			for alias, desc := range cmd.Aliases {
+				if desc.Desc == "" && desc.Params == "" {
 					continue
 				}
 				aliases = append(aliases, alias)
@@ -88,11 +94,11 @@ func add(a [][]string, b, c string, pad int) ([][]string, int) {
 }
 
 // optText returns a string and the opt text.
-func optText(s string) (string, string) {
-	if i := strings.LastIndex(s, ","); i != -1 {
-		return s[:i], " " + strings.TrimSpace(s[i+1:])
+func optText(desc Desc) (string, string) {
+	if desc.Params != "" {
+		return desc.Desc, " " + desc.Params
 	}
-	return s, ""
+	return desc.Desc, desc.Params
 }
 
 // max returns maximum of a, b.

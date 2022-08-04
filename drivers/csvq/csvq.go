@@ -1,6 +1,7 @@
 // Package csvq defines and registers usql's CSVQ driver.
 //
 // See: https://github.com/mithrandie/csvq-driver
+// Group: base
 package csvq
 
 import (
@@ -16,6 +17,7 @@ import (
 func init() {
 	csvq.SetStdout(query.NewDiscard())
 	drivers.Register("csvq", drivers.Driver{
+		AllowMultilineComments: true,
 		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			if strings.HasPrefix(prefix, "SHOW") {
@@ -26,8 +28,7 @@ func init() {
 		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			err := db.QueryRowContext(ctx, `SELECT @#VERSION`).Scan(&ver)
-			if err != nil {
+			if err := db.QueryRowContext(ctx, `SELECT @#VERSION`).Scan(&ver); err != nil {
 				return "", err
 			}
 			return "CSVQ " + ver, nil

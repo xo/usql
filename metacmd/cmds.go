@@ -24,8 +24,8 @@ import (
 type Cmd struct {
 	Section Section
 	Name    string
-	Desc    string
-	Aliases map[string]string
+	Desc    Desc
+	Aliases map[string]Desc
 	Process func(*Params) error
 }
 
@@ -43,10 +43,10 @@ func init() {
 		Question: {
 			Section: SectionHelp,
 			Name:    "?",
-			Desc:    "show help on backslash commands,[commands]",
-			Aliases: map[string]string{
-				"?":  "show help on " + text.CommandName + " command-line options,options",
-				"? ": "show help on special variables,variables",
+			Desc:    Desc{"show help on backslash commands", "[commands]"},
+			Aliases: map[string]Desc{
+				"?":  {"show help on " + text.CommandName + " command-line options", "options"},
+				"? ": {"show help on special variables", "variables"},
 			},
 			Process: func(p *Params) error {
 				Listing(p.Handler.IO().Stdout())
@@ -56,8 +56,8 @@ func init() {
 		Quit: {
 			Section: SectionGeneral,
 			Name:    "q",
-			Desc:    "quit " + text.CommandName,
-			Aliases: map[string]string{"quit": ""},
+			Desc:    Desc{"quit " + text.CommandName, ""},
+			Aliases: map[string]Desc{"quit": {}},
 			Process: func(p *Params) error {
 				p.Option.Quit = true
 				return nil
@@ -66,7 +66,7 @@ func init() {
 		Copyright: {
 			Section: SectionGeneral,
 			Name:    "copyright",
-			Desc:    "show " + text.CommandName + " usage and distribution terms",
+			Desc:    Desc{"show " + text.CommandName + " usage and distribution terms", ""},
 			Process: func(p *Params) error {
 				p.Handler.Print(text.Copyright)
 				return nil
@@ -75,7 +75,7 @@ func init() {
 		ConnectionInfo: {
 			Section: SectionConnection,
 			Name:    "conninfo",
-			Desc:    "display information about the current database connection",
+			Desc:    Desc{"display information about the current database connection", ""},
 			Process: func(p *Params) error {
 				if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
 					p.Handler.Print(text.ConnInfo, u.Driver, u.DSN)
@@ -88,7 +88,7 @@ func init() {
 		Drivers: {
 			Section: SectionGeneral,
 			Name:    "drivers",
-			Desc:    "display information about available database drivers",
+			Desc:    Desc{"display information about available database drivers", ""},
 			Process: func(p *Params) error {
 				out := p.Handler.IO().Stdout()
 				available := drivers.Available()
@@ -119,10 +119,10 @@ func init() {
 		Connect: {
 			Section: SectionConnection,
 			Name:    "c",
-			Desc:    "connect to database with url,URL",
-			Aliases: map[string]string{
-				"c":       "connect to database with SQL driver and parameters,DRIVER PARAMS...",
-				"connect": "",
+			Desc:    Desc{"connect to database url", "DSN"},
+			Aliases: map[string]Desc{
+				"c":       {"connect to database with driver and parameters", "DRIVER PARAMS..."},
+				"connect": {},
 			},
 			Process: func(p *Params) error {
 				vals, err := p.GetAll(true)
@@ -137,8 +137,8 @@ func init() {
 		Disconnect: {
 			Section: SectionConnection,
 			Name:    "Z",
-			Desc:    "close database connection",
-			Aliases: map[string]string{"disconnect": ""},
+			Desc:    Desc{"close database connection", ""},
+			Aliases: map[string]Desc{"disconnect": {}},
 			Process: func(p *Params) error {
 				return p.Handler.Close()
 			},
@@ -146,8 +146,8 @@ func init() {
 		Password: {
 			Section: SectionConnection,
 			Name:    "password",
-			Desc:    "change the password for a user,[USERNAME]",
-			Aliases: map[string]string{"passwd": ""},
+			Desc:    Desc{"change the password for a user", "[USERNAME]"},
+			Aliases: map[string]Desc{"passwd": {}},
 			Process: func(p *Params) error {
 				username, err := p.Get(true)
 				if err != nil {
@@ -167,14 +167,14 @@ func init() {
 		Exec: {
 			Section: SectionQueryExecute,
 			Name:    "g",
-			Desc:    "execute query (and send results to file or |pipe),[(OPTIONS)] [FILE] or ;",
-			Aliases: map[string]string{
-				"gexec":        "execute query and execute each value of the result",
-				"gset":         "execute query and store results in " + text.CommandName + " variables,[PREFIX]",
-				"gx":           `as \g, but forces expanded output mode,[(OPTIONS)] [FILE]`,
-				"G":            `as \g, but forces vertical output mode,[(OPTIONS)] [FILE]`,
-				"crosstabview": "execute query and display results in crosstab,[(OPTIONS)] [COLUMNS]",
-				"watch":        "execute query every specified interval,[(OPTIONS)] [DURATION]",
+			Desc:    Desc{"execute query (and send results to file or |pipe)", "[(OPTIONS)] [FILE] or ;"},
+			Aliases: map[string]Desc{
+				"gexec":        {"execute query and execute each value of the result", ""},
+				"gset":         {"execute query and store results in " + text.CommandName + " variables", "[PREFIX]"},
+				"gx":           {`as \g, but forces expanded output mode`, `[(OPTIONS)] [FILE]`},
+				"G":            {`as \g, but forces vertical output mode`, `[(OPTIONS)] [FILE]`},
+				"crosstabview": {"execute query and display results in crosstab", "[(OPTIONS)] [COLUMNS]"},
+				"watch":        {"execute query every specified interval", "[(OPTIONS)] [DURATION]"},
 			},
 			Process: func(p *Params) error {
 				p.Option.Exec = ExecOnly
@@ -246,8 +246,8 @@ func init() {
 		Edit: {
 			Section: SectionQueryBuffer,
 			Name:    "e",
-			Desc:    "edit the query buffer (or file) with external editor,[FILE] [LINE]",
-			Aliases: map[string]string{"edit": ""},
+			Desc:    Desc{"edit the query buffer (or file) with external editor", "[FILE] [LINE]"},
+			Aliases: map[string]Desc{"edit": {}},
 			Process: func(p *Params) error {
 				// get last statement
 				s, buf := p.Handler.Last(), p.Handler.Buf()
@@ -276,10 +276,10 @@ func init() {
 		Print: {
 			Section: SectionQueryBuffer,
 			Name:    "p",
-			Desc:    "show the contents of the query buffer",
-			Aliases: map[string]string{
-				"print": "",
-				"raw":   "show the raw (non-interpolated) contents of the query buffer",
+			Desc:    Desc{"show the contents of the query buffer", ""},
+			Aliases: map[string]Desc{
+				"print": {},
+				"raw":   {"show the raw (non-interpolated) contents of the query buffer", ""},
 			},
 			Process: func(p *Params) error {
 				// get last statement
@@ -313,8 +313,8 @@ func init() {
 		Reset: {
 			Section: SectionQueryBuffer,
 			Name:    "r",
-			Desc:    "reset (clear) the query buffer",
-			Aliases: map[string]string{"reset": ""},
+			Desc:    Desc{"reset (clear) the query buffer", ""},
+			Aliases: map[string]Desc{"reset": {}},
 			Process: func(p *Params) error {
 				p.Handler.Reset(nil)
 				fmt.Fprintln(p.Handler.IO().Stdout(), text.QueryBufferReset)
@@ -324,10 +324,10 @@ func init() {
 		Echo: {
 			Section: SectionInputOutput,
 			Name:    "echo",
-			Desc:    "write string to standard output (-n for no newline),[-n] [STRING]",
-			Aliases: map[string]string{
-				"qecho": "write string to \\o output stream (-n for no newline),[-n] [STRING]",
-				"warn":  "write string to standard error (-n for no newline),[-n] [STRING]",
+			Desc:    Desc{"write string to standard output (-n for no newline)", "[-n] [STRING]"},
+			Aliases: map[string]Desc{
+				"qecho": {"write string to \\o output stream (-n for no newline)", "[-n] [STRING]"},
+				"warn":  {"write string to standard error (-n for no newline)", "[-n] [STRING]"},
 			},
 			Process: func(p *Params) error {
 				nl := "\n"
@@ -360,8 +360,8 @@ func init() {
 		Write: {
 			Section: SectionQueryBuffer,
 			Name:    "w",
-			Desc:    "write query buffer to file,FILE",
-			Aliases: map[string]string{"write": ""},
+			Desc:    Desc{"write query buffer to file", "FILE"},
+			Aliases: map[string]Desc{"write": {}},
 			Process: func(p *Params) error {
 				// get last statement
 				s, buf := p.Handler.Last(), p.Handler.Buf()
@@ -378,7 +378,7 @@ func init() {
 		ChangeDir: {
 			Section: SectionOperatingSystem,
 			Name:    "cd",
-			Desc:    "change the current working directory,[DIR]",
+			Desc:    Desc{"change the current working directory", "[DIR]"},
 			Process: func(p *Params) error {
 				dir, err := p.Get(true)
 				if err != nil {
@@ -390,7 +390,7 @@ func init() {
 		SetEnv: {
 			Section: SectionOperatingSystem,
 			Name:    "setenv",
-			Desc:    "set or unset environment variable,NAME [VALUE]",
+			Desc:    Desc{"set or unset environment variable", "NAME [VALUE]"},
 			Process: func(p *Params) error {
 				n, err := p.Get(true)
 				if err != nil {
@@ -406,7 +406,7 @@ func init() {
 		Timing: {
 			Section: SectionOperatingSystem,
 			Name:    "timing",
-			Desc:    "toggle timing of commands,[on|off]",
+			Desc:    Desc{"toggle timing of commands", "[on|off]"},
 			Process: func(p *Params) error {
 				v, err := p.Get(true)
 				if err != nil {
@@ -438,7 +438,7 @@ func init() {
 		Shell: {
 			Section: SectionOperatingSystem,
 			Name:    "!",
-			Desc:    "execute command in shell or start interactive shell,[COMMAND]",
+			Desc:    Desc{"execute command in shell or start interactive shell", "[COMMAND]"},
 			Process: func(p *Params) error {
 				return env.Shell(p.GetRaw())
 			},
@@ -446,8 +446,8 @@ func init() {
 		Out: {
 			Section: SectionInputOutput,
 			Name:    "o",
-			Desc:    "send all query results to file or |pipe,[FILE]",
-			Aliases: map[string]string{"out": ""},
+			Desc:    Desc{"send all query results to file or |pipe", "[FILE]"},
+			Aliases: map[string]Desc{"out": {}},
 			Process: func(p *Params) error {
 				if out := p.Handler.GetOutput(); out != nil {
 					p.Handler.SetOutput(nil)
@@ -476,11 +476,11 @@ func init() {
 		Include: {
 			Section: SectionInputOutput,
 			Name:    "i",
-			Desc:    "execute commands from file,FILE",
-			Aliases: map[string]string{
-				"ir":               `as \i, but relative to location of current script,FILE`,
-				"include":          "",
-				"include_relative": "",
+			Desc:    Desc{"execute commands from file", "FILE"},
+			Aliases: map[string]Desc{
+				"ir":               {`as \i, but relative to location of current script`, `FILE`},
+				"include":          {},
+				"include_relative": {},
 			},
 			Process: func(p *Params) error {
 				path, err := p.Get(true)
@@ -497,12 +497,12 @@ func init() {
 		Transact: {
 			Section: SectionTransaction,
 			Name:    "begin",
-			Desc:    "begin a transaction",
-			Aliases: map[string]string{
-				"begin":    "begin a transaction with isolation level,[-read-only] [ISOLATION]",
-				"commit":   "commit current transaction",
-				"rollback": "rollback (abort) current transaction",
-				"abort":    "",
+			Desc:    Desc{"begin a transaction", ""},
+			Aliases: map[string]Desc{
+				"begin":    {"begin a transaction with isolation level", "[-read-only] [ISOLATION]"},
+				"commit":   {"commit current transaction", ""},
+				"rollback": {"rollback (abort) current transaction", ""},
+				"abort":    {},
 			},
 			Process: func(p *Params) error {
 				switch p.Name {
@@ -558,7 +558,7 @@ func init() {
 		Prompt: {
 			Section: SectionVariables,
 			Name:    "prompt",
-			Desc:    "prompt user to set variable,[-TYPE] <VAR> [PROMPT]",
+			Desc:    Desc{"prompt user to set variable", "[-TYPE] <VAR> [PROMPT]"},
 			Process: func(p *Params) error {
 				typ := "string"
 				ok, n, err := p.GetOptional(true)
@@ -592,7 +592,7 @@ func init() {
 		SetVar: {
 			Section: SectionVariables,
 			Name:    "set",
-			Desc:    "set internal variable, or list all if no parameters,[NAME [VALUE]]",
+			Desc:    Desc{"set internal variable, or list all if no parameters", "[NAME [VALUE]]"},
 			Process: func(p *Params) error {
 				ok, n, err := p.GetOK(true)
 				if err != nil {
@@ -623,7 +623,7 @@ func init() {
 		Unset: {
 			Section: SectionVariables,
 			Name:    "unset",
-			Desc:    "unset (delete) internal variable,NAME",
+			Desc:    Desc{"unset (delete) internal variable", "NAME"},
 			Process: func(p *Params) error {
 				n, err := p.Get(true)
 				if err != nil {
@@ -635,15 +635,15 @@ func init() {
 		SetFormatVar: {
 			Section: SectionFormatting,
 			Name:    "pset",
-			Desc:    "set table output option,[NAME [VALUE]]",
-			Aliases: map[string]string{
-				"a": "toggle between unaligned and aligned output mode",
-				"C": "set table title, or unset if none,[STRING]",
-				"f": "show or set field separator for unaligned query output,[STRING]",
-				"H": "toggle HTML output mode",
-				"T": "set HTML <table> tag attributes, or unset if none,[STRING]",
-				"t": "show only rows,[on|off]",
-				"x": "toggle expanded output,[on|off|auto]",
+			Desc:    Desc{"set table output option", "[NAME [VALUE]]"},
+			Aliases: map[string]Desc{
+				"a": {"toggle between unaligned and aligned output mode", ""},
+				"C": {"set table title, or unset if none", "[STRING]"},
+				"f": {"show or set field separator for unaligned query output", "[STRING]"},
+				"H": {"toggle HTML output mode", ""},
+				"T": {"set HTML <table> tag attributes, or unset if none", "[STRING]"},
+				"t": {"show only rows", "[on|off]"},
+				"x": {"toggle expanded output", "[on|off|auto]"},
 			},
 			Process: func(p *Params) error {
 				var ok bool
@@ -723,17 +723,17 @@ func init() {
 		Describe: {
 			Section: SectionInformational,
 			Name:    "d[S+]",
-			Desc:    "list tables, views, and sequences or describe table, view, sequence, or index,[NAME]",
-			Aliases: map[string]string{
-				"da[S+]": "list aggregates,[PATTERN]",
-				"df[S+]": "list functions,[PATTERN]",
-				"dm[S+]": "list materialized views,[PATTERN]",
-				"dv[S+]": "list views,[PATTERN]",
-				"ds[S+]": "list sequences,[PATTERN]",
-				"dn[S+]": "list schemas,[PATTERN]",
-				"dt[S+]": "list tables,[PATTERN]",
-				"di[S+]": "list indexes,[PATTERN]",
-				"l[+]":   "list databases",
+			Desc:    Desc{"list tables, views, and sequences or describe table, view, sequence, or index", "[NAME]"},
+			Aliases: map[string]Desc{
+				"da[S+]": {"list aggregates", "[PATTERN]"},
+				"df[S+]": {"list functions", "[PATTERN]"},
+				"dm[S+]": {"list materialized views", "[PATTERN]"},
+				"dv[S+]": {"list views", "[PATTERN]"},
+				"ds[S+]": {"list sequences", "[PATTERN]"},
+				"dn[S+]": {"list schemas", "[PATTERN]"},
+				"dt[S+]": {"list tables", "[PATTERN]"},
+				"di[S+]": {"list indexes", "[PATTERN]"},
+				"l[+]":   {"list databases", ""},
 			},
 			Process: func(p *Params) error {
 				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -772,7 +772,7 @@ func init() {
 		Stats: {
 			Section: SectionInformational,
 			Name:    "ss[+]",
-			Desc:    "show stats for a table or a query,[TABLE|QUERY] [k]",
+			Desc:    Desc{"show stats for a table or a query", "[TABLE|QUERY] [k]"},
 			Process: func(p *Params) error {
 				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 				defer cancel()
@@ -810,52 +810,55 @@ func init() {
 		Copy: {
 			Section: SectionInputOutput,
 			Name:    "copy",
-			Desc:    "copy data from/to a table,[SRC_URL] [DST_URL] [SRC] [DST]",
+			Desc:    Desc{"copy query from source url to table on destination url", "SRC DST QUERY TABLE"},
+			Aliases: map[string]Desc{
+				"copy": {"copy query from source url to columns of table on destination url", "SRC DST QUERY TABLE(A,...)"},
+			},
 			Process: func(p *Params) error {
 				stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
-				srcURLstr, err := p.Get(true)
+				srcDsn, err := p.Get(true)
 				if err != nil {
 					return err
 				}
-				srcURL, err := dburl.Parse(srcURLstr)
+				srcURL, err := dburl.Parse(srcDsn)
 				if err != nil {
 					return err
 				}
-				dstURLstr, err := p.Get(true)
+				destDsn, err := p.Get(true)
 				if err != nil {
 					return err
 				}
-				dstURL, err := dburl.Parse(dstURLstr)
+				destURL, err := dburl.Parse(destDsn)
 				if err != nil {
 					return err
 				}
-				src, err := p.Get(true)
+				query, err := p.Get(true)
 				if err != nil {
 					return err
 				}
-				dst, err := p.Get(true)
+				table, err := p.Get(true)
 				if err != nil {
 					return err
 				}
-				srcDB, err := drivers.Open(srcURL, stdout, stderr)
+				src, err := drivers.Open(srcURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
-				defer srcDB.Close()
-				dstDB, err := drivers.Open(dstURL, stdout, stderr)
+				defer src.Close()
+				dest, err := drivers.Open(destURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
-				defer dstDB.Close()
+				defer dest.Close()
 				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 				defer cancel()
 				// get the result set
-				r, err := srcDB.QueryContext(ctx, src)
+				r, err := src.QueryContext(ctx, query)
 				if err != nil {
 					return err
 				}
 				defer r.Close()
-				n, err := drivers.Copy(ctx, dstURL, stdout, stderr, r, dst)
+				n, err := drivers.Copy(ctx, destURL, stdout, stderr, r, table)
 				if err != nil {
 					return err
 				}
