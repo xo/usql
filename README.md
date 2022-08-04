@@ -741,12 +741,10 @@ pg:booktest@localhost-> \g
 pg:booktest@localhost=>
 ```
 
-**Note:** variables contained within other strings **will not** be
-interpolated:
-
-> :warning: Warning
+> :information: Note
 >
-> Do not feed the dragons
+> Variables contained within other strings <b><u>will not</b></u> be interpolated:
+
 ```sh
 pg:booktest@localhost=> select ':FOO';
   ?column?
@@ -798,16 +796,14 @@ Type "help" for help.
 pg:booktest@=>
 ```
 
-<hr/>
-
-**Note:** the `.usqlpass` file cannot be readable by other users, and the
-permissions should be set accordingly:
+> :information: Note
+>
+> The `.usqlpass` file cannot be readable by other users, and the permissions
+> should be set accordingly:
 
 ```sh
 chmod 0600 ~/.usqlpass
 ```
-
-<hr/>
 
 #### Runtime Configuration (RC) File
 
@@ -848,12 +844,10 @@ $ usql
 (not connected)=> \copy :PGDSN :MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
 ```
 
-<hr/>
-
-**Note:** `usql`'s `\copy` is distinct from and ***does not*** function like
-`psql`'s `\copy`.
-
-<hr/>
+> :information: Note
+>
+> `usql`'s `\copy is distinct from and <b><u>does not</u></b> function like
+> `psql`'s `\copy`.
 
 ##### Parameters
 
@@ -976,12 +970,10 @@ sq:booktest.db=> select * from books;
 (4 rows)
 ```
 
-<hr/>
-
-**Note:** when importing large datasets (> 1GiB) from one database to another,
-it is better to use a database's native clients and tools.
-
-<hr/>
+> :information: Note
+>
+> When importing large datasets (> 1GiB) from one database to another, it is
+> better to use a database's native clients and tools.
 
 ###### Reusing Connections with Copy
 
