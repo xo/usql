@@ -5,8 +5,8 @@
 <p align="center">
   <a href="#installing" title="Installing">Installing</a> |
   <a href="#building" title="Building">Building</a> |
-  <a href="#using" title="Using">Using</a> |
   <a href="#database-support" title="Database Support">Database Support</a> |
+  <a href="#using" title="Using">Using</a> |
   <a href="#features-and-compatibility" title="Features and Compatibility">Features and Compatibility</a> |
   <a href="https://github.com/xo/usql/releases" title="Releases">Releases</a> |
   <a href="#contributing" title="Contributing">Contributing</a>
@@ -15,14 +15,15 @@
 <br/>
 
 `usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle
-Database, SQLite3, Microsoft SQL Server, [and many other databases][Database Support]
+Database, SQLite3, Microsoft SQL Server, [and many other databases][databases]
 including NoSQL and non-relational databases!
 
-`usql` provides a simple way to work with [SQL and NoSQL databases][Database Support]
+`usql` provides a simple way to work with [SQL and NoSQL databases][databases]
 via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
-core `psql` features, such as [variables][], [backticks][], and [commands][]
-and has additional features that `psql` does not, such as [syntax highlighting][highlighting],
-context-based completion, and [multiple database support][Database Support].
+core `psql` features, such as [variables][variables], [backticks][backticks],
+[backslash commands][commands] and has additional features that `psql` does
+not, such as [multiple database support][databases], [copying between databases][copying],
+[syntax highlighting][highlighting], and [context-based completion][completion].
 
 Database administrators and developers that would prefer to work with a tool
 like `psql` with non-PostgreSQL databases, will find `usql` intuitive,
@@ -42,17 +43,14 @@ for other databases.
 [discord]: https://discord.gg/yJKEzc7prt (Discord Discussion)
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square (Discord Discussion)
 
-[Installing]: #installing (Installing)
-[Building]: #building (Building)
-[Using]: #using (Using)
-[Database Support]: #database-support (Database Support)
-[Features and Compatibility]: #features-and-compatibility (Features and Compatibility)
-[Releases]: https://github.com/xo/usql/releases (Releases)
-[Contributing]: #contributing (Contributing)
+[installing]: #installing (Installing)
+[databases]: #database-support (Database Support)
+[releases]: https://github.com/xo/usql/releases (Releases)
 
 ## Installing
 
-`usql` can be installed [via Release][], [via Homebrew][], [via Scoop][] or [via Go][]:
+`usql` can be installed [via Release][], [via Homebrew][], [via Scoop][] or
+[via Go][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos-and-linux
@@ -61,66 +59,50 @@ for other databases.
 
 ### Installing via Release
 
-1. [Download a release for your platform][Releases]
+1. [Download a release for your platform][releases]
 2. Extract the `usql` or `usql.exe` file from the `.tar.bz2` or `.zip` file
 3. Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or
-`%PATH%` (Windows)
-
-#### macOS Notes
-
-The recommended installation method on macOS is [via `brew` (see below)][via Homebrew].
-If the following or similar error is encountered when attempting to run `usql`:
-
-```sh
-$ usql
-dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicuuc.68.dylib
-  Referenced from: /Users/user/.local/bin/usql
-  Reason: image not found
-Abort trap: 6
-```
-
-Then the [ICU lib][] needs to be installed. This can be accomplished using `brew`:
-
-```
-$ brew install icu4c
-```
-
-[ICU lib]: http://site.icu-project.org
+  `%PATH%` (Windows)
 
 ### Installing via Homebrew (macOS and Linux)
 
-`usql` is available in the [`xo/xo` tap][xo-tap], and can be installed in the
-usual way with the [`brew` command][homebrew]:
+Install `usql` from the [`xo/xo` tap][xo-tap] in the usual way with the [`brew`
+command][homebrew]:
 
 ```sh
 # install usql with "most" drivers
 $ brew install xo/xo/usql
 ```
 
-Additional support for [ODBC databases][Database Support] can be installed by
-passing `--with-odbc` option during install:
+Support for [ODBC databases][databases] is available through the `--with-odbc`
+install flag:
 
 ```sh
 # tap xo homebrew tap
 $ brew tap xo/xo
+
 # install usql with odbc support
 $ brew install --with-odbc usql
 ```
 
 ### Installing via Scoop (Windows)
 
-`usql` can be installed using [Scoop](https://scoop.sh):
+Install `usql` using [Scoop](https://scoop.sh):
 
 ```powershell
-# install scoop if not already installed
-iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+# Optional: Needed to run a remote script the first time
+> Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-scoop install usql
+# install scoop if not already installed
+> irm get.scoop.sh | iex
+
+# install usql with scoop
+> scoop install usql
 ```
 
 ### Installing via Go
 
-`usql` can be installed in the usual Go fashion:
+Install `usql` in the usual Go fashion:
 
 ```sh
 # install usql from master branch with basic database support
@@ -128,48 +110,46 @@ scoop install usql
 $ go install github.com/xo/usql@master
 ```
 
+See [below for information](#building) on `usql` build tags.
+
 ## Building
 
-When building `usql` with [Go][go-project], only drivers for PostgreSQL, MySQL,
-SQLite3 and Microsoft SQL Server will be enabled by default. Other databases
-can be enabled by specifying the build tag for their [database driver][Database Support].
-Additionally, the `most` and `all` build tags include most, and all SQL
-drivers, respectively:
+When building `usql` out-of-the-box with `go build` or `go install`, only the
+[`base` drivers][databases] for PostgreSQL, MySQL, SQLite3, Microsoft SQL
+Server, Oracle, CSVQ will be included in the build:
 
 ```sh
-# install all drivers
-$ go install -tags all github.com/xo/usql@master
+# build/install with base drivers (PostgreSQL, MySQL, SQLite3, Microsoft SQL Server,
+# Oracle, CSVQ)
+$ go install github.com/xo/usql@master
+```
 
-# install with most drivers (excludes unsupported drivers)
-$ go install -tags most github.com/xo/usql@master
+Other databases can be enabled by specifying the [build tag for their database
+driver][databases].
 
-# install with base drivers and additional support for Oracle Database and ODBC
-$ go install -tags 'godror odbc' github.com/xo/usql@master
+```sh
+# build/install with base, Avatica, and ODBC drivers
+$ go install -tags 'avatica odbc' github.com/xo/usql@master
 ```
 
 For every build tag `<driver>`, there is also a `no_<driver>` build tag
-disabling the driver:
+that will disable the driver:
 
 ```sh
-# install all drivers excluding avatica and couchbase
-$ go install -tags 'all no_avatica no_couchbase' github.com/xo/usql@master
+# build/install most drivers, excluding Avatica, Couchbase, and PostgreSQL
+$ go install -tags 'most no_avatica no_couchbase no_postgres' github.com/xo/usql@master
 ```
 
-### Release Builds
+By specifying the build tags `most` or `all`, the build will include most, and
+all SQL drivers, respectively:
 
-[Release builds][Releases] are built with the `most` build tag. Additional
-[SQLite3 build tags](build-release.sh) are also specified for releases.
+```sh
+# build/install with most drivers (excludes CGO drivers and problematic drivers)
+$ go install -tags most github.com/xo/usql@master
 
-### Embedding
-
-An effort has been made to keep `usql`'s packages modular, and reusable by
-other developers wishing to leverage the `usql` code base. As such, it is
-possible to embed or create a SQL command-line interface (e.g, for use by some
-other project as an "official" client) using the core `usql` source tree.
-
-Please refer to [main.go](main.go) to see how `usql` puts together its
-packages. `usql`'s code is also well-documented -- please refer to the
-[Go reference][goref-usql] for an overview of the various packages and APIs.
+# build/install all drivers (includes CGO drivers and problematic drivers)
+$ go install -tags all github.com/xo/usql@master
+```
 
 ## Database Support
 
@@ -181,9 +161,10 @@ The list of drivers that `usql` was built with can be displayed using the
 
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
-$ export GO111MODULE=on
+
 # build excluding the base drivers, and including cassandra and moderncsqlite
 $ go build -tags 'no_postgres no_oracle no_sqlserver no_sqlite3 cassandra moderncsqlite'
+
 # show built driver support
 $ ./usql -c '\drivers'
 Available Drivers:
@@ -202,66 +183,66 @@ its primary URL scheme, the driver's available scheme aliases (shown in
 `[...]`), and the real/underlying driver (shown in `(...)`) for wire compatible
 drivers.
 
-#### Supported Database Schemes and Aliases
+### Supported Database Schemes and Aliases
 
 The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
-| Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                          |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------|
-| Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`                                   | [github.com/denisenkom/go-mssqldb][d-sqlserver]                 |
-| MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                       |
-| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`    | [github.com/sijms/go-ora/v2][d-oracle]                          |
-| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                 |
-| SQLite3              | `sqlite3`       | `sq`, `file`, `sqlite`                          | [github.com/mattn/go-sqlite3][d-sqlite3]<sup>[†][f-cgo]</sup>   |
-|                      |                 |                                                 |                                                                 |
-| Alibaba MaxCompute   | `maxcompute`    | `mc`                                            | [sqlflow.org/gomaxcompute][d-maxcompute]                        |
-| Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                              | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots]      |
-| Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]            |
-| Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                |
-| Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]             |
-| AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                        | [github.com/uber/athenadriver/go][d-athena]                     |
-| Cassandra            | `cassandra`     | `ca`, `scy`, `scylla`, `datastax`, `cql`        | [github.com/MichaelS11/go-cql-driver][d-cassandra]              |
-| ClickHouse           | `clickhouse`    | `ch`                                            | [github.com/ClickHouse/clickhouse-go][d-clickhouse]             |
-| Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                     |
-| CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                      | [github.com/mithrandie/csvq-driver][d-csvq]                     |
-| Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                          |
-| Exasol               | `exasol`        | `ex`, `exa`                                     | [github.com/exasol/exasol-driver-go][d-exasol]                  |
-| Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                   |
-| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                      |
-| Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                    |
-| Google Spanner       | `spanner`       | `sp`                                            | [github.com/cloudspannerecosystem/go-sql-spanner][d-spanner]    |
-| Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                            |
-| ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                            | [modernc.org/sqlite][d-moderncsqlite]                           |
-| MySQL MyMySQL        | `mymysql`       | `zm`, `mymy`                                    | [github.com/ziutek/mymysql/godrv][d-mymysql]                    |
-| Netezza              | `netezza`       | `nz`, `nzgo`                                    | [github.com/IBM/nzgo][d-netezza]                                |
-| PostgreSQL PGX       | `pgx`           | `px`                                            | [github.com/jackc/pgx/v4/stdlib][d-pgx]                         |
-| Presto               | `presto`        | `pr`, `prs`, `prestos`, `prestodb`, `prestodbs` | [github.com/prestodb/presto-go-client/presto][d-presto]         |
-| SAP ASE              | `sapase`        | `ax`, `ase`, `tds`                              | [github.com/thda/tds][d-sapase]                                 |
-| SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                       |
-| Trino                | `trino`         | `tr`, `trs`, `trinos`                           | [github.com/trinodb/trino-go-client/trino][d-trino]             |
-| Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                  |
-| VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]     |
-|                      |                 |                                                 |                                                                 |
-| Apache Hive          | `hive`          | `hi`                                            | [sqlflow.org/gohive][d-hive]                                    |
-| Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                         |
-| Azure CosmosDB       | `cosmos`        | `cm`                                            | [github.com/btnguyen2k/gocosmos][d-cosmos]                      |
-| GO DRiver for ORacle | `godror`        | `gr`                                            | [github.com/godror/godror][d-godror]<sup>[†][f-cgo]</sup>       |
-| ODBC                 | `odbc`          | `od`                                            | [github.com/alexbrainman/odbc][d-odbc]<sup>[†][f-cgo]</sup>     |
-| Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake][d-snowflake]               |
-|                      |                 |                                                 |                                                                 |
-| Amazon Redshift      | `postgres`      | `rs`, `redshift`                                | [github.com/lib/pq][d-postgres]<sup>[‡][f-wire]</sup>           |
-| CockroachDB          | `postgres`      | `cr`, `cdb`, `crdb`, `cockroach`, `cockroachdb` | [github.com/lib/pq][d-postgres]<sup>[‡][f-wire]</sup>           |
-| OLE ODBC             | `adodb`         | `oo`, `ole`, `oleodbc`                          | [github.com/mattn/go-adodb][d-adodb]<sup>[‡][f-wire]</sup>      |
-| SingleStore MemSQL   | `mysql`         | `me`, `memsql`                                  | [github.com/go-sql-driver/mysql][d-mysql]<sup>[‡][f-wire]</sup> |
-| TiDB                 | `mysql`         | `ti`, `tidb`                                    | [github.com/go-sql-driver/mysql][d-mysql]<sup>[‡][f-wire]</sup> |
-| Vitess Database      | `mysql`         | `vt`, `vitess`                                  | [github.com/go-sql-driver/mysql][d-mysql]<sup>[‡][f-wire]</sup> |
-|                      |                 |                                                 |                                                                 |
-| **NO DRIVERS**       | `no_base`       |                                                 | _no base drivers (useful for development)_                      |
-| **MOST DRIVERS**     | `most`          |                                                 | _all stable drivers_                                            |
-| **ALL DRIVERS**      | `all`           |                                                 | _all drivers_                                                   |
-| **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                 | _exclude driver with `<tag>`_                                   |
+| Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                           |
+|----------------------|-----------------|-------------------------------------------------|------------------------------------------------------------------|
+| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                  |
+| MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                        |
+| Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`                                   | [github.com/denisenkom/go-mssqldb][d-sqlserver]                  |
+| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`    | [github.com/sijms/go-ora/v2][d-oracle]                           |
+| SQLite3              | `sqlite3`       | `sq`, `file`, `sqlite`                          | [github.com/mattn/go-sqlite3][d-sqlite3] <sup>[†][f-cgo]</sup>   |
+| CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                      | [github.com/mithrandie/csvq-driver][d-csvq]                      |
+|                      |                 |                                                 |                                                                  |
+| Alibaba MaxCompute   | `maxcompute`    | `mc`                                            | [sqlflow.org/gomaxcompute][d-maxcompute]                         |
+| Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                              | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots]       |
+| Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]             |
+| Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                 |
+| Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]              |
+| AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                        | [github.com/uber/athenadriver/go][d-athena]                      |
+| Cassandra            | `cassandra`     | `ca`, `scy`, `scylla`, `datastax`, `cql`        | [github.com/MichaelS11/go-cql-driver][d-cassandra]               |
+| ClickHouse           | `clickhouse`    | `ch`                                            | [github.com/ClickHouse/clickhouse-go][d-clickhouse]              |
+| Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                      |
+| Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                           |
+| Exasol               | `exasol`        | `ex`, `exa`                                     | [github.com/exasol/exasol-driver-go][d-exasol]                   |
+| Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                    |
+| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                       |
+| Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                     |
+| Google Spanner       | `spanner`       | `sp`                                            | [github.com/cloudspannerecosystem/go-sql-spanner][d-spanner]     |
+| Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                             |
+| ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                            | [modernc.org/sqlite][d-moderncsqlite]                            |
+| MySQL MyMySQL        | `mymysql`       | `zm`, `mymy`                                    | [github.com/ziutek/mymysql/godrv][d-mymysql]                     |
+| Netezza              | `netezza`       | `nz`, `nzgo`                                    | [github.com/IBM/nzgo][d-netezza]                                 |
+| PostgreSQL PGX       | `pgx`           | `px`                                            | [github.com/jackc/pgx/v4/stdlib][d-pgx]                          |
+| Presto               | `presto`        | `pr`, `prs`, `prestos`, `prestodb`, `prestodbs` | [github.com/prestodb/presto-go-client/presto][d-presto]          |
+| SAP ASE              | `sapase`        | `ax`, `ase`, `tds`                              | [github.com/thda/tds][d-sapase]                                  |
+| SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                        |
+| Trino                | `trino`         | `tr`, `trs`, `trinos`                           | [github.com/trinodb/trino-go-client/trino][d-trino]              |
+| Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                   |
+| VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]      |
+|                      |                 |                                                 |                                                                  |
+| Apache Hive          | `hive`          | `hi`                                            | [sqlflow.org/gohive][d-hive]                                     |
+| Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                          |
+| Azure CosmosDB       | `cosmos`        | `cm`                                            | [github.com/btnguyen2k/gocosmos][d-cosmos]                       |
+| GO DRiver for ORacle | `godror`        | `gr`                                            | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>       |
+| ODBC                 | `odbc`          | `od`                                            | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>     |
+| Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake][d-snowflake]                |
+|                      |                 |                                                 |                                                                  |
+| Amazon Redshift      | `postgres`      | `rs`, `redshift`                                | [github.com/lib/pq][d-postgres] <sup>[‡][f-wire]</sup>           |
+| CockroachDB          | `postgres`      | `cr`, `cdb`, `crdb`, `cockroach`, `cockroachdb` | [github.com/lib/pq][d-postgres] <sup>[‡][f-wire]</sup>           |
+| OLE ODBC             | `adodb`         | `oo`, `ole`, `oleodbc`                          | [github.com/mattn/go-adodb][d-adodb] <sup>[‡][f-wire]</sup>      |
+| SingleStore MemSQL   | `mysql`         | `me`, `memsql`                                  | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
+| TiDB                 | `mysql`         | `ti`, `tidb`                                    | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
+| Vitess Database      | `mysql`         | `vt`, `vitess`                                  | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
+|                      |                 |                                                 |                                                                  |
+| **NO DRIVERS**       | `no_base`       |                                                 | _no base drivers (useful for development)_                       |
+| **MOST DRIVERS**     | `most`          |                                                 | _all stable drivers_                                             |
+| **ALL DRIVERS**      | `all`           |                                                 | _all drivers_                                                    |
+| **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                 | _exclude driver with `<tag>`_                                    |
 
 [d-adodb]: https://github.com/mattn/go-adodb
 [d-athena]: https://github.com/uber/athenadriver
@@ -308,13 +289,14 @@ associated database, scheme / build tag, and scheme aliases:
 
 <p>
   <i>
-    <a id="f-cgo"><sup>†</sup>Requires CGO</a><br>
-    <a id="f-wire"><sup>‡</sup>Wire compatible (see respective driver)</a>
+    <a id="f-cgo"><sup>†</sup> Requires CGO</a><br>
+    <a id="f-wire"><sup>‡</sup> Wire compatible (see respective driver)</a>
   </i>
 </p>
 
 Any of the protocol schemes/aliases shown above can be used in conjunction when
-connecting to a database via the command-line or with the [`\connect` command][commands]:
+connecting to a database via the command-line or with the [`\connect` and
+`\copy` commands][commands]:
 
 ```sh
 # connect to a vitess database:
@@ -322,14 +304,17 @@ $ usql vt://user:pass@host:3306/mydatabase
 
 $ usql
 (not connected)=> \c vitess://user:pass@host:3306/mydatabase
+
+$ usql
+(not connected)=> \copy csvq://. pg://localhost/ 'select * ....' 'myTable'
 ```
 
-See [the section below on connecting to databases](#connecting-to-databases)
-for further details building DSNs/URLs for use with `usql`.
+See [the section below on connecting to databases][connecting] for further
+details building DSNs/URLs for use with `usql`.
 
 ## Using
 
-After [installing][Installing], `usql` can be used similarly to the following:
+After [installing][], `usql` can be used similarly to the following:
 
 ```sh
 # connect to a postgres database
@@ -342,7 +327,7 @@ $ usql oracle://user:pass@host/oracle.sid
 $ usql pg://localhost/ -f script.sql
 ```
 
-#### Command-line Options
+### Command-line Options
 
 Supported command-line options:
 
@@ -388,12 +373,12 @@ Options:
 ### Connecting to Databases
 
 `usql` opens a database connection by [parsing a URL][dburl] and passing the
-resulting connection string to [a database driver][Database Support]. Database
+resulting connection string to [a database driver][databases]. Database
 connection strings (aka "data source name" or DSNs) have the same parsing rules
-as URLs, and can be passed to `usql` via command-line, or to the `\connect` or
-`\c` [commands][].
+as URLs, and can be passed to `usql` via command-line, or to the [`\connect`,
+`\c`, and `\copy` commands][commands].
 
-Connection strings look like the following:
+Database connection strings look like the following:
 
 ```txt
    driver+transport://user:pass@host/dbname?opt1=a&opt2=b
@@ -403,23 +388,23 @@ Connection strings look like the following:
 
 Where the above are:
 
-| Component                      | Description                                                                          |
-|--------------------------------|--------------------------------------------------------------------------------------|
-| `driver`                       | driver scheme name or scheme alias                                                   |
-| `transport`                    | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>                      |
-| `user`                         | username                                                                             |
-| `pass`                         | password                                                                             |
-| `host`                         | hostname                                                                             |
-| `dbname`<sup>[±][f-path]</sup> | database name, instance, or service name/ID                                          |
-| `?opt1=a&...`                  | additional database driver options (see respective SQL driver for available options) |
-| `/path/to/file`                | a path on disk                                                                       |
+| Component                       | Description                                                                          |
+|---------------------------------|--------------------------------------------------------------------------------------|
+| `driver`                        | driver scheme name or scheme alias                                                   |
+| `transport`                     | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>                      |
+| `user`                          | username                                                                             |
+| `pass`                          | password                                                                             |
+| `host`                          | hostname                                                                             |
+| `dbname` <sup>[±][f-path]</sup> | database name, instance, or service name/ID                                          |
+| `?opt1=a&...`                   | additional database driver options (see respective SQL driver for available options) |
+| `/path/to/file`                 | a path on disk                                                                       |
 
 [f-path]: #f-path (URL Paths for Databases)
 
 <p>
   <i>
     <a id="f-path">
-      <sup>±</sup>Some databases, such as Microsoft SQL Server, or Oracle
+      <sup>±</sup> Some databases, such as Microsoft SQL Server, or Oracle
       Database support a path component (ie, <code>/dbname</code>) in the form
       of <code>/instance/dbname</code>, where <code>/instance</code> is the
       optional service identifier (aka "SID") or database instance
@@ -429,22 +414,21 @@ Where the above are:
 
 #### Driver Aliases
 
-`usql` supports the same driver names and aliases from the [`dburl`][dburl]
-package. Most databases have at least one or more alias - please refer to the
-[`dburl` documentation][dburl-schemes] for all supported aliases.
+`usql` supports the same driver names and aliases as [the `dburl`
+package][dburl]. Databases have at least one or more aliases. See [`dburl`'s
+scheme documentation][dburl-schemes] for a list of all supported aliases.
 
 ##### Short Aliases
 
 All database drivers have a two character short form that is usually the first
 two letters of the database driver. For example, `pg` for `postgres`, `my` for
-`mysql`, `ms` for `sqlserver` (formerly known as `mssql`), `or` for `oracle`,
-or `sq` for `sqlite3`.
+`mysql`, `ms` for `sqlserver`, `or` for `oracle`, or `sq` for `sqlite3`.
 
 #### Passing Driver Options
 
 Driver options are specified as standard URL query options in the form of
-`?opt1=a&obt2=b`. Please refer to the [relevant database driver's
-documentation][Database Support] for available options.
+`?opt1=a&obt2=b`. Refer to the [relevant database driver's
+documentation][databases] for available options.
 
 #### Paths on Disk
 
@@ -452,10 +436,10 @@ If a URL does not have a `driver:` scheme, `usql` will check if it is a path on
 disk. If the path exists, `usql` will attempt to use an appropriate database
 driver to open the path.
 
-If the specified path is a Unix Domain Socket, `usql` will attempt to open it
-using the MySQL driver. If the path is a directory, `usql` will attempt to open
-it using the PostgreSQL driver. If the path is a regular file, `usql` will
-attempt to open the file using the SQLite3 driver.
+When the path is a Unix Domain Socket, `usql` will attempt to open it using the
+MySQL driver. When the path is a directory, `usql` will attempt to open it
+using the PostgreSQL driver. And, lastly, when the path is a regular file,
+`usql` will attempt to open the file using the SQLite3 driver.
 
 #### Driver Defaults
 
@@ -467,8 +451,8 @@ be left out. `usql` will attempt connecting using defaults where possible:
 $ usql pg://
 ```
 
-Please see documentation for [the database driver][Database Support] you are
-connecting with for more information.
+See the relevant documentation [on database drivers][databases] for more
+information.
 
 ### Connection Examples
 
@@ -514,7 +498,7 @@ $ usql ca://
 # connect to a sqlite database that exists on disk
 $ usql dbname.sqlite3
 
-# NOTE: when connecting to a SQLite database, if the "<driver>://" or
+# Note: when connecting to a SQLite database, if the "<driver>://" or
 # "<driver>:" scheme/alias is omitted, the file must already exist on disk.
 #
 # if the file does not yet exist, the URL must incorporate file:, sq:, sqlite3:,
@@ -550,7 +534,7 @@ $ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trac
 
 ### Executing Queries and Commands
 
-The interactive intrepreter reads queries and [meta (`\ `) commands][commands],
+The interactive intrepreter reads queries and [meta (`\`) commands][commands],
 sending the query to the connected database:
 
 ```sh
@@ -593,7 +577,7 @@ pg:booktest@localhost=>
 ```
 
 Commands may accept one or more parameter, and can be quoted using either `'`
-or `"`. Command parameters may also be [backtick'd][backticks].
+or `"`. Command parameters [may also be backticked][backticks].
 
 ### Backslash Commands
 
@@ -631,6 +615,8 @@ Help
   \? variables                         show help on special variables
 
 Input/Output
+  \copy SRC DST QUERY TABLE            copy query from source url to table on destination url
+  \copy SRC DST QUERY TABLE(A,...)     copy query from source url to columns of table on destination url
   \echo [-n] [STRING]                  write string to standard output (-n for no newline)
   \qecho [-n] [STRING]                 write string to \o output stream (-n for no newline)
   \warn [-n] [STRING]                  write string to standard error (-n for no newline)
@@ -657,18 +643,19 @@ Formatting
   \C [STRING]                          set table title, or unset if none
   \f [STRING]                          show or set field separator for unaligned query output
   \H                                   toggle HTML output mode
-  \T [STRING]                          set HTML <table> tag attributes, or unset if none
   \t [on|off]                          show only rows
+  \T [STRING]                          set HTML <table> tag attributes, or unset if none
   \x [on|off|auto]                     toggle expanded output
 
 Transaction
   \begin                               begin a transaction
+  \begin [-read-only] [ISOLATION]      begin a transaction with isolation level
   \commit                              commit current transaction
   \rollback                            rollback (abort) current transaction
 
 Connection
-  \c URL                               connect to database with url
-  \c DRIVER PARAMS...                  connect to database with SQL driver and parameters
+  \c DSN                               connect to database url
+  \c DRIVER PARAMS...                  connect to database with driver and parameters
   \Z                                   close database connection
   \password [USERNAME]                 change the password for a user
   \conninfo                            display information about the current database connection
@@ -687,8 +674,21 @@ Variables
 
 ## Features and Compatibility
 
-The `usql` project's goal is to support all standard `psql` commands and
-features. Pull Requests are always appreciated!
+An overview of `usql`'s features, functionality, and compability with `psql`:
+
+* [Variables and Interpolation][variables]
+* [Backticks][backticks]
+* [Passwords][usqlpass]
+* [Runtime Configuration (RC) File][usqlrc]
+* [Copying Between Databases][copying]
+* [Syntax Highlighting][highlighting]
+* [Time Formatting][timefmt]
+* [Context Completion][completion]
+* [Host Connection Information](#host-connection-information)
+
+The `usql` project's goal is to support as much of `psql`'s core features and
+functionality, and aims to be as compatible as possible - [contributions are
+always appreciated][contributing]!
 
 #### Variables and Interpolation
 
@@ -741,7 +741,7 @@ pg:booktest@localhost-> \g
 pg:booktest@localhost=>
 ```
 
-**Note**: variables contained within other strings will **NOT** be
+**Note:** variables contained within other strings **will not** be
 interpolated:
 
 ```sh
@@ -756,9 +756,9 @@ select ':FOO';
 pg:booktest@localhost=>
 ```
 
-#### Backtick'd parameters
+#### Backticks
 
-[Meta (`\ `) commands][commands] support backticks on parameters:
+[Meta (`\`) commands][commands] support backticks on parameters:
 
 ```sh
 (not connected)=> \echo Welcome `echo $USER` -- 'currently:' "(" `date` ")"
@@ -766,7 +766,7 @@ Welcome ken -- currently: ( Wed Jun 13 12:10:27 WIB 2018 )
 (not connected)=>
 ```
 
-Backtick'd parameters will be passed to the user's `SHELL`, exactly as written,
+Backticked parameters will be passed to the user's `SHELL`, exactly as written,
 and can be combined with `\set`:
 
 ```sh
@@ -795,16 +795,19 @@ Type "help" for help.
 pg:booktest@=>
 ```
 
-Note: the `.usqlpass` file cannot be readable by other users. Please set the
-permissions accordingly:
+<hr/>
+**Note:** the `.usqlpass` file cannot be readable by other users, and the
+permissions should be set accordingly:
 
 ```sh
 $ chmod 0600 ~/.usqlpass
 ```
+<hr/>
 
 #### Runtime Configuration (RC) File
 
-`usql` supports executing a `.usqlrc` contained in the user's `HOME` directory:
+`usql` supports executing a `.usqlrc` runtime configuration (RC) file contained
+in the user's `HOME` directory:
 
 ```sh
 $ cat $HOME/.usqlrc
@@ -819,44 +822,181 @@ SYNTAX_HL_STYLE = 'paraiso-dark'
 (not connected)=>
 ```
 
-The `.usqlrc` file is read by `usql` at startup in the same way as a file
-passed on the command-line with `-f` / `--file`. It is commonly used to set
-startup environment variables and settings.
+The `.usqlrc` file is read at startup in the same way as a file passed on the
+command-line with `-f` / `--file`. It is commonly used to set startup
+environment variables and settings.
 
-You can temporarily disable the RC-file by passing `-X` or `--no-rc` on the
-command-line:
+RC-file execution can be temporarily disabled at startup by passing `-X` or
+`--no-rc` on the command-line:
 
 ```sh
 $ usql --no-rc pg://
 ```
 
-#### Host Connection Information
+#### Copying Between Databases
 
-By default, `usql` displays connection information when connecting to a
-database. This might cause problems with some databases or connections. This
-can be disabled by setting the system environment variable `USQL_SHOW_HOST_INFORMATION`
-to `false`:
+`usql` provides a `\copy` command that reads data from a source database DSN
+and writes to a destination database DSN:
 
 ```sh
-$ export USQL_SHOW_HOST_INFORMATION=false
-$ usql pg://booktest@localhost
-Type "help" for help.
-
-pg:booktest@=>
+$ usql
+(not connected)=> \copy :PGDSN :MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
 ```
 
-`SHOW_HOST_INFORMATION` is a standard [`usql` variable][variables],
-and can be `\set` or `\unset`. Additionally, it can be passed via the
-command-line using `-v` or `--set`:
+<hr/>
+**Note:** `usql`'s `\copy` is distinct from and ***does not*** function like
+`psql`'s `\copy`.
+<hr/>
+
+##### Parameters
+
+The `\copy` command has two parameter forms:
+
+```txt
+SRC DST QUERY TABLE
+
+SRC DST QUERY TABLE(COL1, COL2, ..., COLN)
+```
+
+Where:
+
+* `SRC` - is the [source database URL][connecting] to connect to, and where the
+  `QUERY` will be executed
+* `DST` - is the [destination database URL][connecting] to connect to, and where
+  the destination `TABLE` resides
+* `QUERY` - is the query to execute on the `SRC` connection, the results of which
+  will be copied to `TABLE`
+* `TABLE` - is the the destination table name, followed by an optional SQL-like
+  column list of the form `(COL1, COL2, ..., COLN)`, where `COL1`, `COL2`, `...`,
+  `COLN` are column names of `TABLE`
+
+The usual rules for [variables, interpolation, and quoting][variables] apply to
+`\copy`'s parameters.
+
+###### Quoting
+
+`QUERY` and `TABLE` ***must*** be quoted when containing spaces:
 
 ```sh
-$ usql --set SHOW_HOST_INFORMATION=false pg://
+$ usql
+(not connected)=> echo :SOURCE_DSN :DESTINATION_DSN
+pg://postgres:P4ssw0rd@localhost/ mysql://localhost
+(not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select * from mySourceTable' 'myDestination(colA, colB)'
+COPY 2
+```
+
+###### Columns
+
+The `QUERY` ***must*** return same number of columns as defined by
+`TABLE`:
+
+```sh
+$ usql
+(not connected)=> \copy csvq:. sq:test.db 'select * from authors' authors
+error: failed to prepare insert query: 2 values for 1 columns
+(not connected)=> \copy csvq:. sq:test.db 'select name from authors' authors(name)
+COPY 2
+```
+
+###### Datatype Compatibilty and Casting
+
+The `\copy` command does not attempt to perform any kind of datatype
+conversion.
+
+If a `QUERY` returns columns with different datatypes than expected by the
+`TABLE`'s column, the `QUERY` can use the source database's conversion/casting
+functionality to cast columns to a datatype that will work for `TABLE`'s
+columns:
+
+```sh
+$ usql
+(not connected)=> \copy postgres://user:pass@localhost mysql://user:pass@localhost 'SELECT uuid_column::TEXT FROM myPgTable' myMyTable
+COPY 1
+```
+
+###### Importing Data from CSV
+
+The `\copy` command is capable of importing data from CSV's (or any other
+database!) using the `csvq` driver:
+
+```sh
+$ cat authors.csv
+author_id,name
+1,Isaac Asimov
+2,Stephen King
+$ cat books.csv
+book_id,author_id,title
+1,1,I Robot
+2,2,Carrie
+3,2,Cujo
+$ usql
+(not connected)=> -- setting variables to make connections easier
+(not connected)=> \set SOURCE_DSN csvq://.
+(not connected)=> \set DESTINATION_DSN sqlite3:booktest.db
+(not connected)=> -- connecting to the destination and creating the schema
+(not connected)=> \c :DESTINATION_DSN
+Connected with driver sqlite3 (SQLite3 3.38.5)
+(sq:booktest.db)=> create table authors (author_id integer, name text);
+CREATE TABLE
+(sq:booktest.db)=> create table books (book_id integer not null primary key autoincrement, author_id integer, title text);
+CREATE TABLE
+(sq:booktest.db)=> -- adding an extra row to books prior to copying
+(sq:booktest.db)=> insert into books (author_id, title) values (1, 'Foundation');
+INSERT 1
+(sq:booktest.db)=> -- disconnecting to demonstrate that \copy opens new database connections
+(sq:booktest.db)=> \disconnect
+(not connected)=> -- copying data from SOURCE -> DESTINATION
+(not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select * from authors' authors
+COPY 2
+(not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select author_id, title from books' 'books(author_id, title)'
+COPY 3
+(not connected)=> \c :DESTINATION_DSN
+Connected with driver sqlite3 (SQLite3 3.38.5)
+(sq:booktest.db)=> select * from authors;
+ author_id |     name
+-----------+--------------
+         1 | Isaac Asimov
+         2 | Stephen King
+(2 rows)
+
+sq:booktest.db=> select * from books;
+ book_id | author_id |   title
+---------+-----------+------------
+       1 |         1 | Foundation
+       2 |         1 | I Robot
+       3 |         2 | Carrie
+       4 |         2 | Cujo
+(4 rows)
+```
+
+<hr/>
+**Note:** when importing large datasets (> 1GiB) from one database to another,
+it is better to use a database's native clients and tools.
+<hr/>
+
+###### Reusing Connections with Copy
+
+The `\copy` command (and all `usql` commands) [works with variables][variables].
+When scripting, or when needing to perform multiple `\copy` operations from/to
+multiple sources/destinations, the best practice is to `\set` connection
+variables either in a script or in [the `$HOME/.usqlrc` RC script][usqlrc].
+
+Similarly, passwords can be stored for easy reuse (and kept out of scripts) by
+storing in [the `$HOME/.usqlpass` password file][usqlpass].
+
+For example:
+
+```sh
+$ cat $HOME/.usqlpass
+postgres:*:*:*:postgres:P4ssw0rd
+godror:*:*:*:system:P4ssw0rd
+$ usql
 Type "help" for help.
 
-pg:booktest@=> \set SHOW_HOST_INFORMATION true
-pg:booktest@=> \connect pg://
-Connected with driver postgres (PostgreSQL 9.6.9)
-pg:booktest@=>
+(not connected)=> \set pglocal postgres://postgres@localhost:49153?sslmode=disable
+(not connected)=> \set orlocal godror://system@localhost:1521/orasid
+(not connected)=> \copy :pglocal :orlocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
+COPY 18
 ```
 
 #### Syntax Highlighting
@@ -871,6 +1011,48 @@ highlighting:
 | `SYNTAX_HL_FORMAT`      | _dependent on terminal support_ | formatter name    | [Chroma formatter name][chroma-formatter]                    |
 | `SYNTAX_HL_OVERRIDE_BG` | `true`                          | `true` or `false` | enables overriding the background color of the chroma styles |
 | `SYNTAX_HL_STYLE`       | `monokai`                       | style name        | [Chroma style name][chroma-style]                            |
+
+The `SYNTAX_*` variables are regular `usql` variables, and can be `\set` and
+`\unset`:
+
+```sh
+$ usql
+(not connected)=> \set SYNTAX_HL_STYLE dracula
+(not connected)=> \unset SYNTAX_HL_OVERRIDE_BG
+```
+
+#### Context Completion
+
+When using the interactive shell, context completion is available in `usql` by
+hitting the `<Tab>` key. For example, hitting `<Tab>` can complete some parts
+of `SELECT` queries on a PostgreSQL databases:
+
+```sh
+$ usql
+Connected with driver postgres (PostgreSQL 14.4 (Debian 14.4-1.pgdg110+1))
+Type "help" for help.
+
+pg:postgres@=> select * f<Tab>
+fetch            from             full outer join
+```
+
+Or, for example completing [backslash commands][commands] while connected to a
+database:
+
+```sh
+$ usql my://
+Connected with driver mysql (10.8.3-MariaDB-1:10.8.3+maria~jammy)
+Type "help" for help.
+
+my:root@=> \g<Tab>
+\g     \gexec \gset  \gx
+```
+
+Not all commands, contexts, or databases support completion. If you're
+interested in helping to make `usql`'s completion better, see [the section
+below on contributing][contributing].
+
+Command completion can be canceled with `<Control-C>`.
 
 #### Time Formatting
 
@@ -902,95 +1084,121 @@ pg:postgres@=> select now();
 pg:postgres@=>
 ```
 
-Any [Go supported time format][go-time] or the standard Go const name (for example,
-`Kitchen`, in the above).
+`usql`'s time format supports any [Go supported time format][go-time], or can
+be the standard Go const name, such as `Kitchen` above. See below for an
+overview of the [available time constants](#time-constants).
 
-##### Constants
+##### Time Constants
 
-| Constant Name | Value                                 |
-|---------------|---------------------------------------|
-| ANSIC         | `Mon Jan _2 15:04:05 2006`            |
-| UnixDate      | `Mon Jan _2 15:04:05 MST 2006`        |
-| RubyDate      | `Mon Jan 02 15:04:05 -0700 2006`      |
-| RFC822        | `02 Jan 06 15:04 MST`                 |
-| RFC822Z       | `02 Jan 06 15:04 -0700`               |
-| RFC850        | `Monday, 02-Jan-06 15:04:05 MST`      |
-| RFC1123       | `Mon, 02 Jan 2006 15:04:05 MST`       |
-| RFC1123Z      | `Mon, 02 Jan 2006 15:04:05 -0700`     |
-| RFC3339       | `2006-01-02T15:04:05Z07:00`           |
-| RFC3339Nano   | `2006-01-02T15:04:05.999999999Z07:00` |
-| Kitchen       | `3:04PM`                              |
-| Stamp         | `Jan _2 15:04:05`                     |
-| StampMilli    | `Jan _2 15:04:05.000`                 |
-| StampMicro    | `Jan _2 15:04:05.000000`              |
-| StampNano     | `Jan _2 15:04:05.000000000`           |
+The following are the time constant names available in `usql`, corresponding
+time format value, and example display output:
 
-#### Copy
+| Constant    | Format                                | Display <sup>[↓][f-ts]</sup>        |
+|-------------|--------------------------------------:|------------------------------------:|
+| ANSIC       | `Mon Jan _2 15:04:05 2006`            | `Wed Aug  3 20:12:48 2022`          |
+| UnixDate    | `Mon Jan _2 15:04:05 MST 2006`        | `Wed Aug  3 20:12:48 UTC 2022`      |
+| RubyDate    | `Mon Jan 02 15:04:05 -0700 2006`      | `Wed Aug 03 20:12:48 +0000 2022`    |
+| RFC822      | `02 Jan 06 15:04 MST`                 | `03 Aug 22 20:12 UTC`               |
+| RFC822Z     | `02 Jan 06 15:04 -0700`               | `03 Aug 22 20:12 +0000`             |
+| RFC850      | `Monday, 02-Jan-06 15:04:05 MST`      | `Wednesday, 03-Aug-22 20:12:48 UTC` |
+| RFC1123     | `Mon, 02 Jan 2006 15:04:05 MST`       | `Wed, 03 Aug 2022 20:12:48 UTC`     |
+| RFC1123Z    | `Mon, 02 Jan 2006 15:04:05 -0700`     | `Wed, 03 Aug 2022 20:12:48 +0000`   |
+| RFC3339     | `2006-01-02T15:04:05Z07:00`           | `2022-08-03T20:12:48Z`              |
+| RFC3339Nano | `2006-01-02T15:04:05.999999999Z07:00` | `2022-08-03T20:12:48.693257Z`       |
+| Kitchen     | `3:04PM`                              | `8:12PM`                            |
+| Stamp       | `Jan _2 15:04:05`                     | `Aug  3 20:12:48`                   |
+| StampMilli  | `Jan _2 15:04:05.000`                 | `Aug  3 20:12:48.693`               |
+| StampMicro  | `Jan _2 15:04:05.000000`              | `Aug  3 20:12:48.693257`            |
+| StampNano   | `Jan _2 15:04:05.000000000`           | `Aug  3 20:12:48.693257000`         |
 
-`usql` implements the `\copy` command that reads data from a database connection
-and writes it into another one. It requires 4 parameters:
-* source connection string
-* destination connection string
-* source query
-* destination table name, optionally with columns
+[f-ts]: #f-ts (Timestamp Value)
 
-Connection strings support same syntax as in `\connect`. Source query needs to be quoted. Source query must
-select same number of columns and in same order as they're defined in the destination table, unless
-they're specified for the destination, as `table_name(column1, column2, ...)`. Quote the whole expression,
-if it contains spaces. `\copy` does not attempt to perform any data type conversion. Use `CAST` in the source query
-to ensure data types compatible with destination table. Some drivers may have limited data type support,
-and they might not work at all when combined with other limited drivers.
+<p>
+  <i>
+    <a id="f-ts"><sup>↓</sup> Generated using timestamp <code>2022-08-03T20:12:48.693257Z</code></a><br>
+  </i>
+</p>
 
-Unlike `psql`, `\copy` in `usql` cannot read data directly from files. Drivers like `csvq` can help with this,
-since they support reading CSV and JSON files.
+#### Host Connection Information
+
+By default, `usql` displays connection information when connecting to a
+database. This might cause problems with some databases or connections. This
+can be disabled by setting the system environment variable `USQL_SHOW_HOST_INFORMATION`
+to `false`:
 
 ```sh
-$ cat books.csv
-book_id,author_id,isbn,title,year,available,tags
-3,1,3,one,2018,"2018-06-01 00:00:00",{}
-4,2,4,two,2019,"2019-06-01 00:00:00",{}
+$ export USQL_SHOW_HOST_INFORMATION=false
+$ usql pg://booktest@localhost
+Type "help" for help.
 
-$ usql -c "\copy csvq://. sqlite3://test.db 'select * from books' 'books'"
-Copied 2 rows
+pg:booktest@=>
 ```
 
-Note that it might be a better idea to use tools dedicated to the destination database to load data in a robust way.
+`SHOW_HOST_INFORMATION` is a standard [`usql` variable][variables],
+and can be `\set` or `\unset`. Additionally, it can be passed via the
+command-line using `-v` or `--set`:
 
-`\copy` reads data from plain `SELECT` queries. Most drivers that have `\copy` enabled use `INSERT` statements,
-except for PostgreSQL ones, which use `COPY TO`. Because data needs to be downloaded from one database and uploaded
-into another, don't expect same performance as in `psql`. For loading large amount of data efficiently,
-use tools native to the destination database.
+```sh
+$ usql --set SHOW_HOST_INFORMATION=false pg://
+Type "help" for help.
 
-You can use `\copy` with variables. Better yet, put those `\set` commands in your runtime configuration file
-at `$HOME/.usqlrc` and passwords at `$HOME/.usqlpass`.
+pg:booktest@=> \set SHOW_HOST_INFORMATION true
+pg:booktest@=> \connect pg://
+Connected with driver postgres (PostgreSQL 9.6.9)
+pg:booktest@=>
+```
+
+## Additional Notes
+
+### macOS
+
+The recommended installation method on macOS is [via `brew` (see above)][via Homebrew]
+due to the way libary dependencies for the `sqlite3` driver are done on macOS.
+If the following (or similar) error is encountered when attempting to run `usql`:
 
 ```sh
 $ usql
-Type "help" for help.
-
-(not connected)=> \set pglocal postgres://postgres@localhost:49153?sslmode=disable
-(not connected)=> \set oralocal godror://system@localhost:1521/orasid
-(not connected)=> \copy :pglocal :oralocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
+dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicuuc.68.dylib
+  Referenced from: /Users/user/.local/bin/usql
+  Reason: image not found
+Abort trap: 6
 ```
+
+Then missing library dependency can be fixed by installing
+[`icu4c`](http://site.icu-project.org) using `brew`:
+
+```sh
+$ brew install icu4c
+Running `brew update --auto-update`...
+==> Downloading ...
+...
+
+$ usql
+(not connected)=>
+```
+
+### Release Builds
+
+[Release builds][releases] are built with the `most` build tag and with
+additional [SQLite3 build tags (see: `build-release.sh`)](build-release.sh).
 
 ## Contributing
 
 `usql` is currently a WIP, and is aiming towards a 1.0 release soon.
 Well-written PRs are always welcome -- and there is a clear backlog of issues
-marked `help wanted` on the GitHub issue tracker!
+marked `help wanted` on the GitHub issue tracker! For [technical details on
+contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 
-[*Please pick up an issue today, and submit a PR tomorrow!*][help-wanted]
-
-For more technical details, see [CONTRIBUTING.md](https://github.com/xo/usql/blob/master/CONTRIBUTING.md).
+[_Pick up an issue today, and submit a PR tomorrow!_][help-wanted]
 
 ## Related Projects
 
-* [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing and opening database connection URLs
+* [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing
+  and opening database connection URLs
 * [xo][xo] - Go command-line tool to generate Go code from a database schema
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
-[go-project]: https://golang.org/project
 [go-time]: https://golang.org/pkg/time/#pkg-constants
 [go-sql]: https://golang.org/pkg/database/sql/
 [homebrew]: https://brew.sh/
@@ -1001,7 +1209,14 @@ For more technical details, see [CONTRIBUTING.md](https://github.com/xo/usql/blo
 [chroma-style]: https://xyproto.github.io/splash/docs/all.html
 [help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
 
+[backticks]: #backticks (Backticks)
 [commands]: #backslash-commands (Commands)
-[backticks]: #backtick-d-parameters (Backtick Parameters)
+[completion]: #context-completion (Context Completion)
+[connecting]: #connecting-to-databases (Connecting to Databases)
+[contributing]: #contributing (Contributing)
+[copying]: #copying-between-databases (Copying Between Databases)
 [highlighting]: #syntax-highlighting (Syntax Highlighting)
+[timefmt]: #time-formatting (Time Formatting)
+[usqlpass]: #passwords (Passwords)
+[usqlrc]: #runtime-configuration-rc-file (Runtime Configuration File)
 [variables]: #variables-and-interpolation (Variable Interpolation)
