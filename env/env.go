@@ -70,7 +70,7 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 
 // EditFile edits a file. If path is empty, then a temporary file will be created.
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
-	ed := Getenv(text.CommandUpper()+"_EDITOR", "EDITOR", "VISUAL")
+	ed := All()["EDITOR"]
 	if ed == "" {
 		return nil, text.ErrNoEditorDefined
 	}
