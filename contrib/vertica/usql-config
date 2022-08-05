@@ -1,2 +1,2 @@
-DB="vertica://dbadmin:P4ssw0rd@localhost/vertica"
+DB="vertica://vertica:P4ssw0rd@localhost/vertica"
 VSQL="SELECT version() AS version;"

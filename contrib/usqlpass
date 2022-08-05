@@ -12,4 +12,4 @@ mysql:*:*:*:root:P4ssw0rd
 oracle:*:*:*:system:P4ssw0rd
 pgx:*:*:*:postgres:P4ssw0rd
 sqlserver:*:*:*:sa:Adm1nP@ssw0rd
-vertica:*:*:*:dbadmin:P4ssw0rd
+vertica:*:*:*:vertica:P4ssw0rd
