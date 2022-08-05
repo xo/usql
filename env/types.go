@@ -59,10 +59,12 @@ func init() {
 	if pagerCmd != "" {
 		pager = "on"
 	}
+
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"PAGER":                 pagerCmd,
+		"EDITOR":                Getenv("USQL_EDITOR", "EDITOR", "VISUAL"),
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
