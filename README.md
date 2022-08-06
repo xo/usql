@@ -867,9 +867,9 @@ Where:
   the destination `TABLE` resides
 * `QUERY` - is the query to execute on the `SRC` connection, the results of which
   will be copied to `TABLE`
-* `TABLE` - is the the destination table name, followed by an optional SQL-like
-  column list of the form `(COL1, COL2, ..., COLN)`, where `COL1`, `COL2`, `...`,
-  `COLN` are column names of `TABLE`
+* `TABLE` - is the destination table name, followed by an optional SQL-like column
+  list of the form `(COL1, COL2, ..., COLN)`
+* `(COL1, COL2, ..., COLN)` - a list of the destination column names, 1-to-N
 
 The usual rules for [variables, interpolation, and quoting][variables] apply to
 `\copy`'s parameters.
@@ -886,10 +886,10 @@ pg://postgres:P4ssw0rd@localhost/ mysql://localhost
 COPY 2
 ```
 
-###### Columns
+###### Column Counts
 
-The `QUERY` ***must*** return same number of columns as defined by
-`TABLE`:
+The `QUERY` ***must*** return the same number of columns as defined by
+the `TABLE` expression:
 
 ```sh
 $ usql
@@ -1086,7 +1086,7 @@ pg:postgres@=>
 ```
 
 `usql`'s time format supports any [Go supported time format][go-time], or can
-be the standard Go const name, such as `Kitchen` above. See below for an
+be any standard Go const name, such as `Kitchen` above. See below for an
 overview of the [available time constants](#time-constants).
 
 ##### Time Constants
@@ -1151,6 +1151,13 @@ pg:booktest@=>
 
 ## Additional Notes
 
+The following are additional notes and miscellania related to `usql`:
+
+### Release Builds
+
+[Release builds][releases] are built with the `most` build tag and with
+additional [SQLite3 build tags (see: `build-release.sh`)](build-release.sh).
+
 ### macOS
 
 The recommended installation method on macOS is [via `brew` (see above)][via Homebrew]
@@ -1177,11 +1184,6 @@ Running `brew update --auto-update`...
 $ usql
 (not connected)=>
 ```
-
-### Release Builds
-
-[Release builds][releases] are built with the `most` build tag and with
-additional [SQLite3 build tags (see: `build-release.sh`)](build-release.sh).
 
 ## Contributing
 
