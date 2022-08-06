@@ -1,4 +1,3 @@
 NAME=exasol
 IMAGE=docker.io/exasol/docker-db
 PUBLISH=8563:8563
-PRIVILEGED=true
