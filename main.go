@@ -62,7 +62,7 @@ func main() {
 			if t, ok := m[tag]; ok {
 				tag = t
 			}
-			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go get -u -tags %s github.com/xo/usql\n\n", tag)
+			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags %s github.com/xo/usql@latest\n\n", tag)
 		}
 		os.Exit(1)
 	}
