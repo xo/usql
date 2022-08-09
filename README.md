@@ -631,6 +631,7 @@ Informational
   \di[S+] [PATTERN]                    list indexes
   \dm[S+] [PATTERN]                    list materialized views
   \dn[S+] [PATTERN]                    list schemas
+  \dp[S] [PATTERN]                     list table, view, and sequence access privileges
   \ds[S+] [PATTERN]                    list sequences
   \dt[S+] [PATTERN]                    list tables
   \dv[S+] [PATTERN]                    list views

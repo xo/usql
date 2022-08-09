@@ -144,7 +144,7 @@ FROM pg_catalog.pg_class c
 		}
 		conds = append(conds, fmt.Sprintf("c.relkind IN (%s)", strings.Join(pholders, ", ")))
 	}
-	rows, closeRows, err := r.query(qstr, conds, "1, 2", vals...)
+	rows, closeRows, err := r.query(qstr, conds, "1, 3, 2", vals...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return metadata.NewTableSet([]metadata.Table{}), nil

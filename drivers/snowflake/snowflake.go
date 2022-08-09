@@ -31,6 +31,7 @@ func init() {
 		infos.WithFunctions(false),
 		infos.WithIndexes(false),
 		infos.WithConstraints(false),
+		infos.WithColumnPrivileges(false),
 	)
 	drivers.Register("snowflake", drivers.Driver{
 		Err: func(err error) (string, string) {

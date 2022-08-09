@@ -26,6 +26,7 @@ require (
 	github.com/gocql/gocql v1.2.0
 	github.com/godror/godror v0.30.2
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
+	github.com/google/go-cmp v0.5.8
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgx/v4 v4.17.0
@@ -146,7 +147,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v2.0.6+incompatible // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
