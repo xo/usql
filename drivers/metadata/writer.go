@@ -772,6 +772,55 @@ func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbos
 	return tblfmt.EncodeAll(w.w, res, params)
 }
 
+// ListPrivilegeSummaries matching pattern
+func (w DefaultWriter) ListPrivilegeSummaries(u *dburl.URL, pattern string, showSystem bool) error {
+	r, ok := w.r.(PrivilegeSummaryReader)
+	if !ok {
+		return fmt.Errorf(text.NotSupportedByDriver, `\dp`, u.Driver)
+	}
+	sp, tp, err := parsePattern(pattern)
+	if err != nil {
+		return fmt.Errorf("failed to parse search pattern: %w", err)
+	}
+	// filter for tables, views and sequences
+	const tableTypes = "tvms"
+	types := []string{}
+	for k, v := range w.tableTypes {
+		if strings.ContainsRune(tableTypes, k) {
+			types = append(types, v...)
+		}
+	}
+	res, err := r.PrivilegeSummaries(Filter{Schema: sp, Name: tp, WithSystem: showSystem, Types: types})
+	if err != nil {
+		return fmt.Errorf("failed to list table privileges: %w", err)
+	}
+	defer res.Close()
+	if !showSystem {
+		// in case the reader doesn't implement WithSystem
+		res.SetFilter(func(r Result) bool {
+			_, ok := w.systemSchemas[r.(*PrivilegeSummary).Schema]
+			return !ok
+		})
+	}
+
+	res.SetScanValues(func(r Result) []interface{} {
+		f := r.(*PrivilegeSummary)
+
+		v := []interface{}{
+			f.Schema,
+			f.Name,
+			f.ObjectType,
+			f.ObjectPrivileges,
+			f.ColumnPrivileges,
+		}
+		return v
+	})
+
+	params := env.Pall()
+	params["title"] = "Access privileges"
+	return tblfmt.EncodeAll(w.w, res, params)
+}
+
 func parsePattern(pattern string) (string, string, error) {
 	// TODO do proper escaping, quoting etc
 	if strings.ContainsRune(pattern, '.') {

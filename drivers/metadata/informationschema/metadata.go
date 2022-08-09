@@ -22,6 +22,9 @@ type InformationSchema struct {
 	hasIndexes          bool
 	hasConstraints      bool
 	hasCheckConstraints bool
+	hasTablePrivileges  bool
+	hasColumnPrivileges bool
+	hasUsagePrivileges  bool
 	clauses             map[ClauseName]string
 	limit               int
 	systemSchemas       []string
@@ -56,6 +59,8 @@ const (
 	ConstraintJoinCond          = ClauseName("constraint_join.fk")
 
 	SequenceColumnsIncrement = ClauseName("sequence_columns.increment")
+
+	PrivilegesGrantor = ClauseName("privileges.grantor")
 )
 
 // New InformationSchema reader
@@ -67,6 +72,9 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 		hasIndexes:          true,
 		hasConstraints:      true,
 		hasCheckConstraints: true,
+		hasTablePrivileges:  true,
+		hasColumnPrivileges: true,
+		hasUsagePrivileges:  true,
 		clauses: map[ClauseName]string{
 			ColumnsDataType:                 "data_type",
 			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
@@ -81,6 +89,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 			ConstraintIsDeferrable:          "t.is_deferrable",
 			ConstraintInitiallyDeferred:     "t.initially_deferred",
 			SequenceColumnsIncrement:        "increment",
+			PrivilegesGrantor:               "grantor",
 		},
 		systemSchemas:     []string{"information_schema"},
 		dataTypeFormatter: func(col metadata.Column) string { return col.DataType },
@@ -145,6 +154,27 @@ func WithCheckConstraints(con bool) metadata.ReaderOption {
 func WithSequences(seq bool) metadata.ReaderOption {
 	return func(r metadata.Reader) {
 		r.(*InformationSchema).hasSequences = seq
+	}
+}
+
+// WithTablePrivileges when the `table_privileges` table exists
+func WithTablePrivileges(t bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasTablePrivileges = t
+	}
+}
+
+// WithColumnPrivileges when the `column_privileges` table exists
+func WithColumnPrivileges(c bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasColumnPrivileges = c
+	}
+}
+
+// WithUsagePrivileges when the `usage_privileges` table exists
+func WithUsagePrivileges(u bool) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).hasUsagePrivileges = u
 	}
 }
 
@@ -819,6 +849,154 @@ func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, 
 		return nil, rows.Err()
 	}
 	return metadata.NewSequenceSet(results), nil
+}
+
+// PrivilegeSummaries of privileges on tables, views and sequences from selected catalog (or all, if empty), matching schemas and names
+func (s InformationSchema) PrivilegeSummaries(f metadata.Filter) (*metadata.PrivilegeSummarySet, error) {
+	if !s.hasTablePrivileges && !s.hasColumnPrivileges && !s.hasUsagePrivileges {
+		return nil, text.ErrNotSupported
+	}
+
+	qstrs := []string{}
+	conds, vals := s.conditions(1, f, formats{
+		catalog:    "object_catalog LIKE %s",
+		schema:     "object_schema LIKE %s",
+		notSchemas: "object_schema NOT IN (%s)",
+		name:       "object_name LIKE %s",
+		types:      "object_type IN (%s)",
+	})
+
+	if s.hasTablePrivileges {
+		columns := []string{
+			"t.table_catalog AS object_catalog",
+			"t.table_schema AS object_schema",
+			"t.table_name AS object_name",
+			"t.table_type AS object_type",
+			"'' AS column_name",
+			"COALESCE(grantee, '') AS grantee",
+			"COALESCE(" + s.clauses[PrivilegesGrantor] + ", '') AS grantor",
+			"COALESCE(privilege_type, '') AS privilege_type",
+			"CASE WHEN is_grantable='YES' THEN 1 ELSE 0 END AS is_grantable",
+		}
+
+		// `tables` is on the left side of the join to also list tables that have no privileges set.
+		qstr := "SELECT\n" +
+			"  " + strings.Join(columns, ", ") + "\n" +
+			"FROM information_schema.tables t\n" +
+			"LEFT JOIN information_schema.table_privileges tp\n" +
+			"  ON t.table_catalog = tp.table_catalog AND t.table_schema = tp.table_schema AND t.table_name = tp.table_name"
+		qstrs = append(qstrs, qstr)
+	}
+
+	if s.hasColumnPrivileges {
+		columns := []string{
+			"t.table_catalog AS object_catalog",
+			"t.table_schema AS object_schema",
+			"t.table_name AS object_name",
+			"t.table_type AS object_type",
+			"column_name",
+			"grantee",
+			s.clauses[PrivilegesGrantor] + " AS grantor",
+			"privilege_type",
+			"CASE WHEN is_grantable='YES' THEN 1 ELSE 0 END AS is_grantable",
+		}
+
+		qstr := "SELECT\n" +
+			"  " + strings.Join(columns, ", ") + "\n" +
+			"FROM information_schema.column_privileges cp\n" +
+			"LEFT JOIN information_schema.tables t\n" +
+			"  ON t.table_catalog = cp.table_catalog AND t.table_schema = cp.table_schema AND t.table_name = cp.table_name"
+		qstrs = append(qstrs, qstr)
+	}
+
+	if s.hasUsagePrivileges {
+		columns := []string{
+			"object_catalog",
+			"object_schema",
+			"object_name",
+			"object_type",
+			"'' AS column_name",
+			"grantee",
+			s.clauses[PrivilegesGrantor] + " AS grantor",
+			"privilege_type",
+			"CASE WHEN is_grantable='YES' THEN 1 ELSE 0 END AS is_grantable",
+		}
+
+		qstr := "SELECT\n" +
+			"  " + strings.Join(columns, ", ") + "\n" +
+			"FROM information_schema.usage_privileges"
+		qstrs = append(qstrs, qstr)
+	}
+
+	// In the query result, table and column level privileges will be on separate rows.
+	// Each table or column can have multple privileges (i.e rows).
+	// For table level privileges the `column_name` column is empty.
+	qstr := "SELECT * FROM (\n" + strings.Join(qstrs, "\nUNION ALL\n") + "\n) AS subquery"
+	rows, closeRows, err := s.query(
+		qstr,
+		conds,
+		"object_catalog, object_schema, object_type, object_name, column_name, grantee, grantor, privilege_type",
+		vals...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return metadata.NewPrivilegeSummarySet([]metadata.PrivilegeSummary{}), nil
+		}
+		return nil, err
+	}
+	defer closeRows()
+
+	type row struct {
+		Catalog       string
+		Schema        string
+		Name          string
+		ObjectType    string
+		Column        string
+		Grantee       string
+		Grantor       string
+		PrivilegeType string
+		IsGrantable   bool
+	}
+	// The rows need to be aggregated into one `metadata.PrivilegeSummary` object per table. The rows are ordered by table such that we can append
+	// to the current `metadata.PrivilegeSummary` as long as we are processing the same table.
+	results := []metadata.PrivilegeSummary{}
+	curSummary := &metadata.PrivilegeSummary{}
+	for rows.Next() {
+		r := row{}
+		err = rows.Scan(&r.Catalog, &r.Schema, &r.Name, &r.ObjectType, &r.Column, &r.Grantee, &r.Grantor, &r.PrivilegeType, &r.IsGrantable)
+		if err != nil {
+			return nil, err
+		}
+
+		if curSummary.Catalog != r.Catalog || curSummary.Schema != r.Schema || curSummary.Name != r.Name {
+			summary := metadata.PrivilegeSummary{
+				Catalog:          r.Catalog,
+				Schema:           r.Schema,
+				Name:             r.Name,
+				ObjectType:       r.ObjectType,
+				ObjectPrivileges: metadata.ObjectPrivileges{},
+				ColumnPrivileges: metadata.ColumnPrivileges{},
+			}
+			results = append(results, summary)
+			curSummary = &results[len(results)-1]
+		}
+
+		switch {
+		// If the row specifies neither column nor table level privileges
+		case r.PrivilegeType == "":
+		// If row specifies table level privilege
+		case r.Column == "":
+			objPrivilege := metadata.ObjectPrivilege{Grantee: r.Grantee, Grantor: r.Grantor, PrivilegeType: r.PrivilegeType, IsGrantable: r.IsGrantable}
+			curSummary.ObjectPrivileges = append(curSummary.ObjectPrivileges, objPrivilege)
+		// If row specifies column level privilege
+		default:
+			colPrivilege := metadata.ColumnPrivilege{Column: r.Column, Grantee: r.Grantee, Grantor: r.Grantor, PrivilegeType: r.PrivilegeType, IsGrantable: r.IsGrantable}
+			curSummary.ColumnPrivileges = append(curSummary.ColumnPrivileges, colPrivilege)
+		}
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return metadata.NewPrivilegeSummarySet(results), nil
 }
 
 func (s InformationSchema) conditions(baseParam int, filter metadata.Filter, formats formats) ([]string, []interface{}) {

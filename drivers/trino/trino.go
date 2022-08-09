@@ -29,6 +29,8 @@ func init() {
 			infos.WithSequences(false),
 			infos.WithIndexes(false),
 			infos.WithConstraints(false),
+			infos.WithColumnPrivileges(false),
+			infos.WithUsagePrivileges(false),
 		)(db, opts...)
 		mr := &metaReader{
 			LoggingReader: metadata.NewLoggingReader(db, opts...),

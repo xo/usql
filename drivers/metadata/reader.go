@@ -10,19 +10,20 @@ import (
 
 // PluginReader allows to be easily composed from other readers
 type PluginReader struct {
-	catalogs          func(Filter) (*CatalogSet, error)
-	schemas           func(Filter) (*SchemaSet, error)
-	tables            func(Filter) (*TableSet, error)
-	columns           func(Filter) (*ColumnSet, error)
-	columnStats       func(Filter) (*ColumnStatSet, error)
-	indexes           func(Filter) (*IndexSet, error)
-	indexColumns      func(Filter) (*IndexColumnSet, error)
-	triggers          func(Filter) (*TriggerSet, error)
-	constraints       func(Filter) (*ConstraintSet, error)
-	constraintColumns func(Filter) (*ConstraintColumnSet, error)
-	functions         func(Filter) (*FunctionSet, error)
-	functionColumns   func(Filter) (*FunctionColumnSet, error)
-	sequences         func(Filter) (*SequenceSet, error)
+	catalogs           func(Filter) (*CatalogSet, error)
+	schemas            func(Filter) (*SchemaSet, error)
+	tables             func(Filter) (*TableSet, error)
+	columns            func(Filter) (*ColumnSet, error)
+	columnStats        func(Filter) (*ColumnStatSet, error)
+	indexes            func(Filter) (*IndexSet, error)
+	indexColumns       func(Filter) (*IndexColumnSet, error)
+	triggers           func(Filter) (*TriggerSet, error)
+	constraints        func(Filter) (*ConstraintSet, error)
+	constraintColumns  func(Filter) (*ConstraintColumnSet, error)
+	functions          func(Filter) (*FunctionSet, error)
+	functionColumns    func(Filter) (*FunctionColumnSet, error)
+	sequences          func(Filter) (*SequenceSet, error)
+	privilegeSummaries func(Filter) (*PrivilegeSummarySet, error)
 }
 
 var _ ExtendedReader = &PluginReader{}
@@ -69,6 +70,9 @@ func NewPluginReader(readers ...Reader) Reader {
 		}
 		if r, ok := i.(SequenceReader); ok {
 			p.sequences = r.Sequences
+		}
+		if r, ok := i.(PrivilegeSummaryReader); ok {
+			p.privilegeSummaries = r.PrivilegeSummaries
 		}
 	}
 	return &p
@@ -163,6 +167,13 @@ func (p PluginReader) Sequences(f Filter) (*SequenceSet, error) {
 		return nil, text.ErrNotSupported
 	}
 	return p.sequences(f)
+}
+
+func (p PluginReader) PrivilegeSummaries(f Filter) (*PrivilegeSummarySet, error) {
+	if p.privilegeSummaries == nil {
+		return nil, text.ErrNotSupported
+	}
+	return p.privilegeSummaries(f)
 }
 
 type LoggingReader struct {

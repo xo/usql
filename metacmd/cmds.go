@@ -733,6 +733,7 @@ func init() {
 				"dn[S+]": {"list schemas", "[PATTERN]"},
 				"dt[S+]": {"list tables", "[PATTERN]"},
 				"di[S+]": {"list indexes", "[PATTERN]"},
+				"dp[S]":  {"list table, view, and sequence access privileges", "[PATTERN]"},
 				"l[+]":   {"list databases", ""},
 			},
 			Process: func(p *Params) error {
@@ -765,6 +766,8 @@ func init() {
 					return m.ListIndexes(p.Handler.URL(), pattern, verbose, showSystem)
 				case "l":
 					return m.ListAllDbs(p.Handler.URL(), pattern, verbose)
+				case "dp":
+					return m.ListPrivilegeSummaries(p.Handler.URL(), pattern, showSystem)
 				}
 				return nil
 			},

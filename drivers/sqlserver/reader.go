@@ -43,6 +43,7 @@ func NewReader(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		}),
 		infos.WithCurrentSchema("schema_name()"),
 		infos.WithDataTypeFormatter(dataTypeFormatter),
+		infos.WithUsagePrivileges(false),
 	)(db, opts...)
 	mr := &metaReader{
 		LoggingReader: metadata.NewLoggingReader(db, opts...),

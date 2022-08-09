@@ -1,6 +1,8 @@
 package metadata
 
 import (
+	"strings"
+
 	"github.com/xo/dburl"
 	"github.com/xo/usql/text"
 )
@@ -20,6 +22,7 @@ type ExtendedReader interface {
 	FunctionReader
 	FunctionColumnReader
 	SequenceReader
+	PrivilegeSummaryReader
 }
 
 // BasicReader of common database metadata like schemas, tables and columns.
@@ -107,6 +110,12 @@ type SequenceReader interface {
 	Sequences(Filter) (*SequenceSet, error)
 }
 
+// PrivilegeSummaryReader lists summaries of privileges granted on tables, views and sequences.
+type PrivilegeSummaryReader interface {
+	Reader
+	PrivilegeSummaries(Filter) (*PrivilegeSummarySet, error)
+}
+
 // Reader of any database metadata in a structured format.
 type Reader interface{}
 
@@ -149,6 +158,8 @@ type Writer interface {
 	ListIndexes(*dburl.URL, string, bool, bool) error
 	// ShowStats \ss
 	ShowStats(*dburl.URL, string, string, bool, int) error
+	// ListPrivilegeSummaries \dp
+	ListPrivilegeSummaries(*dburl.URL, string, bool) error
 }
 
 type CatalogSet struct {
@@ -828,6 +839,179 @@ func (s Sequence) values() []interface{} {
 		s.Max,
 		s.Increment,
 		s.Cycles,
+	}
+}
+
+type PrivilegeSummarySet struct {
+	resultSet
+}
+
+func NewPrivilegeSummarySet(v []PrivilegeSummary) *PrivilegeSummarySet {
+	r := make([]Result, len(v))
+	for i := range v {
+		r[i] = &v[i]
+	}
+	return &PrivilegeSummarySet{
+		resultSet: resultSet{
+			results: r,
+			columns: []string{
+				"Schema",
+				"Name",
+				"Type",
+				"Access privileges",
+				"Column privileges",
+			},
+		},
+	}
+}
+
+func (s PrivilegeSummarySet) Get() *PrivilegeSummary {
+	return s.results[s.current-1].(*PrivilegeSummary)
+}
+
+// PrivilegeSummary summarizes the privileges granted on a database object
+type PrivilegeSummary struct {
+	Catalog          string
+	Schema           string
+	Name             string
+	ObjectType       string
+	ObjectPrivileges ObjectPrivileges
+	ColumnPrivileges ColumnPrivileges
+}
+
+func (s PrivilegeSummary) values() []interface{} {
+	return []interface{}{
+		s.Catalog,
+		s.Schema,
+		s.Name,
+		s.ObjectType,
+		s.ObjectPrivileges,
+		s.ColumnPrivileges,
+	}
+}
+
+// ObjectPrivilege represents a privilege granted on a database object.
+type ObjectPrivilege struct {
+	Grantee       string
+	Grantor       string
+	PrivilegeType string
+	IsGrantable   bool
+}
+
+// ColumnPrivilege represents a privilege granted on a column.
+type ColumnPrivilege struct {
+	Column        string
+	Grantee       string
+	Grantor       string
+	PrivilegeType string
+	IsGrantable   bool
+}
+
+// ObjectPrivileges represents privileges granted on a database object.
+// The privileges are assumed to be sorted. Otherwise the
+// String() method will fail.
+type ObjectPrivileges []ObjectPrivilege
+
+// ColumnPrivileges represents privileges granted on a column.
+// The privileges are assumed to be sorted. Otherwise the
+// String() method will fail.
+type ColumnPrivileges []ColumnPrivilege
+
+func (p ObjectPrivileges) Len() int      { return len(p) }
+func (p ObjectPrivileges) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p ObjectPrivileges) Less(i, j int) bool {
+	switch {
+	case p[i].Grantee != p[j].Grantee:
+		return p[i].Grantee < p[j].Grantee
+	case p[i].Grantor != p[j].Grantor:
+		return p[i].Grantor < p[j].Grantor
+	}
+	return p[i].PrivilegeType < p[j].PrivilegeType
+}
+
+// String returns a string representation of ObjectPrivileges.
+// Assumes the ObjectPrivileges to be sorted.
+func (p ObjectPrivileges) String() string {
+	if len(p) == 0 {
+		return ""
+	}
+
+	lines := []string{}
+	types := []string{}
+	for i := range p {
+		switch {
+		// Is last privilege or next privilege has new grantee or grantor; finalize line
+		case i == len(p)-1 || p[i].Grantee != p[i+1].Grantee || p[i].Grantor != p[i+1].Grantor:
+			types = append(types, typeStr(p[i].PrivilegeType, p[i].IsGrantable))
+			lines = append(lines, lineStr(p[i].Grantee, p[i].Grantor, types))
+			types = types[:0]
+		default:
+			types = append(types, typeStr(p[i].PrivilegeType, p[i].IsGrantable))
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+func (p ColumnPrivileges) Len() int      { return len(p) }
+func (p ColumnPrivileges) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p ColumnPrivileges) Less(i, j int) bool {
+	switch {
+	case p[i].Column != p[j].Column:
+		return p[i].Column < p[j].Column
+	case p[i].Grantee != p[j].Grantee:
+		return p[i].Grantee < p[j].Grantee
+	case p[i].Grantor != p[j].Grantor:
+		return p[i].Grantor < p[j].Grantor
+	}
+	return p[i].PrivilegeType < p[j].PrivilegeType
+}
+
+// String returns a string representation of ColumnPrivileges.
+// Assumes the ColumnPrivileges to be sorted.
+func (p ColumnPrivileges) String() string {
+	if len(p) == 0 {
+		return ""
+	}
+
+	colBlocks := []string{}
+	lines := []string{}
+	types := []string{}
+	for i := range p {
+		switch {
+		// Is last privilege or next privilege has new column; finalize column block
+		case i == len(p)-1 || p[i].Column != p[i+1].Column:
+			types = append(types, typeStr(p[i].PrivilegeType, p[i].IsGrantable))
+			lines = append(lines, "  "+lineStr(p[i].Grantee, p[i].Grantor, types))
+			colBlocks = append(colBlocks, p[i].Column+":\n"+strings.Join(lines, "\n"))
+			lines = lines[:0]
+			types = types[:0]
+		// Next privilege has new grantee or grantor; finalize line
+		case p[i].Grantee != p[i+1].Grantee || p[i].Grantor != p[i+1].Grantor:
+			types = append(types, typeStr(p[i].PrivilegeType, p[i].IsGrantable))
+			lines = append(lines, "  "+lineStr(p[i].Grantee, p[i].Grantor, types))
+			types = types[:0]
+		default:
+			types = append(types, typeStr(p[i].PrivilegeType, p[i].IsGrantable))
+		}
+	}
+	return strings.Join(colBlocks, "\n")
+}
+
+// typeStr appends an asterisk suffix to grantable privileges
+func typeStr(privilege string, grantable bool) string {
+	if grantable {
+		return privilege + "*"
+	} else {
+		return privilege
+	}
+}
+
+// lineStr compiles grantee, grantor and privilege types into a line of output
+func lineStr(grantee, grantor string, types []string) string {
+	if grantor != "" {
+		return grantee + "=" + strings.Join(types, ",") + "/" + grantor
+	} else {
+		return grantee + "=" + strings.Join(types, ",")
 	}
 }
 
