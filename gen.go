@@ -360,10 +360,10 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 	for i, v := range drivers {
 		notes := ""
 		if v.CGO {
-			notes = " <sup>[†][f-cgo]</sup>"
+			notes += " <sup>[†][f-cgo]</sup>"
 		}
 		if v.Wire {
-			notes = " <sup>[‡][f-wire]</sup>"
+			notes += " <sup>[‡][f-wire]</sup>"
 		}
 		rows = append(rows, []string{
 			v.Desc,
