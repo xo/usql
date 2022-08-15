@@ -1,23 +1,23 @@
-                                                               BASE TABLE "public.film"
-         Name         |            Type             | Nullable |                Default                | Size | Decimal Digits | Radix | Octet Length 
-----------------------+-----------------------------+----------+---------------------------------------+------+----------------+-------+--------------
- film_id              | integer                     | "NO"     | nextval('film_film_id_seq'::regclass) |   32 |              0 |     2 |            0 
- title                | character varying           | "NO"     |                                       |  255 |              0 |    10 |         1020 
- description          | text                        | "YES"    |                                       |    0 |              0 |    10 |   1073741824 
- release_year         | integer                     | "YES"    |                                       |   32 |              0 |     2 |            0 
- language_id          | smallint                    | "NO"     |                                       |   16 |              0 |     2 |            0 
- original_language_id | smallint                    | "YES"    |                                       |   16 |              0 |     2 |            0 
- rental_duration      | smallint                    | "NO"     | 3                                     |   16 |              0 |     2 |            0 
- rental_rate          | numeric                     | "NO"     | 4.99                                  |    4 |              2 |    10 |            0 
- length               | smallint                    | "YES"    |                                       |   16 |              0 |     2 |            0 
- replacement_cost     | numeric                     | "NO"     | 19.99                                 |    5 |              2 |    10 |            0 
- rating               | USER-DEFINED                | "YES"    | 'G'::mpaa_rating                      |    0 |              0 |    10 |            0 
- last_update          | timestamp without time zone | "NO"     | now()                                 |    6 |              0 |    10 |            0 
- special_features     | ARRAY                       | "YES"    |                                       |    0 |              0 |    10 |            0 
- fulltext             | tsvector                    | "NO"     |                                       |    0 |              0 |    10 |            0 
+                                                                   table "public.film"
+         Name         |              Type              | Nullable |                Default                | Size | Decimal Digits | Radix | Octet Length 
+----------------------+--------------------------------+----------+---------------------------------------+------+----------------+-------+--------------
+ film_id              | integer                        | "NO"     | nextval('film_film_id_seq'::regclass) |   32 |              0 |     2 |            0 
+ title                | character varying(255)         | "NO"     |                                       |  255 |              0 |    10 |         1020 
+ description          | text                           | "YES"    |                                       |    0 |              0 |    10 |   1073741824 
+ release_year         | integer                        | "YES"    |                                       |   32 |              0 |     2 |            0 
+ language_id          | smallint                       | "NO"     |                                       |   16 |              0 |     2 |            0 
+ original_language_id | smallint                       | "YES"    |                                       |   16 |              0 |     2 |            0 
+ rental_duration      | smallint                       | "NO"     | 3                                     |   16 |              0 |     2 |            0 
+ rental_rate          | numeric(4,2)                   | "NO"     | 4.99                                  |    4 |              2 |    10 |            0 
+ length               | smallint                       | "YES"    |                                       |   16 |              0 |     2 |            0 
+ replacement_cost     | numeric(5,2)                   | "NO"     | 19.99                                 |    5 |              2 |    10 |            0 
+ rating               | USER-DEFINED                   | "YES"    | 'G'::mpaa_rating                      |    0 |              0 |    10 |            0 
+ last_update          | timestamp(6) without time zone | "NO"     | now()                                 |    6 |              0 |    10 |            0 
+ special_features     | ARRAY                          | "YES"    |                                       |    0 |              0 |    10 |            0 
+ fulltext             | tsvector                       | "NO"     |                                       |    0 |              0 |    10 |            0 
 Indexes:
-  "film_pkey" PRIMARY_KEY, UNIQUE, index (film_id)
   "film_fulltext_idx" index (fulltext)
+  "film_pkey" PRIMARY_KEY, UNIQUE, index (film_id)
   "idx_fk_language_id" index (language_id)
   "idx_fk_original_language_id" index (original_language_id)
   "idx_title" index (title)
@@ -28,47 +28,50 @@ Referenced by:
   TABLE "film_actor" CONSTRAINT "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
   TABLE "film_category" CONSTRAINT "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
   TABLE "inventory" CONSTRAINT "inventory_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+  "film_fulltext_trigger" CREATE TRIGGER film_fulltext_trigger BEFORE INSERT OR UPDATE ON film FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger('fulltext', 'pg_catalog.english', 'title', 'description')
+  "last_updated" CREATE TRIGGER last_updated BEFORE UPDATE ON film FOR EACH ROW EXECUTE FUNCTION last_updated()
 
-
-                                        BASE TABLE "public.film_actor"
-    Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
--------------+-----------------------------+----------+---------+------+----------------+-------+--------------
- actor_id    | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
- film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
- last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
+                                            table "public.film_actor"
+    Name     |              Type              | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+-------------+--------------------------------+----------+---------+------+----------------+-------+--------------
+ actor_id    | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ film_id     | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ last_update | timestamp(6) without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 Indexes:
   "film_actor_pkey" PRIMARY_KEY, UNIQUE, index (actor_id, film_id)
   "idx_fk_film_id" index (film_id)
 Foreign-key constraints:
   "film_actor_actor_id_fkey" FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
   "film_actor_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+  "last_updated" CREATE TRIGGER last_updated BEFORE UPDATE ON film_actor FOR EACH ROW EXECUTE FUNCTION last_updated()
 
-
-                                       BASE TABLE "public.film_category"
-    Name     |            Type             | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
--------------+-----------------------------+----------+---------+------+----------------+-------+--------------
- film_id     | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
- category_id | smallint                    | "NO"     |         |   16 |              0 |     2 |            0 
- last_update | timestamp without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
+                                           table "public.film_category"
+    Name     |              Type              | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+-------------+--------------------------------+----------+---------+------+----------------+-------+--------------
+ film_id     | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ category_id | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ last_update | timestamp(6) without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 Indexes:
   "film_category_pkey" PRIMARY_KEY, UNIQUE, index (film_id, category_id)
 Foreign-key constraints:
   "film_category_category_id_fkey" FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT
   "film_category_film_id_fkey" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+Triggers:
+  "last_updated" CREATE TRIGGER last_updated BEFORE UPDATE ON film_category FOR EACH ROW EXECUTE FUNCTION last_updated()
 
-
-                                       VIEW "public.film_list"
-    Name     |       Type        | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
--------------+-------------------+----------+---------+------+----------------+-------+--------------
- fid         | integer           | "YES"    |         |   32 |              0 |     2 |            0 
- title       | character varying | "YES"    |         |  255 |              0 |    10 |         1020 
- description | text              | "YES"    |         |    0 |              0 |    10 |   1073741824 
- category    | character varying | "YES"    |         |   25 |              0 |    10 |          100 
- price       | numeric           | "YES"    |         |    4 |              2 |    10 |            0 
- length      | smallint          | "YES"    |         |   16 |              0 |     2 |            0 
- rating      | USER-DEFINED      | "YES"    |         |    0 |              0 |    10 |            0 
- actors      | text              | "YES"    |         |    0 |              0 |    10 |   1073741824 
-
+                                         view "public.film_list"
+    Name     |          Type          | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
+-------------+------------------------+----------+---------+------+----------------+-------+--------------
+ fid         | integer                | "YES"    |         |   32 |              0 |     2 |            0 
+ title       | character varying(255) | "YES"    |         |  255 |              0 |    10 |         1020 
+ description | text                   | "YES"    |         |    0 |              0 |    10 |   1073741824 
+ category    | character varying(25)  | "YES"    |         |   25 |              0 |    10 |          100 
+ price       | numeric(4,2)           | "YES"    |         |    4 |              2 |    10 |            0 
+ length      | smallint               | "YES"    |         |   16 |              0 |     2 |            0 
+ rating      | USER-DEFINED           | "YES"    |         |    0 |              0 |    10 |            0 
+ actors      | text                   | "YES"    |         |    0 |              0 |    10 |   1073741824 
 
                 Sequence "public.film_film_id_seq"
   Type  | Start | Min |         Max         | Increment | Cycles? 
@@ -100,4 +103,3 @@ Index "public.film_pkey"
 ---------+---------
  film_id | integer 
 primary key, index, for table film
-

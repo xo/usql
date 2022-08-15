@@ -4,4 +4,3 @@
  dbo    | sakila 
  guest  | sakila 
 (2 rows)
-

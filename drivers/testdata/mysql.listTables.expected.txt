@@ -1,10 +1,9 @@
-                  List of relations
- Schema |     Name      |    Type    | Size | Comment 
---------+---------------+------------+------+---------
- sakila | film          | BASE TABLE |      |  
- sakila | film_actor    | BASE TABLE |      |  
- sakila | film_category | BASE TABLE |      |  
- sakila | film_text     | BASE TABLE |      |  
- sakila | film_list     | VIEW       |      |  
+                      List of relations
+ Schema |     Name      |    Type    | Rows | Size | Comment 
+--------+---------------+------------+------+------+---------
+ sakila | film          | BASE TABLE |    0 |      |  
+ sakila | film_actor    | BASE TABLE |    0 |      |  
+ sakila | film_category | BASE TABLE |    0 |      |  
+ sakila | film_text     | BASE TABLE |    0 |      |  
+ sakila | film_list     | VIEW       |    0 |      |  
 (5 rows)
-

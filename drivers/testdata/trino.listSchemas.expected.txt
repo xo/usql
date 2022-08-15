@@ -11,4 +11,3 @@
  sf30000  | tpch 
  tiny     | tpch 
 (9 rows)
-

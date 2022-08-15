@@ -1,19 +1,19 @@
-                                            BASE TABLE "sakila.film"
-         Name         |   Type    | Nullable |      Default      | Size  | Decimal Digits | Radix | Octet Length 
-----------------------+-----------+----------+-------------------+-------+----------------+-------+--------------
- film_id              | smallint  | "NO"     |                   |     5 |              0 |    10 |            0 
- title                | varchar   | "NO"     |                   |   255 |              0 |    10 |          765 
- description          | text      | "YES"    |                   | 65535 |              0 |    10 |        65535 
- release_year         | year      | "YES"    |                   |     0 |              0 |    10 |            0 
- language_id          | tinyint   | "NO"     |                   |     3 |              0 |    10 |            0 
- original_language_id | tinyint   | "YES"    |                   |     3 |              0 |    10 |            0 
- rental_duration      | tinyint   | "NO"     | 3                 |     3 |              0 |    10 |            0 
- rental_rate          | decimal   | "NO"     | 4.99              |     4 |              2 |    10 |            0 
- length               | smallint  | "YES"    |                   |     5 |              0 |    10 |            0 
- replacement_cost     | decimal   | "NO"     | 19.99             |     5 |              2 |    10 |            0 
- rating               | enum      | "YES"    | G                 |     5 |              0 |    10 |           15 
- special_features     | set       | "YES"    |                   |    54 |              0 |    10 |          162 
- last_update          | timestamp | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |    10 |            0 
+                                                                         BASE TABLE "sakila.film"
+         Name         |                                Type                                 | Nullable |      Default      | Size  | Decimal Digits | Radix | Octet Length 
+----------------------+---------------------------------------------------------------------+----------+-------------------+-------+----------------+-------+--------------
+ film_id              | int unsigned                                                        | "NO"     |                   |    10 |              0 |    10 |            0 
+ title                | varchar(255)                                                        | "NO"     |                   |   255 |              0 |    10 |          765 
+ description          | text                                                                | "YES"    |                   | 65535 |              0 |    10 |        65535 
+ release_year         | year                                                                | "YES"    |                   |     0 |              0 |    10 |            0 
+ language_id          | int unsigned                                                        | "NO"     |                   |    10 |              0 |    10 |            0 
+ original_language_id | int unsigned                                                        | "YES"    |                   |    10 |              0 |    10 |            0 
+ rental_duration      | tinyint unsigned                                                    | "NO"     | 3                 |     3 |              0 |    10 |            0 
+ rental_rate          | decimal(4,2)                                                        | "NO"     | 4.99              |     4 |              2 |    10 |            0 
+ length               | smallint unsigned                                                   | "YES"    |                   |     5 |              0 |    10 |            0 
+ replacement_cost     | decimal(5,2)                                                        | "NO"     | 19.99             |     5 |              2 |    10 |            0 
+ rating               | enum('G','PG','PG-13','R','NC-17')                                  | "YES"    | G                 |     5 |              0 |    10 |           15 
+ special_features     | set('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') | "YES"    |                   |    54 |              0 |    10 |          162 
+ last_update          | timestamp                                                           | "NO"     | CURRENT_TIMESTAMP |     0 |              0 |    10 |            0 
 Indexes:
   "idx_fk_language_id" BTREE (language_id)
   "idx_fk_original_language_id" BTREE (original_language_id)
@@ -26,13 +26,12 @@ Referenced by:
   TABLE "film" CONSTRAINT "fk_film_language" FOREIGN KEY (language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
   TABLE "film" CONSTRAINT "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
-
-                                    BASE TABLE "sakila.film_actor"
-    Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
--------------+-----------+----------+-------------------+------+----------------+-------+--------------
- actor_id    | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
- film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
- last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
+                                      BASE TABLE "sakila.film_actor"
+    Name     |     Type     | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
+-------------+--------------+----------+-------------------+------+----------------+-------+--------------
+ actor_id    | int unsigned | "NO"     |                   |   10 |              0 |    10 |            0 
+ film_id     | int unsigned | "NO"     |                   |   10 |              0 |    10 |            0 
+ last_update | timestamp    | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
 Indexes:
   "idx_fk_film_id" BTREE (film_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
@@ -43,13 +42,12 @@ Referenced by:
   TABLE "film_actor" CONSTRAINT "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
   TABLE "film_actor" CONSTRAINT "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
-
-                                   BASE TABLE "sakila.film_category"
-    Name     |   Type    | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
--------------+-----------+----------+-------------------+------+----------------+-------+--------------
- film_id     | smallint  | "NO"     |                   |    5 |              0 |    10 |            0 
- category_id | tinyint   | "NO"     |                   |    3 |              0 |    10 |            0 
- last_update | timestamp | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
+                                    BASE TABLE "sakila.film_category"
+    Name     |     Type     | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
+-------------+--------------+----------+-------------------+------+----------------+-------+--------------
+ film_id     | int unsigned | "NO"     |                   |   10 |              0 |    10 |            0 
+ category_id | int unsigned | "NO"     |                   |   10 |              0 |    10 |            0 
+ last_update | timestamp    | "NO"     | CURRENT_TIMESTAMP |    0 |              0 |    10 |            0 
 Indexes:
   "fk_film_category_category" BTREE (category_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
@@ -60,28 +58,25 @@ Referenced by:
   TABLE "film_category" CONSTRAINT "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
   TABLE "film_category" CONSTRAINT "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
-
-                                BASE TABLE "sakila.film_text"
-    Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
--------------+----------+----------+---------+-------+----------------+-------+--------------
- film_id     | smallint | "NO"     |         |     5 |              0 |    10 |            0 
- title       | varchar  | "NO"     |         |   255 |              0 |    10 |          765 
- description | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
+                                  BASE TABLE "sakila.film_text"
+    Name     |     Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+-------------+--------------+----------+---------+-------+----------------+-------+--------------
+ film_id     | int          | "NO"     |         |    10 |              0 |    10 |            0 
+ title       | varchar(255) | "NO"     |         |   255 |              0 |    10 |          765 
+ description | text         | "YES"    |         | 65535 |              0 |    10 |        65535 
 Indexes:
   "idx_title_description" FULLTEXT (title, description)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 
-
-                                   VIEW "sakila.film_list"
-    Name     |   Type   | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
--------------+----------+----------+---------+-------+----------------+-------+--------------
- FID         | smallint | "YES"    | 0       |     5 |              0 |    10 |            0 
- title       | varchar  | "YES"    |         |   255 |              0 |    10 |          765 
- description | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
- category    | varchar  | "NO"     |         |    25 |              0 |    10 |           75 
- price       | decimal  | "YES"    | 4.99    |     4 |              2 |    10 |            0 
- length      | smallint | "YES"    |         |     5 |              0 |    10 |            0 
- rating      | enum     | "YES"    | G       |     5 |              0 |    10 |           15 
- actors      | text     | "YES"    |         | 65535 |              0 |    10 |        65535 
-
+                                                VIEW "sakila.film_list"
+    Name     |                Type                | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 
+-------------+------------------------------------+----------+---------+-------+----------------+-------+--------------
+ FID         | int unsigned                       | "YES"    | 0       |    10 |              0 |    10 |            0 
+ title       | varchar(255)                       | "YES"    |         |   255 |              0 |    10 |          765 
+ description | text                               | "YES"    |         | 65535 |              0 |    10 |        65535 
+ category    | varchar(25)                        | "NO"     |         |    25 |              0 |    10 |           75 
+ price       | decimal(4,2)                       | "YES"    | 4.99    |     4 |              2 |    10 |            0 
+ length      | smallint unsigned                  | "YES"    |         |     5 |              0 |    10 |            0 
+ rating      | enum('G','PG','PG-13','R','NC-17') | "YES"    | G       |     5 |              0 |    10 |           15 
+ actors      | text                               | "YES"    |         | 65535 |              0 |    10 |        65535 
 
