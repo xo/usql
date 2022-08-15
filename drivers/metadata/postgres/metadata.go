@@ -277,7 +277,7 @@ FROM pg_catalog.pg_class c
 		vals = append(vals, f.Name)
 		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
 	}
-	rows, closeRows, err := r.query(qstr, conds, "1, 2", vals...)
+	rows, closeRows, err := r.query(qstr, conds, "1, 2, 4", vals...)
 	if err != nil {
 		return nil, err
 	}

@@ -8,4 +8,3 @@
  sakila | inventory_in_stock         | tinyint          | p_inventory_id int                                                                          | FUNCTION 
  sakila | rewards_report             |                  | min_monthly_purchases tinyint, min_dollar_amount_purchased decimal, OUT count_rewardees int | PROCEDURE 
 (6 rows)
-

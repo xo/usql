@@ -43,4 +43,3 @@
  sakila | idx_unique_manager          | BTREE    | store         | "NO"     | "YES" 
  sakila | PRIMARY                     | BTREE    | store         | "YES"    | "YES" 
 (41 rows)
-

@@ -12,4 +12,3 @@
  public | last_updated               | trigger          |                                                                     | FUNCTION 
  public | rewards_report             | USER-DEFINED     | min_monthly_purchases integer, min_dollar_amount_purchased numeric  | FUNCTION 
 (10 rows)
-

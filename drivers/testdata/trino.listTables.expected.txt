@@ -1,14 +1,13 @@
-                List of relations
-  Schema  |  Name  |    Type    | Size | Comment 
-----------+--------+------------+------+---------
- sf1      | orders | BASE TABLE |      |  
- sf100    | orders | BASE TABLE |      |  
- sf1000   | orders | BASE TABLE |      |  
- sf10000  | orders | BASE TABLE |      |  
- sf100000 | orders | BASE TABLE |      |  
- sf300    | orders | BASE TABLE |      |  
- sf3000   | orders | BASE TABLE |      |  
- sf30000  | orders | BASE TABLE |      |  
- tiny     | orders | BASE TABLE |      |  
+                   List of relations
+  Schema  |  Name  |    Type    | Rows | Size | Comment 
+----------+--------+------------+------+------+---------
+ sf1      | orders | BASE TABLE |    0 |      |  
+ sf100    | orders | BASE TABLE |    0 |      |  
+ sf1000   | orders | BASE TABLE |    0 |      |  
+ sf10000  | orders | BASE TABLE |    0 |      |  
+ sf100000 | orders | BASE TABLE |    0 |      |  
+ sf300    | orders | BASE TABLE |    0 |      |  
+ sf3000   | orders | BASE TABLE |    0 |      |  
+ sf30000  | orders | BASE TABLE |    0 |      |  
+ tiny     | orders | BASE TABLE |    0 |      |  
 (9 rows)
-
