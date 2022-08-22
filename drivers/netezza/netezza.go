@@ -6,19 +6,18 @@ package netezza
 import (
 	"context"
 	"io"
+	"log"
 
-	"github.com/IBM/nzgo" // DRIVER: nzgo
+	"github.com/IBM/nzgo/v14" // DRIVER: nzgo
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
-	elog := nzgo.PDALogger{
-		LogLevel: "off",
-	}
-	elog.Initialize()
-
+	nzgo.Debug = log.New(io.Discard, "", 0)
+	nzgo.Info = log.New(io.Discard, "", 0)
+	nzgo.Fatal = log.New(io.Discard, "", 0)
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
 		infos.WithIndexes(false),

@@ -6,7 +6,7 @@ package clickhouse
 import (
 	"database/sql"
 
-	_ "github.com/ClickHouse/clickhouse-go" // DRIVER
+	_ "github.com/ClickHouse/clickhouse-go/v2" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

@@ -18,7 +18,6 @@ import (
 
 	"github.com/xo/dburl/passfile"
 	"github.com/xo/usql/text"
-	"github.com/zaf/temp"
 )
 
 // Getenv tries retrieving successive keys from os environment variables.
@@ -77,7 +76,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	if path != "" {
 		path = passfile.Expand(u.HomeDir, path)
 	} else {
-		f, err := temp.File("", text.CommandLower(), "sql")
+		f, err := ioutil.TempFile("", text.CommandLower()+".*.sql")
 		if err != nil {
 			return nil, err
 		}
@@ -281,8 +280,8 @@ func Getvar(s string, v Vars) (bool, string, error) {
 
 // Unquote returns a func that unquotes strings for the user.
 //
-// When exec is true, backtick'd strings (``) will be executed using the
-// provided user's shell (see Exec).
+// When exec is true, backtick'd strings will be executed using the provided
+// user's shell (see Exec).
 func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, error) {
 	return func(s string, isvar bool) (bool, string, error) {
 		// log.Printf(">>> UNQUOTE: %q", s)

@@ -13,7 +13,7 @@ func KnownBuildTags() map[string]string {
 		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
 		"cassandra":     "cql",           // github.com/MichaelS11/go-cql-driver
-		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go
+		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
@@ -29,7 +29,7 @@ func KnownBuildTags() map[string]string {
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
-		"netezza":       "nzgo",          // github.com/IBM/nzgo
+		"netezza":       "nzgo",          // github.com/IBM/nzgo/v14
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v2
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver

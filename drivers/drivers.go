@@ -12,8 +12,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/alecthomas/chroma"
-	"github.com/alecthomas/chroma/lexers"
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/gohxs/readline"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers/completer"

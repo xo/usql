@@ -5,8 +5,8 @@ package styles
 import (
 	"sync"
 
-	"github.com/alecthomas/chroma"
-	cstyles "github.com/alecthomas/chroma/styles"
+	"github.com/alecthomas/chroma/v2"
+	cstyles "github.com/alecthomas/chroma/v2/styles"
 )
 
 // styles is the set of styles with their background colors removed.
