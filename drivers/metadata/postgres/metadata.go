@@ -105,14 +105,14 @@ FROM pg_catalog.pg_database d`
 func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT n.nspname as "Schema",
   c.relname as "Name",
-  CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' END as "Type",
+  CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' ELSE 'unknown' END as "Type",
   COALESCE((c.reltuples / NULLIF(c.relpages, 0)) * (pg_catalog.pg_relation_size(c.oid) / current_setting('block_size')::int), 0)::bigint as "Rows",
   pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as "Size",
   COALESCE(pg_catalog.obj_description(c.oid, 'pg_class'), '') as "Description"
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 `
-	conds := []string{"n.nspname !~ '^pg_toast'"}
+	conds := []string{"n.nspname !~ '^pg_toast' AND c.relkind != 'c'"}
 	vals := []interface{}{}
 	if f.OnlyVisible {
 		conds = append(conds, "pg_catalog.pg_table_is_visible(c.oid)")
