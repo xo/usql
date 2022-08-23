@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -119,8 +120,23 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	var only string
 	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
+	flag.StringVar(&only, "dbs", "", "comma separated list of dbs to test: pgsql, mysql, sqlserver, trino")
 	flag.Parse()
+
+	if only != "" {
+		runOnly := map[string]struct{}{}
+		for _, dbName := range strings.Split(only, ",") {
+			dbName = strings.TrimSpace(dbName)
+			runOnly[dbName] = struct{}{}
+		}
+		for dbName := range dbs {
+			if _, ok := runOnly[dbName]; !ok {
+				delete(dbs, dbName)
+			}
+		}
+	}
 
 	pool, err := dt.NewPool("")
 	if err != nil {
@@ -349,7 +365,10 @@ func TestWriter(t *testing.T) {
 				t.Fatalf("Cannot create results file %s: %v", actual, err)
 			}
 
-			db := dbs[test.dbName]
+			db, ok := dbs[test.dbName]
+			if !ok {
+				continue
+			}
 			w, err := drivers.NewMetadataWriter(context.Background(), db.URL, db.DB, fo)
 			if err != nil {
 				log.Fatalf("Could not create writer %s %s: %v", test.dbName, testFunc.label, err)
@@ -374,10 +393,14 @@ func TestWriter(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
+	pg, ok := dbs["pgsql"]
+	if !ok {
+		t.Skip("Skipping copy tests, as they require PostgreSQL which was not selected for tests")
+	}
 	// setup test data, ignoring errors, since there'll be duplicates
-	_, _ = dbs["pgsql"].DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_address_id_fkey")
-	_, _ = dbs["pgsql"].DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_store_id_fkey")
-	_, _ = dbs["pgsql"].DB.Exec("INSERT INTO staff VALUES (1, 'John', 'Doe', 1, 'john@invalid.com', 1, true, 'jdoe', 'abc', now(), 'abcd')")
+	_, _ = pg.DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_address_id_fkey")
+	_, _ = pg.DB.Exec("ALTER TABLE staff DROP CONSTRAINT staff_store_id_fkey")
+	_, _ = pg.DB.Exec("INSERT INTO staff VALUES (1, 'John', 'Doe', 1, 'john@invalid.com', 1, true, 'jdoe', 'abc', now(), 'abcd')")
 
 	type setupQuery struct {
 		query string
@@ -428,7 +451,10 @@ func TestCopy(t *testing.T) {
 		},
 	}
 	for _, test := range testCases {
-		db := dbs[test.dbName]
+		db, ok := dbs[test.dbName]
+		if !ok {
+			continue
+		}
 
 		// TODO test copy from a different DB, maybe csvq?
 		// TODO test copy from same DB
@@ -439,7 +465,7 @@ func TestCopy(t *testing.T) {
 				log.Fatalf("Failed to run setup query `%s`: %v", q.query, err)
 			}
 		}
-		rows, err := dbs["pgsql"].DB.Query(test.src)
+		rows, err := pg.DB.Query(test.src)
 		if err != nil {
 			log.Fatalf("Could not get rows to copy: %v", err)
 		}
