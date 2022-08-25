@@ -44,7 +44,7 @@ type SchemaReader interface {
 	Schemas(Filter) (*SchemaSet, error)
 }
 
-// TableReader lists database tables.
+// TableReader lists database tables, views, materialized views and sequences.
 type TableReader interface {
 	Reader
 	Tables(Filter) (*TableSet, error)

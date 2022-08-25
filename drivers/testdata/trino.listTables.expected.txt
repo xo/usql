@@ -11,3 +11,4 @@
  sf30000  | orders | BASE TABLE |    0 |      |  
  tiny     | orders | BASE TABLE |    0 |      |  
 (9 rows)
+

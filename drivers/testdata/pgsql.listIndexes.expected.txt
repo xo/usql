@@ -46,3 +46,4 @@
  public | staff_pkey                                          | index | staff            | "YES"    | "YES" 
  public | store_pkey                                          | index | store            | "YES"    | "YES" 
 (44 rows)
+

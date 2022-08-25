@@ -59,3 +59,4 @@
  dbo    | idx_fk_store_address           | NONCLUSTERED | store         | "NO"     | "NO" 
  dbo    | PK__store__A2F2A30D66044831    | NONCLUSTERED | store         | "YES"    | "YES" 
 (57 rows)
+
