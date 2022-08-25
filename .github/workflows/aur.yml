@@ -28,7 +28,7 @@ jobs:
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
-          sed -i "s/sha256sums=.*$/sha256sums=('$SHA256SUM')" $REPO_PATH/PKGBUILD
+          sed -i "s/sha256sums=.*$/sha256sums=('$SHA256SUM')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgver =.*$/pkgver = ${VER#v}/" $REPO_PATH/.SRCINFO
           sed -i "s%source =.*$%source = usql-${VER#v}.tar.gz::https://github.com/xo/usql/archive/${VER}.tar.gz%" $REPO_PATH/.SRCINFO
           sed -i "s/sha256sums =.*$/sha256sums = $SHA256SUM/" $REPO_PATH/.SRCINFO
