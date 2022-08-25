@@ -1,4 +1,4 @@
-//go:build (all || hive) && !no_hive
+//go:build (all || most || hive) && !no_hive
 
 package internal
 
