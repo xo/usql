@@ -62,7 +62,11 @@ func main() {
 			if t, ok := m[tag]; ok {
 				tag = t
 			}
-			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags %s github.com/xo/usql@latest\n\n", tag)
+			rev := "latest"
+			if text.CommandVersion == "0.0.0-dev" || strings.Contains(text.CommandVersion, "-") {
+				rev = "master"
+			}
+			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags %s github.com/xo/usql@%s\n\n", tag, rev)
 		}
 		os.Exit(1)
 	}

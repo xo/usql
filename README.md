@@ -49,11 +49,12 @@ for other databases.
 
 ## Installing
 
-`usql` can be installed [via Release][], [via Homebrew][], [via Scoop][] or
-[via Go][]:
+`usql` can be installed [via Release][], [via Homebrew][], [via AUR][], [via
+Scoop][] or [via Go][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos-and-linux
+[via AUR]: #installing-via-aur-arch-linux
 [via Scoop]: #installing-via-scoop-windows
 [via Go]: #installing-via-go
 
@@ -70,7 +71,7 @@ Install `usql` from the [`xo/xo` tap][xo-tap] in the usual way with the [`brew`
 command][homebrew]:
 
 ```sh
-# install usql with "most" drivers
+# install usql with most drivers
 $ brew install xo/xo/usql
 ```
 
@@ -78,11 +79,34 @@ Support for [ODBC databases][databases] is available through the `--with-odbc`
 install flag:
 
 ```sh
-# tap xo homebrew tap
+# add xo tap
 $ brew tap xo/xo
 
 # install usql with odbc support
 $ brew install --with-odbc usql
+```
+
+### Installing via AUR (Arch Linux)
+
+Install `usql` from the [Arch Linux AUR][aur] in the usual way with the [`yay`
+command][yay]:
+
+```sh
+# install usql with most drivers
+$ yay -S usql
+```
+
+Alternately, build and [install using `makepkg`][arch-makepkg]:
+
+```sh
+$ git clone https://aur.archlinux.org/usql.git && cd usql
+$ makepkg -si
+==> Making package: usql 0.12.10-1 (Fri 26 Aug 2022 05:56:09 AM WIB)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Downloading usql-0.12.10.tar.gz...
+...
 ```
 
 ### Installing via Scoop (Windows)
@@ -105,9 +129,8 @@ Install `usql` using [Scoop](https://scoop.sh):
 Install `usql` in the usual Go fashion:
 
 ```sh
-# install usql from master branch with basic database support
-# includes PostgreSQL, Oracle Database, MySQL, MS SQL, and SQLite3 drivers
-$ go install github.com/xo/usql@master
+# install latest usql version with base drivers
+$ go install github.com/xo/usql@latest
 ```
 
 See [below for information](#building) on `usql` build tags.
@@ -1214,6 +1237,9 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [chroma-formatter]: https://github.com/alecthomas/chroma#formatters
 [chroma-style]: https://xyproto.github.io/splash/docs/all.html
 [help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
+[aur]: https://aur.archlinux.org/packages/usql
+[yay]: https://github.com/Jguer/yay
+[arch-makepkg]: https://wiki.archlinux.org/title/makepkg
 
 [backticks]: #backticks (Backticks)
 [commands]: #backslash-commands (Commands)
