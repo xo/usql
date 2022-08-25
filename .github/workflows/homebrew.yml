@@ -9,6 +9,8 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: bump formula
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
         run: |
           export REPO_PATH=$(brew --prefix)/Homebrew/Library/Taps/xo/homebrew-xo
           brew update
