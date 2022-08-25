@@ -4,29 +4,25 @@ on:
     tags: 'v*'
 jobs:
   homebrew:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v3
       - name: bump formula
         env:
+          HOMEBREW_REPO: https://github.com/xo/homebrew.git
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+          VER: ${{ github.ref_name }}
         run: |
-          export REPO_PATH=$(brew --prefix)/Homebrew/Library/Taps/xo/homebrew-xo
-          brew update
-          brew tap xo/xo
+          export WORKDIR=$(mktemp -d /tmp/aur-usql.XXXXXX)
+          export REPO_PATH=$WORKDIR/aur-usql
+          wget -O $WORKDIR/archive.tar.gz https://github.com/xo/usql/archive/${VER}.tar.gz
+          export SHA256SUM=$(sha256sum $WORKDIR/archive.tar.gz|awk '{print $1}')
+          git clone $HOMEBREW_REPO $REPO_PATH
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'ken@usql.app'
           git -C $REPO_PATH remote set-url origin 'https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git'
-          brew bump-formula-pr \
-            --no-audit \
-            --no-browse \
-            --write-only \
-            --commit \
-            --no-fork \
-            --force \
-            --message='Update usql formula to ${{ github.ref_name }}' \
-            --url='https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz' \
-            xo/xo/usql
+          sed -i "s%url \".*$%url \"https://github.com/xo/usql/archive/${VER}.tar.gz\"%" $REPO_PATH/Formula/usql.rb
+          sed -i "s%sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
+          git -C $REPO_PATH add Formula/usql.rb
+          git -C $REPO_PATH commit -m "Update usql formula to $VER"
           git -C $REPO_PATH show -C
           git -C $REPO_PATH push origin master
