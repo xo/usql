@@ -19,7 +19,7 @@ jobs:
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'ken@usql.app'
           sed -i "s%url \".*$%url \"https://github.com/xo/usql/archive/${VER}.tar.gz\"%" $REPO_PATH/Formula/usql.rb
-          sed -i "s%sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
+          sed -i "s/sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
           git -C $REPO_PATH add Formula/usql.rb
           git -C $REPO_PATH commit -m "Update usql formula to ${VER}"
           git -C $REPO_PATH show -C
