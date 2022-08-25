@@ -9,14 +9,13 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: bump formula
-        env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
         run: |
           export REPO_PATH=$(brew --prefix)/Homebrew/Library/Taps/xo/homebrew-xo
           brew update
           brew tap xo/xo
-          git config --file $REPO_PATH/.git/config user.name 'Kenneth Shaw'
-          git config --file $REPO_PATH/.git/config user.email 'ken@usql.app'
+          git -C $REPO_PATH config user.name 'Kenneth Shaw'
+          git -C $REPO_PATH config user.email 'ken@usql.app'
+          git -C $REPO_PATH remote set-url origin 'https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git'
           brew bump-formula-pr \
             --no-audit \
             --no-browse \
@@ -24,9 +23,8 @@ jobs:
             --commit \
             --no-fork \
             --force \
-            --message="Update usql formula to ${{ github.ref_name }}" \
-            --url="https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz" \
+            --message='Update usql formula to ${{ github.ref_name }}' \
+            --url='https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz' \
             xo/xo/usql
-          cd $REPO_PATH
-          git remote set-url origin "https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git"
-          git push origin master
+          git -C $REPO_PATH show -C
+          git -C $REPO_PATH push origin master
