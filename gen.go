@@ -57,6 +57,9 @@ var mostDrivers = map[string]DriverInfo{}
 // allDrivers are drivers forced to 'all' build tag.
 var allDrivers = map[string]DriverInfo{}
 
+// badDrivers are drivers forced to 'bad' build tag.
+var badDrivers = map[string]DriverInfo{}
+
 // wireDrivers are the wire compatible drivers.
 var wireDrivers = map[string]DriverInfo{}
 
@@ -78,7 +81,7 @@ func run(licenseStart int, licenseAuthor string) error {
 	if err := loadDrivers(filepath.Join(wd, "drivers")); err != nil {
 		return err
 	}
-	if err := writeInternal(filepath.Join(wd, "internal"), baseDrivers, mostDrivers, allDrivers); err != nil {
+	if err := writeInternal(filepath.Join(wd, "internal"), baseDrivers, mostDrivers, allDrivers, badDrivers); err != nil {
 		return err
 	}
 	if err := writeReadme(wd); err != nil {
@@ -116,6 +119,8 @@ func loadDrivers(wd string) error {
 		case driver.Group == "most":
 		case driver.Group == "all":
 			dest = allDrivers
+		case driver.Group == "bad":
+			dest = badDrivers
 		default:
 			return fmt.Errorf("driver %s has invalid group %q", tag, driver.Group)
 		}
@@ -243,6 +248,8 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 			tags = "(all || most || " + v.Tag + ")"
 		case "all":
 			tags = "(all || " + v.Tag + ")"
+		case "bad":
+			tags = "(bad || " + v.Tag + ")"
 		default:
 			panic(v.Tag)
 		}
@@ -315,6 +322,7 @@ func buildDriverTable() string {
 	baseRows, widths := buildRows(baseDrivers, widths)
 	mostRows, widths := buildRows(mostDrivers, widths)
 	allRows, widths := buildRows(allDrivers, widths)
+	badRows, widths := buildRows(badDrivers, widths)
 	wireRows, widths := buildRows(wireDrivers, widths)
 	s := tableRows(widths, ' ', hdr)
 	s += tableRows(widths, '-')
@@ -326,13 +334,16 @@ func buildDriverTable() string {
 	s += tableRows(widths, ' ')
 	s += tableRows(widths, ' ', wireRows...)
 	s += tableRows(widths, ' ')
+	s += tableRows(widths, ' ', badRows...)
+	s += tableRows(widths, ' ')
 	s += tableRows(widths, ' ',
 		[]string{"**NO DRIVERS**", "`no_base`", "", "_no base drivers (useful for development)_"},
 		[]string{"**MOST DRIVERS**", "`most`", "", "_all stable drivers_"},
-		[]string{"**ALL DRIVERS**", "`all`", "", "_all drivers_"},
+		[]string{"**ALL DRIVERS**", "`all`", "", "_all drivers, excluding bad drivers_"},
+		[]string{"**BAD DRIVERS**", "`bad`", "", "_bad drivers (broken/non-working drivers)_"},
 		[]string{"**NO &lt;TAG&gt;**", "`no_<tag>`", "", "_exclude driver with `<tag>`_"},
 	)
-	return s + "\n" + buildTableLinks(baseDrivers, mostDrivers, allDrivers)
+	return s + "\n" + buildTableLinks(baseDrivers, mostDrivers, allDrivers, badDrivers)
 }
 
 var baseOrder = map[string]int{

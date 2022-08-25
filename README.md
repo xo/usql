@@ -228,7 +228,6 @@ associated database, scheme / build tag, and scheme aliases:
 | Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                   |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]      |
 |                      |                 |                                                 |                                                                  |
-| Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                          |
 | GO DRiver for ORacle | `godror`        | `gr`                                            | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>       |
 | ODBC                 | `odbc`          | `od`                                            | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>     |
 |                      |                 |                                                 |                                                                  |
@@ -239,9 +238,12 @@ associated database, scheme / build tag, and scheme aliases:
 | TiDB                 | `mysql`         | `ti`, `tidb`                                    | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
 | Vitess Database      | `mysql`         | `vt`, `vitess`                                  | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
 |                      |                 |                                                 |                                                                  |
+| Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                          |
+|                      |                 |                                                 |                                                                  |
 | **NO DRIVERS**       | `no_base`       |                                                 | _no base drivers (useful for development)_                       |
 | **MOST DRIVERS**     | `most`          |                                                 | _all stable drivers_                                             |
-| **ALL DRIVERS**      | `all`           |                                                 | _all drivers_                                                    |
+| **ALL DRIVERS**      | `all`           |                                                 | _all drivers, excluding bad drivers_                             |
+| **BAD DRIVERS**      | `bad`           |                                                 | _bad drivers (broken/non-working drivers)_                       |
 | **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                 | _exclude driver with `<tag>`_                                    |
 
 [d-adodb]: https://github.com/mattn/go-adodb
