@@ -28,5 +28,5 @@ jobs:
             --url="https://github.com/xo/usql/archive/${{ github.ref_name }}.tar.gz" \
             xo/xo/usql
           cd $REPO_PATH
-          git remote set_url origin "https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git"
+          git remote set-url origin "https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git"
           git push origin master
