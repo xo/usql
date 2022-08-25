@@ -8,21 +8,19 @@ jobs:
     steps:
       - name: bump formula
         env:
-          HOMEBREW_REPO: https://github.com/xo/homebrew.git
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
           VER: ${{ github.ref_name }}
+          HOMEBREW_REPO: https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git
         run: |
-          export WORKDIR=$(mktemp -d /tmp/aur-usql.XXXXXX)
-          export REPO_PATH=$WORKDIR/aur-usql
+          export WORKDIR=$(mktemp -d /tmp/homebrew-xo.XXXXXX)
+          export REPO_PATH=$WORKDIR/homebrew-xo
           wget -O $WORKDIR/archive.tar.gz https://github.com/xo/usql/archive/${VER}.tar.gz
           export SHA256SUM=$(sha256sum $WORKDIR/archive.tar.gz|awk '{print $1}')
           git clone $HOMEBREW_REPO $REPO_PATH
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'ken@usql.app'
-          git -C $REPO_PATH remote set-url origin 'https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git'
           sed -i "s%url \".*$%url \"https://github.com/xo/usql/archive/${VER}.tar.gz\"%" $REPO_PATH/Formula/usql.rb
           sed -i "s%sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
           git -C $REPO_PATH add Formula/usql.rb
-          git -C $REPO_PATH commit -m "Update usql formula to $VER"
+          git -C $REPO_PATH commit -m "Update usql formula to ${VER}"
           git -C $REPO_PATH show -C
           git -C $REPO_PATH push origin master
