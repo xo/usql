@@ -3,7 +3,7 @@ on:
   push:
     tags: 'v*'
 jobs:
-  homebrew:
+  aur:
     runs-on: ubuntu-latest
     steps:
       - name: add ssh key
