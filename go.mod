@@ -61,6 +61,12 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+require (
 	cloud.google.com/go v0.103.0 // indirect
 	cloud.google.com/go/bigquery v1.38.0 // indirect
 	cloud.google.com/go/compute v1.9.0 // indirect
@@ -202,6 +208,7 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/stretchr/testify v1.8.0
 	github.com/twmb/murmur3 v1.1.6 // indirect
 	github.com/uber-go/tally v3.5.0+incompatible // indirect
 	github.com/unchartedsoftware/witch v0.0.0-20200617171400-4f405404126f // indirect

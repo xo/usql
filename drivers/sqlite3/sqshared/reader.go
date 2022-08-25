@@ -3,6 +3,7 @@ package sqshared
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/xo/usql/drivers"
@@ -71,6 +72,7 @@ FROM pragma_table_info(?)`
 			if err != nil {
 				return nil, err
 			}
+			rec = ExternalDataType(rec)
 			results = append(results, rec)
 		}
 		if rows.Err() != nil {
@@ -328,4 +330,44 @@ func (r MetadataReader) query(qstr string, conds []string, order string, vals ..
 		qstr += fmt.Sprintf("\nLIMIT %d", r.limit)
 	}
 	return r.Query(qstr, vals...)
+}
+
+// Function that maps internal postgres data types to external
+func ExternalDataType(col metadata.Column) metadata.Column {
+	regex, err := regexp.Compile(`\w+`)
+	if err != nil {
+		return col
+	}
+	intType := regex.FindString(col.DataType)
+	if intType != "" {
+		col.InternalDataType = intType
+		col.ExternalDataType = Mapping[intType]
+	}
+	return col
+}
+
+// Mapping from sqlite types to external types
+var Mapping = map[string]string{
+	"BOOLEAN":          "BOOLEAN",
+	"TINYINT":          "TINYINT",
+	"SMALLINT":         "SMALLINT",
+	"BIGINT":           "BIGINT",
+	"DATE":             "DATE",
+	"TIMESTAMP":        "TIMESTAMP",
+	"INT":              "INTEGER",
+	"INTEGER":          "INTEGER",
+	"MEDIUMINT":        "INTEGER",
+	"DECIMAL":          "DECIMAL",
+	"DOUBLE":           "DOUBLE",
+	"NUMERIC":          "NUMERIC",
+	"REAL":             "REAL",
+	"FLOAT":            "FLOAT",
+	"CHARACTER":        "CHAR",
+	"NCHAR":            "CHAR",
+	"NATIVE CHARACTER": "CHAR",
+	"CHAR":             "CHAR",
+	"BINARY":           "BINARY",
+	"BLOB":             "BLOB",
+	"VARCHAR":          "VARCHAR",
+	"TEXT":             "TEXT",
 }

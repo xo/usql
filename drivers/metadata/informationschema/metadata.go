@@ -30,6 +30,7 @@ type InformationSchema struct {
 	systemSchemas       []string
 	currentSchema       string
 	dataTypeFormatter   func(metadata.Column) string
+	externalDataType    func(metadata.Column) string
 }
 
 var _ metadata.BasicReader = &InformationSchema{}
@@ -42,6 +43,7 @@ type ClauseName string
 
 const (
 	ColumnsDataType         = ClauseName("columns.data_type")
+	ColumnsInternalDataType = ClauseName("columns.internal_data_type")
 	ColumnsColumnSize       = ClauseName("columns.column_size")
 	ColumnsNumericScale     = ClauseName("columns.numeric_scale")
 	ColumnsNumericPrecRadix = ClauseName("columns.numeric_precision_radix")
@@ -77,6 +79,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 		hasUsagePrivileges:  true,
 		clauses: map[ClauseName]string{
 			ColumnsDataType:                 "data_type",
+			ColumnsInternalDataType:         "int_data_type",
 			ColumnsColumnSize:               "COALESCE(character_maximum_length, numeric_precision, datetime_precision, 0)",
 			ColumnsNumericScale:             "COALESCE(numeric_scale, 0)",
 			ColumnsNumericPrecRadix:         "COALESCE(numeric_precision_radix, 10)",
@@ -200,6 +203,13 @@ func WithDataTypeFormatter(f func(metadata.Column) string) metadata.ReaderOption
 	}
 }
 
+// WithExternalDataType function to build external string representation of data type
+func WithExternalDataType(f func(metadata.Column) string) metadata.ReaderOption {
+	return func(r metadata.Reader) {
+		r.(*InformationSchema).externalDataType = f
+	}
+}
+
 func (s *InformationSchema) SetLimit(l int) {
 	s.limit = l
 }
@@ -213,6 +223,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		"column_name",
 		"ordinal_position",
 		s.clauses[ColumnsDataType],
+		s.clauses[ColumnsInternalDataType],
 		"COALESCE(column_default, '')",
 		"COALESCE(is_nullable, '') AS is_nullable",
 		s.clauses[ColumnsColumnSize],
@@ -247,6 +258,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 			&rec.Name,
 			&rec.OrdinalPosition,
 			&rec.DataType,
+			&rec.InternalDataType,
 			&rec.Default,
 			&rec.IsNullable,
 			&rec.ColumnSize,
@@ -256,6 +268,10 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		)
 		if err != nil {
 			return nil, err
+		}
+		// run the internal to external data type if is has been set
+		if s.externalDataType != nil {
+			rec.ExternalDataType = s.externalDataType(rec)
 		}
 		rec.DataType = s.dataTypeFormatter(rec)
 		results = append(results, rec)

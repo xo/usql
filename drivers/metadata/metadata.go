@@ -317,12 +317,14 @@ type Column struct {
 	OrdinalPosition int
 	DataType        string
 	// ScanType        reflect.Type
-	Default         string
-	ColumnSize      int
-	DecimalDigits   int
-	NumPrecRadix    int
-	CharOctetLength int
-	IsNullable      Bool
+	InternalDataType string
+	ExternalDataType string
+	Default          string
+	ColumnSize       int
+	DecimalDigits    int
+	NumPrecRadix     int
+	CharOctetLength  int
+	IsNullable       Bool
 }
 
 type Bool string
@@ -500,13 +502,15 @@ func (c IndexColumnSet) Get() *IndexColumn {
 }
 
 type IndexColumn struct {
-	Catalog         string
-	Schema          string
-	Table           string
-	IndexName       string
-	Name            string
-	DataType        string
-	OrdinalPosition int
+	Catalog          string
+	Schema           string
+	Table            string
+	IndexName        string
+	Name             string
+	DataType         string
+	InternalDataType string
+	ExternalDataType string
+	OrdinalPosition  int
 }
 
 func (c IndexColumn) values() []interface{} {
@@ -1142,4 +1146,11 @@ func NewTriggerSet(t []Trigger) *TriggerSet {
 
 func (t TriggerSet) Get() *Trigger {
 	return t.results[t.current-1].(*Trigger)
+}
+
+// one big map of all column mapping, since most data types are similar between databases,
+// all in one big bucket
+
+var DataTypeMapping = map[string]string{
+	"aaa": "",
 }

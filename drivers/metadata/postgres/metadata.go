@@ -29,12 +29,14 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 		newIS := infos.New(
 			infos.WithIndexes(false),
 			infos.WithCustomClauses(map[infos.ClauseName]string{
+				infos.ColumnsInternalDataType:   "udt_name",
 				infos.ColumnsColumnSize:         "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 				infos.FunctionColumnsColumnSize: "COALESCE(character_maximum_length, numeric_precision, datetime_precision, interval_precision, 0)",
 			}),
 			infos.WithSystemSchemas([]string{"pg_catalog", "pg_toast", "information_schema"}),
 			infos.WithCurrentSchema("CURRENT_SCHEMA"),
-			infos.WithDataTypeFormatter(dataTypeFormatter))
+			infos.WithDataTypeFormatter(dataTypeFormatter),
+			infos.WithExternalDataType(externalDataType))
 		return metadata.NewPluginReader(
 			newIS(db, opts...),
 			&metaReader{
@@ -71,6 +73,11 @@ func dataTypeFormatter(col metadata.Column) string {
 	default:
 		return col.DataType
 	}
+}
+
+// Function that maps internal postgres data types to external
+func externalDataType(col metadata.Column) string {
+	return Mapping[col.InternalDataType]
 }
 
 func (r *metaReader) SetLimit(l int) {
@@ -429,4 +436,49 @@ func (r metaReader) query(qstr string, conds []string, order string, vals ...int
 		qstr += fmt.Sprintf("\nLIMIT %d", r.limit)
 	}
 	return r.Query(qstr, vals...)
+}
+
+// mapping map with postgres to external data types
+// see https://www.instaclustr.com/blog/postgresql-data-types-mappings-to-sql-jdbc-and-java-data-types/
+var Mapping = map[string]string{
+	"bool":                        "BIT",
+	"boolean":                     "BOOL",
+	"bit":                         "BIT",
+	"int8":                        "BIGINT",
+	"bigserial":                   "BIGINT",
+	"bigint":                      "BIGINT",
+	"oid":                         "BIGINT",
+	"bytea":                       "BINARY",
+	"char":                        "CHAR",
+	"real":                        "FLOAT",
+	"character":                   "CHAR",
+	"bpchar":                      "CHAR",
+	"numeric":                     "NUMERIC",
+	"int4":                        "INTEGER",
+	"integer":                     "INTEGER",
+	"serial":                      "INTEGER",
+	"int2":                        "SMALLINT",
+	"smallserial":                 "SMALLINT",
+	"smallint":                    "SMALLINT",
+	"float4":                      "REAL",
+	"float8":                      "DOUBLE",
+	"money":                       "DOUBLE",
+	"name":                        "VARCHAR",
+	"text":                        "VARCHAR",
+	"varchar":                     "VARCHAR",
+	"character varying":           "VARCHAR",
+	"date":                        "DATE",
+	"time":                        "TIME",
+	"timetz":                      "TIME",
+	"timestamp":                   "TIMESTAMP",
+	"timestamp with time zone":    "TIMESTAMP",
+	"timestamp without time zone": "TIMESTAMP",
+	"timestamptz":                 "TIMESTAMP",
+	"cardinal_number":             "DISTINCT",
+	"character_data":              "DISTINCT",
+	"sql_identifier":              "DISTINCT",
+	"time_stamp":                  "DISTINCT",
+	"yes_or_no":                   "DISTINCT",
+	"xml":                         "SQLXML",
+	"refcursor":                   "REF_CURSOR",
 }
