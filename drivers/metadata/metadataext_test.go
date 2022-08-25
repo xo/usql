@@ -34,7 +34,7 @@ func (err *error) Error() string {
 // also don't forget to add user and password.
 func TestGetPgExternalDataType(t *testing.T) {
 
-	db, err := sql.Open("postgres", "postgres://<user>:<password>@localhost:5432/northwind")
+	db, err := sql.Open("postgres", "postgres://localhost:5432/northwind")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, db)
 
