@@ -29,7 +29,7 @@ jobs:
           export REPO_PATH=$WORKDIR/aur-usql
           wget -O $WORKDIR/archive.tar.gz https://github.com/xo/usql/archive/${VER}.tar.gz
           export SHA256SUM=$(sha256sum $WORKDIR/archive.tar.gz|awk '{print $1}')
-          export CHANGELOG=$(curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/xo/usql/releases/tags/$VER|jq -r .body)
+          export CHANGELOG=$(curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/xo/usql/releases/tags/$VER|jq .body|sed -e 's/\\r//g')
           git clone $AUR_REPO $REPO_PATH
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
@@ -39,7 +39,7 @@ jobs:
           sed -i "s%source =.*$%source = usql-${VER#v}.tar.gz::https://github.com/xo/usql/archive/${VER}.tar.gz%" $REPO_PATH/.SRCINFO
           sed -i "s/sha256sums =.*$/sha256sums = $SHA256SUM/" $REPO_PATH/.SRCINFO
           git -C $REPO_PATH add PKGBUILD .SRCINFO
-          git -C $REPO_PATH commit -m "Update usql version to ${VER}\n\n${CHANGELOG}"
+          git -C $REPO_PATH commit -m "$(printf %b "Update usql version to ${VER}\n\n${CHANGELOG:1:-1}")"
           git -C $REPO_PATH show -C
           git -C $REPO_PATH push origin master
 
@@ -53,14 +53,14 @@ jobs:
           export REPO_PATH=$WORKDIR/homebrew-xo
           wget -O $WORKDIR/archive.tar.gz https://github.com/xo/usql/archive/${VER}.tar.gz
           export SHA256SUM=$(sha256sum $WORKDIR/archive.tar.gz|awk '{print $1}')
-          export CHANGELOG=$(curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/xo/usql/releases/tags/$VER|jq -r .body)
+          export CHANGELOG=$(curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/xo/usql/releases/tags/$VER|jq .body|sed -e 's/\\r//g')
           git clone $HOMEBREW_REPO $REPO_PATH
           git -C $REPO_PATH config user.name 'Kenneth Shaw'
           git -C $REPO_PATH config user.email 'ken@usql.app'
           sed -i "s%url \".*$%url \"https://github.com/xo/usql/archive/${VER}.tar.gz\"%" $REPO_PATH/Formula/usql.rb
           sed -i "s/sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
           git -C $REPO_PATH add Formula/usql.rb
-          git -C $REPO_PATH commit -m "Update usql version to ${VER}\n\n${CHANGELOG}"
+          git -C $REPO_PATH commit -m "$(printf %b "Update usql version to ${VER}\n\n${CHANGELOG:1:-1}")"
           git -C $REPO_PATH show -C
           git -C $REPO_PATH push origin master
 
