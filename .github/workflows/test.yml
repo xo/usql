@@ -1,27 +1,28 @@
 on: [push, pull_request]
-name: Test
+name: Test usql
 jobs:
   test:
+    name: Build and Test usql
     runs-on: ubuntu-latest
     services:
       cassandra:
-        image: usql/cassandra
+        image: docker.io/usql/cassandra:latest
         ports:
           - 9042:9042
       postgres:
-        image: usql/postgres
+        image: docker.io/usql/postgres:latest
         env:
           POSTGRES_PASSWORD: P4ssw0rd
         ports:
           - 5432:5432
       mysql:
-        image: mariadb
+        image: docker.io/library/mariadb
         env:
           MYSQL_ROOT_PASSWORD: P4ssw0rd
         ports:
           - 3306:3306
       sqlserver:
-        image: mcr.microsoft.com/mssql/server:2019-latest
+        image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: Y
           MSSQL_PID: Express
