@@ -35,9 +35,11 @@ jobs:
           git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
           sed -i "s/sha256sums=.*$/sha256sums=('$SHA256SUM')/" $REPO_PATH/PKGBUILD
+          sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgver =.*$/pkgver = ${VER#v}/" $REPO_PATH/.SRCINFO
           sed -i "s%source =.*$%source = usql-${VER#v}.tar.gz::https://github.com/xo/usql/archive/${VER}.tar.gz%" $REPO_PATH/.SRCINFO
           sed -i "s/sha256sums =.*$/sha256sums = $SHA256SUM/" $REPO_PATH/.SRCINFO
+          sed -i "s/pkgrel =.*$/pkgrel = 1/" $REPO_PATH/.SRCINFO
           git -C $REPO_PATH add PKGBUILD .SRCINFO
           git -C $REPO_PATH commit -m "$(printf %b "Update usql version to ${VER}\n\n${CHANGELOG:1:-1}")"
           git -C $REPO_PATH show -C
