@@ -48,7 +48,7 @@ require (
 	github.com/trinodb/trino-go-client v0.302.0
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.2.2
-	github.com/xo/dburl v0.11.1
+	github.com/xo/dburl v0.12.0
 	github.com/xo/tblfmt v0.9.1
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778
 	github.com/yookoala/realpath v1.0.0
