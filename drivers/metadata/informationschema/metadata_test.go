@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/denisenkom/go-mssqldb" // DRIVER: sqlserver
+	_ "github.com/microsoft/go-mssqldb" // DRIVER: sqlserver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/go-cmp/cmp"
 	dt "github.com/ory/dockertest/v3"

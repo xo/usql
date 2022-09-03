@@ -1,6 +1,6 @@
 // Package sqlserver defines and registers usql's Microsoft SQL Server driver.
 //
-// See: https://github.com/denisenkom/go-mssqldb
+// See: https://github.com/microsoft/go-mssqldb
 // Group: base
 package sqlserver
 
@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	sqlserver "github.com/denisenkom/go-mssqldb" // DRIVER
+	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )

@@ -18,7 +18,6 @@ require (
 	github.com/btnguyen2k/gocosmos v0.1.6
 	github.com/cloudspannerecosystem/go-sql-spanner v0.0.0-20220112050259-970f6ba5045e
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
-	github.com/denisenkom/go-mssqldb v0.12.2
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/exasol/exasol-driver-go v0.4.5
 	github.com/genjidb/genji v0.15.1
@@ -36,6 +35,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/mattn/go-sqlite3 v1.14.15
+	github.com/microsoft/go-mssqldb v0.16.0
 	github.com/mithrandie/csvq v1.17.10
 	github.com/mithrandie/csvq-driver v1.6.7
 	github.com/nakagami/firebirdsql v0.9.4
