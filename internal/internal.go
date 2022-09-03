@@ -42,7 +42,7 @@ func KnownBuildTags() map[string]string {
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
 		"spanner":       "spanner",       // github.com/cloudspannerecosystem/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
-		"sqlserver":     "sqlserver",     // github.com/denisenkom/go-mssqldb
+		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient

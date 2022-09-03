@@ -216,7 +216,7 @@ associated database, scheme / build tag, and scheme aliases:
 |----------------------|-----------------|-------------------------------------------------|------------------------------------------------------------------|
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                  |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                        |
-| Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`                                   | [github.com/denisenkom/go-mssqldb][d-sqlserver]                  |
+| Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                   |
 | Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`    | [github.com/sijms/go-ora/v2][d-oracle]                           |
 | SQLite3              | `sqlite3`       | `sq`, `file`, `sqlite`                          | [github.com/mattn/go-sqlite3][d-sqlite3] <sup>[†][f-cgo]</sup>   |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                      | [github.com/mithrandie/csvq-driver][d-csvq]                      |
@@ -303,7 +303,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
 [d-spanner]: https://github.com/cloudspannerecosystem/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
-[d-sqlserver]: https://github.com/denisenkom/go-mssqldb
+[d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
