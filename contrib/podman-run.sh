@@ -116,16 +116,16 @@ TARGETS=()
 case $DIR in
   all)
     TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'|grep -v oracle|grep -v db2))
-    if [[ "$(podman image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+    if [[ "$(podman image ls -q --filter 'reference=localhost/oracle/database')" != "" ]]; then
       TARGETS+=(oracle)
     fi
-    if [[ "$(podman image ls -q --filter 'reference=ibmcom/db2')" != "" && -d /media/src/opt/db2 ]]; then
+    if [[ "$(podman image ls -q --filter 'reference=docker.io/ibmcom/db2')" != "" ]]; then
       TARGETS+=(db2)
     fi
   ;;
   test)
     TARGETS+=(mysql postgres sqlserver cassandra)
-    if [[ "$(podman image ls -q --filter 'reference=oracle/database')" != "" && -d /media/src/opt/oracle ]]; then
+    if [[ "$(podman image ls -q --filter 'reference=localhost/oracle/database')" != "" ]]; then
       TARGETS+=(oracle)
     fi
   ;;
