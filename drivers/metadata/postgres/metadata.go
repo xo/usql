@@ -77,9 +77,34 @@ func (r *metaReader) SetLimit(l int) {
 	r.limit = l
 }
 
+type Catalog struct {
+	metadata.Catalog
+	Owner            string
+	Encoding         string
+	Collate          string
+	Ctype            string
+	AccessPrivileges string
+}
+
+func (s Catalog) Values() []interface{} {
+	return []interface{}{s.Catalog.Catalog, s.Owner, s.Encoding, s.Collate, s.Ctype, s.AccessPrivileges}
+}
+
+func (s Catalog) GetCatalog() metadata.Catalog {
+	return s.Catalog
+}
+
+var (
+	catalogsColumnName = []string{"Catalog", "Owner", "Encoding", "Collate", "Ctype", "Access privileges"}
+)
+
 func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
-	qstr := `
-SELECT d.datname as "Name"
+	qstr := `SELECT d.datname as "Name",
+       pg_catalog.pg_get_userbyid(d.datdba) as "Owner",
+       pg_catalog.pg_encoding_to_char(d.encoding) as "Encoding",
+       d.datcollate as "Collate",
+       d.datctype as "Ctype",
+       COALESCE(pg_catalog.array_to_string(d.datacl, E'\n'),'') AS "Access privileges"
 FROM pg_catalog.pg_database d`
 	rows, closeRows, err := r.query(qstr, []string{}, "1")
 	if err != nil {
@@ -87,19 +112,21 @@ FROM pg_catalog.pg_database d`
 	}
 	defer closeRows()
 
-	results := []metadata.Catalog{}
+	var results []metadata.Result
 	for rows.Next() {
-		rec := metadata.Catalog{}
-		err = rows.Scan(&rec.Catalog)
+		rec := Catalog{
+			Catalog: metadata.Catalog{},
+		}
+		err = rows.Scan(&rec.Catalog.Catalog, &rec.Owner, &rec.Encoding, &rec.Collate, &rec.Ctype, &rec.AccessPrivileges)
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, rec)
+		results = append(results, &rec)
 	}
 	if rows.Err() != nil {
 		return nil, rows.Err()
 	}
-	return metadata.NewCatalogSet(results), nil
+	return metadata.NewCatalogSetWithColumns(results, catalogsColumnName), nil
 }
 
 func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {

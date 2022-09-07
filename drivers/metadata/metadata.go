@@ -179,16 +179,34 @@ func NewCatalogSet(v []Catalog) *CatalogSet {
 	}
 }
 
-func (s CatalogSet) Get() *Catalog {
-	return s.results[s.current-1].(*Catalog)
+func NewCatalogSetWithColumns(v []Result, cols []string) *CatalogSet {
+	return &CatalogSet{
+		resultSet: resultSet{
+			results: v,
+			columns: cols,
+		},
+	}
+}
+
+type CatalogProvider interface {
+	GetCatalog() Catalog
+}
+
+func (s CatalogSet) Get() Catalog {
+	r := s.results[s.current-1]
+	return r.(CatalogProvider).GetCatalog()
 }
 
 type Catalog struct {
 	Catalog string
 }
 
-func (s Catalog) values() []interface{} {
+func (s Catalog) Values() []interface{} {
 	return []interface{}{s.Catalog}
+}
+
+func (s Catalog) GetCatalog() Catalog {
+	return s
 }
 
 type SchemaSet struct {
@@ -217,7 +235,7 @@ type Schema struct {
 	Catalog string
 }
 
-func (s Schema) values() []interface{} {
+func (s Schema) Values() []interface{} {
 	return []interface{}{s.Schema, s.Catalog}
 }
 
@@ -262,7 +280,7 @@ type Table struct {
 	Comment string
 }
 
-func (t Table) values() []interface{} {
+func (t Table) Values() []interface{} {
 	return []interface{}{
 		t.Catalog,
 		t.Schema,
@@ -333,7 +351,7 @@ var (
 	NO      Bool = "NO"
 )
 
-func (c Column) values() []interface{} {
+func (c Column) Values() []interface{} {
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -399,7 +417,7 @@ type ColumnStat struct {
 	TopNFreqs   []float64
 }
 
-func (c ColumnStat) values() []interface{} {
+func (c ColumnStat) Values() []interface{} {
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -458,7 +476,7 @@ type Index struct {
 	Columns   string
 }
 
-func (i Index) values() []interface{} {
+func (i Index) Values() []interface{} {
 	return []interface{}{
 		i.Catalog,
 		i.Schema,
@@ -509,7 +527,7 @@ type IndexColumn struct {
 	OrdinalPosition int
 }
 
-func (c IndexColumn) values() []interface{} {
+func (c IndexColumn) Values() []interface{} {
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -581,7 +599,7 @@ type Constraint struct {
 	CheckClause string
 }
 
-func (i Constraint) values() []interface{} {
+func (i Constraint) Values() []interface{} {
 	return []interface{}{
 		i.Catalog,
 		i.Schema,
@@ -647,7 +665,7 @@ type ConstraintColumn struct {
 	ForeignName       string
 }
 
-func (c ConstraintColumn) values() []interface{} {
+func (c ConstraintColumn) Values() []interface{} {
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -711,7 +729,7 @@ type Function struct {
 	SpecificName string
 }
 
-func (f Function) values() []interface{} {
+func (f Function) Values() []interface{} {
 	return []interface{}{
 		f.Catalog,
 		f.Schema,
@@ -776,7 +794,7 @@ type FunctionColumn struct {
 	CharOctetLength int
 }
 
-func (c FunctionColumn) values() []interface{} {
+func (c FunctionColumn) Values() []interface{} {
 	return []interface{}{
 		c.Catalog,
 		c.Schema,
@@ -831,7 +849,7 @@ type Sequence struct {
 	Cycles    Bool
 }
 
-func (s Sequence) values() []interface{} {
+func (s Sequence) Values() []interface{} {
 	return []interface{}{
 		s.DataType,
 		s.Start,
@@ -879,7 +897,7 @@ type PrivilegeSummary struct {
 	ColumnPrivileges ColumnPrivileges
 }
 
-func (s PrivilegeSummary) values() []interface{} {
+func (s PrivilegeSummary) Values() []interface{} {
 	return []interface{}{
 		s.Catalog,
 		s.Schema,
@@ -1024,7 +1042,7 @@ type resultSet struct {
 }
 
 type Result interface {
-	values() []interface{}
+	Values() []interface{}
 }
 
 func (r *resultSet) SetFilter(f func(Result) bool) {
@@ -1073,7 +1091,7 @@ func (r resultSet) Columns() ([]string, error) {
 func (r resultSet) Scan(dest ...interface{}) error {
 	var v []interface{}
 	if r.scanValues == nil {
-		v = r.results[r.current-1].values()
+		v = r.results[r.current-1].Values()
 	} else {
 		v = r.scanValues(r.results[r.current-1])
 	}
@@ -1107,7 +1125,7 @@ type Trigger struct {
 	Definition string
 }
 
-func (t Trigger) values() []interface{} {
+func (t Trigger) Values() []interface{} {
 	return []interface{}{
 		t.Catalog,
 		t.Schema,
