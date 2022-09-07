@@ -125,6 +125,27 @@ func TestTriggers(t *testing.T) {
 	}
 }
 
+func TestTables(t *testing.T) {
+	schema := "public"
+	expected := "actor_actor_id_seq, address_address_id_seq, category_category_id_seq, city_city_id_seq, country_country_id_seq, customer_customer_id_seq, film_film_id_seq, inventory_inventory_id_seq, language_language_id_seq, payment_payment_id_seq, rental_rental_id_seq, staff_staff_id_seq, store_store_id_seq, actor, address, category, city, country, customer, film, film_actor, film_category, inventory, language, payment, payment_p2007_01, payment_p2007_02, payment_p2007_03, payment_p2007_04, payment_p2007_05, payment_p2007_06, rental, staff, store, actor_info, customer_list, film_list, nicer_but_slower_film_list, sales_by_film_category, sales_by_store, staff_list"
+	parent := "film"
+	r := postgres.NewReader()(db.DB).(metadata.TableReader)
+
+	result, err := r.Tables(metadata.Filter{Schema: schema, Parent: parent})
+	if err != nil {
+		log.Fatalf("Could not read %s triggers: %v", dbName, err)
+	}
+
+	names := []string{}
+	for result.Next() {
+		names = append(names, result.Get().Name)
+	}
+	actual := strings.Join(names, ", ")
+	if actual != expected {
+		t.Errorf("Wrong %s table names, expected:\n  %v\ngot:\n  %v", dbName, expected, names)
+	}
+}
+
 func TestColumns(t *testing.T) {
 	// Only testing postgres specific datatype formatting.
 	// The rest of the functionality is covered by informationschema/metadata_test.go:TestColumns

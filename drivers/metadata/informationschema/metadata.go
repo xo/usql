@@ -266,7 +266,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 	return metadata.NewColumnSet(results), nil
 }
 
-// Tables from selected catalog (or all, if empty), matching schemas, names and types
+// Tables, views, materialized views and sequences from selected catalog (or all, if empty), matching schemas, names and types
 func (s InformationSchema) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT
   table_catalog,

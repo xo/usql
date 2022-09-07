@@ -95,12 +95,7 @@ func (w DefaultWriter) DescribeFunctions(u *dburl.URL, funcTypes, pattern string
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\df`, u.Driver)
 	}
-	types := []string{}
-	for k, v := range w.funcTypes {
-		if strings.ContainsRune(funcTypes, k) {
-			types = append(types, v...)
-		}
-	}
+	types := typesFromTypeRunes(funcTypes, w.funcTypes)
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
 		return fmt.Errorf("failed to parse search pattern: %w", err)
@@ -186,7 +181,8 @@ func (w DefaultWriter) DescribeTableDetails(u *dburl.URL, pattern string, verbos
 	tr, isTR := w.r.(TableReader)
 	_, isCR := w.r.(ColumnReader)
 	if isTR && isCR {
-		res, err := tr.Tables(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
+		types := typesFromTypeRunes("tvm", w.tableTypes)
+		res, err := tr.Tables(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
 		if err != nil {
 			return fmt.Errorf("failed to list tables: %w", err)
 		}
@@ -273,6 +269,8 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 	})
 	params := env.Pall()
 	params["title"] = fmt.Sprintf("%s %s\n", typ, qualifiedIdentifier(sp, tp))
+	// The extra newline is already added as part of the summary
+	params["extra_newline"] = "false"
 	return w.encodeWithSummary(res, params, w.tableDetailsSummary(sp, tp))
 }
 
@@ -358,6 +356,9 @@ func (w DefaultWriter) tableDetailsSummary(sp, tp string) func(io.Writer, int) (
 				return err
 			},
 		)
+		if err != nil {
+			return 0, err
+		}
 		err = w.describeTableTriggers(out, sp, tp)
 		if err != nil {
 			return 0, err
@@ -570,12 +571,7 @@ func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verb
 	if !ok {
 		return fmt.Errorf(text.NotSupportedByDriver, `\dt`, u.Driver)
 	}
-	types := []string{}
-	for k, v := range w.tableTypes {
-		if strings.ContainsRune(tableTypes, k) {
-			types = append(types, v...)
-		}
-	}
+	types := typesFromTypeRunes(tableTypes, w.tableTypes)
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
 		return fmt.Errorf("failed to parse search pattern: %w", err)
@@ -783,13 +779,7 @@ func (w DefaultWriter) ListPrivilegeSummaries(u *dburl.URL, pattern string, show
 		return fmt.Errorf("failed to parse search pattern: %w", err)
 	}
 	// filter for tables, views and sequences
-	const tableTypes = "tvms"
-	types := []string{}
-	for k, v := range w.tableTypes {
-		if strings.ContainsRune(tableTypes, k) {
-			types = append(types, v...)
-		}
-	}
+	types := typesFromTypeRunes("tvms", w.tableTypes)
 	res, err := r.PrivilegeSummaries(Filter{Schema: sp, Name: tp, WithSystem: showSystem, Types: types})
 	if err != nil {
 		return fmt.Errorf("failed to list table privileges: %w", err)
@@ -835,4 +825,14 @@ func qualifiedIdentifier(schema, name string) string {
 		return fmt.Sprintf("\"%s\"", name)
 	}
 	return fmt.Sprintf("\"%s.%s\"", schema, name)
+}
+
+func typesFromTypeRunes(typeRunes string, mapping map[rune][]string) []string {
+	types := []string{}
+	for k, v := range mapping {
+		if strings.ContainsRune(typeRunes, k) {
+			types = append(types, v...)
+		}
+	}
+	return types
 }

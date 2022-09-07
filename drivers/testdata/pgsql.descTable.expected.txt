@@ -103,3 +103,4 @@ Index "public.film_pkey"
 ---------+---------
  film_id | integer 
 primary key, index, for table film
+

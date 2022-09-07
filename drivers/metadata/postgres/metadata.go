@@ -102,6 +102,7 @@ FROM pg_catalog.pg_database d`
 	return metadata.NewCatalogSet(results), nil
 }
 
+// Tables, views, materialized views and sequences from selected catalog (or all, if empty), matching schemas, names and types
 func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 	qstr := `SELECT n.nspname as "Schema",
   c.relname as "Name",
@@ -112,7 +113,9 @@ func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 `
-	conds := []string{"n.nspname !~ '^pg_toast' AND c.relkind != 'c'"}
+	// include tables(r,p,s,f), views(v), materialized views(m) and sequences(s)
+	// exclude composite types(c) and indices (i,I)
+	conds := []string{"n.nspname !~ '^pg_toast' AND c.relkind IN ('r', 'p', 's', 'f', 'v', 'm', 'S')"}
 	vals := []interface{}{}
 	if f.OnlyVisible {
 		conds = append(conds, "pg_catalog.pg_table_is_visible(c.oid)")

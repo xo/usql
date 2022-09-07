@@ -7,3 +7,4 @@
  public | film_category    | table    |    0 | 0 bytes    |  
  public | film_list        | view     |    0 | 0 bytes    |  
 (5 rows)
+

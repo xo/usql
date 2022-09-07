@@ -945,8 +945,6 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 		fmt.Fprintln(w, typ)
 	case err != nil:
 		return err
-	case params["format"] == "aligned":
-		fmt.Fprintln(w)
 	}
 	if h.timing {
 		d := time.Since(start)

@@ -2,6 +2,8 @@ module github.com/xo/usql
 
 go 1.19
 
+replace github.com/xo/tblfmt => github.com/henlue/tblfmt v0.0.0-20220907092445-d163abe06ef8
+
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.3.0
 	github.com/IBM/nzgo/v14 v14.0.0
