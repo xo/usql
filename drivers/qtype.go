@@ -18,6 +18,7 @@ var queryMap = map[string]bool{
 	"VALUES":     true, // compute a set of rows
 	"LIST":       true, // list permissions, roles, users (cassandra)
 	"EXEC":       true, // execute a stored procedure that returns rows (not postgres)
+	"TABLE":      true, // shortcut for select * from <table> (postgresql)
 }
 
 // execMap is the map of SQL prefixes to execute.
