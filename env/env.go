@@ -22,9 +22,15 @@ import (
 
 // Getenv tries retrieving successive keys from os environment variables.
 func Getenv(keys ...string) string {
+	m := make(map[string]string)
+	for _, v := range os.Environ() {
+		if i := strings.Index(v, "="); i != -1 {
+			m[v[:i]] = v[i+1:]
+		}
+	}
 	for _, key := range keys {
-		if s := os.Getenv(key); s != "" {
-			return s
+		if v, ok := m[key]; ok {
+			return v
 		}
 	}
 	return ""
