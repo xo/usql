@@ -27,7 +27,7 @@ func Register(name string, err func(error) (string, string), isPasswordErr func(
 			// if the service name is not specified, use the environment
 			// variable if present
 			if strings.TrimPrefix(u.Path, "/") == "" {
-				if n := env.Getenv("ORACLE_SID", "ORASID"); n != "" {
+				if n, ok := env.Getenv("ORACLE_SID", "ORASID"); ok && n != "" {
 					u.Path = "/" + n
 					if u.Host == "" {
 						u.Host = "localhost"

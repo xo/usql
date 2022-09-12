@@ -38,7 +38,7 @@ var vars, pvars Vars
 func init() {
 	// get USQL_* variables
 	enableHostInformation := "true"
-	if v := Getenv("USQL_SHOW_HOST_INFORMATION"); v != "" {
+	if v, _ := Getenv(strings.ToUpper(text.CommandName) + "_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
 	}
 	// get color level
@@ -47,8 +47,9 @@ func init() {
 	if colorLevel < terminfo.ColorLevelBasic {
 		enableSyntaxHL = "false"
 	}
-	pager, pagerCmd := "off", Getenv("USQL_PAGER", "PAGER")
-	if pagerCmd == "" {
+	pagerCmd, ok := Getenv(strings.ToUpper(text.CommandName)+"_PAGER", "PAGER")
+	pager := "off"
+	if !ok {
 		for _, s := range []string{"less", "more"} {
 			if _, err := exec.LookPath(s); err == nil {
 				pagerCmd = s
@@ -59,12 +60,12 @@ func init() {
 	if pagerCmd != "" {
 		pager = "on"
 	}
-
+	editorCmd, _ := Getenv(strings.ToUpper(text.CommandName)+"_EDITOR", "EDITOR", "VISUAL")
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"PAGER":                 pagerCmd,
-		"EDITOR":                Getenv("USQL_EDITOR", "EDITOR", "VISUAL"),
+		"EDITOR":                editorCmd,
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),

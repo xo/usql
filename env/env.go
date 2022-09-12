@@ -21,7 +21,7 @@ import (
 )
 
 // Getenv tries retrieving successive keys from os environment variables.
-func Getenv(keys ...string) string {
+func Getenv(keys ...string) (string, bool) {
 	m := make(map[string]string)
 	for _, v := range os.Environ() {
 		if i := strings.Index(v, "="); i != -1 {
@@ -30,10 +30,10 @@ func Getenv(keys ...string) string {
 	}
 	for _, key := range keys {
 		if v, ok := m[key]; ok {
-			return v
+			return v, true
 		}
 	}
-	return ""
+	return "", false
 }
 
 // Chdir changes the current working directory to the specified path, or to the
@@ -99,11 +99,11 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	// setup args
 	args := []string{path}
 	if line != "" {
-		prefix := Getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG")
-		if prefix == "" {
-			prefix = "+"
+		if s, ok := Getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG"); ok {
+			args = append(args, s+line)
+		} else {
+			args = append(args, "+"+line)
 		}
-		args = append(args, prefix+line)
 	}
 	// create command
 	c := exec.Command(ed, args...)
@@ -129,7 +129,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 func HistoryFile(u *user.User) string {
 	n := text.CommandUpper() + "_HISTORY"
 	path := "~/." + strings.ToLower(n)
-	if s := Getenv(n); s != "" {
+	if s, ok := Getenv(n); ok {
 		path = s
 	}
 	return passfile.Expand(u.HomeDir, path)
@@ -142,7 +142,7 @@ func HistoryFile(u *user.User) string {
 func RCFile(u *user.User) string {
 	n := text.CommandUpper() + "RC"
 	path := "~/." + strings.ToLower(n)
-	if s := Getenv(n); s != "" {
+	if s, ok := Getenv(n); ok {
 		path = s
 	}
 	return passfile.Expand(u.HomeDir, path)
@@ -154,10 +154,11 @@ func RCFile(u *user.User) string {
 // Looks at the SHELL environment variable first, and then COMSPEC/ComSpec on
 // Windows. Defaults to sh on non-Windows systems, and to cmd.exe on Windows.
 func Getshell() (string, string) {
-	var shell, param string
-	shell, param = Getenv("SHELL"), "-c"
-	if shell == "" && runtime.GOOS == "windows" {
-		shell, param = Getenv("COMSPEC", "ComSpec"), "/c"
+	shell, ok := Getenv("SHELL")
+	param := "-c"
+	if !ok && runtime.GOOS == "windows" {
+		shell, _ = Getenv("COMSPEC", "ComSpec")
+		param = "/c"
 	}
 	// look up path for "cmd.exe" if no other SHELL
 	if shell == "" && runtime.GOOS == "windows" {
