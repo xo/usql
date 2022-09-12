@@ -243,6 +243,50 @@ func TestCompleter(t *testing.T) {
 			},
 			0,
 		},
+		{
+			"TABLE Selectables",
+			"TABLE ",
+			6,
+			[]string{
+				"main",
+				"remote",
+				"default",
+				"system",
+				"film",
+				"factory",
+			},
+			0,
+		},
+		{
+			"TABLE namespaced with catalog",
+			"TABLE remote.",
+			13,
+			[]string{
+				"film",
+				"factory",
+			},
+			7,
+		},
+		{
+			"TABLE namespaced with schema",
+			"TABLE system.",
+			13,
+			[]string{
+				"film",
+				"factory",
+			},
+			7,
+		},
+		{
+			"TABLE namespaced with catalog.schema",
+			"TABLE remote.default.f",
+			22,
+			[]string{
+				"ilm",
+				"actory",
+			},
+			16,
+		},
 	}
 
 	completer := NewDefaultCompleter(WithReader(mockReader{}), WithConnStrings([]string{"pg://"}))
