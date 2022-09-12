@@ -225,7 +225,6 @@ associated database, scheme / build tag, and scheme aliases:
 | Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                              | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots]       |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]             |
 | Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                 |
-| Apache Hive          | `hive`          | `hi`                                            | [sqlflow.org/gohive][d-hive]                                     |
 | Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]              |
 | AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                        | [github.com/uber/athenadriver/go][d-athena]                      |
 | Azure CosmosDB       | `cosmos`        | `cm`                                            | [github.com/btnguyen2k/gocosmos][d-cosmos]                       |
@@ -261,6 +260,7 @@ associated database, scheme / build tag, and scheme aliases:
 | TiDB                 | `mysql`         | `ti`, `tidb`                                    | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
 | Vitess Database      | `mysql`         | `vt`, `vitess`                                  | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup> |
 |                      |                 |                                                 |                                                                  |
+| Apache Hive          | `hive`          | `hi`                                            | [sqlflow.org/gohive][d-hive]                                     |
 | Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                          |
 |                      |                 |                                                 |                                                                  |
 | **NO DRIVERS**       | `no_base`       |                                                 | _no base drivers (useful for development)_                       |
