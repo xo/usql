@@ -435,6 +435,10 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(IGNORE_CASE, previousWords, "FROM|JOIN") {
 		return c.completeWithSelectables(text)
 	}
+	/* TABLE, but not TABLE embedded in other commands */
+	if matches(IGNORE_CASE, previousWords, "TABLE") {
+		return c.completeWithUpdatables(text)
+	}
 	/* Backslash commands */
 	if TailMatches(MATCH_CASE, previousWords, `\cd|\e|\edit|\g|\gx|\i|\include|\ir|\include_relative|\o|\out|\s|\w|\write`) {
 		return completeFromFiles(text)
