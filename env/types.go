@@ -66,6 +66,8 @@ func init() {
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"PAGER":                 pagerCmd,
 		"EDITOR":                editorCmd,
+		// prompts
+		"PROMPT1": "%S%m%/%R%# ",
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),

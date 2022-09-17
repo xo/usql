@@ -162,29 +162,30 @@ var lineend = []rune{'\n'}
 // called again only after any remaining collected runes have been processed.
 //
 // Example:
-//     buf := stmt.New(runeSrc)
-//     for {
-//         cmd, params, err := buf.Next(unquoteFunc)
-//         if err { /* ... */ }
 //
-//         execute, quit := buf.Ready() || cmd == "g", cmd == "q"
+//	buf := stmt.New(runeSrc)
+//	for {
+//	    cmd, params, err := buf.Next(unquoteFunc)
+//	    if err { /* ... */ }
 //
-//         // process command ...
-//         switch cmd {
-//             /* ... */
-//         }
+//	    execute, quit := buf.Ready() || cmd == "g", cmd == "q"
 //
-//         if quit {
-//             break
-//         }
+//	    // process command ...
+//	    switch cmd {
+//	        /* ... */
+//	    }
 //
-//         if execute {
-//            s := buf.String()
-//            res, err := db.Query(s)
-//            /* handle database ... */
-//            buf.Reset(nil)
-//         }
-//     }
+//	    if quit {
+//	        break
+//	    }
+//
+//	    if execute {
+//	       s := buf.String()
+//	       res, err := db.Query(s)
+//	       /* handle database ... */
+//	       buf.Reset(nil)
+//	    }
+//	}
 func (b *Stmt) Next(unquote func(string, bool) (bool, string, error)) (string, string, error) {
 	var err error
 	var i int
