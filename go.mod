@@ -50,7 +50,7 @@ require (
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.2.2
 	github.com/xo/dburl v0.12.4
-	github.com/xo/tblfmt v0.9.1
+	github.com/xo/tblfmt v0.10.0
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4

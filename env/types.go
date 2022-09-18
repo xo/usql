@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	syslocale "github.com/jeandeaual/go-locale"
 	"github.com/xo/terminfo"
 	"github.com/xo/usql/text"
 )
@@ -47,6 +48,7 @@ func init() {
 	if colorLevel < terminfo.ColorLevelBasic {
 		enableSyntaxHL = "false"
 	}
+	// pager
 	pagerCmd, ok := Getenv(strings.ToUpper(text.CommandName)+"_PAGER", "PAGER")
 	pager := "off"
 	if !ok {
@@ -60,6 +62,7 @@ func init() {
 	if pagerCmd != "" {
 		pager = "on"
 	}
+	// editor
 	editorCmd, _ := Getenv(strings.ToUpper(text.CommandName)+"_EDITOR", "EDITOR", "VISUAL")
 	vars = Vars{
 		// usql related logic
@@ -67,12 +70,17 @@ func init() {
 		"PAGER":                 pagerCmd,
 		"EDITOR":                editorCmd,
 		// prompts
-		"PROMPT1": "%S%m%/%R%# ",
+		"PROMPT1": "%S%N%m%/%R%# ",
 		// syntax highlighting variables
 		"SYNTAX_HL":             enableSyntaxHL,
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
 		"SYNTAX_HL_STYLE":       "monokai",
 		"SYNTAX_HL_OVERRIDE_BG": "true",
+	}
+	// determine locale
+	locale := "en-US"
+	if s, err := syslocale.GetLocale(); err == nil {
+		locale = s
 	}
 	pvars = Vars{
 		"border":                   "1",
@@ -84,10 +92,11 @@ func init() {
 		"footer":                   "on",
 		"format":                   "aligned",
 		"linestyle":                "ascii",
+		"locale":                   locale,
 		"null":                     "",
 		"numericlocale":            "off",
-		"pager":                    pager,
 		"pager_min_lines":          "0",
+		"pager":                    pager,
 		"recordsep":                "\n",
 		"recordsep_zero":           "off",
 		"tableattr":                "",
@@ -276,7 +285,7 @@ func Ptoggle(name, extra string) (string, error) {
 			pvars[name] = "aligned"
 		}
 	case "linestyle":
-	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time", "locale":
 	case "tableattr", "title":
 		pvars[name] = ""
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
@@ -324,7 +333,7 @@ func Pset(name, value string) (string, error) {
 			return "", text.ErrInvalidFormatLineStyle
 		}
 		pvars[name] = value
-	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "time", "title":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "time", "title", "locale":
 		pvars[name] = value
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
 		if !borderRE.MatchString(value) {

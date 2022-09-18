@@ -60,6 +60,7 @@ var (
 		`footer`:                   `Default footer is %s.`,
 		`format`:                   `Output format is %s.`,
 		`linestyle`:                `Line style is %s.`,
+		`locale`:                   `Locale is %q.`,
 		`null`:                     `Null display is %q.`,
 		`numericlocale`:            `Locale-adjusted numeric output is %s.`,
 		`pager`:                    `Pager usage is %s.`,

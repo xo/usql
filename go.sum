@@ -1382,8 +1382,8 @@ github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363v
 github.com/xo/dburl v0.12.4 h1:mAIQjCNqCRtfytZNN0tZzK01rfng3n4Ei1s+H9lh61I=
 github.com/xo/dburl v0.12.4/go.mod h1:K6rSPgbVqP3ZFT0RHkdg/M3M5KhLeV2MaS/ZqaLd1kA=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
-github.com/xo/tblfmt v0.9.1 h1:ufdAj+c9pg0uK9jNSYdAlgbrwiwmZhd1TnNneCxlIkM=
-github.com/xo/tblfmt v0.9.1/go.mod h1:t+6T+DRnZFAIEIPJ+Vz34kztPVNf4u6h1kGse1EXdb8=
+github.com/xo/tblfmt v0.10.0 h1:nCQcDlMJFDU3rJ+Z7CFUQUEyndLe8oXbCWZng+UZScU=
+github.com/xo/tblfmt v0.10.0/go.mod h1:qrTw6uxUbKAvoJVTaVYxlUH151r70tdXMVWK2DrHkZM=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e h1:JVG44RsyaB9T2KIHavMF/ppJZNG9ZpyihvCd0w101no=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=

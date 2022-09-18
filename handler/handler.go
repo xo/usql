@@ -547,6 +547,13 @@ func (h *Handler) Prompt(prompt string) string {
 				}
 				buf = append(buf, s...)
 			}
+		case 'N': // database user
+			if connected && h.u.User != nil {
+				s := h.u.User.Username()
+				if s != "" {
+					buf = append(buf, s+"@"...)
+				}
+			}
 		case 'n': // database user
 			if connected && h.u.User != nil {
 				buf = append(buf, h.u.User.Username()...)
