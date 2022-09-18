@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/stdlib" // DRIVER
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
@@ -55,7 +55,6 @@ func init() {
 			return metadata.NewDefaultWriter(pgmeta.NewReader()(db, opts...))(db, w)
 		},
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-
 			conn, err := db.Conn(context.Background())
 			if err != nil {
 				return 0, fmt.Errorf("failed to get a connection from pool: %w", err)

@@ -236,12 +236,12 @@ associated database, scheme / build tag, and scheme aliases:
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                    |
 | Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                       |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                     |
-| Google Spanner       | `spanner`       | `sp`                                            | [github.com/cloudspannerecosystem/go-sql-spanner][d-spanner]     |
+| Google Spanner       | `spanner`       | `sp`                                            | [github.com/googleapis/go-sql-spanner][d-spanner]                |
 | Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                             |
 | ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                            | [modernc.org/sqlite][d-moderncsqlite]                            |
 | MySQL MyMySQL        | `mymysql`       | `zm`, `mymy`                                    | [github.com/ziutek/mymysql/godrv][d-mymysql]                     |
 | Netezza              | `netezza`       | `nz`, `nzgo`                                    | [github.com/IBM/nzgo/v14][d-netezza]                             |
-| PostgreSQL PGX       | `pgx`           | `px`                                            | [github.com/jackc/pgx/v4/stdlib][d-pgx]                          |
+| PostgreSQL PGX       | `pgx`           | `px`                                            | [github.com/jackc/pgx/v5/stdlib][d-pgx]                          |
 | Presto               | `presto`        | `pr`, `prs`, `prestos`, `prestodb`, `prestodbs` | [github.com/prestodb/presto-go-client/presto][d-presto]          |
 | SAP ASE              | `sapase`        | `ax`, `ase`, `tds`                              | [github.com/thda/tds][d-sapase]                                  |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                        |
@@ -301,7 +301,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-sapase]: https://github.com/thda/tds
 [d-saphana]: https://github.com/SAP/go-hdb
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
-[d-spanner]: https://github.com/cloudspannerecosystem/go-sql-spanner
+[d-spanner]: https://github.com/googleapis/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-trino]: https://github.com/trinodb/trino-go-client
