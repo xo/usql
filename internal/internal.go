@@ -33,14 +33,14 @@ func KnownBuildTags() map[string]string {
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v2
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
-		"pgx":           "pgx",           // github.com/jackc/pgx/v4/stdlib
+		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
 		"postgres":      "postgres",      // github.com/lib/pq
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/presto
 		"ql":            "ql",            // modernc.org/ql
 		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
-		"spanner":       "spanner",       // github.com/cloudspannerecosystem/go-sql-spanner
+		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
