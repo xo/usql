@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 	"unicode"
@@ -559,9 +560,13 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			return 0, fmt.Errorf("failed to prepare insert query: %w", err)
 		}
 		defer stmt.Close()
+		columnTypes, err := rows.ColumnTypes()
+		if err != nil {
+			return 0, fmt.Errorf("failed to fetch source column types: %w", err)
+		}
 		values := make([]interface{}, clen)
-		for i := 0; i < clen; i++ {
-			values[i] = new(interface{})
+		for i := 0; i < len(columnTypes); i++ {
+			values[i] = reflect.New(columnTypes[i].ScanType()).Interface()
 		}
 		var n int64
 		for rows.Next() {
