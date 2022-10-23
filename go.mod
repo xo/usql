@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.3.0
 	github.com/IBM/nzgo/v14 v14.0.0
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v0.109.0
+	github.com/SAP/go-hdb v0.109.1
 	github.com/VoltDB/voltdb-client-go v1.0.14
 	github.com/alecthomas/chroma/v2 v2.3.0
 	github.com/alecthomas/kingpin v2.2.6+incompatible
@@ -84,19 +84,19 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.17.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.120 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.16.16 // indirect
+	github.com/aws/aws-sdk-go v1.44.121 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.8 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.35 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.23 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.17 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.14 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.22 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.36 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.18 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.18 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.28.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.29.0 // indirect
 	github.com/aws/smithy-go v1.13.3 // indirect
 	github.com/beltran/gohive v1.5.3 // indirect
 	github.com/beltran/gosasl v0.0.0-20220904020400-625f43db35e0 // indirect
@@ -114,7 +114,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20220520190051-1e77728a1eaa // indirect
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20221020212718-cc0dd372b6d1 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20221021145029-f34af25a0187 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.7 // indirect
@@ -223,7 +223,7 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
+	golang.org/x/exp v0.0.0-20221023144134-a1e5550cf13e // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
