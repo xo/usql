@@ -375,7 +375,18 @@ func (h *Handler) Run() error {
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch); err != nil {
 					lastErr = WrapErr(h.last, err)
-					fmt.Fprintln(stderr, "error:", err)
+					if env.All()["ON_ERROR_STOP"] == "on" {
+						if iactive {
+							fmt.Fprintln(stderr, "error:", err)
+							h.buf.Reset([]rune{}) // empty the buffer so no other statements are run
+							continue
+						} else {
+							stop()
+							return err
+						}
+					} else {
+						fmt.Fprintln(stderr, "error:", err)
+					}
 				}
 				stop()
 			}

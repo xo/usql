@@ -36,6 +36,15 @@ func (v Vars) All() map[string]string {
 
 var vars, pvars Vars
 
+// a map of functions to optionally parse parameters when being set
+// Takes: value, name string
+// Returns: parsedValue string, error
+// See ParseBool for an example
+var variableParseFunctions = map[string]func(string, string) (string, error){
+	"ON_ERROR_STOP": ParseBoolEmptyIsOn,
+	"QUIET":         ParseBoolEmptyIsOn,
+}
+
 func init() {
 	// get USQL_* variables
 	enableHostInformation := "true"
@@ -69,6 +78,7 @@ func init() {
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"PAGER":                 pagerCmd,
 		"EDITOR":                editorCmd,
+		"ON_ERROR_STOP":         "off",
 		// prompts
 		"PROMPT1": "%S%N%m%/%R%# ",
 		// syntax highlighting variables
@@ -125,21 +135,19 @@ func ValidIdentifier(n string) error {
 }
 
 // Set sets a variable.
+// Values are optionally parsed by a helper function if one is defined in
+// variableParseFunctions
 func Set(name, value string) error {
-	err := ValidIdentifier(name)
-	if err != nil {
+	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
-	switch name {
-	case "QUIET":
-		if value == "" {
-			value = "on"
-		} else {
-			value, err = ParseBool(value, name)
-			if err != nil {
-				return err
-			}
+	// parse and validate value if there's a function defined in variableParseFunctions
+	if parseFunction, ok := variableParseFunctions[name]; ok {
+		parsedValue, err := parseFunction(value, name)
+		if err != nil {
+			return fmt.Errorf(text.FormatFieldInvalid, value, name)
 		}
+		value = parsedValue
 	}
 	vars.Set(name, value)
 	return nil
@@ -210,6 +218,14 @@ func ParseBool(value, name string) (string, error) {
 		return "off", nil
 	}
 	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
+}
+
+// ParseBoolEmptyIsOn works like ParseBool but treats empty values as "on"
+func ParseBoolEmptyIsOn(value, name string) (string, error) {
+	if value == "" {
+		return "on", nil
+	}
+	return ParseBool(value, name)
 }
 
 func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
