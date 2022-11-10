@@ -36,15 +36,6 @@ func (v Vars) All() map[string]string {
 
 var vars, pvars Vars
 
-// a map of functions to optionally parse parameters when being set
-// Takes: value, name string
-// Returns: parsedValue string, error
-// See ParseBool for an example
-var variableParseFunctions = map[string]func(string, string) (string, error){
-	"ON_ERROR_STOP": ParseBoolEmptyIsOn,
-	"QUIET":         ParseBoolEmptyIsOn,
-}
-
 func init() {
 	// get USQL_* variables
 	enableHostInformation := "true"
@@ -135,19 +126,19 @@ func ValidIdentifier(n string) error {
 }
 
 // Set sets a variable.
-// Values are optionally parsed by a helper function if one is defined in
-// variableParseFunctions
 func Set(name, value string) error {
 	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
-	// parse and validate value if there's a function defined in variableParseFunctions
-	if parseFunction, ok := variableParseFunctions[name]; ok {
-		parsedValue, err := parseFunction(value, name)
-		if err != nil {
-			return fmt.Errorf(text.FormatFieldInvalid, value, name)
+	if name == "ON_ERROR_STOP" || name == "QUIET" {
+		if value == "" {
+			value = "on"
+		} else {
+			var err error
+			if value, err = ParseBool(value, name); err != nil {
+				return err
+			}
 		}
-		value = parsedValue
 	}
 	vars.Set(name, value)
 	return nil
@@ -218,14 +209,6 @@ func ParseBool(value, name string) (string, error) {
 		return "off", nil
 	}
 	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
-}
-
-// ParseBoolEmptyIsOn works like ParseBool but treats empty values as "on"
-func ParseBoolEmptyIsOn(value, name string) (string, error) {
-	if value == "" {
-		return "on", nil
-	}
-	return ParseBool(value, name)
 }
 
 func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
@@ -324,7 +307,7 @@ func Pset(name, value string) (string, error) {
 	case "pager":
 		s, err := ParseKeywordBool(value, name, "always")
 		if err != nil {
-			return "", text.ErrInvalidFormatExpandedType
+			return "", text.ErrInvalidFormatPagerType
 		}
 		pvars[name] = s
 	case "expanded":

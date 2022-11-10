@@ -77,7 +77,11 @@ func OpenFile(u *user.User, path string, relative bool) (string, *os.File, error
 func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	ed := All()["EDITOR"]
 	if ed == "" {
-		return nil, text.ErrNoEditorDefined
+		if p, err := exec.LookPath("vi"); err == nil {
+			ed = p
+		} else {
+			return nil, text.ErrNoEditorDefined
+		}
 	}
 	if path != "" {
 		path = passfile.Expand(u.HomeDir, path)

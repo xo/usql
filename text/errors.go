@@ -47,6 +47,8 @@ var (
 	ErrTooManyRows = errors.New("too many rows")
 	// ErrInvalidFormatType is the invalid format type error.
 	ErrInvalidFormatType = errors.New(`\pset: allowed formats are unaligned, aligned, wrapped, html, asciidoc, latex, latex-longtable, troff-ms, json, csv`)
+	// ErrInvalidFormatPagerType is the invalid format pager error.
+	ErrInvalidFormatPagerType = errors.New(`\pset: allowed pager values are on, off, always`)
 	// ErrInvalidFormatExpandedType is the invalid format expanded error.
 	ErrInvalidFormatExpandedType = errors.New(`\pset: allowed expanded values are on, off, auto`)
 	// ErrInvalidFormatLineStyle is the invalid format line style error.
