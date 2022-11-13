@@ -1,9 +1,7 @@
 name: Announce Release
-
 on:
   release:
     types: [published]
-
 env:
   VER: ${{ github.ref_name }}
   HOMEBREW_REPO: https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git

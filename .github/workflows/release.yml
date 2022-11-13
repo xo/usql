@@ -1,22 +1,15 @@
 name: Release
-
 on:
   push:
     tags: 'v*'
-
 env:
-  GO_VERSION: 1.18.x
+  GO_VERSION: 1.19.x
 
 jobs:
   build_for_linux:
     name: Build for Linux
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
     - name: Install build dependencies
       run: |
         sudo apt-get -qq update
@@ -26,26 +19,26 @@ jobs:
           unixodbc \
           unixodbc-dev \
           upx
-
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Setup Go
       uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
-
     - name: Build amd64
       env:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
       run: ./build-release.sh -r
-
     - name: Build amd64 (static)
       env:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
       run: ./build-release.sh -r -s
-
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -56,26 +49,22 @@ jobs:
     name: Build for MacOS (amd64)
     runs-on: macos-latest
     steps:
+    - name: Install build dependencies
+      run: brew install coreutils
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-
-    - name: Install build dependencies
-      run: brew install upx coreutils
-
     - name: Setup Go
       uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
-
     - name: Build amd64
       env:
         CGO_ENABLED: 1
         GOOS: darwin
         GOARCH: amd64
-      run: ./build-release.sh -r
-
+      run: ./build-release.sh -r -N
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -86,26 +75,22 @@ jobs:
 #    name: Build for MacOS (arm64)
 #    runs-on: macos-latest
 #    steps:
+#    - name: Install build dependencies
+#      run: brew install coreutils
 #    - name: Checkout
 #      uses: actions/checkout@v3
 #      with:
 #        fetch-depth: 0
-#
-#    - name: Install build dependencies
-#      run: brew install upx coreutils
-#
 #    - name: Setup Go
 #      uses: actions/setup-go@v3
 #      with:
 #        go-version: ${{ env.GO_VERSION }}
-#
 #    - name: Build arm64
 #      env:
 #        CGO_ENABLED: 1
 #        GOOS: darwin
 #        GOARCH: arm64
 #      run: ./build-release.sh -r -n -N
-#
 #    - name: Archive artifacts
 #      uses: actions/upload-artifact@v3
 #      with:
@@ -116,19 +101,16 @@ jobs:
     name: Build for Windows
     runs-on: windows-latest
     steps:
+    - name: Install build dependencies
+      run: choco install upx zip
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-
-    - name: Install build dependencies
-      run: choco install upx zip
-
     - name: Setup Go
       uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
-
     - name: Build amd64
       shell: bash
       env:
@@ -136,7 +118,6 @@ jobs:
         GOOS: windows
         GOARCH: amd64
       run: ./build-release.sh -r
-
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -154,7 +135,6 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
-
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
