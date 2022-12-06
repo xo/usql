@@ -17,6 +17,7 @@ require (
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v0.1.8
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
+	github.com/databendcloud/databend-go v0.1.0
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/exasol/exasol-driver-go v0.4.6
 	github.com/genjidb/genji v0.15.1
@@ -92,6 +93,7 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.17.0 // indirect
+	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aws/aws-sdk-go v1.44.153 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
@@ -132,6 +134,7 @@ require (
 	github.com/couchbase/goutils v0.1.2 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/databendcloud/bendsql v0.0.2 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/docker/cli v20.10.17+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
