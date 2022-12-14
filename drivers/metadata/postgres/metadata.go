@@ -207,33 +207,34 @@ func (r metaReader) ColumnStats(f metadata.Filter) (*metadata.ColumnStatSet, err
 
 	qstr := `
 SELECT
-  s.schemaname,
-  s.tablename,
-  s.attname,
-  s.avg_width,
-  s.null_frac,
-  CASE WHEN n_distinct >= 0 THEN n_distinct ELSE (-n_distinct * $1) END::bigint AS n_distinct,
+  n.nspname,
+  c.relname,
+  a.attname,
+  COALESCE(s.avg_width, 0),
+  COALESCE(s.null_frac, 0.0),
+  COALESCE(CASE WHEN n_distinct >= 0 THEN n_distinct ELSE (-n_distinct * $1) END::bigint, 0) AS n_distinct,
   COALESCE((histogram_bounds::text::text[])[1], ''),
   COALESCE((histogram_bounds::text::text[])[array_length(histogram_bounds::text::text[], 1)], ''),
   most_common_vals::text::text[],
   most_common_freqs::text::text[]
-FROM pg_catalog.pg_stats s
-JOIN pg_catalog.pg_namespace n ON n.nspname = s.schemaname
-JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid AND c.relname = s.tablename
-JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attname = s.attname`
+FROM pg_catalog.pg_namespace n
+JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid
+JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0
+LEFT JOIN pg_catalog.pg_stats s ON n.nspname = s.schemaname AND c.relname = s.tablename AND a.attname = s.attname
+`
 	conds := []string{}
 	vals := []interface{}{rowNum}
 	if f.Schema != "" {
 		vals = append(vals, f.Schema)
-		conds = append(conds, fmt.Sprintf("s.schemaname LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("n.nspname LIKE $%d", len(vals)))
 	}
 	if f.Parent != "" {
 		vals = append(vals, f.Parent)
-		conds = append(conds, fmt.Sprintf("s.tablename LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("c.relname LIKE $%d", len(vals)))
 	}
 	if f.Name != "" {
 		vals = append(vals, f.Name)
-		conds = append(conds, fmt.Sprintf("s.attname LIKE $%d", len(vals)))
+		conds = append(conds, fmt.Sprintf("a.attname LIKE $%d", len(vals)))
 	}
 	rows, closeRows, err := r.query(qstr, conds, "a.attnum", vals...)
 	if err != nil {
