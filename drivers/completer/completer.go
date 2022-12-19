@@ -509,6 +509,9 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		TailMatches(MATCH_CASE, previousWords, `\pset`, `*`, `*`) {
 		return nil
 	}
+	if TailMatches(MATCH_CASE, previousWords, `\?`) {
+		return CompleteFromList(text, "commands", "options", "variables")
+	}
 	// is suggesting basic sql commands better than nothing?
 	return CompleteFromList(text, c.sqlCommands...)
 }
