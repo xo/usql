@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alecthomas/kingpin"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
@@ -49,7 +50,21 @@ func init() {
 				"? ": {"show help on special variables", "variables"},
 			},
 			Process: func(p *Params) error {
-				Listing(p.Handler.IO().Stdout())
+				name, err := p.Get(false)
+				if err != nil {
+					return err
+				}
+				switch name {
+				default:
+					Listing(p.Handler.IO().Stdout())
+				case "commands":
+					Listing(p.Handler.IO().Stdout())
+				case "options":
+					// FIXME: decouple
+					kingpin.Usage()
+				case "variables":
+					env.Listing(p.Handler.IO().Stdout())
+				}
 				return nil
 			},
 		},

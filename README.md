@@ -720,6 +720,8 @@ always appreciated][contributing]!
 
 #### Variables and Interpolation
 
+To see the list of specially treated variables, run the `\? variables` command.
+
 `usql` supports client-side interpolation of variables that can be `\set` and
 `\unset`:
 
