@@ -49,6 +49,7 @@ TAGS=(
   sqlite_fts5
   sqlite_introspect
   sqlite_json1
+  sqlite_math_functions
   sqlite_stat4
   sqlite_userauth
   sqlite_vtable
