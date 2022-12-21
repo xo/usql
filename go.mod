@@ -47,7 +47,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/snowflakedb/gosnowflake v1.6.16
 	github.com/thda/tds v0.1.7
-	github.com/trinodb/trino-go-client v0.307.0
+	github.com/trinodb/trino-go-client v0.308.0
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.3.0
 	github.com/xo/dburl v0.13.0
@@ -56,7 +56,7 @@ require (
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.1.0
-	modernc.org/ql v1.4.3
+	modernc.org/ql v1.4.4
 	modernc.org/sqlite v1.20.0
 	sqlflow.org/gohive v0.0.0-20220817082204-15a5e01fd889
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
@@ -94,11 +94,11 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/apache/thrift v0.17.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.44.162 // indirect
+	github.com/aws/aws-sdk-go v1.44.164 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.3 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.5 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.44 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.7 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.46 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.18 // indirect
@@ -124,7 +124,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20221128185840-c261a164b73d // indirect
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20221213170459-33377d59d70e // indirect
+	github.com/cockroachdb/pebble v0.0.0-20221220215741-4510a8c5f244 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.8 // indirect
@@ -270,9 +270,9 @@ require (
 	modernc.org/ccgo/v3 v3.16.13 // indirect
 	modernc.org/db v1.0.5 // indirect
 	modernc.org/file v1.0.5 // indirect
-	modernc.org/fileutil v1.1.1 // indirect
+	modernc.org/fileutil v1.1.2 // indirect
 	modernc.org/golex v1.0.2 // indirect
-	modernc.org/internal v1.0.5 // indirect
+	modernc.org/internal v1.0.6 // indirect
 	modernc.org/libc v1.22.2 // indirect
 	modernc.org/lldb v1.0.4 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
