@@ -23,6 +23,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters"
@@ -592,6 +593,27 @@ func (h *Handler) Prompt(prompt string) string {
 			if connected {
 				buf = append(buf, path.Base(h.u.Path)...)
 			}
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			j := i + 1
+			base := 10
+			if grab(r, j, end) == '0' {
+				j++
+				base = 8
+			}
+			if grab(r, j, end) == 'x' {
+				j++
+				base = 16
+			}
+			i = j
+			for unicode.IsDigit(grab(r, i+1, end)) {
+				i++
+			}
+
+			n, err := strconv.ParseInt(string(r[j:i+1]), base, 16)
+			if err == nil {
+				buf = append(buf, byte(n))
+			}
+			i--
 		case '~': // like %/ but ~ when default database
 		case '#': // when superuser, a #, otherwise >
 			if h.tx != nil || h.batch {
@@ -967,7 +989,7 @@ func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option
 	for {
 		// this is the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST"
 		// fmt.Fprintf(w, "%s (every %fs)\n\n", time.Now().Format("Mon Jan 2006 3:04:05 PM MST"), float64(opt.Watch)/float64(time.Second))
-		fmt.Fprintln(w, fmt.Sprintf("%s (every %v)", time.Now().Format(time.RFC1123), opt.Watch))
+		fmt.Fprintf(w, "%s (every %v)\n", time.Now().Format(time.RFC1123), opt.Watch)
 		fmt.Fprintln(w)
 		if err := h.execSingle(ctx, w, opt, prefix, sqlstr, qtyp); err != nil {
 			return err
