@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.4.3
-	github.com/IBM/nzgo/v14 v14.0.0
+	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v0.111.7
 	github.com/VoltDB/voltdb-client-go v1.0.14

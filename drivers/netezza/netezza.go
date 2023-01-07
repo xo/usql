@@ -8,7 +8,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/IBM/nzgo/v14" // DRIVER: nzgo
+	"github.com/IBM/nzgo/v12" // DRIVER: nzgo
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
