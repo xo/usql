@@ -41,8 +41,8 @@ podman_run() {
     echo "error: $BASE/podman-config doesn't exist"
     exit 1
   fi
-  # load parameters from docer-config
-  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS
+  # load parameters from podman-config
+  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS CMD
   source $BASE/podman-config
   if [[ "$TARGET" != "$NAME" ]]; then
     echo "error: $BASE/podman-config is invalid"
@@ -73,6 +73,7 @@ podman_run() {
   echo "VOLUME:     $VOLUME"
   echo "NETWORK:    $NETWORK"
   echo "PRIVILEGED: $PRIVILEGED"
+  echo "CMD:        $CMD"
   # update
   if [[ "$UPDATE" == "1" && "$TARGET" != "oracle" ]]; then
     if [ ! -f $BASE/Dockerfile ]; then
@@ -107,7 +108,7 @@ podman_run() {
     )
   fi
   (set -ex;
-    podman run --detach --rm ${PARAMS[@]} $IMAGE
+    podman run --detach --rm ${PARAMS[@]} $IMAGE $CMD
   )
 }
 
