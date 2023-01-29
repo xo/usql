@@ -23,7 +23,7 @@ var (
 			infos.ConstraintIsDeferrable:          "''",
 			infos.ConstraintInitiallyDeferred:     "''",
 			infos.PrivilegesGrantor:               "''",
-			infos.ConstraintJoinCond:              "AND r.table_name = f.table_name",
+			infos.ConstraintJoinCond:              "AND r.referenced_table_name = f.table_name",
 		}),
 		infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema", "sys"}),
 		infos.WithCurrentSchema("COALESCE(DATABASE(), '%')"),
