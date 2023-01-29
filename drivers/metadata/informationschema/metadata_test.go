@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/microsoft/go-mssqldb" // DRIVER: sqlserver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/go-cmp/cmp"
+	_ "github.com/microsoft/go-mssqldb" // DRIVER: sqlserver
 	dt "github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
 	_ "github.com/trinodb/trino-go-client/trino"
@@ -94,8 +94,10 @@ var (
 					infos.ConstraintIsDeferrable:          "''",
 					infos.ConstraintInitiallyDeferred:     "''",
 					infos.PrivilegesGrantor:               "''",
+					infos.ConstraintJoinCond:              "AND r.referenced_table_name = f.table_name",
 				}),
-				infos.WithSystemSchemas([]string{"mysql", "performance_schema", "information_schema"}),
+				infos.WithSystemSchemas([]string{"mysql", "information_schema", "performance_schema", "sys"}),
+				infos.WithCurrentSchema("COALESCE(DATABASE(), '%')"),
 				infos.WithUsagePrivileges(false),
 				infos.WithSequences(false),
 			},
@@ -513,8 +515,8 @@ func TestConstraints(t *testing.T) {
 		"mysql": "film%",
 	}
 	expected := map[string]string{
-		"pgsql": "film.film_language_id_fkey, film.film_original_language_id_fkey, film.film_pkey, film_actor.film_actor_actor_id_fkey, film_actor.film_actor_film_id_fkey, film_actor.film_actor_pkey, film_category.film_category_category_id_fkey, film_category.film_category_film_id_fkey, film_category.film_category_pkey",
-		"mysql": "",
+		"pgsql": "film.2200_16417_10_not_null, film.2200_16417_12_not_null, film.2200_16417_14_not_null, film.2200_16417_1_not_null, film.2200_16417_2_not_null, film.2200_16417_5_not_null, film.2200_16417_7_not_null, film.2200_16417_8_not_null, film.film_language_id_fkey, film.film_original_language_id_fkey, film.film_pkey, film_actor.2200_16429_1_not_null, film_actor.2200_16429_2_not_null, film_actor.2200_16429_3_not_null, film_actor.film_actor_actor_id_fkey, film_actor.film_actor_film_id_fkey, film_actor.film_actor_pkey, film_category.2200_16433_1_not_null, film_category.2200_16433_2_not_null, film_category.2200_16433_3_not_null, film_category.film_category_category_id_fkey, film_category.film_category_film_id_fkey, film_category.film_category_pkey",
+		"mysql": "film.fk_film_language, film.fk_film_language_original, film.PRIMARY, film_actor.fk_film_actor_actor, film_actor.fk_film_actor_film, film_actor.PRIMARY, film_category.fk_film_category_category, film_category.fk_film_category_film, film_category.PRIMARY, film_text.PRIMARY",
 	}
 	for dbName, db := range dbs {
 		if schemas[dbName] == "" {
@@ -522,7 +524,7 @@ func TestConstraints(t *testing.T) {
 		}
 		r := infos.New(db.Opts...)(db.DB).(metadata.ConstraintReader)
 
-		result, err := r.Constraints(metadata.Filter{Schema: schemas[dbName], Name: constraints[dbName]})
+		result, err := r.Constraints(metadata.Filter{Schema: schemas[dbName], Parent: constraints[dbName]})
 		if err != nil {
 			log.Fatalf("Could not read %s constraints: %v", dbName, err)
 		}
@@ -569,6 +571,41 @@ func TestConstraintColumns(t *testing.T) {
 		actual := strings.Join(names, ", ")
 		if actual != expected[dbName] {
 			t.Errorf("Wrong %s constraint column names, expected:\n  %v, got:\n  %v", dbName, expected[dbName], names)
+		}
+	}
+}
+
+func TestReverseConstraints(t *testing.T) {
+	schemas := map[string]string{
+		"pgsql": "public",
+		"mysql": "sakila",
+	}
+	constraints := map[string]string{
+		"pgsql": "film%",
+		"mysql": "film%",
+	}
+	expected := map[string]string{
+		"pgsql": "film_actor.film_actor_film_id_fkey, film_category.film_category_film_id_fkey, inventory.inventory_film_id_fkey",
+		"mysql": "film_actor.fk_film_actor_film, film_category.fk_film_category_film, inventory.fk_inventory_film",
+	}
+	for dbName, db := range dbs {
+		if schemas[dbName] == "" {
+			continue
+		}
+		r := infos.New(db.Opts...)(db.DB).(metadata.ConstraintReader)
+
+		result, err := r.Constraints(metadata.Filter{Schema: schemas[dbName], Reference: constraints[dbName]})
+		if err != nil {
+			log.Fatalf("Could not read %s constraints: %v", dbName, err)
+		}
+
+		names := []string{}
+		for result.Next() {
+			names = append(names, result.Get().Table+"."+result.Get().Name)
+		}
+		actual := strings.Join(names, ", ")
+		if actual != expected[dbName] {
+			t.Errorf("Wrong %s reverse constraint names, expected:\n  %v\ngot:\n  %v", dbName, expected[dbName], names)
 		}
 	}
 }
