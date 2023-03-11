@@ -129,9 +129,9 @@ func (h *Handler) outputHighlighter(s string) string {
 	}
 	// count end lines
 	var endl string
-	for strings.HasSuffix(s, lineterm) {
-		s = strings.TrimSuffix(s, lineterm)
-		endl += lineterm
+	if m := linetermRE.FindStringSubmatch(s); m != nil {
+		s = strings.TrimSuffix(s, m[0])
+		endl += m[0]
 	}
 	// leading whitespace
 	var leading string

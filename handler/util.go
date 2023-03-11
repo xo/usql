@@ -2,20 +2,12 @@ package handler
 
 import (
 	"regexp"
-	"runtime"
 	"strings"
 	"unicode"
 )
 
-// lineterm is the end of line terminal.
-var lineterm string
-
-func init() {
-	lineterm = "\n"
-	if runtime.GOOS == "windows" {
-		lineterm = "\r\n"
-	}
-}
+// linetermRE is the end of line terminal.
+var linetermRE = regexp.MustCompile(`(?:\r?\n)+$`)
 
 // empty reports whether s contains at least one printable, non-space character.
 func empty(s string) bool {
