@@ -24,7 +24,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
     - name: Build amd64
@@ -82,7 +82,7 @@ jobs:
 #      with:
 #        fetch-depth: 0
 #    - name: Setup Go
-#      uses: actions/setup-go@v3
+#      uses: actions/setup-go@v4
 #      with:
 #        go-version: ${{ env.GO_VERSION }}
 #    - name: Build arm64
@@ -108,7 +108,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
     - name: Build amd64
