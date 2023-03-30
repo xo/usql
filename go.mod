@@ -50,7 +50,7 @@ require (
 	github.com/trinodb/trino-go-client v0.310.0
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.3.1
-	github.com/xo/dburl v0.13.0
+	github.com/xo/dburl v0.13.1
 	github.com/xo/tblfmt v0.10.1
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 	github.com/yookoala/realpath v1.0.0
@@ -108,8 +108,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.0 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
-	github.com/beltran/gohive v1.5.3 // indirect
-	github.com/beltran/gosasl v0.0.0-20220904020400-625f43db35e0 // indirect
+	github.com/beltran/gohive v1.5.4 // indirect
+	github.com/beltran/gosasl v0.0.0-20230115020419-e3b503e58833 // indirect
 	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btnguyen2k/consu/checksum v0.1.2 // indirect
@@ -290,3 +290,5 @@ require (
 	modernc.org/token v1.1.0 // indirect
 	modernc.org/zappy v1.0.6 // indirect
 )
+
+replace github.com/google/flatbuffers => github.com/google/flatbuffers v0.0.0-20230110200425-62e4d2e5b215

@@ -6,15 +6,12 @@ package sqlserver
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
 	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
-	"github.com/microsoft/go-mssqldb/azuread"
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
@@ -24,15 +21,6 @@ func init() {
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
 		LexerName:               "tsql",
-		Open: func(u *dburl.URL, _, _ func() io.Writer) (func(string, string) (*sql.DB, error), error) {
-			return func(_ string, params string) (*sql.DB, error) {
-				driver := "sqlserver"
-				if u.Query().Has("fedauth") {
-					driver = azuread.DriverName
-				}
-				return sql.Open(driver, params)
-			}, nil
-		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRowContext(

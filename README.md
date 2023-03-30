@@ -273,7 +273,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-adodb]: https://github.com/mattn/go-adodb
 [d-athena]: https://github.com/uber/athenadriver
 [d-avatica]: https://github.com/apache/calcite-avatica-go
-[d-bigquery]: https://github.com/go-gorm/gorm
+[d-bigquery]: https://github.com/go-gorm/bigquery
 [d-cassandra]: https://github.com/MichaelS11/go-cql-driver
 [d-clickhouse]: https://github.com/ClickHouse/clickhouse-go
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos

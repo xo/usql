@@ -1,6 +1,6 @@
 // Package bigquery defines and registers usql's Google BigQuery driver.
 //
-// See: https://github.com/go-gorm/gorm
+// See: https://github.com/go-gorm/bigquery
 package bigquery
 
 import (
