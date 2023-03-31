@@ -744,7 +744,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	}
 	// open connection
 	var err error
-	h.db, err = drivers.Open(h.u, h.GetOutput, h.IO().Stderr)
+	h.db, err = drivers.Open(ctx, h.u, h.GetOutput, h.IO().Stderr)
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err

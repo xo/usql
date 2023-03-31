@@ -20,41 +20,6 @@ import (
 	"github.com/xo/usql/drivers"
 )
 
-// logger is a null logger that satisfies the gocql.StdLogger and the io.Writer
-// interfaces in order to capture the last error issued by the cql/gocql
-// packages, since the cql package does not (at this time) return any error
-// other than sql.ErrBadConn.
-type logger struct {
-	debug bool
-	last  string
-}
-
-func (l *logger) Print(v ...interface{}) {
-	if l.debug {
-		log.Print(v...)
-	}
-}
-
-func (l *logger) Printf(s string, v ...interface{}) {
-	if l.debug {
-		log.Printf(s, v...)
-	}
-}
-
-func (l *logger) Println(v ...interface{}) {
-	if l.debug {
-		log.Println(v...)
-	}
-}
-
-func (l *logger) Write(buf []byte) (int, error) {
-	if l.debug {
-		log.Printf("WRITE: %s", string(buf))
-	}
-	l.last = string(buf)
-	return len(buf), nil
-}
-
 func init() {
 	var debug bool
 	if s := os.Getenv("CQL_DEBUG"); s != "" {
@@ -76,7 +41,7 @@ func init() {
 				u.RawQuery = q.Encode()
 			}
 		},
-		Open: func(u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
+		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			// override cql and gocql loggers
 			l = &logger{debug: debug}
 			gocql.Logger, cql.CqlDriver.Logger = l, log.New(l, "", 0)
@@ -123,4 +88,39 @@ func init() {
 			"BEGIN BATCH": "APPLY BATCH",
 		},
 	})
+}
+
+// logger is a null logger that satisfies the gocql.StdLogger and the io.Writer
+// interfaces in order to capture the last error issued by the cql/gocql
+// packages, since the cql package does not (at this time) return any error
+// other than sql.ErrBadConn.
+type logger struct {
+	debug bool
+	last  string
+}
+
+func (l *logger) Print(v ...interface{}) {
+	if l.debug {
+		log.Print(v...)
+	}
+}
+
+func (l *logger) Printf(s string, v ...interface{}) {
+	if l.debug {
+		log.Printf(s, v...)
+	}
+}
+
+func (l *logger) Println(v ...interface{}) {
+	if l.debug {
+		log.Println(v...)
+	}
+}
+
+func (l *logger) Write(buf []byte) (int, error) {
+	if l.debug {
+		log.Printf("WRITE: %s", string(buf))
+	}
+	l.last = string(buf)
+	return len(buf), nil
 }

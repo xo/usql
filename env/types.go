@@ -165,6 +165,10 @@ var envVarNames = []varName{
 		"alternative location for the user's .usqlrc file",
 	},
 	{
+		text.CommandUpper() + "_SSLMODE, SSLMODE",
+		"when set to 'retry', allows postgres connections to attempt to reconnect when no ?sslmode= was specified on the url",
+	},
+	{
 		"SYNTAX_HL",
 		"enable syntax highlighting",
 	},
@@ -207,9 +211,10 @@ func (v Vars) All() map[string]string {
 var vars, pvars Vars
 
 func init() {
+	cmdNameUpper := strings.ToUpper(text.CommandName)
 	// get USQL_* variables
 	enableHostInformation := "true"
-	if v, _ := Getenv(strings.ToUpper(text.CommandName) + "_SHOW_HOST_INFORMATION"); v != "" {
+	if v, _ := Getenv(cmdNameUpper + "_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
 	}
 	// get color level
@@ -219,7 +224,7 @@ func init() {
 		enableSyntaxHL = "false"
 	}
 	// pager
-	pagerCmd, ok := Getenv(strings.ToUpper(text.CommandName)+"_PAGER", "PAGER")
+	pagerCmd, ok := Getenv(cmdNameUpper+"_PAGER", "PAGER")
 	pager := "off"
 	if !ok {
 		for _, s := range []string{"less", "more"} {
@@ -233,7 +238,12 @@ func init() {
 		pager = "on"
 	}
 	// editor
-	editorCmd, _ := Getenv(strings.ToUpper(text.CommandName)+"_EDITOR", "EDITOR", "VISUAL")
+	editorCmd, _ := Getenv(cmdNameUpper+"_EDITOR", "EDITOR", "VISUAL")
+	// sslmode
+	sslmode, ok := Getenv(cmdNameUpper+"_SSLMODE", "SSLMODE")
+	if !ok {
+		sslmode = "retry"
+	}
 	vars = Vars{
 		// usql related logic
 		"SHOW_HOST_INFORMATION": enableHostInformation,
@@ -247,6 +257,7 @@ func init() {
 		"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
 		"SYNTAX_HL_STYLE":       "monokai",
 		"SYNTAX_HL_OVERRIDE_BG": "true",
+		"SSLMODE":               sslmode,
 	}
 	// determine locale
 	locale := "en-US"

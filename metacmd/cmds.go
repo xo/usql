@@ -833,6 +833,7 @@ func init() {
 				"copy": {"copy query from source url to columns of table on destination url", "SRC DST QUERY TABLE(A,...)"},
 			},
 			Process: func(p *Params) error {
+				ctx := context.Background()
 				stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
 				srcDsn, err := p.Get(true)
 				if err != nil {
@@ -858,17 +859,17 @@ func init() {
 				if err != nil {
 					return err
 				}
-				src, err := drivers.Open(srcURL, stdout, stderr)
+				src, err := drivers.Open(ctx, srcURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
 				defer src.Close()
-				dest, err := drivers.Open(destURL, stdout, stderr)
+				dest, err := drivers.Open(ctx, destURL, stdout, stderr)
 				if err != nil {
 					return err
 				}
 				defer dest.Close()
-				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+				ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 				defer cancel()
 				// get the result set
 				r, err := src.QueryContext(ctx, query)
