@@ -1256,3 +1256,10 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [usqlpass]: #passwords (Passwords)
 [usqlrc]: #runtime-configuration-rc-file (Runtime Configuration File)
 [variables]: #variables-and-interpolation (Variable Interpolation)
+
+## Contributors
+
+<a align="center" href="https://github.com/xo/usql/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=xo/usql" />
+</a>
+
