@@ -20,6 +20,7 @@ func KnownBuildTags() map[string]string {
 		"databend":      "databend",      // github.com/databendcloud/databend-go
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
+		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v12/arrow/flight/flightsql/driver
 		"genji":         "genji",         // github.com/genjidb/genji/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go

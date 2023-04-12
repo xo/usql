@@ -13,3 +13,4 @@ oracle:*:*:*:system:P4ssw0rd
 pgx:*:*:*:postgres:P4ssw0rd
 sqlserver:*:*:*:sa:Adm1nP@ssw0rd
 vertica:*:*:*:vertica:P4ssw0rd
+flightsql:*:*:*:flight_username:P4ssw0rd
