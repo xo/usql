@@ -13,7 +13,7 @@ require (
 	github.com/alexbrainman/odbc v0.0.0-20211220213544-9c9a2e61c5e2
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
 	github.com/amsokol/ignite-go-client v0.12.2
-	github.com/apache/arrow/go/v12 v12.0.0-20230414082453-b4da4df233c0
+	github.com/apache/arrow/go/v12 v12.0.0-20230414214524-bb69b9f2d617
 	github.com/apache/calcite-avatica-go/v5 v5.2.0
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v0.2.0
