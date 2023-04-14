@@ -271,8 +271,10 @@ github.com/apache/arrow/go/v10 v10.0.1 h1:n9dERvixoC/1JjDmBcs9FPaEryoANa2sCgVFo6
 github.com/apache/arrow/go/v10 v10.0.1/go.mod h1:YvhnlEePVnBS4+0z3fhPfUy7W1Ikj0Ih0vcRo/gZ1M0=
 github.com/apache/arrow/go/v11 v11.0.0 h1:hqauxvFQxww+0mEU/2XHG6LT7eZternCZq+A5Yly2uM=
 github.com/apache/arrow/go/v11 v11.0.0/go.mod h1:Eg5OsL5H+e299f7u5ssuXsuHQVEGC4xei5aX110hRiI=
-github.com/apache/arrow/go/v12 v12.0.0-20230414082453-b4da4df233c0 h1:VVrWha27luV2o/sff8s4NsJ6+8XCzPyVqk41JFTRYhE=
-github.com/apache/arrow/go/v12 v12.0.0-20230414082453-b4da4df233c0/go.mod h1:d+tV/eHZZ7Dz7RPrFKtPK02tpr+c9/PEd/zm8mDS9Vg=
+github.com/apache/arrow/go/v12 v12.0.0-20230414205726-b63463c62881 h1:JPbYUcsmLbGvHfreXi5pOR0e4kZ3ARR+J1M1o05Wnpw=
+github.com/apache/arrow/go/v12 v12.0.0-20230414205726-b63463c62881/go.mod h1:d+tV/eHZZ7Dz7RPrFKtPK02tpr+c9/PEd/zm8mDS9Vg=
+github.com/apache/arrow/go/v12 v12.0.0-20230414214524-bb69b9f2d617 h1:LZoH4/hFOVQpsUJYDD43DhJfYuO7n6B7FW78sdGzeFI=
+github.com/apache/arrow/go/v12 v12.0.0-20230414214524-bb69b9f2d617/go.mod h1:d+tV/eHZZ7Dz7RPrFKtPK02tpr+c9/PEd/zm8mDS9Vg=
 github.com/apache/calcite-avatica-go/v5 v5.2.0 h1:9SQf9qz/iUaC39lvRDqFGmVVtoIWtnDB94YNg2Dy+UY=
 github.com/apache/calcite-avatica-go/v5 v5.2.0/go.mod h1:R9YlGqS8pPRnWAW1peGPpVax49XcujI7GLebaz9sOfk=
 github.com/apache/thrift v0.14.1/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
