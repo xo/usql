@@ -172,7 +172,7 @@ func TestMain(m *testing.M) {
 				log.Fatalf("Failed to parse %s ready URL %s: %v", dbName, db.ReadyDSN, err)
 			}
 			if err := pool.Retry(func() error {
-				readyDB, err := drivers.Open(readyURL, nil, nil)
+				readyDB, err := drivers.Open(context.Background(), readyURL, nil, nil)
 				if err != nil {
 					return err
 				}
@@ -190,7 +190,7 @@ func TestMain(m *testing.M) {
 		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 		var openErr error
 		if retryErr := pool.Retry(func() error {
-			db.DB, openErr = drivers.Open(db.URL, nil, nil)
+			db.DB, openErr = drivers.Open(context.Background(), db.URL, nil, nil)
 			if openErr != nil {
 				return openErr
 			}
