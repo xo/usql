@@ -215,3 +215,76 @@ func TestColumns(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexes(t *testing.T) {
+	schema := "public"
+	table := "tmp_table"
+
+	tests := []struct {
+		indexType string
+		want      string
+	}{
+		{
+			indexType: "btree",
+			want:      "btree",
+		},
+		{
+			indexType: "hash",
+			want:      "hash",
+		},
+	}
+
+	columns := []string{}
+	for _, v := range tests {
+		columns = append(columns, fmt.Sprintf("column_%s integer", v.indexType))
+	}
+	indexes := []string{}
+	for _, v := range tests {
+		indexes = append(indexes, fmt.Sprintf("CREATE INDEX %s_index ON %s.%s USING %[1]s (column_%[1]s)", v.indexType, schema, table))
+	}
+	query := `
+		CREATE TABLE %s.%s (%s);
+		-- Indexes creation sql
+		%s
+	`
+	db.DB.Exec(fmt.Sprintf(query, schema, table, strings.Join(columns, ", "), strings.Join(indexes, ";")))
+	defer db.DB.Exec(fmt.Sprintf("DROP TABLE %s.%s", schema, table))
+
+	r := postgres.NewReader()(db.DB).(metadata.IndexReader)
+
+	t.Run("Get info about access method for specyfic index.", func(t *testing.T) {
+		accessMethods := []string{}
+		for _, v := range tests {
+			result, err := r.Indexes(metadata.Filter{Name: fmt.Sprintf("%s_index", v.indexType)})
+			if err != nil {
+				log.Fatalf("Could not get Index informatin: %s", err)
+			}
+			for result.Next() {
+				accessMethods = append(accessMethods, result.Get().Type)
+			}
+		}
+
+		for i, test := range tests {
+			if accessMethods[i] != test.want {
+				t.Errorf("Wrong %s index access method, expected:\n  %s, got:\n  %s", dbName, test.want, accessMethods[i])
+			}
+		}
+	})
+
+	t.Run("Get info about index access method for all table indexes.", func(t *testing.T) {
+		result, err := r.Indexes(metadata.Filter{Schema: schema, Parent: table})
+		if err != nil {
+			log.Fatalf("Could not get Index informatin: %s", err)
+		}
+		accessMethods := []string{}
+		for result.Next() {
+			accessMethods = append(accessMethods, result.Get().Type)
+		}
+
+		for i, test := range tests {
+			if accessMethods[i] != test.want {
+				t.Errorf("Wrong %s index access method, expected:\n  %s, got:\n  %s", dbName, test.want, accessMethods[i])
+			}
+		}
+	})
+}
