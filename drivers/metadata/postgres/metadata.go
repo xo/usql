@@ -277,11 +277,17 @@ SELECT
   c.relname as "Name",
   CASE i.indisprimary WHEN TRUE THEN 'YES' ELSE 'NO' END,
   CASE i.indisunique WHEN TRUE THEN 'YES' ELSE 'NO' END,
-  CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' END as "Type"
+  COALESCE(am.amname, 
+  	CASE c.relkind 
+		WHEN 'i' THEN 'index' 
+		WHEN 'I' THEN 'partitioned index' 
+	END
+   ) as "Type"
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
      LEFT JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
-     LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid`
+     LEFT JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
+     LEFT JOIN pg_am am ON am.oid=c.relam`
 	conds := []string{
 		"c.relkind IN ('i','I','')",
 		"n.nspname !~ '^pg_toast'",
