@@ -217,10 +217,15 @@ func init() {
 	if v, _ := Getenv(cmdNameUpper + "_SHOW_HOST_INFORMATION"); v != "" {
 		enableHostInformation = v
 	}
+	// get NO_COLOR
+	noColor := false
+	if s, ok := Getenv("NO_COLOR"); ok {
+		noColor = s != "0" && s != "false" && s != "off"
+	}
 	// get color level
 	colorLevel, _ := terminfo.ColorLevelFromEnv()
 	enableSyntaxHL := "true"
-	if colorLevel < terminfo.ColorLevelBasic {
+	if noColor || colorLevel < terminfo.ColorLevelBasic {
 		enableSyntaxHL = "false"
 	}
 	// pager
