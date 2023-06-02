@@ -1032,8 +1032,8 @@ github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635/go.mod h1:hkRG
 github.com/thda/tds v0.1.7 h1:s29kbnJK0agL3ps85A/sb9XS2uxgKF5UJ6AZjbyqXX4=
 github.com/thda/tds v0.1.7/go.mod h1:isLIF1oZdXfkqVMJM8RyNrsjlHPlTKnPlnsBs7ngZcM=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
-github.com/trinodb/trino-go-client v0.311.0 h1:2tGarqWVZRWgeUteDRrQteYmtqNaBHomOWZYNUG1M2g=
-github.com/trinodb/trino-go-client v0.311.0/go.mod h1:yI2MwYvoFWr4Xb9BCBUEbth9eXrnqGw9CtpL6ae6Wns=
+github.com/trinodb/trino-go-client v0.312.0 h1:O7bfMFCrt8pWChx1NAJEYwTVlwKjwGDZ+ZaMHRzk0O0=
+github.com/trinodb/trino-go-client v0.312.0/go.mod h1:yI2MwYvoFWr4Xb9BCBUEbth9eXrnqGw9CtpL6ae6Wns=
 github.com/twmb/murmur3 v1.1.8 h1:8Yt9taO/WN3l08xErzjeschgZU2QSrwm1kclYq+0aRg=
 github.com/twmb/murmur3 v1.1.8/go.mod h1:Qq/R7NUyOfr65zD+6Q5IHKsJLwP7exErjN6lyyq3OSQ=
 github.com/uber-go/tally v3.3.17+incompatible/go.mod h1:YDTIBxdXyOU/sCWilKB4bgyufu1cEi0jdVnRdxvjnmU=

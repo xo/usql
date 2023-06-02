@@ -47,7 +47,7 @@ require (
 	github.com/sirupsen/logrus v1.9.2
 	github.com/snowflakedb/gosnowflake v1.6.21
 	github.com/thda/tds v0.1.7
-	github.com/trinodb/trino-go-client v0.311.0
+	github.com/trinodb/trino-go-client v0.312.0
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.3.2
 	github.com/xo/dburl v0.14.2
