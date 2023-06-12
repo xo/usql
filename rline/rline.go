@@ -2,6 +2,8 @@
 package rline
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -43,6 +45,8 @@ type IO interface {
 	SetOutput(func(string) string)
 }
 
+type PasswordPrompt func(string) (string, error)
+
 // Rline provides a type compatible with the IO interface.
 type Rline struct {
 	Inst *readline.Instance
@@ -55,7 +59,7 @@ type Rline struct {
 	P    func(string)
 	A    func(readline.AutoCompleter)
 	S    func(string) error
-	Pw   func(string) (string, error)
+	Pw   PasswordPrompt
 }
 
 // Next returns the next line of runes (excluding '\n') from the input.
@@ -226,4 +230,74 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		S:  l.SaveHistory,
 		Pw: pw,
 	}, nil
+}
+
+func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw PasswordPrompt) IO {
+	return &Rline{
+		N: func() ([]rune, error) {
+			buf := new(bytes.Buffer)
+			var b []byte
+			var isPrefix bool
+			var err error
+			for {
+				// read
+				b, isPrefix, err = reader.ReadLine()
+				// when not EOF
+				if err != nil && err != io.EOF {
+					return nil, err
+				}
+				// append
+				if _, werr := buf.Write(b); werr != nil {
+					return nil, werr
+				}
+				// end of line
+				if !isPrefix || err != nil {
+					break
+				}
+			}
+			// peek and read possible line ending \n or \r\n
+			if err != io.EOF {
+				if err := peekEnding(buf, reader); err != nil {
+					return nil, err
+				}
+			}
+			return []rune(buf.String()), err
+		},
+		Out: out,
+		Err: err,
+		Pw:  pw,
+	}
+}
+
+// peekEnding peeks to see if the next successive bytes in r is \n or \r\n,
+// writing to w if it is. Does not advance r if the next bytes are not \n or
+// \r\n.
+func peekEnding(w io.Writer, r *bufio.Reader) error {
+	// peek first byte
+	buf, err := r.Peek(1)
+	switch {
+	case err != nil && err != io.EOF:
+		return err
+	case err == nil && buf[0] == '\n':
+		if _, rerr := r.ReadByte(); err != nil && err != io.EOF {
+			return rerr
+		}
+		_, werr := w.Write([]byte{'\n'})
+		return werr
+	case err == nil && buf[0] != '\r':
+		return nil
+	}
+	// peek second byte
+	buf, err = r.Peek(1)
+	switch {
+	case err != nil && err != io.EOF:
+		return err
+	case err == nil && buf[0] != '\n':
+		return nil
+	}
+	if _, rerr := r.ReadByte(); err != nil && err != io.EOF {
+		return rerr
+	}
+	_, werr := w.Write([]byte{'\n'})
+	return werr
 }
