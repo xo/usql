@@ -3,6 +3,7 @@ package completer
 
 import (
 	"fmt"
+	"github.com/xo/usql/rline"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gohxs/readline"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
@@ -111,7 +111,7 @@ var (
 	}
 )
 
-func NewDefaultCompleter(opts ...Option) readline.AutoCompleter {
+func NewDefaultCompleter(opts ...Option) rline.Completer {
 	c := completer{
 		// an empty struct satisfies the metadata.Reader interface, because it is actually empty
 		reader:           struct{}{},
@@ -277,7 +277,7 @@ type logger interface {
 	Println(...interface{})
 }
 
-func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
+func (c completer) Complete(line []rune, start int) (newLine [][]rune, length int) {
 	var i int
 	for i = start - 1; i > 0; i-- {
 		if strings.ContainsRune(WORD_BREAKS, line[i]) {

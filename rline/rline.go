@@ -34,13 +34,19 @@ type IO interface {
 	// Prompt sets the prompt for the next interactive line read.
 	Prompt(string)
 	// Completer sets the auto-completer.
-	Completer(readline.AutoCompleter)
+	Completer(Completer)
 	// Save saves a line of history.
 	Save(string) error
 	// Password prompts for a password.
 	Password(string) (string, error)
 	// SetOutput sets the output filter func.
 	SetOutput(func(string) string)
+}
+
+// Completer returns candidates matching current input
+type Completer interface {
+	// Complete current input with matching commands
+	Complete(line []rune, pos int) (newLine [][]rune, length int)
 }
 
 // rline provides a type compatible with the IO interface.
@@ -52,7 +58,7 @@ type rline struct {
 	stderr         io.Writer
 	isInteractive  bool
 	prompt         func(string)
-	completer      func(readline.AutoCompleter)
+	completer      func(Completer)
 	saveHistory    func(string) error
 	passwordPrompt passwordPrompt
 }
@@ -98,7 +104,7 @@ func (l *rline) Prompt(s string) {
 }
 
 // Completer sets the auto-completer.
-func (l *rline) Completer(a readline.AutoCompleter) {
+func (l *rline) Completer(a Completer) {
 	if l.completer != nil {
 		l.completer(a)
 	}
@@ -213,14 +219,22 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		stderr:        stderr,
 		isInteractive: interactive || cygwin,
 		prompt:        l.SetPrompt,
-		completer: func(a readline.AutoCompleter) {
+		completer: func(a Completer) {
 			cfg := l.Config.Clone()
-			cfg.AutoComplete = a
+			cfg.AutoComplete = readlineCompleter{c: a}
 			l.SetConfig(cfg)
 		},
 		saveHistory:    l.SaveHistory,
 		passwordPrompt: pw,
 	}, nil
+}
+
+type readlineCompleter struct {
+	c Completer
+}
+
+func (r readlineCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
+	return r.c.Complete(line, pos)
 }
 
 func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw passwordPrompt) IO {
