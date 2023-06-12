@@ -43,8 +43,6 @@ type IO interface {
 	SetOutput(func(string) string)
 }
 
-type PasswordPrompt func(string) (string, error)
-
 // rline provides a type compatible with the IO interface.
 type rline struct {
 	instance       *readline.Instance
@@ -56,8 +54,10 @@ type rline struct {
 	prompt         func(string)
 	completer      func(readline.AutoCompleter)
 	saveHistory    func(string) error
-	passwordPrompt PasswordPrompt
+	passwordPrompt passwordPrompt
 }
+
+type passwordPrompt func(string) (string, error)
 
 // Next returns the next line of runes (excluding '\n') from the input.
 func (l *rline) Next() ([]rune, error) {
@@ -223,7 +223,7 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	}, nil
 }
 
-func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw PasswordPrompt) IO {
+func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw passwordPrompt) IO {
 	return &rline{
 		nextLine: func() ([]rune, error) {
 			buf := new(bytes.Buffer)
