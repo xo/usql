@@ -31,8 +31,6 @@ type IO interface {
 	Stderr() io.Writer
 	// Interactive determines if the IO is an interactive terminal.
 	Interactive() bool
-	// Cygwin determines if the IO is a Cygwin interactive terminal.
-	Cygwin() bool
 	// Prompt sets the prompt for the next interactive line read.
 	Prompt(string)
 	// Completer sets the auto-completer.
@@ -55,7 +53,6 @@ type rline struct {
 	stdout         io.Writer
 	stderr         io.Writer
 	isInteractive  bool
-	isCygwin       bool
 	prompt         func(string)
 	completer      func(readline.AutoCompleter)
 	saveHistory    func(string) error
@@ -91,11 +88,6 @@ func (l *rline) Stderr() io.Writer {
 // Interactive determines if the IO is an interactive terminal.
 func (l *rline) Interactive() bool {
 	return l.isInteractive
-}
-
-// Cygwin determines if the IO is a Cygwin interactive terminal.
-func (l *rline) Cygwin() bool {
-	return l.isCygwin
 }
 
 // Prompt sets the prompt for the next interactive line read.
@@ -220,7 +212,6 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		stdout:        stdout,
 		stderr:        stderr,
 		isInteractive: interactive || cygwin,
-		isCygwin:      cygwin,
 		prompt:        l.SetPrompt,
 		completer: func(a readline.AutoCompleter) {
 			cfg := l.Config.Clone()
