@@ -47,90 +47,90 @@ type IO interface {
 
 type PasswordPrompt func(string) (string, error)
 
-// Rline provides a type compatible with the IO interface.
-type Rline struct {
-	Inst *readline.Instance
-	N    func() ([]rune, error)
-	C    func() error
-	Out  io.Writer
-	Err  io.Writer
-	Int  bool
-	Cyg  bool
-	P    func(string)
-	A    func(readline.AutoCompleter)
-	S    func(string) error
-	Pw   PasswordPrompt
+// rline provides a type compatible with the IO interface.
+type rline struct {
+	instance       *readline.Instance
+	nextLine       func() ([]rune, error)
+	close          func() error
+	stdout         io.Writer
+	stderr         io.Writer
+	isInteractive  bool
+	isCygwin       bool
+	prompt         func(string)
+	completer      func(readline.AutoCompleter)
+	saveHistory    func(string) error
+	passwordPrompt PasswordPrompt
 }
 
 // Next returns the next line of runes (excluding '\n') from the input.
-func (l *Rline) Next() ([]rune, error) {
-	if l.N != nil {
-		return l.N()
+func (l *rline) Next() ([]rune, error) {
+	if l.nextLine != nil {
+		return l.nextLine()
 	}
 	return nil, io.EOF
 }
 
 // Close closes the IO.
-func (l *Rline) Close() error {
-	if l.C != nil {
-		return l.C()
+func (l *rline) Close() error {
+	if l.close != nil {
+		return l.close()
 	}
 	return nil
 }
 
 // Stdout is the IO's standard out.
-func (l *Rline) Stdout() io.Writer {
-	return l.Out
+func (l *rline) Stdout() io.Writer {
+	return l.stdout
 }
 
 // Stderr is the IO's standard error out.
-func (l *Rline) Stderr() io.Writer {
-	return l.Err
+func (l *rline) Stderr() io.Writer {
+	return l.stderr
 }
 
 // Interactive determines if the IO is an interactive terminal.
-func (l *Rline) Interactive() bool {
-	return l.Int
+func (l *rline) Interactive() bool {
+	return l.isInteractive
 }
 
 // Cygwin determines if the IO is a Cygwin interactive terminal.
-func (l *Rline) Cygwin() bool {
-	return l.Cyg
+func (l *rline) Cygwin() bool {
+	return l.isCygwin
 }
 
 // Prompt sets the prompt for the next interactive line read.
-func (l *Rline) Prompt(s string) {
-	if l.P != nil {
-		l.P(s)
+func (l *rline) Prompt(s string) {
+	if l.prompt != nil {
+		l.prompt(s)
 	}
 }
 
 // Completer sets the auto-completer.
-func (l *Rline) Completer(a readline.AutoCompleter) {
-	if l.A != nil {
-		l.A(a)
+func (l *rline) Completer(a readline.AutoCompleter) {
+	if l.completer != nil {
+		l.completer(a)
 	}
 }
 
 // Save saves a line of history.
-func (l *Rline) Save(s string) error {
-	if l.S != nil {
-		return l.S(s)
+func (l *rline) Save(s string) error {
+	if l.saveHistory != nil {
+		return l.saveHistory(s)
 	}
 	return nil
 }
 
 // Password prompts for a password.
-func (l *Rline) Password(prompt string) (string, error) {
-	if l.Pw != nil {
-		return l.Pw(prompt)
+func (l *rline) Password(prompt string) (string, error) {
+	if l.passwordPrompt != nil {
+		return l.passwordPrompt(prompt)
 	}
 	return "", ErrPasswordNotAvailable
 }
 
 // SetOutput sets the output format func.
-func (l *Rline) SetOutput(f func(string) string) {
-	l.Inst.Config.Output = f
+func (l *rline) SetOutput(f func(string) string) {
+	l.instance.Config.Output = f
 }
 
 // New creates a new readline input/output handler.
@@ -208,33 +208,33 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 	if forceNonInteractive {
 		n, pw = nil, nil
 	}
-	return &Rline{
-		Inst: l,
-		N:    n,
-		C: func() error {
+	return &rline{
+		instance: l,
+		nextLine: n,
+		close: func() error {
 			for _, f := range closers {
 				_ = f()
 			}
 			return nil
 		},
-		Out: stdout,
-		Err: stderr,
-		Int: interactive || cygwin,
-		Cyg: cygwin,
-		P:   l.SetPrompt,
-		A: func(a readline.AutoCompleter) {
+		stdout:        stdout,
+		stderr:        stderr,
+		isInteractive: interactive || cygwin,
+		isCygwin:      cygwin,
+		prompt:        l.SetPrompt,
+		completer: func(a readline.AutoCompleter) {
 			cfg := l.Config.Clone()
 			cfg.AutoComplete = a
 			l.SetConfig(cfg)
 		},
-		S:  l.SaveHistory,
-		Pw: pw,
+		saveHistory:    l.SaveHistory,
+		passwordPrompt: pw,
 	}, nil
 }
 
 func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw PasswordPrompt) IO {
-	return &Rline{
-		N: func() ([]rune, error) {
+	return &rline{
+		nextLine: func() ([]rune, error) {
 			buf := new(bytes.Buffer)
 			var b []byte
 			var isPrefix bool
@@ -263,9 +263,9 @@ func NewFromReader(reader *bufio.Reader, out, err io.Writer, pw PasswordPrompt) 
 			}
 			return []rune(buf.String()), err
 		},
-		Out: out,
-		Err: err,
-		Pw:  pw,
+		stdout:         out,
+		stderr:         err,
+		passwordPrompt: pw,
 	}
 }
 
