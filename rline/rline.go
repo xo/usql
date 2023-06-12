@@ -51,8 +51,6 @@ type rline struct {
 	stdout         io.Writer
 	stderr         io.Writer
 	isInteractive  bool
-	prompt         func(string)
-	completer      func(Completer)
 	saveHistory    func(string) error
 	passwordPrompt passwordPrompt
 }
@@ -88,20 +86,6 @@ func (l *rline) Stderr() io.Writer {
 // Interactive determines if the IO is an interactive terminal.
 func (l *rline) Interactive() bool {
 	return l.isInteractive
-}
-
-// Prompt sets the prompt for the next interactive line read.
-func (l *rline) Prompt(s string) {
-	if l.prompt != nil {
-		l.prompt(s)
-	}
-}
-
-// Completer sets the auto-completer.
-func (l *rline) Completer(a Completer) {
-	if l.completer != nil {
-		l.completer(a)
-	}
 }
 
 // Save saves a line of history.

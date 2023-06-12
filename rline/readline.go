@@ -18,7 +18,29 @@ var (
 // baseRline should be embedded in a struct implementing the IO interface,
 // as it keeps implementation specific state.
 type baseRline struct {
-	instance *readline.Instance
+	instance  *readline.Instance
+	prompt    func(string)
+	completer func(Completer)
+}
+
+// Prompt sets the prompt for the next interactive line read.
+func (l *rline) Prompt(s string) {
+	l.instance.SetPrompt(s)
+}
+
+// Completer sets the auto-completer.
+func (l *rline) Completer(a Completer) {
+	cfg := l.instance.Config.Clone()
+	cfg.AutoComplete = readlineCompleter{c: a}
+	l.instance.SetConfig(cfg)
+}
+
+type readlineCompleter struct {
+	c Completer
+}
+
+func (r readlineCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
+	return r.c.Complete(line, pos)
 }
 
 // SetOutput sets the output format func.
@@ -102,7 +124,9 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 		n, pw = nil, nil
 	}
 	return &rline{
-		instance: l,
+		baseRline: baseRline{
+			instance: l,
+		},
 		nextLine: n,
 		close: func() error {
 			for _, f := range closers {
@@ -110,24 +134,10 @@ func New(forceNonInteractive bool, out, histfile string) (IO, error) {
 			}
 			return nil
 		},
-		stdout:        stdout,
-		stderr:        stderr,
-		isInteractive: interactive || cygwin,
-		prompt:        l.SetPrompt,
-		completer: func(a Completer) {
-			cfg := l.Config.Clone()
-			cfg.AutoComplete = readlineCompleter{c: a}
-			l.SetConfig(cfg)
-		},
+		stdout:         stdout,
+		stderr:         stderr,
+		isInteractive:  interactive || cygwin,
 		saveHistory:    l.SaveHistory,
 		passwordPrompt: pw,
 	}, nil
-}
-
-type readlineCompleter struct {
-	c Completer
-}
-
-func (r readlineCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
-	return r.c.Complete(line, pos)
 }
