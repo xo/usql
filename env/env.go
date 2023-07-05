@@ -5,7 +5,6 @@ package env
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -86,7 +85,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	if path != "" {
 		path = passfile.Expand(u.HomeDir, path)
 	} else {
-		f, err := ioutil.TempFile("", text.CommandLower()+".*.sql")
+		f, err := os.CreateTemp("", text.CommandLower()+".*.sql")
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +94,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 			return nil, err
 		}
 		path = f.Name()
-		err = ioutil.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
+		err = os.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +118,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 		return nil, err
 	}
 	// read
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

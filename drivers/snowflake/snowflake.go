@@ -5,7 +5,6 @@ package snowflake
 
 import (
 	"io"
-	"io/ioutil"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -19,7 +18,7 @@ import (
 
 func init() {
 	r := logrus.New()
-	r.Out, r.Level = ioutil.Discard, logrus.PanicLevel
+	r.Out, r.Level = io.Discard, logrus.PanicLevel
 	var l gosnowflake.SFLogger = &logger{r}
 	gosnowflake.SetLogger(&l)
 	newReader := infos.New(
