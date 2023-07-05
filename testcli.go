@@ -9,7 +9,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -123,7 +122,7 @@ func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) 
 	if err != nil {
 		return err
 	}
-	buf, err := ioutil.ReadFile(test.script)
+	buf, err := os.ReadFile(test.script)
 	if err != nil {
 		return err
 	}

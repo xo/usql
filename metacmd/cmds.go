@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"sort"
@@ -387,7 +386,7 @@ func init() {
 				if err != nil {
 					return err
 				}
-				return ioutil.WriteFile(file, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
+				return os.WriteFile(file, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 			},
 		},
 		ChangeDir: {
