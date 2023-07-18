@@ -236,7 +236,6 @@ associated database, scheme / build tag, and scheme aliases:
 | Exasol               | `exasol`        | `ex`, `exa`                                     | [github.com/exasol/exasol-driver-go][d-exasol]                              |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                               |
 | FlightSQL            | `flightsql`     | `fl`, `flight`                                  | [github.com/apache/arrow/go/v12/arrow/flight/flightsql/driver][d-flightsql] |
-| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                                  |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                                |
 | Google Spanner       | `spanner`       | `sp`                                            | [github.com/googleapis/go-sql-spanner][d-spanner]                           |
 | Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                                        |
@@ -264,6 +263,7 @@ associated database, scheme / build tag, and scheme aliases:
 |                      |                 |                                                 |                                                                             |
 | Apache Hive          | `hive`          | `hi`                                            | [sqlflow.org/gohive][d-hive]                                                |
 | Apache Impala        | `impala`        | `im`                                            | [github.com/bippio/go-impala][d-impala]                                     |
+| Genji                | `genji`         | `gj`                                            | [github.com/genjidb/genji/driver][d-genji]                                  |
 |                      |                 |                                                 |                                                                             |
 | **NO DRIVERS**       | `no_base`       |                                                 | _no base drivers (useful for development)_                                  |
 | **MOST DRIVERS**     | `most`          |                                                 | _all stable drivers_                                                        |

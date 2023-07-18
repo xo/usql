@@ -1,4 +1,4 @@
-//go:build (all || most || genji) && !no_genji
+//go:build (bad || genji) && !no_genji
 
 package internal
 
