@@ -3,7 +3,7 @@ module github.com/xo/usql
 go 1.20
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.10.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.11.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v1.3.10
@@ -29,7 +29,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/googleapis/go-sql-spanner v1.1.0
-	github.com/jackc/pgconn v1.14.0
+	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v5 v5.4.2
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/jmrobles/h2go v0.5.0
@@ -37,7 +37,7 @@ require (
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.19
 	github.com/mattn/go-sqlite3 v1.14.17
-	github.com/microsoft/go-mssqldb v1.3.0
+	github.com/microsoft/go-mssqldb v1.4.0
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
 	github.com/nakagami/firebirdsql v0.9.6
@@ -65,7 +65,7 @@ require (
 require (
 	cloud.google.com/go v0.110.6 // indirect
 	cloud.google.com/go/bigquery v1.52.0 // indirect
-	cloud.google.com/go/compute v1.21.0 // indirect
+	cloud.google.com/go/compute v1.22.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
@@ -90,7 +90,7 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apache/thrift v0.18.1 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.44.302 // indirect
+	github.com/aws/aws-sdk-go v1.44.306 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.27 // indirect
@@ -197,7 +197,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8 // indirect
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
@@ -257,9 +257,9 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.132.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230717213848-3f92550aa753 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230717213848-3f92550aa753 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230717213848-3f92550aa753 // indirect
+	google.golang.org/genproto v0.0.0-20230720185612-659f7aaaa771 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230720185612-659f7aaaa771 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230720185612-659f7aaaa771 // indirect
 	google.golang.org/grpc v1.56.2 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
