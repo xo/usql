@@ -100,11 +100,3 @@ func optText(desc Desc) (string, string) {
 	}
 	return desc.Desc, desc.Params
 }
-
-// max returns maximum of a, b.
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

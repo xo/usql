@@ -559,14 +559,6 @@ func GoTime() string {
 	return tfmt
 }
 
-// max returns maximum of a, b.
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // Listing writes the formatted variables listing to w, separated into different
 // sections for all known variables.
 func Listing(w io.Writer) {

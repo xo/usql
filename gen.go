@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -126,7 +127,7 @@ func loadDrivers(wd string) error {
 			return nil
 		}
 		m := dirRE.FindAllStringSubmatch(n, -1)
-		if m == nil || m[0][1] != m[0][2] || contains(skipDirs, m[0][1]) {
+		if m == nil || m[0][1] != m[0][2] || slices.Contains(skipDirs, m[0][1]) {
 			return nil
 		}
 		tag, dest := m[0][1], mostDrivers
@@ -513,19 +514,3 @@ const licenseTextGo = `package text
 // License contains the license text for usql.
 const License = ` + "`%s`" + `
 `
-
-func contains(v []string, n string) bool {
-	for _, s := range v {
-		if s == n {
-			return true
-		}
-	}
-	return false
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

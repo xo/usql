@@ -3,6 +3,7 @@ package stmt
 
 import (
 	"bytes"
+	"unicode"
 )
 
 // MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
@@ -414,4 +415,21 @@ func WithAllowHashComments(enable bool) Option {
 	return func(b *Stmt) {
 		b.allowHashComments = enable
 	}
+}
+
+// IsSpaceOrControl is a special test for either a space or a control (ie, \b)
+// characters.
+func IsSpaceOrControl(r rune) bool {
+	return unicode.IsSpace(r) || unicode.IsControl(r)
+}
+
+// RunesLastIndex returns the last index in r of needle, or -1 if not found.
+func RunesLastIndex(r []rune, needle rune) int {
+	i := len(r) - 1
+	for ; i >= 0; i-- {
+		if r[i] == needle {
+			return i
+		}
+	}
+	return i
 }
