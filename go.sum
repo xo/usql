@@ -680,6 +680,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/icholy/digest v0.1.22 h1:dRIwCjtAcXch57ei+F0HSb5hmprL873+q7PoVojdMzM=
 github.com/icholy/digest v0.1.22/go.mod h1:uLAeDdWKIWNFMH0wqbwchbTQOmJWhzSnL7zmqSPqEEc=
+github.com/ildus/ingres v1.0.0 h1:ZIR+GVoxA4e/4BIRDL/h9sWUTNwJwF8296TeZb7S5NQ=
+github.com/ildus/ingres v1.0.0/go.mod h1:Efkl31pdGVIKooO2CC6WBGoc3uZP6SB2yD8k/d7UAAA=
 github.com/imdario/mergo v0.3.13 h1:lFzP57bqS/wsqKssCGmtLAb8A0wKjLGrve2q3PPVcBk=
 github.com/imdario/mergo v0.3.13/go.mod h1:4lJ1jqUDcsbIECGy0RUJAXNIhg+6ocWgb1ALK2O4oXg=
 github.com/jackc/chunkreader v1.0.0/go.mod h1:RT6O25fNZIuasFJRyZ4R/Y2BbhasbmZXF9QQ7T3kePo=

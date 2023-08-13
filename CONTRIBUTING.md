@@ -12,7 +12,7 @@ with code or documentation changes.
 
 1. Add a new schema in [dburl](https://github.com/xo/dburl).
 1. Create a new go package in `drivers`. It should have an `init()` function, that would call `drivers.Register()`.
-1. Regenerate code in the `internal` package by running `internal/gen.sh`.
+1. Regenerate code in the `internal` package by running `go run gen.go`.
 1. Add any new required modules using `go get` or by editing `go.mod` manually and running `go mod tidy`.
 1. Run all tests, build `usql` and see if the new driver works.
 1. Update `README.md`.

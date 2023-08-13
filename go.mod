@@ -29,6 +29,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/googleapis/go-sql-spanner v1.1.0
+	github.com/ildus/ingres v1.0.0
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173

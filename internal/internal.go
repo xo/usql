@@ -27,6 +27,7 @@ func KnownBuildTags() map[string]string {
 		"hive":          "hive",          // sqlflow.org/gohive
 		"ignite":        "ignite",        // github.com/amsokol/ignite-go-client/sql
 		"impala":        "impala",        // github.com/bippio/go-impala
+		"ingres":        "ingres",        // github.com/ildus/ingres
 		"maxcompute":    "maxcompute",    // sqlflow.org/gomaxcompute
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
