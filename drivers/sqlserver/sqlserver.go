@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
+	_ "github.com/microsoft/go-mssqldb/azuread" // needed for azuresql authentication
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 )
