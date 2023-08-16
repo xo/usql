@@ -172,7 +172,11 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 			return nil, WrapErr(u.Driver, err)
 		}
 	}
-	db, err := f(u.Driver, u.DSN)
+	driver := u.Driver
+	if u.GoDriver != "" {
+		driver = u.GoDriver
+	}
+	db, err := f(driver, u.DSN)
 	if err != nil {
 		return nil, WrapErr(u.Driver, err)
 	}
