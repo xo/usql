@@ -3,14 +3,14 @@ module github.com/xo/usql
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.12.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.13.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.3.16
+	github.com/SAP/go-hdb v1.4.1
 	github.com/VoltDB/voltdb-client-go v1.0.15
 	github.com/alecthomas/chroma/v2 v2.8.0
 	github.com/alecthomas/kingpin/v2 v2.3.2
-	github.com/alexbrainman/odbc v0.0.0-20211220213544-9c9a2e61c5e2
+	github.com/alexbrainman/odbc v0.0.0-20230814102256-1421b829acc9
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
 	github.com/amsokol/ignite-go-client v0.12.2
 	github.com/apache/arrow/go/v12 v12.0.1
@@ -24,7 +24,7 @@ require (
 	github.com/genjidb/genji v0.15.2
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gocql/gocql v1.5.2
-	github.com/godror/godror v0.37.0
+	github.com/godror/godror v0.38.1
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.5.9
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
@@ -43,7 +43,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prestodb/presto-go-client v0.0.0-20230524183650-a1a0bac0f63e
-	github.com/sijms/go-ora/v2 v2.7.11
+	github.com/sijms/go-ora/v2 v2.7.12
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snowflakedb/gosnowflake v1.6.23
 	github.com/thda/tds v0.1.7
@@ -72,7 +72,7 @@ require (
 	cloud.google.com/go/spanner v1.47.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.1.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
@@ -90,7 +90,7 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apache/thrift v0.18.1 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.44.319 // indirect
+	github.com/aws/aws-sdk-go v1.44.324 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.12 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.32 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/beltran/gosasl v0.0.0-20230115020419-e3b503e58833 // indirect
 	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btnguyen2k/consu/checksum v0.1.2 // indirect
+	github.com/btnguyen2k/consu/checksum v1.0.0 // indirect
 	github.com/btnguyen2k/consu/gjrc v0.2.1 // indirect
 	github.com/btnguyen2k/consu/olaf v0.1.3 // indirect
 	github.com/btnguyen2k/consu/reddo v0.1.8 // indirect
@@ -149,8 +149,7 @@ require (
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-zookeeper/zk v1.0.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -164,7 +163,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230110200425-62e4d2e5b215 // indirect
 	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
-	github.com/google/s2a-go v0.1.4 // indirect
+	github.com/google/s2a-go v0.1.5 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.5 // indirect
@@ -245,7 +244,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/exp v0.0.0-20230807204917-050eac23e9de // indirect
+	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
@@ -255,11 +254,11 @@ require (
 	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/api v0.136.0 // indirect
+	google.golang.org/api v0.137.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230807174057-1744710a1577 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230807174057-1744710a1577 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
+	google.golang.org/genproto v0.0.0-20230815205213-6bfd019c3878 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230815205213-6bfd019c3878 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -273,19 +272,19 @@ require (
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/b v1.0.4 // indirect
 	modernc.org/cc/v3 v3.41.0 // indirect
-	modernc.org/ccgo/v3 v3.16.14 // indirect
+	modernc.org/ccgo/v3 v3.16.15 // indirect
 	modernc.org/db v1.0.10 // indirect
 	modernc.org/file v1.0.8 // indirect
-	modernc.org/fileutil v1.1.2 // indirect
+	modernc.org/fileutil v1.2.0 // indirect
 	modernc.org/golex v1.0.5 // indirect
 	modernc.org/internal v1.0.8 // indirect
 	modernc.org/libc v1.24.1 // indirect
-	modernc.org/lldb v1.0.7 // indirect
+	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
-	modernc.org/memory v1.6.0 // indirect
+	modernc.org/memory v1.7.0 // indirect
 	modernc.org/opt v0.1.3 // indirect
-	modernc.org/sortutil v1.1.1 // indirect
-	modernc.org/strutil v1.1.3 // indirect
+	modernc.org/sortutil v1.2.0 // indirect
+	modernc.org/strutil v1.2.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 	modernc.org/zappy v1.0.9 // indirect
 )
