@@ -981,8 +981,8 @@ github.com/xeipuuv/gojsonschema v1.2.0 h1:LhYJRs+L4fBtjZUfuSZIKGeVu0QRy8e5Xi7D17
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
 github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8Ydu2Bstc=
 github.com/xhit/go-str2duration/v2 v2.1.0/go.mod h1:ohY8p+0f07DiV6Em5LKB0s2YpLtXVyJfNt1+BlmyAsU=
-github.com/xo/dburl v0.14.2 h1:tqiXv1glyxFph3LA39RXE4TYidr/yp7kG2YDrgJVjiA=
-github.com/xo/dburl v0.14.2/go.mod h1:B7/G9FGungw6ighV8xJNwWYQPMfn3gsi2sn5SE8Bzco=
+github.com/xo/dburl v0.16.0 h1:jlBeGe8fnsW+vBYemte903WHQbJnZx7OpJZy2ofq+5g=
+github.com/xo/dburl v0.16.0/go.mod h1:B7/G9FGungw6ighV8xJNwWYQPMfn3gsi2sn5SE8Bzco=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.10.3 h1:Fb2Le5wvzBjOwA/KFRpP5bZo+iR9cZnzSAN3tULoUPI=
 github.com/xo/tblfmt v0.10.3/go.mod h1:W6oqhxtqDOEMkrS2GPO0zmcww7ozM2E6BRv3kNfXd24=

@@ -21,6 +21,24 @@ func init() {
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
 		LexerName:               "tsql",
+		/*
+			// NOTE: this has been commented out, as it is not necessary. if
+			// NOTE: the azuread.DriverName is changed from `azuresql`, then
+			// NOTE: this func will be necessary as dburl will never import non
+			// NOTE: stdlib package. as is, dburl.Open will handle the call
+			// NOTE: to sql.Open and will pass the `azuresql` driver name
+			Open: func(_ context.Context, u *dburl.URL, _, _ func() io.Writer) (func(string, string) (*sql.DB, error), error) {
+				return func(_ string, params string) (*sql.DB, error) {
+					driver := "sqlserver"
+					switch {
+					case u.Query().Has("fedauth"),
+						strings.Contains(strings.ToLower(u.OriginalScheme), "azuresql"):
+						driver = azuread.DriverName
+					}
+					return sql.Open(driver, params)
+				}, nil
+			},
+		*/
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver, level, edition string
 			err := db.QueryRowContext(
