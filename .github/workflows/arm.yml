@@ -43,3 +43,4 @@ jobs:
           export PATH=$PATH:/usr/local/go/bin
           go version
           go env
+          ./build-release.sh -r -n
