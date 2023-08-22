@@ -3,8 +3,8 @@ on: push
 env:
   GO_VERSION: stable
 jobs:
-  build_for_linux_arm:
-    name: Build for Linux (ARM)
+  build:
+    name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
