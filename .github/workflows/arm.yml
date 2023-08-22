@@ -7,12 +7,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [armv6l, arm64]
+        target: [arm64]
         include:
-        - target: armv6l
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero2_w
-          base_image: raspios_lite:latest
+#        - target: armv6l
+#          cpu: arm1176
+#          cpu_info: cpuinfo/raspberrypi_zero2_w
+#          base_image: raspios_lite:latest
         - target: arm64
           cpu: cortex-a53
           cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
@@ -29,8 +29,7 @@ jobs:
         image_additional_mb: 4096
         optimize_image: no
         commands: |
-          uname -a
-          uname -m
+          sudo apt install git
           ./contrib/go-setup.sh
           export PATH=$PATH:/usr/local/go/bin
           go version
