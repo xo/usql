@@ -10,9 +10,10 @@ STATIC=0
 FORCE=0
 CHECK=1
 UPX=1
+VERBOSE=false
 
 OPTIND=1
-while getopts "b:v:sfrnN" opt; do
+while getopts "b:v:sfrnNx" opt; do
 case "$opt" in
   b) BUILD=$OPTARG ;;
   v) VER=$OPTARG ;;
@@ -26,6 +27,7 @@ case "$opt" in
     VER=$(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1||:)
     popd &> /dev/null
   ;;
+  x) VERBOSE=true ;;
 esac
 done
 
@@ -94,7 +96,7 @@ if [ "$STATIC" = "1" ]; then
       )
     ;;
     *)
-      echo "error: fully static builds not currently supported for $PLATFORM"
+      echo "ERROR: fully static builds not currently supported for $PLATFORM"
       exit 1
     ;;
   esac
@@ -102,7 +104,7 @@ fi
 
 # check not overwriting existing build artifacts
 if [[ -e $OUT && "$FORCE" != "1" ]]; then
-  echo "error: $OUT exists and FORCE != 1 (try $0 -f)"
+  echo "ERROR: $OUT exists and FORCE != 1 (try $0 -f)"
   exit 1
 fi
 
@@ -135,6 +137,8 @@ echo "BUILDING:    $BIN"
 echo "BUILD:"
 (set -x;
   go build \
+    -v=$VERBOSE \
+    -x=$VERBOSE \
     -ldflags="$LDFLAGS" \
     -tags="$TAGS" \
     -trimpath \
@@ -155,7 +159,7 @@ fi
 if [[ "$CHECK" == "1" ]]; then
   BUILT_VER=$($BIN --version)
   if [ "$BUILT_VER" != "$NAME ${VER#v}" ]; then
-    echo -e "\n\nerror: expected $NAME --version to report '$NAME ${VER#v}', got: '$BUILT_VER'"
+    echo -e "\n\nERROR: expected $NAME --version to report '$NAME ${VER#v}', got: '$BUILT_VER'"
     exit 1
   fi
   echo "REPORTED:    $BUILT_VER"
@@ -175,12 +179,8 @@ esac
 # report
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
 case $EXT in
-  tar.bz2)
-    tar -jvtf $OUT
-  ;;
-  zip)
-    unzip -l $OUT
-  ;;
+  tar.bz2) tar -jvtf $OUT ;;
+  zip)     unzip -l  $OUT ;;
 esac
 
 popd &> /dev/null

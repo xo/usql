@@ -7,34 +7,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [zero_raspbian, zero_raspios, zero_dietpi, zero2_64_raspios]
+        target: [armv6l, arm64]
         include:
-        - target: zero_raspbian
+        - target: armv6l
           cpu: arm1176
           cpu_info: cpuinfo/raspberrypi_zero_w
-          base_image: raspbian_lite:latest
-        - target: zero_raspios
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
-          base_image: raspios_lite:latest
-        - target: zero_dietpi
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
-          base_image: dietpi:rpi_armv6_bullseye
-        - target: zero2_64_raspios
+          base_image: raspi_2_bullseye:20230102
+        - target: arm64
           cpu: cortex-a53
           cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-          base_image: raspios_lite_arm64:latest
+          base_image: raspi_4_bullseye:20230102
     steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: ARM Runner
       uses: pguyot/arm-runner-action@v2
       with:
-        image_additional_mb: 4096
-        base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}
         cpu_info: ${{ matrix.cpu_info }}
+        base_image: ${{ matrix.base_image }}
+        image_additional_mb: 4096
         optimize_image: no
         commands: |
           uname -a
@@ -43,4 +35,4 @@ jobs:
           export PATH=$PATH:/usr/local/go/bin
           go version
           go env
-          ./build-release.sh -r -n
+          ./build-release.sh -x -r -n
