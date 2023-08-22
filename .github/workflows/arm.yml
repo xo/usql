@@ -13,15 +13,12 @@ jobs:
         - arch: armv6l
           cpu: arm1176
           base_image: raspios_lite:latest
-          cpu_info: raspberrypi_zero_w
         - arch: armv7l
           cpu: cortex-a7
           base_image: raspios_lite:latest
-          cpu_info: raspberrypi_3b
         - arch: aarch64
           cpu: cortex-a53
           base_image: raspios_lite_arm64:latest
-          cpu_info: raspberrypi_zero2_w_arm64_w
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -30,7 +27,6 @@ jobs:
       with:
         base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}
-        cpu_info: ${{ matrix.cpu_info }}
         commands: |
           uname -a
           test `uname -m` = ${{ matrix.arch }}
