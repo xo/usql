@@ -22,6 +22,7 @@ jobs:
           cpu: cortex-a53
           base_image: raspios_lite_arm64:latest
           cpu_info: raspberrypi_zero2_w_arm64_w
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: ARM Runner
@@ -31,10 +32,9 @@ jobs:
         cpu: ${{ matrix.cpu }}
         cpu_info: ${{ matrix.cpu_info }}
         commands: |
-            uname -a
-            test `uname -m` = ${{ matrix.arch }}
-            grep Model /proc/cpuinfo
-#    steps:
+          uname -a
+          test `uname -m` = ${{ matrix.arch }}
+          grep Model /proc/cpuinfo
 #    - name: Install build dependencies
 #      run: |
 #        sudo apt-get -qq update
