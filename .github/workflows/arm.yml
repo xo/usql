@@ -1,63 +1,43 @@
 name: ARM Build
 on: push
-env:
-  GO_VERSION: stable
 jobs:
-  build:
-    name: Build
+  test_suite:
+    name: Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        arch: [armv6l, armv7l, aarch64]
+        target: [zero_raspbian, zero_raspios, zero_dietpi, zero2_64_raspios]
         include:
-        - arch: armv6l
+        - target: zero_raspbian
           cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
+          base_image: raspbian_lite:latest
+        - target: zero_raspios
+          cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
           base_image: raspios_lite:latest
-        - arch: armv7l
-          cpu: cortex-a7
-          base_image: raspios_lite:latest
-        - arch: aarch64
+        - target: zero_dietpi
+          cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
+          base_image: dietpi:rpi_armv6_bullseye
+        - target: zero2_64_raspios
           cpu: cortex-a53
+          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
           base_image: raspios_lite_arm64:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: ARM Runner
       uses: pguyot/arm-runner-action@v2
+      id: arm_runner
       with:
+        image_additional_mb: 4096
         base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}
+        cpu_info: ${{ matrix.cpu_info }}
+        optimize_image: no
         commands: |
           uname -a
           test `uname -m` = ${{ matrix.arch }}
           grep Model /proc/cpuinfo
-#    - name: Install build dependencies
-#      run: |
-#        sudo apt-get -qq update
-#        sudo apt-get install -y --no-install-recommends \
-#          build-essential \
-#          libicu-dev \
-#          unixodbc \
-#          unixodbc-dev \
-#          upx
-#    - name: Setup Go
-#      uses: actions/setup-go@v4
-#      with:
-#        go-version: ${{ env.GO_VERSION }}
-#    - name: Build amd64
-#      env:
-#        CGO_ENABLED: 1
-#        GOOS: linux
-#        GOARCH: amd64
-#      run: ./build-release.sh -r
-#    - name: Build amd64 (static)
-#      env:
-#        CGO_ENABLED: 1
-#        GOOS: linux
-#        GOARCH: amd64
-#      run: ./build-release.sh -r -s
-#    - name: Archive artifacts
-#      uses: actions/upload-artifact@v3
-#      with:
-#        name: dist-linux
-#        path: build/linux/*/*/usql*.tar.bz2
