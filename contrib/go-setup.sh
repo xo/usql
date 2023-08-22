@@ -6,10 +6,9 @@
 ARCH=$(uname -m)
 PLATFORM=linux
 
-echo "ARCH: $ARCH"
-
 case $ARCH in
-  *) echo "oops $ARCH"; exit 1 ;;
+  aarch64) ARCH=arm64 ;;
+  x86_64)  ARCH=amd64 ;;
 esac
 
 REPO=https://go.googlesource.com/go
@@ -23,6 +22,12 @@ set -e
 LATEST=$(curl -4 -s "$DL"|sed -E -n "/<a .+?>go1\.[0-9]+(\.[0-9]+)?\.$PLATFORM-$ARCH\.$EXT</p"|head -1)
 ARCHIVE=$(sed -E -e 's/.*<a .+?>(.+?)<\/a.*/\1/' <<< "$LATEST")
 STABLE=$(sed -E -e 's/^go//' -e "s/\.$PLATFORM-$ARCH\.$EXT$//" <<< "$ARCHIVE")
+
+if ! [[ "$STABLE" =~ ^1\.[0-9\.]+$ ]]; then
+  echo "ERROR: unable to retrieve latest Go version for $PLATFORM/$ARCH ($STABLE)"
+  exit 1
+fi
+
 REMOTE=$(sed -E -e 's/.*<a .+?href="(.+?)".*/\1/' <<< "$LATEST")
 VERSION="go$STABLE"
 
@@ -36,6 +41,11 @@ done
 # prefix passed version with go
 if [[ "$VERSION" =~ ^1\.[0-9]+ ]]; then
   VERSION="go$VERSION"
+fi
+
+if ! [[ "$VERSION" =~ ^go1\.[0-9]+\.[0-9]+$ ]]; then
+  echo "ERROR: invalid Go version $VERSION"
+  exit 1
 fi
 
 if ! [[ "$REMOTE" =~ "^https://" ]]; then

@@ -40,3 +40,6 @@ jobs:
           uname -a
           uname -m
           ./contrib/go-setup.sh
+          export PATH=$PATH:/usr/local/go/bin
+          go version
+          go env
