@@ -11,7 +11,7 @@ jobs:
         include:
         - target: armv6l
           cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
+          cpu_info: cpuinfo/raspberrypi_zero2_w
           base_image: raspios_lite:latest
         - target: arm64
           cpu: cortex-a53
