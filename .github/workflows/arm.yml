@@ -2,7 +2,7 @@ name: ARM Build
 on: push
 jobs:
   test_suite:
-    name: Test
+    name: Setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,7 +30,6 @@ jobs:
       uses: actions/checkout@v3
     - name: ARM Runner
       uses: pguyot/arm-runner-action@v2
-      id: arm_runner
       with:
         image_additional_mb: 4096
         base_image: ${{ matrix.base_image }}
@@ -39,5 +38,5 @@ jobs:
         optimize_image: no
         commands: |
           uname -a
-          test `uname -m` = ${{ matrix.arch }}
-          grep Model /proc/cpuinfo
+          uname -m
+          ./contrib/go-setup.sh
