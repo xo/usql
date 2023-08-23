@@ -9,14 +9,14 @@ jobs:
       matrix:
         target: [arm64]
         include:
-#        - target: armv6l
-#          cpu: arm1176
-#          cpu_info: cpuinfo/raspberrypi_zero2_w
-#          base_image: raspios_lite:latest
-        - target: arm64
-          cpu: cortex-a53
-          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-          base_image: raspios_lite_arm64:latest
+        - target: armv6l
+          cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero2_w
+          base_image: raspios_lite:latest
+ #       - target: arm64
+ #         cpu: cortex-a53
+ #         cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+ #         base_image: raspios_lite_arm64:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -35,6 +35,9 @@ jobs:
           echo 2 $(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$')
           echo 3 $(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V)
           echo 4 $(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1)
+          sudo apt install -y golang
+          go version
+          go env
           #|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1
 #          ./contrib/go-setup.sh
 #          export PATH=$PATH:/usr/local/go/bin
