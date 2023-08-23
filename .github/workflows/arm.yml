@@ -26,12 +26,12 @@ jobs:
         cpu: ${{ matrix.cpu }}
         cpu_info: ${{ matrix.cpu_info }}
         base_image: ${{ matrix.base_image }}
-        image_additional_mb: 4096
+        image_additional_mb: 16384
         optimize_image: no
         commands: |
-          sudo apt install -y git
+          sudo apt install -y git upx tar bzip2
           ./contrib/go-setup.sh
           export PATH=$PATH:/usr/local/go/bin
           go version
           go env
-          ./build-release.sh -x -r -n
+          ./build-release.sh -r -N -x
