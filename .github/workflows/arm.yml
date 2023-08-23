@@ -29,6 +29,8 @@ jobs:
         image_additional_mb: 16384
         optimize_image: no
         commands: |
+          ls -al
+          echo $PWD
           sudo apt install -y git upx tar bzip2
           git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1
 #          ./contrib/go-setup.sh
