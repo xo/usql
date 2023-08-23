@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [arm64]
+        target: [armv6l, arm64]
         include:
         - target: armv6l
           cpu: arm1176
