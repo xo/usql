@@ -11,12 +11,12 @@ jobs:
         include:
         - target: armv6l
           cpu: cortex-a7
-          cpu_info: cpuinfo/raspberrypi_zero2_w
-          base_image: raspios_lite:latest
+          cpu_info: cpuinfo/raspberrypi_3b
+          base_image: raspi_2_bookworm:20230612
         - target: arm64
           cpu: cortex-a53
-          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-          base_image: raspios_lite_arm64:latest
+          cpu_info: cpuinfo/raspberrypi_4b
+          base_image: raspi_4_bookworm:20230612
     steps:
     - name: Checkout
       uses: actions/checkout@v3
