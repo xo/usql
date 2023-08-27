@@ -3,7 +3,7 @@ module github.com/xo/usql
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.13.2
+	github.com/ClickHouse/clickhouse-go/v2 v2.13.3
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v1.4.2
@@ -43,7 +43,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prestodb/presto-go-client v0.0.0-20230524183650-a1a0bac0f63e
-	github.com/sijms/go-ora/v2 v2.7.15
+	github.com/sijms/go-ora/v2 v2.7.17
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snowflakedb/gosnowflake v1.6.24
 	github.com/thda/tds v0.1.7
@@ -69,7 +69,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
-	cloud.google.com/go/spanner v1.48.0 // indirect
+	cloud.google.com/go/spanner v1.49.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1 // indirect
@@ -92,11 +92,11 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apache/thrift v0.18.1 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.44.329 // indirect
+	github.com/aws/aws-sdk-go v1.44.332 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.35 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.80 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.81 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4 // indirect
@@ -285,7 +285,7 @@ require (
 	modernc.org/libc v1.24.1 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
-	modernc.org/memory v1.7.0 // indirect
+	modernc.org/memory v1.7.1 // indirect
 	modernc.org/opt v0.1.3 // indirect
 	modernc.org/sortutil v1.2.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
