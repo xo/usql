@@ -35,17 +35,16 @@ for other databases.
 [![Releases][release-status]][Releases]
 [![Discord Discussion][discord-status]][discord]
 
-[usql-ci]: https://github.com/xo/usql/actions/workflows/test.yml (Test CI)
-[usql-ci-status]: https://github.com/xo/usql/actions/workflows/test.yml/badge.svg (Test CI)
-[goref-usql]: https://pkg.go.dev/github.com/xo/usql (Go Reference)
-[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg (Go Reference)
-[release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag&sort=semver (Latest Release)
-[discord]: https://discord.gg/yJKEzc7prt (Discord Discussion)
-[discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square (Discord Discussion)
-
-[installing]: #installing (Installing)
-[databases]: #database-support (Database Support)
-[releases]: https://github.com/xo/usql/releases (Releases)
+[usql-ci]: https://github.com/xo/usql/actions/workflows/test.yml "Test CI"
+[usql-ci-status]: https://github.com/xo/usql/actions/workflows/test.yml/badge.svg "Test CI"
+[goref-usql]: https://pkg.go.dev/github.com/xo/usql "Go Reference"
+[goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg "Go Reference"
+[release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag&sort=semver "Latest Release"
+[discord]: https://discord.gg/yJKEzc7prt "Discord Discussion"
+[discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
+[installing]: #installing "Installing"
+[databases]: #database-support "Database Support"
+[releases]: https://github.com/xo/usql/releases "Releases"
 
 ## Installing
 
@@ -63,7 +62,7 @@ Scoop][] or [via Go][]:
 1. [Download a release for your platform][releases]
 2. Extract the `usql` or `usql.exe` file from the `.tar.bz2` or `.zip` file
 3. Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or
-  `%PATH%` (Windows)
+   `%PATH%` (Windows)
 
 ### Installing via Homebrew (macOS and Linux)
 
@@ -131,6 +130,9 @@ Install `usql` in the usual Go fashion:
 ```sh
 # install latest usql version with base drivers
 $ go install github.com/xo/usql@latest
+
+# alternately, install usql with most drivers (see below for info about build tags)
+$ go install -tags most github.com/xo/usql@latest
 ```
 
 See [below for information](#building) on `usql` build tags.
@@ -212,8 +214,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -311,10 +314,11 @@ associated database, scheme / build tag, and scheme aliases:
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
+
 <!-- DRIVER DETAILS END -->
 
-[f-cgo]: #f-cgo (Requires CGO)
-[f-wire]: #f-wire (Wire compatible)
+[f-cgo]: #f-cgo "Requires CGO"
+[f-wire]: #f-wire "Wire compatible"
 
 <p>
   <i>
@@ -418,7 +422,7 @@ Database connection strings look like the following:
 Where the above are:
 
 | Component                       | Description                                                                          |
-|---------------------------------|--------------------------------------------------------------------------------------|
+| ------------------------------- | ------------------------------------------------------------------------------------ |
 | `driver`                        | driver scheme name or scheme alias                                                   |
 | `transport`                     | `tcp`, `udp`, `unix` or driver name <i>(for ODBC and ADODB)</i>                      |
 | `user`                          | username                                                                             |
@@ -428,7 +432,7 @@ Where the above are:
 | `?opt1=a&...`                   | additional database driver options (see respective SQL driver for available options) |
 | `/path/to/file`                 | a path on disk                                                                       |
 
-[f-path]: #f-path (URL Paths for Databases)
+[f-path]: #f-path "URL Paths for Databases"
 
 <p>
   <i>
@@ -706,15 +710,15 @@ Variables
 
 An overview of `usql`'s features, functionality, and compability with `psql`:
 
-* [Variables and Interpolation][variables]
-* [Backticks][backticks]
-* [Passwords][usqlpass]
-* [Runtime Configuration (RC) File][usqlrc]
-* [Copying Between Databases][copying]
-* [Syntax Highlighting][highlighting]
-* [Time Formatting][timefmt]
-* [Context Completion][completion]
-* [Host Connection Information](#host-connection-information)
+- [Variables and Interpolation][variables]
+- [Backticks][backticks]
+- [Passwords][usqlpass]
+- [Runtime Configuration (RC) File][usqlrc]
+- [Copying Between Databases][copying]
+- [Syntax Highlighting][highlighting]
+- [Time Formatting][timefmt]
+- [Context Completion][completion]
+- [Host Connection Information](#host-connection-information)
 
 The `usql` project's goal is to support as much of `psql`'s core features and
 functionality, and aims to be as compatible as possible - [contributions are
@@ -738,7 +742,7 @@ FOO = 'bar'
 (not connected)=>
 ```
 
-A `\set` variable, `NAME`,  will be directly interpolated (by string
+A `\set` variable, `NAME`, will be directly interpolated (by string
 substitution) into the query when prefixed with `:` and optionally surrounded
 by quotation marks (`'` or `"`):
 
@@ -893,22 +897,22 @@ SRC DST QUERY TABLE(COL1, COL2, ..., COLN)
 
 Where:
 
-* `SRC` - is the [source database URL][connecting] to connect to, and where the
+- `SRC` - is the [source database URL][connecting] to connect to, and where the
   `QUERY` will be executed
-* `DST` - is the [destination database URL][connecting] to connect to, and where
+- `DST` - is the [destination database URL][connecting] to connect to, and where
   the destination `TABLE` resides
-* `QUERY` - is the query to execute on the `SRC` connection, the results of which
+- `QUERY` - is the query to execute on the `SRC` connection, the results of which
   will be copied to `TABLE`
-* `TABLE` - is the destination table name, followed by an optional SQL-like column
+- `TABLE` - is the destination table name, followed by an optional SQL-like column
   list of the form `(COL1, COL2, ..., COLN)`
-* `(COL1, COL2, ..., COLN)` - a list of the destination column names, 1-to-N
+- `(COL1, COL2, ..., COLN)` - a list of the destination column names, 1-to-N
 
 The usual rules for [variables, interpolation, and quoting][variables] apply to
 `\copy`'s parameters.
 
 ###### Quoting
 
-`QUERY` and `TABLE` ***must*** be quoted when containing spaces:
+`QUERY` and `TABLE` **_must_** be quoted when containing spaces:
 
 ```sh
 $ usql
@@ -920,7 +924,7 @@ COPY 2
 
 ###### Column Counts
 
-The `QUERY` ***must*** return the same number of columns as defined by
+The `QUERY` **_must_** return the same number of columns as defined by
 the `TABLE` expression:
 
 ```sh
@@ -1039,7 +1043,7 @@ Interactive queries will be syntax highlighted by default, using
 highlighting:
 
 | Variable                | Default                         | Values            | Description                                                  |
-|-------------------------|---------------------------------|-------------------|--------------------------------------------------------------|
+| ----------------------- | ------------------------------- | ----------------- | ------------------------------------------------------------ |
 | `SYNTAX_HL`             | `true`                          | `true` or `false` | enables syntax highlighting                                  |
 | `SYNTAX_HL_FORMAT`      | _dependent on terminal support_ | formatter name    | [Chroma formatter name][chroma-formatter]                    |
 | `SYNTAX_HL_OVERRIDE_BG` | `true`                          | `true` or `false` | enables overriding the background color of the chroma styles |
@@ -1126,25 +1130,25 @@ overview of the [available time constants](#time-constants).
 The following are the time constant names available in `usql`, corresponding
 time format value, and example display output:
 
-| Constant    | Format                                | Display <sup>[↓][f-ts]</sup>        |
-|-------------|--------------------------------------:|------------------------------------:|
-| ANSIC       | `Mon Jan _2 15:04:05 2006`            | `Wed Aug  3 20:12:48 2022`          |
-| UnixDate    | `Mon Jan _2 15:04:05 MST 2006`        | `Wed Aug  3 20:12:48 UTC 2022`      |
-| RubyDate    | `Mon Jan 02 15:04:05 -0700 2006`      | `Wed Aug 03 20:12:48 +0000 2022`    |
-| RFC822      | `02 Jan 06 15:04 MST`                 | `03 Aug 22 20:12 UTC`               |
-| RFC822Z     | `02 Jan 06 15:04 -0700`               | `03 Aug 22 20:12 +0000`             |
-| RFC850      | `Monday, 02-Jan-06 15:04:05 MST`      | `Wednesday, 03-Aug-22 20:12:48 UTC` |
-| RFC1123     | `Mon, 02 Jan 2006 15:04:05 MST`       | `Wed, 03 Aug 2022 20:12:48 UTC`     |
-| RFC1123Z    | `Mon, 02 Jan 2006 15:04:05 -0700`     | `Wed, 03 Aug 2022 20:12:48 +0000`   |
-| RFC3339     | `2006-01-02T15:04:05Z07:00`           | `2022-08-03T20:12:48Z`              |
-| RFC3339Nano | `2006-01-02T15:04:05.999999999Z07:00` | `2022-08-03T20:12:48.693257Z`       |
-| Kitchen     | `3:04PM`                              | `8:12PM`                            |
-| Stamp       | `Jan _2 15:04:05`                     | `Aug  3 20:12:48`                   |
-| StampMilli  | `Jan _2 15:04:05.000`                 | `Aug  3 20:12:48.693`               |
-| StampMicro  | `Jan _2 15:04:05.000000`              | `Aug  3 20:12:48.693257`            |
-| StampNano   | `Jan _2 15:04:05.000000000`           | `Aug  3 20:12:48.693257000`         |
+| Constant    |                                Format |        Display <sup>[↓][f-ts]</sup> |
+| ----------- | ------------------------------------: | ----------------------------------: |
+| ANSIC       |            `Mon Jan _2 15:04:05 2006` |          `Wed Aug  3 20:12:48 2022` |
+| UnixDate    |        `Mon Jan _2 15:04:05 MST 2006` |      `Wed Aug  3 20:12:48 UTC 2022` |
+| RubyDate    |      `Mon Jan 02 15:04:05 -0700 2006` |    `Wed Aug 03 20:12:48 +0000 2022` |
+| RFC822      |                 `02 Jan 06 15:04 MST` |               `03 Aug 22 20:12 UTC` |
+| RFC822Z     |               `02 Jan 06 15:04 -0700` |             `03 Aug 22 20:12 +0000` |
+| RFC850      |      `Monday, 02-Jan-06 15:04:05 MST` | `Wednesday, 03-Aug-22 20:12:48 UTC` |
+| RFC1123     |       `Mon, 02 Jan 2006 15:04:05 MST` |     `Wed, 03 Aug 2022 20:12:48 UTC` |
+| RFC1123Z    |     `Mon, 02 Jan 2006 15:04:05 -0700` |   `Wed, 03 Aug 2022 20:12:48 +0000` |
+| RFC3339     |           `2006-01-02T15:04:05Z07:00` |              `2022-08-03T20:12:48Z` |
+| RFC3339Nano | `2006-01-02T15:04:05.999999999Z07:00` |       `2022-08-03T20:12:48.693257Z` |
+| Kitchen     |                              `3:04PM` |                            `8:12PM` |
+| Stamp       |                     `Jan _2 15:04:05` |                   `Aug  3 20:12:48` |
+| StampMilli  |                 `Jan _2 15:04:05.000` |               `Aug  3 20:12:48.693` |
+| StampMicro  |              `Jan _2 15:04:05.000000` |            `Aug  3 20:12:48.693257` |
+| StampNano   |           `Jan _2 15:04:05.000000000` |         `Aug  3 20:12:48.693257000` |
 
-[f-ts]: #f-ts (Timestamp Value)
+[f-ts]: #f-ts "Timestamp Value"
 
 <p>
   <i>
@@ -1228,9 +1232,9 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Related Projects
 
-* [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing
+- [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing
   and opening database connection URLs
-* [xo][xo] - Go command-line tool to generate Go code from a database schema
+- [xo][xo] - Go command-line tool to generate Go code from a database schema
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
@@ -1246,15 +1250,14 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [aur]: https://aur.archlinux.org/packages/usql
 [yay]: https://github.com/Jguer/yay
 [arch-makepkg]: https://wiki.archlinux.org/title/makepkg
-
-[backticks]: #backticks (Backticks)
-[commands]: #backslash-commands (Commands)
-[completion]: #context-completion (Context Completion)
-[connecting]: #connecting-to-databases (Connecting to Databases)
-[contributing]: #contributing (Contributing)
-[copying]: #copying-between-databases (Copying Between Databases)
-[highlighting]: #syntax-highlighting (Syntax Highlighting)
-[timefmt]: #time-formatting (Time Formatting)
-[usqlpass]: #passwords (Passwords)
-[usqlrc]: #runtime-configuration-rc-file (Runtime Configuration File)
-[variables]: #variables-and-interpolation (Variable Interpolation)
+[backticks]: #backticks "Backticks"
+[commands]: #backslash-commands "Commands"
+[completion]: #context-completion "Context Completion"
+[connecting]: #connecting-to-databases "Connecting to Databases"
+[contributing]: #contributing "Contributing"
+[copying]: #copying-between-databases "Copying Between Databases"
+[highlighting]: #syntax-highlighting "Syntax Highlighting"
+[timefmt]: #time-formatting "Time Formatting"
+[usqlpass]: #passwords "Passwords"
+[usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"
+[variables]: #variables-and-interpolation "Variable Interpolation"
