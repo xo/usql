@@ -226,6 +226,7 @@ func TestCompleter(t *testing.T) {
 			"CREATE ",
 			7,
 			[]string{
+				"SCHEMA",
 				"DATABASE",
 				"TABLE",
 				"SEQUENCE",

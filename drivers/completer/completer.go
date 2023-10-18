@@ -345,7 +345,7 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 
 	/* Complete CREATE */
 	if TailMatches(IGNORE_CASE, previousWords, "CREATE") {
-		return CompleteFromList(text, "DATABASE", "SEQUENCE", "TABLE", "VIEW", "TEMPORARY")
+		return CompleteFromList(text, "DATABASE", "SCHEMA", "SEQUENCE", "TABLE", "VIEW", "TEMPORARY")
 	}
 	if TailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY") {
 		return CompleteFromList(text, "TABLE", "VIEW")
