@@ -116,19 +116,13 @@ pushd $SRC &> /dev/null
 TARGETS=()
 case $DIR in
   all)
-    TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'|grep -v oracle|grep -v db2))
-    if [[ "$(podman image ls -q --filter 'reference=localhost/oracle/database')" != "" ]]; then
-      TARGETS+=(oracle)
-    fi
+    TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'|grep -v db2))
     if [[ "$(podman image ls -q --filter 'reference=docker.io/ibmcom/db2')" != "" ]]; then
       TARGETS+=(db2)
     fi
   ;;
   test)
-    TARGETS+=(mysql postgres sqlserver cassandra)
-    if [[ "$(podman image ls -q --filter 'reference=localhost/oracle/database')" != "" ]]; then
-      TARGETS+=(oracle)
-    fi
+    TARGETS+=(mysql postgres sqlserver oracle cassandra)
   ;;
   *)
     TARGETS+=($DIR)

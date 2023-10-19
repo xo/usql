@@ -1,5 +1,5 @@
 NAME=oracle
-IMAGE=localhost/oracle/database:21.3.0-ee
+IMAGE=container-registry.oracle.com/database/free
 PUBLISH=1521:1521
-ENV="ORACLE_SID=orasid ORACLE_PDB=db1 ORACLE_PWD=P4ssw0rd"
+ENV="ORACLE_PDB=db1 ORACLE_PWD=P4ssw0rd"
 VOLUME=oracle-data:/opt/oracle/oradata
