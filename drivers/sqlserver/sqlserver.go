@@ -12,9 +12,13 @@ import (
 	"strings"
 
 	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
-	_ "github.com/microsoft/go-mssqldb/azuread" // needed for azuresql authentication
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
+
+	// needed for azuresql authentication, named pipes, and shared memory transport protocols
+	_ "github.com/microsoft/go-mssqldb/azuread"
+	_ "github.com/microsoft/go-mssqldb/namedpipe"
+	_ "github.com/microsoft/go-mssqldb/sharedmemory"
 )
 
 func init() {
