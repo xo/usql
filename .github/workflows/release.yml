@@ -7,10 +7,11 @@ env:
 
 jobs:
   build_for_linux:
-    matrix:
-      arch: [amd64, arm, arm64]
     name: Build for Linux
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm, arm64]
     steps:
     - name: Install build dependencies
       run: |
