@@ -9,18 +9,20 @@ BUILD=$SRC/build
 STATIC=0
 FORCE=0
 CHECK=1
-UPX=1
 VERBOSE=false
+PLATFORM=$(go env GOOS)
+ARCH=$(go env GOARCH)
+GOARCH=$ARCH
 
 OPTIND=1
-while getopts "b:v:sfrnNx" opt; do
+while getopts "a:b:v:sfrnx" opt; do
 case "$opt" in
+  a) ARCH=$OPTARG ;;
   b) BUILD=$OPTARG ;;
   v) VER=$OPTARG ;;
   s) STATIC=1 ;;
   f) FORCE=1 ;;
   n) CHECK=0 ;;
-  N) UPX=0 ;;
   r)
     # get latest tag version
     pushd $SRC &> /dev/null
@@ -37,8 +39,6 @@ if [ "$VER" = "" ]; then
   FORCE=1
 fi
 
-PLATFORM=$(go env GOOS)
-ARCH=$(go env GOARCH)
 NAME=$(basename $SRC)
 VER="${VER#v}"
 EXT=tar.bz2
@@ -67,6 +67,39 @@ case $PLATFORM in
 esac
 OUT=$DIR/$NAME-$VER-$PLATFORM-$ARCH.$EXT
 
+CARCH=
+QEMUARCH=
+GNUTYPE=
+CC=
+CXX=
+EXTLD=g++
+
+# CC=$CARCH-linux-$GNUTYPE-gcc CXX=$CARCH-linux-$GNUTYPE-cpp CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build -o usql-$GOARCH
+# CC=$CARCH-linux-$GNUTYPE-gcc CXX=$CARCH-linux-$GNUTYPE-cpp CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build -o usql-$GOARCH
+# qemu-$CARCH -L /usr/$CARCH-linux-$GNUTYPE/ ./usql-$GOARCH
+# qemu-$CARCH -L /usr/$CARCH-linux-$GNUTYPE/ ./usql-$GOARCH
+
+if [[ "$ARCH" != "$GOARCH" ]]; then
+  case $ARCH in
+    arm)   CARCH=armhf   QEMUARCH=arm     GNUTYPE=gnueabihf ;;
+    arm64) CARCH=aarch64 QEMUARCH=aarch64 GNUTYPE=gnu ;;
+    *)
+      echo "error: unknown arch $ARCH"
+      exit 1
+    ;;
+  esac
+  BUILDARCH=$CARCH
+  if [[ "$ARCH" == "arm" ]]; then
+    TAGS+=(no_netezza)
+    if ! [ -x "$(command -v $CARCH-linux-$GNUTYPE-gcc)" ]; then
+      BUILDARCH=arm-none
+    fi
+  fi
+  CC=$BUILDARCH-linux-$GNUTYPE-gcc
+  CXX=$BUILDARCH-linux-$GNUTYPE-c++
+  EXTLD=$BUILDARCH-linux-$GNUTYPE-g++
+fi
+
 LDFLAGS=(
   -s
   -w
@@ -92,11 +125,11 @@ if [ "$STATIC" = "1" ]; then
       LDFLAGS+=(
         -linkmode=external
         -extldflags \'$EXTLDFLAGS\'
-        -extld g++
+        -extld $EXTLD
       )
     ;;
     *)
-      echo "ERROR: fully static builds not currently supported for $PLATFORM"
+      echo "ERROR: fully static builds not currently supported for $PLATFORM/$ARCH"
       exit 1
     ;;
   esac
@@ -135,7 +168,12 @@ echo "BUILDING:    $BIN"
 
 # build
 echo "BUILD:"
+
 (set -x;
+  CC=$CC \
+  CXX=$CXX \
+  CGO_ENABLED=1 \
+  GOARCH=$ARCH \
   go build \
     -v=$VERBOSE \
     -x=$VERBOSE \
@@ -145,19 +183,24 @@ echo "BUILD:"
     -o $BIN
 ) 2>&1 | log '    '
 
-# upx
-if [[ "$UPX" == "1" ]]; then
-  case $PLATFORM in
-    linux|windows|darwin)
-      COMPRESSED=$(upx -q -q $BIN|awk '{print $1 " -> " $3 " (" $4 ")"}')
-      echo "COMPRESSED:  $COMPRESSED"
-    ;;
-  esac
-fi
+built_ver() {
+  if [[ "$ARCH" != "$GOARCH" ]]; then
+    EXTRA=
+    if [ -d /usr/$BUILDARCH-linux-$GNUTYPE/libc ]; then
+      EXTRA="-L /usr/$BUILDARCH-linux-$GNUTYPE/libc"
+    fi
+    qemu-$QEMUARCH \
+      -L /usr/$BUILDARCH-linux-$GNUTYPE \
+      $EXTRA \
+      $BIN --version
+  else
+    $BIN --version
+  fi
+}
 
 # check build
 if [[ "$CHECK" == "1" ]]; then
-  BUILT_VER=$($BIN --version)
+  BUILT_VER=$(built_ver)
   if [ "$BUILT_VER" != "$NAME ${VER#v}" ]; then
     echo -e "\n\nERROR: expected $NAME --version to report '$NAME ${VER#v}', got: '$BUILT_VER'"
     exit 1
