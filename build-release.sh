@@ -91,7 +91,7 @@ if [[ "$ARCH" != "$GOARCH" ]]; then
   BUILDARCH=$CARCH
   if [[ "$ARCH" == "arm" ]]; then
     TAGS+=(no_netezza)
-    if ! [ -x "$(command -v $CARCH-linux-$GNUTYPE-gcc)" ]; then
+    if [ ! -d /usr/$CARCH-linux-$GNUTYPE ]; then
       BUILDARCH=arm-none
     fi
   fi
