@@ -18,7 +18,7 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -y \
           build-essential \
-          qemu-user-static \
+          qemu-user \
           gcc-arm-linux-gnueabihf \
           gcc-aarch64-linux-gnu \
           libstdc++6-armhf-cross \
