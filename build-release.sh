@@ -74,11 +74,6 @@ CC=
 CXX=
 EXTLD=g++
 
-# CC=$CARCH-linux-$GNUTYPE-gcc CXX=$CARCH-linux-$GNUTYPE-cpp CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build -o usql-$GOARCH
-# CC=$CARCH-linux-$GNUTYPE-gcc CXX=$CARCH-linux-$GNUTYPE-cpp CGO_ENABLED=1 GOOS=linux GOARCH=$GOARCH go build -o usql-$GOARCH
-# qemu-$CARCH -L /usr/$CARCH-linux-$GNUTYPE/ ./usql-$GOARCH
-# qemu-$CARCH -L /usr/$CARCH-linux-$GNUTYPE/ ./usql-$GOARCH
-
 if [[ "$ARCH" != "$GOARCH" ]]; then
   case $ARCH in
     arm)   CARCH=armhf   QEMUARCH=arm     GNUTYPE=gnueabihf ;;
@@ -88,16 +83,18 @@ if [[ "$ARCH" != "$GOARCH" ]]; then
       exit 1
     ;;
   esac
-  BUILDARCH=$CARCH
+  LDARCH=$CARCH
   if [[ "$ARCH" == "arm" ]]; then
     TAGS+=(no_netezza)
-    if [ ! -d /usr/$CARCH-linux-$GNUTYPE ]; then
-      BUILDARCH=arm-none
+    if [ -d /usr/arm-linux-$GNUTYPE ]; then
+      LDARCH=arm
+    elif [ -d /usr/arm-none-linux-$GNUTYPE ]; then
+      LDARCH=arm-none
     fi
   fi
-  CC=$BUILDARCH-linux-$GNUTYPE-gcc
-  CXX=$BUILDARCH-linux-$GNUTYPE-c++
-  EXTLD=$BUILDARCH-linux-$GNUTYPE-g++
+  CC=$LDARCH-linux-$GNUTYPE-gcc
+  CXX=$LDARCH-linux-$GNUTYPE-c++
+  EXTLD=$LDARCH-linux-$GNUTYPE-g++
 fi
 
 LDFLAGS=(
@@ -186,11 +183,11 @@ echo "BUILD:"
 built_ver() {
   if [[ "$ARCH" != "$GOARCH" ]]; then
     EXTRA=
-    if [ -d /usr/$BUILDARCH-linux-$GNUTYPE/libc ]; then
-      EXTRA="-L /usr/$BUILDARCH-linux-$GNUTYPE/libc"
+    if [ -d /usr/$LDARCH-linux-$GNUTYPE/libc ]; then
+      EXTRA="-L /usr/$LDARCH-linux-$GNUTYPE/libc"
     fi
     qemu-$QEMUARCH \
-      -L /usr/$BUILDARCH-linux-$GNUTYPE \
+      -L /usr/$LDARCH-linux-$GNUTYPE \
       $EXTRA \
       $BIN --version
   else
