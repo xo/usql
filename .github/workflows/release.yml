@@ -75,21 +75,21 @@ jobs:
       - build_for_macos
     runs-on: macos-latest
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        run: |
-          export WORKDIR=/tmp/usql-universal
-          mkdir -p $WORKDIR
-          tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR usql
-          mv $WORKDIR/usql $WORKDIR/usql-amd64
-          tar -jxvf dist-darwin-arm64/*/*/usql*.tar.bz2 -C $WORKDIR usql
-          mv $WORKDIR/usql $WORKDIR/usql-arm64
-          lipo -create -output $WORKDIR/usql $WORKDIR/usql-amd64 $WORKDIR/usql-arm64
-          $WORKDIR/usql --version
-          rm $WORKDIR/usql-{amd64,arm64}
-          tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR LICENSE
-          tar -C $WORKDIR -cjf usql-${GITHUB_REF_NAME#v}-darwin-universal.tar.bz2
-          ls -alh usql*
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      run: |
+        export WORKDIR=/tmp/usql-universal
+        mkdir -p $WORKDIR
+        tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR usql
+        mv $WORKDIR/usql $WORKDIR/usql-amd64
+        tar -jxvf dist-darwin-arm64/*/*/usql*.tar.bz2 -C $WORKDIR usql
+        mv $WORKDIR/usql $WORKDIR/usql-arm64
+        lipo -create -output $WORKDIR/usql $WORKDIR/usql-amd64 $WORKDIR/usql-arm64
+        $WORKDIR/usql --version
+        rm $WORKDIR/usql-{amd64,arm64}
+        tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR LICENSE
+        tar -C $WORKDIR -cjf usql-${GITHUB_REF_NAME#v}-darwin-universal.tar.bz2
+        ls -alh usql*
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
