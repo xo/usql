@@ -38,11 +38,12 @@ jobs:
     - name: Build ${{ matrix.arch }}
       run: ./build-release.sh -r -a ${{ matrix.arch }}
     - name: Build ${{ matrix.arch }} (static)
+      if: matrix.arch != 'arm'
       run: ./build-release.sh -r -a ${{ matrix.arch }} -s
 #    - name: Archive artifacts
 #      uses: actions/upload-artifact@v3
 #      with:
-#        name: dist-linux
+#        name: dist-linux-${{ matrix.arch }}
 #        path: build/linux/*/*/usql*.tar.bz2
 
 #  build_for_macos:
@@ -65,7 +66,7 @@ jobs:
 #    - name: Archive artifacts
 #      uses: actions/upload-artifact@v3
 #      with:
-#        name: dist-darwin-amd64
+#        name: dist-darwin-${{ matrix.arch }}
 #        path: build/darwin/*/*/usql*.tar.bz2
 
 #  build_for_windows:
