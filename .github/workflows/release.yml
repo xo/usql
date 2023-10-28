@@ -47,7 +47,7 @@ jobs:
         path: build/linux/*/*/usql*.tar.bz2
 
   build_for_macos:
-    name: Build for MacOS
+    name: Build for macOS
     runs-on: macos-latest
     strategy:
       matrix:
@@ -68,6 +68,33 @@ jobs:
       with:
         name: dist-darwin-${{ matrix.arch }}
         path: build/darwin/*/*/usql*.tar.bz2
+
+  build_for_macos_universal:
+    name: Build for macOS (universal)
+    needs:
+      - build_for_macos
+    runs-on: macos-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        run: |
+          export WORKDIR=/tmp/usql-universal
+          mkdir -p $WORKDIR
+          tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR usql
+          mv $WORKDIR/usql $WORKDIR/usql-amd64
+          tar -jxvf dist-darwin-arm64/*/*/usql*.tar.bz2 -C $WORKDIR usql
+          mv $WORKDIR/usql $WORKDIR/usql-arm64
+          lipo -create -output $WORKDIR/usql $WORKDIR/usql-amd64 $WORKDIR/usql-arm64
+          $WORKDIR/usql --version
+          rm $WORKDIR/usql-{amd64,arm64}
+          tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR LICENSE
+          tar -C $WORKDIR -cjf usql-${GITHUB_REF_NAME#v}-darwin-universal.tar.bz2
+          ls -alh usql*
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist-darwin-universal
+        path: ./usql*.tar.bz2
 
   build_for_windows:
     name: Build for Windows
@@ -96,6 +123,7 @@ jobs:
       - build_for_linux
       - build_for_macos
       - build_for_windows
+      - build_for_macos_universal
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
