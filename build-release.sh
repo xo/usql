@@ -181,7 +181,7 @@ echo "BUILD:"
 ) 2>&1 | log '    '
 
 built_ver() {
-  if [[ "$ARCH" != "$GOARCH" ]]; then
+  if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
     EXTRA=
     if [ -d /usr/$LDARCH-linux-$GNUTYPE/libc ]; then
       EXTRA="-L /usr/$LDARCH-linux-$GNUTYPE/libc"
@@ -190,6 +190,8 @@ built_ver() {
       -L /usr/$LDARCH-linux-$GNUTYPE \
       $EXTRA \
       $BIN --version
+  elif [[ "$PLATFORM" == "darwin" && "$ARCH" != "$GOARCH" ]]; then
+    echo "usql $VER"
   else
     $BIN --version
   fi
