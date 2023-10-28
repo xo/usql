@@ -74,7 +74,7 @@ CC=
 CXX=
 EXTLD=g++
 
-if [[ "$ARCH" != "$GOARCH" ]]; then
+if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
   case $ARCH in
     arm)   CARCH=armhf   QEMUARCH=arm     GNUTYPE=gnueabihf ;;
     arm64) CARCH=aarch64 QEMUARCH=aarch64 GNUTYPE=gnu ;;
