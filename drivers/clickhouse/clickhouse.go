@@ -1,5 +1,6 @@
 // Package clickhouse defines and registers usql's ClickHouse driver.
 //
+// Group: base
 // See: https://github.com/ClickHouse/clickhouse-go
 package clickhouse
 

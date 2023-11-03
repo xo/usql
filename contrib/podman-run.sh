@@ -122,7 +122,7 @@ case $DIR in
     fi
   ;;
   test)
-    TARGETS+=(mysql postgres sqlserver oracle cassandra)
+    TARGETS+=(mysql clickhouse postgres sqlserver oracle cassandra)
   ;;
   *)
     TARGETS+=($DIR)

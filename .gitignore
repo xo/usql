@@ -16,6 +16,7 @@
 
 *.sqlite3
 *.sqlite3-journal
+*.duckdb
 
 /instantclient*
 /*.pc
