@@ -18,6 +18,7 @@ func KnownBuildTags() map[string]string {
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/databendcloud/databend-go
+		"duckdb":        "duckdb",        // github.com/marcboeker/go-duckdb
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v12/arrow/flight/flightsql/driver

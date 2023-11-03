@@ -9,7 +9,7 @@ fi
 
 for TARGET in $SRC/*/usql-config; do
   NAME=$(basename $(dirname $TARGET))
-  if [ ! -z "$(podman ps -q --filter "name=$NAME")" ]; then
+  if [[ ! -z "$(podman ps -q --filter "name=$NAME")" || "$NAME" == "duckdb" || "$NAME" == "sqlite3" ]]; then
     unset DB VSQL
     source $TARGET
     if [ -z "$DB" ]; then

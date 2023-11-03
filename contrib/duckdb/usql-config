@@ -1,0 +1,2 @@
+DB="duckdb:test.duckdb"
+VSQL="SELECT library_version AS version FROM pragma_version();"
