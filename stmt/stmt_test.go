@@ -116,7 +116,7 @@ func TestNextResetState(t *testing.T) {
 		{`select 1; select 1\g`, []string{`select 1;`, `select 1`}, []string{`|`, `\g|`}, `=`, nil},
 		{"select 1\n\\g", []string{`select 1`}, []string{`|`, `\g|`}, `=`, nil},
 		{"select 1 \\g\n\n\n\n\\v", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v|`}, `=`, nil}, // 15
-		{"select 1 \\g\n\n\n\n\\v aoeu \\p zzz \n\n", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v| aoeu `, `\p| zzz `, `|`, `|`}, `=`, nil},
+		{"select 1 \\g\n\n\n\n\\v foob \\p zzz \n\n", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v| foob `, `\p| zzz `, `|`, `|`}, `=`, nil},
 		{" select 1 \\g \\p \n select (15)\\g", []string{`select 1 `, `select (15)`}, []string{`\g| `, `\p| `, `\g|`}, `=`, nil},
 		{" select 1 (  \\g ) \n ;", []string{"select 1 (  \\g ) \n ;"}, []string{`|`, `|`}, `=`, nil},
 		{ // 19
@@ -137,7 +137,7 @@ func TestNextResetState(t *testing.T) {
 		{"select \"\";", []string{"select \"\";"}, []string{"|"}, "=", nil},
 		{"select \"\n\";", []string{"select \"\n\";"}, []string{"|", "|"}, "=", nil}, // 25
 		{"select $$$$;", []string{"select $$$$;"}, []string{"|"}, "=", nil},
-		{"select $$\naoeu(\n$$;", []string{"select $$\naoeu(\n$$;"}, []string{"|", "|", "|"}, "=", nil},
+		{"select $$\nfoob(\n$$;", []string{"select $$\nfoob(\n$$;"}, []string{"|", "|", "|"}, "=", nil},
 		{"select $tag$$tag$;", []string{"select $tag$$tag$;"}, []string{"|"}, "=", nil},
 		{"select $tag$\n\n$tag$;", []string{"select $tag$\n\n$tag$;"}, []string{"|", "|", "|"}, "=", nil},
 		{"select $tag$\n(\n$tag$;", []string{"select $tag$\n(\n$tag$;"}, []string{"|", "|", "|"}, "=", nil}, // 30
@@ -158,7 +158,7 @@ func TestNextResetState(t *testing.T) {
 		{"\\p \\p\nselect (", nil, []string{`\p| `, `\p|`, "|"}, "(", nil}, // 45
 		{"\\p \\p\nselect ()", nil, []string{`\p| `, `\p|`, "|"}, "-", nil},
 		{"\n             \t\t               \n", nil, []string{"|", "|", "|"}, "=", nil},
-		{"\n   aoeu      \t\t               \n", nil, []string{"|", "|", "|"}, "-", nil},
+		{"\n   foob      \t\t               \n", nil, []string{"|", "|", "|"}, "-", nil},
 		{"$$", nil, []string{"|"}, "$", nil},
 		{"$$foo", nil, []string{"|"}, "$", nil}, // 50
 		{"'", nil, []string{"|"}, "'", nil},

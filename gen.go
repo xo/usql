@@ -427,6 +427,10 @@ func buildAliases(v DriverInfo) string {
 			aliases[i] = v.Driver
 		}
 	}
+	headerTypes := dburl.HeaderTypes()
+	if slices.Contains(headerTypes, name) {
+		aliases = append(aliases, `file`)
+	}
 	if len(aliases) > 0 {
 		return "`" + strings.Join(aliases, "`, `") + "`"
 	}

@@ -202,20 +202,20 @@ func TestReadCommand(t *testing.T) {
 		{`\c 'foo bar' z`, 0, `\c| 'foo bar' z|`},
 		{`\c foo "bar " z `, 0, `\c| foo "bar " z |`},
 		{"\\c `foo bar z  `  ", 0, "\\c| `foo bar z  `  |"}, // 20
-		{`\c 'aoeu':foo:bar'test'  `, 0, `\c| 'aoeu':foo:bar'test'  |`},
+		{`\c 'foob':foo:bar'test'  `, 0, `\c| 'foob':foo:bar'test'  |`},
 		{"\\a \n\\b\\c\n", 0, "\\a| |\n\\b\\c\n"},
-		{`\a'aoeu' \b`, 0, `\a'aoeu'| |\b`},
+		{`\a'foob' \b`, 0, `\a'foob'| |\b`},
 		{`\foo 'test' "bar"\print`, 0, `\foo| 'test' "bar"|\print`}, // 25
 		{`\foo 'test' "bar"  \print`, 0, `\foo| 'test' "bar"  |\print`},
-		{`\aaoeu' \b`, 0, `\aaoeu'| |\b`},
-		{`\aaoeu' '\b  `, 0, `\aaoeu'| '\b  |`},
-		{`\aaoeu' '\b  '\print`, 0, `\aaoeu'| '\b  '|\print`},
-		{`\aaoeu' '\b  ' \print`, 0, `\aaoeu'| '\b  ' |\print`}, // 30
-		{`\aaoeu' '\b  ' \print `, 0, `\aaoeu'| '\b  ' |\print `},
-		{"\\foo `aoeu'aoeu'\\print", 0, "\\foo| `aoeu'aoeu'\\print|"},
-		{"\\foo `aoeu'aoeu'  \\print", 0, "\\foo| `aoeu'aoeu'  \\print|"},
-		{`\foo "aoeu'aoeu'\\print`, 0, `\foo| "aoeu'aoeu'\\print|`},
-		{`\foo "aoeu'aoeu'  \\print`, 0, `\foo| "aoeu'aoeu'  \\print|`}, // 35
+		{`\afoob' \b`, 0, `\afoob'| |\b`},
+		{`\afoob' '\b  `, 0, `\afoob'| '\b  |`},
+		{`\afoob' '\b  '\print`, 0, `\afoob'| '\b  '|\print`},
+		{`\afoob' '\b  ' \print`, 0, `\afoob'| '\b  ' |\print`}, // 30
+		{`\afoob' '\b  ' \print `, 0, `\afoob'| '\b  ' |\print `},
+		{"\\foo `foob'foob'\\print", 0, "\\foo| `foob'foob'\\print|"},
+		{"\\foo `foob'foob'  \\print", 0, "\\foo| `foob'foob'  \\print|"},
+		{`\foo "foob'foob'\\print`, 0, `\foo| "foob'foob'\\print|`},
+		{`\foo "foob'foob'  \\print`, 0, `\foo| "foob'foob'  \\print|`}, // 35
 		{`\foo "\""\print`, 0, `\foo| "\""|\print`},
 		{`\foo "\"'"\print`, 0, `\foo| "\"'"|\print`},
 		{`\foo "\"''"\print`, 0, `\foo| "\"''"|\print`},
@@ -260,12 +260,12 @@ func TestFindPrefix(t *testing.T) {
 		{" select into  *   from  ", 4, "SELECT INTO"},
 		{" select   \t  into \n *  \t\t\n\n\n  from     ", 4, "SELECT INTO"}, // 10
 		{"  select\n\n\tb\t\tzfrom j\n\n  ", 2, "SELECT B"},
-		{"select/* aoeu  */into", 4, "SELECTINTO"}, // 12
-		{"select/* aoeu  */\tinto", 4, "SELECT INTO"},
-		{"select/* aoeu  */ into", 4, "SELECT INTO"},
-		{"select/* aoeu  */ into ", 4, "SELECT INTO"},
-		{"select /* aoeu  */ into ", 4, "SELECT INTO"},
-		{"   select /* aoeu  */ into ", 4, "SELECT INTO"},
+		{"select/* foob  */into", 4, "SELECTINTO"}, // 12
+		{"select/* foob  */\tinto", 4, "SELECT INTO"},
+		{"select/* foob  */ into", 4, "SELECT INTO"},
+		{"select/* foob  */ into ", 4, "SELECT INTO"},
+		{"select /* foob  */ into ", 4, "SELECT INTO"},
+		{"   select /* foob  */ into ", 4, "SELECT INTO"},
 		{" select * --test\n from where \n\nfff", 4, "SELECT"},
 		{"/*idreamedital*/foo//bar\n/*  nothing */test\n\n\nwe made /*\n\n\n\n*/   \t   it    ", 5, "FOO TEST WE MADE IT"},
 		{" --yes\n//no\n\n\t/*whatever*/ ", 4, ""}, // 20
@@ -286,8 +286,8 @@ func TestFindPrefix(t *testing.T) {
 		{"\n\n/* */\nn /* */n", 7, "N N"},
 		{"\n\n/* */\nn/* */\nn", 7, "N N"},
 		{"\n\n/* */\nn/* */ n", 7, "N N"},
-		{"*/aoeu", 7, ""},
-		{"*/ \n --\naoeu", 7, ""},
+		{"*/foob", 7, ""},
+		{"*/ \n --\nfoob", 7, ""},
 		{"--\n\n--\ntest", 7, "TEST"}, // 40
 		{"\b\btest", 7, "TEST"},
 		{"select/*\r\n\r\n*/blah", 7, "SELECTBLAH"},
@@ -300,8 +300,8 @@ func TestFindPrefix(t *testing.T) {
 		{";test", 5, ""},
 		{"\b\b\t;test", 5, ""},
 		{"\b\t; test", 5, ""},
-		{"\b\taoeu; test", 5, "AOEU"},
-		{"  TEST /*\n\t\b*/\b\t;aoeu", 10, "TEST"},
+		{"\b\tfoob; test", 5, "FOOB"},
+		{"  TEST /*\n\t\b*/\b\t;foob", 10, "TEST"},
 		{"begin transaction\n\tinsert into x;\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
 		{"--\nbegin /* */transaction/* */\n/* */\tinsert into x;--/* */\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},
 		{"#\nbegin /* */transaction/* */\n/* */\t#\ninsert into x;#\n--/* */\ncommit;", 6, "BEGIN TRANSACTION INSERT INTO X"},

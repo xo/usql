@@ -69,4 +69,6 @@ var (
 	ErrNotSupported = errors.New("not supported")
 	// ErrWrongNumberOfArguments is the wrong number of arguments error.
 	ErrWrongNumberOfArguments = errors.New("wrong number of arguments")
+	// ErrUnknownFileType is the unknown file type error.
+	ErrUnknownFileType = errors.New("unknown file type")
 )

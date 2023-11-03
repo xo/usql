@@ -728,8 +728,11 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 			case fi.Mode()&os.ModeSocket != 0:
 				return h.Open(ctx, "mysql+unix:"+urlstr)
 			}
-			// it is a file, so reattempt to open it with sqlite3
-			return h.Open(ctx, "sqlite3:"+urlstr)
+			// it is a file, so attempt to open it with detected scheme
+			if scheme, err := dburl.SchemeType(urlstr); err == nil {
+				return h.Open(ctx, scheme+":"+urlstr)
+			}
+			return text.ErrUnknownFileType
 		case err != nil:
 			return err
 		}
