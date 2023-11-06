@@ -370,12 +370,13 @@ func buildDriverTable(includeTagSummary bool) string {
 }
 
 var baseOrder = map[string]int{
-	"postgres":  0,
-	"mysql":     1,
-	"sqlserver": 2,
-	"oracle":    3,
-	"sqlite3":   4,
-	"csvq":      5,
+	"postgres":   0,
+	"mysql":      1,
+	"sqlserver":  2,
+	"oracle":     3,
+	"sqlite3":    4,
+	"clickhouse": 5,
+	"csvq":       6,
 }
 
 func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
