@@ -40,7 +40,7 @@ for other databases.
 [goref-usql]: https://pkg.go.dev/github.com/xo/usql "Go Reference"
 [goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg "Go Reference"
 [release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag&sort=semver "Latest Release"
-[discord]: https://discord.gg/yJKEzc7prt "Discord Discussion"
+[discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 [installing]: #installing "Installing"
 [databases]: #database-support "Database Support"
@@ -214,8 +214,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | ClickHouse           | `clickhouse`    | `ch`                                            | [github.com/ClickHouse/clickhouse-go/v2][d-clickhouse]                      |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
@@ -315,6 +316,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
+
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
