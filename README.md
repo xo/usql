@@ -850,6 +850,8 @@ in the user's `HOME` directory:
 $ cat $HOME/.usqlrc
 \echo WELCOME TO THE JUNGLE `date`
 \set SYNTAX_HL_STYLE paraiso-dark
+# display color prompt (default is prompt is "%S%m%/%R%#" )
+\set PROMPT1 "\033[32m%S%m%/%R%#\033[0m" 
 $ usql
 WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
 Type "help" for help.
