@@ -4,46 +4,20 @@ set -e
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
+NAME=$(basename $SRC)
 VER=
-BUILD=$SRC/build
 STATIC=0
 FORCE=0
 CHECK=1
+INSTALL=0
+BUILDONLY=0
 VERBOSE=false
+CGO_ENABLED=1
+LDNAME=github.com/xo/usql/text.CommandName
+LDVERSION=github.com/xo/usql/text.CommandVersion
 PLATFORM=$(go env GOOS)
 ARCH=$(go env GOARCH)
 GOARCH=$ARCH
-
-OPTIND=1
-while getopts "a:b:v:sfrnx" opt; do
-case "$opt" in
-  a) ARCH=$OPTARG ;;
-  b) BUILD=$OPTARG ;;
-  v) VER=$OPTARG ;;
-  s) STATIC=1 ;;
-  f) FORCE=1 ;;
-  n) CHECK=0 ;;
-  r)
-    # get latest tag version
-    pushd $SRC &> /dev/null
-    VER=$(git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1||:)
-    popd &> /dev/null
-  ;;
-  x) VERBOSE=true ;;
-esac
-done
-
-# neither -v or -r specified, set FORCE and VER
-if [ "$VER" = "" ]; then
-  VER=0.0.0-dev
-  FORCE=1
-fi
-
-NAME=$(basename $SRC)
-VER="${VER#v}"
-EXT=tar.bz2
-DIR=$BUILD/$PLATFORM/$ARCH/$VER
-BIN=$DIR/$NAME
 
 TAGS=(
   most
@@ -56,6 +30,44 @@ TAGS=(
   sqlite_userauth
   sqlite_vtable
 )
+
+latest_tag() {
+  # get latest tag version
+  pushd $SRC &> /dev/null
+  git tag -l|grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'|sort -r -V|head -1||:
+  popd &> /dev/null
+}
+
+OPTIND=1
+while getopts "a:v:sfnibxt:r" opt; do
+case "$opt" in
+  a) ARCH=$OPTARG ;;
+  v) VER=$OPTARG ;;
+  s) STATIC=1 ;;
+  f) FORCE=1 ;;
+  n) CHECK=0 ;;
+  i) INSTALL=1 ;;
+  b) BUILDONLY=1 ;;
+  x) VERBOSE=true ;;
+  t) TAGS=($OPTARG) ;;
+  r) VER=$(latest_tag) ;;
+esac
+done
+
+# neither -v or -r specified, or -v=master, set FORCE and VER
+if [[ "$VER" = "" || "$VER" == "master" ]]; then
+  VER=0.0.0-dev
+  FORCE=1
+fi
+
+VER="${VER#v}"
+
+BUILD=$SRC/build
+DIR=$BUILD/$PLATFORM/$ARCH/$VER
+
+EXT=tar.bz2
+BIN=$DIR/$NAME
+
 case $PLATFORM in
   darwin|linux)
     TAGS+=(no_adodb)
@@ -100,8 +112,8 @@ fi
 LDFLAGS=(
   -s
   -w
-  -X github.com/xo/usql/text.CommandName=$NAME
-  -X github.com/xo/usql/text.CommandVersion=$VER
+  -X $LDNAME=$NAME
+  -X $LDVERSION=$VER
 )
 
 if [ "$STATIC" = "1" ]; then
@@ -133,7 +145,7 @@ if [ "$STATIC" = "1" ]; then
 fi
 
 # check not overwriting existing build artifacts
-if [[ -e $OUT && "$FORCE" != "1" ]]; then
+if [[ -e $OUT && "$FORCE" != "1" && "$INSTALL" == "0" ]]; then
   echo "ERROR: $OUT exists and FORCE != 1 (try $0 -f)"
   exit 1
 fi
@@ -166,19 +178,30 @@ echo "BUILDING:    $BIN"
 # build
 echo "BUILD:"
 
+VERB=build
+OUTPUT="-o $BIN"
+if [ "$INSTALL" = "1" ]; then
+  VERB=install OUTPUT=""
+elif [ "$BUILDONLY" = "1" ]; then
+  OUTPUT=""
+fi
 (set -x;
   CC=$CC \
   CXX=$CXX \
-  CGO_ENABLED=1 \
+  CGO_ENABLED=$CGO_ENABLED \
   GOARCH=$ARCH \
-  go build \
+  go $VERB \
     -v=$VERBOSE \
     -x=$VERBOSE \
     -ldflags="$LDFLAGS" \
     -tags="$TAGS" \
     -trimpath \
-    -o $BIN
-) 2>&1 | log '    '
+    $OUTPUT
+) 2>&1 | log '  '
+
+if [[ "$INSTALL" == "1" || "$BUILDONLY" == "1" ]]; then
+  exit
+fi
 
 built_ver() {
   if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
@@ -191,7 +214,7 @@ built_ver() {
       $EXTRA \
       $BIN --version
   elif [[ "$PLATFORM" == "darwin" && "$ARCH" != "$GOARCH" ]]; then
-    echo "usql $VER"
+    echo "$NAME ${VER#v}"
   else
     $BIN --version
   fi
