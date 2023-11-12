@@ -19,6 +19,10 @@ func init() {
 		RowsAffected: func(sql.Result) (int64, error) {
 			return 0, nil
 		},
+		ChangePassword: func(db drivers.DB, user, newpw, oldpw string) error {
+			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY '` + newpw + `'`)
+			return err
+		},
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*clickhouse.Exception); ok {
 				return strconv.Itoa(int(e.Code)), strings.TrimPrefix(e.Message, "clickhouse: ")
