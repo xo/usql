@@ -65,16 +65,21 @@ VER="${VER#v}"
 BUILD=$SRC/build
 DIR=$BUILD/$PLATFORM/$ARCH/$VER
 
-EXT=tar.gz
+TAR=tar
+EXT=tar.bz2
 BIN=$DIR/$NAME
 
 case $PLATFORM in
-  darwin|linux)
+  linux)
     TAGS+=(no_adodb)
   ;;
   windows)
     EXT=zip
     BIN=$BIN.exe
+  ;;
+  darwin)
+    TAGS+=(no_adodb)
+    TAR=gtar
   ;;
 esac
 OUT=$DIR/$NAME-$VER-$PLATFORM-$ARCH.$EXT
@@ -201,6 +206,22 @@ if [[ "$INSTALL" == "1" || "$BUILDONLY" == "1" ]]; then
   exit
 fi
 
+(set -x;
+  file $BIN
+)
+if [[ "$PLATFORM" != "windows" ]]; then
+  (set -x;
+    chmod +x $BIN
+  )
+fi
+
+# purge disk cache
+if [[ "$PLATFORM" == "darwin" && "$CI" == "true" ]]; then
+  (set -x;
+    sudo /usr/sbin/purge
+  )
+fi
+
 built_ver() {
   if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
     EXTRA=
@@ -231,23 +252,20 @@ fi
 # pack
 cp $SRC/LICENSE $DIR
 case $EXT in
-  tar.gz)
-    tar -C $DIR -czf $OUT $(basename $BIN) LICENSE
-  ;;
-  zip)
-    zip $OUT -j $BIN LICENSE
-  ;;
+  tar.bz2) $TAR -C $DIR -cjf $OUT $(basename $BIN) LICENSE ;;
+  zip) zip $OUT -j $BIN LICENSE ;;
 esac
 
 # report
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
 
 case $EXT in
-  tar.gz) tar -zvtf $OUT ;;
-  zip)    unzip -l  $OUT ;;
+  tar.bz2) (set -x; $TAR  -jvtf $OUT) ;;
+  zip)     (set -x; unzip -l    $OUT) ;;
 esac
 
-echo "SHA256SUM:"
-sha256sum $DIR/*
+(set -x;
+  sha256sum $DIR/*
+)
 
 popd &> /dev/null

@@ -38,12 +38,10 @@ jobs:
     - name: Build ${{ matrix.arch }}
       run: |
         ./build.sh -v $VER -a ${{ matrix.arch }}
-        file build/linux/*/*/$APP
     - name: Build ${{ matrix.arch }} (static)
       if: matrix.arch != 'arm'
       run: |
         ./build.sh -v $VER -a ${{ matrix.arch }} -s
-        file build/linux/*/*/${APP}_static
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -59,7 +57,8 @@ jobs:
         arch: [amd64, arm64]
     steps:
     - name: Install build dependencies
-      run: brew install coreutils
+      run: |
+        brew install coreutils gnu-tar
     - name: Checkout
       uses: actions/checkout@v3
     - name: Setup Go
@@ -69,7 +68,6 @@ jobs:
     - name: Build ${{ matrix.arch }}
       run: |
         ./build.sh -v $VER -a ${{ matrix.arch }}
-        file build/darwin/*/*/$APP
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -84,7 +82,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Install build dependencies
-      run: brew install coreutils
+      run: |
+        brew install coreutils gnu-tar
     - name: Download artifacts
       uses: actions/download-artifact@v3
     - name: Build universal
@@ -92,11 +91,11 @@ jobs:
         export WORKDIR=$PWD/build/darwin/universal/$VER
         mkdir -p $WORKDIR
 
-        tar -zxvf dist-darwin-amd64/*/*/*.tar.gz -C $WORKDIR $APP
-        tar -zxvf dist-darwin-amd64/*/*/*.tar.gz -C $WORKDIR LICENSE
+        gtar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR $APP
+        gtar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR LICENSE
         mv $WORKDIR/$APP $WORKDIR/$APP-amd64
 
-        tar -zxvf dist-darwin-arm64/*/*/*.tar.gz -C $WORKDIR $APP
+        gtar -jxvf dist-darwin-arm64/*/*/*.tar.bz2 -C $WORKDIR $APP
         mv $WORKDIR/$APP $WORKDIR/$APP-arm64
 
         file $WORKDIR/$APP-{amd64,arm64}
@@ -107,7 +106,9 @@ jobs:
 
         rm $WORKDIR/$APP-{amd64,arm64}
 
-        tar -C $WORKDIR -czf $WORKDIR/$APP-${VER#v}-darwin-universal.tar.gz $APP LICENSE
+        sudo /usr/sbin/purge
+
+        gtar -C $WORKDIR -cjf $WORKDIR/$APP-${VER#v}-darwin-universal.tar.bz2 $APP LICENSE
         ls -alh $WORKDIR/*
         sha256sum $WORKDIR/*
     - name: Archive artifacts
@@ -131,7 +132,8 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
     - name: Build amd64
       shell: bash
-      run: ./build.sh -v $VER
+      run: |
+        ./build.sh -v $VER
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -158,5 +160,5 @@ jobs:
           draft: true
           generate_release_notes: true
           files: |
-            dist-*/*/*/*.gz
+            dist-*/*/*/*.tar.bz2
             dist-*/*/*/*.zip
