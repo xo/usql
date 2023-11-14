@@ -153,12 +153,6 @@ fi
 TAGS="${TAGS[@]}"
 LDFLAGS="${LDFLAGS[@]}"
 
-log() {
-  cat - | while read -r message; do
-    echo "$1$message"
-  done
-}
-
 echo "APP:         $NAME/${VER} ($PLATFORM/$ARCH)"
 if [ "$STATIC" = "1" ]; then
   echo "STATIC:      yes"
@@ -197,7 +191,7 @@ fi
     -tags="$TAGS" \
     -trimpath \
     $OUTPUT
-) 2>&1 | log '  '
+)
 
 if [[ "$INSTALL" == "1" || "$BUILDONLY" == "1" ]]; then
   exit

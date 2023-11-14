@@ -87,6 +87,7 @@ var (
 	InvalidOption        = `invalid option %q`
 	NotificationReceived = `Asynchronous notification %q %sreceived from server process with PID %d.`
 	NotificationPayload  = `with payload %q `
+	UnknownShortAlias    = `(unk)`
 )
 
 func init() {

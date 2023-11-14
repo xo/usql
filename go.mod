@@ -6,9 +6,9 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.5.9
+	github.com/SAP/go-hdb v1.5.10
 	github.com/VoltDB/voltdb-client-go v1.0.15
-	github.com/alecthomas/chroma/v2 v2.10.1
+	github.com/alecthomas/chroma/v2 v2.11.1
 	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/alexbrainman/odbc v0.0.0-20230814102256-1421b829acc9
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
@@ -51,7 +51,7 @@ require (
 	github.com/trinodb/trino-go-client v0.313.0
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.3.3
-	github.com/xo/dburl v0.17.1
+	github.com/xo/dburl v0.18.2
 	github.com/xo/tblfmt v0.10.3
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 	github.com/yookoala/realpath v1.0.0
@@ -93,11 +93,11 @@ require (
 	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.47.9 // indirect
+	github.com/aws/aws-sdk-go v1.47.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.22.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.15.2 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.5 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.2 // indirect
@@ -289,7 +289,7 @@ require (
 	modernc.org/fileutil v1.2.0 // indirect
 	modernc.org/golex v1.1.0 // indirect
 	modernc.org/internal v1.1.0 // indirect
-	modernc.org/libc v1.34.0 // indirect
+	modernc.org/libc v1.34.3 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect

@@ -529,7 +529,14 @@ func (h *Handler) Prompt(prompt string) string {
 			buf = append(buf, '%')
 		case 'S': // short driver name
 			if connected {
-				buf = append(buf, dburl.ShortAlias(h.u.Scheme)+":"...)
+				s := dburl.ShortAlias(h.u.Scheme)
+				if s == "" {
+					s = dburl.ShortAlias(h.u.Driver)
+				}
+				if s == "" {
+					s = text.UnknownShortAlias
+				}
+				buf = append(buf, s+":"...)
 			} else {
 				buf = append(buf, text.NotConnected...)
 			}
@@ -717,23 +724,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		urlstr := params[0]
 		// parse dsn
 		u, err := dburl.Parse(urlstr)
-		switch {
-		case err == dburl.ErrInvalidDatabaseScheme:
-			fi, err := os.Stat(urlstr)
-			switch {
-			case err != nil:
-				return err
-			case fi.IsDir():
-				return h.Open(ctx, "postgres+unix:"+urlstr)
-			case fi.Mode()&os.ModeSocket != 0:
-				return h.Open(ctx, "mysql+unix:"+urlstr)
-			}
-			// it is a file, so attempt to open it with detected scheme
-			if scheme, err := dburl.SchemeType(urlstr); err == nil {
-				return h.Open(ctx, scheme+":"+urlstr)
-			}
-			return text.ErrUnknownFileType
-		case err != nil:
+		if err != nil {
 			return err
 		}
 		h.u = u
