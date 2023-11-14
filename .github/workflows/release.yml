@@ -83,7 +83,6 @@ jobs:
       - build_for_macos
     runs-on: macos-latest
     steps:
-    steps:
     - name: Install build dependencies
       run: brew install coreutils
     - name: Download artifacts
