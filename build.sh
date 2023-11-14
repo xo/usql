@@ -241,9 +241,13 @@ esac
 
 # report
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
+
 case $EXT in
   tar.bz2) tar -jvtf $OUT ;;
   zip)     unzip -l  $OUT ;;
 esac
+
+echo "SHA256SUM:"
+sha256sum $DIR/*
 
 popd &> /dev/null
