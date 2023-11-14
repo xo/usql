@@ -1,6 +1,8 @@
 name: Release
 on: push
 env:
+  APP: usql
+  VER: ${{ github.ref_name }}
   GO_VERSION: stable
 
 jobs:
@@ -34,15 +36,20 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
     - name: Build ${{ matrix.arch }}
-      run: ./build.sh -v ${{ github.ref_name }} -a ${{ matrix.arch }}
+      run: |
+        ./build.sh -v $VER -a ${{ matrix.arch }}
+        file build/linux/*/*/$APP
     - name: Build ${{ matrix.arch }} (static)
       if: matrix.arch != 'arm'
-      run: ./build.sh -v ${{ github.ref_name }} -a ${{ matrix.arch }} -s
+      run: |
+        ./build.sh -v $VER -a ${{ matrix.arch }} -s
+        file build/linux/*/*/${APP}_static
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
         name: dist-linux-${{ matrix.arch }}
-        path: build/linux/*/*/usql*.tar.bz2
+        path: build/linux/**/*
+        if-no-files-found: error
 
   build_for_macos:
     name: Build for macOS
@@ -61,13 +68,14 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
     - name: Build ${{ matrix.arch }}
       run: |
-        ./build.sh -v ${{ github.ref_name }} -a ${{ matrix.arch }}
-        file build/darwin/*/*/usql
+        ./build.sh -v $VER -a ${{ matrix.arch }}
+        file build/darwin/*/*/$APP
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
         name: dist-darwin-${{ matrix.arch }}
-        path: build/darwin/*/*/usql*.tar.bz2
+        path: build/darwin/**/*
+        if-no-files-found: error
 
   build_for_macos_universal:
     name: Build for macOS (universal)
@@ -75,27 +83,39 @@ jobs:
       - build_for_macos
     runs-on: macos-latest
     steps:
+    steps:
+    - name: Install build dependencies
+      run: brew install coreutils
     - name: Download artifacts
       uses: actions/download-artifact@v3
     - name: Build universal
       run: |
-        export WORKDIR=/tmp/usql-universal
+        export WORKDIR=$PWD/build/darwin/universal/$VER
         mkdir -p $WORKDIR
-        tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR usql
-        mv $WORKDIR/usql $WORKDIR/usql-amd64
-        tar -jxvf dist-darwin-arm64/*/*/usql*.tar.bz2 -C $WORKDIR usql
-        mv $WORKDIR/usql $WORKDIR/usql-arm64
-        lipo -create -output $WORKDIR/usql $WORKDIR/usql-amd64 $WORKDIR/usql-arm64
-        $WORKDIR/usql --version
-        rm $WORKDIR/usql-{amd64,arm64}
-        tar -jxvf dist-darwin-amd64/*/*/usql*.tar.bz2 -C $WORKDIR LICENSE
-        tar -C $WORKDIR -cjf usql-${GITHUB_REF_NAME#v}-darwin-universal.tar.bz2
-        ls -alh usql*
+
+        tar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR $APP
+        tar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR LICENSE
+        mv $WORKDIR/$APP $WORKDIR/$APP-amd64
+
+        tar -jxvf dist-darwin-arm64/*/*/*.tar.bz2 -C $WORKDIR $APP
+        mv $WORKDIR/$APP $WORKDIR/$APP-arm64
+
+        file $WORKDIR/$APP-{amd64,arm64}
+
+        lipo -create -output $WORKDIR/$APP $WORKDIR/$APP-amd64 $WORKDIR/$APP-arm64
+        file $WORKDIR/$APP
+
+        rm $WORKDIR/$APP-{amd64,arm64}
+
+        tar -C $WORKDIR -cjf $WORKDIR/$APP-${VER#v}-darwin-universal.tar.bz2 $APP LICENSE
+        ls -alh $WORKDIR/*
+        sha256sum $WORKDIR/*
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
         name: dist-darwin-universal
-        path: ./usql*.tar.bz2
+        path: build/darwin/**/*
+        if-no-files-found: error
 
   build_for_windows:
     name: Build for Windows
@@ -111,29 +131,32 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
     - name: Build amd64
       shell: bash
-      run: ./build.sh -v ${{ github.ref_name }}
+      run: ./build.sh -v $VER
     - name: Archive artifacts
       uses: actions/upload-artifact@v3
       with:
         name: dist-windows
-        path: build/windows/*/*/usql*.zip
+        path: build/windows/**/*
+        if-no-files-found: error
 
   release:
     name: Draft Release
     needs:
       - build_for_linux
       - build_for_macos
-      - build_for_windows
       - build_for_macos_universal
+      - build_for_windows
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: usql ${{ github.ref_name }}
+          name: ${{ env.APP }} ${{ env.VER }}
           draft: true
           generate_release_notes: true
-          files: dist-*/*/*/usql*.*
+          files: |
+            dist-*/*/*/*.bz2
+            dist-*/*/*/*.zip
