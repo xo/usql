@@ -43,6 +43,6 @@ jobs:
     - name: Unit Tests
       run: go test -v ./stmt
     - name: Build with all drivers
-      run: ./build.sh -t all
+      run: ./build.sh -b -t all
     - name: Shell Tests
       run: go run testcli.go
