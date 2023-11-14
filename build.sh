@@ -65,7 +65,7 @@ VER="${VER#v}"
 BUILD=$SRC/build
 DIR=$BUILD/$PLATFORM/$ARCH/$VER
 
-EXT=tar.bz2
+EXT=tar.gz
 BIN=$DIR/$NAME
 
 case $PLATFORM in
@@ -231,8 +231,8 @@ fi
 # pack
 cp $SRC/LICENSE $DIR
 case $EXT in
-  tar.bz2)
-    tar -C $DIR -cjf $OUT $(basename $BIN) LICENSE
+  tar.gz)
+    tar -C $DIR -czf $OUT $(basename $BIN) LICENSE
   ;;
   zip)
     zip $OUT -j $BIN LICENSE
@@ -243,8 +243,8 @@ esac
 echo "PACKED:      $OUT ($(du -sh $OUT|awk '{print $1}'))"
 
 case $EXT in
-  tar.bz2) tar -jvtf $OUT ;;
-  zip)     unzip -l  $OUT ;;
+  tar.gz) tar -zvtf $OUT ;;
+  zip)    unzip -l  $OUT ;;
 esac
 
 echo "SHA256SUM:"

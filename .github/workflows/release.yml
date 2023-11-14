@@ -92,11 +92,11 @@ jobs:
         export WORKDIR=$PWD/build/darwin/universal/$VER
         mkdir -p $WORKDIR
 
-        tar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR $APP
-        tar -jxvf dist-darwin-amd64/*/*/*.tar.bz2 -C $WORKDIR LICENSE
+        tar -zxvf dist-darwin-amd64/*/*/*.tar.gz -C $WORKDIR $APP
+        tar -zxvf dist-darwin-amd64/*/*/*.tar.gz -C $WORKDIR LICENSE
         mv $WORKDIR/$APP $WORKDIR/$APP-amd64
 
-        tar -jxvf dist-darwin-arm64/*/*/*.tar.bz2 -C $WORKDIR $APP
+        tar -zxvf dist-darwin-arm64/*/*/*.tar.gz -C $WORKDIR $APP
         mv $WORKDIR/$APP $WORKDIR/$APP-arm64
 
         file $WORKDIR/$APP-{amd64,arm64}
@@ -107,7 +107,7 @@ jobs:
 
         rm $WORKDIR/$APP-{amd64,arm64}
 
-        tar -C $WORKDIR -cjf $WORKDIR/$APP-${VER#v}-darwin-universal.tar.bz2 $APP LICENSE
+        tar -C $WORKDIR -czf $WORKDIR/$APP-${VER#v}-darwin-universal.tar.gz $APP LICENSE
         ls -alh $WORKDIR/*
         sha256sum $WORKDIR/*
     - name: Archive artifacts
@@ -158,5 +158,5 @@ jobs:
           draft: true
           generate_release_notes: true
           files: |
-            dist-*/*/*/*.bz2
+            dist-*/*/*/*.gz
             dist-*/*/*/*.zip
