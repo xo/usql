@@ -102,6 +102,7 @@ jobs:
         file $WORKDIR/$APP-{amd64,arm64}
 
         lipo -create -output $WORKDIR/$APP $WORKDIR/$APP-amd64 $WORKDIR/$APP-arm64
+        chmod +x $WORKDIR/$APP
         file $WORKDIR/$APP
 
         rm $WORKDIR/$APP-{amd64,arm64}
