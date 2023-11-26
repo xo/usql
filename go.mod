@@ -6,10 +6,10 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.5.10
+	github.com/SAP/go-hdb v1.6.1
 	github.com/VoltDB/voltdb-client-go v1.0.15
 	github.com/alecthomas/chroma/v2 v2.11.1
-	github.com/alecthomas/kingpin/v2 v2.3.2
+	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alexbrainman/odbc v0.0.0-20230814102256-1421b829acc9
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
 	github.com/amsokol/ignite-go-client v0.12.2
@@ -18,7 +18,7 @@ require (
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v0.3.0
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
-	github.com/databendcloud/databend-go v0.4.5
+	github.com/databendcloud/databend-go v0.4.6
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/exasol/exasol-driver-go v1.0.4
 	github.com/genjidb/genji v0.15.2
@@ -34,7 +34,7 @@ require (
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/jmrobles/h2go v0.5.0
 	github.com/lib/pq v1.10.9
-	github.com/marcboeker/go-duckdb v1.5.1
+	github.com/marcboeker/go-duckdb v1.5.3
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-sqlite3 v1.14.18
@@ -44,7 +44,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prestodb/presto-go-client v0.0.0-20230524183650-a1a0bac0f63e
-	github.com/sijms/go-ora/v2 v2.7.20
+	github.com/sijms/go-ora/v2 v2.7.22
 	github.com/sirupsen/logrus v1.9.3
 	github.com/snowflakedb/gosnowflake v1.6.25
 	github.com/thda/tds v0.1.7
