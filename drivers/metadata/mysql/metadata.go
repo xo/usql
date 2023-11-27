@@ -1,9 +1,9 @@
 package mysql
 
 import (
+	"github.com/xo/usql/rline"
 	"time"
 
-	"github.com/gohxs/readline"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
@@ -30,7 +30,7 @@ var (
 		infos.WithUsagePrivileges(false),
 	)
 	// NewCompleter for MySQL databases
-	NewCompleter = func(db drivers.DB, opts ...completer.Option) readline.AutoCompleter {
+	NewCompleter = func(db drivers.DB, opts ...completer.Option) rline.Completer {
 		readerOpts := []metadata.ReaderOption{
 			// this needs to be relatively low, since autocomplete is very interactive
 			metadata.WithTimeout(3 * time.Second),
