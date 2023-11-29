@@ -7,7 +7,6 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/sirupsen/logrus"
 	"github.com/snowflakedb/gosnowflake" // DRIVER
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
@@ -17,10 +16,7 @@ import (
 )
 
 func init() {
-	r := logrus.New()
-	r.Out, r.Level = io.Discard, logrus.PanicLevel
-	var l gosnowflake.SFLogger = &logger{r}
-	gosnowflake.SetLogger(&l)
+	gosnowflake.GetLogger().SetOutput(io.Discard)
 	newReader := infos.New(
 		infos.WithPlaceholder(func(int) string { return "?" }),
 		infos.WithCustomClauses(map[infos.ClauseName]string{
@@ -50,13 +46,6 @@ func init() {
 		},
 	})
 }
-
-// logger is an empty logger.
-type logger struct {
-	*logrus.Logger
-}
-
-func (*logger) SetLogLevel(string) error { return nil }
 
 func listAllDbs(db drivers.DB, w io.Writer, pattern string, verbose bool) error {
 	rows, err := db.Query("SHOW databases")
