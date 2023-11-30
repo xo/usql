@@ -1,0 +1,4 @@
+NAME=hive
+IMAGE=docker.io/apache/hive:4.0.0-beta-1
+PUBLISH="10000:10000 10002:10002"
+ENV="SERVICE_NAME=hiveserver2"
