@@ -58,7 +58,7 @@ require (
 	gorm.io/driver/bigquery v1.2.0
 	modernc.org/ql v1.4.7
 	modernc.org/sqlite v1.27.0
-	sqlflow.org/gohive v0.0.0-20220817082204-15a5e01fd889
+	sqlflow.org/gohive v0.0.0-20231130013447-c9657f0f21f9
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
 
@@ -106,8 +106,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.0 // indirect
 	github.com/aws/smithy-go v1.18.0 // indirect
-	github.com/beltran/gohive v1.5.4 // indirect
-	github.com/beltran/gosasl v0.0.0-20230115020419-e3b503e58833 // indirect
+	github.com/beltran/gohive v1.6.0 // indirect
+	github.com/beltran/gosasl v0.0.0-20231124144235-92b2e4f10bb6 // indirect
 	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btnguyen2k/consu/checksum v1.1.0 // indirect
