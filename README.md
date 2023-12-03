@@ -214,8 +214,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -315,6 +316,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
+
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
@@ -1240,8 +1242,8 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
-[go-time]: https://golang.org/pkg/time/#pkg-constants
-[go-sql]: https://golang.org/pkg/database/sql/
+[go-time]: https://pkg.go.dev/time#pkg-constants
+[go-sql]: https://pkg.go.dev/database/sql
 [homebrew]: https://brew.sh/
 [xo]: https://github.com/xo/xo
 [xo-tap]: https://github.com/xo/homebrew-xo
