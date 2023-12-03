@@ -42,7 +42,7 @@ podman_run() {
     exit 1
   fi
   # load parameters from podman-config
-  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED PARAMS CMD
+  unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED HOSTNAME PARAMS CMD
   source $BASE/podman-config
   if [[ "$TARGET" != "$NAME" ]]; then
     echo "error: $BASE/podman-config is invalid"
@@ -50,7 +50,7 @@ podman_run() {
   fi
   # setup params
   PARAMS=()
-  for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED; do
+  for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED HOSTNAME; do
     n=$(tr 'A-Z' 'a-z' <<< "$k")
     v=$(eval echo "\$$k")
     if [ ! -z "$v" ]; then
@@ -66,7 +66,7 @@ podman_run() {
   fi
   # show parameters
   echo "-------------------------------------------"
-  echo "NAME:       $NAME"
+  echo "NAME:       $NAME $HOSTNAME"
   echo "IMAGE:      $IMAGE (update: $UPDATE)"
   echo "PUBLISH:    $PUBLISH"
   echo "ENV:        $ENV"

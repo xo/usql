@@ -18,7 +18,9 @@ func KnownBuildTags() map[string]string {
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/databendcloud/databend-go
+		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/marcboeker/go-duckdb
+		"dynamodb":      "dynamodb",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v12/arrow/flight/flightsql/driver
@@ -49,5 +51,6 @@ func KnownBuildTags() map[string]string {
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient
+		"ydb":           "ydb",           // github.com/ydb-platform/ydb-go-sdk/v3
 	}
 }

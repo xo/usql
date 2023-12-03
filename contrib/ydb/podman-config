@@ -1,0 +1,6 @@
+NAME=ydb
+HOSTNAME=localhost
+IMAGE=cr.yandex/yc/yandex-docker-local-ydb
+PUBLISH="2135:2135 2136:2136 8765:8765"
+ENV="YDB_DEFAULT_LOG_LEVEL=NOTICE GRPC_TLS_PORT=2135 GRPC_PORT=2136 MON_PORT=8765"
+VOLUME="ydb-certs:/ydb_certs ydb-data:/ydb_data"
