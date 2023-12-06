@@ -214,8 +214,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -321,6 +322,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-ydb]: https://github.com/ydb-platform/ydb-go-sdk
+
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
@@ -1200,7 +1202,7 @@ The following are additional notes and miscellania related to `usql`:
 ### Release Builds
 
 [Release builds][releases] are built with the `most` build tag and with
-additional [SQLite3 build tags (see: `build-release.sh`)](build-release.sh).
+additional [SQLite3 build tags (see: `build.sh`)](build.sh).
 
 ### macOS
 
