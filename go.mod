@@ -46,7 +46,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prestodb/presto-go-client v0.0.0-20230524183650-a1a0bac0f63e
-	github.com/sijms/go-ora/v2 v2.8.2
+	github.com/sijms/go-ora/v2 v2.8.3
 	github.com/snowflakedb/gosnowflake v1.7.1
 	github.com/thda/tds v0.1.7
 	github.com/trinodb/trino-go-client v0.313.0
