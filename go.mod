@@ -3,10 +3,10 @@ module github.com/xo/usql
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.17.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.17.1
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.6.6
+	github.com/SAP/go-hdb v1.6.8
 	github.com/VoltDB/voltdb-client-go v1.0.15
 	github.com/alecthomas/chroma/v2 v2.12.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.3.0
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v1.0.0
-	github.com/btnguyen2k/godynamo v0.4.0
+	github.com/btnguyen2k/godynamo v1.0.0
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databendcloud/databend-go v0.4.6
 	github.com/databricks/databricks-sql-go v1.5.2
@@ -55,7 +55,7 @@ require (
 	github.com/xo/dburl v0.20.0
 	github.com/xo/tblfmt v0.10.3
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.54.2
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.54.3
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.2.0
@@ -95,7 +95,7 @@ require (
 	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.49.9 // indirect
+	github.com/aws/aws-sdk-go v1.49.12 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.13 // indirect
@@ -249,7 +249,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.17.0 // indirect
+	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
@@ -283,7 +283,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848 // indirect
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
