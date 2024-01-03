@@ -102,7 +102,7 @@ if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
   esac
   LDARCH=$CARCH
   if [[ "$ARCH" == "arm" ]]; then
-    TAGS+=(no_netezza)
+    TAGS+=(no_netezza no_chai)
     if [ -d /usr/arm-linux-$GNUTYPE ]; then
       LDARCH=arm
     elif [ -d /usr/arm-none-linux-$GNUTYPE ]; then
