@@ -13,18 +13,18 @@ func KnownBuildTags() map[string]string {
 		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
 		"cassandra":     "cql",           // github.com/MichaelS11/go-cql-driver
+		"chai":          "chai",          // github.com/chaisql/chai/driver
 		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
-		"databend":      "databend",      // github.com/databendcloud/databend-go
+		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/marcboeker/go-duckdb
 		"dynamodb":      "dynamodb",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v12/arrow/flight/flightsql/driver
-		"genji":         "genji",         // github.com/genjidb/genji/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // sqlflow.org/gohive

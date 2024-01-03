@@ -1,12 +1,12 @@
 // Package databend defines and registers usql's Databend driver.
 //
-// See: https://github.com/databendcloud/databend-go
+// See: https://github.com/datafuselabs/databend-go
 package databend
 
 import (
 	"io"
 
-	_ "github.com/databendcloud/databend-go" // DRIVER
+	_ "github.com/datafuselabs/databend-go" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
