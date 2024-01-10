@@ -17,11 +17,11 @@ require (
 	github.com/apache/calcite-avatica-go/v5 v5.3.0
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v1.0.0
-	github.com/btnguyen2k/godynamo v1.1.1
+	github.com/btnguyen2k/godynamo v1.2.0
 	github.com/chaisql/chai v0.16.0
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databricks/databricks-sql-go v1.5.2
-	github.com/datafuselabs/databend-go v0.5.1
+	github.com/datafuselabs/databend-go v0.5.2
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/exasol/exasol-driver-go v1.0.4
 	github.com/go-sql-driver/mysql v1.7.1
@@ -43,7 +43,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
-	github.com/nakagami/firebirdsql v0.9.6
+	github.com/nakagami/firebirdsql v0.9.7-0.20240103231955-52eb2ad8c23e
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prestodb/presto-go-client v0.0.0-20230524183650-a1a0bac0f63e
 	github.com/proullon/ramsql v0.1.3
@@ -97,20 +97,20 @@ require (
 	github.com/apache/thrift v0.19.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aws/aws-sdk-go v1.49.12 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.24.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.13 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.12.13 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.14 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.12.14 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.9 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.10 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.18.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.7 // indirect
 	github.com/aws/smithy-go v1.19.0 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitfield/gotestdox v0.2.2 // indirect
 	github.com/btnguyen2k/consu/checksum v1.1.0 // indirect
-	github.com/btnguyen2k/consu/g18 v0.0.2 // indirect
+	github.com/btnguyen2k/consu/g18 v0.1.0 // indirect
 	github.com/btnguyen2k/consu/gjrc v0.2.1 // indirect
 	github.com/btnguyen2k/consu/olaf v0.1.3 // indirect
 	github.com/btnguyen2k/consu/reddo v0.1.8 // indirect
