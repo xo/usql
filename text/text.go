@@ -3,6 +3,7 @@
 package text
 
 import (
+	_ "embed"
 	"regexp"
 	"strings"
 )
@@ -117,6 +118,11 @@ var CommandLower = func() string {
 var CommandUpper = func() string {
 	return strings.ToUpper(Command())
 }
+
+// LogoPng is the embedded logo.
+//
+//go:embed logo.png
+var LogoPng []byte
 
 // UsageTemplate returns the usage template.
 var UsageTemplate = func() string {

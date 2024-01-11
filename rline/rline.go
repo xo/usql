@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/gohxs/readline"
-	isatty "github.com/mattn/go-isatty"
 )
 
 var (
@@ -130,10 +129,7 @@ func (l *Rline) SetOutput(f func(string) string) {
 }
 
 // New creates a new readline input/output handler.
-func New(forceNonInteractive bool, out, histfile string) (IO, error) {
-	// determine if interactive
-	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
-	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
+func New(interactive, cygwin, forceNonInteractive bool, out, histfile string) (IO, error) {
 	var closers []func() error
 	// configure stdin
 	var stdin io.ReadCloser

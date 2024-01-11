@@ -1,8 +1,8 @@
-<p align="center">
+<div align="center">
   <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql.png" height="120">
-</p>
+</div>
 
-<p align="center">
+<div align="center">
   <a href="#installing" title="Installing">Installing</a> |
   <a href="#building" title="Building">Building</a> |
   <a href="#database-support" title="Database Support">Database Support</a> |
@@ -10,7 +10,7 @@
   <a href="#features-and-compatibility" title="Features and Compatibility">Features and Compatibility</a> |
   <a href="https://github.com/xo/usql/releases" title="Releases">Releases</a> |
   <a href="#contributing" title="Contributing">Contributing</a>
-</p>
+</div>
 
 <br/>
 
@@ -23,7 +23,8 @@ via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
 core `psql` features, such as [variables][variables], [backticks][backticks],
 [backslash commands][commands] and has additional features that `psql` does
 not, such as [multiple database support][databases], [copying between databases][copying],
-[syntax highlighting][highlighting], and [context-based completion][completion].
+[syntax highlighting][highlighting], [context-based completion][completion],
+and [terminal graphics][termgraphics].
 
 Database administrators and developers that would prefer to work with a tool
 like `psql` with non-PostgreSQL databases, will find `usql` intuitive,
@@ -214,8 +215,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -323,6 +325,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-ydb]: https://github.com/ydb-platform/ydb-go-sdk
+
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
@@ -1195,6 +1198,72 @@ Connected with driver postgres (PostgreSQL 9.6.9)
 pg:booktest@=>
 ```
 
+#### Terminal Graphics
+
+`usql` supports terminal graphics for [Kitty][kitty-graphics], [iTerm][iterm-graphics],
+and [Sixel][sixel-graphics] enabled terminals using the [`github.com/kenshaw/rasterm` package][rasterm].
+Terminal graphics are only available when using the interactive shell.
+
+##### Detection and Support
+
+`usql` will attempt to detect when terminal graphics support is available using
+the `USQL_TERM_GRAPHICS`, `TERM_GRAPHICS` and other environment variables
+unique to various terminals.
+
+When support is available, the logo will be displayed at the start of an
+interactive session:
+
+<div style="padding-left: 20px;">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql-interactive.png" height="120">
+</div>
+
+##### Charts and Graphs
+
+The [`\chart` meta command][chart-command] can be used to display a chart
+directly in the terminal:
+
+<div style="padding-left: 20px;">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/chart-example.png" height="120">
+</div>
+
+See [the section on the `\chart` meta command][chart-command] for details.
+
+##### Enabling/Disabling Terminal Graphics
+
+Terminal graphics can be forced enabled or disabled by setting the
+`USQL_TERM_GRAPHICS` or the `TERM_GRAPHICS` environment variable:
+
+```sh
+# disable
+$ USQL_TERM_GRAPHICS=none usql
+
+# force iterm graphics
+$ TERM_GRAPHICS=iterm usql
+```
+
+| Variable        | Default | Values                                | Description                    |
+| --------------- | ------- | ------------------------------------- | ------------------------------ |
+| `TERM_GRAPHICS` | ``      | ``, `kitty`, `iterm`, `sixel`, `none` | enables/disables term graphics |
+
+##### Terminals with Graphics Support
+
+The following terminals have been tested with `usql`:
+
+- [WezTerm][wezterm] is a cross-platform terminal for Windows, macOS, Linux, and
+  many other platforms that supports [iTerm][iterm-graphics] graphics
+
+- [iTerm2][iterm2] is a macOS terminal that supports [iTerm][iterm-graphics]
+  graphics
+
+- [kitty][kitty] is a terminal for Linux, macOS, and various BSDs that supports
+  [Kitty][kitty-graphics] graphics
+
+- [foot][foot] is a Wayland terminal for Linux (and other Wayland hosts) that
+  supports [Sixel][sixel-graphics] graphics
+
+Additional terminals that support [Sixel][sixel-graphics] graphics are
+catalogued on the [Are We Sixel Yet?][arewesixelyet] website.
+
 ## Additional Notes
 
 The following are additional notes and miscellania related to `usql`:
@@ -1267,7 +1336,18 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [contributing]: #contributing "Contributing"
 [copying]: #copying-between-databases "Copying Between Databases"
 [highlighting]: #syntax-highlighting "Syntax Highlighting"
+[termgraphics]: #terminal-graphics "Terminal Graphics"
 [timefmt]: #time-formatting "Time Formatting"
 [usqlpass]: #passwords "Passwords"
 [usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"
 [variables]: #variables-and-interpolation "Variable Interpolation"
+[kitty-graphics]: https://sw.kovidgoyal.net/kitty/graphics-protocol.html
+[iterm-graphics]: https://iterm2.com/documentation-images.html
+[sixel-graphics]: https://saitoha.github.io/libsixel/
+[rasterm]: https://github.com/kenshaw/rasterm
+[wezterm]: https://wezfurlong.org/wezterm/
+[iterm2]: https://iterm2.com
+[foot]: https://codeberg.org/dnkl/foot
+[kitty]: https://sw.kovidgoyal.net/kitty/
+[arewesixelyet]: https://www.arewesixelyet.com
+[chart-command]: #chart-command "\\chart meta command"

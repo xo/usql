@@ -185,6 +185,10 @@ var envVarNames = []varName{
 		"enables overriding the background color of the chroma styles",
 	},
 	{
+		"TERM_GRAPHICS",
+		`use the specified terminal graphics`,
+	},
+	{
 		"SHELL",
 		"shell used by the \\! command",
 	},
@@ -263,6 +267,7 @@ func init() {
 		"SYNTAX_HL_STYLE":       "monokai",
 		"SYNTAX_HL_OVERRIDE_BG": "true",
 		"SSLMODE":               sslmode,
+		"TERM_GRAPHICS":         "none",
 	}
 	// determine locale
 	locale := "en-US"

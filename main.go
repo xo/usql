@@ -12,6 +12,7 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/mattn/go-isatty"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/handler"
@@ -80,6 +81,23 @@ func run(args *Args, u *user.User) error {
 	if err != nil {
 		return err
 	}
+	// determine if interactive
+	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
+	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
+	forceNonInteractive := len(args.CommandOrFiles) != 0
+	// enable term graphics
+	if !forceNonInteractive && interactive && !cygwin {
+		// NOTE: this is done here and not in the env.init() package, because
+		// NOTE: we need to determine if it is interactive first, otherwise it
+		// NOTE: could mess up the non-interactive output with control characters
+		var typ string
+		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
+			typ = s
+		}
+		if err := env.Set("TERM_GRAPHICS", typ); err != nil {
+			return err
+		}
+	}
 	// handle variables
 	for _, v := range args.Variables {
 		if i := strings.Index(v, "="); i != -1 {
@@ -108,7 +126,7 @@ func run(args *Args, u *user.User) error {
 		}
 	}
 	// create input/output
-	l, err := rline.New(len(args.CommandOrFiles) != 0, args.Out, env.HistoryFile(u))
+	l, err := rline.New(interactive, cygwin, forceNonInteractive, args.Out, env.HistoryFile(u))
 	if err != nil {
 		return err
 	}

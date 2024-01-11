@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"image/png"
 	"io"
 	"log"
 	"net/url"
@@ -226,8 +227,19 @@ func (h *Handler) Run() error {
 	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
 	// display welcome info
 	if iactive {
-		fmt.Fprintln(h.l.Stdout(), text.WelcomeDesc)
-		fmt.Fprintln(h.l.Stdout())
+		// graphics logo
+		if typ := env.TermGraphics(); typ.Available() {
+			logo, err := png.Decode(bytes.NewReader(text.LogoPng))
+			if err != nil {
+				return err
+			}
+			if err := typ.Encode(stdout, logo); err != nil {
+				return err
+			}
+		}
+		// welcome text
+		fmt.Fprintln(stdout, text.WelcomeDesc)
+		fmt.Fprintln(stdout)
 	}
 	var lastErr error
 	for {

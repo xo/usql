@@ -15,6 +15,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/kenshaw/rasterm"
 	"github.com/xo/dburl/passfile"
 	"github.com/xo/usql/text"
 )
@@ -321,4 +322,11 @@ func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, 
 		}
 		return true, res, nil
 	}
+}
+
+// TermGraphics returns the [rasterm.TermType] based on
+func TermGraphics() rasterm.TermType {
+	var typ rasterm.TermType
+	_ = typ.UnmarshalText([]byte(Get("TERM_GRAPHICS")))
+	return typ
 }
