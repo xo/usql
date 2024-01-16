@@ -3,7 +3,10 @@
 package text
 
 import (
+	"bytes"
 	_ "embed"
+	"image"
+	"image/png"
 	"regexp"
 	"strings"
 )
@@ -119,6 +122,9 @@ var CommandUpper = func() string {
 	return strings.ToUpper(Command())
 }
 
+// Logo is the logo.
+var Logo image.Image
+
 // LogoPng is the embedded logo.
 //
 //go:embed logo.png
@@ -138,4 +144,11 @@ Arguments:
 {{if .Context.Flags}}\
 Options:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}{{end}}`
+}
+
+func init() {
+	var err error
+	if Logo, err = png.Decode(bytes.NewReader(LogoPng)); err != nil {
+		panic(err)
+	}
 }

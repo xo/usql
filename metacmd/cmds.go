@@ -82,6 +82,9 @@ func init() {
 			Name:    "copyright",
 			Desc:    Desc{"show " + text.CommandName + " usage and distribution terms", ""},
 			Process: func(p *Params) error {
+				if typ := env.TermGraphics(); typ.Available() {
+					typ.Encode(p.Handler.IO().Stdout(), text.Logo)
+				}
 				p.Handler.Print(text.Copyright)
 				return nil
 			},

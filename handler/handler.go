@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"image/png"
 	"io"
 	"log"
 	"net/url"
@@ -229,11 +228,7 @@ func (h *Handler) Run() error {
 	if iactive {
 		// graphics logo
 		if typ := env.TermGraphics(); typ.Available() {
-			logo, err := png.Decode(bytes.NewReader(text.LogoPng))
-			if err != nil {
-				return err
-			}
-			if err := typ.Encode(stdout, logo); err != nil {
+			if err := typ.Encode(stdout, text.Logo); err != nil {
 				return err
 			}
 		}
