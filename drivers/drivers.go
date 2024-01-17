@@ -597,3 +597,7 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 		return n, rows.Err()
 	}
 }
+
+func init() {
+	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
+}

@@ -15,7 +15,6 @@ import (
 )
 
 func init() {
-	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
 	endRE := regexp.MustCompile(`;?\s*$`)
 	endAnchorRE := regexp.MustCompile(`(?i)\send\s*;\s*$`)
 	drivers.Register("odbc", drivers.Driver{
