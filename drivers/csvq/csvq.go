@@ -11,6 +11,7 @@ import (
 
 	"github.com/mithrandie/csvq-driver" // DRIVER
 	"github.com/mithrandie/csvq/lib/query"
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
@@ -18,7 +19,7 @@ func init() {
 	csvq.SetStdout(query.NewDiscard())
 	drivers.Register("csvq", drivers.Driver{
 		AllowMultilineComments: true,
-		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
+		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			if strings.HasPrefix(prefix, "SHOW") {
 				csvq.SetStdout(os.Stdout)

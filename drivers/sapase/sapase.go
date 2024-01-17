@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/thda/tds" // DRIVER: tds
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
@@ -48,7 +49,7 @@ func init() {
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed")
 		},
-		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
+		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 			sqlstr = endRE.ReplaceAllString(sqlstr, "")
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil

@@ -55,7 +55,7 @@ func Register(name string, err func(error) (string, string), isPasswordErr func(
 		},
 		Err:           err,
 		IsPasswordErr: isPasswordErr,
-		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
+		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 			if !endAnchorRE.MatchString(sqlstr) {
 				// trim last ; but only when not END;
 				sqlstr = endRE.ReplaceAllString(sqlstr, "")

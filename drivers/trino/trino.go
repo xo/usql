@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	_ "github.com/trinodb/trino-go-client/trino" // DRIVER
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
@@ -39,7 +40,7 @@ func init() {
 	}
 	drivers.Register("trino", drivers.Driver{
 		AllowMultilineComments: true,
-		Process: func(prefix string, sqlstr string) (string, string, bool, error) {
+		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 			sqlstr = endRE.ReplaceAllString(sqlstr, "")
 			typ, q := drivers.QueryExecType(prefix, sqlstr)
 			return typ, sqlstr, q, nil

@@ -74,7 +74,7 @@ type Driver struct {
 	// IsPasswordErr will be used by IsPasswordErr if defined.
 	IsPasswordErr func(error) bool
 	// Process will be used by Process if defined.
-	Process func(string, string) (string, string, bool, error)
+	Process func(*dburl.URL, string, string) (string, string, bool, error)
 	// RowsAffected will be used by RowsAffected if defined.
 	RowsAffected func(sql.Result) (int64, error)
 	// Err will be used by Error.Error if defined.
@@ -246,7 +246,7 @@ func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 // Process processes the sql query for a driver.
 func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) {
 	if d, ok := drivers[u.Driver]; ok && d.Process != nil {
-		a, b, c, err := d.Process(prefix, sqlstr)
+		a, b, c, err := d.Process(u, prefix, sqlstr)
 		return a, b, c, WrapErr(u.Driver, err)
 	}
 	typ, q := QueryExecType(prefix, sqlstr)
