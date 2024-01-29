@@ -11,12 +11,14 @@ import (
 	"io"
 	"strings"
 
-	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/stdlib" // DRIVER
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
+	"github.com/xo/usql/text"
 )
 
 func init() {
@@ -24,6 +26,33 @@ func init() {
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		LexerName:              "postgres",
+		Open: func(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
+			return func(_, dsn string) (*sql.DB, error) {
+				config, err := pgx.ParseConfig(dsn)
+				if err != nil {
+					return nil, err
+				}
+				config.OnNotice = func(_ *pgconn.PgConn, notice *pgconn.Notice) {
+					out := stderr()
+					fmt.Fprintln(out, notice.Severity+": ", notice.Message)
+					if notice.Hint != "" {
+						fmt.Fprintln(out, "HINT: ", notice.Hint)
+					}
+				}
+				config.OnNotification = func(_ *pgconn.PgConn, notification *pgconn.Notification) {
+					var payload string
+					if notification.Payload != "" {
+						payload = fmt.Sprintf(text.NotificationPayload, notification.Payload)
+					}
+					fmt.Fprintln(stdout(), fmt.Sprintf(text.NotificationReceived, notification.Channel, payload, notification.PID))
+				}
+				// NOTE: as opposed to the github.com/lib/pq driver, this
+				// NOTE: driver has a "prefer" mode that is enabled by default.
+				// NOTE: as such there is no logic here to try to reconnect as
+				// NOTE: in the postgres driver.
+				return stdlib.OpenDB(*config), nil
+			}, nil
+		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRowContext(ctx, `SHOW server_version`).Scan(&ver)
