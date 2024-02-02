@@ -3,7 +3,7 @@ module github.com/xo/usql
 go 1.21
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.17.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.18.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v1.7.11
@@ -22,11 +22,11 @@ require (
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databricks/databricks-sql-go v1.5.3
 	github.com/datafuselabs/databend-go v0.5.2
-	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/docker v25.0.1+incompatible
 	github.com/exasol/exasol-driver-go v1.0.4
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gocql/gocql v1.6.0
-	github.com/godror/godror v0.41.0
+	github.com/godror/godror v0.41.1
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.6.0
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
@@ -34,12 +34,12 @@ require (
 	github.com/jackc/pgx/v5 v5.5.2
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/jmrobles/h2go v0.5.0
-	github.com/kenshaw/rasterm v0.1.8
+	github.com/kenshaw/rasterm v0.1.10
 	github.com/lib/pq v1.10.9
 	github.com/marcboeker/go-duckdb v1.5.6
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.20
-	github.com/mattn/go-sqlite3 v1.14.20
+	github.com/mattn/go-sqlite3 v1.14.21
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
@@ -83,7 +83,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/ClickHouse/ch-go v0.61.0 // indirect
+	github.com/ClickHouse/ch-go v0.61.2 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.5.1 // indirect
 	github.com/DataDog/zstd v1.5.6-0.20230622172052-ea68dcab66c0 // indirect
 	github.com/IBM/nzgo v11.1.0+incompatible // indirect
@@ -136,19 +136,20 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.0.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/containerd/containerd v1.7.7 // indirect
+	github.com/containerd/containerd v1.7.11 // indirect
 	github.com/containerd/continuity v0.4.2 // indirect
+	github.com/containerd/log v0.1.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.9.0 // indirect
 	github.com/couchbase/go-couchbase v0.1.1 // indirect
 	github.com/couchbase/gomemcached v0.3.0 // indirect
 	github.com/couchbase/goutils v0.1.2 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/distribution/reference v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/docker/cli v20.10.17+incompatible // indirect
-	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
@@ -235,6 +236,7 @@ require (
 	github.com/mithrandie/ternary v1.1.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
+	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -243,7 +245,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
-	github.com/paulmach/orb v0.10.0 // indirect
+	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -276,9 +278,9 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1 // indirect
-	go.opentelemetry.io/otel v1.21.0 // indirect
-	go.opentelemetry.io/otel/metric v1.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.21.0 // indirect
+	go.opentelemetry.io/otel v1.22.0 // indirect
+	go.opentelemetry.io/otel/metric v1.22.0 // indirect
+	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
