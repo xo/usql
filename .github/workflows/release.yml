@@ -30,7 +30,7 @@ jobs:
           libc6-dev-arm64-cross \
           file
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
@@ -43,7 +43,7 @@ jobs:
       run: |
         ./build.sh -v $VER -a ${{ matrix.arch }} -s
     - name: Archive artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-linux-${{ matrix.arch }}
         path: build/linux/**/*
@@ -60,7 +60,7 @@ jobs:
       run: |
         brew install coreutils gnu-tar
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
@@ -69,7 +69,7 @@ jobs:
       run: |
         ./build.sh -v $VER -a ${{ matrix.arch }}
     - name: Archive artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-darwin-${{ matrix.arch }}
         path: build/darwin/**/*
@@ -85,7 +85,7 @@ jobs:
       run: |
         brew install coreutils gnu-tar
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     - name: Build universal
       run: |
         export WORKDIR=$PWD/build/darwin/universal/$VER
@@ -112,7 +112,7 @@ jobs:
         ls -alh $WORKDIR/*
         sha256sum $WORKDIR/*
     - name: Archive artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-darwin-universal
         path: build/darwin/**/*
@@ -125,7 +125,7 @@ jobs:
     - name: Install build dependencies
       run: choco install zip
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
@@ -135,7 +135,7 @@ jobs:
       run: |
         ./build.sh -v $VER
     - name: Archive artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist-windows
         path: build/windows/**/*
@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')

@@ -39,7 +39,7 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Unit Tests
       run: go test -v ./stmt
     - name: Build with all drivers
