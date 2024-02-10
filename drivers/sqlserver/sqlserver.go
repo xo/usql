@@ -25,6 +25,7 @@ func init() {
 	drivers.Register("sqlserver", drivers.Driver{
 		AllowMultilineComments:  true,
 		RequirePreviousPassword: true,
+		UseColumnTypes:          true,
 		LexerName:               "tsql",
 		/*
 			// NOTE: this has been commented out, as it is not necessary. if
