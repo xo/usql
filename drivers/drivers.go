@@ -75,6 +75,8 @@ type Driver struct {
 	IsPasswordErr func(error) bool
 	// Process will be used by Process if defined.
 	Process func(*dburl.URL, string, string) (string, string, bool, error)
+	// ColumnTypes is a callback that will be used if
+	ColumnTypes func(*sql.ColumnType) (interface{}, error)
 	// RowsAffected will be used by RowsAffected if defined.
 	RowsAffected func(sql.Result) (int64, error)
 	// Err will be used by Error.Error if defined.
@@ -251,6 +253,11 @@ func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) 
 	}
 	typ, q := QueryExecType(prefix, sqlstr)
 	return typ, sqlstr, q, nil
+}
+
+// ColumnTypes returns the column types callback for a driver.
+func ColumnTypes(u *dburl.URL) func(*sql.ColumnType) (interface{}, error) {
+	return drivers[u.Driver].ColumnTypes
 }
 
 // IsPasswordErr returns true if an err is a password error for a driver.

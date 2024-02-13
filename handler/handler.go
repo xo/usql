@@ -1112,25 +1112,29 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 	} else if opt.Exec != metacmd.ExecWatch {
 		params["pager_cmd"] = env.All()["PAGER"]
 	}
-	useColumnTypes := drivers.UseColumnTypes(h.u)
+	// set up column type config
+	var extra []tblfmt.Option
+	switch f := drivers.ColumnTypes(h.u); {
+	case f != nil:
+		extra = append(extra, tblfmt.WithColumnTypesFunc(f))
+	case drivers.UseColumnTypes(h.u):
+		extra = append(extra, tblfmt.WithUseColumnTypes(true))
+	}
 	// wrap query with crosstab
 	resultSet := tblfmt.ResultSet(rows)
 	if opt.Exec == metacmd.ExecCrosstab {
 		var err error
-		resultSet, err = tblfmt.NewCrosstabView(rows, tblfmt.WithParams(opt.Crosstab...), tblfmt.WithUseColumnTypes(useColumnTypes))
+		resultSet, err = tblfmt.NewCrosstabView(rows, append(extra, tblfmt.WithParams(opt.Crosstab...))...)
 		if err != nil {
 			return err
 		}
-		useColumnTypes = false
+		extra = nil
 	}
 	if drivers.LowerColumnNames(h.u) {
 		params["lower_column_names"] = "true"
 	}
-	if useColumnTypes {
-		params["use_column_types"] = "true"
-	}
 	// encode and handle error conditions
-	switch err := tblfmt.EncodeAll(w, resultSet, params); {
+	switch err := tblfmt.EncodeAll(w, resultSet, params, extra...); {
 	case err != nil && cmd != nil && errors.Is(err, syscall.EPIPE):
 		// broken pipe means pager quit before consuming all data, which might be expected
 		return nil
