@@ -1,12 +1,14 @@
 module github.com/xo/usql
 
-go 1.21
+go 1.22
+
+toolchain go1.22.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.18.0
 	github.com/IBM/nzgo/v12 v12.0.8
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.8.2
+	github.com/SAP/go-hdb v1.8.4
 	github.com/VoltDB/voltdb-client-go v1.0.15
 	github.com/alecthomas/chroma/v2 v2.12.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -32,7 +34,7 @@ require (
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/googleapis/go-sql-spanner v1.2.1
 	github.com/jackc/pgx/v5 v5.5.3
-	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
+	github.com/jeandeaual/go-locale v0.0.0-20240204043739-672d8d016d9a
 	github.com/jmrobles/h2go v0.5.0
 	github.com/kenshaw/rasterm v0.1.10
 	github.com/lib/pq v1.10.9
@@ -54,9 +56,9 @@ require (
 	github.com/uber/athenadriver v1.1.14
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.21.1
-	github.com/xo/tblfmt v0.10.4
+	github.com/xo/tblfmt v0.12.0
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.55.2
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.56.1
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.2.0
@@ -92,7 +94,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
-	github.com/aliyun/aliyun-tablestore-go-sdk v1.7.11 // indirect
+	github.com/aliyun/aliyun-tablestore-go-sdk v1.7.14 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apache/arrow/go/v14 v14.0.2 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
@@ -116,7 +118,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.1 // indirect
 	github.com/aws/smithy-go v1.19.0 // indirect
 	github.com/beltran/gohive v1.7.0 // indirect
-	github.com/beltran/gosasl v0.0.0-20231222125041-ee0856a74bc2 // indirect
+	github.com/beltran/gosasl v0.0.0-20240210185013-36d7ba6de436 // indirect
 	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitfield/gotestdox v0.2.2 // indirect
@@ -187,7 +189,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230110200425-62e4d2e5b215 // indirect
-	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
+	github.com/google/goterm v0.0.0-20200907032337-555d40f16ae2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
