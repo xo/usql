@@ -35,6 +35,7 @@ for other databases.
 [![Go Reference][goref-usql-status]][goref-usql]
 [![Releases][release-status]][Releases]
 [![Discord Discussion][discord-status]][discord]
+[![Packaging status](https://repology.org/badge/tiny-repos/usql-cli.svg)](https://repology.org/project/usql-cli/versions)
 
 [usql-ci]: https://github.com/xo/usql/actions/workflows/test.yml "Test CI"
 [usql-ci-status]: https://github.com/xo/usql/actions/workflows/test.yml/badge.svg "Test CI"
