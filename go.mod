@@ -20,7 +20,7 @@ require (
 	github.com/bippio/go-impala v2.1.0+incompatible
 	github.com/btnguyen2k/gocosmos v1.1.0
 	github.com/btnguyen2k/godynamo v1.2.0
-	github.com/chaisql/chai v0.16.0
+	github.com/chaisql/chai v0.16.1-0.20240218103834-23e406360fd2
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databricks/databricks-sql-go v1.5.3
 	github.com/datafuselabs/databend-go v0.5.6

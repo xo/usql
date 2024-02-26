@@ -380,8 +380,8 @@ github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghf
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
 github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/chaisql/chai v0.16.0 h1:UVvVOcf9H/OfSNRAzH9j1TuJnetUGGqV6gaAXZ8mrjQ=
-github.com/chaisql/chai v0.16.0/go.mod h1:DYGursaN0/64vw3puP+ICq/sYr+TfdbKo9jmRax6J3Q=
+github.com/chaisql/chai v0.16.1-0.20240218103834-23e406360fd2 h1:vLtnPMqbTuTQcnfn5EDipZI0PISMSn7AMmz6HhAu+GU=
+github.com/chaisql/chai v0.16.1-0.20240218103834-23e406360fd2/go.mod h1:ix/NVvPO+dv6wsmln8R5H22yJb0iIj6KrGpouHaJmrE=
 github.com/checkpoint-restore/go-criu/v5 v5.3.0/go.mod h1:E/eQpaFtUKGOOSEBZgmKAcn+zUUwWxqcaKZlF54wK8E=
 github.com/chzyer/logex v1.1.10 h1:Swpa1K6QvQznwJRcfTfQJmTE72DqScAa40E+fbHEXEE=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
