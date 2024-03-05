@@ -353,6 +353,17 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(IGNORE_CASE, previousWords, "CREATE", "TABLE", "*") || TailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY", "TABLE", "*") {
 		return CompleteFromList(text, "(")
 	}
+
+	/* Complete ALTER */
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER") {
+		return CompleteFromList(text, "DATABASE", "FUNCTION", "INDEX", "SCHEMA", "SEQUENCE", "TABLE", "TRIGGER", "USER", "VIEW")
+	}
+
+	/* Complete DROP */
+	if TailMatches(IGNORE_CASE, previousWords, "DROP") {
+		return CompleteFromList(text, "CONSTRAINT", "COLUMN", "DATABASE", "FUNCTION", "INDEX", "SCHEMA", "SEQUENCE", "TABLE", "TRIGGER", "USER", "VIEW")
+	}
+
 	/* INSERT --- can be inside EXPLAIN, RULE, etc */
 	/* Complete INSERT with "INTO" */
 	if TailMatches(IGNORE_CASE, previousWords, "INSERT") {
