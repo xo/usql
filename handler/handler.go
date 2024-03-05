@@ -1014,7 +1014,21 @@ func (h *Handler) execSingle(ctx context.Context, w io.Writer, opt metacmd.Optio
 		f = h.query
 	}
 	// exec
-	return f(ctx, w, opt, prefix, sqlstr)
+	start := time.Now()
+	if err := f(ctx, w, opt, prefix, sqlstr); err != nil {
+		return err
+	}
+	if h.timing {
+		d := time.Since(start)
+		format := text.TimingDesc
+		v := []interface{}{float64(d.Microseconds()) / 1000}
+		if d > 1*time.Second {
+			format += " (%v)"
+			v = append(v, d.Round(1*time.Millisecond))
+		}
+		h.Print(format, v...)
+	}
+	return nil
 }
 
 // execSet executes a SQL query, setting all returned columns as variables.
@@ -1079,7 +1093,6 @@ func (h *Handler) execExec(ctx context.Context, w io.Writer, _ metacmd.Option, p
 
 // query executes a query against the database.
 func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string) error {
-	start := time.Now()
 	// run query
 	rows, err := h.DB().QueryContext(ctx, sqlstr)
 	if err != nil {
@@ -1146,16 +1159,6 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 		return err
 	case params["format"] == "aligned":
 		fmt.Fprintln(w)
-	}
-	if h.timing {
-		d := time.Since(start)
-		format := text.TimingDesc
-		v := []interface{}{float64(d.Microseconds()) / 1000}
-		if d > 1*time.Second {
-			format += " (%v)"
-			v = append(v, d.Round(1*time.Millisecond))
-		}
-		h.Print(format, v...)
 	}
 	if pipe != nil {
 		pipe.Close()
