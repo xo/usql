@@ -578,7 +578,7 @@ $ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trac
 
 ### Executing Queries and Commands
 
-The interactive intrepreter reads queries and [meta (`\`) commands][commands],
+The interactive interpreter reads queries and [meta (`\`) commands][commands],
 sending the query to the connected database:
 
 ```sh
@@ -719,7 +719,7 @@ Variables
 
 ## Features and Compatibility
 
-An overview of `usql`'s features, functionality, and compability with `psql`:
+An overview of `usql`'s features, functionality, and compatibility with `psql`:
 
 - [Variables and Interpolation][variables]
 - [Backticks][backticks]
@@ -948,7 +948,7 @@ error: failed to prepare insert query: 2 values for 1 columns
 COPY 2
 ```
 
-###### Datatype Compatibilty and Casting
+###### Datatype Compatibility and Casting
 
 The `\copy` command does not attempt to perform any kind of datatype
 conversion.
@@ -1276,7 +1276,7 @@ additional [SQLite3 build tags (see: `build.sh`)](build.sh).
 ### macOS
 
 The recommended installation method on macOS is [via `brew` (see above)][via Homebrew]
-due to the way libary dependencies for the `sqlite3` driver are done on macOS.
+due to the way library dependencies for the `sqlite3` driver are done on macOS.
 If the following (or similar) error is encountered when attempting to run `usql`:
 
 ```sh

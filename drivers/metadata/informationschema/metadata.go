@@ -192,7 +192,7 @@ func WithCurrentSchema(expr string) metadata.ReaderOption {
 	}
 }
 
-// WithDataTypeFormatter function to build updated string represenation of data type
+// WithDataTypeFormatter function to build updated string representation of data type
 // from Column
 func WithDataTypeFormatter(f func(metadata.Column) string) metadata.ReaderOption {
 	return func(r metadata.Reader) {
