@@ -1,4 +1,4 @@
-// Package metacmd contains meta information and implentation for usql's
+// Package metacmd contains meta information and implementation for usql's
 // backslash (\) commands.
 package metacmd
 
