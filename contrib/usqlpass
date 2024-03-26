@@ -6,6 +6,7 @@ postgres:*:*:*:postgres:P4ssw0rd
 
 cql:*:*:*:cassandra:cassandra
 clickhouse:*:*:*:clickhouse:P4ssw0rd
+couchbase:*:*:*:Administrator:P4ssw0rd
 godror:*:*:*:system:P4ssw0rd
 ignite:*:*:*:ignite:ignite
 mymysql:*:*:*:root:P4ssw0rd
