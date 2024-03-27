@@ -35,6 +35,8 @@ type Handler interface {
 	Buf() *stmt.Stmt
 	// Reset resets the last and current query buffer.
 	Reset([]rune)
+	// Bind binds query parameters.
+	Bind([]interface{})
 	// Open opens a database connection.
 	Open(context.Context, ...string) error
 	// Close closes the current database connection.

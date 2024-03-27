@@ -52,6 +52,8 @@ const (
 	Drivers
 	// Describe is the describe meta command (\d and variants).
 	Describe
+	// Bind is the bind meta command (\bind).
+	Bind
 	// Exec is the execute meta command (\g and variants).
 	Exec
 	// Edit is the edit query buffer meta command (\e).

@@ -181,6 +181,26 @@ func init() {
 				return nil
 			},
 		},
+		Bind: {
+			Section: SectionQueryExecute,
+			Name:    "bind",
+			Desc:    Desc{"set query parameters", "[PARAM]..."},
+			Process: func(p *Params) error {
+				bind, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				var v []interface{}
+				if n := len(bind); n != 0 {
+					v = make([]interface{}, len(bind))
+					for i := 0; i < n; i++ {
+						v[i] = bind[i]
+					}
+				}
+				p.Handler.Bind(v)
+				return nil
+			},
+		},
 		Exec: {
 			Section: SectionQueryExecute,
 			Name:    "g",

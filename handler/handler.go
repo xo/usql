@@ -68,6 +68,8 @@ type Handler struct {
 	// batch
 	batch    bool
 	batchEnd string
+	// bind are bound values for exec statements
+	bind []interface{}
 	// connection
 	u  *dburl.URL
 	db *sql.DB
@@ -381,7 +383,7 @@ func (h *Handler) Run() error {
 					out = h.out
 				}
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch); err != nil {
+				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch, h.unbind()...); err != nil {
 					lastErr = WrapErr(h.last, err)
 					if env.All()["ON_ERROR_STOP"] == "on" {
 						if iactive {
@@ -403,7 +405,7 @@ func (h *Handler) Run() error {
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, forceTrans bool) error {
+func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, forceTrans bool, bind ...interface{}) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
@@ -418,16 +420,16 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 			return err
 		}
 	}
-	f := h.execSingle
+	f := h.doExecSingle
 	switch opt.Exec {
 	case metacmd.ExecExec:
-		f = h.execExec
+		f = h.doExecExec
 	case metacmd.ExecSet:
-		f = h.execSet
+		f = h.doExecSet
 	case metacmd.ExecWatch:
-		f = h.execWatch
+		f = h.doExecWatch
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, opt, prefix, sqlstr, qtyp)); err != nil {
+	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, opt, prefix, sqlstr, qtyp, bind)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -444,6 +446,18 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
 	h.last, h.lastPrefix, h.lastRaw, h.batch, h.batchEnd = "", "", "", false, ""
+}
+
+// Bind sets the bind parameters for the next query execution.
+func (h *Handler) Bind(bind []interface{}) {
+	h.bind = bind
+}
+
+// unbind returns the bind parameters.
+func (h *Handler) unbind() []interface{} {
+	v := h.bind
+	h.bind = nil
+	return v
 }
 
 // Prompt parses a prompt.
@@ -985,14 +999,14 @@ func (h *Handler) Print(format string, a ...interface{}) {
 	fmt.Fprintln(h.l.Stdout(), fmt.Sprintf(format, a...))
 }
 
-// execWatch repeatedly executes a query against the database.
-func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool) error {
+// doExecWatch repeatedly executes a query against the database.
+func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	for {
 		// this is the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST"
 		// fmt.Fprintf(w, "%s (every %fs)\n\n", time.Now().Format("Mon Jan 2006 3:04:05 PM MST"), float64(opt.Watch)/float64(time.Second))
 		fmt.Fprintf(w, "%s (every %v)\n", time.Now().Format(time.RFC1123), opt.Watch)
 		fmt.Fprintln(w)
-		if err := h.execSingle(ctx, w, opt, prefix, sqlstr, qtyp); err != nil {
+		if err := h.doExecSingle(ctx, w, opt, prefix, sqlstr, qtyp, bind); err != nil {
 			return err
 		}
 		select {
@@ -1006,16 +1020,16 @@ func (h *Handler) execWatch(ctx context.Context, w io.Writer, opt metacmd.Option
 	}
 }
 
-// execSingle executes a single query against the database based on its query type.
-func (h *Handler) execSingle(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool) error {
+// doExecSingle executes a single query against the database based on its query type.
+func (h *Handler) doExecSingle(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	// exec or query
-	f := h.exec
+	f := h.doExec
 	if qtyp {
-		f = h.query
+		f = h.doQuery
 	}
 	// exec
 	start := time.Now()
-	if err := f(ctx, w, opt, prefix, sqlstr); err != nil {
+	if err := f(ctx, w, opt, prefix, sqlstr, bind); err != nil {
 		return err
 	}
 	if h.timing {
@@ -1031,10 +1045,10 @@ func (h *Handler) execSingle(ctx context.Context, w io.Writer, opt metacmd.Optio
 	return nil
 }
 
-// execSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) execSet(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, _ bool) error {
+// doExecSet executes a SQL query, setting all returned columns as variables.
+func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, _ bool, bind []interface{}) error {
 	// query
-	rows, err := h.DB().QueryContext(ctx, sqlstr)
+	rows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
 	if err != nil {
 		return err
 	}
@@ -1070,31 +1084,31 @@ func (h *Handler) execSet(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	return nil
 }
 
-// execExec executes a query and re-executes all columns of all rows as if they
+// doExecExec executes a query and re-executes all columns of all rows as if they
 // were their own queries.
-func (h *Handler) execExec(ctx context.Context, w io.Writer, _ metacmd.Option, prefix, sqlstr string, qtyp bool) error {
+func (h *Handler) doExecExec(ctx context.Context, w io.Writer, _ metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	// query
-	rows, err := h.DB().QueryContext(ctx, sqlstr)
+	rows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
 	if err != nil {
 		return err
 	}
-	// execRows
-	if err := h.execRows(ctx, w, rows); err != nil {
+	// exec resulting rows
+	if err := h.doExecRows(ctx, w, rows); err != nil {
 		return err
 	}
 	// check for additional result sets ...
 	for rows.NextResultSet() {
-		if err := h.execRows(ctx, w, rows); err != nil {
+		if err := h.doExecRows(ctx, w, rows); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// query executes a query against the database.
-func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string) error {
+// doQuery executes a doQuery against the database.
+func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string, bind []interface{}) error {
 	// run query
-	rows, err := h.DB().QueryContext(ctx, sqlstr)
+	rows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
 	if err != nil {
 		return err
 	}
@@ -1169,8 +1183,8 @@ func (h *Handler) query(ctx context.Context, w io.Writer, opt metacmd.Option, ty
 	return err
 }
 
-// execRows executes all the columns in the row.
-func (h *Handler) execRows(ctx context.Context, w io.Writer, rows *sql.Rows) error {
+// doExecRows executes all the columns in the row.
+func (h *Handler) doExecRows(ctx context.Context, w io.Writer, rows *sql.Rows) error {
 	// get columns
 	cols, err := drivers.Columns(h.u, rows)
 	if err != nil {
@@ -1251,9 +1265,9 @@ func (h *Handler) scan(rows *sql.Rows, clen int, tfmt string) ([]string, error) 
 	return row, nil
 }
 
-// exec does a database exec.
-func (h *Handler) exec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, sqlstr string) error {
-	res, err := h.DB().ExecContext(ctx, sqlstr)
+// doExec does a database exec.
+func (h *Handler) doExec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, sqlstr string, bind []interface{}) error {
+	res, err := h.DB().ExecContext(ctx, sqlstr, bind...)
 	if err != nil {
 		_ = env.Set("ROW_COUNT", "0")
 		return err
