@@ -68,6 +68,8 @@ const (
 	ChangeDir
 	// SetEnv is the system set environment variable meta command (\setenv).
 	SetEnv
+	// GetEnv is the system get environment variable meta command (\getenv).
+	GetEnv
 	// Shell is the system shell exec meta command (\!).
 	Shell
 	// Out is the switch output meta command (\o).

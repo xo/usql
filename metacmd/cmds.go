@@ -420,6 +420,29 @@ func init() {
 				return os.Setenv(n, v)
 			},
 		},
+		GetEnv: {
+			Section: SectionOperatingSystem,
+			Name:    "getenv",
+			Desc:    Desc{"fetch environment variable", "VARNAME ENVVAR"},
+			Process: func(p *Params) error {
+				n, err := p.Get(true)
+				switch {
+				case err != nil:
+					return err
+				case n == "":
+					return text.ErrMissingRequiredArgument
+				}
+				v, err := p.Get(true)
+				switch {
+				case err != nil:
+					return err
+				case v == "":
+					return text.ErrMissingRequiredArgument
+				}
+				value, _ := env.Getenv(v)
+				return env.Set(n, value)
+			},
+		},
 		Timing: {
 			Section: SectionOperatingSystem,
 			Name:    "timing",
