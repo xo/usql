@@ -8,66 +8,25 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-	"fmt"
+	"errors"
 	"io"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
 
-	vertigo "github.com/vertica/vertica-sql-go" // DRIVER
+	vertica "github.com/vertica/vertica-sql-go" // DRIVER
 	"github.com/vertica/vertica-sql-go/logger"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	// List of custom TLS configurations that may be applied via query in connection string.
-	customTlsConfig := map[string]func(string, *tls.Config) error{
-		"ca_path": func(queryValue string, c *tls.Config) error {
-			rootCertPool := x509.NewCertPool()
-
-			pem, err := os.ReadFile(queryValue)
-			if err != nil {
-				return err
-			}
-
-			if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
-				return fmt.Errorf("error: failed to append pem to cert pool")
-			}
-
-			c.RootCAs = rootCertPool
-
-			return nil
-		},
-	}
-
-	hasCustomTlsConfig := func(queries url.Values) bool {
-		for key := range customTlsConfig {
-			if queries.Has(key) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	applyCustomTlsConfig := func(queries url.Values, tlsConfig *tls.Config) error {
-		for key, configFunction := range customTlsConfig {
-			if queries.Has(key) {
-				if err := configFunction(queries.Get(key), tlsConfig); err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	}
-
 	// turn off logging
 	if os.Getenv("VERTICA_SQL_GO_LOG_LEVEL") == "" {
 		logger.SetLogLevel(logger.NONE)
 	}
+
 	errCodeRE := regexp.MustCompile(`(?i)^\[([0-9a-z]+)\]\s+(.+)`)
 	drivers.Register("vertica", drivers.Driver{
 		AllowDollar:            true,
@@ -80,42 +39,28 @@ func init() {
 			return ver, nil
 		},
 		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
-			return func(_, _ string) (*sql.DB, error) {
-				queries := u.Query()
-
-				if hasCustomTlsConfig(queries) {
-					if queries.Get("tlsmode") != "server-strict" {
-						configNames := []string{}
-
-						for key := range customTlsConfig {
-							configNames = append(configNames, key)
-						}
-
-						return nil, fmt.Errorf(fmt.Sprintf("error: when custom tls configurations are set (%s), tlsmode must be set to server-strict", strings.Join(configNames, ",")))
+			return func(driver, dsn string) (*sql.DB, error) {
+				u, err := url.Parse(dsn)
+				if err != nil {
+					return nil, err
+				}
+				q := u.Query()
+				if name := q.Get("ca_path"); name != "" {
+					if q.Get("tlsmode") != "server-strict" {
+						return nil, errors.New("tlsmode must be set to server-strict: ca_path is set")
 					}
-
-					tlsConfig := &tls.Config{ServerName: u.Hostname()}
-
-					if err := applyCustomTlsConfig(queries, tlsConfig); err != nil {
+					cfg := &tls.Config{
+						ServerName: u.Hostname(),
+					}
+					if err := addCA(name, cfg); err != nil {
 						return nil, err
 					}
-
-					if err := vertigo.RegisterTLSConfig("custom_tls_config", tlsConfig); err != nil {
+					if err := vertica.RegisterTLSConfig("custom_tls_config", cfg); err != nil {
 						return nil, err
 					}
-
-					queries.Set("tlsmode", "custom_tls_config")
+					q.Set("tlsmode", "custom_tls_config")
 				}
-
-				dsn := url.URL{
-					Scheme:   u.Driver,
-					User:     u.User,
-					Host:     u.Host,
-					Path:     u.Path,
-					RawQuery: queries.Encode(),
-				}
-
-				return sql.Open(u.Driver, dsn.String())
+				return sql.Open(driver, u.String())
 			}, nil
 		},
 		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
@@ -133,4 +78,17 @@ func init() {
 			return strings.HasSuffix(strings.TrimSpace(err.Error()), "Invalid username or password")
 		},
 	})
+}
+
+// addCA adds the specified file name as a ca to the tls config.
+func addCA(name string, cfg *tls.Config) error {
+	pool := x509.NewCertPool()
+	switch pem, err := os.ReadFile(name); {
+	case err != nil:
+		return err
+	case !pool.AppendCertsFromPEM(pem):
+		return errors.New("failed to append pem to cert pool")
+	}
+	cfg.RootCAs = pool
+	return nil
 }
