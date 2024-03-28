@@ -324,7 +324,8 @@ func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, 
 	}
 }
 
-// TermGraphics returns the [rasterm.TermType] based on
+// TermGraphics returns the [rasterm.TermType] based on TERM_GRAPHICS
+// environment variable.
 func TermGraphics() rasterm.TermType {
 	var typ rasterm.TermType
 	_ = typ.UnmarshalText([]byte(Get("TERM_GRAPHICS")))
