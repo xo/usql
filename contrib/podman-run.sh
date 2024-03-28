@@ -41,6 +41,7 @@ podman_run() {
     echo "error: $BASE/podman-config doesn't exist"
     exit 1
   fi
+
   # load parameters from podman-config
   unset IMAGE NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED HOSTNAME PARAMS CMD
   source $BASE/podman-config
@@ -48,6 +49,7 @@ podman_run() {
     echo "error: $BASE/podman-config is invalid"
     exit 1
   fi
+
   # setup params
   PARAMS=()
   for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED HOSTNAME; do
@@ -59,11 +61,13 @@ podman_run() {
       done
     fi
   done
+
   # determine if image exists
   EXISTS=$(podman image ls -q $IMAGE)
   if [[ "$UPDATE" == "0" && -z "$EXISTS" ]]; then
     UPDATE=1
   fi
+
   # show parameters
   echo "-------------------------------------------"
   echo "NAME:       $NAME $HOSTNAME"
@@ -74,6 +78,8 @@ podman_run() {
   echo "NETWORK:    $NETWORK"
   echo "PRIVILEGED: $PRIVILEGED"
   echo "CMD:        $CMD"
+  echo
+
   # update
   if [[ "$UPDATE" == "1" && "$TARGET" != "oracle" ]]; then
     if [ ! -f $BASE/Dockerfile ]; then
@@ -95,21 +101,24 @@ podman_run() {
       )
     fi
   fi
-  # stop any running images
+
+  # stop and remove
   if [ ! -z "$(podman ps -q --filter "name=$NAME")" ]; then
     (set -x;
       podman stop $NAME
     )
   fi
-
   if [ ! -z "$(podman ps -q -a --filter "name=$NAME")" ]; then
     (set -x;
       podman rm -f $NAME
     )
   fi
+
+  # start
   (set -ex;
     podman run --detach --rm ${PARAMS[@]} $IMAGE $CMD
   )
+  echo
 }
 
 pushd $SRC &> /dev/null
