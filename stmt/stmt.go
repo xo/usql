@@ -220,7 +220,7 @@ parse:
 		case c == '\'' || c == '"':
 			b.quote = c
 		// start of dollar quoted string literal (postgres)
-		case b.allowDollar && c == '$':
+		case b.allowDollar && c == '$' && (next == '$' || next == '_' || unicode.IsLetter(next)):
 			var id string
 			id, i, ok = readDollarAndTag(b.r, i, b.rlen)
 			if ok {

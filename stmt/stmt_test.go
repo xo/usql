@@ -184,6 +184,10 @@ func TestNextResetState(t *testing.T) {
 		{`select 1\g '\g `, []string{`select 1`}, []string{`\g| '\g `}, "=", nil},
 		{`select 1\g "\g `, []string{`select 1`}, []string{`\g| "\g `}, "=", nil},
 		{"select 1\\g `\\g ", []string{`select 1`}, []string{"\\g| `\\g "}, "=", nil},
+		{"select $$\\g$$\\g", []string{`select $$\g$$`}, []string{`\g|`}, "=", nil},
+		{"select $1\\bind a b c\\g", []string{`select $1`}, []string{`\bind| a b c`, `\g|`}, "=", nil},
+		{"select $1 \\bind a b c \\g", []string{`select $1 `}, []string{`\bind| a b c `, `\g|`}, "=", nil},
+		{"select $2, $a$ foo $a$, $1 \\bind a b \\g", []string{`select $2, $a$ foo $a$, $1 `}, []string{`\bind| a b `, `\g|`}, "=", nil},
 	}
 	for i, test := range tests {
 		b := New(sp(test.s, "\n"), WithAllowDollar(true), WithAllowMultilineComments(true), WithAllowCComments(true))
