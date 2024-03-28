@@ -1,4 +1,4 @@
-# Configuring db2
+# db2 Notes
 
 1. Install unixodbc:
 

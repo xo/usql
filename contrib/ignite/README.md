@@ -1,4 +1,4 @@
-# Setting up Ignite
+# Ignite Notes
 
 After starting the database, run `activate.sh`:
 
