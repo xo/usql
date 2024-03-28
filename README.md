@@ -638,6 +638,7 @@ General
   \drivers                             display information about available database drivers
 
 Query Execute
+  \bind [PARAM]...                     set query parameters
   \g [(OPTIONS)] [FILE] or ;           execute query (and send results to file or |pipe)
   \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
   \G [(OPTIONS)] [FILE]                as \g, but forces vertical output mode
@@ -688,8 +689,8 @@ Formatting
   \C [STRING]                          set table title, or unset if none
   \f [STRING]                          show or set field separator for unaligned query output
   \H                                   toggle HTML output mode
-  \t [on|off]                          show only rows
   \T [STRING]                          set HTML <table> tag attributes, or unset if none
+  \t [on|off]                          show only rows
   \x [on|off|auto]                     toggle expanded output
 
 Transaction
@@ -708,6 +709,7 @@ Connection
 Operating System
   \cd [DIR]                            change the current working directory
   \setenv NAME [VALUE]                 set or unset environment variable
+  \getenv VARNAME ENVVAR               fetch environment variable
   \! [COMMAND]                         execute command in shell or start interactive shell
   \timing [on|off]                     toggle timing of commands
 
