@@ -75,6 +75,7 @@ func Run(ctx context.Context, cliargs []string) error {
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
 	c.SetArgs(cliargs[1:])
 	c.SilenceErrors = true
+	c.SetUsageTemplate(text.UsageTemplate)
 
 	flags := c.Flags()
 	flags.SortFlags = false

@@ -93,6 +93,14 @@ var (
 	NotificationReceived = `Asynchronous notification %q %sreceived from server process with PID %d.`
 	NotificationPayload  = `with payload %q `
 	UnknownShortAlias    = `(unk)`
+	UsageTemplate        = `Usage: {{.UseLine}}
+
+Args:
+  DSN   database url
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
+`
 )
 
 func init() {
