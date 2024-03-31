@@ -25,14 +25,25 @@ type ContextExecutor interface {
 	ExecuteContext(context.Context) error
 }
 
-// NewCommand builds the command context.
-func NewCommand(cliargs []string) ContextExecutor {
+// New builds the command context.
+func New(cliargs []string) ContextExecutor {
 	args := &Args{}
+	var (
+		bashCompletion       bool
+		zshCompletion        bool
+		fishCompletion       bool
+		powershellCompletion bool
+		noDescriptions       bool
+	)
 	v := viper.New()
 	c := &cobra.Command{
-		Use:     text.CommandName + " [flags]... [DSN]",
-		Short:   text.Short(),
-		Version: text.CommandVersion,
+		Use:                text.CommandName + " [flags]... [DSN]",
+		Short:              text.Short(),
+		Version:            text.CommandVersion,
+		SilenceErrors:      true,
+		SilenceUsage:       true,
+		DisableAutoGenTag:  true,
+		DisableSuggestions: true,
 		Args: func(_ *cobra.Command, cliargs []string) error {
 			if len(cliargs) > 1 {
 				return text.ErrWrongNumberOfArguments
@@ -74,6 +85,22 @@ func NewCommand(cliargs []string) ContextExecutor {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, cliargs []string) error {
+			switch {
+			case bashCompletion:
+				return cmd.GenBashCompletionV2(os.Stdout, !noDescriptions)
+			case zshCompletion:
+				if noDescriptions {
+					return cmd.GenZshCompletionNoDesc(os.Stdout)
+				}
+				return cmd.GenZshCompletion(os.Stdout)
+			case fishCompletion:
+				return cmd.GenFishCompletion(os.Stdout, !noDescriptions)
+			case powershellCompletion:
+				if noDescriptions {
+					return cmd.GenPowerShellCompletion(os.Stdout)
+				}
+				return cmd.GenPowerShellCompletionWithDesc(os.Stdout)
+			}
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
@@ -83,10 +110,17 @@ func NewCommand(cliargs []string) ContextExecutor {
 
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
 	c.SetArgs(cliargs[1:])
-	c.SilenceUsage, c.SilenceErrors = true, true
 	c.SetUsageTemplate(text.UsageTemplate)
 
 	flags := c.Flags()
+
+	// completions
+	flags.BoolVar(&bashCompletion, "completion-script-bash", false, "output bash completion script and exit")
+	flags.BoolVar(&zshCompletion, "completion-script-zsh", false, "output zsh completion script and exit")
+	flags.BoolVar(&fishCompletion, "completion-script-fish", false, "output fish completion script and exit")
+	flags.BoolVar(&powershellCompletion, "completion-script-powershell", false, "output powershell completion script and exit")
+	flags.BoolVar(&noDescriptions, "no-descriptions", false, "disable descriptions in completion scripts")
+
 	flags.SortFlags = false
 	// command / file flags
 	flags.VarP(commandOrFile{args, true}, "command", "c", "run only single command (SQL or internal) and exit")
@@ -145,8 +179,12 @@ func NewCommand(cliargs []string) ContextExecutor {
 		_, _ = w.Write([]byte(s))
 	}
 	// mark hidden
-	for _, s := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
-		if err := flags.MarkHidden(s); err != nil {
+	for _, name := range []string{
+		"no-psqlrc", "no-usqlrc", "var", "variable",
+		"completion-script-bash", "completion-script-zsh", "completion-script-fish",
+		"completion-script-powershell", "no-descriptions",
+	} {
+		if err := flags.MarkHidden(name); err != nil {
 			panic(err)
 		}
 	}
@@ -313,7 +351,7 @@ func (c commandOrFile) Type() string {
 	return "FILE"
 }
 
-// vs handles setting vars with predefined var names.
+// vs handles setting vars with predefined values.
 type vs struct {
 	vars *[]string
 	vals []string
