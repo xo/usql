@@ -83,12 +83,12 @@ func Run(ctx context.Context, cliargs []string) error {
 	flags.VarP(commandOrFile{args, true}, "command", "c", "run only single command (SQL or internal) and exit")
 	flags.VarP(commandOrFile{args, false}, "file", "f", "execute commands from file and exit")
 	// general flags
-	flags.BoolVarP(&args.NoPassword, "no-password", "W", false, "never prompt for password")
+	flags.BoolVarP(&args.NoPassword, "no-password", "w", false, "never prompt for password")
 	flags.BoolVarP(&args.NoRC, "no-rc", "X", false, "do not read start up file (aliases: --no-psqlrc --no-usqlrc)")
 	flags.BoolVar(&args.NoRC, "no-psqlrc", false, "do not read startup file")
 	flags.BoolVar(&args.NoRC, "no-usqlrc", false, "do not read startup file")
 	flags.VarP(filevar{&args.Out}, "out", "o", "output file")
-	flags.BoolVarP(&args.ForcePassword, "password", "w", false, "force password prompt (should happen automatically)")
+	flags.BoolVarP(&args.ForcePassword, "password", "W", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
 
 	ss := func(v *[]string, name, short, usage, placeholder string, vals ...string) {
