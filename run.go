@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -34,6 +35,7 @@ func New(cliargs []string) ContextExecutor {
 		fishCompletion       bool
 		powershellCompletion bool
 		noDescriptions       bool
+		badHelp              bool
 	)
 	v := viper.New()
 	c := &cobra.Command{
@@ -85,6 +87,7 @@ func New(cliargs []string) ContextExecutor {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, cliargs []string) error {
+			// completions
 			switch {
 			case bashCompletion:
 				return cmd.GenBashCompletionV2(os.Stdout, !noDescriptions)
@@ -100,7 +103,11 @@ func New(cliargs []string) ContextExecutor {
 					return cmd.GenPowerShellCompletion(os.Stdout)
 				}
 				return cmd.GenPowerShellCompletionWithDesc(os.Stdout)
+			case badHelp:
+				return errors.New("unknown shorthand flag: 'h' in -h")
 			}
+
+			// run
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
@@ -113,18 +120,20 @@ func New(cliargs []string) ContextExecutor {
 	c.SetUsageTemplate(text.UsageTemplate)
 
 	flags := c.Flags()
+	flags.SortFlags = false
 
-	// completions
+	// completions / short circuits
 	flags.BoolVar(&bashCompletion, "completion-script-bash", false, "output bash completion script and exit")
 	flags.BoolVar(&zshCompletion, "completion-script-zsh", false, "output zsh completion script and exit")
 	flags.BoolVar(&fishCompletion, "completion-script-fish", false, "output fish completion script and exit")
 	flags.BoolVar(&powershellCompletion, "completion-script-powershell", false, "output powershell completion script and exit")
 	flags.BoolVar(&noDescriptions, "no-descriptions", false, "disable descriptions in completion scripts")
+	flags.BoolVarP(&badHelp, "bad-help", "h", false, "bad help")
 
-	flags.SortFlags = false
 	// command / file flags
 	flags.VarP(commandOrFile{args, true}, "command", "c", "run only single command (SQL or internal) and exit")
 	flags.VarP(commandOrFile{args, false}, "file", "f", "execute commands from file and exit")
+
 	// general flags
 	flags.BoolVarP(&args.NoPassword, "no-password", "w", false, "never prompt for password")
 	flags.BoolVarP(&args.NoRC, "no-rc", "X", false, "do not read start up file (aliases: --no-psqlrc --no-usqlrc)")
@@ -162,27 +171,33 @@ func New(cliargs []string) ContextExecutor {
 	ss(&args.PVariables, "vertical", "G", "vertical output mode", "", "format=vertical")
 	// set bools
 	ss(&args.Variables, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
+
 	// add config
 	_ = flags.StringP("config", "", "", "config file")
+
 	// manually set --version, see github.com/spf13/cobra/command.go
-	flags.BoolP("version", "V", false, "output version information, then exit")
+	_ = flags.BoolP("version", "V", false, "output version information, then exit")
 	_ = flags.SetAnnotation("version", cobra.FlagSetByCobraAnnotation, []string{"true"})
+
 	// manually set --help, see github.com/spf13/cobra/command.go
-	flags.Bool("help", false, "show this help, then exit")
+	_ = flags.BoolP("help", "?", false, "show this help, then exit")
 	_ = c.Flags().SetAnnotation("help", cobra.FlagSetByCobraAnnotation, []string{"true"})
+
 	// expose to metacmd
 	metacmd.Usage = func(w io.Writer, banner bool) {
-		s := "\n\n" + c.UsageString()
+		s := c.UsageString()
 		if banner {
-			s = text.Short() + s
+			s = text.Short() + "\n\n" + s
 		}
 		_, _ = w.Write([]byte(s))
 	}
+
 	// mark hidden
 	for _, name := range []string{
 		"no-psqlrc", "no-usqlrc", "var", "variable",
 		"completion-script-bash", "completion-script-zsh", "completion-script-fish",
 		"completion-script-powershell", "no-descriptions",
+		"bad-help",
 	} {
 		if err := flags.MarkHidden(name); err != nil {
 			panic(err)
