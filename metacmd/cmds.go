@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/alecthomas/kingpin/v2"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
@@ -53,16 +53,28 @@ func init() {
 				if err != nil {
 					return err
 				}
-				switch name {
+				stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
+				var cmd *exec.Cmd
+				var wc io.WriteCloser
+				if pager := env.Get("PAGER"); pager != "" {
+					if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
+						return err
+					}
+					stdout = wc
+				}
+				switch name = strings.TrimSpace(strings.ToLower(name)); {
+				case name == "options":
+					Usage(stdout)
+				case name == "variables":
+					env.Listing(stdout)
 				default:
-					Listing(p.Handler.IO().Stdout())
-				case "commands":
-					Listing(p.Handler.IO().Stdout())
-				case "options":
-					// FIXME: decouple
-					kingpin.Usage()
-				case "variables":
-					env.Listing(p.Handler.IO().Stdout())
+					Listing(stdout)
+				}
+				if cmd != nil {
+					if err := wc.Close(); err != nil {
+						return err
+					}
+					return cmd.Wait()
 				}
 				return nil
 			},
@@ -181,26 +193,6 @@ func init() {
 				return nil
 			},
 		},
-		Bind: {
-			Section: SectionQueryExecute,
-			Name:    "bind",
-			Desc:    Desc{"set query parameters", "[PARAM]..."},
-			Process: func(p *Params) error {
-				bind, err := p.GetAll(true)
-				if err != nil {
-					return err
-				}
-				var v []interface{}
-				if n := len(bind); n != 0 {
-					v = make([]interface{}, len(bind))
-					for i := 0; i < n; i++ {
-						v[i] = bind[i]
-					}
-				}
-				p.Handler.Bind(v)
-				return nil
-			},
-		},
 		Exec: {
 			Section: SectionQueryExecute,
 			Name:    "g",
@@ -277,6 +269,26 @@ func init() {
 						p.Option.Watch = d
 					}
 				}
+				return nil
+			},
+		},
+		Bind: {
+			Section: SectionQueryExecute,
+			Name:    "bind",
+			Desc:    Desc{"set query parameters", "[PARAM]..."},
+			Process: func(p *Params) error {
+				bind, err := p.GetAll(true)
+				if err != nil {
+					return err
+				}
+				var v []interface{}
+				if n := len(bind); n != 0 {
+					v = make([]interface{}, len(bind))
+					for i := 0; i < n; i++ {
+						v[i] = bind[i]
+					}
+				}
+				p.Handler.Bind(v)
 				return nil
 			},
 		},
@@ -384,7 +396,7 @@ func init() {
 				if err != nil {
 					return err
 				}
-				out := io.Writer(p.Handler.IO().Stdout())
+				out := p.Handler.IO().Stdout()
 				if o := p.Handler.GetOutput(); p.Name == "qecho" && o != nil {
 					out = o
 				} else if p.Name == "warn" {
@@ -424,22 +436,6 @@ func init() {
 				return env.Chdir(p.Handler.User(), dir)
 			},
 		},
-		SetEnv: {
-			Section: SectionOperatingSystem,
-			Name:    "setenv",
-			Desc:    Desc{"set or unset environment variable", "NAME [VALUE]"},
-			Process: func(p *Params) error {
-				n, err := p.Get(true)
-				if err != nil {
-					return err
-				}
-				v, err := p.Get(true)
-				if err != nil {
-					return err
-				}
-				return os.Setenv(n, v)
-			},
-		},
 		GetEnv: {
 			Section: SectionOperatingSystem,
 			Name:    "getenv",
@@ -461,6 +457,22 @@ func init() {
 				}
 				value, _ := env.Getenv(v)
 				return env.Set(n, value)
+			},
+		},
+		SetEnv: {
+			Section: SectionOperatingSystem,
+			Name:    "setenv",
+			Desc:    Desc{"set or unset environment variable", "NAME [VALUE]"},
+			Process: func(p *Params) error {
+				n, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				v, err := p.Get(true)
+				if err != nil {
+					return err
+				}
+				return os.Setenv(n, v)
 			},
 		},
 		Timing: {
@@ -509,7 +521,7 @@ func init() {
 			Desc:    Desc{"send all query results to file or |pipe", "[FILE]"},
 			Aliases: map[string]Desc{"out": {}},
 			Process: func(p *Params) error {
-				if out := p.Handler.GetOutput(); out != nil {
+				if p.Handler.GetOutput() != nil {
 					p.Handler.SetOutput(nil)
 				}
 				params, err := p.GetAll(true)
@@ -522,7 +534,7 @@ func init() {
 				}
 				var out io.WriteCloser
 				if pipe[0] == '|' {
-					out, _, err = env.Pipe(pipe[1:])
+					out, _, err = env.Pipe(p.Handler.IO().Stdout(), p.Handler.IO().Stderr(), pipe[1:])
 				} else {
 					out, err = os.OpenFile(pipe, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 				}
@@ -966,4 +978,8 @@ func init() {
 		}
 		sectMap[c.Section] = append(sectMap[c.Section], mc)
 	}
+}
+
+// Usage is used by the [Question] command to display command line options
+var Usage = func(io.Writer) {
 }

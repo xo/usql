@@ -102,6 +102,7 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	}
 	if iactive {
 		l.SetOutput(h.outputHighlighter)
+		l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
 	}
 	return h
 }
@@ -732,19 +733,15 @@ func (h *Handler) Highlight(w io.Writer, buf string) error {
 // an appropriate driver (mysql, postgres, sqlite3) depending on the type (unix
 // domain socket, directory, or regular file, respectively).
 func (h *Handler) Open(ctx context.Context, params ...string) error {
-	// build a list of all possible connStrings for the completer
-	connStrings := h.connStrings()
 	if len(params) == 0 || params[0] == "" {
-		h.l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(connStrings)))
 		return nil
 	}
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
 	if len(params) < 2 {
-		urlstr := params[0]
 		// parse dsn
-		u, err := dburl.Parse(urlstr)
+		u, err := dburl.Parse(params[0])
 		if err != nil {
 			return err
 		}
@@ -769,7 +766,6 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
-			h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOpts(), completer.WithConnStrings(connStrings)))
 			return h.Version(ctx)
 		}
 	}
@@ -1127,7 +1123,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		}
 		if pipeName != "" {
 			if pipeName[0] == '|' {
-				pipe, cmd, err = env.Pipe(pipeName[1:])
+				pipe, cmd, err = env.Pipe(h.IO().Stdout(), h.IO().Stderr(), pipeName[1:])
 			} else {
 				pipe, err = os.OpenFile(pipeName, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 			}

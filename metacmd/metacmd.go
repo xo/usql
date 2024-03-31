@@ -52,10 +52,10 @@ const (
 	Drivers
 	// Describe is the describe meta command (\d and variants).
 	Describe
-	// Bind is the bind meta command (\bind).
-	Bind
 	// Exec is the execute meta command (\g and variants).
 	Exec
+	// Bind is the bind meta command (\bind).
+	Bind
 	// Edit is the edit query buffer meta command (\e).
 	Edit
 	// Print is the print query buffer meta command (\p, \print, \raw).
@@ -68,10 +68,10 @@ const (
 	Write
 	// ChangeDir is the system change directory meta command (\cd).
 	ChangeDir
-	// SetEnv is the system set environment variable meta command (\setenv).
-	SetEnv
 	// GetEnv is the system get environment variable meta command (\getenv).
 	GetEnv
+	// SetEnv is the system set environment variable meta command (\setenv).
+	SetEnv
 	// Shell is the system shell exec meta command (\!).
 	Shell
 	// Out is the switch output meta command (\o).

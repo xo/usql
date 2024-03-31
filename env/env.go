@@ -201,13 +201,13 @@ func Shell(s string) error {
 }
 
 // Pipe starts a command and returns its input for writing.
-func Pipe(c string) (io.WriteCloser, *exec.Cmd, error) {
+func Pipe(stdout, stderr io.Writer, c string) (io.WriteCloser, *exec.Cmd, error) {
 	shell, param := Getshell()
 	if shell == "" {
 		return nil, nil, text.ErrNoShellAvailable
 	}
 	cmd := exec.Command(shell, param, c)
-	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	cmd.Stdout, cmd.Stderr = stdout, stderr
 	out, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, nil, err

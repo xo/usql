@@ -1,0 +1,5 @@
+connections:
+  postg: postgres://postgres:P4ssw0rd@localhost
+init: |
+  \echo welcome to the jungle `date`
+  \set SYNTAX_HL_STYLE paraiso-dark

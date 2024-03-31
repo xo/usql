@@ -16,6 +16,7 @@ var (
 	CommandName           = `usql`
 	CommandVersion        = `0.0.0-dev`
 	PassfileName          = CommandName + `pass`
+	ConfigName            = "config"
 	Banner                = `the universal command-line interface for SQL databases`
 	NotConnected          = `(not connected)`
 	HelpPrefix            = `help`
@@ -122,6 +123,11 @@ var CommandUpper = func() string {
 	return strings.ToUpper(Command())
 }
 
+// Short returns the command name and banner.
+var Short = func() string {
+	return Command() + ", " + Banner
+}
+
 // Logo is the logo.
 var Logo image.Image
 
@@ -129,22 +135,6 @@ var Logo image.Image
 //
 //go:embed logo.png
 var LogoPng []byte
-
-// UsageTemplate returns the usage template.
-var UsageTemplate = func() string {
-	n := CommandLower()
-	return n + `, ` + Banner + `
-
-Usage:
-  ` + n + ` [OPTIONS]... [DSN]
-
-Arguments:
-  DSN                            database url
-
-{{if .Context.Flags}}\
-Options:
-{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}{{end}}`
-}
 
 func init() {
 	var err error

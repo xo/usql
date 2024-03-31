@@ -536,8 +536,8 @@ func Pset(name, value string) (string, error) {
 	return pvars[name], nil
 }
 
-// timeConstMap is the time const name to value map.
-var timeConstMap = map[string]string{
+// timeConsts are well known time consts.
+var timeConsts = map[string]string{
 	"ANSIC":       time.ANSIC,
 	"UnixDate":    time.UnixDate,
 	"RubyDate":    time.RubyDate,
@@ -558,7 +558,7 @@ var timeConstMap = map[string]string{
 // GoTime returns the user's time format converted to Go's time.Format value.
 func GoTime() string {
 	tfmt := pvars["time"]
-	if s, ok := timeConstMap[tfmt]; ok {
+	if s, ok := timeConsts[tfmt]; ok {
 		return s
 	}
 	return tfmt
