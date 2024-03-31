@@ -164,7 +164,7 @@ func run(ctx context.Context, args *Args) error {
 		}
 	*/
 
-	fmt.Fprintf(os.Stdout, "\n\nVARS: %v\n\nPVARS: %v\n\n\n", args.Variables, args.PVariables)
+	// fmt.Fprintf(os.Stdout, "\n\nVARS: %v\n\nPVARS: %v\n\n\n", args.Variables, args.PVariables)
 
 	// handle variables
 	for _, v := range args.Variables {
