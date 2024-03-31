@@ -73,9 +73,8 @@ func Run(ctx context.Context, cliargs []string) error {
 	}
 
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
-	c.InitDefaultHelpCmd()
 	c.SetArgs(cliargs[1:])
-	c.SilenceErrors, c.SilenceUsage = true, true
+	c.SilenceErrors = true
 
 	flags := c.Flags()
 	flags.SortFlags = false
@@ -90,28 +89,35 @@ func Run(ctx context.Context, cliargs []string) error {
 	flags.VarP(filevar{&args.Out}, "out", "o", "output file")
 	flags.BoolVarP(&args.ForcePassword, "password", "w", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
+
+	ss := func(v *[]string, name, short, usage, placeholder string, vals ...string) {
+		f := flags.VarPF(vs{v, vals, placeholder}, name, short, usage)
+		if placeholder == "" {
+			f.DefValue, f.NoOptDefVal = "true", "true"
+		}
+	}
 	// set
-	flags.VarP(vs{&args.Variables, nil, "NAME=VALUE"}, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`)
-	flags.Var(vs{&args.Variables, nil, "NAME=VALUE"}, "var", "set variable NAME to VALUE")
-	flags.Var(vs{&args.Variables, nil, "NAME=VALUE"}, "variable", "set variable NAME to VALUE")
+	ss(&args.Variables, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
+	ss(&args.Variables, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
+	ss(&args.Variables, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
 	// pset
-	flags.VarP(vs{&args.PVariables, nil, "VAR=ARG"}, "pset", "P", `set printing option VAR to ARG (see \pset command)`)
+	ss(&args.PVariables, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
 	// pset flags
-	flags.VarP(vs{&args.PVariables, []string{"fieldsep=%q", "csv_fieldsep=%q"}, "FIELD-SEPARATOR"}, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`)
-	flags.VarP(vs{&args.PVariables, []string{"recordsep=%q"}, "RECORD-SEPARATOR"}, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`)
-	flags.VarP(vs{&args.PVariables, []string{"tableattr=%q"}, "TABLE-ATTR"}, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)")
+	ss(&args.PVariables, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
+	ss(&args.PVariables, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
+	ss(&args.PVariables, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
 	// pset bools
-	flags.VarPF(vs{&args.PVariables, []string{"format=unaligned"}, ""}, "no-align", "A", "unaligned table output mode").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"format=html"}, ""}, "html", "H", "HTML table output mode").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"tuples_only=on"}, ""}, "tuples-only", "t", "print rows only").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"expanded=on"}, ""}, "expanded", "x", "turn on expanded table output").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"fieldsep_zero=on"}, ""}, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"recordsep_zero=on"}, ""}, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"format=json"}, ""}, "json", "J", "JSON output mode").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"format=csv"}, ""}, "csv", "C", "CSV output mode").NoOptDefVal = "true"
-	flags.VarPF(vs{&args.PVariables, []string{"format=vertical"}, ""}, "vertical", "G", "vertical output mode").NoOptDefVal = "true"
+	ss(&args.PVariables, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
+	ss(&args.PVariables, "html", "H", "HTML table output mode", "", "format=html")
+	ss(&args.PVariables, "tuples-only", "t", "print rows only", "", "tuples_only=on")
+	ss(&args.PVariables, "expanded", "x", "turn on expanded table output", "", "expanded=on")
+	ss(&args.PVariables, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
+	ss(&args.PVariables, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
+	ss(&args.PVariables, "json", "J", "JSON output mode", "", "format=json")
+	ss(&args.PVariables, "csv", "C", "CSV output mode", "", "format=csv")
+	ss(&args.PVariables, "vertical", "G", "vertical output mode", "", "format=vertical")
 	// set bools
-	flags.VarPF(vs{&args.Variables, []string{"QUIET=on"}, ""}, "quiet", "q", "run quietly (no messages, only query output)").NoOptDefVal = "true"
+	ss(&args.Variables, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
 	// add config
 	_ = flags.StringP("config", "", "", "config file")
 	// manually set --version, see github.com/spf13/cobra/command.go
@@ -322,14 +328,14 @@ func (vs) String() string {
 
 // Type satisfies the [pflag.Value] interface.
 func (p vs) Type() string {
-	if p.IsBoolFlag() {
+	if p.isBool() {
 		return "bool"
 	}
 	return p.typ
 }
 
-// IsBoolFlag satisfies the pflag.boolFlag interface.
-func (p vs) IsBoolFlag() bool {
+// isBool satisfies the pflag.boolFlag interface.
+func (p vs) isBool() bool {
 	return len(p.vals) != 0 && !strings.Contains(p.vals[0], "%")
 }
 
