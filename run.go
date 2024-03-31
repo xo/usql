@@ -129,7 +129,7 @@ func Run(ctx context.Context, cliargs []string) error {
 	_ = c.Flags().SetAnnotation("help", cobra.FlagSetByCobraAnnotation, []string{"true"})
 	// add to metacmd usage
 	metacmd.Usage = func(w io.Writer) {
-		_, _ = w.Write([]byte(c.UsageString()))
+		_, _ = w.Write([]byte(text.Short() + "\n\n" + c.UsageString()))
 	}
 	// mark hidden
 	for _, s := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
