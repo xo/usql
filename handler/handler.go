@@ -1416,6 +1416,32 @@ func (h *Handler) SetOutput(o io.WriteCloser) {
 	h.out = o
 }
 
+// Error wraps handler errors.
+type Error struct {
+	Buf string
+	Err error
+}
+
+// WrapErr wraps an [error] using the specified driver when err is not nil.
+func WrapErr(buf string, err error) error {
+	if err == nil {
+		return nil
+	}
+	// avoid double wrapping error
+	if _, ok := err.(*Error); ok {
+		return err
+	}
+	return &Error{buf, err}
+}
+
+// Error satisfies the [error] interface, returning the original error message.
+func (e *Error) Error() string {
+	return e.Err.Error()
+}
+
+// Unwrap returns the original error.
+func (e *Error) Unwrap() error { return e.Err }
+
 func readerOpts() []metadata.ReaderOption {
 	var opts []metadata.ReaderOption
 	envs := env.All()
@@ -1471,4 +1497,28 @@ func grab(r []rune, i, end int) rune {
 		return r[i]
 	}
 	return 0
+}
+
+// linetermRE is the end of line terminal.
+var linetermRE = regexp.MustCompile(`(?:\r?\n)+$`)
+
+// empty reports whether s contains at least one printable, non-space character.
+func empty(s string) bool {
+	i := strings.IndexFunc(s, func(r rune) bool {
+		return unicode.IsPrint(r) && !unicode.IsSpace(r)
+	})
+	return i == -1
+}
+
+var ansiRE = regexp.MustCompile(`\x1b[[0-9]+([:;][0-9]+)*m`)
+
+// lastcolor returns the last defined color in s, if any.
+func lastcolor(s string) string {
+	if i := strings.LastIndex(s, "\n"); i != -1 {
+		s = s[:i]
+	}
+	if i := strings.LastIndex(s, "\x1b[0m"); i != -1 {
+		s = s[i+4:]
+	}
+	return strings.Join(ansiRE.FindAllString(s, -1), "")
 }

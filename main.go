@@ -37,7 +37,8 @@ func main() {
 		return
 	}
 	// run
-	if err := Run(context.Background(), os.Args); err != nil && err != io.EOF && err != rline.ErrInterrupt {
+	c := NewCommand(os.Args)
+	if err := c.ExecuteContext(context.Background()); err != nil && err != io.EOF && err != rline.ErrInterrupt {
 		var he *handler.Error
 		if !errors.As(err, &he) {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -58,6 +59,16 @@ func main() {
 			}
 			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags %s github.com/xo/usql@%s\n\n", tag, rev)
 		}
+		/*
+			switch estr := err.Error(); {
+			case err == text.ErrWrongNumberOfArguments,
+				strings.HasPrefix(estr, "unknown flag:"),
+				strings.HasPrefix(estr, "unknown shorthand flag:"),
+				strings.HasPrefix(estr, "bad flag syntax:"),
+				strings.HasPrefix(estr, "flag needs an argument:"):
+				metacmd.Usage(os.Stderr, false)
+			}
+		*/
 		os.Exit(1)
 	}
 }

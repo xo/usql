@@ -20,16 +20,25 @@ import (
 	"github.com/xo/usql/text"
 )
 
-// Run processes args, processing args.CommandOrFiles if non-empty, if
-// specified, otherwise launch an interactive readline from stdin.
-func Run(ctx context.Context, cliargs []string) error {
+// ContextExecutor is the command context.
+type ContextExecutor interface {
+	ExecuteContext(context.Context) error
+}
+
+// NewCommand builds the command context.
+func NewCommand(cliargs []string) ContextExecutor {
 	args := &Args{}
 	v := viper.New()
 	c := &cobra.Command{
 		Use:     text.CommandName + " [flags]... [DSN]",
 		Short:   text.Short(),
 		Version: text.CommandVersion,
-		Args:    cobra.RangeArgs(0, 1),
+		Args: func(_ *cobra.Command, cliargs []string) error {
+			if len(cliargs) > 1 {
+				return text.ErrWrongNumberOfArguments
+			}
+			return nil
+		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			commandUpper := text.CommandUpper()
 			configFile := strings.TrimSpace(os.Getenv(commandUpper + "_CONFIG"))
@@ -68,13 +77,13 @@ func Run(ctx context.Context, cliargs []string) error {
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
-			return run(cmd.Context(), args)
+			return Run(cmd.Context(), args)
 		},
 	}
 
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
 	c.SetArgs(cliargs[1:])
-	c.SilenceErrors = true
+	c.SilenceUsage, c.SilenceErrors = true, true
 	c.SetUsageTemplate(text.UsageTemplate)
 
 	flags := c.Flags()
@@ -128,19 +137,24 @@ func Run(ctx context.Context, cliargs []string) error {
 	flags.Bool("help", false, "show this help, then exit")
 	_ = c.Flags().SetAnnotation("help", cobra.FlagSetByCobraAnnotation, []string{"true"})
 	// expose to metacmd
-	metacmd.Usage = func(w io.Writer) {
-		_, _ = w.Write([]byte(text.Short() + "\n\n" + c.UsageString()))
+	metacmd.Usage = func(w io.Writer, banner bool) {
+		s := "\n\n" + c.UsageString()
+		if banner {
+			s = text.Short() + s
+		}
+		_, _ = w.Write([]byte(s))
 	}
 	// mark hidden
 	for _, s := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
 		if err := flags.MarkHidden(s); err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return c.ExecuteContext(ctx)
+	return c
 }
 
-func run(ctx context.Context, args *Args) error {
+// Run runs the application.
+func Run(ctx context.Context, args *Args) error {
 	// get user
 	u, err := user.Current()
 	if err != nil {
@@ -329,15 +343,10 @@ func (vs) String() string {
 
 // Type satisfies the [pflag.Value] interface.
 func (p vs) Type() string {
-	if p.isBool() {
+	if p.typ == "" {
 		return "bool"
 	}
 	return p.typ
-}
-
-// isBool satisfies the pflag.boolFlag interface.
-func (p vs) isBool() bool {
-	return len(p.vals) != 0 && !strings.Contains(p.vals[0], "%")
 }
 
 // filevar is a file var.

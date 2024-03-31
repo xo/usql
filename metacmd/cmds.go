@@ -64,7 +64,7 @@ func init() {
 				}
 				switch name = strings.TrimSpace(strings.ToLower(name)); {
 				case name == "options":
-					Usage(stdout)
+					Usage(stdout, true)
 				case name == "variables":
 					env.Listing(stdout)
 				default:
@@ -981,5 +981,5 @@ func init() {
 }
 
 // Usage is used by the [Question] command to display command line options
-var Usage = func(io.Writer) {
+var Usage = func(io.Writer, bool) {
 }
