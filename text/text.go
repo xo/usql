@@ -18,6 +18,7 @@ var (
 	PassfileName          = CommandName + `pass`
 	ConfigName            = "config"
 	Banner                = `the universal command-line interface for SQL databases`
+	CommandHelpHint       = `hint: try "` + CommandName + ` --help" for more information.`
 	NotConnected          = `(not connected)`
 	HelpPrefix            = `help`
 	QuitPrefix            = `quit`

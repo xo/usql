@@ -58,16 +58,14 @@ func main() {
 			}
 			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags %s github.com/xo/usql@%s\n\n", tag, rev)
 		}
-		/*
-			switch estr := err.Error(); {
-			case err == text.ErrWrongNumberOfArguments,
-				strings.HasPrefix(estr, "unknown flag:"),
-				strings.HasPrefix(estr, "unknown shorthand flag:"),
-				strings.HasPrefix(estr, "bad flag syntax:"),
-				strings.HasPrefix(estr, "flag needs an argument:"):
-				metacmd.Usage(os.Stderr, false)
-			}
-		*/
+		switch estr := err.Error(); {
+		case err == text.ErrWrongNumberOfArguments,
+			strings.HasPrefix(estr, "unknown flag:"),
+			strings.HasPrefix(estr, "unknown shorthand flag:"),
+			strings.HasPrefix(estr, "bad flag syntax:"),
+			strings.HasPrefix(estr, "flag needs an argument:"):
+			fmt.Fprintln(os.Stderr, text.CommandHelpHint)
+		}
 		os.Exit(1)
 	}
 }
