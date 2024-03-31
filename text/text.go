@@ -97,7 +97,7 @@ var (
   {{.UseLine}}
 
 Arguments:
-  DSN   database url
+  DSN   database url or connection name
 
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}

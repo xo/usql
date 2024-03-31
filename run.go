@@ -26,7 +26,7 @@ func Run(ctx context.Context, cliargs []string) error {
 	args := &Args{}
 	v := viper.New()
 	c := &cobra.Command{
-		Use:     text.CommandName + " [flags] [DSN]",
+		Use:     text.CommandName + " [flags]... [DSN]",
 		Short:   text.Short(),
 		Version: text.CommandVersion,
 		Args:    cobra.RangeArgs(0, 1),
