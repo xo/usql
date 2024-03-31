@@ -971,7 +971,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version(ctx context.Context) error {
-	if env.Get("SHOW_HOST_INFORMATION") != "true" {
+	if env.Get("SHOW_HOST_INFORMATION") != "true" || !h.IO().Interactive() {
 		return nil
 	}
 	if h.db == nil {
