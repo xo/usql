@@ -127,7 +127,7 @@ func Run(ctx context.Context, cliargs []string) error {
 	// manually set --help, see github.com/spf13/cobra/command.go
 	flags.Bool("help", false, "show this help, then exit")
 	_ = c.Flags().SetAnnotation("help", cobra.FlagSetByCobraAnnotation, []string{"true"})
-	// add to metacmd usage
+	// expose to metacmd
 	metacmd.Usage = func(w io.Writer) {
 		_, _ = w.Write([]byte(text.Short() + "\n\n" + c.UsageString()))
 	}
