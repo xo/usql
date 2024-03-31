@@ -70,43 +70,43 @@ func cliTests() ([]Test, error) {
 		{
 			"complex/postgres",
 			"./contrib/postgres/test.sql",
-			[]string{"pgsql://postgres:P4ssw0rd@localhost", "--pset=pager=off"},
+			[]string{"pgsql://postgres:P4ssw0rd@localhost", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"complex/mysql",
 			"./contrib/mysql/test.sql",
-			[]string{"my://root:P4ssw0rd@localhost", "--pset=pager=off"},
+			[]string{"my://root:P4ssw0rd@localhost", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"complex/sqlite3",
 			"./contrib/sqlite3/test.sql",
-			[]string{"sqlite:./testdata/sqlite3_test.db", "--pset=pager=off"},
+			[]string{"sqlite:./testdata/sqlite3_test.db", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"complex/moderncsqlite",
 			"./contrib/sqlite3/test.sql",
-			[]string{"mq:./testdata/moderncsqlite_test.db", "--pset=pager=off"},
+			[]string{"mq:./testdata/moderncsqlite_test.db", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"complex/sqlserver",
 			"./contrib/sqlserver/test.sql",
-			[]string{"sqlserver://sa:Adm1nP@ssw0rd@localhost/", "--pset=pager=off"},
+			[]string{"sqlserver://sa:Adm1nP@ssw0rd@localhost/", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"complex/cassandra",
 			"./contrib/cassandra/test.sql",
-			[]string{"ca://cassandra:cassandra@localhost", "--pset=pager=off"},
+			[]string{"ca://cassandra:cassandra@localhost", "--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 		{
 			"copy/a_bit_of_everything",
 			"./testdata/copy.sql",
-			[]string{"--pset=pager=off"},
+			[]string{"--set=PAGER=''", "--pset=pager=off"},
 			env,
 		},
 	}, nil
@@ -139,7 +139,6 @@ func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) 
 		defer exp.Close()
 		return err
 	}
-	return exp.Close()
 }
 
 type noopWriteCloser struct {
