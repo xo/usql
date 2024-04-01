@@ -118,6 +118,10 @@ var pvarNames = []varName{
 		`format used to display time/date column values (default "RFC3339Nano")`,
 	},
 	{
+		"timezone",
+		`the timezone to display dates in (default '')`,
+	},
+	{
 		"title",
 		"set the table title for subsequently printed tables",
 	},
@@ -294,6 +298,7 @@ func init() {
 		"recordsep_zero":           "off",
 		"tableattr":                "",
 		"time":                     "RFC3339Nano",
+		"timezone":                 "",
 		"title":                    "",
 		"tuples_only":              "off",
 		"unicode_border_linestyle": "single",
@@ -476,7 +481,7 @@ func Ptoggle(name, extra string) (string, error) {
 			pvars[name] = "aligned"
 		}
 	case "linestyle":
-	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time", "locale":
+	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time", "timezone", "locale":
 	case "tableattr", "title":
 		pvars[name] = ""
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
@@ -525,6 +530,11 @@ func Pset(name, value string) (string, error) {
 		}
 		pvars[name] = value
 	case "csv_fieldsep", "fieldsep", "null", "recordsep", "tableattr", "time", "title", "locale":
+		pvars[name] = value
+	case "timezone":
+		if _, err := time.LoadLocation(value); err != nil {
+			return "", text.ErrInvalidTimezoneLocation
+		}
 		pvars[name] = value
 	case "unicode_border_linestyle", "unicode_column_linestyle", "unicode_header_linestyle":
 		if !borderRE.MatchString(value) {

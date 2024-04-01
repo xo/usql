@@ -55,6 +55,8 @@ var (
 	ErrInvalidFormatLineStyle = errors.New(`\pset: allowed line styles are ascii, old-ascii, unicode`)
 	// ErrInvalidFormatBorderLineStyle is the invalid format border line style error.
 	ErrInvalidFormatBorderLineStyle = errors.New(`\pset: allowed Unicode border line styles are single, double`)
+	// ErrInvalidTimezoneLocation is the invalid timezone location error.
+	ErrInvalidTimezoneLocation = errors.New(`\pset: invalid timezone location`)
 	// ErrInvalidQuotedString is the invalid quoted string error.
 	ErrInvalidQuotedString = errors.New(`invalid quoted string`)
 	// ErrInvalidFormatOption is the invalid format option error.
