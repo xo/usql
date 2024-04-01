@@ -1039,8 +1039,8 @@ github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQ
 github.com/xo/dburl v0.22.0 h1:sO5WLm2ywMzyiLxEcLBlw5AyKvdR5hirq9U7s3fCoeM=
 github.com/xo/dburl v0.22.0/go.mod h1:B7/G9FGungw6ighV8xJNwWYQPMfn3gsi2sn5SE8Bzco=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
-github.com/xo/tblfmt v0.12.1 h1:kohkoLtIuuM7FiRkoYDsURPBz4viVr9wj13XUJvVSxs=
-github.com/xo/tblfmt v0.12.1/go.mod h1:AKivZTttxEXXrztqGl0dGVh4hsEOSGIfSZNbRhnKZuo=
+github.com/xo/tblfmt v0.13.0 h1:mh0ilx9rKZNoMqGwvyMpQv3MED+X6te6ZqB+BzSypck=
+github.com/xo/tblfmt v0.13.0/go.mod h1:BLPC+dRy68cgSK/mPgQRfFQ/xLg231Fyic178ybjB34=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e h1:JVG44RsyaB9T2KIHavMF/ppJZNG9ZpyihvCd0w101no=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=

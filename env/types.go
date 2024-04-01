@@ -258,6 +258,7 @@ func init() {
 		"SHOW_HOST_INFORMATION": enableHostInformation,
 		"PAGER":                 pagerCmd,
 		"EDITOR":                editorCmd,
+		"QUIET":                 "off",
 		"ON_ERROR_STOP":         "off",
 		// prompts
 		"PROMPT1": "%S%N%m%/%R%# ",

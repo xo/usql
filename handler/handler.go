@@ -228,8 +228,8 @@ var helpQuitExitRE = regexp.MustCompile(fmt.Sprintf(`(?im)^(%s|%s|%s)\s*$`, text
 func (h *Handler) Run() error {
 	stdout, stderr, iactive := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
 	// display welcome info
-	if iactive {
-		// graphics logo
+	if iactive && env.Get("QUIET") == "off" {
+		// logo
 		if typ := env.TermGraphics(); typ.Available() {
 			if err := typ.Encode(stdout, text.Logo); err != nil {
 				return err
@@ -756,7 +756,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	}
 	// open connection
 	var err error
-	h.db, err = drivers.Open(ctx, h.u, h.GetOutput, h.IO().Stderr)
+	h.db, err = drivers.Open(ctx, h.u, h.GetOutput, h.l.Stderr)
 	if err != nil && !drivers.IsPasswordErr(h.u, err) {
 		defer h.Close()
 		return err
@@ -971,19 +971,20 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version(ctx context.Context) error {
-	if env.Get("SHOW_HOST_INFORMATION") != "true" || !h.IO().Interactive() {
+	if env.Get("SHOW_HOST_INFORMATION") != "true" || !h.l.Interactive() {
 		return nil
 	}
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
 	ver, err := drivers.Version(ctx, h.u, h.DB())
-	if err != nil {
+	switch {
+	case err != nil:
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
+	case ver == "":
+		ver = "<unknown>"
 	}
-	if ver != "" {
-		h.Print(text.ConnInfo, h.u.Driver, ver)
-	}
+	h.Print(text.ConnInfo, h.u.Driver, ver)
 	return nil
 }
 
@@ -1030,13 +1031,13 @@ func (h *Handler) doExecSingle(ctx context.Context, w io.Writer, opt metacmd.Opt
 	}
 	if h.timing {
 		d := time.Since(start)
-		format := text.TimingDesc
+		s := text.TimingDesc
 		v := []interface{}{float64(d.Microseconds()) / 1000}
 		if d > 1*time.Second {
-			format += " (%v)"
+			s += " (%v)"
 			v = append(v, d.Round(1*time.Millisecond))
 		}
-		h.Print(format, v...)
+		fmt.Fprintln(h.l.Stdout(), fmt.Sprintf(s, v...))
 	}
 	return nil
 }
@@ -1123,7 +1124,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		}
 		if pipeName != "" {
 			if pipeName[0] == '|' {
-				pipe, cmd, err = env.Pipe(h.IO().Stdout(), h.IO().Stderr(), pipeName[1:])
+				pipe, cmd, err = env.Pipe(h.l.Stdout(), h.l.Stderr(), pipeName[1:])
 			} else {
 				pipe, err = os.OpenFile(pipeName, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 			}
@@ -1275,12 +1276,14 @@ func (h *Handler) doExec(ctx context.Context, w io.Writer, _ metacmd.Option, typ
 		return err
 	}
 	// print name
-	fmt.Fprint(w, typ)
-	// print count
-	if count > 0 {
-		fmt.Fprint(w, " ", count)
+	if env.Get("QUIET") == "off" {
+		fmt.Fprint(w, typ)
+		// print count
+		if count > 0 {
+			fmt.Fprint(w, " ", count)
+		}
+		fmt.Fprintln(w)
 	}
-	fmt.Fprintln(w)
 	return env.Set("ROW_COUNT", strconv.FormatInt(count, 10))
 }
 

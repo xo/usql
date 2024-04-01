@@ -94,10 +94,11 @@ func init() {
 			Name:    "copyright",
 			Desc:    Desc{"show " + text.CommandName + " usage and distribution terms", ""},
 			Process: func(p *Params) error {
+				stdout := p.Handler.IO().Stdout()
 				if typ := env.TermGraphics(); typ.Available() {
-					typ.Encode(p.Handler.IO().Stdout(), text.Logo)
+					typ.Encode(stdout, text.Logo)
 				}
-				p.Handler.Print(text.Copyright)
+				fmt.Fprintln(stdout, text.Copyright)
 				return nil
 			},
 		},
@@ -106,11 +107,11 @@ func init() {
 			Name:    "conninfo",
 			Desc:    Desc{"display information about the current database connection", ""},
 			Process: func(p *Params) error {
+				s := text.NotConnected
 				if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
-					p.Handler.Print(text.ConnInfo, u.Driver, u.DSN)
-				} else {
-					p.Handler.Print(text.NotConnected)
+					s = fmt.Sprintf(text.ConnInfo, u.Driver, u.DSN)
 				}
+				fmt.Fprintln(p.Handler.IO().Stdout(), s)
 				return nil
 			},
 		},
@@ -119,7 +120,7 @@ func init() {
 			Name:    "drivers",
 			Desc:    Desc{"display information about available database drivers", ""},
 			Process: func(p *Params) error {
-				out := p.Handler.IO().Stdout()
+				stdout := p.Handler.IO().Stdout()
 				available := drivers.Available()
 				names := make([]string, len(available))
 				var z int
@@ -128,7 +129,7 @@ func init() {
 					z++
 				}
 				sort.Strings(names)
-				fmt.Fprintln(out, text.AvailableDrivers)
+				fmt.Fprintln(stdout, text.AvailableDrivers)
 				for _, n := range names {
 					s := "  " + n
 					driver, aliases := dburl.SchemeDriverAndAliases(n)
@@ -140,7 +141,7 @@ func init() {
 							s += " [" + strings.Join(aliases, ", ") + "]"
 						}
 					}
-					fmt.Fprintln(out, s)
+					fmt.Fprintln(stdout, s)
 				}
 				return nil
 			},
@@ -366,7 +367,7 @@ func init() {
 			Aliases: map[string]Desc{"reset": {}},
 			Process: func(p *Params) error {
 				p.Handler.Reset(nil)
-				fmt.Fprintln(p.Handler.IO().Stdout(), text.QueryBufferReset)
+				p.Handler.Print(text.QueryBufferReset)
 				return nil
 			},
 		},
@@ -379,17 +380,18 @@ func init() {
 				"warn":  {"write string to standard error (-n for no newline)", "[-n] [STRING]"},
 			},
 			Process: func(p *Params) error {
-				nl := "\n"
-				var vals []string
 				ok, n, err := p.GetOptional(true)
 				if err != nil {
 					return err
 				}
-				if ok && n == "n" {
-					nl = ""
-				} else if ok {
+				f := fmt.Fprintln
+				var vals []string
+				switch {
+				case ok && n == "n":
+					f = fmt.Fprint
+				case ok:
 					vals = append(vals, "-"+n)
-				} else {
+				default:
 					vals = append(vals, n)
 				}
 				v, err := p.GetAll(true)
@@ -397,12 +399,13 @@ func init() {
 					return err
 				}
 				out := p.Handler.IO().Stdout()
-				if o := p.Handler.GetOutput(); p.Name == "qecho" && o != nil {
+				switch o := p.Handler.GetOutput(); {
+				case p.Name == "qecho" && o != nil:
 					out = o
-				} else if p.Name == "warn" {
+				case p.Name == "warn":
 					out = p.Handler.IO().Stderr()
 				}
-				fmt.Fprint(out, strings.Join(append(vals, v...), " ")+nl)
+				f(out, strings.Join(append(vals, v...), " "))
 				return nil
 			},
 		},
@@ -521,9 +524,7 @@ func init() {
 			Desc:    Desc{"send all query results to file or |pipe", "[FILE]"},
 			Aliases: map[string]Desc{"out": {}},
 			Process: func(p *Params) error {
-				if p.Handler.GetOutput() != nil {
-					p.Handler.SetOutput(nil)
-				}
+				p.Handler.SetOutput(nil)
 				params, err := p.GetAll(true)
 				if err != nil {
 					return err
