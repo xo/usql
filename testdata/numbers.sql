@@ -1,0 +1,4 @@
+select '1251258098.1555901285'::numeric;
+select '1251258098.1555901285'::float4;
+select '1251258098.1555901285'::float8;
+select '1251258098.1555901285'::double precision;
