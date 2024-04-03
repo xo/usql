@@ -99,7 +99,7 @@ func New(cliargs []string) ContextExecutor {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, cliargs []string) error {
-			// completions
+			// completions and short circuits
 			switch {
 			case bashCompletion:
 				return cmd.GenBashCompletionV2(os.Stdout, !noDescriptions)
@@ -118,6 +118,7 @@ func New(cliargs []string) ContextExecutor {
 			case badHelp:
 				return errors.New("unknown shorthand flag: 'h' in -h")
 			}
+			args.Conns = v.GetStringMapString("connections")
 			// run
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
@@ -194,15 +195,6 @@ func New(cliargs []string) ContextExecutor {
 	_ = flags.BoolP("help", "?", false, "show this help, then exit")
 	_ = c.Flags().SetAnnotation("help", cobra.FlagSetByCobraAnnotation, []string{"true"})
 
-	// expose to metacmd
-	metacmd.Usage = func(w io.Writer, banner bool) {
-		s := c.UsageString()
-		if banner {
-			s = text.Short() + "\n\n" + s
-		}
-		_, _ = w.Write([]byte(s))
-	}
-
 	// mark hidden
 	for _, name := range []string{
 		"no-psqlrc", "no-usqlrc", "var", "variable",
@@ -211,6 +203,15 @@ func New(cliargs []string) ContextExecutor {
 		"bad-help",
 	} {
 		flags.Lookup(name).Hidden = true
+	}
+
+	// expose to metacmd
+	metacmd.Usage = func(w io.Writer, banner bool) {
+		s := c.UsageString()
+		if banner {
+			s = text.Short() + "\n\n" + s
+		}
+		_, _ = w.Write([]byte(s))
 	}
 	return c
 }
@@ -227,29 +228,29 @@ func Run(ctx context.Context, args *Args) error {
 	if err != nil {
 		return err
 	}
+
 	// determine if interactive
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 	forceNonInteractive := len(args.CommandOrFiles) != 0
+
 	// enable term graphics
-	/*
-		if !forceNonInteractive && interactive && !cygwin {
-			// NOTE: this is done here and not in the env.init() package, because
-			// NOTE: we need to determine if it is interactive first, otherwise it
-			// NOTE: could mess up the non-interactive output with control characters
-			var typ string
-			if s, _ := env.Getenv(commandUpper+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
-				typ = s
-			}
-			if err := env.Set("TERM_GRAPHICS", typ); err != nil {
-				return err
-			}
+	if !forceNonInteractive && interactive && !cygwin {
+		// NOTE: this is done here and not in the env.init() package, because
+		// NOTE: we need to determine if it is interactive first, otherwise it
+		// NOTE: could mess up the non-interactive output with control characters
+		var typ string
+		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
+			typ = s
 		}
-	*/
+		if err := env.Set("TERM_GRAPHICS", typ); err != nil {
+			return err
+		}
+	}
 
-	// fmt.Fprintf(os.Stdout, "\n\nVARS: %v\n\nPVARS: %v\n\n\n", args.Variables, args.PVariables)
+	// fmt.Fprintf(os.Stdout, "VARS: %v\nPVARS: %v\n", args.Variables, args.PVariables)
 
-	// handle variables
+	// set variables
 	for _, v := range args.Variables {
 		if i := strings.Index(v, "="); i != -1 {
 			_ = env.Set(v[:i], v[i+1:])
@@ -257,13 +258,12 @@ func Run(ctx context.Context, args *Args) error {
 			_ = env.Unset(v)
 		}
 	}
+	// set pvariables
 	for _, v := range args.PVariables {
 		if i := strings.Index(v, "="); i != -1 {
 			vv := v[i+1:]
 			if c := vv[0]; c == '\'' || c == '"' {
-				var err error
-				vv, err = env.Dequote(vv, c)
-				if err != nil {
+				if vv, err = env.Dequote(vv, c); err != nil {
 					return err
 				}
 			}
@@ -283,7 +283,7 @@ func Run(ctx context.Context, args *Args) error {
 	}
 	defer l.Close()
 	// create handler
-	h := handler.New(l, u, wd, args.NoPassword)
+	h := handler.New(l, u, wd, args.NoPassword, args.Conns)
 	// force password
 	dsn := args.DSN
 	if args.ForcePassword {
@@ -337,6 +337,7 @@ type Args struct {
 	SingleTransaction bool
 	Variables         []string
 	PVariables        []string
+	Conns             map[string]string
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,
