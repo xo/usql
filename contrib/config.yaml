@@ -1,5 +1,17 @@
 connections:
-  postg: postgres://postgres:P4ssw0rd@localhost
+  cbs: couchbase://Administrator:P4ssw0rd@localhost
+  clk: clickhouse://clickhouse:P4ssw0rd@localhost
+  css: cassandra://cassandra:cassandra@localhost
+  fsl: flightsql://flight_username:P4ssw0rd@localhost
+  gdr: godror://system:P4ssw0rd@localhost/free
+  ign: ignite://ignite:ignite@localhost
+  mss: sqlserver://sa:Adm1nP@ssw0rd@localhost
+  mym: mysql://root:P4ssw0rd@localhost
+  myz: mymysql://root:P4ssw0rd@localhost
+  ora: oracle://system:P4ssw0rd@localhost/free
+  pgs: postgres://postgres:P4ssw0rd@localhost
+  pgx: pgx://postgres:P4ssw0rd@localhost
+  vrt: vertica://vertica:P4ssw0rd@localhost
 init: |
   \echo welcome to the jungle `date`
   \set SYNTAX_HL_STYLE paraiso-dark
