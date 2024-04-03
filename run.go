@@ -84,7 +84,6 @@ func New(cliargs []string) ContextExecutor {
 					_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", v.Get(f.Name)))
 				}
 			})
-
 			// unhide params
 			switch {
 			case bashCompletion,
@@ -92,8 +91,9 @@ func New(cliargs []string) ContextExecutor {
 				fishCompletion,
 				powershellCompletion,
 				cmd.Name() == "__complete":
+				flags := cmd.Root().Flags()
 				for _, name := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
-					cmd.Root().Flags().Lookup(name).Hidden = false
+					flags.Lookup(name).Hidden = false
 				}
 			}
 			return nil
@@ -118,7 +118,6 @@ func New(cliargs []string) ContextExecutor {
 			case badHelp:
 				return errors.New("unknown shorthand flag: 'h' in -h")
 			}
-
 			// run
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
@@ -184,7 +183,7 @@ func New(cliargs []string) ContextExecutor {
 	// set bools
 	ss(&args.Variables, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
 
-	// add config
+	// app config
 	_ = flags.StringP("config", "", "", "config file")
 
 	// manually set --version, see github.com/spf13/cobra/command.go
@@ -211,9 +210,7 @@ func New(cliargs []string) ContextExecutor {
 		"completion-script-powershell", "no-descriptions",
 		"bad-help",
 	} {
-		if err := flags.MarkHidden(name); err != nil {
-			panic(err)
-		}
+		flags.Lookup(name).Hidden = true
 	}
 	return c
 }
