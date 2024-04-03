@@ -84,6 +84,18 @@ func New(cliargs []string) ContextExecutor {
 					_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", v.Get(f.Name)))
 				}
 			})
+
+			// unhide params
+			switch {
+			case bashCompletion,
+				zshCompletion,
+				fishCompletion,
+				powershellCompletion,
+				cmd.Name() == "__complete":
+				for _, name := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
+					cmd.Root().Flags().Lookup(name).Hidden = false
+				}
+			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, cliargs []string) error {
