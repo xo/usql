@@ -123,7 +123,7 @@ func New(cliargs []string) ContextExecutor {
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
-			return Run(cmd.Context(), args, v.GetStringMap("connections"))
+			return Run(cmd.Context(), args, v.GetStringMap("connections"), v.GetString("init"))
 		},
 	}
 
@@ -219,7 +219,7 @@ func New(cliargs []string) ContextExecutor {
 }
 
 // Run runs the application.
-func Run(ctx context.Context, args *Args, connections map[string]interface{}) error {
+func Run(ctx context.Context, args *Args, connections map[string]interface{}, initstr string) error {
 	// get user
 	u, err := user.Current()
 	if err != nil {
@@ -331,10 +331,16 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}) er
 			return err
 		}
 	}
-	// rc file
-	if rc := env.RCFile(u); !args.NoRC && rc != "" {
-		if err = h.Include(rc, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
-			return err
+	// scripts
+	if !args.NoRC {
+		// rc file
+		if rc := env.RCFile(u); rc != "" {
+			if err = h.Include(rc, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
+				return err
+			}
+		}
+		if s := strings.TrimSpace(initstr); s != "" {
+			h.Reset([]rune(s + "\n"))
 		}
 	}
 	// setup runner
