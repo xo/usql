@@ -1,3 +1,4 @@
+---
 # named connections
 connections:
   my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
@@ -24,10 +25,17 @@ connections:
     pass: vertica
     host: localhost
   sll:
-    protocol: sqlite3
+    file: /path/to/mydb.sqlite3
   mdc: modernsqlite:test.db
   dkd: test.duckdb
   zzz: ["driver", 'param1', param2]
+  zz2:
+    proto: mysql
+    user: 'my username'
+    pass: 'my password!'
+    host: localhost
+    opts:
+      opt1: "😀"
 # startup script
 init: |
   \echo welcome to the jungle `date`
