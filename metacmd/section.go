@@ -74,12 +74,14 @@ func Listing(w io.Writer) {
 		}
 		sectionDescs[section] = descs
 	}
-	for _, section := range SectionOrder {
+	for i, section := range SectionOrder {
+		if i != 0 {
+			fmt.Fprintln(w)
+		}
 		fmt.Fprintln(w, section)
 		for _, line := range sectionDescs[section] {
 			fmt.Fprintln(w, rpad(line[0], plen), "", line[1])
 		}
-		fmt.Fprintln(w)
 	}
 }
 
