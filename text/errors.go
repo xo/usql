@@ -73,4 +73,8 @@ var (
 	ErrWrongNumberOfArguments = errors.New("wrong number of arguments")
 	// ErrUnknownFileType is the unknown file type error.
 	ErrUnknownFileType = errors.New("unknown file type")
+	// ErrNamedConnectionIsNotAURL is the named connection is not a url error.
+	ErrNamedConnectionIsNotAURL = errors.New("named connection is not a url")
+	// ErrInvalidConfig is the invalid config error.
+	ErrInvalidConfig = errors.New("invalid config")
 )

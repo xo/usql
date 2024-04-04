@@ -74,14 +74,12 @@ type Handler struct {
 	u  *dburl.URL
 	db *sql.DB
 	tx *sql.Tx
-	// conns are user defined connections.
-	conns map[string]string
 	// out file or pipe
 	out io.WriteCloser
 }
 
 // New creates a new input handler.
-func New(l rline.IO, user *user.User, wd string, nopw bool, conns map[string]string) *Handler {
+func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 	f, iactive := l.Next, l.Interactive()
 	if iactive {
 		f = func() ([]rune, error) {
@@ -96,19 +94,15 @@ func New(l rline.IO, user *user.User, wd string, nopw bool, conns map[string]str
 		}
 	}
 	h := &Handler{
-		l:     l,
-		user:  user,
-		wd:    wd,
-		nopw:  nopw,
-		buf:   stmt.New(f),
-		conns: conns,
+		l:    l,
+		user: user,
+		wd:   wd,
+		nopw: nopw,
+		buf:  stmt.New(f),
 	}
 	if iactive {
 		l.SetOutput(h.outputHighlighter)
 		l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
-	}
-	if h.conns == nil {
-		h.conns = make(map[string]string)
 	}
 	return h
 }
@@ -745,11 +739,13 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
+	if len(params) == 1 {
+		if v, ok := env.Cget(params[0]); ok {
+			params = v
+		}
+	}
 	if len(params) < 2 {
 		dsn := params[0]
-		if s, ok := h.conns[dsn]; ok {
-			dsn = s
-		}
 		// parse dsn
 		u, err := dburl.Parse(dsn)
 		if err != nil {
@@ -831,7 +827,7 @@ func (h *Handler) connStrings() []string {
 		}
 		names = append(names, fmt.Sprintf("%s://%s%s%s%s", entry.Protocol, user, host, port, dbname))
 	}
-	for name := range h.conns {
+	for name := range env.Call() {
 		names = append(names, name)
 	}
 	sort.Strings(names)
@@ -860,11 +856,13 @@ func (h *Handler) forceParams(u *dburl.URL) {
 // Password collects a password from input, and returns a modified DSN
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
-	switch s, ok := h.conns[dsn]; {
+	switch v, ok := env.Cget(dsn); {
 	case dsn == "":
 		return "", text.ErrMissingDSN
+	case ok && len(v) < 2:
+		return "", text.ErrNamedConnectionIsNotAURL
 	case ok:
-		dsn = s
+		dsn = v[0]
 	}
 	u, err := dburl.Parse(dsn)
 	if err != nil {
@@ -1403,7 +1401,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		Err: h.l.Stderr(),
 		Pw:  h.l.Password,
 	}
-	p := New(l, h.user, filepath.Dir(path), h.nopw, h.conns)
+	p := New(l, h.user, filepath.Dir(path), h.nopw)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
 	err = p.Run()

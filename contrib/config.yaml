@@ -1,9 +1,16 @@
+# named connections
 connections:
-  cbs: couchbase://Administrator:P4ssw0rd@localhost
-  clk: clickhouse://clickhouse:P4ssw0rd@localhost
+  my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
+  my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
   css: cassandra://cassandra:cassandra@localhost
   fsl: flightsql://flight_username:P4ssw0rd@localhost
-  gdr: godror://system:P4ssw0rd@localhost/free
+  gdr:
+    protocol: godror
+    username: system
+    password: P4ssw0rd
+    hostname: localhost
+    port: 1521
+    database: free
   ign: ignite://ignite:ignite@localhost
   mss: sqlserver://sa:Adm1nP@ssw0rd@localhost
   mym: mysql://root:P4ssw0rd@localhost
@@ -11,7 +18,17 @@ connections:
   ora: oracle://system:P4ssw0rd@localhost/free
   pgs: postgres://postgres:P4ssw0rd@localhost
   pgx: pgx://postgres:P4ssw0rd@localhost
-  vrt: vertica://vertica:P4ssw0rd@localhost
+  vrt:
+    proto: vertica
+    user: vertica
+    pass: vertica
+    host: localhost
+  sll:
+    protocol: sqlite3
+  mdc: modernsqlite:test.db
+  dkd: test.duckdb
+  zzz: ["driver", 'param1', param2]
+# startup script
 init: |
   \echo welcome to the jungle `date`
   \set SYNTAX_HL_STYLE paraiso-dark

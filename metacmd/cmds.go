@@ -18,6 +18,7 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
+	"golang.org/x/exp/maps"
 )
 
 // Cmd is a command implementation.
@@ -56,7 +57,7 @@ func init() {
 				stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
 				var cmd *exec.Cmd
 				var wc io.WriteCloser
-				if pager := env.Get("PAGER"); pager != "" {
+				if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
 					if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
 						return err
 					}
@@ -120,7 +121,16 @@ func init() {
 			Name:    "drivers",
 			Desc:    Desc{"display information about available database drivers", ""},
 			Process: func(p *Params) error {
-				stdout := p.Handler.IO().Stdout()
+				stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
+				var cmd *exec.Cmd
+				var wc io.WriteCloser
+				if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
+					var err error
+					if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
+						return err
+					}
+					stdout = wc
+				}
 				available := drivers.Available()
 				names := make([]string, len(available))
 				var z int
@@ -143,6 +153,12 @@ func init() {
 					}
 					fmt.Fprintln(stdout, s)
 				}
+				if cmd != nil {
+					if err := wc.Close(); err != nil {
+						return err
+					}
+					return cmd.Wait()
+				}
 				return nil
 			},
 		},
@@ -162,6 +178,35 @@ func init() {
 				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 				defer cancel()
 				return p.Handler.Open(ctx, vals...)
+			},
+		},
+		SetConnVar: {
+			Section: SectionConnection,
+			Name:    "cset",
+			Desc:    Desc{"set named connection, or list all if no parameters", "[NAME [DSN]]"},
+			Aliases: map[string]Desc{
+				"cset": {"define named connection for database driver", "NAME DRIVER PARAMS..."},
+			},
+			Process: func(p *Params) error {
+				ok, n, err := p.GetOK(true)
+				switch {
+				case err != nil:
+					return err
+				case ok:
+					vals, err := p.GetAll(true)
+					if err != nil {
+						return err
+					}
+					return env.Cset(n, vals...)
+				}
+				vals := env.Call()
+				keys := maps.Keys(vals)
+				sort.Strings(keys)
+				out := p.Handler.IO().Stdout()
+				for _, k := range keys {
+					fmt.Fprintln(out, k, "=", "'"+strings.Join(vals[k], " ")+"'")
+				}
+				return nil
 			},
 		},
 		Disconnect: {
@@ -668,29 +713,24 @@ func init() {
 			Desc:    Desc{"set internal variable, or list all if no parameters", "[NAME [VALUE]]"},
 			Process: func(p *Params) error {
 				ok, n, err := p.GetOK(true)
-				if err != nil {
+				switch {
+				case err != nil:
 					return err
-				}
-				if !ok {
-					vals := env.All()
-					out := p.Handler.IO().Stdout()
-					n := make([]string, len(vals))
-					var i int
-					for k := range vals {
-						n[i] = k
-						i++
+				case ok:
+					vals, err := p.GetAll(true)
+					if err != nil {
+						return err
 					}
-					sort.Strings(n)
-					for _, k := range n {
-						fmt.Fprintln(out, k, "=", "'"+vals[k]+"'")
-					}
-					return nil
+					return env.Set(n, strings.Join(vals, " "))
 				}
-				vals, err := p.GetAll(true)
-				if err != nil {
-					return err
+				vals := env.All()
+				keys := maps.Keys(vals)
+				sort.Strings(keys)
+				out := p.Handler.IO().Stdout()
+				for _, k := range keys {
+					fmt.Fprintln(out, k, "=", "'"+vals[k]+"'")
 				}
-				return env.Set(n, strings.Join(vals, ""))
+				return nil
 			},
 		},
 		Unset: {
@@ -705,7 +745,7 @@ func init() {
 				return env.Unset(n)
 			},
 		},
-		SetFormatVar: {
+		SetPrintVar: {
 			Section: SectionFormatting,
 			Name:    "pset",
 			Desc:    Desc{"set table output option", "[NAME [VALUE]]"},
@@ -981,6 +1021,6 @@ func init() {
 	}
 }
 
-// Usage is used by the [Question] command to display command line options
+// Usage is used by the [Question] command to display command line options.
 var Usage = func(io.Writer, bool) {
 }

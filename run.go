@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/xo/dburl"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/handler"
 	"github.com/xo/usql/metacmd"
@@ -118,12 +119,11 @@ func New(cliargs []string) ContextExecutor {
 			case badHelp:
 				return errors.New("unknown shorthand flag: 'h' in -h")
 			}
-			args.Conns = v.GetStringMapString("connections")
 			// run
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
-			return Run(cmd.Context(), args)
+			return Run(cmd.Context(), args, v.GetStringMap("connections"))
 		},
 	}
 
@@ -162,27 +162,29 @@ func New(cliargs []string) ContextExecutor {
 		}
 	}
 	// set
-	ss(&args.Variables, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
-	ss(&args.Variables, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
-	ss(&args.Variables, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
+	ss(&args.Vars, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
+	ss(&args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
+	ss(&args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
+	// cset
+	ss(&args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
 	// pset
-	ss(&args.PVariables, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
+	ss(&args.Pvars, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
 	// pset flags
-	ss(&args.PVariables, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
-	ss(&args.PVariables, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
-	ss(&args.PVariables, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
+	ss(&args.Pvars, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
+	ss(&args.Pvars, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
+	ss(&args.Pvars, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
 	// pset bools
-	ss(&args.PVariables, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
-	ss(&args.PVariables, "html", "H", "HTML table output mode", "", "format=html")
-	ss(&args.PVariables, "tuples-only", "t", "print rows only", "", "tuples_only=on")
-	ss(&args.PVariables, "expanded", "x", "turn on expanded table output", "", "expanded=on")
-	ss(&args.PVariables, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
-	ss(&args.PVariables, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
-	ss(&args.PVariables, "json", "J", "JSON output mode", "", "format=json")
-	ss(&args.PVariables, "csv", "C", "CSV output mode", "", "format=csv")
-	ss(&args.PVariables, "vertical", "G", "vertical output mode", "", "format=vertical")
+	ss(&args.Pvars, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
+	ss(&args.Pvars, "html", "H", "HTML table output mode", "", "format=html")
+	ss(&args.Pvars, "tuples-only", "t", "print rows only", "", "tuples_only=on")
+	ss(&args.Pvars, "expanded", "x", "turn on expanded table output", "", "expanded=on")
+	ss(&args.Pvars, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
+	ss(&args.Pvars, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
+	ss(&args.Pvars, "json", "J", "JSON output mode", "", "format=json")
+	ss(&args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
+	ss(&args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
 	// set bools
-	ss(&args.Variables, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
+	ss(&args.Vars, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
 
 	// app config
 	_ = flags.StringP("config", "", "", "config file")
@@ -217,7 +219,7 @@ func New(cliargs []string) ContextExecutor {
 }
 
 // Run runs the application.
-func Run(ctx context.Context, args *Args) error {
+func Run(ctx context.Context, args *Args, connections map[string]interface{}) error {
 	// get user
 	u, err := user.Current()
 	if err != nil {
@@ -248,26 +250,51 @@ func Run(ctx context.Context, args *Args) error {
 		}
 	}
 
-	// fmt.Fprintf(os.Stdout, "VARS: %v\nPVARS: %v\n", args.Variables, args.PVariables)
+	// configured named connections
+	for name, v := range connections {
+		if err := setConn(name, v); err != nil && !forceNonInteractive && interactive {
+			fmt.Fprintln(os.Stderr, fmt.Sprintf(text.InvalidNamedConnection, name, err))
+		}
+	}
 
-	// set variables
-	for _, v := range args.Variables {
+	// fmt.Fprintf(os.Stdout, "VARS: %v\nCVARS: %v\nPVARS: %v\n", args.Vars, args.Cvars, args.Pvars)
+
+	// set vars
+	for _, v := range args.Vars {
 		if i := strings.Index(v, "="); i != -1 {
 			_ = env.Set(v[:i], v[i+1:])
 		} else {
 			_ = env.Unset(v)
 		}
 	}
-	// set pvariables
-	for _, v := range args.PVariables {
+	// set cvars
+	for _, v := range args.Cvars {
 		if i := strings.Index(v, "="); i != -1 {
-			vv := v[i+1:]
-			if c := vv[0]; c == '\'' || c == '"' {
-				if vv, err = env.Dequote(vv, c); err != nil {
+			s := v[i+1:]
+			if c := s[0]; c == '\'' || c == '"' {
+				if s, err = env.Dequote(s, c); err != nil {
 					return err
 				}
 			}
-			if _, err = env.Pset(v[:i], vv); err != nil {
+			if err = env.Cset(v[:i], s); err != nil {
+				return err
+			}
+		} else {
+			if err = env.Cset(v, ""); err != nil {
+				return err
+			}
+		}
+	}
+	// set pvars
+	for _, v := range args.Pvars {
+		if i := strings.Index(v, "="); i != -1 {
+			s := v[i+1:]
+			if c := s[0]; c == '\'' || c == '"' {
+				if s, err = env.Dequote(s, c); err != nil {
+					return err
+				}
+			}
+			if _, err = env.Pset(v[:i], s); err != nil {
 				return err
 			}
 		} else {
@@ -283,7 +310,7 @@ func Run(ctx context.Context, args *Args) error {
 	}
 	defer l.Close()
 	// create handler
-	h := handler.New(l, u, wd, args.NoPassword, args.Conns)
+	h := handler.New(l, u, wd, args.NoPassword)
 	// force password
 	dsn := args.DSN
 	if args.ForcePassword {
@@ -335,9 +362,9 @@ type Args struct {
 	NoPassword        bool
 	NoRC              bool
 	SingleTransaction bool
-	Variables         []string
-	PVariables        []string
-	Conns             map[string]string
+	Vars              []string
+	Cvars             []string
+	Pvars             []string
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,
@@ -431,6 +458,23 @@ func (filevar) String() string {
 // Type satisfies the [pflag.Value] interface.
 func (filevar) Type() string {
 	return "FILE"
+}
+
+// setConn sets a named connection.
+func setConn(name string, v interface{}) error {
+	switch x := v.(type) {
+	case string:
+		return env.Cset(name, x)
+	case []string:
+		return env.Cset(name, x...)
+	case map[string]interface{}:
+		urlstr, err := dburl.BuildURL(x)
+		if err != nil {
+			return err
+		}
+		return env.Cset(name, urlstr)
+	}
+	return text.ErrInvalidConfig
 }
 
 // runCommandOrFiles processes all the supplied commands or files.

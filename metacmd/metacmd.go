@@ -40,6 +40,8 @@ const (
 	Copyright
 	// Connect is the connect meta command (\c, \connect).
 	Connect
+	// SetConnVar is the set conn var command (\cset).
+	SetConnVar
 	// Copy is the copy meta command (\copy).
 	Copy
 	// Disconnect is the disconnect meta command (\Z).
@@ -86,8 +88,8 @@ const (
 	SetVar
 	// Unset is the variable unset meta command (\unset).
 	Unset
-	// SetFormatVar is the set format variable meta commands (\pset, \a, \C, \f, \H, \t, \T, \x).
-	SetFormatVar
+	// SetPrintVar is the set print variable meta commands (\pset, \a, \C, \f, \H, \t, \T, \x).
+	SetPrintVar
 	// Timing is the timing meta command (\timing).
 	Timing
 	// Stats is the show stats meta command (\ss and variants).

@@ -216,7 +216,14 @@ func (v Vars) All() map[string]string {
 	return map[string]string(v)
 }
 
-var vars, pvars Vars
+// vars are the environment variables.
+var vars Vars
+
+// pvars are the environment printing variables.
+var pvars Vars
+
+// cvars are the environment named connections.
+var cvars map[string][]string
 
 func init() {
 	cmdNameUpper := strings.ToUpper(text.CommandName)
@@ -305,6 +312,7 @@ func init() {
 		"unicode_column_linestyle": "single",
 		"unicode_header_linestyle": "single",
 	}
+	cvars = make(map[string][]string)
 }
 
 // ValidIdentifier returns an error when n is not a valid identifier.
@@ -545,6 +553,43 @@ func Pset(name, value string) (string, error) {
 		panic(fmt.Sprintf("field %s was defined in package pvars variable, but not in switch", name))
 	}
 	return pvars[name], nil
+}
+
+// Cset sets a named connection for the environment.
+func Cset(name string, vals ...string) error {
+	if err := ValidIdentifier(name); err != nil {
+		return err
+	}
+	if _, ok := cvars[name]; len(vals) == 0 || vals[0] == "" && ok {
+		delete(cvars, name)
+	} else {
+		v := make([]string, len(vals))
+		copy(v, vals)
+		cvars[name] = v
+	}
+	return nil
+}
+
+// Cget returns the environment's named connection.
+func Cget(name string) ([]string, bool) {
+	vals, ok := cvars[name]
+	if !ok {
+		return nil, false
+	}
+	v := make([]string, len(vals))
+	copy(v, vals)
+	return v, true
+}
+
+// Call returns all named connections from the environment.
+func Call() map[string][]string {
+	m := make(map[string][]string, len(cvars))
+	for k, vals := range cvars {
+		v := make([]string, len(vals))
+		copy(v, vals)
+		m[k] = v
+	}
+	return m
 }
 
 // timeConsts are well known time consts.

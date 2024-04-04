@@ -85,16 +85,17 @@ var (
 		`tableattr`: `Table attributes unset.`,
 		`title`:     `Title is unset.`,
 	}
-	TimingSet            = `Timing is %s.`
-	TimingDesc           = `Time: %0.3f ms`
-	InvalidValue         = `invalid -%s value %q: %s`
-	NotSupportedByDriver = `%s not supported by %s driver`
-	RelationNotFound     = `Did not find any relation named "%s".`
-	InvalidOption        = `invalid option %q`
-	NotificationReceived = `Asynchronous notification %q %sreceived from server process with PID %d.`
-	NotificationPayload  = `with payload %q `
-	UnknownShortAlias    = `(unk)`
-	UsageTemplate        = `Usage:
+	TimingSet              = `Timing is %s.`
+	TimingDesc             = `Time: %0.3f ms`
+	InvalidValue           = `invalid -%s value %q: %s`
+	NotSupportedByDriver   = `%s not supported by %s driver`
+	RelationNotFound       = `Did not find any relation named "%s".`
+	InvalidOption          = `invalid option %q`
+	NotificationReceived   = `Asynchronous notification %q %sreceived from server process with PID %d.`
+	NotificationPayload    = `with payload %q `
+	UnknownShortAlias      = `(unk)`
+	InvalidNamedConnection = `warning: named connection %q was not defined: %v`
+	UsageTemplate          = `Usage:
   {{.UseLine}}
 
 Arguments:
