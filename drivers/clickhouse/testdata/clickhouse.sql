@@ -340,3 +340,11 @@ CREATE TABLE tutorial_unexpected.hits_v1 (
 )
 ENGINE = MergeTree()
 ORDER BY (Unexpected);
+
+CREATE DATABASE copy_test;
+CREATE TABLE copy_test.dest (
+    StringCol String,
+    NumCol UInt32
+)
+ENGINE = MergeTree()
+ORDER BY (StringCol);
