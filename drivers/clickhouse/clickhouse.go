@@ -65,7 +65,6 @@ func CopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, table strin
 			}
 			table += "(" + strings.Join(columns, ", ") + ")"
 		}
-		// TODO if the db supports multiple rows per insert, create batches of 10 rows
 		query = "INSERT INTO " + table + " VALUES (" + strings.Repeat("?, ", clen-1) + "?)"
 	}
 	tx, err := db.BeginTx(ctx, nil)
@@ -109,8 +108,6 @@ func CopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, table strin
 		}
 		n += rn
 	}
-	// TODO if using batches, flush the last batch,
-	// TODO prepare another statement and count remaining rows
 	err = tx.Commit()
 	if err != nil {
 		return n, fmt.Errorf("failed to commit transaction: %w", err)
