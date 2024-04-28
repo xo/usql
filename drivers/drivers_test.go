@@ -423,6 +423,15 @@ func TestCopy(t *testing.T) {
 			dest: "staff_copy",
 		},
 		{
+			dbName: "pgsql",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select * from staff",
+			dest: "public.staff_copy",
+		},
+		{
 			dbName: "pgx",
 			setupQueries: []setupQuery{
 				{query: "DROP TABLE staff_copy"},
@@ -430,6 +439,15 @@ func TestCopy(t *testing.T) {
 			},
 			src:  "select * from staff",
 			dest: "staff_copy",
+		},
+		{
+			dbName: "pgx",
+			setupQueries: []setupQuery{
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select * from staff",
+			dest: "public.staff_copy",
 		},
 		{
 			dbName: "mysql",

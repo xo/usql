@@ -137,7 +137,11 @@ func init() {
 				if err != nil {
 					return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
 				}
-				query = pq.CopyIn(table, columns...)
+				if schemaSep := strings.Index(table, "."); schemaSep >= 0 {
+					query = pq.CopyInSchema(table[:schemaSep], table[schemaSep+1:], columns...)
+				} else {
+					query = pq.CopyIn(table, columns...)
+				}
 			}
 			tx, err := db.BeginTx(ctx, nil)
 			if err != nil {
