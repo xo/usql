@@ -122,7 +122,7 @@ func init() {
 			var n int64
 			err = conn.Raw(func(driverConn interface{}) error {
 				conn := driverConn.(*stdlib.Conn).Conn()
-				n, err = conn.CopyFrom(ctx, pgx.Identifier{table}, columns, crows)
+				n, err = conn.CopyFrom(ctx, pgx.Identifier(strings.SplitN(table, ".", 2)), columns, crows)
 				return err
 			})
 			return n, err
@@ -141,7 +141,11 @@ func (r *copyRows) Next() bool {
 
 func (r *copyRows) Values() ([]interface{}, error) {
 	err := r.rows.Scan(r.values...)
-	return r.values, err
+	actuals := make([]interface{}, len(r.values))
+	for i, v := range r.values {
+		actuals[i] = *(v.(*interface{}))
+	}
+	return actuals, err
 }
 
 func (r *copyRows) Err() error {
