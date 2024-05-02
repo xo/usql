@@ -540,16 +540,12 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 		if !strings.HasPrefix(strings.ToLower(query), "insert into") {
 			leftParen := strings.IndexRune(table, '(')
 			if leftParen == -1 {
-				colStmt, err := db.PrepareContext(ctx, "SELECT * FROM "+table+" WHERE 1=0")
-				if err != nil {
-					return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
-				}
-				defer colStmt.Close()
-				colRows, err := colStmt.QueryContext(ctx)
+				colRows, err := db.QueryContext(ctx, "SELECT * FROM "+table+" WHERE 1=0")
 				if err != nil {
 					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
 				}
 				columns, err := colRows.Columns()
+				_ = colRows.Close()
 				if err != nil {
 					return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
 				}
@@ -576,8 +572,11 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			return 0, fmt.Errorf("failed to fetch source column types: %w", err)
 		}
 		values := make([]interface{}, clen)
+		valueRefs := make([]reflect.Value, clen)
+		actuals := make([]interface{}, clen)
 		for i := 0; i < len(columnTypes); i++ {
-			values[i] = reflect.New(columnTypes[i].ScanType()).Interface()
+			valueRefs[i] = reflect.New(columnTypes[i].ScanType())
+			values[i] = valueRefs[i].Interface()
 		}
 		var n int64
 		for rows.Next() {
@@ -585,7 +584,12 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			if err != nil {
 				return n, fmt.Errorf("failed to scan row: %w", err)
 			}
-			res, err := stmt.ExecContext(ctx, values...)
+			//We can't use values... in Exec() below, because some drivers
+			//don't accept pointer to an argument instead of the arg itself.
+			for i := range values {
+				actuals[i] = valueRefs[i].Elem().Interface()
+			}
+			res, err := stmt.ExecContext(ctx, actuals...)
 			if err != nil {
 				return n, fmt.Errorf("failed to exec insert: %w", err)
 			}
