@@ -115,6 +115,10 @@ var (
 			DSN:        "trino://test@localhost:%s/tpch/sf1",
 			DockerPort: "8080/tcp",
 		},
+		"csvq": {
+			// go test sets working directory to current package regardless of initial working directory
+			DSN: "csvq://./testdata/csvq",
+		},
 	}
 	cleanup bool
 )
@@ -144,30 +148,21 @@ func TestMain(m *testing.M) {
 	}
 
 	for dbName, db := range dbs {
-		var ok bool
-		db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
-		if !ok {
-			buildOpts := &dt.BuildOptions{
-				ContextDir: "./testdata/docker",
-				BuildArgs:  db.BuildArgs,
-			}
-			db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)
-			if err != nil {
-				log.Fatalf("Could not start %s: %s", dbName, err)
-			}
-		}
-
-		hostPort := db.Resource.GetPort(db.DockerPort)
-		db.URL, err = dburl.Parse(fmt.Sprintf(db.DSN, hostPort))
+		dsn, hostPort := getConnInfo(dbName, db, pool)
+		db.URL, err = dburl.Parse(dsn)
 		if err != nil {
 			log.Fatalf("Failed to parse %s URL %s: %v", dbName, db.DSN, err)
 		}
 
 		if len(db.Exec) != 0 {
+			readyDSN := db.ReadyDSN
 			if db.ReadyDSN == "" {
-				db.ReadyDSN = db.DSN
+				readyDSN = db.DSN
 			}
-			readyURL, err := dburl.Parse(fmt.Sprintf(db.ReadyDSN, hostPort))
+			if hostPort != "" {
+				readyDSN = fmt.Sprintf(db.ReadyDSN, hostPort)
+			}
+			readyURL, err := dburl.Parse(readyDSN)
 			if err != nil {
 				log.Fatalf("Failed to parse %s ready URL %s: %v", dbName, db.ReadyDSN, err)
 			}
@@ -205,13 +200,44 @@ func TestMain(m *testing.M) {
 	// You can't defer this because os.Exit doesn't care for defer
 	if cleanup {
 		for _, db := range dbs {
-			if err := pool.Purge(db.Resource); err != nil {
-				log.Fatal("Could not purge resource: ", err)
+			if db.Resource != nil {
+				if err := pool.Purge(db.Resource); err != nil {
+					log.Fatal("Could not purge resource: ", err)
+				}
 			}
 		}
 	}
 
 	os.Exit(code)
+}
+
+func getConnInfo(dbName string, db *Database, pool *dt.Pool) (string, string) {
+	if db.RunOptions == nil {
+		return db.DSN, ""
+	}
+
+	var ok bool
+	db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
+	if ok && !db.Resource.Container.State.Running {
+		err := db.Resource.Close()
+		if err != nil {
+			log.Fatalf("Failed to clean up stale container %s: %s", dbName, err)
+		}
+		ok = false
+	}
+	if !ok {
+		buildOpts := &dt.BuildOptions{
+			ContextDir: "./testdata/docker",
+			BuildArgs:  db.BuildArgs,
+		}
+		var err error
+		db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)
+		if err != nil {
+			log.Fatalf("Failed to start %s: %s", dbName, err)
+		}
+	}
+	hostPort := db.Resource.GetPort(db.DockerPort)
+	return fmt.Sprintf(db.DSN, hostPort), hostPort
 }
 
 func TestWriter(t *testing.T) {
@@ -467,6 +493,14 @@ func TestCopy(t *testing.T) {
 			src:  "select first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update from staff",
 			dest: "staff_copy(first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update)",
 		},
+		{
+			dbName: "csvq",
+			setupQueries: []setupQuery{
+				{query: "CREATE TABLE IF NOT EXISTS staff_copy AS SELECT * FROM `staff.csv` WHERE 0=1", check: true},
+			},
+			src:  "select first_name, last_name, address_id, email, store_id, active, username, password, last_update from staff",
+			dest: "staff_copy",
+		},
 	}
 	for _, test := range testCases {
 		db, ok := dbs[test.dbName]
@@ -474,30 +508,33 @@ func TestCopy(t *testing.T) {
 			continue
 		}
 
-		// TODO test copy from a different DB, maybe csvq?
-		// TODO test copy from same DB
+		t.Run(test.dbName, func(t *testing.T) {
 
-		for _, q := range test.setupQueries {
-			_, err := db.DB.Exec(q.query)
-			if q.check && err != nil {
-				log.Fatalf("Failed to run setup query `%s`: %v", q.query, err)
+			// TODO test copy from a different DB, maybe csvq?
+			// TODO test copy from same DB
+
+			for _, q := range test.setupQueries {
+				_, err := db.DB.Exec(q.query)
+				if q.check && err != nil {
+					t.Fatalf("Failed to run setup query `%s`: %v", q.query, err)
+				}
 			}
-		}
-		rows, err := pg.DB.Query(test.src)
-		if err != nil {
-			log.Fatalf("Could not get rows to copy: %v", err)
-		}
+			rows, err := pg.DB.Query(test.src)
+			if err != nil {
+				t.Fatalf("Could not get rows to copy: %v", err)
+			}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		var rlen int64 = 1
-		n, err := drivers.Copy(ctx, db.URL, nil, nil, rows, test.dest)
-		if err != nil {
-			log.Fatalf("Could not copy: %v", err)
-		}
-		if n != rlen {
-			log.Fatalf("Expected to copy %d rows but got %d", rlen, n)
-		}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var rlen int64 = 1
+			n, err := drivers.Copy(ctx, db.URL, nil, nil, rows, test.dest)
+			if err != nil {
+				t.Fatalf("Could not copy: %v", err)
+			}
+			if n != rlen {
+				t.Fatalf("Expected to copy %d rows but got %d", rlen, n)
+			}
+		})
 	}
 }
 
