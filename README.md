@@ -376,42 +376,39 @@ $ usql pg://localhost/ -f script.sql
 Supported command-line options:
 
 ```sh
-$ usql --help
-usql, the universal command-line interface for SQL databases
-
 Usage:
-  usql [OPTIONS]... [DSN]
+  usql [flags]... [DSN]
 
 Arguments:
-  DSN                            database url
+  DSN   database url or connection name
 
-Options:
-  -c, --command=COMMAND ...    run only single command (SQL or internal) and exit
-  -f, --file=FILE ...          execute commands from file and exit
-  -w, --no-password            never prompt for password
-  -X, --no-rc                  do not read start up file
-  -o, --out=OUT                output file
-  -W, --password               force password prompt (should happen automatically)
-  -1, --single-transaction     execute as a single transaction (if non-interactive)
-  -v, --set=, --variable=NAME=VALUE ...
-                               set variable NAME to VALUE
-  -P, --pset=VAR[=ARG] ...     set printing option VAR to ARG (see \pset command)
-  -F, --field-separator=FIELD-SEPARATOR ...
-                               field separator for unaligned output (default, "|")
-  -R, --record-separator=RECORD-SEPARATOR ...
-                               record separator for unaligned output (default, \n)
-  -T, --table-attr=TABLE-ATTR ...
-                               set HTML table tag attributes (e.g., width, border)
-  -A, --no-align               unaligned table output mode
-  -H, --html                   HTML table output mode
-  -t, --tuples-only            print rows only
-  -x, --expanded               turn on expanded table output
-  -z, --field-separator-zero   set field separator for unaligned output to zero byte
-  -0, --record-separator-zero  set record separator for unaligned output to zero byte
-  -J, --json                   JSON output mode
-  -C, --csv                    CSV output mode
-  -G, --vertical               vertical output mode
-  -V, --version                display version and exit
+Flags:
+  -c, --command COMMAND                     run only single command (SQL or internal) and exit
+  -f, --file FILE                           execute commands from file and exit
+  -w, --no-password                         never prompt for password
+  -X, --no-rc                               do not read start up file (aliases: --no-psqlrc --no-usqlrc)
+  -o, --out FILE                            output file
+  -W, --password                            force password prompt (should happen automatically)
+  -1, --single-transaction                  execute as a single transaction (if non-interactive)
+  -v, --set NAME=VALUE                      set variable NAME to VALUE (see \set command, aliases: --var --variable)
+  -N, --cset NAME=DSN                       set named connection NAME to DSN (see \cset command)
+  -P, --pset VAR=ARG                        set printing option VAR to ARG (see \pset command)
+  -F, --field-separator FIELD-SEPARATOR     field separator for unaligned and CSV output (default "|" and ",")
+  -R, --record-separator RECORD-SEPARATOR   record separator for unaligned and CSV output (default \n)
+  -T, --table-attr TABLE-ATTR               set HTML table tag attributes (e.g., width, border)
+  -A, --no-align                            unaligned table output mode
+  -H, --html                                HTML table output mode
+  -t, --tuples-only                         print rows only
+  -x, --expanded                            turn on expanded table output
+  -z, --field-separator-zero                set field separator for unaligned and CSV output to zero byte
+  -0, --record-separator-zero               set record separator for unaligned and CSV output to zero byte
+  -J, --json                                JSON output mode
+  -C, --csv                                 CSV output mode
+  -G, --vertical                            vertical output mode
+  -q, --quiet                               run quietly (no messages, only query output)
+      --config string                       config file
+  -V, --version                             output version information, then exit
+  -?, --help                                show this help, then exit
 ```
 
 ### Connecting to Databases
@@ -638,7 +635,6 @@ General
   \drivers                             display information about available database drivers
 
 Query Execute
-  \bind [PARAM]...                     set query parameters
   \g [(OPTIONS)] [FILE] or ;           execute query (and send results to file or |pipe)
   \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
   \G [(OPTIONS)] [FILE]                as \g, but forces vertical output mode
@@ -646,6 +642,7 @@ Query Execute
   \gset [PREFIX]                       execute query and store results in usql variables
   \gx [(OPTIONS)] [FILE]               as \g, but forces expanded output mode
   \watch [(OPTIONS)] [DURATION]        execute query every specified interval
+  \bind [PARAM]...                     set query parameters
 
 Query Buffer
   \e [FILE] [LINE]                     edit the query buffer (or file) with external editor
@@ -702,14 +699,16 @@ Transaction
 Connection
   \c DSN                               connect to database url
   \c DRIVER PARAMS...                  connect to database with driver and parameters
+  \cset [NAME [DSN]]                   set named connection, or list all if no parameters
+  \cset NAME DRIVER PARAMS...          define named connection for database driver
   \Z                                   close database connection
   \password [USERNAME]                 change the password for a user
   \conninfo                            display information about the current database connection
 
 Operating System
   \cd [DIR]                            change the current working directory
-  \setenv NAME [VALUE]                 set or unset environment variable
   \getenv VARNAME ENVVAR               fetch environment variable
+  \setenv NAME [VALUE]                 set or unset environment variable
   \! [COMMAND]                         execute command in shell or start interactive shell
   \timing [on|off]                     toggle timing of commands
 
