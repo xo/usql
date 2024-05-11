@@ -174,7 +174,7 @@ var envVarNames = []varName{
 	},
 	{
 		text.CommandUpper() + "_SSLMODE, SSLMODE",
-		"when set to 'retry', allows postgres connections to attempt to reconnect when no ?sslmode= was specified on the url",
+		"when set to 'retry', allows connections to attempt to reconnect when no ?sslmode= was specified on the url",
 	},
 	{
 		"SYNTAX_HL",
@@ -635,13 +635,26 @@ func Listing(w io.Writer) {
 	for i, v := range pvarNames {
 		pvarsWithDesc[i] = v.String()
 	}
-	envVarsWithDesc := make([]string, len(envVarNames))
-	for i, v := range envVarNames {
-		envVarsWithDesc[i] = v.String()
-	}
 
 	// determine config dir name
 	configDir, configExtra := buildConfigDir("config.yaml")
+
+	// environment var names
+	configDesc := configDir
+	if configExtra != "" {
+		configDesc = configExtra
+	}
+	ev := []varName{
+		{
+			text.CommandUpper() + "_CONFIG",
+			fmt.Sprintf(`config file path (default %q)`, configDesc),
+		},
+	}
+	envVarsWithDesc := make([]string, len(envVarNames)+1)
+	for i, v := range append(ev, envVarNames...) {
+		envVarsWithDesc[i] = v.String()
+	}
+
 	if configExtra != "" {
 		configExtra = " (" + configExtra + ")"
 	}
