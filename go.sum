@@ -1513,8 +1513,8 @@ github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 h1:EzJWgHo
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
 github.com/xeipuuv/gojsonschema v1.2.0 h1:LhYJRs+L4fBtjZUfuSZIKGeVu0QRy8e5Xi7D17UxZ74=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
-github.com/xo/dburl v0.23.0 h1:XoLcZ/Dy2SlaTmVbACNyfmHcexvMl0+7NRrak92jn5g=
-github.com/xo/dburl v0.23.0/go.mod h1:B7/G9FGungw6ighV8xJNwWYQPMfn3gsi2sn5SE8Bzco=
+github.com/xo/dburl v0.23.1 h1:PX1RgQaaJV1S5iADcM1TT39OLrg5daeV6Hp7RYwVoYw=
+github.com/xo/dburl v0.23.1/go.mod h1:B7/G9FGungw6ighV8xJNwWYQPMfn3gsi2sn5SE8Bzco=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
 github.com/xo/tblfmt v0.13.1 h1:lhQAH5OSPhKCEvmh4suPe52woLuF2npX2TLB91CiPZ4=
 github.com/xo/tblfmt v0.13.1/go.mod h1:BLPC+dRy68cgSK/mPgQRfFQ/xLg231Fyic178ybjB34=
