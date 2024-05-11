@@ -237,19 +237,21 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 	forceNonInteractive := len(args.CommandOrFiles) != 0
 
-	// enable term graphics
-	if !forceNonInteractive && interactive && !cygwin {
-		// NOTE: this is done here and not in the env.init() package, because
-		// NOTE: we need to determine if it is interactive first, otherwise it
-		// NOTE: could mess up the non-interactive output with control characters
-		var typ string
-		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
-			typ = s
+	/*
+		// enable term graphics
+		if !forceNonInteractive && interactive && !cygwin {
+			// NOTE: this is done here and not in the env.init() package, because
+			// NOTE: we need to determine if it is interactive first, otherwise it
+			// NOTE: could mess up the non-interactive output with control characters
+			var typ string
+			if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
+				typ = s
+			}
+			if err := env.Set("TERM_GRAPHICS", typ); err != nil {
+				return err
+			}
 		}
-		if err := env.Set("TERM_GRAPHICS", typ); err != nil {
-			return err
-		}
-	}
+	*/
 
 	// configured named connections
 	for name, v := range connections {
