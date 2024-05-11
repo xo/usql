@@ -148,9 +148,10 @@ func New(cliargs []string) ContextExecutor {
 
 	// general flags
 	flags.BoolVarP(&args.NoPassword, "no-password", "w", false, "never prompt for password")
-	flags.BoolVarP(&args.NoRC, "no-rc", "X", false, "do not read start up file (aliases: --no-psqlrc --no-usqlrc)")
-	flags.BoolVar(&args.NoRC, "no-psqlrc", false, "do not read startup file")
-	flags.BoolVar(&args.NoRC, "no-usqlrc", false, "do not read startup file")
+	flags.BoolVarP(&args.NoInit, "no-init", "X", false, "do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-usqlrc)")
+	flags.BoolVar(&args.NoInit, "no-rc", false, "do not read startup file")
+	flags.BoolVar(&args.NoInit, "no-psqlrc", false, "do not read startup file")
+	flags.BoolVar(&args.NoInit, "no-usqlrc", false, "do not read startup file")
 	flags.VarP(filevar{&args.Out}, "out", "o", "output file")
 	flags.BoolVarP(&args.ForcePassword, "password", "W", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
@@ -199,7 +200,7 @@ func New(cliargs []string) ContextExecutor {
 
 	// mark hidden
 	for _, name := range []string{
-		"no-psqlrc", "no-usqlrc", "var", "variable",
+		"no-rc", "no-psqlrc", "no-usqlrc", "var", "variable",
 		"completion-script-bash", "completion-script-zsh", "completion-script-fish",
 		"completion-script-powershell", "no-descriptions",
 		"bad-help",
@@ -332,7 +333,7 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 		}
 	}
 	// scripts
-	if !args.NoRC {
+	if !args.NoInit {
 		// rc file
 		if rc := env.RCFile(u); rc != "" {
 			if err = h.Include(rc, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
@@ -366,7 +367,7 @@ type Args struct {
 	Out               string
 	ForcePassword     bool
 	NoPassword        bool
-	NoRC              bool
+	NoInit            bool
 	SingleTransaction bool
 	Vars              []string
 	Cvars             []string

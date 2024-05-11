@@ -376,6 +376,9 @@ $ usql pg://localhost/ -f script.sql
 Supported command-line options:
 
 ```sh
+$ usql --help
+usql, the universal command-line interface for SQL databases
+
 Usage:
   usql [flags]... [DSN]
 
@@ -386,7 +389,7 @@ Flags:
   -c, --command COMMAND                     run only single command (SQL or internal) and exit
   -f, --file FILE                           execute commands from file and exit
   -w, --no-password                         never prompt for password
-  -X, --no-rc                               do not read start up file (aliases: --no-psqlrc --no-usqlrc)
+  -X, --no-init                             do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-usqlrc)
   -o, --out FILE                            output file
   -W, --password                            force password prompt (should happen automatically)
   -1, --single-transaction                  execute as a single transaction (if non-interactive)
@@ -419,12 +422,18 @@ connection strings (aka "data source name" or DSNs) have the same parsing rules
 as URLs, and can be passed to `usql` via command-line, or to the [`\connect`,
 `\c`, and `\copy` commands][commands].
 
+Database connections can be named/defined via [the `\cset` command][connection-vars]
+or in [the `config.yaml` configuration file][config].
+
+#### Database Connection Strings
+
 Database connection strings look like the following:
 
 ```txt
-   driver+transport://user:pass@host/dbname?opt1=a&opt2=b
-   driver:/path/to/file
-   /path/to/file
+  driver+transport://user:pass@host/dbname?opt1=a&opt2=b
+  driver:/path/to/file
+  /path/to/file
+  name
 ```
 
 Where the above are:
@@ -439,6 +448,7 @@ Where the above are:
 | `dbname` <sup>[±][f-path]</sup> | database name, instance, or service name/ID                                          |
 | `?opt1=a&...`                   | additional database driver options (see respective SQL driver for available options) |
 | `/path/to/file`                 | a path on disk                                                                       |
+| `name`                          | a connection name set by [`\cset`][connection-vars] or in [`config.yaml`][config]    |
 
 [f-path]: #f-path "URL Paths for Databases"
 
@@ -553,6 +563,12 @@ $ usql file:/path/to/dbname.sqlite3
 $ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
 $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
 
+# connect to a named connection in $HOME/.config/usql/config.yaml
+$ cat $HOME/.config/usql/config.yaml
+connections:
+  my_named_connection: sqlserver://user:pass@localhost/
+$ usql my_named_connection
+
 # connect with ODBC driver (requires building with odbc tag)
 $ cat /etc/odbcinst.ini
 [DB2]
@@ -568,15 +584,19 @@ Setup=libodbcpsqlS.so
 Debug=0
 CommLog=1
 UsageCount=1
-# connect to db2, postgres databases using ODBC
+
+# connect to db2, postgres databases using above odbc config
 $ usql odbc+DB2://user:pass@localhost/dbname
 $ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trace.log
 ```
 
+See the [section on connection variables][connection-vars] for information on
+defining connection names.
+
 ### Executing Queries and Commands
 
-The interactive interpreter reads queries and [meta (`\`) commands][commands],
-sending the query to the connected database:
+The interactive interpreter reads queries and [backslash meta (`\`)
+commands][commands], sending the query to the connected database:
 
 ```sh
 $ usql sqlite://example.sqlite3
@@ -622,7 +642,16 @@ or `"`. Command parameters [may also be backticked][backticks].
 
 ### Backslash Commands
 
-Currently available commands:
+`usql` supports interleaved backslash (`\`) meta commands to modify or alter
+the way that `usql` interprets queries, formats its output, and changes the
+resulting interactive flow.
+
+```sh
+(not connected)=> \c postgres://user:pass@localhost
+pg:user@localhost=> select * from my_table \G
+```
+
+Available backslash meta commands can be displayed with `\?`:
 
 ```sh
 $ usql
@@ -718,45 +747,114 @@ Variables
   \unset NAME                          unset (delete) internal variable
 ```
 
+Parameters passed to commands [can be backticked][backticks].
+
 ## Features and Compatibility
 
 An overview of `usql`'s features, functionality, and compatibility with `psql`:
 
-- [Variables and Interpolation][variables]
+- [Configuration][config]
+- [Variables][variables]
 - [Backticks][backticks]
-- [Passwords][usqlpass]
-- [Runtime Configuration (RC) File][usqlrc]
 - [Copying Between Databases][copying]
 - [Syntax Highlighting][highlighting]
 - [Time Formatting][timefmt]
 - [Context Completion][completion]
 - [Host Connection Information](#host-connection-information)
+- [Passwords][usqlpass]
+- [Runtime Configuration (RC) File][usqlrc]
 
 The `usql` project's goal is to support as much of `psql`'s core features and
 functionality, and aims to be as compatible as possible - [contributions are
 always appreciated][contributing]!
 
-#### Variables and Interpolation
+#### Configuration
 
-To see the list of specially treated variables, run the `\? variables` command.
+During its initialization phase, `usql` reads a standard [YAML
+configuration][yaml] file `config.yaml`. On Windows this is `%AppData%/usql`,
+on macOS this is `$HOME/Library/Application Support/usql`, on Linux and
+other Unix systems this is normally `$HOME/.config/usql`.
 
-`usql` supports client-side interpolation of variables that can be `\set` and
-`\unset`:
+##### Defining Connections
 
-```sh
-$ usql
-(not connected)=> \set
-(not connected)=> \set FOO bar
-(not connected)=> \set
-FOO = 'bar'
-(not connected)=> \unset FOO
-(not connected)=> \set
-(not connected)=>
+`usql`'s `config.yaml` file can [contain predefined connection
+DSNs][connecting] defined as a string as a map:
+
+```yaml
+connections:
+  my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
+  my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
+  my_godror_conn:
+    protocol: godror
+    username: system
+    password: P4ssw0rd
+    hostname: localhost
+    port: 1521
+    database: free
 ```
 
-A `\set` variable, `NAME`, will be directly interpolated (by string
-substitution) into the query when prefixed with `:` and optionally surrounded
-by quotation marks (`'` or `"`):
+Named connections can be used on the command-line with with `\connect`, `\c`,
+`\copy`, and [other commands][commands]:
+
+```sh
+$ usql my_godror_conn
+Connected with driver godror (Oracle Database 23.0.0.0.0)
+Type "help" for help.
+
+gr:system@localhost/free=>
+```
+
+##### Init Script
+
+An `init` script can be defined in `usql`'s `config.yaml`:
+
+```yaml
+init: |
+  \echo welcome to the jungle `date`
+  \set SYNTAX_HL_STYLE paraiso-dark
+```
+
+The script is read from the `config.yaml` at startup in the same way as a file
+passed on the command-line with `-f` / `--file`, and will be executed prior to
+starting the interactive interpreter before any `-c` / `--command` / `-f` /
+`--file` flag.
+
+The `init` script is commonly used to set startup environment variables and
+settings. The execution of the init script can be disabled on the command-line
+using the `-X` / `--no-init` flag.
+
+##### Other Options
+
+An up-to-date overview of other configuration options is available in
+[`contrib/config.yaml`](contrib/config.yaml).
+
+#### Variables
+
+`usql` supports [runtime][runtime-vars], [connection][connection-vars], and
+[display formatting][print-vars] variables that can be `\set`, `\cset`, or
+`\pset` respectively.
+
+##### Runtime Variables
+
+Client-side runtime variables are managed with the `\set` and `\unset`
+[commands][commands]:
+
+```sh
+(not connected)=> \unset FOO
+(not connected)=> \set FOO bar
+```
+
+Runtime variables can be shown with `\set`:
+
+```sh
+(not connected)=> \set
+FOO = 'bar'
+```
+
+###### Variable Interpolation
+
+When a runtime variable `NAME` has been `\set`, then `:NAME`, `:'NAME'`, and
+`:"NAME"` will be interpolated into the query buffer:
 
 ```sh
 pg:booktest@localhost=> \set FOO bar
@@ -767,27 +865,27 @@ pg:booktest@localhost=> select * from authors where name = :'FOO';
 (1 rows)
 ```
 
-The three forms, `:NAME`, `:'NAME'`, and `:"NAME"`, are used to interpolate a
-variable in parts of a query that may require quoting, such as for a column
-name, or when doing concatenation in a query:
+Where a runtime variable is used as `:'NAME'` or `:"NAME"` the interpolated
+value will be quoted using `'` or `"` respectively:
 
 ```sh
 pg:booktest@localhost=> \set TBLNAME authors
 pg:booktest@localhost=> \set COLNAME name
 pg:booktest@localhost=> \set FOO bar
 pg:booktest@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+```
+
+The query buffer and any interpolated values can be displayed with `\p` and
+`\print`, or the raw query buffer can be shown with `\raw`:
+
+```sh
 pg:booktest@localhost-> \p
 select * from authors where "name" = 'bar'
 pg:booktest@localhost-> \raw
 select * from :TBLNAME where :"COLNAME" = :'FOO'
-pg:booktest@localhost-> \g
-  author_id | name
-+-----------+------+
-          7 | bar
-(1 rows)
-
-pg:booktest@localhost=>
 ```
+
+<hr/>
 
 > **Note**
 >
@@ -802,12 +900,67 @@ pg:booktest@localhost=> select ':FOO';
 
 pg:booktest@localhost=> \p
 select ':FOO';
-pg:booktest@localhost=>
+```
+
+<hr/>
+
+##### Connection Variables
+
+Connection variables work similarly to runtime variables, and are managed with
+`\cset`. Connection variables can be used with the `\c`, `\connect`, `\copy`,
+or [any other command][commands]:
+
+```sh
+(not connected)=> \cset my_conn postgres://user:pass@localhost
+(not connected)=> \c my_conn
+Connected with driver postgres (PostgreSQL 16.2 (Debian 16.2-1.pgdg120+2))
+pg:postgres@localhost=>
+```
+
+Connection variables are not interpolated into queries. See the [configuration
+section for information on defining persistent connection variables][config].
+
+Connection variables can be shown through `\cset`:
+
+```sh
+(not connected)=> \cset
+my_conn = 'postgres://user:pass@localhost'
+```
+
+##### Display Formatting (Print) Variables
+
+Client-side display formatting variables can be set using `\pset` and [via
+other commands][commands]:
+
+```sh
+(not connected)=> \pset time Kitchen
+Time display is "Kitchen" ("3:04PM").
+(not connected)=> \a
+Output format is unaligned.
+```
+
+Display formatting variables and settings can be shown through `\pset`:
+
+```sh
+(not connected)=> \pset
+time                     Kitchen
+```
+
+##### Other Variables
+
+Runtime behavior can be modified through special variables, such as
+[enabling/disabling syntax highlighting][highlighting].
+
+Additional information on setting/using variables and the recognized special
+variables can be shown with `\? variables`:
+
+```sh
+(not connected)=> \? variables
 ```
 
 #### Backticks
 
-[Meta (`\`) commands][commands] support backticks on parameters:
+[Backslash (`\`) meta commands][commands] support backticks on parameters:
 
 ```sh
 (not connected)=> \echo Welcome `echo $USER` -- 'currently:' "(" `date` ")"
@@ -827,86 +980,43 @@ Wed Jun 13 12:17:11 WIB 2018
 pg:booktest@localhost=>
 ```
 
-#### Passwords
-
-`usql` supports reading passwords for databases from a `.usqlpass` file
-contained in the user's `HOME` directory at startup:
-
-```sh
-$ cat $HOME/.usqlpass
-# format is:
-# protocol:host:port:dbname:user:pass
-postgres:*:*:*:booktest:booktest
-$ usql pg://
-Connected with driver postgres (PostgreSQL 9.6.9)
-Type "help" for help.
-
-pg:booktest@=>
-```
-
-> **Note**
->
-> The `.usqlpass` file cannot be readable by other users, and the permissions
-> should be set accordingly:
-
-```sh
-chmod 0600 ~/.usqlpass
-```
-
-#### Runtime Configuration (RC) File
-
-`usql` supports executing a `.usqlrc` runtime configuration (RC) file contained
-in the user's `HOME` directory:
-
-```sh
-$ cat $HOME/.usqlrc
-\echo WELCOME TO THE JUNGLE `date`
-\set SYNTAX_HL_STYLE paraiso-dark
-# display color prompt (default is prompt is "%S%m%/%R%#" )
-\set PROMPT1 "\033[32m%S%m%/%R%#\033[0m"
-$ usql
-WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
-Type "help" for help.
-
-(not connected)=> \set
-SYNTAX_HL_STYLE = 'paraiso-dark'
-(not connected)=>
-```
-
-The `.usqlrc` file is read at startup in the same way as a file passed on the
-command-line with `-f` / `--file`. It is commonly used to set startup
-environment variables and settings.
-
-RC-file execution can be temporarily disabled at startup by passing `-X` or
-`--no-rc` on the command-line:
-
-```sh
-$ usql --no-rc pg://
-```
-
 #### Copying Between Databases
 
 `usql` provides a `\copy` command that reads data from a source database DSN
 and writes to a destination database DSN:
 
 ```sh
-$ usql
-(not connected)=> \copy :PGDSN :MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
+(not connected)=> \cset PGDSN postgres://user:pass@localhost
+(not connected)=> \cset MYDSN mysql://user:pass@localhost
+(not connected)=> \copy PGDSN MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
 ```
+
+As demonstrated above, the `\copy` command does not require being connected to
+a database, and will not impact or alter any open database connection.
+
+Any valid URL or DSN name maybe used for the source and destination database:
+
+```sh
+(not connected)=> \cset MYDSN mysql://user:pass@localhost
+(not connected)=> \copy postgres://user:pass@localhost MYDSN 'select book_id, author_id from books' 'books(id, author_id)'
+```
+
+<hr/>
 
 > **Note**
 >
 > `usql`'s `\copy` is distinct from and <b><u>does not</u></b> function like
 > `psql`'s `\copy`.
 
-##### Parameters
+<hr/>
+
+##### Copy Parameters
 
 The `\copy` command has two parameter forms:
 
 ```txt
-SRC DST QUERY TABLE
-
-SRC DST QUERY TABLE(COL1, COL2, ..., COLN)
+\copy SRC DST QUERY TABLE
+\copy SRC DST QUERY TABLE(COL1, COL2, ..., COLN)
 ```
 
 Where:
@@ -1020,10 +1130,14 @@ sq:booktest.db=> select * from books;
 (4 rows)
 ```
 
+<hr/>
+
 > **Note**
 >
 > When importing large datasets (> 1GiB) from one database to another, it is
 > better to use a database's native clients and tools.
+
+<hr/>
 
 ###### Reusing Connections with Copy
 
@@ -1220,7 +1334,7 @@ interactive session:
 
 ##### Charts and Graphs
 
-The [`\chart` meta command][chart-command] can be used to display a chart
+The [`\chart` command][chart-command] can be used to display a chart
 directly in the terminal:
 
 <div style="padding-left: 20px;">
@@ -1264,6 +1378,74 @@ The following terminals have been tested with `usql`:
 
 Additional terminals that support [Sixel][sixel-graphics] graphics are
 catalogued on the [Are We Sixel Yet?][arewesixelyet] website.
+
+#### Passwords
+
+`usql` supports reading passwords for databases from a `.usqlpass` file
+contained in the user's `HOME` directory at startup:
+
+```sh
+$ cat $HOME/.usqlpass
+# format is:
+# protocol:host:port:dbname:user:pass
+postgres:*:*:*:booktest:booktest
+$ usql pg://
+Connected with driver postgres (PostgreSQL 9.6.9)
+Type "help" for help.
+
+pg:booktest@=>
+```
+
+While the `.usqlpass` functionality will not be removed, it is recommended to
+[define named connections][connection-vars] preferrably via [the `config.yaml`
+file][config].
+
+<hr/>
+
+> **Note**
+>
+> The `.usqlpass` file cannot be readable by other users, and the permissions
+> should be set accordingly:
+
+```sh
+chmod 0600 ~/.usqlpass
+```
+
+<hr/>
+
+#### Runtime Configuration (RC) File
+
+`usql` supports executing a `.usqlrc` runtime configuration (RC) file contained
+in the user's `HOME` directory:
+
+```sh
+$ cat $HOME/.usqlrc
+\echo WELCOME TO THE JUNGLE `date`
+\set SYNTAX_HL_STYLE paraiso-dark
+# display color prompt (default is prompt is "%S%m%/%R%#" )
+\set PROMPT1 "\033[32m%S%m%/%R%#\033[0m"
+$ usql
+WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
+Type "help" for help.
+
+(not connected)=> \set
+SYNTAX_HL_STYLE = 'paraiso-dark'
+(not connected)=>
+```
+
+The `.usqlrc` file is read at startup in the same way as a file passed on the
+command-line with `-f` / `--file`. It is commonly used to set startup
+environment variables and settings.
+
+RC-file execution can be temporarily disabled at startup by passing `-X` or
+`--no-init` on the command-line:
+
+```sh
+$ usql --no-init pg://
+```
+
+While the `.usqlrc` functionality will not be removed, it is recommended to set
+an `init` script in [the `config.yaml` file][config].
 
 ## Additional Notes
 
@@ -1331,7 +1513,8 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [yay]: https://github.com/Jguer/yay
 [arch-makepkg]: https://wiki.archlinux.org/title/makepkg
 [backticks]: #backticks "Backticks"
-[commands]: #backslash-commands "Commands"
+[config]: #configuration "Configuration"
+[commands]: #backslash-commands "Backslash Commands"
 [completion]: #context-completion "Context Completion"
 [connecting]: #connecting-to-databases "Connecting to Databases"
 [contributing]: #contributing "Contributing"
@@ -1341,7 +1524,10 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [timefmt]: #time-formatting "Time Formatting"
 [usqlpass]: #passwords "Passwords"
 [usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"
-[variables]: #variables-and-interpolation "Variable Interpolation"
+[variables]: #variables "Variables"
+[runtime-vars]: #runtime-variables "Runtime Variables"
+[connection-vars]: #connection-variables "Connection Variables"
+[print-vars]: #display-formatting-(print)-variables "Display Formatting (print) Variables"
 [kitty-graphics]: https://sw.kovidgoyal.net/kitty/graphics-protocol.html
 [iterm-graphics]: https://iterm2.com/documentation-images.html
 [sixel-graphics]: https://saitoha.github.io/libsixel/
@@ -1352,3 +1538,4 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [kitty]: https://sw.kovidgoyal.net/kitty/
 [arewesixelyet]: https://www.arewesixelyet.com
 [chart-command]: #chart-command "\\chart meta command"
+[yaml]: https://yaml.org

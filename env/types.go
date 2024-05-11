@@ -3,8 +3,11 @@ package env
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,6 +17,7 @@ import (
 	syslocale "github.com/jeandeaual/go-locale"
 	"github.com/xo/terminfo"
 	"github.com/xo/usql/text"
+	"github.com/yookoala/realpath"
 )
 
 type varName struct {
@@ -620,8 +624,8 @@ func GoTime() string {
 	return tfmt
 }
 
-// Listing writes the formatted variables listing to w, separated into different
-// sections for all known variables.
+// Listing writes a formatted listing of the special environment variables to
+// w, separated in sections based on variable type.
 func Listing(w io.Writer) {
 	varsWithDesc := make([]string, len(varNames))
 	for i, v := range varNames {
@@ -635,36 +639,68 @@ func Listing(w io.Writer) {
 	for i, v := range envVarNames {
 		envVarsWithDesc[i] = v.String()
 	}
-	template := `
-List of specially treated variables
+
+	// determine config dir name
+	configDir, configExtra := buildConfigDir("config.yaml")
+	if configExtra != "" {
+		configExtra = " (" + configExtra + ")"
+	}
+
+	template := `List of specially treated variables
 
 %s variables:
 Usage:
-  %s --set=NAME=VALUE
-  or \set NAME VALUE inside %s
+  %[1]s --set=NAME=VALUE
+  or \set NAME VALUE inside %[1]s
 
-%s
-
+%[2]s
 
 Display settings:
 Usage:
-  %s --pset=NAME[=VALUE]
-  or \pset NAME [VALUE] inside %s
+  %[1]s --pset=NAME[=VALUE]
+  or \pset NAME [VALUE] inside %[1]s
 
-%s
+%[3]s
 
 Environment variables:
 Usage:
-  NAME=VALUE [NAME=VALUE] %s ...
-  or \setenv NAME [VALUE] inside %s
+  NAME=VALUE [NAME=VALUE] %[1]s ...
+  or \setenv NAME [VALUE] inside %[1]s
 
-%s
+%[4]s
 
+Connection variables:
+Usage:
+  %[1]s --cset NAME[=DSN]
+  or \cset NAME [DSN] inside %[1]s
+  or \cset NAME DRIVER PARAMS... inside %[1]s
+  or define in %[5]s%[6]s
 `
 	fmt.Fprintf(
 		w, template,
-		text.CommandName, text.CommandName, text.CommandName, strings.Join(varsWithDesc, "\n"),
-		text.CommandName, text.CommandName, strings.Join(pvarsWithDesc, "\n"),
-		text.CommandName, text.CommandName, strings.Join(envVarsWithDesc, "\n"),
+		text.CommandName,
+		strings.TrimRightFunc(strings.Join(varsWithDesc, ""), unicode.IsSpace),
+		strings.TrimRightFunc(strings.Join(pvarsWithDesc, ""), unicode.IsSpace),
+		strings.TrimRightFunc(strings.Join(envVarsWithDesc, ""), unicode.IsSpace),
+		configDir,
+		configExtra,
 	)
+}
+
+func buildConfigDir(configName string) (string, string) {
+	dir := `$HOME/.config/usql`
+	switch runtime.GOOS {
+	case "darwin":
+		dir = `$HOME/Library/Application Support`
+	case "windows":
+		dir = `%AppData%\usql`
+	}
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return filepath.Join(dir, configName), ""
+	}
+	if configDir, err = realpath.Realpath(configDir); err != nil {
+		return filepath.Join(dir, configName), ""
+	}
+	return filepath.Join(dir, configName), filepath.Join(configDir, "usql", configName)
 }
