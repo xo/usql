@@ -770,15 +770,15 @@ always appreciated][contributing]!
 
 #### Configuration
 
-During its initialization phase, `usql` reads a standard [YAML
-configuration][yaml] file `config.yaml`. On Windows this is `%AppData%/usql`,
-on macOS this is `$HOME/Library/Application Support/usql`, on Linux and
-other Unix systems this is normally `$HOME/.config/usql`.
+During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
+file `config.yaml`. On Windows this is `%AppData%/usql/config.yaml`, on macOS
+this is `$HOME/Library/Application Support/usql/config.yaml`, and on Linux and
+other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
 
-##### Defining Connections
+##### `connections:`
 
-`usql`'s `config.yaml` file can [contain predefined connection
-DSNs][connecting] defined as a string as a map:
+[Named connection DSNs][connecting] can be defined under `connections:` as a string
+or as a map:
 
 ```yaml
 connections:
@@ -793,8 +793,8 @@ connections:
     database: free
 ```
 
-Named connections can be used on the command-line with with `\connect`, `\c`,
-`\copy`, and [other commands][commands]:
+Defined `connections:` can be used on the command-line with with `\connect`,
+`\c`, `\copy`, and [other commands][commands]:
 
 ```sh
 $ usql my_godror_conn
@@ -804,9 +804,9 @@ Type "help" for help.
 gr:system@localhost/free=>
 ```
 
-##### Init Script
+##### `init:`
 
-An `init` script can be defined in `usql`'s `config.yaml`:
+An initialization script can be defined as `init:`:
 
 ```yaml
 init: |
@@ -814,19 +814,18 @@ init: |
   \set SYNTAX_HL_STYLE paraiso-dark
 ```
 
-The script is read from the `config.yaml` at startup in the same way as a file
-passed on the command-line with `-f` / `--file`, and will be executed prior to
-starting the interactive interpreter before any `-c` / `--command` / `-f` /
-`--file` flag.
+The `init:` string is read at startup and will executed prior to any `-c` /
+`--command` / `-f` / `--file` flag and before starting the interactive
+interpreter.
 
-The `init` script is commonly used to set startup environment variables and
-settings. The execution of the init script can be disabled on the command-line
-using the `-X` / `--no-init` flag.
+The initialization script is commonly used to set startup environment variables
+and settings. The execution of the init script can be disabled on the
+command-line using the `--no-init` / `-X` flag.
 
-##### Other Options
+##### Other Config Options
 
-An up-to-date overview of other configuration options is available in
-[`contrib/config.yaml`](contrib/config.yaml).
+Please see [`contrib/config.yaml`](contrib/config.yaml) for examples of other
+available configuration options.
 
 #### Variables
 
@@ -875,7 +874,7 @@ pg:booktest@localhost=> \set FOO bar
 pg:booktest@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
 ```
 
-The query buffer and any interpolated values can be displayed with `\p` and
+The query buffer and interpolated values can be displayed with `\p` and
 `\print`, or the raw query buffer can be shown with `\raw`:
 
 ```sh
@@ -908,7 +907,7 @@ select ':FOO';
 
 Connection variables work similarly to runtime variables, and are managed with
 `\cset`. Connection variables can be used with the `\c`, `\connect`, `\copy`,
-or [any other command][commands]:
+or [other commands][commands]:
 
 ```sh
 (not connected)=> \cset my_conn postgres://user:pass@localhost
@@ -992,7 +991,7 @@ and writes to a destination database DSN:
 ```
 
 As demonstrated above, the `\copy` command does not require being connected to
-a database, and will not impact or alter any open database connection.
+a database, and will not impact or alter the current open database connection.
 
 Any valid URL or DSN name maybe used for the source and destination database:
 
