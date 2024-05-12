@@ -676,7 +676,7 @@ func init() {
 		Prompt: {
 			Section: SectionVariables,
 			Name:    "prompt",
-			Desc:    Desc{"prompt user to set variable", "[-TYPE] <VAR> [PROMPT]"},
+			Desc:    Desc{"prompt user to set variable", "[-TYPE] VAR [PROMPT]"},
 			Process: func(p *Params) error {
 				typ := "string"
 				ok, n, err := p.GetOptional(true)

@@ -182,7 +182,7 @@ $ go install -tags all github.com/xo/usql@master
 `usql` works with all Go standard library compatible SQL drivers supported by
 [`github.com/xo/dburl`][dburl].
 
-The list of drivers that `usql` was built with can be displayed using the
+The list of drivers that `usql` was built with can be displayed with the
 [`\drivers` command][commands]:
 
 ```sh
@@ -338,7 +338,7 @@ associated database, scheme / build tag, and scheme aliases:
   </i>
 </p>
 
-Any of the protocol schemes/aliases shown above can be used in conjunction when
+Any of the protocol schemes/aliases above can be used in conjunction when
 connecting to a database via the command-line or with the [`\connect` and
 `\copy` commands][commands]:
 
@@ -422,7 +422,7 @@ connection strings (aka "data source name" or DSNs) have the same parsing rules
 as URLs, and can be passed to `usql` via command-line, or to the [`\connect`,
 `\c`, and `\copy` commands][commands].
 
-Database connections can be named/defined via [the `\cset` command][connection-vars]
+Database connections can be defined with [the `\cset` command][connection-vars]
 or in [the `config.yaml` configuration file][config].
 
 #### Database Connection Strings
@@ -487,10 +487,10 @@ If a URL does not have a `driver:` scheme, `usql` will check if it is a path on
 disk. If the path exists, `usql` will attempt to use an appropriate database
 driver to open the path.
 
-When the path is a Unix Domain Socket, `usql` will attempt to open it using the
+When the path is a Unix Domain Socket, `usql` will attempt to open it with the
 MySQL driver. When the path is a directory, `usql` will attempt to open it
 using the PostgreSQL driver. And, lastly, when the path is a regular file,
-`usql` will attempt to open the file using the SQLite3 driver.
+`usql` will attempt to open the file using the SQLite3 or DuckDB drivers.
 
 #### Driver Defaults
 
@@ -549,8 +549,8 @@ $ usql ca://
 # connect to a sqlite database that exists on disk
 $ usql dbname.sqlite3
 
-# Note: when connecting to a SQLite database, if the "<driver>://" or
-# "<driver>:" scheme/alias is omitted, the file must already exist on disk.
+# Note: when connecting to a SQLite database, if the "driver://" or
+# "driver:" scheme/alias is omitted, the file must already exist on disk.
 #
 # if the file does not yet exist, the URL must incorporate file:, sq:, sqlite3:,
 # or any other recognized sqlite3 driver alias to force usql to create a new,
@@ -585,7 +585,7 @@ Debug=0
 CommLog=1
 UsageCount=1
 
-# connect to db2, postgres databases using above odbc config
+# connect to db2, postgres databases using odbc config above
 $ usql odbc+DB2://user:pass@localhost/dbname
 $ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trace.log
 ```
@@ -742,7 +742,7 @@ Operating System
   \timing [on|off]                     toggle timing of commands
 
 Variables
-  \prompt [-TYPE] <VAR> [PROMPT]       prompt user to set variable
+  \prompt [-TYPE] VAR [PROMPT]       prompt user to set variable
   \set [NAME [VALUE]]                  set internal variable, or list all if no parameters
   \unset NAME                          unset (delete) internal variable
 ```
@@ -793,8 +793,8 @@ connections:
     database: free
 ```
 
-Defined `connections:` can be used on the command-line with with `\connect`,
-`\c`, `\copy`, and [other commands][commands]:
+Defined `connections:` can be used on the command-line with `\connect`, `\c`,
+`\copy`, and [other commands][commands]:
 
 ```sh
 $ usql my_godror_conn
@@ -814,17 +814,15 @@ init: |
   \set SYNTAX_HL_STYLE paraiso-dark
 ```
 
-The `init:` string is read at startup and will executed prior to any `-c` /
+The `init:` script is commonly used to set [environment variables][variables]
+or other configuration, and can be disabled on the command-line using the
+`--no-init` / `-X` flag. The script will be executed prior to any `-c` /
 `--command` / `-f` / `--file` flag and before starting the interactive
 interpreter.
 
-The initialization script is commonly used to set startup environment variables
-and settings. The execution of the init script can be disabled on the
-command-line using the `--no-init` / `-X` flag.
+##### Other Options
 
-##### Other Config Options
-
-Please see [`contrib/config.yaml`](contrib/config.yaml) for examples of other
+Please see [`contrib/config.yaml`](contrib/config.yaml) for an overview of
 available configuration options.
 
 #### Variables
@@ -835,15 +833,14 @@ available configuration options.
 
 ##### Runtime Variables
 
-Client-side runtime variables are managed with the `\set` and `\unset`
-[commands][commands]:
+Runtime variables are managed with the `\set` and `\unset` [commands][commands]:
 
 ```sh
 (not connected)=> \unset FOO
 (not connected)=> \set FOO bar
 ```
 
-Runtime variables can be shown with `\set`:
+Runtime variables can be displayed with `\set`:
 
 ```sh
 (not connected)=> \set
@@ -875,7 +872,7 @@ pg:booktest@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
 ```
 
 The query buffer and interpolated values can be displayed with `\p` and
-`\print`, or the raw query buffer can be shown with `\raw`:
+`\print`, or the raw query buffer can be displayed with `\raw`:
 
 ```sh
 pg:booktest@localhost-> \p
@@ -919,7 +916,7 @@ pg:postgres@localhost=>
 Connection variables are not interpolated into queries. See the [configuration
 section for information on defining persistent connection variables][config].
 
-Connection variables can be shown through `\cset`:
+Connection variables can be displayed with `\cset`:
 
 ```sh
 (not connected)=> \cset
@@ -928,8 +925,8 @@ my_conn = 'postgres://user:pass@localhost'
 
 ##### Display Formatting (Print) Variables
 
-Client-side display formatting variables can be set using `\pset` and [via
-other commands][commands]:
+Display formatting variables can be set using `\pset` and [other
+commands][commands]:
 
 ```sh
 (not connected)=> \pset time Kitchen
@@ -938,7 +935,7 @@ Time display is "Kitchen" ("3:04PM").
 Output format is unaligned.
 ```
 
-Display formatting variables and settings can be shown through `\pset`:
+Display formatting variables can be displayed with `\pset`:
 
 ```sh
 (not connected)=> \pset
@@ -947,11 +944,12 @@ time                     Kitchen
 
 ##### Other Variables
 
-Runtime behavior can be modified through special variables, such as
-[enabling/disabling syntax highlighting][highlighting].
+Runtime behavior, such as [enabling or disabling syntax
+highlighting][highlighting] can be modified through special variables like
+[`SYNTAX_HL`][highlighting].
 
-Additional information on setting/using variables and the recognized special
-variables can be shown with `\? variables`:
+Use the `\? variables` [command][commands] to display variable help information
+and to list special variables recognized by `usql`:
 
 ```sh
 (not connected)=> \? variables
@@ -991,7 +989,8 @@ and writes to a destination database DSN:
 ```
 
 As demonstrated above, the `\copy` command does not require being connected to
-a database, and will not impact or alter the current open database connection.
+a database, and will not modify or change the current open database connection
+or state.
 
 Any valid URL or DSN name maybe used for the source and destination database:
 
@@ -1222,7 +1221,7 @@ Command completion can be canceled with `<Control-C>`.
 
 Some databases support time/date columns that [support formatting][go-time]. By
 default, `usql` formats time/date columns as [RFC3339Nano][go-time], and can be
-set using `\pset time <FORMAT>`:
+set using `\pset time FORMAT`:
 
 ```sh
 $ usql pg://
@@ -1457,9 +1456,9 @@ additional [SQLite3 build tags (see: `build.sh`)](build.sh).
 
 ### macOS
 
-The recommended installation method on macOS is [via `brew` (see above)][via Homebrew]
-due to the way library dependencies for the `sqlite3` driver are done on macOS.
-If the following (or similar) error is encountered when attempting to run `usql`:
+The recommended installation method on macOS is [via `brew`][via Homebrew] due
+to the way library dependencies for the `sqlite3` driver are done on macOS. If
+the following (or similar) error is encountered when attempting to run `usql`:
 
 ```sh
 $ usql
