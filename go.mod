@@ -31,7 +31,7 @@ require (
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.6.0
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
-	github.com/googleapis/go-sql-spanner v1.3.1
+	github.com/googleapis/go-sql-spanner v1.4.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49
 	github.com/jmrobles/h2go v0.5.0
@@ -41,7 +41,7 @@ require (
 	github.com/mattn/go-adodb v0.0.1
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-sqlite3 v1.14.22
-	github.com/microsoft/go-mssqldb v1.7.1
+	github.com/microsoft/go-mssqldb v1.7.2
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
 	github.com/nakagami/firebirdsql v0.9.9
@@ -60,13 +60,13 @@ require (
 	github.com/xo/dburl v0.23.1
 	github.com/xo/tblfmt v0.13.1
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.68.1
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.69.0
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4
-	golang.org/x/exp v0.0.0-20240529005216-23cca8864a10
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	gorm.io/driver/bigquery v1.2.0
 	modernc.org/ql v1.4.7
-	modernc.org/sqlite v1.29.10
+	modernc.org/sqlite v1.30.0
 	sqlflow.org/gohive v0.0.0-20231130013447-c9657f0f21f9
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
@@ -74,7 +74,7 @@ require (
 require (
 	cel.dev/expr v0.15.0 // indirect
 	cloud.google.com/go v0.114.0 // indirect
-	cloud.google.com/go/auth v0.5.0 // indirect
+	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/bigquery v1.61.0 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
@@ -107,7 +107,7 @@ require (
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/apache/thrift v0.20.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
-	github.com/aws/aws-sdk-go v1.53.12 // indirect
+	github.com/aws/aws-sdk-go v1.53.14 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.16 // indirect
@@ -206,7 +206,7 @@ require (
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.6 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
@@ -260,7 +260,7 @@ require (
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
-	github.com/prometheus/procfs v0.15.0 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
@@ -321,7 +321,7 @@ require (
 	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/gotestsum v1.11.0 // indirect
+	gotest.tools/gotestsum v1.12.0 // indirect
 	howett.net/plist v1.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
 	modernc.org/db v1.0.10 // indirect
@@ -330,7 +330,7 @@ require (
 	modernc.org/gc/v3 v3.0.0-20240304020402-f0dba7c97c2b // indirect
 	modernc.org/golex v1.1.0 // indirect
 	modernc.org/internal v1.1.0 // indirect
-	modernc.org/libc v1.50.9 // indirect
+	modernc.org/libc v1.51.0 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
