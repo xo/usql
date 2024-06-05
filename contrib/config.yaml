@@ -28,7 +28,7 @@ connections:
     file: /path/to/mydb.sqlite3
   mdc: modernsqlite:test.db
   dkd: test.duckdb
-  zzz: ["driver", 'param1', param2]
+  zzz: ["databricks", "token:dapi*****@adb-*************.azuredatabricks.net:443/sql/protocolv1/o/*********/*******"]
   zz2:
     proto: mysql
     user: 'my username'

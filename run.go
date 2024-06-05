@@ -474,8 +474,8 @@ func setConn(name string, v interface{}) error {
 	switch x := v.(type) {
 	case string:
 		return env.Cset(name, x)
-	case []string:
-		return env.Cset(name, x...)
+	case []interface{}:
+		return env.Cset(name, convSlice(x)...)
 	case map[string]interface{}:
 		urlstr, err := dburl.BuildURL(x)
 		if err != nil {
@@ -504,4 +504,13 @@ func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func
 		}
 		return nil
 	}
+}
+
+// convSlice converts a generic slice to a string slice.
+func convSlice(v []interface{}) []string {
+	s := make([]string, len(v))
+	for i, x := range v {
+		s[i] = fmt.Sprintf("%s", x)
+	}
+	return s
 }
