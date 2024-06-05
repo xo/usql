@@ -213,6 +213,34 @@ var execMap = map[string]bool{
 	"UNLISTEN":                         true, // stop listening for a notification
 	"UPDATE":                           true, // update rows of a table
 	"VACUUM":                           true, // garbage-collect and optionally analyze a database
+	// oracle
+	"ADMINISTER KEY MANAGEMENT":   true,
+	"ALTER ANALYTIC VIEW":         true,
+	"ALTER ATTRIBUTE DIMENSION":   true,
+	"ALTER AUDIT POLICY":          true,
+	"ALTER CLUSTER":               true,
+	"ALTER DATABASE DICTIONARY":   true,
+	"ALTER DATABASE LINK":         true,
+	"ALTER DIMENSION":             true,
+	"ALTER DISKGROUP":             true,
+	"ALTER FLASHBACK ARCHIVE":     true,
+	"ALTER HEIRARCHY":             true,
+	"ALTER INMEMORY JOIN GROUP":   true,
+	"ALTER JAVA":                  true,
+	"ALTER LIBRARY":               true,
+	"ALTER LOCKDOWN PROFILE":      true,
+	"ALTER MATERIALIZED VIEW LOG": true,
+	"ALTER MATERIALIZED ZONEMAP":  true,
+	"ALTER PACKAGE":               true,
+	"ALTER PLUGGABLE DATABASE":    true,
+	"ALTER PROCEDURE":             true,
+	"ALTER PROFILE":               true,
+	"ALTER RESOURCE COST":         true,
+	"ALTER ROLLBACK SEGMENT":      true,
+	"ALTER SESSION":               true,
+	"ALTER SYNONYM":               true,
+	"ALTER TABLESPACE SET":        true,
+	"ASSOCIATE STATISTICS":        true,
 }
 
 // createIgnore are parts of the query exec type after CREATE to ignore.
