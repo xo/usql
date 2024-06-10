@@ -429,6 +429,8 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		f = h.doExecSet
 	case metacmd.ExecWatch:
 		f = h.doExecWatch
+	case metacmd.ExecChart:
+		f = h.doExecChart
 	}
 	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, opt, prefix, sqlstr, qtyp, bind)); err != nil {
 		if forceTrans {
@@ -1031,6 +1033,11 @@ func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Opti
 	}
 }
 
+// doExecChart executes a single query against the database, displaying its output as a chart.
+func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
+	return nil
+}
+
 // doExecSingle executes a single query against the database based on its query type.
 func (h *Handler) doExecSingle(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	// exec or query
@@ -1158,12 +1165,11 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	case drivers.UseColumnTypes(h.u):
 		extra = append(extra, tblfmt.WithUseColumnTypes(true))
 	}
-	// wrap query with crosstab
 	resultSet := tblfmt.ResultSet(rows)
+	// wrap query with crosstab
 	if opt.Exec == metacmd.ExecCrosstab {
 		var err error
-		resultSet, err = tblfmt.NewCrosstabView(rows, append(extra, tblfmt.WithParams(opt.Crosstab...))...)
-		if err != nil {
+		if resultSet, err = tblfmt.NewCrosstabView(rows, append(extra, tblfmt.WithParams(opt.Crosstab...))...); err != nil {
 			return err
 		}
 		extra = nil

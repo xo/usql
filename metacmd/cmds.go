@@ -249,6 +249,7 @@ func init() {
 				{"gexec", "", "execute query and execute each value of the result"},
 				{"gset", "[PREFIX]", "execute query and store results in " + text.CommandName + " variables"},
 				{"crosstabview", "[(OPTIONS)] [COLUMNS]", "execute query and display results in crosstab"},
+				{"chart", "CHART [(OPTIONS)]", "execute query and display results as a chart"},
 				{"watch", "[(OPTIONS)] [DURATION]", "execute query every specified interval"},
 			},
 			Process: func(p *Params) error {
@@ -295,6 +296,8 @@ func init() {
 							break
 						}
 					}
+				case "chart":
+					p.Option.Exec = ExecChart
 				case "watch":
 					p.Option.Exec = ExecWatch
 					p.Option.Watch = 2 * time.Second
