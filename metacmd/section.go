@@ -61,16 +61,11 @@ func Listing(w io.Writer) {
 		var descs [][]string
 		for _, c := range sectMap[section] {
 			cmd := cmds[c]
-			s, opts := optText(cmd.Desc)
-			descs, plen = add(descs, `  \`+cmd.Desc.Name+opts, s, plen)
-			// sort aliases
-			var aliases []int
-			for i, d := range cmd.Aliases {
+			for i, d := range cmd.Descs {
 				if d.Desc == "" && d.Params == "" {
 					continue
 				}
-				aliases = append(aliases, i)
-				s, opts := optText(cmd.Aliases[i])
+				s, opts := optText(cmd.Descs[i])
 				descs, plen = add(descs, `  \`+strings.TrimSpace(d.Name)+opts, s, plen)
 			}
 		}
