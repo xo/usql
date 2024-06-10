@@ -3,14 +3,14 @@ package metacmd
 import (
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 )
 
 // Desc holds information about a command or alias description.
 type Desc struct {
-	Desc   string
+	Name   string
 	Params string
+	Desc   string
 }
 
 // Section is a meta command section.
@@ -39,10 +39,17 @@ func (s Section) String() string {
 
 // SectionOrder is the order of sections to display via Listing.
 var SectionOrder = []Section{
-	SectionGeneral, SectionQueryExecute, SectionQueryBuffer, SectionHelp,
-	SectionInputOutput, SectionInformational, SectionFormatting,
+	SectionGeneral,
+	SectionQueryExecute,
+	SectionQueryBuffer,
+	SectionHelp,
+	SectionInputOutput,
+	SectionInformational,
+	SectionFormatting,
 	SectionTransaction,
-	SectionConnection, SectionOperatingSystem, SectionVariables,
+	SectionConnection,
+	SectionOperatingSystem,
+	SectionVariables,
 }
 
 // Listing writes the formatted command listing to w, separated into different
@@ -55,21 +62,16 @@ func Listing(w io.Writer) {
 		for _, c := range sectMap[section] {
 			cmd := cmds[c]
 			s, opts := optText(cmd.Desc)
-			descs, plen = add(descs, `  \`+cmd.Name+opts, s, plen)
+			descs, plen = add(descs, `  \`+cmd.Desc.Name+opts, s, plen)
 			// sort aliases
-			var aliases []string
-			for alias, desc := range cmd.Aliases {
-				if desc.Desc == "" && desc.Params == "" {
+			var aliases []int
+			for i, d := range cmd.Aliases {
+				if d.Desc == "" && d.Params == "" {
 					continue
 				}
-				aliases = append(aliases, alias)
-			}
-			sort.Slice(aliases, func(i, j int) bool {
-				return strings.ToLower(aliases[i]) < strings.ToLower(aliases[j])
-			})
-			for _, alias := range aliases {
-				s, opts := optText(cmd.Aliases[alias])
-				descs, plen = add(descs, `  \`+strings.TrimSpace(alias)+opts, s, plen)
+				aliases = append(aliases, i)
+				s, opts := optText(cmd.Aliases[i])
+				descs, plen = add(descs, `  \`+strings.TrimSpace(d.Name)+opts, s, plen)
 			}
 		}
 		sectionDescs[section] = descs
