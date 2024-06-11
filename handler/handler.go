@@ -1005,17 +1005,17 @@ func (h *Handler) Version(ctx context.Context) error {
 }
 
 // Print formats according to a format specifier and writes to handler's standard output.
-func (h *Handler) Print(format string, a ...interface{}) {
+func (h *Handler) Print(s string, v ...interface{}) {
 	if env.Get("QUIET") == "on" {
 		return
 	}
-	fmt.Fprintln(h.l.Stdout(), fmt.Sprintf(format, a...))
+	fmt.Fprintln(h.l.Stdout(), fmt.Sprintf(s, v...))
 }
 
 // doExecWatch repeatedly executes a query against the database.
 func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	for {
-		// this is the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST"
+		// the actual output that psql has: "Mon Jan 2006 3:04:05 PM MST" -- which is _slightly_ different than RFC1123
 		// fmt.Fprintf(w, "%s (every %fs)\n\n", time.Now().Format("Mon Jan 2006 3:04:05 PM MST"), float64(opt.Watch)/float64(time.Second))
 		fmt.Fprintf(w, "%s (every %v)\n", time.Now().Format(time.RFC1123), opt.Watch)
 		fmt.Fprintln(w)
