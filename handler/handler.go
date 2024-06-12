@@ -1062,7 +1062,7 @@ func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Opti
 
 // doExecChart executes a single query against the database, displaying its output as a chart.
 func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
-	stdout, _, _ := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
+	stdout := h.l.Stdout()
 	// Report a missing renderer before anything else. Without one no terminal
 	// and no argument can make \chart work, and reporting the terminal first
 	// would name the wrong cause.
@@ -1087,6 +1087,7 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	// get cols
 	cols, err := drivers.Columns(h.u, rows)
 	if err != nil {
@@ -1173,6 +1174,7 @@ func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	// get cols
 	cols, err := drivers.Columns(h.u, rows)
 	if err != nil {
@@ -1213,6 +1215,7 @@ func (h *Handler) doExecExec(ctx context.Context, w io.Writer, _ metacmd.Option,
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	// exec resulting rows
 	if err := h.doExecRows(ctx, w, rows); err != nil {
 		return err
