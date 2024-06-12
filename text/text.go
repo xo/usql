@@ -40,6 +40,7 @@ var (
 	ConfirmPassword       = `Confirm password: `
 	PasswordChangeFailed  = `\password for %q failed: %v`
 	CouldNotSetVariable   = `could not set variable %q`
+	ChartParseFailed      = `\chart: invalid argument for %q: %v`
 	// PasswordChangeSucceeded = `\password succeeded for %q`
 	HelpDesc          string
 	HelpDescShort     = `Use \? for help or press control-C to clear the input buffer.`
@@ -106,6 +107,19 @@ Arguments:
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
 `
+	ChartUsage = `\chart: create and display charts from SQL data
+usage: \chart [opts]
+
+available options:
+
+help
+title    [title]     chart title
+subtitle [subtitle]  chart subtitle
+size     NxN         chart size (width x height)
+bg       [color]     chart background color
+type     [bar|line]  chart type
+prec     [num]       data decimal precision
+file     [path]      write chart to file (svg)`
 )
 
 func init() {
