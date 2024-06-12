@@ -57,6 +57,10 @@ var (
 	ErrInvalidFormatBorderLineStyle = errors.New(`\pset: allowed Unicode border line styles are single, double`)
 	// ErrInvalidTimezoneLocation is the invalid timezone location error.
 	ErrInvalidTimezoneLocation = errors.New(`\pset: invalid timezone location`)
+	// ErrGraphicsNotSupported is the graphics not supported error.
+	ErrGraphicsNotSupported = errors.New(`\chart: graphics not supported in terminal`)
+	// ErrNoNumericColumns is the no numeric columns error.
+	ErrNoNumericColumns = errors.New(`\chart: no numeric columns found`)
 	// ErrInvalidQuotedString is the invalid quoted string error.
 	ErrInvalidQuotedString = errors.New(`invalid quoted string`)
 	// ErrInvalidFormatOption is the invalid format option error.

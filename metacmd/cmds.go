@@ -298,6 +298,30 @@ func init() {
 					}
 				case "chart":
 					p.Option.Exec = ExecChart
+					if p.Option.Params == nil {
+						p.Option.Params = make(map[string]string, 1)
+					}
+					params, err := p.GetAll(true)
+					if err != nil {
+						return err
+					}
+					for i := 0; i < len(params); i++ {
+						param := params[i]
+						if param == "help" {
+							p.Option.Params["help"] = ""
+							return nil
+						}
+						equal := strings.IndexByte(param, '=')
+						switch {
+						case equal == -1 && i >= len(params)-1:
+							return text.ErrWrongNumberOfArguments
+						case equal == -1:
+							i++
+							p.Option.Params[param] = params[i]
+						default:
+							p.Option.Params[param[:equal]] = param[equal+1:]
+						}
+					}
 				case "watch":
 					p.Option.Exec = ExecWatch
 					p.Option.Watch = 2 * time.Second
