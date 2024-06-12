@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -123,7 +126,15 @@ func New(cliargs []string) ContextExecutor {
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
-			return Run(cmd.Context(), args, v.GetStringMap("connections"), v.GetString("init"))
+			// create charts chroot
+			var err error
+			if args.Charts, err = chartsFS(v); err != nil {
+				return err
+			}
+			// fmt.Fprintf(os.Stderr, "\n\n%v\n\n", args.Charts)
+			args.Connections = v.GetStringMap("connections")
+			args.Init = v.GetString("init")
+			return Run(cmd.Context(), args)
 		},
 	}
 
@@ -220,7 +231,7 @@ func New(cliargs []string) ContextExecutor {
 }
 
 // Run runs the application.
-func Run(ctx context.Context, args *Args, connections map[string]interface{}, initstr string) error {
+func Run(ctx context.Context, args *Args) error {
 	// get user
 	u, err := user.Current()
 	if err != nil {
@@ -252,7 +263,7 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 	}
 
 	// configured named connections
-	for name, v := range connections {
+	for name, v := range args.Connections {
 		if err := setConn(name, v); err != nil && !forceNonInteractive && interactive {
 			fmt.Fprintln(os.Stderr, fmt.Sprintf(text.InvalidNamedConnection, name, err))
 		}
@@ -311,7 +322,7 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 	}
 	defer l.Close()
 	// create handler
-	h := handler.New(l, u, wd, args.NoPassword)
+	h := handler.New(l, u, wd, args.Charts, args.NoPassword)
 	// force password
 	dsn := args.DSN
 	if args.ForcePassword {
@@ -332,7 +343,7 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 			return err
 		}
 	}
-	// scripts
+	// init script
 	if !args.NoInit {
 		// rc file
 		if rc := env.RCFile(u); rc != "" {
@@ -340,7 +351,7 @@ func Run(ctx context.Context, args *Args, connections map[string]interface{}, in
 				return err
 			}
 		}
-		if s := strings.TrimSpace(initstr); s != "" {
+		if s := strings.TrimSpace(args.Init); s != "" {
 			h.Reset([]rune(s + "\n"))
 		}
 	}
@@ -372,6 +383,9 @@ type Args struct {
 	Vars              []string
 	Cvars             []string
 	Pvars             []string
+	Charts            billy.Filesystem
+	Connections       map[string]interface{}
+	Init              string
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,
@@ -465,6 +479,38 @@ func (filevar) String() string {
 // Type satisfies the [pflag.Value] interface.
 func (filevar) Type() string {
 	return "FILE"
+}
+
+// chartsFS creates a filesystem for charts.
+func chartsFS(v *viper.Viper) (billy.Filesystem, error) {
+	var configDir string
+	if s := v.ConfigFileUsed(); s != "" {
+		configDir = filepath.Dir(s)
+	} else {
+		var err error
+		if configDir, err = os.UserConfigDir(); err != nil {
+			return nil, err
+		}
+		configDir = filepath.Join(configDir, text.CommandName)
+	}
+	chartsPath := "charts"
+	if s := v.GetString("charts_path"); s != "" {
+		chartsPath = s
+	}
+	fs := osfs.New(configDir, osfs.WithBoundOS())
+	switch fi, err := fs.Stat(chartsPath); {
+	case err != nil && os.IsNotExist(err) && chartsPath == "charts":
+		return memfs.New(), nil
+	case err != nil && os.IsNotExist(err):
+		fmt.Fprintln(os.Stderr, fmt.Sprintf(text.ChartsPathDoesNotExist, chartsPath))
+		return memfs.New(), nil
+	case err != nil:
+		return nil, err
+	case !fi.IsDir():
+		fmt.Fprintln(os.Stderr, fmt.Sprintf(text.ChartsPathIsNotADirectory, chartsPath))
+		return memfs.New(), nil
+	}
+	return fs.Chroot(chartsPath)
 }
 
 // setConn sets a named connection.

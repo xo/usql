@@ -28,6 +28,7 @@ import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters"
 	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/go-git/go-billy/v5"
 	"github.com/xo/dburl"
 	"github.com/xo/dburl/passfile"
 	"github.com/xo/tblfmt"
@@ -53,7 +54,11 @@ import (
 type Handler struct {
 	l    rline.IO
 	user *user.User
-	wd   string
+	// wd is the working directoyr.
+	wd string
+	// charts is the charts filesystem.
+	charts billy.Filesystem
+	// nopw indicates not asking for password.
 	nopw bool
 	// timing of every command executed
 	timing bool
@@ -79,7 +84,7 @@ type Handler struct {
 }
 
 // New creates a new input handler.
-func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
+func New(l rline.IO, user *user.User, wd string, charts billy.Filesystem, nopw bool) *Handler {
 	f, iactive := l.Next, l.Interactive()
 	if iactive {
 		f = func() ([]rune, error) {
@@ -94,11 +99,12 @@ func New(l rline.IO, user *user.User, wd string, nopw bool) *Handler {
 		}
 	}
 	h := &Handler{
-		l:    l,
-		user: user,
-		wd:   wd,
-		nopw: nopw,
-		buf:  stmt.New(f),
+		l:      l,
+		user:   user,
+		wd:     wd,
+		charts: charts,
+		nopw:   nopw,
+		buf:    stmt.New(f),
 	}
 	if iactive {
 		l.SetOutput(h.outputHighlighter)
@@ -1407,7 +1413,7 @@ func (h *Handler) Include(path string, relative bool) error {
 		Err: h.l.Stderr(),
 		Pw:  h.l.Password,
 	}
-	p := New(l, h.user, filepath.Dir(path), h.nopw)
+	p := New(l, h.user, filepath.Dir(path), h.charts, h.nopw)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
 	err = p.Run()
@@ -1438,6 +1444,9 @@ func (h *Handler) SetOutput(o io.WriteCloser) {
 	}
 	h.out = o
 }
+
+// FS is the filesystem interface.
+type FS interface{}
 
 // Error wraps handler errors.
 type Error struct {

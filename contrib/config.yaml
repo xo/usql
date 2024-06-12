@@ -40,3 +40,8 @@ connections:
 init: |
   \echo welcome to the jungle `date`
   \set SYNTAX_HL_STYLE paraiso-dark
+# charts path
+charts_path: charts
+# defined queries
+queries:
+  q1:
