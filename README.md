@@ -50,7 +50,7 @@ for other databases.
 ## Installing
 
 `usql` can be installed [via Release][], [via Homebrew][], [via AUR][], [via
-Scoop][] or [via Go][]:
+Scoop][], [via Go][], or [via Docker][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos-and-linux
@@ -141,7 +141,12 @@ See [below for information](#building) on `usql` build tags.
 
 ### Installing via Docker
 
-Install `usql` with Docker, Podman, or other Container runtime:
+An [official container image][docker-hub] is maintained by the `usql` team, and
+can be used with Docker, Podman, or other container runtime.
+
+[docker-hub]: https://hub.docker.com/r/usql/usql
+
+Install `usql` with Docker, Podman, or other container runtime:
 
 ```sh
 # run interactive shell and mount the $PWD/data directory as a volume for use
