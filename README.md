@@ -141,8 +141,9 @@ See [below for information](#building) on `usql` build tags.
 
 ### Installing via Docker
 
-An [official container image][docker-hub] is maintained by the `usql` team, and
-can be used with Docker, Podman, or other container runtime.
+An [official container image (`docker.io/usql/usql`)][docker-hub] is maintained
+by the `usql` team, and can be used with Docker, Podman, or other container
+runtime.
 
 [docker-hub]: https://hub.docker.com/r/usql/usql
 
