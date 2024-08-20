@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -10,10 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
-	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -404,6 +403,14 @@ type commandOrFile struct {
 
 // Set satisfies the [pflag.Value] interface.
 func (c commandOrFile) Set(value string) error {
+	if value == "-" {
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+		value = scanner.Text()
+	}
 	c.args.CommandOrFiles = append(c.args.CommandOrFiles, CommandOrFile{
 		Command: c.command,
 		Value:   value,
