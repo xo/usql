@@ -36,6 +36,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49
 	github.com/jmrobles/h2go v0.5.0
+	github.com/kenshaw/colors v0.1.6
 	github.com/kenshaw/rasterm v0.1.10
 	github.com/lib/pq v1.10.9
 	github.com/marcboeker/go-duckdb v1.7.0
@@ -58,8 +59,9 @@ require (
 	github.com/trinodb/trino-go-client v0.315.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.3
-	github.com/xo/chartfmt v0.0.0
 	github.com/xo/dburl v0.23.2
+	github.com/xo/echartsgoja v0.1.1
+	github.com/xo/resvg v0.6.0
 	github.com/xo/tblfmt v0.13.2
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.75.2
@@ -235,6 +237,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	github.com/kenshaw/snaker v0.2.0 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
@@ -296,9 +299,6 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	github.com/xo/echartsgoja v0.1.1 // indirect
-	github.com/xo/resvg v0.6.0 // indirect
-	github.com/xo/vegagoja v0.1.0 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20240528144234-5d5a685e41f7 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
@@ -355,5 +355,3 @@ require (
 	modernc.org/token v1.1.0 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )
-
-replace github.com/xo/chartfmt => ../chartfmt
