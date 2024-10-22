@@ -24,7 +24,7 @@ func KnownBuildTags() map[string]string {
 		"dynamodb":      "dynamodb",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
-		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v16/arrow/flight/flightsql/driver
+		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // sqlflow.org/gohive
@@ -45,6 +45,7 @@ func KnownBuildTags() map[string]string {
 		"ramsql":        "ramsql",        // github.com/proullon/ramsql/driver
 		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
+		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb

@@ -152,8 +152,33 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
+      - name: Extract artifacts
+        run: |
+          mkdir /tmp/scan
+          mkdir scan
+          for i in dist-*/*/*/*.tar.bz2; do
+            ver=$(sed -e 's/\.tar\.bz2$//' <<< $i|cut -d- -f2-)
+            echo "extracting $i ($ver)"
+            tar -C /tmp/scan -jv -f $i -x $APP
+            hash=$(sha256sum /tmp/scan/$APP|awk '{print $1}')
+            mv /tmp/scan/$APP ./scan/$APP-$ver-${hash:0:8}
+          done
+          for i in dist-*/*/*/*.zip; do
+            ver=$(sed -e 's/\.zip$//' <<< $i|cut -d- -f2-)
+            echo "extracting $i ($ver)"
+            unzip -d /tmp/scan $i $APP.exe
+            hash=$(sha256sum /tmp/scan/$APP.exe|awk '{print $1}')
+            mv /tmp/scan/$APP.exe ./scan/$APP-$ver-${hash:0:8}.exe
+          done
+      - name: Submit to VirusTotal
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+          request_rate: 4
+          files: |
+            ./scan/${{ env.APP }}-*
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: ${{ env.APP }} ${{ env.VER }}

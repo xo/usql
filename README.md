@@ -283,7 +283,7 @@ associated database, scheme / build tag, and scheme aliases:
 | DynamoDb             | `dynamodb`      | `dy`, `dyn`, `dynamo`, `dynamodb`               | [github.com/btnguyen2k/godynamo][d-dynamodb]                                |
 | Exasol               | `exasol`        | `ex`, `exa`                                     | [github.com/exasol/exasol-driver-go][d-exasol]                              |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                             | [github.com/nakagami/firebirdsql][d-firebird]                               |
-| FlightSQL            | `flightsql`     | `fl`, `flight`                                  | [github.com/apache/arrow/go/v16/arrow/flight/flightsql/driver][d-flightsql] |
+| FlightSQL            | `flightsql`     | `fl`, `flight`                                  | [github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver][d-flightsql] |
 | Google BigQuery      | `bigquery`      | `bq`                                            | [gorm.io/driver/bigquery/driver][d-bigquery]                                |
 | Google Spanner       | `spanner`       | `sp`                                            | [github.com/googleapis/go-sql-spanner][d-spanner]                           |
 | Microsoft ADODB      | `adodb`         | `ad`, `ado`                                     | [github.com/mattn/go-adodb][d-adodb]                                        |
@@ -295,6 +295,7 @@ associated database, scheme / build tag, and scheme aliases:
 | RamSQL               | `ramsql`        | `rm`, `ram`                                     | [github.com/proullon/ramsql/driver][d-ramsql]                               |
 | SAP ASE              | `sapase`        | `ax`, `ase`, `tds`                              | [github.com/thda/tds][d-sapase]                                             |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                                   |
+| Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake][d-snowflake]                           |
 | Trino                | `trino`         | `tr`, `trs`, `trinos`                           | [github.com/trinodb/trino-go-client/trino][d-trino]                         |
 | Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                              |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                 |
@@ -355,6 +356,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-ramsql]: https://github.com/proullon/ramsql
 [d-sapase]: https://github.com/thda/tds
 [d-saphana]: https://github.com/SAP/go-hdb
+[d-snowflake]: https://github.com/snowflakedb/gosnowflake
 [d-spanner]: https://github.com/googleapis/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
