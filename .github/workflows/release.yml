@@ -157,14 +157,14 @@ jobs:
           mkdir /tmp/scan
           mkdir scan
           for i in dist-*/*/*/*.tar.bz2; do
-            ver=$(sed -e 's/\.tar\.bz2$//' <<< $i|cut -d- -f2-)
+            ver=$(sed -e 's/\.tar\.bz2$//' <<< $(basename $i)|cut -d- -f2-)
             echo "extracting $i ($ver)"
             tar -C /tmp/scan -jv -f $i -x $APP
             hash=$(sha256sum /tmp/scan/$APP|awk '{print $1}')
             mv /tmp/scan/$APP ./scan/$APP-$ver-${hash:0:8}
           done
           for i in dist-*/*/*/*.zip; do
-            ver=$(sed -e 's/\.zip$//' <<< $i|cut -d- -f2-)
+            ver=$(sed -e 's/\.zip$//' <<< $(basename $i)|cut -d- -f2-)
             echo "extracting $i ($ver)"
             unzip -d /tmp/scan $i $APP.exe
             hash=$(sha256sum /tmp/scan/$APP.exe|awk '{print $1}')
