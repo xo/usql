@@ -88,6 +88,10 @@ jobs:
       uses: actions/download-artifact@v4
     - name: Build universal
       run: |
+        if [ "$VER" = "master" ]; then
+          VER=0.0.0-dev
+        fi
+
         export WORKDIR=$PWD/build/darwin/universal/$VER
         mkdir -p $WORKDIR
 
@@ -182,10 +186,8 @@ jobs:
           request_rate: 4
           files: |
             ./scan/*
-      - name: Add VirusTotal Info
-        run: |
-          echo '${{ toJSON(steps.virustotal.outputs) }}'
-      - name: Draft Release
+      - name: Generate Release Notes
+        id: generate_release_notes
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
@@ -195,3 +197,36 @@ jobs:
           files: |
             dist-*/*/*/*.tar.bz2
             dist-*/*/*/*.zip
+      - name: Add VirusTotal Info to Release Notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # get release notes
+          url=https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${{ steps.generate_release_notes.outputs.id }}
+          body=$(
+            curl \
+              -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              $url \
+              | jq -r .body
+          )
+
+          # append virustotal details to release notes
+          nl=$'\n'
+          body+="$nl[VirusTotal](https://www.virustotal.com) analysis:$nl"
+          while read -r -d, line; do
+            name=$(sed -e 's/^\.\/scan\/\([^=]\+\)=.*/\1/' <<< "$line")
+            vturl=$(sed -e 's/.*=\(https.*\)/\1/' <<< "$line")
+            body+="* [$name]($vturl)$nl"
+          done <<< "$a"
+
+          # update release notes
+          curl \
+            -L \
+            -X PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "{\"body\": \"$body\"}" \
+            $url
