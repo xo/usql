@@ -8,8 +8,7 @@
 # 'all', or 'test'.
 #
 # all  -- starts all available database images.
-# test -- starts the primary testing images. The testing images are cassandra,
-#         mysql, postgres, sqlserver, and oracle [if available].
+# test -- starts the primary testing images. The testing images are cassandra, mysql, postgres, sqlserver, and oracle
 # -u   -- perform podman pull for images prior to start.
 #
 # Will stop any running podman container prior to starting.
@@ -81,7 +80,7 @@ podman_run() {
   echo
 
   # update
-  if [[ "$UPDATE" == "1" && "$TARGET" != "oracle" ]]; then
+  if [[ "$UPDATE" == "1" ]]; then
     if [ ! -f $BASE/Dockerfile ]; then
       (set -ex;
         podman pull $IMAGE
