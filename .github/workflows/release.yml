@@ -200,10 +200,13 @@ jobs:
       - name: Add VirusTotal Info to Release Notes
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          # get release notes
+          # github api url
           url=https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${{ steps.generate_release_notes.outputs.id }}
+
+          # get release notes
           body=$(
             curl \
+              -s \
               -L \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
@@ -219,10 +222,11 @@ jobs:
             name=$(sed -e 's/^\.\/scan\/\([^=]\+\)=.*/\1/' <<< "$line")
             vturl=$(sed -e 's/.*=\(https.*\)/\1/' <<< "$line")
             body+="* [$name]($vturl)$nl"
-          done <<< "$a"
+          done <<< "${{ steps.virustotal.outputs.analysis }}"
 
           # update release notes
           curl \
+            -s \
             -L \
             -X PATCH \
             -H "Accept: application/vnd.github+json" \
