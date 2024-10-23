@@ -141,7 +141,7 @@ jobs:
         path: build/windows/**/*
         if-no-files-found: error
 
-  release:
+  draft_release:
     name: Draft Release
     needs:
       - build_for_linux
@@ -175,13 +175,17 @@ jobs:
           file ./scan/*
           sha256sum ./scan/*
       - name: Submit to VirusTotal
+        id: virustotal
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
           request_rate: 4
           files: |
             ./scan/*
-      - name: Release
+      - name: Add VirusTotal Info
+        run: |
+          echo '${{ toJSON(steps.virustotal.outputs) }}'
+      - name: Draft Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
