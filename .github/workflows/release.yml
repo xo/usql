@@ -215,6 +215,8 @@ jobs:
               | jq -r .body
           )
 
+          echo -e ">>>\n$body\n<<<"
+
           # append virustotal details to release notes
           nl=$'\n'
           body+="$nl[VirusTotal](https://www.virustotal.com) analysis:$nl"
@@ -225,6 +227,9 @@ jobs:
           done <<< "${{ steps.virustotal.outputs.analysis }}"
 
           # update release notes
+          export body
+          echo -e ">>>\n$body\n<<<"
+
           curl \
             -s \
             -L \
