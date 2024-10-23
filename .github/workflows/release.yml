@@ -8,7 +8,7 @@ env:
 jobs:
   build_for_linux:
     name: Build for Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -152,7 +152,7 @@ jobs:
       - build_for_macos
       - build_for_macos_universal
       - build_for_windows
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
