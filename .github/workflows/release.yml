@@ -202,20 +202,23 @@ jobs:
         run: |
           # github api url
           url=https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${{ steps.generate_release_notes.outputs.id }}
+          echo "url: $url"
 
           # get release notes
-          body=$(
+          release=$(
             curl \
               -s \
               -L \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
-              $url \
-              | jq -r .body
+              $url
           )
+          tag_name=$(jq -r .tag_name <<< "$release")
+          target_commitish=$(jq -r .target_commitish <<< "$release")
+          body=$(jq -r .body <<< "$release")
 
-          echo -e ">>>\n$body\n<<<"
+          echo "tag_name: $tag_name target_commitish: $target_commitish"
 
           # append virustotal details to release notes
           nl=$'\n'
@@ -226,10 +229,10 @@ jobs:
             body+="* [$name]($vturl)$nl"
           done <<< "${{ steps.virustotal.outputs.analysis }}"
 
-          # update release notes
-          export body
-          echo -e ">>>\n$body\n<<<"
+          echo -e "body:\n$body"
 
+          # update release notes
+          export tag_name target_commitish body
           curl \
             -s \
             -L \
@@ -237,6 +240,8 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
+            --variable '%tag_name' \
+            --varable '%target_commitish' \
             --variable '%body' \
-            --expand-data '{"body": "{{body:trim:json}}"}' \
+            --expand-data '{"tag_name": "{{tag_name:json}}", "body": "{{body:trim:json}}"}' \
             $url
