@@ -3,7 +3,7 @@ name: Test usql
 jobs:
   test:
     name: Build and Test usql
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       cassandra:
         image: docker.io/usql/cassandra:latest
@@ -41,8 +41,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Unit Tests
-      run: go test -v ./stmt
+      run: |
+        go test -v ./stmt
     - name: Build with all drivers
-      run: ./build.sh -b -t all
+      run: |
+        ./build.sh -b -t all
     - name: Shell Tests
-      run: go run testcli.go
+      run: |
+        go run testcli.go &> output.log
+        ls -alh output.log
+    - name: Archive output
+      uses: actions/upload-artifact@v4
+      with:
+        name: output
+        path: output.log
+        if-no-files-found: error

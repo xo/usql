@@ -58,7 +58,7 @@ jobs:
     steps:
     - name: Install build dependencies
       run: |
-        brew install coreutils gnu-tar
+        brew install coreutils
     - name: Checkout
       uses: actions/checkout@v4
     - name: Setup Go
@@ -83,7 +83,7 @@ jobs:
     steps:
     - name: Install build dependencies
       run: |
-        brew install coreutils gnu-tar
+        brew install coreutils
     - name: Download artifacts
       uses: actions/download-artifact@v4
     - name: Build universal
@@ -219,7 +219,7 @@ jobs:
 
           # append virustotal details to release notes
           nl=$'\n'
-          body+="$nl[VirusTotal](https://www.virustotal.com) analysis:$nl"
+          body+="$nl$nl[VirusTotal](https://www.virustotal.com) analysis:$nl"
           while read -r -d, line; do
             name=$(sed -e 's/^\.\/scan\/\([^=]\+\)=.*/\1/' <<< "$line")
             vturl=$(sed -e 's/.*=\(https.*\)/\1/' <<< "$line")
