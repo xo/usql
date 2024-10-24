@@ -255,8 +255,9 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
+
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
+| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -364,6 +365,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-ydb]: https://github.com/ydb-platform/ydb-go-sdk
+
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
