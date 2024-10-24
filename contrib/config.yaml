@@ -17,6 +17,7 @@ connections:
   mym: mysql://root:P4ssw0rd@localhost
   myz: mymysql://root:P4ssw0rd@localhost
   ora: oracle://system:P4ssw0rd@localhost/free
+  ore: oracle://system:P4ssw0rd@localhost:1522/db1
   pgs: postgres://postgres:P4ssw0rd@localhost
   pgx: pgx://postgres:P4ssw0rd@localhost
   vrt:
@@ -40,6 +41,7 @@ connections:
 init: |
   \echo welcome to the jungle `date`
   \set SYNTAX_HL_STYLE paraiso-dark
+  \set PROMPT1 '\033[32m%S%M%/%R%#\033[0m '
 # charts path
 charts_path: charts
 # defined queries

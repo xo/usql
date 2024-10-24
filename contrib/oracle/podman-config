@@ -2,4 +2,5 @@ NAME=oracle
 IMAGE=container-registry.oracle.com/database/free
 PUBLISH=1521:1521
 ENV="ORACLE_PDB=db1 ORACLE_PWD=P4ssw0rd"
-VOLUME=oracle-data:/opt/oracle/oradata
+NETWORK="slirp4netns:enable_ipv6=false"
+VOLUME=oracle-free-data:/opt/oracle/oradata
