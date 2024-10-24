@@ -1,2 +1,2 @@
 DB="pgx://postgres:P4ssw0rd@localhost"
-VSQL="SHOW server_version;"
+VSQL="SELECT setting AS version FROM pg_settings WHERE name='server_version';"
