@@ -19,6 +19,7 @@ var (
 	ConfigName            = "config"
 	Banner                = `the universal command-line interface for SQL databases`
 	CommandHelpHint       = `hint: try "` + CommandName + ` --help" for more information.`
+	GoInstallHint         = "\ntry:\n\n  go install -tags 'most %s' github.com/xo/usql@%s\n\n"
 	NotConnected          = `(not connected)`
 	HelpPrefix            = `help`
 	QuitPrefix            = `quit`

@@ -97,7 +97,7 @@ func New(cliargs []string) ContextExecutor {
 				powershellCompletion,
 				cmd.Name() == "__complete":
 				flags := cmd.Root().Flags()
-				for _, name := range []string{"no-psqlrc", "no-usqlrc", "var", "variable"} {
+				for _, name := range []string{"no-psqlrc", "no-" + text.CommandName + "rc", "var", "variable"} {
 					flags.Lookup(name).Hidden = false
 				}
 			}
@@ -160,10 +160,10 @@ func New(cliargs []string) ContextExecutor {
 
 	// general flags
 	flags.BoolVarP(&args.NoPassword, "no-password", "w", false, "never prompt for password")
-	flags.BoolVarP(&args.NoInit, "no-init", "X", false, "do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-usqlrc)")
+	flags.BoolVarP(&args.NoInit, "no-init", "X", false, "do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-"+text.CommandName+"rc)")
 	flags.BoolVar(&args.NoInit, "no-rc", false, "do not read startup file")
 	flags.BoolVar(&args.NoInit, "no-psqlrc", false, "do not read startup file")
-	flags.BoolVar(&args.NoInit, "no-usqlrc", false, "do not read startup file")
+	flags.BoolVar(&args.NoInit, "no-"+text.CommandName+"rc", false, "do not read startup file")
 	flags.VarP(filevar{&args.Out}, "out", "o", "output file")
 	flags.BoolVarP(&args.ForcePassword, "password", "W", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
@@ -212,7 +212,7 @@ func New(cliargs []string) ContextExecutor {
 
 	// mark hidden
 	for _, name := range []string{
-		"no-rc", "no-psqlrc", "no-usqlrc", "var", "variable",
+		"no-rc", "no-psqlrc", "no-" + text.CommandName + "rc", "var", "variable",
 		"completion-script-bash", "completion-script-zsh", "completion-script-fish",
 		"completion-script-powershell", "no-descriptions",
 		"bad-help",

@@ -56,7 +56,7 @@ func main() {
 			if text.CommandVersion == "0.0.0-dev" || strings.Contains(text.CommandVersion, "-") {
 				rev = "master"
 			}
-			fmt.Fprintf(os.Stderr, "\ntry:\n\n  go install -tags 'most %s' github.com/xo/usql@%s\n\n", tag, rev)
+			fmt.Fprintf(os.Stderr, text.GoInstallHint, tag, rev)
 		}
 		switch estr := err.Error(); {
 		case err == text.ErrWrongNumberOfArguments,
