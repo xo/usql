@@ -811,9 +811,9 @@ always appreciated][contributing]!
 #### Configuration
 
 During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
-file `config.yaml`. On Windows this is `%AppData%/usql/config.yaml`, on macOS
-this is `$HOME/Library/Application Support/usql/config.yaml`, and on Linux and
-other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
+file [`config.yaml`](contrib/config.yaml). On Windows this is `%AppData%/usql/config.yaml`,
+on macOS this is `$HOME/Library/Application Support/usql/config.yaml`, and on
+Linux and other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
 
 ##### `connections:`
 
@@ -846,12 +846,13 @@ gr:system@localhost/free=>
 
 ##### `init:`
 
-An initialization script can be defined as `init:`:
+An initialization script can be defined as `init:` as a string:
 
 ```yaml
 init: |
   \echo welcome to the jungle `date`
   \set SYNTAX_HL_STYLE paraiso-dark
+  \set PROMPT1 '\033[32m%S%M%/%R%#\033[0m '
 ```
 
 The `init:` script is commonly used to set [environment variables][variables]
