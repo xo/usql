@@ -1,0 +1,2 @@
+DB="ydb://localhost/local"
+VSQL="SELECT 'unk' as version;"

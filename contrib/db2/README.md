@@ -4,6 +4,7 @@
 
 ```sh
 $ sudo aptitude install unixodbc unixodbc-bin unixodbc-dev
+$ yay -S unixodbc
 ```
 
 2. Download `dsdriver` and install:
@@ -21,10 +22,10 @@ $ cat odbcinst.ini | sudo tee -a /etc/odbcinst.ini
 $ sudo cp {db2cli.ini,db2dsdriver.cfg} /opt/db2/clidriver/cfg/
 ```
 
-4. Run DB2 docker image:
+4. Run DB2 container:
 
 ```sh
-$ ../docker-run.sh db2 -u
+$ ../podman-run.sh db2 -u
 ```
 
 5. Verify DB2 working:

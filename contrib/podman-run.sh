@@ -49,6 +49,11 @@ podman_run() {
     exit 1
   fi
 
+  # default network settings
+  if [ -z "$NETWORK" ]; then
+    NETWORK=slirp4netns
+  fi
+
   # setup params
   PARAMS=()
   for k in NAME PUBLISH ENV VOLUME NETWORK PRIVILEGED HOSTNAME; do
@@ -69,13 +74,14 @@ podman_run() {
 
   # show parameters
   echo "-------------------------------------------"
-  echo "NAME:       $NAME $HOSTNAME"
+  echo "NAME:       $NAME"
   echo "IMAGE:      $IMAGE (update: $UPDATE)"
   echo "PUBLISH:    $PUBLISH"
   echo "ENV:        $ENV"
   echo "VOLUME:     $VOLUME"
   echo "NETWORK:    $NETWORK"
   echo "PRIVILEGED: $PRIVILEGED"
+  echo "HOSTNAME:   $HOSTNAME"
   echo "CMD:        $CMD"
   echo
 
@@ -124,10 +130,7 @@ pushd $SRC &> /dev/null
 TARGETS=()
 case $DIR in
   all)
-    TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'|grep -v db2))
-    if [[ "$(podman image ls -q --filter 'reference=docker.io/ibmcom/db2')" != "" ]]; then
-      TARGETS+=(db2)
-    fi
+    TARGETS+=($(find . -type f -name podman-config|awk -F'/' '{print $2}'))
   ;;
   test)
     TARGETS+=(mysql postgres sqlserver oracle clickhouse cassandra)
