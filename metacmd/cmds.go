@@ -370,17 +370,31 @@ func init() {
 			Section: SectionQueryBuffer,
 			Descs: []Desc{
 				{"e", "[FILE] [LINE]", "edit the query buffer (or file) with external editor"},
-				{"edit", "", ""},
+				{"edit", "[-exec]", "edit the query (or exec) buffer"},
 			},
 			Process: func(p *Params) error {
-				// get last statement
-				s, buf := p.Handler.Last(), p.Handler.Buf()
-				if buf.Len != 0 {
-					s = buf.String()
+				var exec bool
+				ok, path, err := p.GetOptional(true)
+				if ok {
+					if path != "exec" {
+						return fmt.Errorf(text.InvalidOption, path)
+					}
+					exec = true
+					if path, err = p.Get(true); err != nil {
+						return err
+					}
 				}
-				path, err := p.Get(true)
-				if err != nil {
-					return err
+				// get last statement
+				s, buf := "", p.Handler.Buf()
+				switch {
+				case buf.Len != 0 && exec:
+					s = buf.String()
+				case buf.Len != 0:
+					s = buf.RawString()
+				case exec:
+					s = p.Handler.LastExec()
+				default:
+					s = p.Handler.LastRaw()
 				}
 				line, err := p.Get(true)
 				if err != nil {
@@ -403,22 +417,24 @@ func init() {
 				{"p", "", "show the contents of the query buffer"},
 				{"print", "", ""},
 				{"raw", "", "show the raw (non-interpolated) contents of the query buffer"},
+				{"exec", "", "show the contents of the exec buffer"},
 			},
 			Process: func(p *Params) error {
 				// get last statement
 				var s string
-				if p.Name == "raw" {
-					s = p.Handler.LastRaw()
-				} else {
-					s = p.Handler.Last()
-				}
-				// use current statement buf if not empty
-				buf := p.Handler.Buf()
-				switch {
+				switch buf := p.Handler.Buf(); {
+				case buf.Len != 0 && p.Name == "exec":
+					s = buf.String()
 				case buf.Len != 0 && p.Name == "raw":
 					s = buf.RawString()
 				case buf.Len != 0:
-					s = buf.String()
+					s = buf.PrintString()
+				case p.Name == "exec":
+					s = p.Handler.LastExec()
+				case p.Name == "raw":
+					s = p.Handler.LastRaw()
+				default:
+					s = p.Handler.LastPrint()
 				}
 				switch {
 				case s == "":
@@ -490,7 +506,7 @@ func init() {
 			},
 			Process: func(p *Params) error {
 				// get last statement
-				s, buf := p.Handler.Last(), p.Handler.Buf()
+				s, buf := p.Handler.LastExec(), p.Handler.Buf()
 				if buf.Len != 0 {
 					s = buf.String()
 				}

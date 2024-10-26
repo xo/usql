@@ -27,8 +27,10 @@ type Handler interface {
 	URL() *dburl.URL
 	// DB returns the current database connection.
 	DB() drivers.DB
-	// Last returns the last executed query.
-	Last() string
+	// LastExec returns the last executed query.
+	LastExec() string
+	// LastPrint returns the last executed printable query.
+	LastPrint() string
 	// LastRaw returns the last raw (non-interpolated) query.
 	LastRaw() string
 	// Buf returns the current query buffer.

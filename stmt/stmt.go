@@ -63,6 +63,31 @@ func (b *Stmt) String() string {
 	return string(b.Buf)
 }
 
+// PrintString returns a print string of the statement buffer, which is the
+// statement buffer but with escaped variables re-interpolated.
+func (b *Stmt) PrintString() string {
+	if b.Len == 0 {
+		return ""
+	}
+	i, s, z := 0, string(b.Buf), new(bytes.Buffer)
+	// deinterpolate vars
+	for _, v := range b.Vars {
+		if v.Quote != '\\' {
+			continue
+		}
+		if len(s) > i {
+			z.WriteString(s[i:v.I])
+		}
+		z.WriteString(v.String())
+		i = v.I + v.Len
+	}
+	// add remaining
+	if len(s) > i {
+		z.WriteString(s[i:])
+	}
+	return z.String()
+}
+
 // RawString returns the non-interpolated version of the statement buffer.
 func (b *Stmt) RawString() string {
 	if b.Len == 0 {
@@ -373,8 +398,6 @@ func (v *Var) String() string {
 // Substitute substitutes part of r, with s.
 func (v *Var) Substitute(r []rune, s string, ok bool) ([]rune, int) {
 	switch v.Quote {
-	case '\\':
-		s = "\\" + s
 	case '?':
 		s = trueFalse(ok)
 	}

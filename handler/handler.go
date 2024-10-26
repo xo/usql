@@ -69,9 +69,10 @@ type Handler struct {
 	singleLineMode bool
 	// query statement buffer
 	buf *stmt.Stmt
-	// last statement
-	last       string
+	// lastExec statement
+	lastExec   string
 	lastPrefix string
+	lastPrint  string
 	lastRaw    string
 	// batch
 	batch    bool
@@ -359,12 +360,13 @@ func (h *Handler) Run() error {
 					h.batch, h.batchEnd = true, end
 				case h.batch:
 					var lend string
-					if len(h.last) != 0 {
+					if len(h.lastExec) != 0 {
 						lend = "\n"
 					}
 					// append to last
-					h.last += lend + h.buf.String()
+					h.lastExec += lend + h.buf.String()
 					h.lastPrefix = h.buf.Prefix
+					h.lastPrint += lend + h.buf.PrintString()
 					h.lastRaw += lend + h.buf.RawString()
 					h.buf.Reset(nil)
 					// break
@@ -376,15 +378,15 @@ func (h *Handler) Run() error {
 				}
 			}
 			if h.buf.Len != 0 {
-				h.last, h.lastPrefix, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.RawString()
+				h.lastExec, h.lastPrefix, h.lastPrint, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.PrintString(), h.buf.RawString()
 				h.buf.Reset(nil)
 			}
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
-			if !h.batch && h.last != "" && h.last != ";" {
+			if !h.batch && h.lastExec != "" && h.lastExec != ";" {
 				// force a transaction for batched queries for certain drivers
 				var forceBatch bool
 				if h.u != nil {
-					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.last, true, true, true))
+					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.lastExec, true, true, true))
 					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
 				}
 				// execute
@@ -393,8 +395,8 @@ func (h *Handler) Run() error {
 					out = h.out
 				}
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.last, forceBatch, h.unbind()...); err != nil {
-					lastErr = WrapErr(h.last, err)
+				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.lastExec, forceBatch, h.unbind()...); err != nil {
+					lastErr = WrapErr(h.lastExec, err)
 					if env.All()["ON_ERROR_STOP"] == "on" {
 						if iactive {
 							fmt.Fprintln(stderr, "error:", err)
@@ -457,7 +459,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 // Reset resets the handler's query statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
-	h.last, h.lastPrefix, h.lastRaw, h.batch, h.batchEnd = "", "", "", false, ""
+	h.lastExec, h.lastPrefix, h.lastPrint, h.lastRaw, h.batch, h.batchEnd = "", "", "", "", false, ""
 }
 
 // Bind sets the bind parameters for the next query execution.
@@ -699,9 +701,14 @@ func (h *Handler) DB() drivers.DB {
 	return h.db
 }
 
-// Last returns the last executed statement.
-func (h *Handler) Last() string {
-	return h.last
+// LastExec returns the last executed statement.
+func (h *Handler) LastExec() string {
+	return h.lastExec
+}
+
+// LastPrint returns the last printable statement.
+func (h *Handler) LastPrint() string {
+	return h.lastPrint
 }
 
 // LastRaw returns the last raw (non-interpolated) executed statement.
