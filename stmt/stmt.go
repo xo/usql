@@ -98,8 +98,7 @@ func (b *Stmt) RawString() string {
 	if b.Len == 0 {
 		return ""
 	}
-	s, z := string(b.Buf), new(bytes.Buffer)
-	var i int
+	i, s, z := 0, string(b.Buf), new(bytes.Buffer)
 	// deinterpolate vars
 	for _, v := range b.Vars {
 		if !v.Defined {
@@ -241,7 +240,7 @@ parse:
 			i++
 		// variable declaration
 		case c == ':' && next != ':':
-			if v := readVar(b.r, i, b.rlen); v != nil {
+			if v := readVar(b.r, i, b.rlen, next); v != nil {
 				var q string
 				if v.Quote != 0 {
 					q = string(v.Quote)

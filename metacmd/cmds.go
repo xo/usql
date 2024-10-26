@@ -203,7 +203,7 @@ func init() {
 				sort.Strings(keys)
 				out := p.Handler.IO().Stdout()
 				for _, k := range keys {
-					fmt.Fprintln(out, k, "=", "'"+strings.Join(vals[k], " ")+"'")
+					fmt.Fprintln(out, k, "=", env.Quote(strings.Join(vals[k], " ")))
 				}
 				return nil
 			},
@@ -763,7 +763,7 @@ func init() {
 				sort.Strings(keys)
 				out := p.Handler.IO().Stdout()
 				for _, k := range keys {
-					fmt.Fprintln(out, k, "=", "'"+vals[k]+"'")
+					fmt.Fprintln(out, k, "=", env.Quote(vals[k]))
 				}
 				return nil
 			},

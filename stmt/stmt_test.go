@@ -4,6 +4,7 @@ import (
 	"io"
 	"os/user"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -48,27 +49,29 @@ func TestAppend(t *testing.T) {
 		{[]string{a512, "", "foo"}, a512 + "\n\nfoo", 517, 2 * MinCapIncrease},
 	}
 	for i, test := range tests {
-		b := new(Stmt)
-		for _, s := range test.s {
-			b.AppendString(s, "\n")
-		}
-		if s := b.String(); s != test.exp {
-			t.Errorf("test %d expected result of `%s`, got: `%s`", i, test.exp, s)
-		}
-		if b.Len != test.l {
-			t.Errorf("test %d expected resulting len of %d, got: %d", i, test.l, b.Len)
-		}
-		if c := cap(b.Buf); c != test.c {
-			t.Errorf("test %d expected resulting cap of %d, got: %d", i, test.c, c)
-		}
-		b.Reset(nil)
-		if b.Len != 0 {
-			t.Errorf("test %d expected after reset len of 0, got: %d", i, b.Len)
-		}
-		b.AppendString("", "\n")
-		if s := b.String(); s != "" {
-			t.Errorf("test %d expected after reset appending an empty string would result in empty string, got: `%s`", i, s)
-		}
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			b := new(Stmt)
+			for _, s := range test.s {
+				b.AppendString(s, "\n")
+			}
+			if s := b.String(); s != test.exp {
+				t.Errorf("expected result of %q, got: %q", test.exp, s)
+			}
+			if b.Len != test.l {
+				t.Errorf("expected resulting len of %d, got: %d", test.l, b.Len)
+			}
+			if c := cap(b.Buf); c != test.c {
+				t.Errorf("expected resulting cap of %d, got: %d", test.c, c)
+			}
+			b.Reset(nil)
+			if b.Len != 0 {
+				t.Errorf("expected after reset len of 0, got: %d", b.Len)
+			}
+			b.AppendString("", "\n")
+			if s := b.String(); s != "" {
+				t.Errorf("expected after reset appending an empty string would result in empty string, got: %q", s)
+			}
+		})
 	}
 }
 
@@ -80,7 +83,7 @@ func TestVariedSeparator(t *testing.T) {
 		t.Errorf("expected len of 9, got: %d", b.Len)
 	}
 	if s := b.String(); s != "foobarfoo" {
-		t.Errorf("expected `%s`, got: `%s`", "foobarfoo", s)
+		t.Errorf("expected %q, got: %q", "foobarfoo", s)
 	}
 	if c := cap(b.Buf); c != MinCapIncrease {
 		t.Errorf("expected cap of %d, got: %d", MinCapIncrease, c)
@@ -166,7 +169,7 @@ func TestNextResetState(t *testing.T) {
 		{"\"", nil, []string{"|"}, "\"", nil},
 		{"\"foo", nil, []string{"|"}, "\"", nil},
 		{":a :b", nil, []string{"|"}, "-", []string{"a", "b"}}, // 55
-		{`select :'a b' :"foo bar"`, nil, []string{"|"}, "-", []string{"a b", "foo bar"}},
+		{`select :'a_b' :"foo_bar_"`, nil, []string{"|"}, "-", []string{"a_b", "foo_bar_"}},
 		{`select :a:b;`, []string{"select :a:b;"}, []string{"|"}, "=", []string{"a", "b"}},
 		{"select :'a\n:foo:bar", nil, []string{"|", "|"}, "'", nil}, // 58
 		{"select :''\n:foo:bar\\g", []string{"select :''\n:foo:bar"}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
@@ -190,71 +193,79 @@ func TestNextResetState(t *testing.T) {
 		{"select $2, $a$ foo $a$, $1 \\bind a b \\g", []string{`select $2, $a$ foo $a$, $1 `}, []string{`\bind| a b `, `\g|`}, "=", nil},
 	}
 	for i, test := range tests {
-		b := New(sp(test.s, "\n"), WithAllowDollar(true), WithAllowMultilineComments(true), WithAllowCComments(true))
-		var stmts, cmds, aparams []string
-		var vars []*Var
-	loop:
-		for {
-			cmd, params, err := b.Next(unquote)
-			switch {
-			case err == io.EOF:
-				break loop
-			case err != nil:
-				t.Fatalf("test %d did not expect error, got: %v", i, err)
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			t.Logf("statement: %q", test.s)
+			b := New(
+				sp(test.s, "\n"),
+				WithAllowDollar(true),
+				WithAllowMultilineComments(true),
+				WithAllowCComments(true),
+			)
+			var stmts, cmds, aparams []string
+			var vars []*Var
+		loop:
+			for {
+				cmd, params, err := b.Next(unquote)
+				switch {
+				case err == io.EOF:
+					break loop
+				case err != nil:
+					t.Fatalf("expected no error, got: %v", err)
+				}
+				vars = append(vars, b.Vars...)
+				if b.Ready() || cmd == `\g` {
+					stmts = append(stmts, b.String())
+					b.Reset(nil)
+				}
+				cmds = append(cmds, cmd)
+				aparams = append(aparams, params)
 			}
-			vars = append(vars, b.Vars...)
-			if b.Ready() || cmd == `\g` {
-				stmts = append(stmts, b.String())
-				b.Reset(nil)
+			if len(stmts) != len(test.stmts) {
+				t.Logf(">> %#v // %#v", test.stmts, stmts)
+				t.Fatalf("expected %d statements, got: %d", len(test.stmts), len(stmts))
 			}
-			cmds = append(cmds, cmd)
-			aparams = append(aparams, params)
-		}
-		if len(stmts) != len(test.stmts) {
-			t.Logf(">> %#v // %#v", test.stmts, stmts)
-			t.Fatalf("test %d expected %d statements, got: %d", i, len(test.stmts), len(stmts))
-		}
-		if !reflect.DeepEqual(stmts, test.stmts) {
-			t.Logf(">> %#v // %#v", test.stmts, stmts)
-			t.Fatalf("test %d expected statements %s, got: %s", i, jj(test.stmts), jj(stmts))
-		}
-		if cz := cc(cmds, aparams); !reflect.DeepEqual(cz, test.cmds) {
-			t.Logf(">> cmds: %#v, aparams: %#v, cz: %#v, test.cmds: %#v", cmds, aparams, cz, test.cmds)
-			t.Fatalf("test %d expected commands %v, got: %v", i, jj(test.cmds), jj(cz))
-		}
-		if st := b.State(); st != test.state {
-			t.Fatalf("test %d expected end parse state `%s`, got: `%s`", i, test.state, st)
-		}
-		if len(vars) != len(test.vars) {
-			t.Fatalf("test %d expected %d vars, got: %d", i, len(test.vars), len(vars))
-		}
-		for _, n := range test.vars {
-			if !hasVar(vars, n) {
-				t.Fatalf("test %d missing variable `%s`", i, n)
+			if !reflect.DeepEqual(stmts, test.stmts) {
+				t.Logf(">> %#v // %#v", test.stmts, stmts)
+				t.Fatalf("expected statements %s, got: %s", jj(test.stmts), jj(stmts))
 			}
-		}
-		b.Reset(nil)
-		if len(b.Buf) != 0 {
-			t.Fatalf("test %d after reset b.Buf should have len %d, got: %d", i, 0, len(b.Buf))
-		}
-		if b.Len != 0 {
-			t.Fatalf("test %d after reset should have len %d, got: %d", i, 0, b.Len)
-		}
-		if len(b.Vars) != 0 {
-			t.Fatalf("test %d after reset should have len(vars) == 0, got: %d", i, len(b.Vars))
-		}
-		if b.Prefix != "" {
-			t.Fatalf("test %d after reset should have empty prefix, got: %s", i, b.Prefix)
-		}
-		if b.quote != 0 || b.quoteDollarTag != "" || b.multilineComment || b.balanceCount != 0 {
-			t.Fatalf("test %d after reset should have a cleared parse state", i)
-		}
-		if st := b.State(); st != "=" {
-			t.Fatalf("test %d after reset should have state `=`, got: `%s`", i, st)
-		}
-		if b.ready {
-			t.Fatalf("test %d after reset should not be ready", i)
-		}
+			if cz := cc(cmds, aparams); !reflect.DeepEqual(cz, test.cmds) {
+				t.Logf(">> cmds: %#v, aparams: %#v, cz: %#v, test.cmds: %#v", cmds, aparams, cz, test.cmds)
+				t.Fatalf("expected commands %v, got: %v", jj(test.cmds), jj(cz))
+			}
+			if st := b.State(); st != test.state {
+				t.Fatalf("expected end parse state %q, got: %q", test.state, st)
+			}
+			if len(vars) != len(test.vars) {
+				t.Fatalf("expected %d vars, got: %d", len(test.vars), len(vars))
+			}
+			for _, n := range test.vars {
+				if !hasVar(vars, n) {
+					t.Fatalf("missing variable %q", n)
+				}
+			}
+			b.Reset(nil)
+			if len(b.Buf) != 0 {
+				t.Fatalf("after reset b.Buf should have len %d, got: %d", 0, len(b.Buf))
+			}
+			if b.Len != 0 {
+				t.Fatalf("after reset should have len %d, got: %d", 0, b.Len)
+			}
+			if len(b.Vars) != 0 {
+				t.Fatalf("after reset should have len(vars) == 0, got: %d", len(b.Vars))
+			}
+			if b.Prefix != "" {
+				t.Fatalf("after reset should have empty prefix, got: %s", b.Prefix)
+			}
+			if b.quote != 0 || b.quoteDollarTag != "" || b.multilineComment || b.balanceCount != 0 {
+				t.Fatal("after reset should have a cleared parse state")
+			}
+			if st := b.State(); st != "=" {
+				t.Fatalf("after reset should have state `=`, got: %q", st)
+			}
+			if b.ready {
+				t.Fatal("after reset should not be ready")
+			}
+		})
 	}
 }
 

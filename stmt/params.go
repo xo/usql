@@ -63,7 +63,7 @@ loop:
 		case c == '\'' || c == '"' || c == '`':
 			quote = c
 		case c == ':' && next != ':':
-			if v := readVar(p.R, i, p.Len); v != nil {
+			if v := readVar(p.R, i, p.Len, next); v != nil {
 				n := v.String()
 				ok, z, err := f(n[1:], true)
 				switch {

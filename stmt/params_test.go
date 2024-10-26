@@ -3,6 +3,7 @@ package stmt
 import (
 	"os/user"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/xo/usql/env"
@@ -20,22 +21,19 @@ func TestDecodeParamsGetRaw(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	unquote := testUnquote(u, t, 0, exp)
-	ok, s, err := p.Get(unquote)
-	if err != nil {
+	unquote := testUnquote(t, u, 0, exp)
+	switch ok, s, err := p.Get(unquote); {
+	case err != nil:
 		t.Fatalf("expected no error, got: %v", err)
-	}
-	if s != "" {
+	case s != "":
 		t.Errorf("expected empty string, got: %q", s)
-	}
-	if ok {
+	case ok:
 		t.Errorf("expected ok=false, got: %t", ok)
 	}
-	v, err := p.GetAll(unquote)
-	if err != nil {
+	switch v, err := p.GetAll(unquote); {
+	case err != nil:
 		t.Fatalf("expected no error, got: %v", err)
-	}
-	if len(v) != 0 {
+	case len(v) != 0:
 		t.Errorf("expected v to have length 0, got: %d", len(v))
 	}
 }
@@ -89,17 +87,20 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{` 'yes':'foo':"foo"'blah''no' "\ntest" `, []string{`yes'bar'"bar"blah'no`, "\ntest"}, nil},
 	}
 	for i, test := range tests {
-		vals, err := DecodeParams(test.s).GetAll(testUnquote(u, t, i, test.s))
-		if err != test.err {
-			t.Fatalf("test %d for %q expected err %v, got: %v", i, test.s, test.err, err)
-		}
-		if !reflect.DeepEqual(vals, test.exp) {
-			t.Errorf("test %d for %q expected %v, got: %v", i, test.s, test.exp, vals)
-		}
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			vals, err := DecodeParams(test.s).GetAll(testUnquote(t, u, i, test.s))
+			if err != test.err {
+				t.Fatalf("expected error %v, got: %v", test.err, err)
+			}
+			if !reflect.DeepEqual(vals, test.exp) {
+				t.Errorf("expected %v, got: %v", test.exp, vals)
+			}
+		})
 	}
 }
 
-func testUnquote(u *user.User, t *testing.T, i int, teststr string) func(string, bool) (bool, string, error) {
+func testUnquote(t *testing.T, u *user.User, i int, teststr string) func(string, bool) (bool, string, error) {
+	t.Helper()
 	f := env.Unquote(u, false, env.Vars{
 		"foo": "bar",
 	})

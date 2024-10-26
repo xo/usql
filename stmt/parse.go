@@ -8,6 +8,9 @@ import (
 // prefixCount is the number of words to extract from a prefix.
 const prefixCount = 6
 
+// maxVarNameLen is the maximum var name length.
+const maxVarNameLen = 128
+
 // grab grabs i from r, or returns 0 if i >= end.
 func grab(r []rune, i, end int) rune {
 	if i < end {
@@ -122,59 +125,77 @@ func readMultilineComment(r []rune, i, end int) (int, bool) {
 	return end, false
 }
 
-// readStringVar reads a string quoted variable.
-func readStringVar(r []rune, i, end int) *Var {
-	start, q := i, grab(r, i+1, end)
-	for i += 2; i < end; i++ {
-		c := grab(r, i, end)
-		if c == q {
-			if i-start < 3 {
-				return nil
-			}
-			return &Var{
-				I:     start,
-				End:   i + 1,
-				Quote: q,
-				Name:  string(r[start+2 : i]),
+// readVar reads variable from r in the form of :var_name :'var_name'
+// :"var_name" and :{?var_name}.
+func readVar(r []rune, i, end int, next rune) *Var {
+	o := 1
+	switch next {
+	case '\'', '"':
+		o = 2
+	case '{':
+		if grab(r, i+2, end) != '?' {
+			return nil
+		}
+		o, next = 3, '}'
+	default:
+		next = 0
+	}
+	n, q := readVarName(r, i+o, end, next)
+	v := n
+	switch {
+	case n-i < o+1, next != 0 && next != q:
+		return nil
+	case next != 0:
+		v++
+	}
+	if next == '}' {
+		next = '?'
+	}
+	return &Var{
+		I:     i,
+		End:   v,
+		Quote: next,
+		Name:  string(r[i+o : n]),
+	}
+}
+
+// readVarName reads a variable name up to maxVarNameLen.
+func readVarName(r []rune, i, end int, q rune) (int, rune) {
+	c := rune(-1)
+	for n := 0; i < end && n < maxVarNameLen && c != q; i, n = i+1, n+1 {
+		switch c = grab(r, i, end); {
+		case c == 0, c == q, c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c):
+			return i, c
+		}
+	}
+	return i, 0
+}
+
+// readStringVar reads a string quoted variable in the form of :'var_name'
+// :"var_name".
+func readStringVar(r []rune, i, end int, q rune) *Var {
+	/*
+		start, q := i, grab(r, i+1, end)
+		for i += 2; i < end; i++ {
+			if q == grab(r, i, end) {
+				if i-start < 3 {
+					return nil
+				}
+				return &Var{
+					I:     start,
+					End:   i + 1,
+					Quote: q,
+					Name:  string(r[start+2 : i]),
+				}
 			}
 		}
-		/*
-			// this is commented out, because need to determine what should be
-			// the "right" behavior ... should we only allow "identifiers"?
-			else if c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
-				return nil
-			}
-		*/
-	}
+	*/
 	return nil
 }
 
-// readVar reads variable from r.
-func readVar(r []rune, i, end int) *Var {
-	if grab(r, i, end) != ':' || grab(r, i+1, end) == ':' {
-		return nil
-	}
-	if end-i < 2 {
-		return nil
-	}
-	if c := grab(r, i+1, end); c == '"' || c == '\'' {
-		return readStringVar(r, i, end)
-	}
-	start := i
-	i++
-	for ; i < end; i++ {
-		if c := grab(r, i, end); c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
-			break
-		}
-	}
-	if i-start < 2 {
-		return nil
-	}
-	return &Var{
-		I:    start,
-		End:  i,
-		Name: string(r[start+1 : i]),
-	}
+// readTestVar reads a
+func readTestVar(r []rune, i, end int) *Var {
+	return nil
 }
 
 // readCommand reads the command and any parameters from r, returning the

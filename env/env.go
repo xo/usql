@@ -324,6 +324,12 @@ func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, 
 	}
 }
 
+// Quote quotes a string.
+func Quote(s string) string {
+	s = strconv.QuoteToGraphic(s)
+	return "'" + s[1:len(s)-1] + "'"
+}
+
 // TermGraphics returns the [rasterm.TermType] based on TERM_GRAPHICS
 // environment variable.
 func TermGraphics() rasterm.TermType {

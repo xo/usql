@@ -518,8 +518,8 @@ two letters of the database driver. For example, `pg` for `postgres`, `my` for
 #### Passing Driver Options
 
 Driver options are specified as standard URL query options in the form of
-`?opt1=a&opt2=b`. Refer to the [relevant database driver's
-documentation][databases] for available options.
+`?opt1=a&opt2=b`. Refer to the [relevant database driver's documentation][databases]
+for available options.
 
 #### Paths on Disk
 
@@ -635,8 +635,8 @@ defining connection names.
 
 ### Executing Queries and Commands
 
-The interactive interpreter reads queries and [backslash meta (`\`)
-commands][commands], sending the query to the connected database:
+The interactive interpreter reads queries and [backslash meta (`\`) commands][commands],
+sending the query to the connected database:
 
 ```sh
 $ usql sqlite://example.sqlite3
