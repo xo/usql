@@ -121,7 +121,7 @@ func (b *Stmt) Ready() bool {
 // Reset resets the statement buffer.
 func (b *Stmt) Reset(r []rune) {
 	// reset buf
-	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", nil
+	b.Buf, b.Len, b.Prefix, b.Vars = nil, 0, "", b.Vars[:0]
 	// quote state
 	b.quote, b.quoteDollarTag = 0, ""
 	// multicomment state
@@ -187,7 +187,7 @@ func (b *Stmt) Next(unquote func(string, bool) (bool, string, error)) (string, s
 	var ok bool
 parse:
 	for ; i < b.rlen; i++ {
-		// log.Printf(">> (%c) %d", b.r[i], i)
+		// fmt.Fprintf(os.Stderr, "> %d: `%s`\n", i, string(b.r[i:]))
 		// grab c, next
 		c, next := b.r[i], grab(b.r, i+1, b.rlen)
 		switch {
@@ -231,20 +231,11 @@ parse:
 				ok, z, _ := unquote(v.Name, true)
 				if v.Defined = ok || v.Quote == '?'; v.Defined {
 					b.r, b.rlen = v.Substitute(b.r, z, ok)
-					i--
 				}
 				if b.Len != 0 {
 					v.I += b.Len + 1
 				}
 			}
-		// unbalance
-		case c == '(':
-			b.balanceCount++
-		// balance
-		case c == ')':
-			b.balanceCount = max(0, b.balanceCount-1)
-		// continue processing quoted string, multiline comment, or unbalanced statements
-		case b.quote != 0 || b.multilineComment || b.balanceCount != 0:
 		// skip escaped backslash, semicolon, colon
 		case c == '\\' && (next == '\\' || next == ';' || next == ':'):
 			v := &Var{
@@ -257,7 +248,14 @@ parse:
 			if b.r, b.rlen = v.Substitute(b.r, string(next), false); b.Len != 0 {
 				v.I += b.Len + 1
 			}
-			i++
+		// unbalance
+		case c == '(':
+			b.balanceCount++
+		// balance
+		case c == ')':
+			b.balanceCount = max(0, b.balanceCount-1)
+		// continue processing quoted string, multiline comment, or unbalanced statements
+		case b.quote != 0 || b.multilineComment || b.balanceCount != 0:
 		// start of command
 		case c == '\\':
 			// parse command and params end positions

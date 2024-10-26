@@ -192,6 +192,11 @@ func TestNextResetState(t *testing.T) {
 		{"select $1\\bind a b c\\g", []string{`select $1`}, []string{`\bind| a b c`, `\g|`}, "=", nil},
 		{"select $1 \\bind a b c \\g", []string{`select $1 `}, []string{`\bind| a b c `, `\g|`}, "=", nil},
 		{"select $2, $a$ foo $a$, $1 \\bind a b \\g", []string{`select $2, $a$ foo $a$, $1 `}, []string{`\bind| a b `, `\g|`}, "=", nil},
+		{"select \\;\\\\\\:\\; \n;", []string{"select ;\\:; \n;"}, []string{`|`, `|`}, `=`, []string{`;`, `\`, `:`, `;`}},
+		{"select \\;\\;\\;\\; \n;", []string{"select ;;;; \n;"}, []string{`|`, `|`}, `=`, []string{`;`, `;`, `;`, `;`}},
+		{`select \;\;\;\;;`, []string{`select ;;;;;`}, []string{`|`}, `=`, []string{`;`, `;`, `;`, `;`}},
+		{`select \\\;\\\;\\\;\\\;;`, []string{`select \;\;\;\;;`}, []string{`|`}, `=`, []string{`\`, `;`, `\`, `;`, `\`, `;`, `\`, `;`}},
+		{`select \:foo;`, []string{`select :foo;`}, []string{`|`}, `=`, []string{":"}},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -207,61 +212,87 @@ func TestNextResetState(t *testing.T) {
 		loop:
 			for {
 				cmd, params, err := b.Next(unquote)
+				t.Logf("next buf:%q", string(b.Buf))
+				t.Logf("next cmd:%q params:%q", cmd, params)
 				switch {
 				case err == io.EOF:
 					break loop
 				case err != nil:
 					t.Fatalf("expected no error, got: %v", err)
 				}
-				vars = append(vars, b.Vars...)
 				if b.Ready() || cmd == `\g` {
 					stmts = append(stmts, b.String())
+					vars = append(vars, b.Vars...)
 					b.Reset(nil)
 				}
 				cmds = append(cmds, cmd)
 				aparams = append(aparams, params)
 			}
-			if len(stmts) != len(test.stmts) {
-				t.Logf(">> %#v // %#v", test.stmts, stmts)
-				t.Fatalf("expected %d statements, got: %d", len(test.stmts), len(stmts))
-			}
-			if !reflect.DeepEqual(stmts, test.stmts) {
-				t.Logf(">> %#v // %#v", test.stmts, stmts)
-				t.Fatalf("expected statements %s, got: %s", jj(test.stmts), jj(stmts))
+			vars = append(vars, b.Vars...)
+			if len(stmts) != len(test.stmts) || !reflect.DeepEqual(stmts, test.stmts) {
+				t.Errorf("expected %d statements, got: %d", len(test.stmts), len(stmts))
+				t.Logf("expected:")
+				for _, s := range test.stmts {
+					t.Logf(" %q", s)
+				}
+				t.Logf("got:")
+				for _, s := range stmts {
+					t.Logf(" %q", s)
+				}
 			}
 			if cz := cc(cmds, aparams); !reflect.DeepEqual(cz, test.cmds) {
 				t.Logf(">> cmds: %#v, aparams: %#v, cz: %#v, test.cmds: %#v", cmds, aparams, cz, test.cmds)
-				t.Fatalf("expected commands %v, got: %v", jj(test.cmds), jj(cz))
+				t.Errorf("commands do not match")
+				t.Logf("expected:")
+				for _, s := range test.cmds {
+					t.Logf(" %q", s)
+				}
+				t.Logf("got:")
+				for _, s := range cz {
+					t.Logf(" %q", s)
+				}
 			}
 			if st := b.State(); st != test.state {
-				t.Fatalf("expected end parse state %q, got: %q", test.state, st)
+				t.Errorf("expected end parse state %q, got: %q", test.state, st)
 			}
 			if len(vars) != len(test.vars) {
-				t.Fatalf("expected %d vars, got: %d", len(test.vars), len(vars))
+				t.Errorf("expected %d vars, got: %d", len(test.vars), len(vars))
+				t.Logf("expected:")
+				for _, v := range test.vars {
+					t.Logf(" %#v", v)
+				}
+				t.Logf("got:")
+				for _, v := range vars {
+					t.Logf(" %#v", v)
+				}
 			}
-			for _, n := range test.vars {
-				if !hasVar(vars, n) {
-					t.Fatalf("missing variable %q", n)
+			for i, v := range test.vars {
+				if len(vars) < i {
+					t.Logf("expected var %d: %#v", i, v)
+					continue
+				}
+				if vars[i].Name != v {
+					t.Errorf("expected var %d: %q, got: %q", i, v, vars[i].Name)
 				}
 			}
 			b.Reset(nil)
 			if len(b.Buf) != 0 {
-				t.Fatalf("after reset b.Buf should have len %d, got: %d", 0, len(b.Buf))
+				t.Errorf("after reset b.Buf should have len %d, got: %d", 0, len(b.Buf))
 			}
 			if b.Len != 0 {
-				t.Fatalf("after reset should have len %d, got: %d", 0, b.Len)
+				t.Errorf("after reset should have len %d, got: %d", 0, b.Len)
 			}
 			if len(b.Vars) != 0 {
-				t.Fatalf("after reset should have len(vars) == 0, got: %d", len(b.Vars))
+				t.Errorf("after reset should have len(vars) == 0, got: %d", len(b.Vars))
 			}
 			if b.Prefix != "" {
-				t.Fatalf("after reset should have empty prefix, got: %s", b.Prefix)
+				t.Errorf("after reset should have empty prefix, got: %s", b.Prefix)
 			}
 			if b.quote != 0 || b.quoteDollarTag != "" || b.multilineComment || b.balanceCount != 0 {
 				t.Fatal("after reset should have a cleared parse state")
 			}
 			if st := b.State(); st != "=" {
-				t.Fatalf("after reset should have state `=`, got: %q", st)
+				t.Errorf("after reset should have state `=`, got: %q", st)
 			}
 			if b.ready {
 				t.Fatal("after reset should not be ready")
@@ -403,10 +434,6 @@ func cc(cmds []string, params []string) []string {
 	return z
 }
 
-func jj(s []string) string {
-	return "[`" + strings.Join(s, "`,`") + "`]"
-}
-
 func sp(a, sep string) func() ([]rune, error) {
 	s := strings.Split(a, sep)
 	return func() ([]rune, error) {
@@ -417,13 +444,4 @@ func sp(a, sep string) func() ([]rune, error) {
 		}
 		return nil, io.EOF
 	}
-}
-
-func hasVar(vars []*Var, n string) bool {
-	for _, v := range vars {
-		if v.Name == n {
-			return true
-		}
-	}
-	return false
 }
