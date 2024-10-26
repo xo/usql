@@ -71,7 +71,7 @@ func (b *Stmt) RawString() string {
 	i, s, z := 0, string(b.Buf), new(bytes.Buffer)
 	// deinterpolate vars
 	for _, v := range b.Vars {
-		if !v.Defined {
+		if !v.Defined && v.Quote != '\\' {
 			continue
 		}
 		if len(s) > i {
@@ -222,8 +222,6 @@ parse:
 		case b.quote != 0 || b.multilineComment || b.balanceCount != 0:
 		// skip escaped backslash, semicolon, colon
 		case c == '\\' && (next == '\\' || next == ';' || next == ':'):
-			// FIXME: the below works, but it may not make sense to keep this enabled.
-			// FIXME: also, the behavior is slightly different than psql
 			v := &Var{
 				I:     i,
 				End:   i + 2,
@@ -234,6 +232,7 @@ parse:
 			if b.r, b.rlen = v.Substitute(b.r, string(next), false); b.Len != 0 {
 				v.I += b.Len + 1
 			}
+			i++
 		// start of command
 		case c == '\\':
 			// parse command and params end positions
@@ -373,7 +372,10 @@ func (v *Var) String() string {
 
 // Substitute substitutes part of r, with s.
 func (v *Var) Substitute(r []rune, s string, ok bool) ([]rune, int) {
-	if v.Quote == '?' {
+	switch v.Quote {
+	case '\\':
+		s = "\\" + s
+	case '?':
 		s = trueFalse(ok)
 	}
 	sr, rcap := []rune(s), cap(r)

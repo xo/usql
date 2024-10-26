@@ -177,11 +177,11 @@ func readVarName(r []rune, i, end int, q rune) (int, rune) {
 // A command is defined as the first non-blank text after \, followed by
 // parameters up to either the next \ or a control character (for example, \n):
 func readCommand(r []rune, i, end int) (int, int) {
-command:
 	// find end of command
+	c, next := rune(0), rune(0)
+command:
 	for ; i < end; i++ {
-		next := grab(r, i+1, end)
-		switch {
+		switch next = grab(r, i+1, end); {
 		case next == 0:
 			return end, end
 		case next == '\\' || unicode.IsControl(next):
@@ -196,8 +196,7 @@ command:
 params:
 	// find end of params
 	for ; i < end; i++ {
-		c, next := r[i], grab(r, i+1, end)
-		switch {
+		switch c, next = r[i], grab(r, i+1, end); {
 		case next == 0:
 			return cmd, end
 		case quote == 0 && (c == '\'' || c == '"' || c == '`'):

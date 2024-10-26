@@ -537,7 +537,7 @@ func TestSubstituteVar(t *testing.T) {
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			z := []rune(test.s)
-			y, l := substituteVar(z, test.v, test.sub)
+			y, l := test.v.Substitute(z, test.sub, true)
 			if sl := len([]rune(test.sub)); test.v.Len != sl {
 				t.Errorf("expected v.Len to be %d, got: %d", sl, test.v.Len)
 			}
