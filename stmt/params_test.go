@@ -62,7 +62,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{`:foo:foo`, []string{`barbar`}, nil},
 		{` :foo:foo `, []string{`barbar`}, nil},
 		{`  :foo:foo  `, []string{`barbar`}, nil},
-		{`'hello'`, []string{`hello`}, nil}, // 14
+		{`'hello'`, []string{`hello`}, nil},
 		{`  'hello''yes'  `, []string{`hello'yes`}, nil},
 		{`  'hello\'...\'yes'  `, []string{`hello'...'yes`}, nil},
 		{`  "hello\'...\'yes"  `, nil, text.ErrInvalidQuotedString},
@@ -81,7 +81,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{` :'foo'  :"foo"`, []string{`'bar'`, `"bar"`}, nil},
 		{` :'foo'  :"foo" `, []string{`'bar'`, `"bar"`}, nil},
 		{` :'foo'  :"foo"  :foo `, []string{`'bar'`, `"bar"`, `bar`}, nil},
-		{` :'foo':foo:"foo" `, []string{`'bar'bar"bar"`}, nil}, // 30
+		{` :'foo':foo:"foo" `, []string{`'bar'bar"bar"`}, nil},
 		{` :'foo''yes':'foo' `, []string{`'bar'yes'bar'`}, nil},
 		{` :'foo' 'yes' :'foo' `, []string{`'bar'`, `yes`, `'bar'`}, nil},
 		{` 'yes':'foo':"foo"'blah''no' "\ntest" `, []string{`yes'bar'"bar"blah'no`, "\ntest"}, nil},

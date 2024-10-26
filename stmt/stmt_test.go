@@ -29,24 +29,24 @@ func TestAppend(t *testing.T) {
 		c   int
 	}{
 		{[]string{""}, "", 0, 0},
-		{[]string{"", ""}, "\n", 1, MinCapIncrease},
-		{[]string{"", "", ""}, "\n\n", 2, MinCapIncrease},
-		{[]string{"", "", "", ""}, "\n\n\n", 3, MinCapIncrease},
-		{[]string{"a", ""}, "a\n", 2, 2}, // 4
-		{[]string{"a", "b", ""}, "a\nb\n", 4, MinCapIncrease},
-		{[]string{"a", "b", "c", ""}, "a\nb\nc\n", 6, MinCapIncrease},
-		{[]string{"", "a", ""}, "\na\n", 3, MinCapIncrease}, // 7
-		{[]string{"", "a", "b", ""}, "\na\nb\n", 5, MinCapIncrease},
-		{[]string{"", "a", "b", "c", ""}, "\na\nb\nc\n", 7, MinCapIncrease},
-		{[]string{"", "foo"}, "\nfoo", 4, MinCapIncrease}, // 10
-		{[]string{"", "foo", ""}, "\nfoo\n", 5, MinCapIncrease},
-		{[]string{"foo", "", "bar"}, "foo\n\nbar", 8, MinCapIncrease},
-		{[]string{"", "foo", "bar"}, "\nfoo\nbar", 8, MinCapIncrease},
-		{[]string{a512}, a512, 512, 512}, // 14
-		{[]string{a512, a512}, a512 + "\n" + a512, 1025, 5 * MinCapIncrease},
-		{[]string{a512, a512, a512}, a512 + "\n" + a512 + "\n" + a512, 1538, 5 * MinCapIncrease},
-		{[]string{a512, ""}, a512 + "\n", 513, 2 * MinCapIncrease}, // 17
-		{[]string{a512, "", "foo"}, a512 + "\n\nfoo", 517, 2 * MinCapIncrease},
+		{[]string{"", ""}, "\n", 1, minCapIncrease},
+		{[]string{"", "", ""}, "\n\n", 2, minCapIncrease},
+		{[]string{"", "", "", ""}, "\n\n\n", 3, minCapIncrease},
+		{[]string{"a", ""}, "a\n", 2, 2},
+		{[]string{"a", "b", ""}, "a\nb\n", 4, minCapIncrease},
+		{[]string{"a", "b", "c", ""}, "a\nb\nc\n", 6, minCapIncrease},
+		{[]string{"", "a", ""}, "\na\n", 3, minCapIncrease},
+		{[]string{"", "a", "b", ""}, "\na\nb\n", 5, minCapIncrease},
+		{[]string{"", "a", "b", "c", ""}, "\na\nb\nc\n", 7, minCapIncrease},
+		{[]string{"", "foo"}, "\nfoo", 4, minCapIncrease},
+		{[]string{"", "foo", ""}, "\nfoo\n", 5, minCapIncrease},
+		{[]string{"foo", "", "bar"}, "foo\n\nbar", 8, minCapIncrease},
+		{[]string{"", "foo", "bar"}, "\nfoo\nbar", 8, minCapIncrease},
+		{[]string{a512}, a512, 512, 512},
+		{[]string{a512, a512}, a512 + "\n" + a512, 1025, 5 * minCapIncrease},
+		{[]string{a512, a512, a512}, a512 + "\n" + a512 + "\n" + a512, 1538, 5 * minCapIncrease},
+		{[]string{a512, ""}, a512 + "\n", 513, 2 * minCapIncrease},
+		{[]string{a512, "", "foo"}, a512 + "\n\nfoo", 517, 2 * minCapIncrease},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -85,8 +85,8 @@ func TestVariedSeparator(t *testing.T) {
 	if s := b.String(); s != "foobarfoo" {
 		t.Errorf("expected %q, got: %q", "foobarfoo", s)
 	}
-	if c := cap(b.Buf); c != MinCapIncrease {
-		t.Errorf("expected cap of %d, got: %d", MinCapIncrease, c)
+	if c := cap(b.Buf); c != minCapIncrease {
+		t.Errorf("expected cap of %d, got: %d", minCapIncrease, c)
 	}
 }
 
@@ -103,51 +103,51 @@ func TestNextResetState(t *testing.T) {
 		state string
 		vars  []string
 	}{
-		{``, nil, []string{`|`}, `=`, nil}, // 0
+		{``, nil, []string{`|`}, `=`, nil},
 		{`;`, []string{`;`}, []string{`|`}, `=`, nil},
 		{` ; `, []string{`;`}, []string{`|`, `|`}, `=`, nil},
 		{` \v `, nil, []string{`\v| `}, `=`, nil},
 		{` \v \p`, nil, []string{`\v| `, `\p|`}, `=`, nil},
-		{` \v   foo   \p`, nil, []string{`\v|   foo   `, `\p|`}, `=`, nil}, // 5
+		{` \v   foo   \p`, nil, []string{`\v|   foo   `, `\p|`}, `=`, nil},
 		{` \v   foo   bar  \p   zz`, nil, []string{`\v|   foo   bar  `, `\p|   zz`}, `=`, nil},
 		{` \very   foo   bar  \print   zz`, nil, []string{`\very|   foo   bar  `, `\print|   zz`}, `=`, nil},
 		{`select 1;`, []string{`select 1;`}, []string{`|`}, `=`, nil},
 		{`select 1\g`, []string{`select 1`}, []string{`\g|`}, `=`, nil},
-		{`select 1 \g`, []string{`select 1 `}, []string{`\g|`}, `=`, nil}, // 10
+		{`select 1 \g`, []string{`select 1 `}, []string{`\g|`}, `=`, nil},
 		{` select 1 \g`, []string{`select 1 `}, []string{`\g|`}, `=`, nil},
 		{` select 1   \g  `, []string{`select 1   `}, []string{`\g|  `}, `=`, nil},
 		{`select 1; select 1\g`, []string{`select 1;`, `select 1`}, []string{`|`, `\g|`}, `=`, nil},
 		{"select 1\n\\g", []string{`select 1`}, []string{`|`, `\g|`}, `=`, nil},
-		{"select 1 \\g\n\n\n\n\\v", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v|`}, `=`, nil}, // 15
+		{"select 1 \\g\n\n\n\n\\v", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v|`}, `=`, nil},
 		{"select 1 \\g\n\n\n\n\\v foob \\p zzz \n\n", []string{`select 1 `}, []string{`\g|`, `|`, `|`, `|`, `\v| foob `, `\p| zzz `, `|`, `|`}, `=`, nil},
 		{" select 1 \\g \\p \n select (15)\\g", []string{`select 1 `, `select (15)`}, []string{`\g| `, `\p| `, `\g|`}, `=`, nil},
 		{" select 1 (  \\g ) \n ;", []string{"select 1 (  \\g ) \n ;"}, []string{`|`, `|`}, `=`, nil},
-		{ // 19
+		{
 			" select 1\n;select 2\\g  select 3;  \\p   \\z  foo bar ",
 			[]string{"select 1\n;", "select 2"},
 			[]string{`|`, `|`, `\g|  select 3;  `, `\p|   `, `\z|  foo bar `},
 			"=", nil,
 		},
-		{ // 20
+		{
 			" select 1\\g\n\n\tselect 2\\g\n select 3;  \\p   \\z  foo bar \\p\\p select * from;  \n\\p",
 			[]string{`select 1`, `select 2`, `select 3;`},
 			[]string{`\g|`, `|`, `\g|`, `|`, `\p|   `, `\z|  foo bar `, `\p|`, `\p| select * from;  `, `\p|`},
 			"=", nil,
 		},
-		{"select '';", []string{"select '';"}, []string{"|"}, "=", nil}, // 21
+		{"select '';", []string{"select '';"}, []string{"|"}, "=", nil},
 		{"select 'a''b\nz';", []string{"select 'a''b\nz';"}, []string{"|", "|"}, "=", nil},
 		{"select 'a' 'b\nz';", []string{"select 'a' 'b\nz';"}, []string{"|", "|"}, "=", nil},
 		{"select \"\";", []string{"select \"\";"}, []string{"|"}, "=", nil},
-		{"select \"\n\";", []string{"select \"\n\";"}, []string{"|", "|"}, "=", nil}, // 25
+		{"select \"\n\";", []string{"select \"\n\";"}, []string{"|", "|"}, "=", nil},
 		{"select $$$$;", []string{"select $$$$;"}, []string{"|"}, "=", nil},
 		{"select $$\nfoob(\n$$;", []string{"select $$\nfoob(\n$$;"}, []string{"|", "|", "|"}, "=", nil},
 		{"select $tag$$tag$;", []string{"select $tag$$tag$;"}, []string{"|"}, "=", nil},
 		{"select $tag$\n\n$tag$;", []string{"select $tag$\n\n$tag$;"}, []string{"|", "|", "|"}, "=", nil},
-		{"select $tag$\n(\n$tag$;", []string{"select $tag$\n(\n$tag$;"}, []string{"|", "|", "|"}, "=", nil}, // 30
+		{"select $tag$\n(\n$tag$;", []string{"select $tag$\n(\n$tag$;"}, []string{"|", "|", "|"}, "=", nil},
 		{"select $tag$\n\\v(\n$tag$;", []string{"select $tag$\n\\v(\n$tag$;"}, []string{"|", "|", "|"}, "=", nil},
 		{"select $tag$\n\\v(\n$tag$\\g", []string{"select $tag$\n\\v(\n$tag$"}, []string{"|", "|", `\g|`}, "=", nil},
 		{"select $$\n\\v(\n$tag$$zz$$\\g$$\\g", []string{"select $$\n\\v(\n$tag$$zz$$\\g$$"}, []string{"|", "|", `\g|`}, "=", nil},
-		{"select * --\n\\v", nil, []string{"|", `\v|`}, "-", nil}, // 34
+		{"select * --\n\\v", nil, []string{"|", `\v|`}, "-", nil},
 		{"select--", nil, []string{"|"}, "-", nil},
 		{"select --", nil, []string{"|"}, "-", nil},
 		{"select /**/", nil, []string{"|"}, "-", nil},
@@ -156,34 +156,35 @@ func TestNextResetState(t *testing.T) {
 		{"select /*", nil, []string{"|"}, "*", nil},
 		{"select * /**/", nil, []string{"|"}, "-", nil},
 		{"select * /* \n\n\n--*/\n;", []string{"select * /* \n\n\n--*/\n;"}, []string{"|", "|", "|", "|", "|"}, "=", nil},
-		{"select * /* \n\n\n--*/\n", nil, []string{"|", "|", "|", "|", "|"}, "-", nil}, // 43
+		{"select * /* \n\n\n--*/\n", nil, []string{"|", "|", "|", "|", "|"}, "-", nil},
 		{"select * /* \n\n\n--\n", nil, []string{"|", "|", "|", "|", "|"}, "*", nil},
-		{"\\p \\p\nselect (", nil, []string{`\p| `, `\p|`, "|"}, "(", nil}, // 45
+		{"\\p \\p\nselect (", nil, []string{`\p| `, `\p|`, "|"}, "(", nil},
 		{"\\p \\p\nselect ()", nil, []string{`\p| `, `\p|`, "|"}, "-", nil},
 		{"\n             \t\t               \n", nil, []string{"|", "|", "|"}, "=", nil},
 		{"\n   foob      \t\t               \n", nil, []string{"|", "|", "|"}, "-", nil},
 		{"$$", nil, []string{"|"}, "$", nil},
-		{"$$foo", nil, []string{"|"}, "$", nil}, // 50
+		{"$$foo", nil, []string{"|"}, "$", nil},
 		{"'", nil, []string{"|"}, "'", nil},
 		{"(((()()", nil, []string{"|"}, "(", nil},
 		{"\"", nil, []string{"|"}, "\"", nil},
 		{"\"foo", nil, []string{"|"}, "\"", nil},
-		{":a :b", nil, []string{"|"}, "-", []string{"a", "b"}}, // 55
+		{":a :b", nil, []string{"|"}, "-", []string{"a", "b"}},
+		{":{?a_b} :{?_foo_bar_}", nil, []string{"|"}, "-", []string{"a_b", "_foo_bar_"}},
 		{`select :'a_b' :"foo_bar_"`, nil, []string{"|"}, "-", []string{"a_b", "foo_bar_"}},
 		{`select :a:b;`, []string{"select :a:b;"}, []string{"|"}, "=", []string{"a", "b"}},
-		{"select :'a\n:foo:bar", nil, []string{"|", "|"}, "'", nil}, // 58
+		{"select :'a\n:foo:bar", nil, []string{"|", "|"}, "'", nil},
 		{"select :''\n:foo:bar\\g", []string{"select :''\n:foo:bar"}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
-		{"select :''\n:foo :bar\\g", []string{"select :''\n:foo :bar"}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}}, // 60
+		{"select :''\n:foo :bar\\g", []string{"select :''\n:foo :bar"}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
 		{"select :''\n :foo :bar \\g", []string{"select :''\n :foo :bar "}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
-		{"select :'a\n:'foo':\"bar\"", nil, []string{"|", "|"}, "'", nil}, // 62
+		{"select :'a\n:'foo':\"bar\"", nil, []string{"|", "|"}, "'", nil},
 		{"select :''\n:'foo':\"bar\"\\g", []string{"select :''\n:'foo':\"bar\""}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
 		{"select :''\n:'foo' :\"bar\"\\g", []string{"select :''\n:'foo' :\"bar\""}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
 		{"select :''\n :'foo' :\"bar\" \\g", []string{"select :''\n :'foo' :\"bar\" "}, []string{"|", `\g|`}, "=", []string{"foo", "bar"}},
-		{`select 1\echo 'pg://':foo'/':bar`, nil, []string{`\echo| 'pg://':foo'/':bar`}, "-", nil}, // 66
+		{`select 1\echo 'pg://':foo'/':bar`, nil, []string{`\echo| 'pg://':foo'/':bar`}, "-", nil},
 		{`select :'foo'\echo 'pg://':bar'/' `, nil, []string{`\echo| 'pg://':bar'/' `}, "-", []string{"foo"}},
 		{`select 1\g '\g`, []string{`select 1`}, []string{`\g| '\g`}, "=", nil},
 		{`select 1\g "\g`, []string{`select 1`}, []string{`\g| "\g`}, "=", nil},
-		{"select 1\\g `\\g", []string{`select 1`}, []string{"\\g| `\\g"}, "=", nil}, // 70
+		{"select 1\\g `\\g", []string{`select 1`}, []string{"\\g| `\\g"}, "=", nil},
 		{`select 1\g '\g `, []string{`select 1`}, []string{`\g| '\g `}, "=", nil},
 		{`select 1\g "\g `, []string{`select 1`}, []string{`\g| "\g `}, "=", nil},
 		{"select 1\\g `\\g ", []string{`select 1`}, []string{"\\g| `\\g "}, "=", nil},

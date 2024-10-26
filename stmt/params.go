@@ -32,7 +32,7 @@ func (p *Params) GetRaw() string {
 // Get reads the next command parameter using the provided substitution func.
 // True indicates there are runes remaining in the command parameters to
 // process.
-func (p *Params) Get(f func(string, bool) (bool, string, error)) (bool, string, error) {
+func (p *Params) Get(unquote func(string, bool) (bool, string, error)) (bool, string, error) {
 	i, _ := findNonSpace(p.R, 0, p.Len)
 	if i >= p.Len {
 		return false, "", nil
@@ -50,7 +50,7 @@ loop:
 			if !ok {
 				break loop
 			}
-			ok, z, err := f(string(p.R[start:i+1]), false)
+			ok, z, err := unquote(string(p.R[start:i+1]), false)
 			switch {
 			case err != nil:
 				return false, "", err
@@ -64,16 +64,18 @@ loop:
 			quote = c
 		case c == ':' && next != ':':
 			if v := readVar(p.R, i, p.Len, next); v != nil {
-				n := v.String()
-				ok, z, err := f(n[1:], true)
-				switch {
+				switch ok, z, err := unquote(v.Name, true); {
 				case err != nil:
 					return false, "", err
+				case v.Quote == '?':
+					z = trueFalse(ok)
+					p.R, p.Len = substitute(p.R, v.I, p.Len, len(v.String()), z)
+					i = v.I + len(z) - 1
 				case ok:
-					p.R, p.Len = substitute(p.R, v.I, p.Len, len(n), z)
+					p.R, p.Len = substitute(p.R, v.I, p.Len, len(v.String()), z)
 					i = v.I + len(z) - 1
 				default:
-					i += len(n) - 1
+					i += len(v.String()) - 1
 				}
 			}
 		case unicode.IsSpace(c):
@@ -91,10 +93,10 @@ loop:
 
 // GetAll retrieves all remaining command parameters using the provided
 // substitution func. Will return on the first encountered error.
-func (p *Params) GetAll(f func(string, bool) (bool, string, error)) ([]string, error) {
+func (p *Params) GetAll(unquote func(string, bool) (bool, string, error)) ([]string, error) {
 	var s []string
 	for {
-		ok, v, err := p.Get(f)
+		ok, v, err := p.Get(unquote)
 		if err != nil {
 			return s, err
 		}

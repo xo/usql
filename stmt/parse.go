@@ -171,33 +171,6 @@ func readVarName(r []rune, i, end int, q rune) (int, rune) {
 	return i, 0
 }
 
-// readStringVar reads a string quoted variable in the form of :'var_name'
-// :"var_name".
-func readStringVar(r []rune, i, end int, q rune) *Var {
-	/*
-		start, q := i, grab(r, i+1, end)
-		for i += 2; i < end; i++ {
-			if q == grab(r, i, end) {
-				if i-start < 3 {
-					return nil
-				}
-				return &Var{
-					I:     start,
-					End:   i + 1,
-					Quote: q,
-					Name:  string(r[start+2 : i]),
-				}
-			}
-		}
-	*/
-	return nil
-}
-
-// readTestVar reads a
-func readTestVar(r []rune, i, end int) *Var {
-	return nil
-}
-
 // readCommand reads the command and any parameters from r, returning the
 // offset from i for the end of command, and the end of the command parameters.
 //
@@ -331,25 +304,6 @@ func substitute(r []rune, i, end, n int, s string) ([]rune, int) {
 	// substitute
 	copy(r[i+sn:], r[i+n:])
 	copy(r[i:], sr)
-	return r[:tlen], tlen
-}
-
-// substituteVar substitutes part of r, based on v, with s.
-func substituteVar(r []rune, v *Var, s string) ([]rune, int) {
-	sr, rcap := []rune(s), cap(r)
-	v.Len = len(sr)
-	// grow ...
-	tlen := len(r) + v.Len - (v.End - v.I)
-	if tlen > rcap {
-		z := make([]rune, tlen)
-		copy(z, r)
-		r = z
-	} else {
-		r = r[:rcap]
-	}
-	// substitute
-	copy(r[v.I+v.Len:], r[v.End:])
-	copy(r[v.I:v.I+v.Len], sr)
 	return r[:tlen], tlen
 }
 

@@ -6,38 +6,8 @@ import (
 	"unicode"
 )
 
-// MinCapIncrease is the minimum amount by which to grow a Stmt.Buf.
-const MinCapIncrease = 512
-
-// Var holds information about a variable.
-type Var struct {
-	// I is where the variable starts (ie, ':') in Stmt.Buf.
-	I int
-	// End is where the variable ends in Stmt.Buf.
-	End int
-	// Quote is the quote character used if the variable was quoted, 0
-	// otherwise.
-	Quote rune
-	// Name is the actual variable name excluding ':' and any enclosing quote
-	// characters.
-	Name string
-	// Len is the length of the replaced variable.
-	Len int
-	// Defined indicates whether the variable has been defined.
-	Defined bool
-}
-
-// String satisfies the fmt.Stringer interface.
-func (v *Var) String() string {
-	var q string
-	switch {
-	case v.Quote == '\\':
-		return "\\" + v.Name
-	case v.Quote != 0:
-		q = string(v.Quote)
-	}
-	return ":" + q + v.Name + q
-}
+// minCapIncrease is the minimum amount by which to grow a Stmt.Buf.
+const minCapIncrease = 512
 
 // Stmt is a reusable statement buffer that handles reading and parsing
 // SQL-like statements.
@@ -107,16 +77,7 @@ func (b *Stmt) RawString() string {
 		if len(s) > i {
 			z.WriteString(s[i:v.I])
 		}
-		if v.Quote != '\\' {
-			z.WriteRune(':')
-		}
-		if v.Quote != 0 {
-			z.WriteRune(v.Quote)
-		}
-		z.WriteString(v.Name)
-		if v.Quote != 0 && v.Quote != '\\' {
-			z.WriteRune(v.Quote)
-		}
+		z.WriteString(v.String())
 		i = v.I + v.Len
 	}
 	// add remaining
@@ -241,14 +202,10 @@ parse:
 		// variable declaration
 		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen, next); v != nil {
-				var q string
-				if v.Quote != 0 {
-					q = string(v.Quote)
-				}
 				b.Vars = append(b.Vars, v)
-				if ok, z, _ := unquote(q+v.Name+q, true); ok {
-					v.Defined = true
-					b.r, b.rlen = substituteVar(b.r, v, z)
+				ok, z, _ := unquote(v.Name, true)
+				if v.Defined = ok || v.Quote == '?'; v.Defined {
+					b.r, b.rlen = v.Substitute(b.r, z, ok)
 					i--
 				}
 				if b.Len != 0 {
@@ -274,8 +231,7 @@ parse:
 				Name:  string(next),
 			}
 			b.Vars = append(b.Vars, v)
-			b.r, b.rlen = substituteVar(b.r, v, string(next))
-			if b.Len != 0 {
+			if b.r, b.rlen = v.Substitute(b.r, string(next), false); b.Len != 0 {
 				v.I += b.Len + 1
 			}
 		// start of command
@@ -323,10 +279,13 @@ parse:
 	// reset r
 	b.r = b.r[i:]
 	b.rlen = len(b.r)
-	// log.Printf("returning from NEXT: `%s`", string(b.Buf))
-	// log.Printf(">>>>>>>>>>>> REMAIN: `%s`", string(b.r))
-	// log.Printf(">>>>>>>>>>>>    CMD: `%s`", cmd)
-	// log.Printf(">>>>>>>>>>>> PARAMS: %v", params)
+	/*
+		fmt.Fprintf(os.Stderr, "\n------------------------------\n")
+		fmt.Fprintf(os.Stderr, "    NEXT: `%s`\n", string(b.Buf))
+		fmt.Fprintf(os.Stderr, "  REMAIN: `%s`\n", string(b.r))
+		fmt.Fprintf(os.Stderr, "     CMD: `%s`\n", cmd)
+		fmt.Fprintf(os.Stderr, "  PARAMS: %v\n", params)
+	*/
 	return cmd, params, nil
 }
 
@@ -350,7 +309,7 @@ func (b *Stmt) Append(r, sep []rune) {
 	// grow
 	if bcap := cap(b.Buf); tlen > bcap {
 		n := tlen + 2*rlen
-		n += MinCapIncrease - (n % MinCapIncrease)
+		n += minCapIncrease - (n % minCapIncrease)
 		z := make([]rune, blen, n)
 		copy(z, b.Buf)
 		b.Buf = z
@@ -379,6 +338,59 @@ func (b *Stmt) State() string {
 		return "-"
 	}
 	return "="
+}
+
+// Var holds information about a variable.
+type Var struct {
+	// I is where the variable starts (ie, ':') in Stmt.Buf.
+	I int
+	// End is where the variable ends in Stmt.Buf.
+	End int
+	// Quote is the quote character used if the variable was quoted, 0
+	// otherwise.
+	Quote rune
+	// Name is the actual variable name excluding ':' and any enclosing quote
+	// characters.
+	Name string
+	// Len is the length of the replaced variable.
+	Len int
+	// Defined indicates whether the variable has been defined.
+	Defined bool
+}
+
+// String satisfies the fmt.Stringer interface.
+func (v *Var) String() string {
+	switch v.Quote {
+	case '\\':
+		return "\\" + v.Name
+	case '\'', '"':
+		return ":" + string(v.Quote) + v.Name + string(v.Quote)
+	case '?':
+		return ":{?" + v.Name + "}"
+	}
+	return ":" + v.Name
+}
+
+// Substitute substitutes part of r, with s.
+func (v *Var) Substitute(r []rune, s string, ok bool) ([]rune, int) {
+	if v.Quote == '?' {
+		s = trueFalse(ok)
+	}
+	sr, rcap := []rune(s), cap(r)
+	v.Len = len(sr)
+	// grow ...
+	tlen := len(r) + v.Len - (v.End - v.I)
+	if tlen > rcap {
+		z := make([]rune, tlen)
+		copy(z, r)
+		r = z
+	} else {
+		r = r[:rcap]
+	}
+	// substitute
+	copy(r[v.I+v.Len:], r[v.End:])
+	copy(r[v.I:v.I+v.Len], sr)
+	return r[:tlen], tlen
 }
 
 // Option is a statement buffer option.
@@ -431,4 +443,12 @@ func RunesLastIndex(r []rune, needle rune) int {
 		}
 	}
 	return i
+}
+
+// trueFalse returns TRUE or FALSE.
+func trueFalse(ok bool) string {
+	if ok {
+		return "TRUE"
+	}
+	return "FALSE"
 }

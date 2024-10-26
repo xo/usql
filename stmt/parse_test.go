@@ -192,41 +192,41 @@ func TestReadCommand(t *testing.T) {
 		i   int
 		exp string
 	}{
-		{`\c foo bar z`, 0, `\c| foo bar z|`}, // 0
+		{`\c foo bar z`, 0, `\c| foo bar z|`},
 		{`\c foo bar z `, 0, `\c| foo bar z |`},
 		{`\c foo bar z  `, 0, `\c| foo bar z  |`},
 		{`\c    foo    bar    z  `, 0, `\c|    foo    bar    z  |`},
 		{`\c    pg://blah    bar    z  `, 0, `\c|    pg://blah    bar    z  |`},
-		{`\foo    pg://blah    bar    z  `, 0, `\foo|    pg://blah    bar    z  |`}, // 5
+		{`\foo    pg://blah    bar    z  `, 0, `\foo|    pg://blah    bar    z  |`},
 		{`\a\b`, 0, `\a||\b`},
 		{`\a \b`, 0, `\a| |\b`},
 		{"\\a \n\\b", 0, "\\a| |\n\\b"},
 		{` \ab \bc \cd `, 5, `\bc| |\cd `},
-		{`\p foo \p`, 0, `\p| foo |\p`}, // 10
+		{`\p foo \p`, 0, `\p| foo |\p`},
 		{`\p foo   \p bar`, 0, `\p| foo   |\p bar`},
 		{`\p\p`, 0, `\p||\p`},
 		{`\p \r foo`, 0, `\p| |\r foo`},
 		{`\print   \reset    foo`, 0, `\print|   |\reset    foo`},
-		{`\print   \reset    foo`, 9, `\reset|    foo|`}, // 15
+		{`\print   \reset    foo`, 9, `\reset|    foo|`},
 		{`\print   \reset    foo  `, 9, `\reset|    foo  |`},
 		{`\print   \reset    foo  bar  `, 9, `\reset|    foo  bar  |`},
 		{`\c 'foo bar' z`, 0, `\c| 'foo bar' z|`},
 		{`\c foo "bar " z `, 0, `\c| foo "bar " z |`},
-		{"\\c `foo bar z  `  ", 0, "\\c| `foo bar z  `  |"}, // 20
+		{"\\c `foo bar z  `  ", 0, "\\c| `foo bar z  `  |"},
 		{`\c 'foob':foo:bar'test'  `, 0, `\c| 'foob':foo:bar'test'  |`},
 		{"\\a \n\\b\\c\n", 0, "\\a| |\n\\b\\c\n"},
 		{`\a'foob' \b`, 0, `\a'foob'| |\b`},
-		{`\foo 'test' "bar"\print`, 0, `\foo| 'test' "bar"|\print`}, // 25
+		{`\foo 'test' "bar"\print`, 0, `\foo| 'test' "bar"|\print`},
 		{`\foo 'test' "bar"  \print`, 0, `\foo| 'test' "bar"  |\print`},
 		{`\afoob' \b`, 0, `\afoob'| |\b`},
 		{`\afoob' '\b  `, 0, `\afoob'| '\b  |`},
 		{`\afoob' '\b  '\print`, 0, `\afoob'| '\b  '|\print`},
-		{`\afoob' '\b  ' \print`, 0, `\afoob'| '\b  ' |\print`}, // 30
+		{`\afoob' '\b  ' \print`, 0, `\afoob'| '\b  ' |\print`},
 		{`\afoob' '\b  ' \print `, 0, `\afoob'| '\b  ' |\print `},
 		{"\\foo `foob'foob'\\print", 0, "\\foo| `foob'foob'\\print|"},
 		{"\\foo `foob'foob'  \\print", 0, "\\foo| `foob'foob'  \\print|"},
 		{`\foo "foob'foob'\\print`, 0, `\foo| "foob'foob'\\print|`},
-		{`\foo "foob'foob'  \\print`, 0, `\foo| "foob'foob'  \\print|`}, // 35
+		{`\foo "foob'foob'  \\print`, 0, `\foo| "foob'foob'  \\print|`},
 		{`\foo "\""\print`, 0, `\foo| "\""|\print`},
 		{`\foo "\"'"\print`, 0, `\foo| "\"'"|\print`},
 		{`\foo "\"''"\print`, 0, `\foo| "\"''"|\print`},
@@ -266,14 +266,14 @@ func TestFindPrefix(t *testing.T) {
 		{"  ", 4, ""},
 		{" select ", 4, "SELECT"},
 		{" select to ", 4, "SELECT TO"},
-		{" select to ", 4, "SELECT TO"}, // 5
+		{" select to ", 4, "SELECT TO"},
 		{" select   to   ", 4, "SELECT TO"},
 		{"select into from", 2, "SELECT INTO"},
 		{"select into * from", 4, "SELECT INTO"},
 		{" select into  *   from  ", 4, "SELECT INTO"},
-		{" select   \t  into \n *  \t\t\n\n\n  from     ", 4, "SELECT INTO"}, // 10
+		{" select   \t  into \n *  \t\t\n\n\n  from     ", 4, "SELECT INTO"},
 		{"  select\n\n\tb\t\tzfrom j\n\n  ", 2, "SELECT B"},
-		{"select/* foob  */into", 4, "SELECTINTO"}, // 12
+		{"select/* foob  */into", 4, "SELECTINTO"},
 		{"select/* foob  */\tinto", 4, "SELECT INTO"},
 		{"select/* foob  */ into", 4, "SELECT INTO"},
 		{"select/* foob  */ into ", 4, "SELECT INTO"},
@@ -281,7 +281,7 @@ func TestFindPrefix(t *testing.T) {
 		{"   select /* foob  */ into ", 4, "SELECT INTO"},
 		{" select * --test\n from where \n\nfff", 4, "SELECT"},
 		{"/*idreamedital*/foo//bar\n/*  nothing */test\n\n\nwe made /*\n\n\n\n*/   \t   it    ", 5, "FOO TEST WE MADE IT"},
-		{" --yes\n//no\n\n\t/*whatever*/ ", 4, ""}, // 20
+		{" --yes\n//no\n\n\t/*whatever*/ ", 4, ""},
 		{"/*/*test*/*/ select ", 4, ""},
 		{"/*/*test*/*/ select ", 4, ""},
 		{"//", 4, ""},
@@ -289,7 +289,7 @@ func TestFindPrefix(t *testing.T) {
 		{"* select", 4, ""},
 		{"/**/", 4, ""},
 		{"--\n\t\t\thello,\t--", 4, "HELLO"},
-		{"/*   */\n\n\n\tselect/*--\n*/\t\b\bzzz", 4, "SELECT ZZZ"}, // 28
+		{"/*   */\n\n\n\tselect/*--\n*/\t\b\bzzz", 4, "SELECT ZZZ"},
 		{"n\nn\n\nn\tn", 7, "N N N N"},
 		{"n\nn\n\nn\tn", 1, "N"},
 		{"--\n/* */n/* */\nn\n--\nn\tn", 7, "N N N N"},
@@ -301,12 +301,12 @@ func TestFindPrefix(t *testing.T) {
 		{"\n\n/* */\nn/* */ n", 7, "N N"},
 		{"*/foob", 7, ""},
 		{"*/ \n --\nfoob", 7, ""},
-		{"--\n\n--\ntest", 7, "TEST"}, // 40
+		{"--\n\n--\ntest", 7, "TEST"},
 		{"\b\btest", 7, "TEST"},
 		{"select/*\r\n\r\n*/blah", 7, "SELECTBLAH"},
 		{"\r\n\r\nselect from where", 8, "SELECT FROM WHERE"},
 		{"\r\n\b\bselect 1;create 2;", 8, "SELECT"},
-		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION"}, // 45
+		{"\r\n\bbegin transaction;\ncreate x where;", 8, "BEGIN TRANSACTION"},
 		{"begin;test;create;awesome", 3, "BEGIN"},
 		{" /* */ ; begin; ", 5, ""},
 		{" /* foo */ test; test", 5, "TEST"},
@@ -344,27 +344,27 @@ func TestReadVar(t *testing.T) {
 		{`:'ab  ' `, 0, nil},
 		{`:"ab  " `, 0, nil},
 		{`:{?ab  } `, 0, nil},
-		{`:a`, 0, v(0, 2, `a`)}, // 7
+		{`:a`, 0, v(0, 2, `a`)},
 		{`:ab`, 0, v(0, 3, `ab`)},
 		{`:a `, 0, v(0, 2, `a`)},
 		{`:a_ `, 0, v(0, 3, `a_`)},
 		{":a_\t ", 0, v(0, 3, `a_`)},
 		{":a_\n ", 0, v(0, 3, `a_`)},
-		{`:a9`, 0, v(0, 3, `a9`)}, // 13
+		{`:a9`, 0, v(0, 3, `a9`)},
 		{`:ab9`, 0, v(0, 4, `ab9`)},
 		{`:a 9`, 0, v(0, 2, `a`)},
 		{`:a_9 `, 0, v(0, 4, `a_9`)},
 		{":a_9\t ", 0, v(0, 4, `a_9`)},
 		{":a_9\n ", 0, v(0, 4, `a_9`)},
-		{`:a_;`, 0, v(0, 3, `a_`)}, // 19
+		{`:a_;`, 0, v(0, 3, `a_`)},
 		{`:a_\`, 0, v(0, 3, `a_`)},
 		{`:a_$`, 0, v(0, 3, `a_`)},
 		{`:a_'`, 0, v(0, 3, `a_`)},
 		{`:a_"`, 0, v(0, 3, `a_`)},
-		{`:ab `, 0, v(0, 3, `ab`)}, // 24
+		{`:ab `, 0, v(0, 3, `ab`)},
 		{`:ab123 `, 0, v(0, 6, `ab123`)},
 		{`:ab123`, 0, v(0, 6, `ab123`)},
-		{`:'`, 0, nil}, // 27
+		{`:'`, 0, nil},
 		{`:' `, 0, nil},
 		{`:' a`, 0, nil},
 		{`:' a `, 0, nil},
@@ -372,31 +372,31 @@ func TestReadVar(t *testing.T) {
 		{`:" `, 0, nil},
 		{`:" a`, 0, nil},
 		{`:" a `, 0, nil},
-		{`:''`, 0, nil}, // 35
+		{`:''`, 0, nil},
 		{`:'' `, 0, nil},
 		{`:'' a`, 0, nil},
 		{`:""`, 0, nil},
 		{`:"" `, 0, nil},
 		{`:"" a`, 0, nil},
-		{`:'     `, 0, nil}, // 41
+		{`:'     `, 0, nil},
 		{`:'       `, 0, nil},
 		{`:"     `, 0, nil},
 		{`:"       `, 0, nil},
-		{`:'a'`, 0, v(0, 4, `a`, `'`)}, // 45
+		{`:'a'`, 0, v(0, 4, `a`, `'`)},
 		{`:'a' `, 0, v(0, 4, `a`, `'`)},
 		{`:'ab'`, 0, v(0, 5, `ab`, `'`)},
 		{`:'ab' `, 0, v(0, 5, `ab`, `'`)},
-		{`:"a"`, 0, v(0, 4, `a`, `"`)}, // 50
+		{`:"a"`, 0, v(0, 4, `a`, `"`)},
 		{`:"a" `, 0, v(0, 4, `a`, `"`)},
 		{`:"ab"`, 0, v(0, 5, `ab`, `"`)},
 		{`:"ab" `, 0, v(0, 5, `ab`, `"`)},
-		{`:型`, 0, v(0, 2, "型")}, // 55
+		{`:型`, 0, v(0, 2, "型")},
 		{`:'型'`, 0, v(0, 4, "型", `'`)},
 		{`:"型"`, 0, v(0, 4, "型", `"`)},
 		{` :型 `, 1, v(1, 3, "型")},
 		{` :'型' `, 1, v(1, 5, "型", `'`)},
 		{` :"型" `, 1, v(1, 5, "型", `"`)},
-		{`:型示師`, 0, v(0, 4, "型示師")}, // 61
+		{`:型示師`, 0, v(0, 4, "型示師")},
 		{`:'型示師'`, 0, v(0, 6, "型示師", `'`)},
 		{`:"型示師"`, 0, v(0, 6, "型示師", `"`)},
 		{` :型示師 `, 1, v(1, 5, "型示師")},
@@ -493,40 +493,40 @@ func TestSubstituteVar(t *testing.T) {
 		{` :a `, v(1, 3, `a`), `x`, ` x `},
 		{` :'a' `, v(1, 5, `a`, `'`), `'x'`, ` 'x' `},
 		{` :"a" `, v(1, 5, "a", `"`), `"x"`, ` "x" `},
-		{`:a`, v(0, 2, `a`), ``, ``}, // 6
+		{`:a`, v(0, 2, `a`), ``, ``},
 		{` :a`, v(1, 3, `a`), ``, ` `},
 		{`:a `, v(0, 2, `a`), ``, ` `},
 		{` :a `, v(1, 3, `a`), ``, `  `},
 		{` :'a' `, v(1, 5, `a`, `'`), ``, `  `},
 		{` :"a" `, v(1, 5, "a", `"`), "", `  `},
-		{` :aaa `, v(1, 5, "aaa"), "", "  "}, // 12
+		{` :aaa `, v(1, 5, "aaa"), "", "  "},
 		{` :aaa `, v(1, 5, "aaa"), a512, " " + a512 + " "},
 		{` :` + a512 + ` `, v(1, len(a512)+2, a512), "", "  "},
-		{`:foo`, v(0, 4, "foo"), "这是一个", `这是一个`}, // 15
+		{`:foo`, v(0, 4, "foo"), "这是一个", `这是一个`},
 		{`:foo `, v(0, 4, "foo"), "这是一个", `这是一个 `},
 		{` :foo`, v(1, 5, "foo"), "这是一个", ` 这是一个`},
 		{` :foo `, v(1, 5, "foo"), "这是一个", ` 这是一个 `},
-		{`:'foo'`, v(0, 6, `foo`, `'`), `'这是一个'`, `'这是一个'`}, // 19
+		{`:'foo'`, v(0, 6, `foo`, `'`), `'这是一个'`, `'这是一个'`},
 		{`:'foo' `, v(0, 6, `foo`, `'`), `'这是一个'`, `'这是一个' `},
 		{` :'foo'`, v(1, 7, `foo`, `'`), `'这是一个'`, ` '这是一个'`},
 		{` :'foo' `, v(1, 7, `foo`, `'`), `'这是一个'`, ` '这是一个' `},
-		{`:"foo"`, v(0, 6, `foo`, `"`), `"这是一个"`, `"这是一个"`}, // 23
+		{`:"foo"`, v(0, 6, `foo`, `"`), `"这是一个"`, `"这是一个"`},
 		{`:"foo" `, v(0, 6, `foo`, `"`), `"这是一个"`, `"这是一个" `},
 		{` :"foo"`, v(1, 7, `foo`, `"`), `"这是一个"`, ` "这是一个"`},
 		{` :"foo" `, v(1, 7, `foo`, `"`), `"这是一个"`, ` "这是一个" `},
-		{`:型`, v(0, 2, `型`), `x`, `x`}, // 27
+		{`:型`, v(0, 2, `型`), `x`, `x`},
 		{` :型`, v(1, 3, `型`), `x`, ` x`},
 		{`:型 `, v(0, 2, `型`), `x`, `x `},
 		{` :型 `, v(1, 3, `型`), `x`, ` x `},
 		{` :'型' `, v(1, 5, `型`, `'`), `'x'`, ` 'x' `},
 		{` :"型" `, v(1, 5, "型", `"`), `"x"`, ` "x" `},
-		{`:型`, v(0, 2, `型`), ``, ``}, // 33
+		{`:型`, v(0, 2, `型`), ``, ``},
 		{` :型`, v(1, 3, `型`), ``, ` `},
 		{`:型 `, v(0, 2, `型`), ``, ` `},
 		{` :型 `, v(1, 3, `型`), ``, `  `},
 		{` :'型' `, v(1, 5, `型`, `'`), ``, `  `},
 		{` :"型" `, v(1, 5, "型", `"`), "", `  `},
-		{`:型示師`, v(0, 4, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼`}, // 39
+		{`:型示師`, v(0, 4, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼`},
 		{` :型示師`, v(1, 5, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼`},
 		{`:型示師 `, v(0, 4, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼 `},
 		{` :型示師 `, v(1, 5, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼 `},
