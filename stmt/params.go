@@ -64,18 +64,15 @@ loop:
 			quote = c
 		case c == ':' && next != ':':
 			if v := readVar(p.R, i, p.Len, next); v != nil {
-				switch ok, z, err := unquote(v.Name, true); {
+				ok, z, err := unquote(v.Name, true)
+				switch {
 				case err != nil:
 					return false, "", err
-				case v.Quote == '?':
-					z = trueFalse(ok)
-					p.R, p.Len = substitute(p.R, v.I, p.Len, len(v.String()), z)
-					i = v.I + len(z) - 1
-				case ok:
-					p.R, p.Len = substitute(p.R, v.I, p.Len, len(v.String()), z)
-					i = v.I + len(z) - 1
+				case ok || v.Quote == '?':
+					p.R, p.Len = v.Substitute(p.R, z, ok)
+					i += v.Len - 1
 				default:
-					i += len(v.String()) - 1
+					i = v.End - 1
 				}
 			}
 		case unicode.IsSpace(c):

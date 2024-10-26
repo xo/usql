@@ -292,6 +292,102 @@ func TestEmptyVariablesRawString(t *testing.T) {
 	}
 }
 
+func TestVarSubstitute(t *testing.T) {
+	a512 := sl(512, 'a')
+	tests := []struct {
+		s   string
+		v   *Var
+		sub string
+		exp string
+	}{
+		{`:a`, v(0, `a`), `x`, `x`},
+		{` :a`, v(1, `a`), `x`, ` x`},
+		{`:a `, v(0, `a`), `x`, `x `},
+		{` :a `, v(1, `a`), `x`, ` x `},
+		{` :'a' `, v(1, `a`, `'`), `x`, ` 'x' `},
+		{` :"a" `, v(1, "a", `"`), `x`, ` "x" `},
+		{`:a`, v(0, `a`), ``, ``},
+		{` :a`, v(1, `a`), ``, ` `},
+		{`:a `, v(0, `a`), ``, ` `},
+		{` :a `, v(1, `a`), ``, `  `},
+		{` :'a' `, v(1, `a`, `'`), ``, ` '' `},
+		{` :"a" `, v(1, "a", `"`), "", ` "" `},
+		{` :aaa `, v(1, "aaa"), "", "  "},
+		{` :aaa `, v(1, "aaa"), a512, " " + a512 + " "},
+		{` :` + a512 + ` `, v(1, a512), "", "  "},
+		{`:foo`, v(0, "foo"), "这是一个", `这是一个`},
+		{`:foo `, v(0, "foo"), "这是一个", `这是一个 `},
+		{` :foo`, v(1, "foo"), "这是一个", ` 这是一个`},
+		{` :foo `, v(1, "foo"), "这是一个", ` 这是一个 `},
+		{`:'foo'`, v(0, `foo`, `'`), `这是一个`, `'这是一个'`},
+		{`:'foo' `, v(0, `foo`, `'`), `这是一个`, `'这是一个' `},
+		{` :'foo'`, v(1, `foo`, `'`), `这是一个`, ` '这是一个'`},
+		{` :'foo' `, v(1, `foo`, `'`), `这是一个`, ` '这是一个' `},
+		{`:"foo"`, v(0, `foo`, `"`), `这是一个`, `"这是一个"`},
+		{`:"foo" `, v(0, `foo`, `"`), `这是一个`, `"这是一个" `},
+		{` :"foo"`, v(1, `foo`, `"`), `这是一个`, ` "这是一个"`},
+		{` :"foo" `, v(1, `foo`, `"`), `这是一个`, ` "这是一个" `},
+		{`:型`, v(0, `型`), `x`, `x`},
+		{` :型`, v(1, `型`), `x`, ` x`},
+		{`:型 `, v(0, `型`), `x`, `x `},
+		{` :型 `, v(1, `型`), `x`, ` x `},
+		{` :'型' `, v(1, `型`, `'`), `x`, ` 'x' `},
+		{` :"型" `, v(1, "型", `"`), `x`, ` "x" `},
+		{`:型`, v(0, `型`), ``, ``},
+		{` :型`, v(1, `型`), ``, ` `},
+		{`:型 `, v(0, `型`), ``, ` `},
+		{` :型 `, v(1, `型`), ``, `  `},
+		{` :'型' `, v(1, `型`, `'`), ``, ` '' `},
+		{` :"型" `, v(1, "型", `"`), "", ` "" `},
+		{`:型示師`, v(0, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼`},
+		{` :型示師`, v(1, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼`},
+		{`:型示師 `, v(0, `型示師`), `本門台初埼本門台初埼`, `本門台初埼本門台初埼 `},
+		{` :型示師 `, v(1, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼 `},
+		{` :型示師 `, v(1, `型示師`), `本門台初埼本門台初埼`, ` 本門台初埼本門台初埼 `},
+		{` :'型示師' `, v(1, `型示師`, `'`), `a`, ` 'a' `},
+		{` :"型示師" `, v(1, `型示師`, `"`), `b`, ` "b" `},
+		{` :'型示師' `, v(1, `型示師`, `'`), `本門台初埼本門台初埼`, ` '本門台初埼本門台初埼' `},
+		{` :"型示師" `, v(1, `型示師`, `"`), `本門台初埼本門台初埼`, ` "本門台初埼本門台初埼" `},
+		{`:{?foo}`, v(0, `foo`, `?`), ``, `TRUE`},
+		{`:{?foo_}`, v(0, `foo_`, `?`), ``, `FALSE`},
+		{` :{?foo} `, v(1, `foo`, `?`), ``, ` TRUE `},
+		{` :{?foo_} `, v(1, `foo_`, `?`), ``, ` FALSE `},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			t.Logf("`%s` `%s`: `%s` --> `%s`", test.v.Name, test.sub, test.s, test.exp)
+			t.Logf("[]byte: %d", len([]byte(test.s)))
+			t.Logf("[]rune: %d", len([]rune(test.s)))
+			t.Logf("v.I:%d v.End:%d", test.v.I, test.v.End)
+			r, n := test.v.Substitute([]rune(test.s), test.sub, test.v.Name == "foo")
+			if exp := len([]rune(test.exp)); n != exp {
+				t.Errorf("expected n to be %d, got: %d", exp, n)
+			}
+			if s := string(r); s != test.exp {
+				t.Errorf("expected %q, got: %q", test.exp, s)
+			}
+		})
+	}
+}
+
+func v(i int, name string, x ...string) *Var {
+	z := &Var{
+		I:    i,
+		Name: name,
+		End:  i + len([]rune(name)) + 1, // :name
+	}
+	if len(x) != 0 {
+		z.Quote = []rune(x[0])[0]
+		switch z.Quote {
+		case '\'', '"':
+			z.End += 2 // '', ""
+		case '?':
+			z.End += 3 // {?}
+		}
+	}
+	return z
+}
+
 // cc combines commands with params.
 func cc(cmds []string, params []string) []string {
 	if len(cmds) == 0 {

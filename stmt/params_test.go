@@ -21,7 +21,7 @@ func TestDecodeParamsGetRaw(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	unquote := testUnquote(t, u, 0, exp)
+	unquote := testUnquote(t, u)
 	switch ok, s, err := p.Get(unquote); {
 	case err != nil:
 		t.Fatalf("expected no error, got: %v", err)
@@ -53,6 +53,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{` :foo`, []string{`bar`}, nil},
 		{` :'foo`, nil, text.ErrUnterminatedQuotedString},
 		{`:'foo'`, []string{`'bar'`}, nil},
+		{` :'foo' `, []string{`'bar'`}, nil},
 		{`:'foo':foo`, []string{`'bar'bar`}, nil},
 		{`:'foo':foo:"foo"`, []string{`'bar'bar"bar"`}, nil},
 		{`:'foo':foo:foo`, []string{`'bar'barbar`}, nil},
@@ -88,7 +89,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			vals, err := DecodeParams(test.s).GetAll(testUnquote(t, u, i, test.s))
+			vals, err := DecodeParams(test.s).GetAll(testUnquote(t, u))
 			if err != test.err {
 				t.Fatalf("expected error %v, got: %v", test.err, err)
 			}
@@ -99,7 +100,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 	}
 }
 
-func testUnquote(t *testing.T, u *user.User, i int, teststr string) func(string, bool) (bool, string, error) {
+func testUnquote(t *testing.T, u *user.User) func(string, bool) (bool, string, error) {
 	t.Helper()
 	f := env.Unquote(u, false, env.Vars{
 		"foo": "bar",

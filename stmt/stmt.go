@@ -400,7 +400,10 @@ func (v *Var) Substitute(r []rune, s string, ok bool) ([]rune, int) {
 	switch v.Quote {
 	case '?':
 		s = trueFalse(ok)
+	case '\'', '"':
+		s = string(v.Quote) + s + string(v.Quote)
 	}
+	// fmt.Fprintf(os.Stderr, "orig: %q repl: %q\n", string(r), s)
 	sr, rcap := []rune(s), cap(r)
 	v.Len = len(sr)
 	// grow ...
