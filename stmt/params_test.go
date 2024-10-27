@@ -52,6 +52,10 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{` `, nil, nil},
 		{` :foo`, []string{`bar`}, nil},
 		{` :'foo`, nil, text.ErrUnterminatedQuotedString},
+		{` :'型示師`, nil, text.ErrUnterminatedQuotedString},
+		{` :"型示師`, nil, text.ErrUnterminatedQuotedString},
+		{` :'型示師 `, nil, text.ErrUnterminatedQuotedString},
+		{` :"型示師 `, nil, text.ErrUnterminatedQuotedString},
 		{`:'foo'`, []string{`'bar'`}, nil},
 		{` :'foo' `, []string{`'bar'`}, nil},
 		{`:'foo':foo`, []string{`'bar'bar`}, nil},
@@ -86,6 +90,9 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{` :'foo''yes':'foo' `, []string{`'bar'yes'bar'`}, nil},
 		{` :'foo' 'yes' :'foo' `, []string{`'bar'`, `yes`, `'bar'`}, nil},
 		{` 'yes':'foo':"foo"'blah''no' "\ntest" `, []string{`yes'bar'"bar"blah'no`, "\ntest"}, nil},
+		{`:型示師:'型示師':"型示師"`, []string{`:型示師:'型示師':"型示師"`}, nil},
+		{`:型示師 :'型示師' :"型示師"`, []string{`:型示師`, `:'型示師'`, `:"型示師"`}, nil},
+		{` :型示師 :'型示師' :"型示師" `, []string{`:型示師`, `:'型示師'`, `:"型示師"`}, nil},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
