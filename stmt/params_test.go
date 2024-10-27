@@ -93,6 +93,12 @@ func TestDecodeParamsGetAll(t *testing.T) {
 		{`:型示師:'型示師':"型示師"`, []string{`:型示師:'型示師':"型示師"`}, nil},
 		{`:型示師 :'型示師' :"型示師"`, []string{`:型示師`, `:'型示師'`, `:"型示師"`}, nil},
 		{` :型示師 :'型示師' :"型示師" `, []string{`:型示師`, `:'型示師'`, `:"型示師"`}, nil},
+		{` :{?foo} `, []string{`TRUE`}, nil},
+		{` :{?foo_} `, []string{`FALSE`}, nil},
+		{` :{?型示} `, []string{`TRUE`}, nil},
+		{` :{?型示師} `, []string{`FALSE`}, nil},
+		{` :{?型示師 } `, []string{`:{?型示師`, `}`}, nil},
+		{` :{?foo }`, []string{`:{?foo`, `}`}, nil},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -111,6 +117,7 @@ func testUnquote(t *testing.T, u *user.User) func(string, bool) (bool, string, e
 	t.Helper()
 	f := env.Unquote(u, false, env.Vars{
 		"foo": "bar",
+		"型示":  "yes",
 	})
 	return func(s string, isvar bool) (bool, string, error) {
 		// t.Logf("test %d %q s: %q, isvar: %t", i, teststr, s, isvar)
