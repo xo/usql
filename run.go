@@ -135,6 +135,7 @@ func New(cliargs []string) ContextExecutor {
 			// fmt.Fprintf(os.Stderr, "\n\n%v\n\n", args.Charts)
 			args.Connections = v.GetStringMap("connections")
 			args.Init = v.GetString("init")
+			args.ConfigFileUsed = v.ConfigFileUsed()
 			return Run(cmd.Context(), args)
 		},
 	}
@@ -352,8 +353,10 @@ func Run(ctx context.Context, args *Args) error {
 				return err
 			}
 		}
-		if s := strings.TrimSpace(args.Init); s != "" {
-			h.Reset([]rune(s + "\n"))
+		if args.Init != "" {
+			if err = h.IncludeReader(strings.NewReader(args.Init), args.ConfigFileUsed); err != nil {
+				return err
+			}
 		}
 	}
 	// setup runner
@@ -387,6 +390,7 @@ type Args struct {
 	Charts            billy.Filesystem
 	Connections       map[string]interface{}
 	Init              string
+	ConfigFileUsed    string
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,

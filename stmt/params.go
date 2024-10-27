@@ -56,7 +56,7 @@ loop:
 				return false, "", err
 			case ok:
 				p.R, p.Len = substitute(p.R, start, p.Len, i-start+1, z)
-				i = start + len(z) - 1
+				i = start + len([]rune(z)) - 1
 			}
 			quote = 0
 		// start of single, double, or backtick string

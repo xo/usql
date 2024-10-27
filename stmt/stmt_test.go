@@ -11,14 +11,6 @@ import (
 	"github.com/xo/usql/env"
 )
 
-func sl(n int, r rune) string {
-	z := make([]rune, n)
-	for i := 0; i < n; i++ {
-		z[i] = r
-	}
-	return string(z)
-}
-
 func TestAppend(t *testing.T) {
 	a512 := sl(512, 'a')
 	// b1024 := sl(1024, 'b')
@@ -444,4 +436,12 @@ func sp(a, sep string) func() ([]rune, error) {
 		}
 		return nil, io.EOF
 	}
+}
+
+func sl(n int, r rune) string {
+	z := make([]rune, n)
+	for i := 0; i < n; i++ {
+		z[i] = r
+	}
+	return string(z)
 }

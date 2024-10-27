@@ -157,6 +157,10 @@ func TestReadString(t *testing.T) {
 		{` "fo'o" `, 1, `"fo'o"`, true},
 		{`"fo''o"`, 0, `"fo''o"`, true},
 		{` "fo''o" `, 1, `"fo''o"`, true},
+		{`'本門台初埼本門台初埼'`, 0, `'本門台初埼本門台初埼'`, true},
+		{` '本門台初埼本門台初埼' `, 1, `'本門台初埼本門台初埼'`, true},
+		{`"本門台初埼本門台初埼"`, 0, `"本門台初埼本門台初埼"`, true},
+		{` "本門台初埼本門台初埼" `, 1, `"本門台初埼本門台初埼"`, true},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

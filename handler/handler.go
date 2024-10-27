@@ -1447,18 +1447,9 @@ func (h *Handler) Rollback() error {
 	return nil
 }
 
-// Include includes the specified path.
-func (h *Handler) Include(path string, relative bool) error {
-	if relative && !filepath.IsAbs(path) {
-		path = filepath.Join(h.wd, path)
-	}
-	// open
-	path, f, err := env.OpenFile(h.user, path, relative)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	r := bufio.NewReader(f)
+// IncludeReader includes the content of rdr.
+func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
+	r := bufio.NewReader(rdr)
 	// setup rline
 	l := &rline.Rline{
 		N: func() ([]rune, error) {
@@ -1497,9 +1488,24 @@ func (h *Handler) Include(path string, relative bool) error {
 	p := New(l, h.user, filepath.Dir(path), h.charts, h.nopw)
 	p.db, p.u = h.db, h.u
 	drivers.ConfigStmt(p.u, p.buf)
-	err = p.Run()
+	err := p.Run()
 	h.db, h.u = p.db, p.u
 	return err
+}
+
+// Include includes the specified path.
+func (h *Handler) Include(path string, relative bool) error {
+	if relative && !filepath.IsAbs(path) {
+		path = filepath.Join(h.wd, path)
+	}
+	fmt.Fprintf(os.Stderr, "include: %s\n", path)
+	// open
+	path, f, err := env.OpenFile(h.user, path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return h.IncludeReader(f, path)
 }
 
 // MetadataWriter loads the metadata writer for the
