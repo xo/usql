@@ -44,6 +44,7 @@ init: |
   \set PROMPT1 '\033[32m%S%M%/%R%#\033[0m '
   \set bar test
   \set foo test
+  -- \set SHOW_HOST_INFORMATION false
   -- \set SYNTAX_HL false
   \set 型示師 '本門台初埼本門台初埼'
 # charts path

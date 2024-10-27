@@ -1498,7 +1498,7 @@ func (h *Handler) Include(path string, relative bool) error {
 	if relative && !filepath.IsAbs(path) {
 		path = filepath.Join(h.wd, path)
 	}
-	fmt.Fprintf(os.Stderr, "include: %s\n", path)
+	// fmt.Fprintf(os.Stderr, "include: %s relative: %t\n", path, relative)
 	// open
 	path, f, err := env.OpenFile(h.user, path)
 	if err != nil {
