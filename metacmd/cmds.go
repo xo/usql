@@ -244,6 +244,7 @@ func init() {
 			Section: SectionQueryExecute,
 			Descs: []Desc{
 				{"g", "[(OPTIONS)] [FILE] or ;", "execute query (and send results to file or |pipe)"},
+				{"go", "", ""},
 				{"G", "[(OPTIONS)] [FILE]", "as \\g, but forces vertical output mode"},
 				{"gx", "[(OPTIONS)] [FILE]", "as \\g, but forces expanded output mode"},
 				{"gexec", "", "execute query and execute each value of the result"},
@@ -255,7 +256,7 @@ func init() {
 			Process: func(p *Params) error {
 				p.Option.Exec = ExecOnly
 				switch p.Name {
-				case "g":
+				case "g", "go":
 					params, err := p.GetAll(true)
 					if err != nil {
 						return err
