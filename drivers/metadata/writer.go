@@ -143,7 +143,7 @@ func (w DefaultWriter) DescribeFunctions(u *dburl.URL, funcTypes, pattern string
 		}
 		return v
 	})
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of functions"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -271,7 +271,7 @@ func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSys
 		}
 		return v
 	})
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = fmt.Sprintf("%s %s\n", typ, qualifiedIdentifier(sp, tp))
 	return w.encodeWithSummary(res, params, w.tableDetailsSummary(sp, tp))
 }
@@ -501,7 +501,7 @@ func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool
 		s := res.Get()
 		// wrap current record into a separate recordSet
 		rows := NewSequenceSet([]Sequence{*s})
-		params := env.Pall()
+		params := env.Vars().Print()
 		params["footer"] = "off"
 		params["title"] = fmt.Sprintf("Sequence \"%s.%s\"\n", s.Schema, s.Name)
 		err = tblfmt.EncodeAll(w.w, rows, params)
@@ -532,7 +532,7 @@ func (w DefaultWriter) describeIndex(i *Index) error {
 		return []interface{}{f.Name, f.DataType}
 	})
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = fmt.Sprintf("Index %s\n", qualifiedIdentifier(i.Schema, i.Name))
 	return w.encodeWithSummary(res, params, func(out io.Writer, _ int) (int, error) {
 		primary := ""
@@ -559,7 +559,7 @@ func (w DefaultWriter) ListAllDbs(u *dburl.URL, pattern string, verbose bool) er
 	}
 	defer res.Close()
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of databases"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -611,7 +611,7 @@ func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verb
 		return v
 	})
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of relations"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -635,7 +635,7 @@ func (w DefaultWriter) ListSchemas(u *dburl.URL, pattern string, verbose, showSy
 			return !ok
 		})
 	}
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of schemas"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -683,7 +683,7 @@ func (w DefaultWriter) ListIndexes(u *dburl.URL, pattern string, verbose, showSy
 		return v
 	})
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of indexes"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -767,7 +767,7 @@ func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbos
 		return v
 	})
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "Column stats"
 	return tblfmt.EncodeAll(w.w, res, params)
 }
@@ -816,7 +816,7 @@ func (w DefaultWriter) ListPrivilegeSummaries(u *dburl.URL, pattern string, show
 		return v
 	})
 
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "Access privileges"
 	return tblfmt.EncodeAll(w.w, res, params)
 }

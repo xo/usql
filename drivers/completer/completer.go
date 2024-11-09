@@ -2,7 +2,6 @@
 package completer
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -690,13 +689,13 @@ func CompleteFromListCase(ct caseType, text []rune, options ...string) [][]rune 
 }
 
 func completeFromVariables(text []rune, prefix, suffix string, needValue bool) [][]rune {
-	vars := env.All()
+	vars := env.Vars().Vars()
 	names := make([]string, 0, len(vars))
 	for name, value := range vars {
 		if needValue && value == "" {
 			continue
 		}
-		names = append(names, fmt.Sprintf("%s%s%s", prefix, name, suffix))
+		names = append(names, prefix+name+suffix)
 	}
 	return CompleteFromListCase(MATCH_CASE, text, names...)
 }
@@ -930,7 +929,7 @@ func (c completer) getNamespaces(f metadata.Filter) []string {
 	return names
 }
 
-func (c completer) completeWithAttributes(ct caseType, selectable string, text []rune, options ...string) [][]rune {
+func (c completer) completeWithAttributes(_ caseType, selectable string, text []rune, options ...string) [][]rune {
 	names := make([]string, 0, 10)
 	if r, ok := c.reader.(metadata.ColumnReader); ok {
 		parent := parseParentIdentifier(selectable)

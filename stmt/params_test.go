@@ -10,10 +10,10 @@ import (
 	"github.com/xo/usql/text"
 )
 
-func TestDecodeParamsGetRaw(t *testing.T) {
+func TestParamsGetRaw(t *testing.T) {
 	const exp = `  'a string'  "another string"   `
-	p := DecodeParams(exp)
-	s := p.GetRaw()
+	p := NewParams(exp)
+	s := p.Raw()
 	if s != exp {
 		t.Errorf("expected %q, got: %q", exp, s)
 	}
@@ -22,7 +22,7 @@ func TestDecodeParamsGetRaw(t *testing.T) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 	unquote := testUnquote(t, u)
-	switch ok, s, err := p.Get(unquote); {
+	switch s, ok, err := p.Next(unquote); {
 	case err != nil:
 		t.Fatalf("expected no error, got: %v", err)
 	case s != "":
@@ -30,7 +30,7 @@ func TestDecodeParamsGetRaw(t *testing.T) {
 	case ok:
 		t.Errorf("expected ok=false, got: %t", ok)
 	}
-	switch v, err := p.GetAll(unquote); {
+	switch v, err := p.All(unquote); {
 	case err != nil:
 		t.Fatalf("expected no error, got: %v", err)
 	case len(v) != 0:
@@ -38,7 +38,7 @@ func TestDecodeParamsGetRaw(t *testing.T) {
 	}
 }
 
-func TestDecodeParamsGetAll(t *testing.T) {
+func TestParamsGetAll(t *testing.T) {
 	u, err := user.Current()
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
@@ -102,7 +102,7 @@ func TestDecodeParamsGetAll(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			vals, err := DecodeParams(test.s).GetAll(testUnquote(t, u))
+			vals, err := NewParams(test.s).All(testUnquote(t, u))
 			if err != test.err {
 				t.Fatalf("expected error %v, got: %v", test.err, err)
 			}
@@ -113,13 +113,13 @@ func TestDecodeParamsGetAll(t *testing.T) {
 	}
 }
 
-func testUnquote(t *testing.T, u *user.User) func(string, bool) (bool, string, error) {
+func testUnquote(t *testing.T, u *user.User) func(string, bool) (string, bool, error) {
 	t.Helper()
-	f := env.Unquote(u, false, env.Vars{
-		"foo": "bar",
-		"型示":  "yes",
-	})
-	return func(s string, isvar bool) (bool, string, error) {
+	vars := env.NewVars()
+	vars.Set("foo", "bar")
+	vars.Set("型示", "yes")
+	f := env.Untick(u, vars, false)
+	return func(s string, isvar bool) (string, bool, error) {
 		// t.Logf("test %d %q s: %q, isvar: %t", i, teststr, s, isvar)
 		return f(s, isvar)
 	}

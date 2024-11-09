@@ -87,7 +87,7 @@ func TestNextResetState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	unquote := env.Unquote(u, false, env.Vars{})
+	unquote := env.Untick(u, env.NewVars(), false)
 	tests := []struct {
 		s     string
 		stmts []string

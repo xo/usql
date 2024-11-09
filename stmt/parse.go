@@ -11,7 +11,7 @@ const prefixCount = 6
 // maxVarNameLen is the maximum var name length.
 const maxVarNameLen = 128
 
-// grab grabs i from r, or returns 0 if i >= end.
+// grab returns the i'th rune from r when i < end, otherwise 0.
 func grab(r []rune, i, end int) rune {
 	if i < end {
 		return r[i]
@@ -22,7 +22,7 @@ func grab(r []rune, i, end int) rune {
 // findSpace finds first space rune in r, returning end if not found.
 func findSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if IsSpaceOrControl(r[i]) {
+		if isSpaceOrControl(r[i]) {
 			return i, true
 		}
 	}
@@ -32,7 +32,7 @@ func findSpace(r []rune, i, end int) (int, bool) {
 // findNonSpace finds first non space rune in r, returning end if not found.
 func findNonSpace(r []rune, i, end int) (int, bool) {
 	for ; i < end; i++ {
-		if !IsSpaceOrControl(r[i]) {
+		if !isSpaceOrControl(r[i]) {
 			return i, true
 		}
 	}
@@ -256,7 +256,7 @@ loop:
 			}
 			// add space when remaining runes begin with space, and previous
 			// captured word did not
-			if sl := len(s); end > 0 && sl != 0 && IsSpaceOrControl(r[0]) && !IsSpaceOrControl(s[sl-1]) {
+			if sl := len(s); end > 0 && sl != 0 && isSpaceOrControl(r[0]) && !isSpaceOrControl(s[sl-1]) {
 				s = append(s, ' ')
 			}
 		// end of statement, max words, or punctuation that can be ignored

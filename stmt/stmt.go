@@ -69,23 +69,23 @@ func (b *Stmt) PrintString() string {
 	if b.Len == 0 {
 		return ""
 	}
-	i, s, z := 0, string(b.Buf), new(bytes.Buffer)
+	i, s, w := 0, string(b.Buf), new(bytes.Buffer)
 	// deinterpolate vars
 	for _, v := range b.Vars {
 		if v.Quote != '\\' {
 			continue
 		}
 		if len(s) > i {
-			z.WriteString(s[i:v.I])
+			w.WriteString(s[i:v.I])
 		}
-		z.WriteString(v.String())
+		w.WriteString(v.String())
 		i = v.I + v.Len
 	}
 	// add remaining
 	if len(s) > i {
-		z.WriteString(s[i:])
+		w.WriteString(s[i:])
 	}
-	return z.String()
+	return w.String()
 }
 
 // RawString returns the non-interpolated version of the statement buffer.
@@ -135,9 +135,6 @@ func (b *Stmt) Reset(r []rune) {
 	}
 }
 
-// lineend is the slice to use when appending a line.
-var lineend = []rune{'\n'}
-
 // Next reads the next statement from the rune source, returning when either
 // the statement has been terminated, or a meta command has been read from the
 // rune source. After a call to Next, the collected statement is available in
@@ -172,7 +169,7 @@ var lineend = []rune{'\n'}
 //	       buf.Reset(nil)
 //	    }
 //	}
-func (b *Stmt) Next(unquote func(string, bool) (bool, string, error)) (string, string, error) {
+func (b *Stmt) Next(unquote func(string, bool) (string, bool, error)) (string, string, error) {
 	var err error
 	var i int
 	// no runes to process, grab more
@@ -228,7 +225,7 @@ parse:
 		case c == ':' && next != ':':
 			if v := readVar(b.r, i, b.rlen, next); v != nil {
 				b.Vars = append(b.Vars, v)
-				ok, z, _ := unquote(v.Name, true)
+				z, ok, _ := unquote(v.Name, true)
 				if v.Defined = ok || v.Quote == '?'; v.Defined {
 					b.r, b.rlen = v.Substitute(b.r, z, ok)
 				}
@@ -454,21 +451,20 @@ func WithAllowHashComments(enable bool) Option {
 	}
 }
 
-// IsSpaceOrControl is a special test for either a space or a control (ie, \b)
+// isSpaceOrControl is a special test for either a space or a control (ie, \b)
 // characters.
-func IsSpaceOrControl(r rune) bool {
+func isSpaceOrControl(r rune) bool {
 	return unicode.IsSpace(r) || unicode.IsControl(r)
 }
 
-// RunesLastIndex returns the last index in r of needle, or -1 if not found.
-func RunesLastIndex(r []rune, needle rune) int {
-	i := len(r) - 1
-	for ; i >= 0; i-- {
+// lastIndex returns the last index in r of needle, or -1 if not found.
+func lastIndex(r []rune, needle rune) int {
+	for i := len(r) - 1; i >= 0; i-- {
 		if r[i] == needle {
 			return i
 		}
 	}
-	return i
+	return -1
 }
 
 // trueFalse returns TRUE or FALSE.
@@ -478,3 +474,6 @@ func trueFalse(ok bool) string {
 	}
 	return "FALSE"
 }
+
+// lineend is the slice to use when appending a line.
+var lineend = []rune{'\n'}

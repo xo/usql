@@ -12,8 +12,8 @@ type Params struct {
 	Len int
 }
 
-// DecodeParams decodes command parameters.
-func DecodeParams(params string) *Params {
+// NewParams creates command parameters.
+func NewParams(params string) *Params {
 	r := []rune(params)
 	return &Params{
 		R:   r,
@@ -21,21 +21,21 @@ func DecodeParams(params string) *Params {
 	}
 }
 
-// GetRaw reads all remaining runes. No substitution or whitespace removal is
+// Raw reads all remaining runes. No substitution or whitespace removal is
 // performed.
-func (p *Params) GetRaw() string {
+func (p *Params) Raw() string {
 	s := string(p.R)
 	p.R, p.Len = p.R[:0], 0
 	return s
 }
 
-// Get reads the next command parameter using the provided substitution func.
+// Next reads the next command parameter using the provided substitution func.
 // True indicates there are runes remaining in the command parameters to
 // process.
-func (p *Params) Get(unquote func(string, bool) (bool, string, error)) (bool, string, error) {
+func (p *Params) Next(unquote func(string, bool) (string, bool, error)) (string, bool, error) {
 	i, _ := findNonSpace(p.R, 0, p.Len)
 	if i >= p.Len {
-		return false, "", nil
+		return "", false, nil
 	}
 	var ok bool
 	var quote rune
@@ -50,10 +50,9 @@ loop:
 			if !ok {
 				break loop
 			}
-			ok, z, err := unquote(string(p.R[start:i+1]), false)
-			switch {
+			switch z, ok, err := unquote(string(p.R[start:i+1]), false); {
 			case err != nil:
-				return false, "", err
+				return "", false, err
 			case ok:
 				p.R, p.Len = substitute(p.R, start, p.Len, i-start+1, z)
 				i = start + len([]rune(z)) - 1
@@ -64,10 +63,9 @@ loop:
 			quote = c
 		case c == ':' && next != ':':
 			if v := readVar(p.R, i, p.Len, next); v != nil {
-				ok, z, err := unquote(v.Name, true)
-				switch {
+				switch z, ok, err := unquote(v.Name, true); {
 				case err != nil:
-					return false, "", err
+					return "", false, err
 				case ok || v.Quote == '?':
 					p.R, p.Len = v.Substitute(p.R, z, ok)
 					i += v.Len - 1
@@ -80,27 +78,35 @@ loop:
 		}
 	}
 	if quote != 0 {
-		return false, "", text.ErrUnterminatedQuotedString
+		return "", false, text.ErrUnterminatedQuotedString
 	}
-	v := string(p.R[start:i])
+	s := string(p.R[start:i])
 	p.R = p.R[i:]
 	p.Len = len(p.R)
-	return true, v, nil
+	return s, true, nil
 }
 
-// GetAll retrieves all remaining command parameters using the provided
+// All retrieves all remaining command parameters using the provided
 // substitution func. Will return on the first encountered error.
-func (p *Params) GetAll(unquote func(string, bool) (bool, string, error)) ([]string, error) {
-	var s []string
+func (p *Params) All(unquote func(string, bool) (string, bool, error)) ([]string, error) {
+	var v []string
+loop:
 	for {
-		ok, v, err := p.Get(unquote)
-		if err != nil {
-			return s, err
+		switch s, ok, err := p.Next(unquote); {
+		case err != nil:
+			return v, err
+		case !ok:
+			break loop
+		default:
+			v = append(v, s)
 		}
-		if !ok {
-			break
-		}
-		s = append(s, v)
 	}
-	return s, nil
+	return v, nil
+}
+
+// Arg retrieves the next argument, without decoding.
+func (p *Params) Arg() (string, bool, error) {
+	return p.Next(func(s string, _ bool) (string, bool, error) {
+		return s, true, nil
+	})
 }

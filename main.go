@@ -1,4 +1,6 @@
 // Command usql is the universal command-line interface for SQL databases.
+//
+//go:debug x509negativeserial=1
 package main
 
 //go:generate go run gen.go

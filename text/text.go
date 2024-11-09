@@ -7,41 +7,44 @@ import (
 	_ "embed"
 	"image"
 	"image/png"
+	"io"
 	"regexp"
 	"strings"
 )
 
 // Various usql text bits.
 var (
-	CommandName           = `usql`
-	CommandVersion        = `0.0.0-dev`
-	PassfileName          = CommandName + `pass`
-	ConfigName            = "config"
-	Banner                = `the universal command-line interface for SQL databases`
-	CommandHelpHint       = `hint: try "` + CommandName + ` --help" for more information.`
-	GoInstallHint         = "\ntry:\n\n  go install -tags 'most %s' github.com/xo/usql@%s\n\n"
-	NotConnected          = `(not connected)`
-	HelpPrefix            = `help`
-	QuitPrefix            = `quit`
-	ExitPrefix            = `exit`
-	WelcomeDesc           = `Type "` + HelpPrefix + `" for help.`
-	QueryBufferEmpty      = `Query buffer is empty.`
-	QueryBufferReset      = `Query buffer reset (cleared).`
-	InvalidCommand        = `Invalid command \%s. Try \? for help.`
-	ExtraArgumentIgnored  = `\%s: extra argument %q ignored`
-	MissingRequiredArg    = `\%s: missing required argument`
-	Copyright             = CommandName + ", " + Banner + ".\n\n" + License
-	RowCount              = `(%d rows)`
-	AvailableDrivers      = `Available Drivers:`
-	ConnInfo              = `Connected with driver %s (%s)`
-	EnterPassword         = `Enter password: `
-	EnterPreviousPassword = `Enter previous password: `
-	PasswordsDoNotMatch   = `Passwords do not match, trying again ...`
-	NewPassword           = `Enter new password: `
-	ConfirmPassword       = `Confirm password: `
-	PasswordChangeFailed  = `\password for %q failed: %v`
-	CouldNotSetVariable   = `could not set variable %q`
-	ChartParseFailed      = `\chart: invalid argument for %q: %v`
+	CommandName              = `usql`
+	CommandVersion           = `0.0.0-dev`
+	PassfileName             = CommandName + `pass`
+	ConfigName               = "config"
+	Banner                   = `the universal command-line interface for SQL databases`
+	CommandHelpHint          = `hint: try "` + CommandName + ` --help" for more information.`
+	GoInstallHint            = "\ntry:\n\n  go install -tags 'most %s' github.com/xo/usql@%s\n\n"
+	NotConnected             = `(not connected)`
+	HelpPrefix               = `help`
+	QuitPrefix               = `quit`
+	ExitPrefix               = `exit`
+	WelcomeDesc              = `Type "` + HelpPrefix + `" for help.`
+	QueryBufferEmpty         = `Query buffer is empty.`
+	QueryBufferReset         = `Query buffer reset (cleared).`
+	InvalidCommand           = `Invalid command \%s. Try \? for help.`
+	ExtraArgumentIgnored     = `\%s: extra argument %q ignored`
+	MissingRequiredArg       = `\%s: missing required argument`
+	Copyright                = CommandName + ", " + Banner + ".\n\n" + License
+	RowCount                 = `(%d rows)`
+	AvailableDrivers         = `Available Drivers:`
+	ConnInfo                 = `Connected with driver %s (%s)`
+	EnterPassword            = `Enter password: `
+	EnterPreviousPassword    = `Enter previous password: `
+	PasswordsDoNotMatch      = `Passwords do not match, trying again ...`
+	NewPassword              = `Enter new password: `
+	ConfirmPassword          = `Confirm password: `
+	PasswordChangeFailed     = `\password for %q failed: %v`
+	CouldNotSetVariable      = `could not set variable %q`
+	ChartParseFailed         = `\chart: invalid argument for %q: %v`
+	CommandIgnoredUseEndIf   = `%s command ignored; use \endif or %s to exit current \if block`
+	UnrecognizedValueForCond = `unrecognized value %q for "\%s expression": Boolean expected`
 	// PasswordChangeSucceeded = `\password succeeded for %q`
 	HelpDesc          string
 	HelpDescShort     = `Use \? for help or press control-C to clear the input buffer.`
@@ -154,6 +157,20 @@ var CommandUpper = func() string {
 // Short returns the command name and banner.
 var Short = func() string {
 	return Command() + ", " + Banner
+}
+
+// UsageString is used to return the
+var UsageString = func() string {
+	return ""
+}
+
+// Usage displays writes the command line options to w, optionally including a
+// banner.
+func Usage(w io.Writer, banner bool) {
+	if banner {
+		_, _ = w.Write([]byte(Short() + "\n\n"))
+	}
+	_, _ = w.Write([]byte(UsageString()))
 }
 
 // Logo is the logo.

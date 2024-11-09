@@ -705,25 +705,30 @@ General
 
 Query Execute
   \g [(OPTIONS)] [FILE] or ;           execute query (and send results to file or |pipe)
-  \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
+  \go [(OPTIONS)] [FILE]               alias for \g
   \G [(OPTIONS)] [FILE]                as \g, but forces vertical output mode
+  \ego [(OPTIONS)] [FILE]              alias for \G
+  \gx [(OPTIONS)] [FILE]               as \g, but forces expanded output mode
   \gexec                               execute query and execute each value of the result
   \gset [PREFIX]                       execute query and store results in usql variables
-  \gx [(OPTIONS)] [FILE]               as \g, but forces expanded output mode
+  \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
+  \chart CHART [(OPTIONS)]             execute query and display results as a chart
   \watch [(OPTIONS)] [DURATION]        execute query every specified interval
   \bind [PARAM]...                     set query parameters
 
 Query Buffer
   \e [FILE] [LINE]                     edit the query buffer (or file) with external editor
+  \edit [-exec]                        edit the query (or exec) buffer
   \p                                   show the contents of the query buffer
   \raw                                 show the raw (non-interpolated) contents of the query buffer
+  \exec                                show the contents of the exec buffer
   \r                                   reset (clear) the query buffer
   \w FILE                              write query buffer to file
 
 Help
   \? [commands]                        show help on backslash commands
   \? options                           show help on usql command-line options
-  \? variables                         show help on special variables
+  \? variables                         show help on special usql variables
 
 Input/Output
   \copy SRC DST QUERY TABLE            copy query from source url to table on destination url
@@ -734,6 +739,12 @@ Input/Output
   \o [FILE]                            send all query results to file or |pipe
   \i FILE                              execute commands from file
   \ir FILE                             as \i, but relative to location of current script
+
+Conditional
+  \if EXPR                             begin conditional block
+  \elif EXPR                           alternative within current conditional block
+  \else                                final alternative within current conditional block
+  \endif                               end conditional block
 
 Informational
   \d[S+] [NAME]                        list tables, views, and sequences or describe table, view, sequence, or index
@@ -761,17 +772,18 @@ Formatting
 
 Transaction
   \begin                               begin a transaction
-  \begin [-read-only] [ISOLATION]      begin a transaction with isolation level
+  \begin -read-only ISOLATION          begin a transaction with isolation level
   \commit                              commit current transaction
   \rollback                            rollback (abort) current transaction
 
 Connection
   \c DSN                               connect to database url
   \c DRIVER PARAMS...                  connect to database with driver and parameters
-  \cset [NAME [DSN]]                   set named connection, or list all if no parameters
+  \cset                                show named connections
+  \cset NAME DSN                       set named connection
   \cset NAME DRIVER PARAMS...          define named connection for database driver
   \Z                                   close database connection
-  \password [USERNAME]                 change the password for a user
+  \password [USER]                     change password for user
   \conninfo                            display information about the current database connection
 
 Operating System
@@ -782,7 +794,7 @@ Operating System
   \timing [on|off]                     toggle timing of commands
 
 Variables
-  \prompt [-TYPE] VAR [PROMPT]       prompt user to set variable
+  \prompt [-TYPE] VAR [PROMPT]         prompt user to set variable
   \set [NAME [VALUE]]                  set internal variable, or list all if no parameters
   \unset NAME                          unset (delete) internal variable
 ```

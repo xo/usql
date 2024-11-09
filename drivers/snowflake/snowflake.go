@@ -47,14 +47,13 @@ func init() {
 	})
 }
 
-func listAllDbs(db drivers.DB, w io.Writer, pattern string, verbose bool) error {
+func listAllDbs(db drivers.DB, w io.Writer, _ string, _ bool) error {
 	rows, err := db.Query("SHOW databases")
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-
-	params := env.Pall()
+	params := env.Vars().Print()
 	params["title"] = "List of databases"
 	return tblfmt.EncodeAll(w, rows, params)
 }

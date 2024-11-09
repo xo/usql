@@ -1,11 +1,9 @@
-//go:debug x509negativeserial=1
 package main
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -21,7 +19,6 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/handler"
-	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/rline"
 	"github.com/xo/usql/text"
 )
@@ -143,6 +140,7 @@ func New(cliargs []string) ContextExecutor {
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
 	c.SetArgs(cliargs[1:])
 	c.SetUsageTemplate(text.UsageTemplate)
+	text.UsageString = c.UsageString
 
 	flags := c.Flags()
 	flags.SortFlags = false
@@ -169,36 +167,30 @@ func New(cliargs []string) ContextExecutor {
 	flags.BoolVarP(&args.ForcePassword, "password", "W", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
 
-	ss := func(v *[]string, name, short, usage, placeholder string, vals ...string) {
-		f := flags.VarPF(vs{v, vals, placeholder}, name, short, usage)
-		if placeholder == "" {
-			f.DefValue, f.NoOptDefVal = "true", "true"
-		}
-	}
 	// set
-	ss(&args.Vars, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
-	ss(&args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
-	ss(&args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
+	sf(flags, &args.Vars, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
+	sf(flags, &args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
+	sf(flags, &args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
 	// cset
-	ss(&args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
+	sf(flags, &args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
 	// pset
-	ss(&args.Pvars, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
+	sf(flags, &args.Pvars, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
 	// pset flags
-	ss(&args.Pvars, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
-	ss(&args.Pvars, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
-	ss(&args.Pvars, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
+	sf(flags, &args.Pvars, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
+	sf(flags, &args.Pvars, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
+	sf(flags, &args.Pvars, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
 	// pset bools
-	ss(&args.Pvars, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
-	ss(&args.Pvars, "html", "H", "HTML table output mode", "", "format=html")
-	ss(&args.Pvars, "tuples-only", "t", "print rows only", "", "tuples_only=on")
-	ss(&args.Pvars, "expanded", "x", "turn on expanded table output", "", "expanded=on")
-	ss(&args.Pvars, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
-	ss(&args.Pvars, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
-	ss(&args.Pvars, "json", "J", "JSON output mode", "", "format=json")
-	ss(&args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
-	ss(&args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
+	sf(flags, &args.Pvars, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
+	sf(flags, &args.Pvars, "html", "H", "HTML table output mode", "", "format=html")
+	sf(flags, &args.Pvars, "tuples-only", "t", "print rows only", "", "tuples_only=on")
+	sf(flags, &args.Pvars, "expanded", "x", "turn on expanded table output", "", "expanded=on")
+	sf(flags, &args.Pvars, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
+	sf(flags, &args.Pvars, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
+	sf(flags, &args.Pvars, "json", "J", "JSON output mode", "", "format=json")
+	sf(flags, &args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
+	sf(flags, &args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
 	// set bools
-	ss(&args.Vars, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
+	sf(flags, &args.Vars, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
 
 	// app config
 	_ = flags.StringP("config", "", "", "config file")
@@ -221,14 +213,6 @@ func New(cliargs []string) ContextExecutor {
 		flags.Lookup(name).Hidden = true
 	}
 
-	// expose to metacmd
-	metacmd.Usage = func(w io.Writer, banner bool) {
-		s := c.UsageString()
-		if banner {
-			s = text.Short() + "\n\n" + s
-		}
-		_, _ = w.Write([]byte(s))
-	}
 	return c
 }
 
@@ -259,7 +243,7 @@ func Run(ctx context.Context, args *Args) error {
 		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
 			typ = s
 		}
-		if err := env.Set("TERM_GRAPHICS", typ); err != nil {
+		if err := env.Vars().Set("TERM_GRAPHICS", typ); err != nil {
 			return err
 		}
 	}
@@ -276,9 +260,9 @@ func Run(ctx context.Context, args *Args) error {
 	// set vars
 	for _, v := range args.Vars {
 		if i := strings.Index(v, "="); i != -1 {
-			_ = env.Set(v[:i], v[i+1:])
+			_ = env.Vars().Set(v[:i], v[i+1:])
 		} else {
-			_ = env.Unset(v)
+			_ = env.Vars().Unset(v)
 		}
 	}
 	// set cvars
@@ -286,15 +270,15 @@ func Run(ctx context.Context, args *Args) error {
 		if i := strings.Index(v, "="); i != -1 {
 			s := v[i+1:]
 			if c := s[0]; c == '\'' || c == '"' {
-				if s, err = env.Dequote(s, c); err != nil {
+				if s, err = env.Unquote(s); err != nil {
 					return err
 				}
 			}
-			if err = env.Cset(v[:i], s); err != nil {
+			if err = env.Vars().SetConn(v[:i], s); err != nil {
 				return err
 			}
 		} else {
-			if err = env.Cset(v, ""); err != nil {
+			if err = env.Vars().SetConn(v, ""); err != nil {
 				return err
 			}
 		}
@@ -304,15 +288,15 @@ func Run(ctx context.Context, args *Args) error {
 		if i := strings.Index(v, "="); i != -1 {
 			s := v[i+1:]
 			if c := s[0]; c == '\'' || c == '"' {
-				if s, err = env.Dequote(s, c); err != nil {
+				if s, err = env.Unquote(s); err != nil {
 					return err
 				}
 			}
-			if _, err = env.Pset(v[:i], s); err != nil {
+			if _, err = env.Vars().SetPrint(v[:i], s); err != nil {
 				return err
 			}
 		} else {
-			if _, err = env.Ptoggle(v, ""); err != nil {
+			if _, err = env.Vars().TogglePrint(v, ""); err != nil {
 				return err
 			}
 		}
@@ -518,19 +502,19 @@ func chartsFS(v *viper.Viper) (billy.Filesystem, error) {
 	return fs.Chroot(chartsPath)
 }
 
-// setConn sets a named connection.
-func setConn(name string, v interface{}) error {
-	switch x := v.(type) {
+// setConn sets a connection name to a DSN built from the passed value.
+func setConn(name string, value interface{}) error {
+	switch x := value.(type) {
 	case string:
-		return env.Cset(name, x)
+		return env.Vars().SetConn(name, x)
 	case []interface{}:
-		return env.Cset(name, convSlice(x)...)
+		return env.Vars().SetConn(name, convSlice(x)...)
 	case map[string]interface{}:
 		urlstr, err := dburl.BuildURL(x)
 		if err != nil {
 			return err
 		}
-		return env.Cset(name, urlstr)
+		return env.Vars().SetConn(name, urlstr)
 	}
 	return text.ErrInvalidConfig
 }
@@ -552,6 +536,14 @@ func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func
 			}
 		}
 		return nil
+	}
+}
+
+// sf sets a flag.
+func sf(flags *pflag.FlagSet, v *[]string, name, short, usage, placeholder string, vals ...string) {
+	f := flags.VarPF(vs{v, vals, placeholder}, name, short, usage)
+	if placeholder == "" {
+		f.DefValue, f.NoOptDefVal = "true", "true"
 	}
 }
 

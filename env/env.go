@@ -4,6 +4,7 @@ package env
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -13,12 +14,31 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/kenshaw/rasterm"
 	"github.com/xo/dburl/passfile"
 	"github.com/xo/usql/text"
 )
+
+// vars are environment variables.
+var vars *Variables
+
+func init() {
+	vars = NewDefaultVars()
+}
+
+// Vars returns the environment variables.
+func Vars() *Variables {
+	return vars
+}
+
+// Get returns a standard variable.
+func Get(name string) string {
+	value, _ := vars.Get(name)
+	return value
+}
 
 // Getenv tries retrieving successive keys from os environment variables.
 func Getenv(keys ...string) (string, bool) {
@@ -73,30 +93,28 @@ func OpenFile(u *user.User, path string) (string, *os.File, error) {
 	return path, f, nil
 }
 
-// EditFile edits a file. If path is empty, then a temporary file will be created.
-func EditFile(u *user.User, path, line, s string) ([]rune, error) {
-	ed := All()["EDITOR"]
-	if ed == "" {
-		if p, err := exec.LookPath("vi"); err == nil {
-			ed = p
-		} else {
+// EditFile edits a file. If path is empty, then a temporary file will be
+// created.
+func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
+	ed, _ := vars.Get("EDITOR")
+	switch {
+	case ed == "":
+		if ed, _ = exec.LookPath("vi"); ed == "" {
 			return nil, text.ErrNoEditorDefined
 		}
-	}
-	if path != "" {
+	case path != "":
 		path = passfile.Expand(u.HomeDir, path)
-	} else {
+	default:
 		f, err := os.CreateTemp("", text.CommandLower()+".*.sql")
 		if err != nil {
 			return nil, err
 		}
-		err = f.Close()
-		if err != nil {
+		path = f.Name()
+		if _, err = f.Write(append(bytes.TrimSuffix(buf, lineend), '\n')); err != nil {
+			f.Close()
 			return nil, err
 		}
-		path = f.Name()
-		err = os.WriteFile(path, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
-		if err != nil {
+		if err = f.Close(); err != nil {
 			return nil, err
 		}
 	}
@@ -111,10 +129,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	}
 	// create command
 	c := exec.Command(ed, args...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	// run
+	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := c.Run(); err != nil {
 		return nil, err
 	}
@@ -123,7 +138,7 @@ func EditFile(u *user.User, path, line, s string) ([]rune, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []rune(strings.TrimSuffix(string(buf), "\n")), nil
+	return bytes.TrimSuffix(buf, lineend), nil
 }
 
 // HistoryFile returns the path to the history file.
@@ -234,23 +249,24 @@ func Exec(s string) (string, error) {
 		return "", err
 	}
 	// remove ending \r\n
-	buf = bytes.TrimSuffix(buf, []byte{'\n'})
+	buf = bytes.TrimSuffix(buf, lineend)
 	buf = bytes.TrimSuffix(buf, []byte{'\r'})
 	return string(buf), nil
 }
 
-var cleanDoubleRE = regexp.MustCompile(`(^|[^\\])''`)
-
-// Dequote unquotes a string.
-func Dequote(s string, quote byte) (string, error) {
-	if len(s) < 2 || s[len(s)-1] != quote {
+// Unquote unquotes a string.
+func Unquote(s string) (string, error) {
+	switch n := len(s); {
+	case n == 0:
+		return "", nil
+	case n < 2, s[n-1] != s[0], s[0] != '\'' && s[0] != '"' && s[0] != '`':
 		return "", text.ErrUnterminatedQuotedString
 	}
+	quote := s[0]
 	s = s[1 : len(s)-1]
 	if quote == '\'' {
-		s = cleanDoubleRE.ReplaceAllString(s, "$1\\'")
+		s = cleanDoubleRE.ReplaceAllString(s, `$1\'`)
 	}
-
 	// this is the last part of strconv.Unquote
 	var runeTmp [utf8.UTFMax]byte
 	buf := make([]byte, 0, 3*len(s)/2) // Try to avoid more allocations.
@@ -273,54 +289,37 @@ func Dequote(s string, quote byte) (string, error) {
 	return string(buf), nil
 }
 
-// Getvar retrieves an environment variable.
-func Getvar(s string, v Vars) (bool, string, error) {
-	q, n := "", s
-	if c := s[0]; c == '\'' || c == '"' {
-		var err error
-		if n, err = Dequote(s, c); err != nil {
-			return false, "", err
-		}
-		q = string(c)
-	}
-	if val, ok := v[n]; ok {
-		return true, q + val + q, nil
-	}
-	return false, s, nil
-}
-
-// Unquote returns a func that unquotes strings for the user.
+// Untick returns a func that unquotes and unticks strings for the user.
 //
 // When exec is true, backtick'd strings will be executed using the provided
 // user's shell (see Exec).
-func Unquote(u *user.User, exec bool, v Vars) func(string, bool) (bool, string, error) {
-	return func(s string, isvar bool) (bool, string, error) {
-		// log.Printf(">>> UNQUOTE: %q", s)
-		if isvar {
-			return Getvar(s, v)
-		}
-		if len(s) < 2 {
-			return false, "", text.ErrInvalidQuotedString
+func Untick(u *user.User, v *Variables, exec bool) func(string, bool) (string, bool, error) {
+	return func(s string, isvar bool) (string, bool, error) {
+		// fmt.Fprintf(os.Stderr, "untick: %q\n", s)
+		switch {
+		case isvar:
+			value, ok := v.Get(s)
+			return value, ok, nil
+		case len(s) < 2:
+			return "", false, text.ErrInvalidQuotedString
 		}
 		c := s[0]
-		z, err := Dequote(s, c)
-		if err != nil {
-			return false, "", err
-		}
-		if c == '\'' || c == '"' {
-			return true, z, nil
-		}
-		if c != '`' {
-			return false, "", text.ErrInvalidQuotedString
-		}
-		if !exec {
-			return true, z, nil
+		z, err := Unquote(s)
+		switch {
+		case err != nil:
+			return "", false, err
+		case c == '\'', c == '"':
+			return z, true, nil
+		case c != '`':
+			return "", false, text.ErrInvalidQuotedString
+		case !exec:
+			return z, true, nil
 		}
 		res, err := Exec(z)
 		if err != nil {
-			return false, "", err
+			return "", false, err
 		}
-		return true, res, nil
+		return res, true, nil
 	}
 }
 
@@ -334,6 +333,54 @@ func Quote(s string) string {
 // environment variable.
 func TermGraphics() rasterm.TermType {
 	var typ rasterm.TermType
-	_ = typ.UnmarshalText([]byte(Get("TERM_GRAPHICS")))
+	s, _ := vars.Get("TERM_GRAPHICS")
+	_ = typ.UnmarshalText([]byte(s))
 	return typ
 }
+
+// ValidIdentifier returns an error when n is not a valid identifier.
+func ValidIdentifier(n string) error {
+	r := []rune(n)
+	rlen := len(r)
+	if rlen < 1 {
+		return text.ErrInvalidIdentifier
+	}
+	for i := 0; i < rlen; i++ {
+		if c := r[i]; c != '_' && !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+			return text.ErrInvalidIdentifier
+		}
+	}
+	return nil
+}
+
+func ParseBool(value, name string) (string, error) {
+	switch strings.ToLower(value) {
+	case "1", "t", "tr", "tru", "true", "on":
+		return "on", nil
+	case "0", "f", "fa", "fal", "fals", "false", "of", "off":
+		return "off", nil
+	}
+	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
+}
+
+func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
+	v := strings.ToLower(value)
+	switch v {
+	case "1", "t", "tr", "tru", "true", "on":
+		return "on", nil
+	case "0", "f", "fa", "fal", "fals", "false", "of", "off":
+		return "off", nil
+	}
+	for _, k := range keywords {
+		if v == k {
+			return v, nil
+		}
+	}
+	return "", fmt.Errorf(text.FormatFieldInvalid, value, name)
+}
+
+// lineend is the line ending.
+var lineend = []byte{'\n'}
+
+// cleanDoubleRE matches double quotes.
+var cleanDoubleRE = regexp.MustCompile(`(^|[^\\])''`)

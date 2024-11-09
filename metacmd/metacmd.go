@@ -3,95 +3,272 @@
 package metacmd
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
+	"io"
+	"os/user"
+	"strings"
+	"time"
+
+	"github.com/mattn/go-runewidth"
+	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
+	"github.com/xo/usql/env"
+	"github.com/xo/usql/rline"
 	"github.com/xo/usql/stmt"
 	"github.com/xo/usql/text"
 )
 
-// Metacmd represents a command and associated meta information about it.
-type Metacmd uint
+// Handler is the shared interface for a command handler.
+type Handler interface {
+	// IO handles the handler's IO.
+	IO() rline.IO
+	// User returns the current user.
+	User() *user.User
+	// URL returns the current database URL.
+	URL() *dburl.URL
+	// DB returns the current database connection.
+	DB() drivers.DB
+	// LastExec returns the last executed query.
+	LastExec() string
+	// LastPrint returns the last executed printable query.
+	LastPrint() string
+	// LastRaw returns the last raw (non-interpolated) query.
+	LastRaw() string
+	// Buf returns the current query buffer.
+	Buf() *stmt.Stmt
+	// Reset resets the last and current query buffer.
+	Reset([]rune)
+	// Bind binds query parameters.
+	Bind([]interface{})
+	// Open opens a database connection.
+	Open(context.Context, ...string) error
+	// Close closes the current database connection.
+	Close() error
+	// ChangePassword changes the password for a user.
+	ChangePassword(string) (string, error)
+	// ReadVar reads a variable of a specified type.
+	ReadVar(string, string) (string, error)
+	// Include includes a file.
+	Include(string, bool) error
+	// Begin begins a transaction.
+	Begin(*sql.TxOptions) error
+	// Commit commits the current transaction.
+	Commit() error
+	// Rollback aborts the current transaction.
+	Rollback() error
+	// Highlight highlights the statement.
+	Highlight(io.Writer, string) error
+	// GetTiming mode.
+	GetTiming() bool
+	// SetTiming mode.
+	SetTiming(bool)
+	// GetOutput writer.
+	GetOutput() io.Writer
+	// SetOutput writer.
+	SetOutput(io.WriteCloser)
+	// MetadataWriter retrieves the metadata writer for the handler.
+	MetadataWriter(context.Context) (metadata.Writer, error)
+	// Print formats according to a format specifier and writes to handler's standard output.
+	Print(string, ...interface{})
+}
+
+// Dump writes the command descriptions to w, separated by section.
+func Dump(w io.Writer, hidden bool) error {
+	n := 0
+	for i := range sections {
+		for _, desc := range descs[i] {
+			if !desc.Hidden || hidden {
+				n = max(n, runewidth.StringWidth(desc.Name)+1+runewidth.StringWidth(desc.Params))
+			}
+		}
+	}
+	for i, s := range sections {
+		if i != 0 {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprintln(w, s)
+		for _, desc := range descs[i] {
+			if !desc.Hidden || hidden {
+				_, _ = fmt.Fprintf(w, "  \\%- *s  %s\n", n, desc.Name+" "+desc.Params, desc.Desc)
+			}
+		}
+	}
+	return nil
+}
 
 // Decode converts a command name (or alias) into a Runner.
-func Decode(name string, params *stmt.Params) (Runner, error) {
-	mc, ok := cmdMap[name]
+func Decode(name string, params *stmt.Params) (func(Handler) (Option, error), error) {
+	f, ok := cmds[name]
 	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
 	}
-	cmd := cmds[mc]
-	return RunnerFunc(func(h Handler) (Option, error) {
+	return func(h Handler) (Option, error) {
 		p := &Params{
 			Handler: h,
 			Name:    name,
 			Params:  params,
 		}
-		err := cmd.Process(p)
+		err := f(p)
 		return p.Option, err
-	}), nil
+	}, nil
 }
 
-// Command types.
+// Params wraps metacmd parameters.
+type Params struct {
+	// Handler is the process handler.
+	Handler Handler
+	// Name is the name of the metacmd.
+	Name string
+	// Params are the actual statement parameters.
+	Params *stmt.Params
+	// Option contains resulting command execution options.
+	Option Option
+}
+
+// Next returns the next command parameter, using env.Untick.
+func (p *Params) Next(exec bool) (string, error) {
+	v, _, err := p.Params.Next(env.Untick(
+		p.Handler.User(),
+		env.Vars(),
+		exec,
+	))
+	if err != nil {
+		return "", err
+	}
+	return v, nil
+}
+
+// NextOK returns the next command parameter, using env.Untick.
+func (p *Params) NextOK(exec bool) (string, bool, error) {
+	return p.Params.Next(env.Untick(
+		p.Handler.User(),
+		env.Vars(),
+		exec,
+	))
+}
+
+// NextOpt returns the next command parameter, using env.Untick. Returns true
+// when the value is prefixed with a "-", along with the value sans the "-"
+// prefix. Otherwise returns false and the value.
+func (p *Params) NextOpt(exec bool) (string, bool, error) {
+	v, err := p.Next(exec)
+	switch {
+	case err != nil:
+		return "", false, err
+	case len(v) > 0 && v[0] == '-':
+		return v[1:], true, nil
+	}
+	return v, false, nil
+}
+
+// All gets all remaining command parameters using env.Untick.
+func (p *Params) All(exec bool) ([]string, error) {
+	return p.Params.All(env.Untick(
+		p.Handler.User(),
+		env.Vars(),
+		exec,
+	))
+}
+
+// Raw returns the remaining command parameters as a raw string.
+//
+// Note: no other processing is done to interpolate variables or to decode
+// string values.
+func (p *Params) Raw() string {
+	return p.Params.Raw()
+}
+
+// Option contains parsed result options of a metacmd.
+type Option struct {
+	// Quit instructs the handling code to quit.
+	Quit bool
+	// Exec informs the handling code of the type of execution.
+	Exec ExecType
+	// Params are accompanying string parameters for execution.
+	Params map[string]string
+	// Crosstab are the crosstab column parameters.
+	Crosstab []string
+	// Watch is the watch duration interval.
+	Watch time.Duration
+}
+
+func (opt *Option) ParseParams(params []string, defaultKey string) error {
+	if opt.Params == nil {
+		opt.Params = make(map[string]string, len(params))
+	}
+	formatOpts := false
+	for i, param := range params {
+		if len(param) == 0 {
+			continue
+		}
+		if !formatOpts {
+			if param[0] == '(' {
+				formatOpts = true
+			} else {
+				opt.Params[defaultKey] = strings.Join(params[i:], " ")
+				return nil
+			}
+		}
+		parts := strings.SplitN(param, "=", 2)
+		if len(parts) == 1 {
+			return text.ErrInvalidFormatOption
+		}
+		opt.Params[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
+		if formatOpts && param[len(param)-1] == ')' {
+			formatOpts = false
+		}
+	}
+	return nil
+}
+
+// ExecType represents the type of execution requested.
+type ExecType int
+
 const (
-	// None is an empty command.
-	None Metacmd = iota
-	// Question is question meta command (\?)
-	Question
-	// Quit is the quit meta command (\?).
-	Quit
-	// Copyright is the copyright meta command (\copyright).
-	Copyright
-	// Connect is the connect meta command (\c, \connect).
-	Connect
-	// SetConnVar is the set conn var command (\cset).
-	SetConnVar
-	// Copy is the copy meta command (\copy).
-	Copy
-	// Disconnect is the disconnect meta command (\Z).
-	Disconnect
-	// Password is the change password meta command (\password).
-	Password
-	// ConnectionInfo is the connection info meta command (\conninfo).
-	ConnectionInfo
-	// Drivers is the driver info meta command (\drivers).
-	Drivers
-	// Describe is the describe meta command (\d and variants).
-	Describe
-	// Exec is the execute meta command (\g and variants).
-	Exec
-	// Bind is the bind meta command (\bind).
-	Bind
-	// Edit is the edit query buffer meta command (\e).
-	Edit
-	// Print is the print query buffer meta command (\p, \print, \raw).
-	Print
-	// Reset is the reset query buffer meta command (\r, \reset).
-	Reset
-	// Echo is the echo meta command (\echo, \warn, \qecho).
-	Echo
-	// Write is the write meta command (\w).
-	Write
-	// ChangeDir is the system change directory meta command (\cd).
-	ChangeDir
-	// GetEnv is the system get environment variable meta command (\getenv).
-	GetEnv
-	// SetEnv is the system set environment variable meta command (\setenv).
-	SetEnv
-	// Shell is the system shell exec meta command (\!).
-	Shell
-	// Out is the switch output meta command (\o).
-	Out
-	// Include is the system include file meta command (\i and variants).
-	Include
-	// Transact is the transaction meta command (\begin, \commit, \rollback).
-	Transact
-	// Prompt is the variable prompt meta command (\prompt).
-	Prompt
-	// SetVar is the set variable meta command (\set).
-	SetVar
-	// Unset is the variable unset meta command (\unset).
-	Unset
-	// SetPrintVar is the set print variable meta commands (\pset, \a, \C, \f, \H, \t, \T, \x).
-	SetPrintVar
-	// Timing is the timing meta command (\timing).
-	Timing
-	// Stats is the show stats meta command (\ss and variants).
-	Stats
+	// ExecNone indicates no execution.
+	ExecNone ExecType = iota
+	// ExecOnly indicates plain execution only (\g).
+	ExecOnly
+	// ExecPipe indicates execution and piping results (\g |file)
+	ExecPipe
+	// ExecSet indicates execution and setting the resulting columns as
+	// variables (\gset).
+	ExecSet
+	// ExecExec indicates execution and executing the resulting rows (\gexec).
+	ExecExec
+	// ExecCrosstab indicates execution using crosstabview (\crosstabview).
+	ExecCrosstab
+	// ExecChart indicates execution using chart (\chart).
+	ExecChart
+	// ExecWatch indicates repeated execution with a fixed time interval.
+	ExecWatch
 )
+
+// desc wraps a meta command description.
+type desc struct {
+	Name   string
+	Params string
+	Desc   string
+	Func   func(*Params) error
+	Hidden bool
+}
+
+// Names returns the names for the command.
+func (d desc) Names() []string {
+	switch i := strings.Index(d.Name, "["); {
+	case i == -1:
+		return []string{d.Name}
+	case !strings.HasSuffix(d.Name, "]"):
+		panic(fmt.Sprintf("invalid command %q", d.Name))
+	default:
+		name := d.Name[:i]
+		v := []string{name}
+		for _, s := range d.Name[i+1 : len(d.Name)-1] {
+			v = append(v, name+string(s))
+		}
+		return v
+	}
+}

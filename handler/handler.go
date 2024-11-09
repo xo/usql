@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/url"
 	"os"
 	"os/exec"
@@ -18,7 +19,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -52,36 +53,44 @@ import (
 // for usql's interactive command-line and manages most of the core/high-level logic.
 //
 // Manages the active statement buffer, application IO, executing/querying SQL
-// statements, and handles backslash (\) commands encountered in the input
+// statements, and handles backslash (\) meta commands encountered in the input
 // stream.
 type Handler struct {
-	l    rline.IO
+	// l is the readline handler.
+	l rline.IO
+	// user is the user.
 	user *user.User
-	// wd is the working directoyr.
+	// wd is the working directory.
 	wd string
 	// charts is the charts filesystem.
 	charts billy.Filesystem
 	// nopw indicates not asking for password.
 	nopw bool
-	// timing of every command executed
+	// timing of every command executed.
 	timing bool
-	// singleLineMode is single line mode
+	// singleLineMode is single line mode.
 	singleLineMode bool
-	// query statement buffer
+	// buf is the query statement buffer.
 	buf *stmt.Stmt
-	// lastExec statement
-	lastExec   string
-	lastPrefix string
-	lastPrint  string
-	lastRaw    string
-	// batch
-	batch    bool
+	// lastExec is the last executed query statement.
+	lastExec string
+	// lastExecPrefix is the last executed query statement prefix.
+	lastExecPrefix string
+	// lastPrint is the last executed printable query statement.
+	lastPrint string
+	// lastRaw is the last executed raw query statement.
+	lastRaw string
+	// batch indicates a batch has been started.
+	batch bool
+	// batchEnd is the batch end string.
 	batchEnd string
-	// bind are bound values for exec statements
+	// bind are bound values for that will be used for statement execution.
 	bind []interface{}
-	// connection
-	u  *dburl.URL
+	// u is the active connection information.
+	u *dburl.URL
+	// db is the active database connection.
 	db *sql.DB
+	// tx is the active transaction, if any.
 	tx *sql.Tx
 	// out file or pipe
 	out io.WriteCloser
@@ -117,11 +126,6 @@ func New(l rline.IO, user *user.User, wd string, charts billy.Filesystem, nopw b
 	return h
 }
 
-// SetSingleLineMode sets the single line mode toggle.
-func (h *Handler) SetSingleLineMode(singleLineMode bool) {
-	h.singleLineMode = singleLineMode
-}
-
 // GetTiming gets the timing toggle.
 func (h *Handler) GetTiming() bool {
 	return h.timing
@@ -132,107 +136,10 @@ func (h *Handler) SetTiming(timing bool) {
 	h.timing = timing
 }
 
-// outputHighlighter returns s as a highlighted string, based on the current
-// buffer and syntax highlighting settings.
-func (h *Handler) outputHighlighter(s string) string {
-	// bail when string is empty (ie, contains no printable, non-space
-	// characters) or if syntax highlighting is not enabled
-	if empty(s) || env.All()["SYNTAX_HL"] != "true" {
-		return s
-	}
-	// count end lines
-	var endl string
-	if m := linetermRE.FindStringSubmatch(s); m != nil {
-		s = strings.TrimSuffix(s, m[0])
-		endl += m[0]
-	}
-	// leading whitespace
-	var leading string
-	// capture current query statement buffer
-	orig := h.buf.RawString()
-	full := orig
-	if full != "" {
-		full += "\n"
-	} else {
-		// get leading whitespace
-		if i := strings.IndexFunc(s, func(r rune) bool {
-			return !stmt.IsSpaceOrControl(r)
-		}); i != -1 {
-			leading = s[:i]
-		}
-	}
-	full += s
-	// setup statement parser
-	st := drivers.NewStmt(h.u, func() func() ([]rune, error) {
-		y := strings.Split(orig, "\n")
-		if y[0] == "" {
-			y[0] = s
-		} else {
-			y = append(y, s)
-		}
-		return func() ([]rune, error) {
-			if len(y) > 0 {
-				z := y[0]
-				y = y[1:]
-				return []rune(z), nil
-			}
-			return nil, io.EOF
-		}
-	}())
-	// accumulate all "active" statements in buffer, breaking either at
-	// EOF or when a \ cmd has been encountered
-	var err error
-	var cmd, final string
-loop:
-	for {
-		cmd, _, err = st.Next(env.Unquote(h.user, false, env.All()))
-		switch {
-		case err != nil && err != io.EOF:
-			return s + endl
-		case err == io.EOF:
-			break loop
-		}
-		if st.Ready() || cmd != "" {
-			final += st.RawString()
-			st.Reset(nil)
-			// grab remaining whitespace to add to final
-			l := len(final)
-			// find first non empty character
-			if i := strings.IndexFunc(full[l:], func(r rune) bool {
-				return !stmt.IsSpaceOrControl(r)
-			}); i != -1 {
-				final += full[l : l+i]
-			}
-		}
-	}
-	if !st.Ready() && cmd == "" {
-		final += st.RawString()
-	}
-	final = leading + final
-	// determine whatever is remaining after "active"
-	var remaining string
-	if fnl := len(final); fnl < len(full) {
-		remaining = full[fnl:]
-	}
-	// this happens when a read line is empty and/or has only
-	// whitespace and a \ cmd
-	if s == remaining {
-		return s + endl
-	}
-	// highlight entire final accumulated buffer
-	b := new(bytes.Buffer)
-	if err := h.Highlight(b, final); err != nil {
-		return s + endl
-	}
-	colored := b.String()
-	// return only last line plus whatever remaining string (ie, after
-	// a \ cmd) and the end line count
-	ss := strings.Split(colored, "\n")
-	return lastcolor(colored) + ss[len(ss)-1] + remaining + endl
+// SetSingleLineMode sets the single line mode toggle.
+func (h *Handler) SetSingleLineMode(singleLineMode bool) {
+	h.singleLineMode = singleLineMode
 }
-
-// helpQuitExitRE is a regexp to use to match help, quit, or exit messages.
-var helpQuitExitRE = regexp.MustCompile(fmt.Sprintf(`(?im)^(%s|%s|%s)\s*$`, text.HelpPrefix, text.QuitPrefix, text.ExitPrefix))
 
 // Run executes queries and commands.
 func (h *Handler) Run() error {
@@ -249,69 +156,39 @@ func (h *Handler) Run() error {
 		fmt.Fprintln(stdout, text.WelcomeDesc)
 		fmt.Fprintln(stdout)
 	}
+	var cmd string
+	var paramstr string
+	var err error
+	var opt metacmd.Option
+	var cont bool
 	var lastErr error
+	var execute bool
 	for {
-		var execute bool
+		execute = false
 		// set prompt
 		if iactive {
 			h.l.Prompt(h.Prompt(env.Get("PROMPT1")))
 		}
 		// read next statement/command
-		cmd, paramstr, err := h.buf.Next(env.Unquote(h.user, false, env.All()))
-		switch {
+		switch cmd, paramstr, err = h.buf.Next(env.Untick(h.user, env.Vars(), false)); {
 		case h.singleLineMode && err == nil:
 			execute = h.buf.Len != 0
 		case err == rline.ErrInterrupt:
 			h.buf.Reset(nil)
 			continue
+		case err == io.EOF:
+			return lastErr
 		case err != nil:
-			if err == io.EOF {
-				return lastErr
-			}
 			return err
+		case cmd != "":
+			opt, cont, lastErr = h.apply(stdout, stderr, strings.TrimPrefix(cmd, `\`), paramstr)
 		}
-		var opt metacmd.Option
-		if cmd != "" {
-			cmd = strings.TrimPrefix(cmd, `\`)
-			params := stmt.DecodeParams(paramstr)
-			// decode
-			r, err := metacmd.Decode(cmd, params)
-			if err != nil {
-				lastErr = WrapErr(cmd, err)
-				switch {
-				case err == text.ErrUnknownCommand:
-					fmt.Fprintln(stderr, fmt.Sprintf(text.InvalidCommand, cmd))
-				case err == text.ErrMissingRequiredArgument:
-					fmt.Fprintln(stderr, fmt.Sprintf(text.MissingRequiredArg, cmd))
-				default:
-					fmt.Fprintln(stderr, "error:", err)
-				}
-				continue
-			}
-			// run
-			opt, err = r.Run(h)
-			if err != nil && err != rline.ErrInterrupt {
-				lastErr = WrapErr(cmd, err)
-				fmt.Fprintln(stderr, "error:", err)
-				continue
-			}
-			// print unused command parameters
-			for {
-				ok, arg, err := params.Get(func(s string, isvar bool) (bool, string, error) {
-					return true, s, nil
-				})
-				if err != nil {
-					fmt.Fprintln(stderr, "error:", err)
-				}
-				if !ok {
-					break
-				}
-				fmt.Fprintln(stdout, fmt.Sprintf(text.ExtraArgumentIgnored, cmd, arg))
-			}
+		if cont {
+			continue
 		}
 		// help, exit, quit intercept
 		if iactive && len(h.buf.Buf) >= 4 {
-			i, first := stmt.RunesLastIndex(h.buf.Buf, '\n'), false
+			i, first := lastIndex(h.buf.Buf, '\n'), false
 			if i == -1 {
 				i, first = 0, true
 			}
@@ -365,7 +242,7 @@ func (h *Handler) Run() error {
 					}
 					// append to last
 					h.lastExec += lend + h.buf.String()
-					h.lastPrefix = h.buf.Prefix
+					h.lastExecPrefix = h.buf.Prefix
 					h.lastPrint += lend + h.buf.PrintString()
 					h.lastRaw += lend + h.buf.RawString()
 					h.buf.Reset(nil)
@@ -373,12 +250,12 @@ func (h *Handler) Run() error {
 					if h.batchEnd != typ {
 						continue
 					}
-					h.lastPrefix = h.batchEnd
+					h.lastExecPrefix = h.batchEnd
 					h.batch, h.batchEnd = false, ""
 				}
 			}
 			if h.buf.Len != 0 {
-				h.lastExec, h.lastPrefix, h.lastPrint, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.PrintString(), h.buf.RawString()
+				h.lastExec, h.lastExecPrefix, h.lastPrint, h.lastRaw = h.buf.String(), h.buf.Prefix, h.buf.PrintString(), h.buf.RawString()
 				h.buf.Reset(nil)
 			}
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
@@ -395,9 +272,9 @@ func (h *Handler) Run() error {
 					out = h.out
 				}
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				if err = h.Execute(ctx, out, opt, h.lastPrefix, h.lastExec, forceBatch, h.unbind()...); err != nil {
+				if err = h.Execute(ctx, out, opt, h.lastExecPrefix, h.lastExec, forceBatch, h.unbind()...); err != nil {
 					lastErr = WrapErr(h.lastExec, err)
-					if env.All()["ON_ERROR_STOP"] == "on" {
+					if env.Get("ON_ERROR_STOP") == "on" {
 						if iactive {
 							fmt.Fprintln(stderr, "error:", err)
 							h.buf.Reset([]rune{}) // empty the buffer so no other statements are run
@@ -414,6 +291,143 @@ func (h *Handler) Run() error {
 			}
 		}
 	}
+}
+
+// apply applies the command against the handler.
+func (h *Handler) apply(stdout, stderr io.Writer, cmd, paramstr string) (metacmd.Option, bool, error) {
+	// cmd = strings.TrimPrefix(cmd, `\`)
+	params := stmt.NewParams(paramstr)
+	// decode
+	f, err := metacmd.Decode(cmd, params)
+	if err != nil {
+		switch err = WrapErr(cmd, err); {
+		case err == text.ErrUnknownCommand:
+			fmt.Fprintln(stderr, fmt.Sprintf(text.InvalidCommand, cmd))
+		case err == text.ErrMissingRequiredArgument:
+			fmt.Fprintln(stderr, fmt.Sprintf(text.MissingRequiredArg, cmd))
+		default:
+			fmt.Fprintln(stderr, "error:", err)
+		}
+		return metacmd.Option{}, true, err
+	}
+	// run
+	opt, err := f(h)
+	if err != nil && err != rline.ErrInterrupt {
+		fmt.Fprintln(stderr, "error:", err)
+		return metacmd.Option{}, true, WrapErr(cmd, err)
+	}
+loop:
+	// print unused command parameters
+	for {
+		switch arg, ok, err := params.Arg(); {
+		case err != nil:
+			fmt.Fprintln(stderr, "error:", err)
+		case !ok:
+			break loop
+		default:
+			fmt.Fprintln(stdout, fmt.Sprintf(text.ExtraArgumentIgnored, cmd, arg))
+		}
+	}
+	return opt, false, nil
+}
+
+// outputHighlighter returns s as a highlighted string, based on the current
+// buffer and syntax highlighting settings.
+func (h *Handler) outputHighlighter(s string) string {
+	// bail when string is empty (ie, contains no printable, non-space
+	// characters) or if syntax highlighting is not enabled
+	if empty(s) || env.Get("SYNTAX_HL") != "true" {
+		return s
+	}
+	// count end lines
+	var endl string
+	if m := lineendRE.FindStringSubmatch(s); m != nil {
+		s = strings.TrimSuffix(s, m[0])
+		endl += m[0]
+	}
+	// leading whitespace
+	var leading string
+	// capture current query statement buffer
+	orig := h.buf.RawString()
+	full := orig
+	if full != "" {
+		full += "\n"
+	} else {
+		// get leading whitespace
+		if i := strings.IndexFunc(s, func(r rune) bool {
+			return !isSpaceOrControl(r)
+		}); i != -1 {
+			leading = s[:i]
+		}
+	}
+	full += s
+	// setup statement parser
+	st := drivers.NewStmt(h.u, func() func() ([]rune, error) {
+		y := strings.Split(orig, "\n")
+		if y[0] == "" {
+			y[0] = s
+		} else {
+			y = append(y, s)
+		}
+		return func() ([]rune, error) {
+			if len(y) > 0 {
+				z := y[0]
+				y = y[1:]
+				return []rune(z), nil
+			}
+			return nil, io.EOF
+		}
+	}())
+	// accumulate all "active" statements in buffer, breaking either at
+	// EOF or when a \ cmd has been encountered
+	var err error
+	var cmd, final string
+loop:
+	for {
+		cmd, _, err = st.Next(env.Untick(h.user, env.Vars(), false))
+		switch {
+		case err != nil && err != io.EOF:
+			return s + endl
+		case err == io.EOF:
+			break loop
+		}
+		if st.Ready() || cmd != "" {
+			final += st.RawString()
+			st.Reset(nil)
+			// grab remaining whitespace to add to final
+			l := len(final)
+			// find first non empty character
+			if i := strings.IndexFunc(full[l:], func(r rune) bool {
+				return !isSpaceOrControl(r)
+			}); i != -1 {
+				final += full[l : l+i]
+			}
+		}
+	}
+	if !st.Ready() && cmd == "" {
+		final += st.RawString()
+	}
+	final = leading + final
+	// determine whatever is remaining after "active"
+	var remaining string
+	if fnl := len(final); fnl < len(full) {
+		remaining = full[fnl:]
+	}
+	// this happens when a read line is empty and/or has only
+	// whitespace and a \ cmd
+	if s == remaining {
+		return s + endl
+	}
+	// highlight entire final accumulated buffer
+	b := new(bytes.Buffer)
+	if err := h.Highlight(b, final); err != nil {
+		return s + endl
+	}
+	colored := b.String()
+	// return only last line plus whatever remaining string (ie, after
+	// a \ cmd) and the end line count
+	ss := strings.Split(colored, "\n")
+	return lastcolor(colored) + ss[len(ss)-1] + remaining + endl
 }
 
 // Execute executes a query against the connected database.
@@ -459,7 +473,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 // Reset resets the handler's query statement buffer.
 func (h *Handler) Reset(r []rune) {
 	h.buf.Reset(r)
-	h.lastExec, h.lastPrefix, h.lastPrint, h.lastRaw, h.batch, h.batchEnd = "", "", "", "", false, ""
+	h.lastExec, h.lastExecPrefix, h.lastPrint, h.lastRaw, h.batch, h.batchEnd = "", "", "", "", false, ""
 }
 
 // Bind sets the bind parameters for the next query execution.
@@ -723,14 +737,13 @@ func (h *Handler) Buf() *stmt.Stmt {
 
 // Highlight highlights using the current environment settings.
 func (h *Handler) Highlight(w io.Writer, buf string) error {
-	vars := env.All()
 	// create lexer, formatter, styler
 	l := chroma.Coalesce(drivers.Lexer(h.u))
-	f := formatters.Get(vars["SYNTAX_HL_FORMAT"])
-	s := styles.Get(vars["SYNTAX_HL_STYLE"])
+	f := formatters.Get(env.Get("SYNTAX_HL_FORMAT"))
+	s := styles.Get(env.Get("SYNTAX_HL_STYLE"))
 	// override background
-	if vars["SYNTAX_HL_OVERRIDE_BG"] != "false" {
-		s = ustyles.Get(vars["SYNTAX_HL_STYLE"])
+	if env.Get("SYNTAX_HL_OVERRIDE_BG") != "false" {
+		s = ustyles.Get(env.Get("SYNTAX_HL_STYLE"))
 	}
 	// tokenize stream
 	it, err := l.Tokenise(nil, buf)
@@ -758,7 +771,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		return text.ErrPreviousTransactionExists
 	}
 	if len(params) == 1 {
-		if v, ok := env.Cget(params[0]); ok {
+		if v, ok := env.Vars().GetConn(params[0]); ok {
 			params = v
 		}
 	}
@@ -843,13 +856,9 @@ func (h *Handler) connStrings() []string {
 				}
 			}
 		}
-		names = append(names, fmt.Sprintf("%s://%s%s%s%s", entry.Protocol, user, host, port, dbname))
+		names = append(names, entry.Protocol+"://"+user+host+port+dbname)
 	}
-	for name := range env.Call() {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names
+	return append(names, slices.Sorted(maps.Keys(env.Vars().Conn()))...)
 }
 
 // forceParams forces connection parameters on a database URL, adding any
@@ -874,13 +883,13 @@ func (h *Handler) forceParams(u *dburl.URL) {
 // Password collects a password from input, and returns a modified DSN
 // including the collected password.
 func (h *Handler) Password(dsn string) (string, error) {
-	switch v, ok := env.Cget(dsn); {
+	switch conn, ok := env.Vars().GetConn(dsn); {
 	case dsn == "":
 		return "", text.ErrMissingDSN
-	case ok && len(v) < 2:
+	case ok && len(conn) < 2:
 		return "", text.ErrNamedConnectionIsNotAURL
 	case ok:
-		dsn = v[0]
+		dsn = conn[0]
 	}
 	u, err := dburl.Parse(dsn)
 	if err != nil {
@@ -946,9 +955,8 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 		_, err = strconv.ParseFloat(v, 64)
 	case "bool":
 		var b bool
-		b, err = strconv.ParseBool(v)
-		if err == nil {
-			v = fmt.Sprintf("%v", b)
+		if b, err = strconv.ParseBool(v); err == nil {
+			v = fmt.Sprintf("%t", b)
 		}
 	}
 	if err != nil {
@@ -1077,7 +1085,7 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	}
 	// process row(s)
 	transposed := make([][]string, len(cols))
-	clen, tfmt := len(cols), env.GoTime()
+	clen, tfmt := len(cols), env.Vars().PrintTimeFormat()
 	for rows.Next() {
 		row, err := h.scan(rows, clen, tfmt)
 		if err != nil {
@@ -1165,7 +1173,7 @@ func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option
 	// process row(s)
 	var i int
 	var row []string
-	clen, tfmt := len(cols), env.GoTime()
+	clen, tfmt := len(cols), env.Vars().PrintTimeFormat()
 	for rows.Next() {
 		if i == 0 {
 			row, err = h.scan(rows, clen, tfmt)
@@ -1184,7 +1192,7 @@ func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option
 		if err = env.ValidIdentifier(n); err != nil {
 			return fmt.Errorf(text.CouldNotSetVariable, n)
 		}
-		_ = env.Set(n, row[i])
+		_ = env.Vars().Set(n, row[i])
 	}
 	return nil
 }
@@ -1218,8 +1226,8 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		return err
 	}
 	defer rows.Close()
-	params := env.Pall()
-	params["time"] = env.GoTime()
+	params := env.Vars().Print()
+	params["time"] = env.Vars().PrintTimeFormat()
 	for k, v := range opt.Params {
 		params[k] = v
 	}
@@ -1242,7 +1250,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 			w = pipe
 		}
 	} else if opt.Exec != metacmd.ExecWatch {
-		params["pager_cmd"] = env.All()["PAGER"]
+		params["pager_cmd"] = env.Get("PAGER")
 	}
 	// set up column type config
 	var extra []tblfmt.Option
@@ -1295,8 +1303,10 @@ func (h *Handler) doExecRows(ctx context.Context, w io.Writer, rows *sql.Rows) e
 		return err
 	}
 	// process rows
-	res := metacmd.Option{Exec: metacmd.ExecOnly}
-	clen, tfmt := len(cols), env.GoTime()
+	res := metacmd.Option{
+		Exec: metacmd.ExecOnly,
+	}
+	clen, tfmt := len(cols), env.Vars().PrintTimeFormat()
 	for rows.Next() {
 		if clen != 0 {
 			row, err := h.scan(rows, clen, tfmt)
@@ -1373,13 +1383,13 @@ func (h *Handler) scan(rows *sql.Rows, clen int, tfmt string) ([]string, error) 
 func (h *Handler) doExec(ctx context.Context, w io.Writer, _ metacmd.Option, typ, sqlstr string, bind []interface{}) error {
 	res, err := h.DB().ExecContext(ctx, sqlstr, bind...)
 	if err != nil {
-		_ = env.Set("ROW_COUNT", "0")
+		_ = env.Vars().Set("ROW_COUNT", "0")
 		return err
 	}
 	// get affected
 	count, err := drivers.RowsAffected(h.u, res)
 	if err != nil {
-		_ = env.Set("ROW_COUNT", "0")
+		_ = env.Vars().Set("ROW_COUNT", "0")
 		return err
 	}
 	// print name
@@ -1391,7 +1401,7 @@ func (h *Handler) doExec(ctx context.Context, w io.Writer, _ metacmd.Option, typ
 		}
 		fmt.Fprintln(w)
 	}
-	return env.Set("ROW_COUNT", strconv.FormatInt(count, 10))
+	return env.Vars().Set("ROW_COUNT", strconv.FormatInt(count, 10))
 }
 
 // Begin begins a transaction.
@@ -1444,6 +1454,26 @@ func (h *Handler) Rollback() error {
 	if err := tx.Rollback(); err != nil {
 		return drivers.WrapErr(h.u.Driver, err)
 	}
+	return nil
+}
+
+// If starts an if block.
+func (h *Handler) If(ok bool) error {
+	return nil
+}
+
+// ElseIf starts an else if block.
+func (h *Handler) ElseIf(ok bool) error {
+	return nil
+}
+
+// Else starts an else block.
+func (h *Handler) Else(bool) error {
+	return nil
+}
+
+// EndIf closes an if block.
+func (h *Handler) EndIf(bool) error {
 	return nil
 }
 
@@ -1559,13 +1589,14 @@ func (e *Error) Error() string {
 }
 
 // Unwrap returns the original error.
-func (e *Error) Unwrap() error { return e.Err }
+func (e *Error) Unwrap() error {
+	return e.Err
+}
 
 func readerOpts() []metadata.ReaderOption {
 	var opts []metadata.ReaderOption
-	envs := env.All()
-	if envs["ECHO_HIDDEN"] == "on" || envs["ECHO_HIDDEN"] == "noexec" {
-		if envs["ECHO_HIDDEN"] == "noexec" {
+	if env.Get("ECHO_HIDDEN") == "on" || env.Get("ECHO_HIDDEN") == "noexec" {
+		if env.Get("ECHO_HIDDEN") == "noexec" {
 			opts = append(opts, metadata.WithDryRun(true))
 		}
 		opts = append(
@@ -1610,7 +1641,7 @@ func peekEnding(w io.Writer, r *bufio.Reader) error {
 	return werr
 }
 
-// grab grabs i from r, or returns 0 if i >= end.
+// grab returns the i'th rune from r when i < end, otherwise 0.
 func grab(r []rune, i, end int) rune {
 	if i < end {
 		return r[i]
@@ -1618,18 +1649,13 @@ func grab(r []rune, i, end int) rune {
 	return 0
 }
 
-// linetermRE is the end of line terminal.
-var linetermRE = regexp.MustCompile(`(?:\r?\n)+$`)
-
-// empty reports whether s contains at least one printable, non-space character.
+// empty reports whether s contains at least one printable, non-space
+// character.
 func empty(s string) bool {
-	i := strings.IndexFunc(s, func(r rune) bool {
+	return strings.IndexFunc(s, func(r rune) bool {
 		return unicode.IsPrint(r) && !unicode.IsSpace(r)
-	})
-	return i == -1
+	}) == -1
 }
-
-var ansiRE = regexp.MustCompile(`\x1b[[0-9]+([:;][0-9]+)*m`)
 
 // lastcolor returns the last defined color in s, if any.
 func lastcolor(s string) string {
@@ -1641,3 +1667,27 @@ func lastcolor(s string) string {
 	}
 	return strings.Join(ansiRE.FindAllString(s, -1), "")
 }
+
+// isSpaceOrControl returns true when r is a space or control character.
+func isSpaceOrControl(r rune) bool {
+	return unicode.IsSpace(r) || unicode.IsControl(r)
+}
+
+// lastIndex returns the last index in r of needle, or -1 if not found.
+func lastIndex(r []rune, needle rune) int {
+	for i := len(r) - 1; i >= 0; i-- {
+		if r[i] == needle {
+			return i
+		}
+	}
+	return -1
+}
+
+// ansiRE matches ansi escape (color) codes.
+var ansiRE = regexp.MustCompile(`\x1b[[0-9]+([:;][0-9]+)*m`)
+
+// lineendRE is the end of line terminal.
+var lineendRE = regexp.MustCompile(`(?:\r?\n)+$`)
+
+// helpQuitExitRE is a regexp to use to match help, quit, or exit messages.
+var helpQuitExitRE = regexp.MustCompile(`(?im)^+(` + strings.Join([]string{text.HelpPrefix, text.QuitPrefix, text.ExitPrefix}, "|") + `)\s*$`)
