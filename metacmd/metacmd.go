@@ -80,7 +80,7 @@ func Dump(w io.Writer, hidden bool) error {
 	n := 0
 	for i := range sections {
 		for _, desc := range descs[i] {
-			if !desc.Hidden || hidden {
+			if (!desc.Hidden && !desc.Deprecated) || hidden {
 				n = max(n, runewidth.StringWidth(desc.Name)+1+runewidth.StringWidth(desc.Params))
 			}
 		}
@@ -91,8 +91,8 @@ func Dump(w io.Writer, hidden bool) error {
 		}
 		fmt.Fprintln(w, s)
 		for _, desc := range descs[i] {
-			if !desc.Hidden || hidden {
-				_, _ = fmt.Fprintf(w, "  \\%- *s  %s\n", n, desc.Name+" "+desc.Params, desc.Desc)
+			if (!desc.Hidden && !desc.Deprecated) || hidden {
+				_, _ = fmt.Fprintf(w, "  \\%- *s  %s\n", n, desc.Name+" "+desc.Params, wrap(desc.Desc, 95, n+5))
 			}
 		}
 	}
@@ -249,11 +249,12 @@ const (
 
 // desc wraps a meta command description.
 type desc struct {
-	Name   string
-	Params string
-	Desc   string
-	Func   func(*Params) error
-	Hidden bool
+	Func       func(*Params) error
+	Name       string
+	Params     string
+	Desc       string
+	Hidden     bool
+	Deprecated bool
 }
 
 // Names returns the names for the command.
@@ -271,4 +272,25 @@ func (d desc) Names() []string {
 		}
 		return v
 	}
+}
+
+// wrap wraps a line of text to the specified width, and adding the prefix to
+// each wrapped line.
+func wrap(s string, width, prefixWidth int) string {
+	words := strings.Fields(strings.TrimSpace(s))
+	if len(words) == 0 {
+		return ""
+	}
+	prefix, wrapped := strings.Repeat(" ", prefixWidth), words[0]
+	left := width - prefixWidth - len(wrapped)
+	for _, word := range words[1:] {
+		if left < len(word)+1 {
+			wrapped += "\n" + prefix + word
+			left = width - len(word)
+		} else {
+			wrapped += " " + word
+			left -= 1 + len(word)
+		}
+	}
+	return wrapped
 }

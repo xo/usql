@@ -699,104 +699,124 @@ Type "help" for help.
 
 (not connected)=> \?
 General
-  \q                                   quit usql
-  \copyright                           show usql usage and distribution terms
-  \drivers                             display information about available database drivers
-
-Query Execute
-  \g [(OPTIONS)] [FILE] or ;           execute query (and send results to file or |pipe)
-  \go [(OPTIONS)] [FILE]               alias for \g
-  \G [(OPTIONS)] [FILE]                as \g, but forces vertical output mode
-  \ego [(OPTIONS)] [FILE]              alias for \G
-  \gx [(OPTIONS)] [FILE]               as \g, but forces expanded output mode
-  \gexec                               execute query and execute each value of the result
-  \gset [PREFIX]                       execute query and store results in usql variables
-  \crosstabview [(OPTIONS)] [COLUMNS]  execute query and display results in crosstab
-  \chart CHART [(OPTIONS)]             execute query and display results as a chart
-  \watch [(OPTIONS)] [DURATION]        execute query every specified interval
-  \bind [PARAM]...                     set query parameters
-
-Query Buffer
-  \e [FILE] [LINE]                     edit the query buffer (or file) with external editor
-  \edit [-exec]                        edit the query (or exec) buffer
-  \p                                   show the contents of the query buffer
-  \raw                                 show the raw (non-interpolated) contents of the query buffer
-  \exec                                show the contents of the exec buffer
-  \r                                   reset (clear) the query buffer
-  \w FILE                              write query buffer to file
+  \q                                quit usql
+  \quit                             alias for \q
+  \copyright                        show usage and distribution terms for usql
+  \drivers                          show database drivers available to usql
 
 Help
-  \? [commands]                        show help on backslash commands
-  \? options                           show help on usql command-line options
-  \? variables                         show help on special usql variables
-
-Input/Output
-  \copy SRC DST QUERY TABLE            copy query from source url to table on destination url
-  \copy SRC DST QUERY TABLE(A,...)     copy query from source url to columns of table on destination url
-  \echo [-n] [STRING]                  write string to standard output (-n for no newline)
-  \qecho [-n] [STRING]                 write string to \o output stream (-n for no newline)
-  \warn [-n] [STRING]                  write string to standard error (-n for no newline)
-  \o [FILE]                            send all query results to file or |pipe
-  \i FILE                              execute commands from file
-  \ir FILE                             as \i, but relative to location of current script
-
-Conditional
-  \if EXPR                             begin conditional block
-  \elif EXPR                           alternative within current conditional block
-  \else                                final alternative within current conditional block
-  \endif                               end conditional block
-
-Informational
-  \d[S+] [NAME]                        list tables, views, and sequences or describe table, view, sequence, or index
-  \da[S+] [PATTERN]                    list aggregates
-  \df[S+] [PATTERN]                    list functions
-  \di[S+] [PATTERN]                    list indexes
-  \dm[S+] [PATTERN]                    list materialized views
-  \dn[S+] [PATTERN]                    list schemas
-  \dp[S] [PATTERN]                     list table, view, and sequence access privileges
-  \ds[S+] [PATTERN]                    list sequences
-  \dt[S+] [PATTERN]                    list tables
-  \dv[S+] [PATTERN]                    list views
-  \l[+]                                list databases
-  \ss[+] [TABLE|QUERY] [k]             show stats for a table or a query
-
-Formatting
-  \pset [NAME [VALUE]]                 set table output option
-  \a                                   toggle between unaligned and aligned output mode
-  \C [STRING]                          set table title, or unset if none
-  \f [STRING]                          show or set field separator for unaligned query output
-  \H                                   toggle HTML output mode
-  \T [STRING]                          set HTML <table> tag attributes, or unset if none
-  \t [on|off]                          show only rows
-  \x [on|off|auto]                     toggle expanded output
-
-Transaction
-  \begin                               begin a transaction
-  \begin -read-only ISOLATION          begin a transaction with isolation level
-  \commit                              commit current transaction
-  \rollback                            rollback (abort) current transaction
+  \? [commands]                     show help on usql's meta (backslash) commands
+  \? options                        show help on usql command-line options
+  \? variables                      show help on special usql variables
 
 Connection
-  \c DSN                               connect to database url
-  \c DRIVER PARAMS...                  connect to database with driver and parameters
-  \cset                                show named connections
-  \cset NAME DSN                       set named connection
-  \cset NAME DRIVER PARAMS...          define named connection for database driver
-  \Z                                   close database connection
-  \password [USER]                     change password for user
-  \conninfo                            display information about the current database connection
+  \c DSN or \c NAME                 connect to dsn or named database connection
+  \c DRIVER PARAMS...               connect to database with driver and parameters
+  \connect                          alias for \c
+  \Z                                close (disconnect) database connection
+  \disconnect                       alias for \Z
+  \password [USER]                  change password for user
+  \passwd                           alias for \password
+  \conninfo                         display information about the current database connection
 
-Operating System
-  \cd [DIR]                            change the current working directory
-  \getenv VARNAME ENVVAR               fetch environment variable
-  \setenv NAME [VALUE]                 set or unset environment variable
-  \! [COMMAND]                         execute command in shell or start interactive shell
-  \timing [on|off]                     toggle timing of commands
+Query Execute
+  \g [(OPTIONS)] [FILE] or ;        execute query (and send results to file or |pipe)
+  \go                               alias for \g
+  \G [(OPTIONS)] [FILE]             as \g, but forces vertical output mode
+  \ego                              alias for \G
+  \gx [(OPTIONS)] [FILE]            as \g, but forces expanded output mode
+  \gexec                            execute query and execute each value of the result
+  \gset [PREFIX]                    execute query and store results in usql variables
+  \bind [PARAM]...                  set query parameters
+  \timing [on|off]                  toggle timing of commands
+
+Query View
+  \crosstab [(OPTIONS)] [COLUMNS]   execute query and display results in crosstab
+  \crosstabview                     alias for \crosstab
+  \xtab                             alias for \crosstab
+  \chart CHART [(OPTIONS)]          execute query and display results as a chart
+  \watch [(OPTIONS)] [INTERVAL]     execute query every specified interval
+
+Query Buffer
+  \e [-raw|-exec] [FILE] [LINE]     edit the query buffer, raw (non-interpolated) buffer, the
+                                    exec buffer, or a file with external editor
+  \edit                             alias for \e
+  \p [-raw|-exec]                   show the contents of the query buffer, the raw
+                                    (non-interpolated) buffer or the exec buffer
+  \print                            alias for \p
+  \raw                              alias for \p
+  \exec                             alias for \p
+  \w [-raw|-exec] FILE              write the contents of the query buffer, raw
+                                    (non-interpolated) buffer, or exec buffer to file
+  \write                            alias for \w
+  \r                                reset (clear) the query buffer
+  \reset                            alias for \r
+
+Informational
+  \d[S+] [NAME]                     list tables, views, and sequences or describe table, view,
+                                    sequence, or index
+  \da[S+] [PATTERN]                 list aggregates
+  \df[S+] [PATTERN]                 list functions
+  \di[S+] [PATTERN]                 list indexes
+  \dm[S+] [PATTERN]                 list materialized views
+  \dn[S+] [PATTERN]                 list schemas
+  \dp[S] [PATTERN]                  list table, view, and sequence access privileges
+  \ds[S+] [PATTERN]                 list sequences
+  \dt[S+] [PATTERN]                 list tables
+  \dv[S+] [PATTERN]                 list views
+  \l[+]                             list databases
+  \ss[+] [TABLE|QUERY] [k]          show stats for a table or a query
 
 Variables
-  \prompt [-TYPE] VAR [PROMPT]         prompt user to set variable
-  \set [NAME [VALUE]]                  set internal variable, or list all if no parameters
-  \unset NAME                          unset (delete) internal variable
+  \set [NAME [VALUE]]               set usql application variable, or show all usql application
+                                    variables if no parameters
+  \unset NAME                       unset (delete) usql application variable
+  \pset [NAME [VALUE]]              set table print formatting option, or show all print
+                                    formatting options if no parameters
+  \a                                toggle between unaligned and aligned output mode
+  \C [TITLE]                        set table title, or unset if none
+  \f [SEPARATOR]                    show or set field separator for unaligned query output
+  \H                                toggle HTML output mode
+  \T [ATTRIBUTES]                   set HTML <table> tag attributes, or unset if none
+  \t [on|off]                       show only rows
+  \x [on|off|auto]                  toggle expanded output
+  \cset [NAME [URL]]                set named connection, or show all named connections if no
+                                    parameters
+  \cset NAME DRIVER PARAMS...       set named connection for driver and parameters
+  \prompt [-TYPE] VAR [PROMPT]      prompt user to set application variable
+
+Input/Output
+  \echo [-n] [MESSAGE]...           write message to standard output (-n for no newline)
+  \qecho [-n] [MESSAGE]...          write message to \o output stream (-n for no newline)
+  \warn [-n] [MESSAGE]...           write message to standard error (-n for no newline)
+  \o [FILE]                         send all query results to file or |pipe
+  \out                              alias for \o
+  \copy SRC DST QUERY TABLE         copy results of query from source database into table on
+                                    destination database
+  \copy SRC DST QUERY TABLE(A,...)  copy results of query from source database into table's
+                                    columns on destination database
+
+Control/Conditional
+  \i FILE                           execute commands from file
+  \include                          alias for \i
+  \ir FILE                          as \i, but relative to location of current script
+  \include_relative                 alias for \ir
+  \if EXPR                          begin conditional block
+  \elif EXPR                        alternative within current conditional block
+  \else                             final alternative within current conditional block
+  \endif                            end conditional block
+
+Transaction
+  \begin [-read-only [ISOLATION]]   begin transaction, with optional isolation level
+  \commit                           commit current transaction
+  \rollback                         rollback (abort) current transaction
+  \abort                            alias for \rollback
+
+Operating System/Environment
+  \! [COMMAND]                      execute command in shell or start interactive shell
+  \cd [DIR]                         change the current working directory
+  \getenv VARNAME ENVVAR            fetch environment variable
+  \setenv NAME [VALUE]              set or unset environment variable
 ```
 
 Parameters passed to commands [can be backticked][backticks].

@@ -365,42 +365,42 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 
 // desc is a meta command description.
 type desc struct {
-	Name   string
-	Params string
-	Desc   string
-	Func   string
-	Hidden bool
-	Alias  string
+	Func       string
+	Name       string
+	Params     string
+	Desc       string
+	Hidden     bool
+	Deprecated bool
 }
 
 func newDesc(funcName, alias string, v []string) desc {
-	name, params, descstr := v[0], "", ""
-	switch len(v) {
-	case 1:
+	name, params, descstr, hidden := v[0], "", "", false
+	switch n := len(v); {
+	case n == 1:
 		if i := strings.Index(name, ":"); i != -1 {
 			name, alias = name[:i], name[i+1:]
 		}
-	case 2:
+	case n == 2:
 		descstr = v[1]
-	case 3:
+	case n >= 3:
 		params, descstr = v[1], v[2]
 	}
+	if descstr == "" {
+		hidden, descstr = true, `alias for \`+alias
+	}
 	return desc{
-		Name:   name,
-		Params: params,
-		Desc:   descstr,
-		Func:   funcName,
-		Alias:  alias,
+		Func:       funcName,
+		Name:       name,
+		Params:     params,
+		Desc:       descstr,
+		Hidden:     hidden,
+		Deprecated: v[len(v)-1] == "DEPRECATED",
 	}
 }
 
 func (d desc) String() string {
-	if d.Desc != "" {
-		s := strings.ReplaceAll(fmt.Sprintf("%q", d.Desc), "{{CommandName}}", `" + text.CommandName + "`)
-		return fmt.Sprintf("{%q, %q, %s, %s, %t}", d.Name, d.Params, s, d.Func, false)
-	}
-	s := `alias for \` + d.Alias
-	return fmt.Sprintf("{%q, %q, %q, %s, %t}", d.Name, d.Params, s, d.Func, true)
+	s := strings.ReplaceAll(d.Desc, "{{CommandName}}", "` + text.CommandName + `")
+	return fmt.Sprintf("{%s, `%s`, `%s`, `%s`, %t, %t}", d.Func, d.Name, d.Params, s, d.Hidden, d.Deprecated)
 }
 
 func findCommand(name string) string {
@@ -647,17 +647,16 @@ var baseOrder = map[string]int{
 var sections = []string{
 	"General",
 	"Help",
+	"Connection",
 	"Query Execute",
-	//"Query View",
+	"Query View",
 	"Query Buffer",
 	"Informational",
 	"Variables",
-	"Connection",
-	"Conditional",
 	"Input/Output",
+	"Control/Conditional",
 	"Transaction",
 	"Operating System/Environment",
-	//"Formatting",
 }
 
 // regexps.

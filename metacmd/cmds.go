@@ -20,14 +20,86 @@ import (
 	"github.com/xo/usql/text"
 )
 
-// Question is a Help meta command (\?). Writes a help message to the output.
+// Quit is a General meta command (\q \quit). Quits the application.
 //
 // Descs:
 //
-//	?	[commands]	show help on meta (backslash) commands
+//	q	quit {{CommandName}}
+//	quit
+func Quit(p *Params) error {
+	p.Option.Quit = true
+	return nil
+}
+
+// Copyright is a General meta command (\copyright). Writes the
+// application's copyright message to the output.
+//
+// Descs:
+//
+//	copyright	show usage and distribution terms for {{CommandName}}
+func Copyright(p *Params) error {
+	stdout := p.Handler.IO().Stdout()
+	if typ := env.TermGraphics(); typ.Available() {
+		typ.Encode(stdout, text.Logo)
+	}
+	fmt.Fprintln(stdout, text.Copyright)
+	return nil
+}
+
+// Drivers is a General meta command (\drivers). Writes information about the
+// database drivers the application was built with to the output.
+//
+// Descs:
+//
+//	drivers	show database drivers available to {{CommandName}}
+func Drivers(p *Params) error {
+	stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
+	var cmd *exec.Cmd
+	var wc io.WriteCloser
+	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
+		var err error
+		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
+			return err
+		}
+		stdout = wc
+	}
+	available := drivers.Available()
+	names := make([]string, len(available))
+	var z int
+	for k := range available {
+		names[z] = k
+		z++
+	}
+	sort.Strings(names)
+	fmt.Fprintln(stdout, text.AvailableDrivers)
+	for _, n := range names {
+		s := "  " + n
+		driver, aliases := dburl.SchemeDriverAndAliases(n)
+		if driver != n {
+			s += " (" + driver + ")"
+		}
+		if len(aliases) > 0 {
+			s += " [" + strings.Join(aliases, ", ") + "]"
+		}
+		fmt.Fprintln(stdout, s)
+	}
+	if cmd != nil {
+		if err := wc.Close(); err != nil {
+			return err
+		}
+		return cmd.Wait()
+	}
+	return nil
+}
+
+// Help is a Help meta command (\?). Writes a help message to the output.
+//
+// Descs:
+//
+//	?	[commands]	show help on {{CommandName}}'s meta (backslash) commands
 //	?	options	show help on {{CommandName}} command-line options
 //	?	variables	show help on special {{CommandName}} variables
-func Question(p *Params) error {
+func Help(p *Params) error {
 	name, err := p.Next(false)
 	if err != nil {
 		return err
@@ -45,9 +117,9 @@ func Question(p *Params) error {
 	case name == "options":
 		text.Usage(stdout, true)
 	case name == "variables":
-		env.Listing(stdout)
+		_ = env.Listing(stdout)
 	default:
-		Dump(stdout, name == "commands")
+		_ = Dump(stdout, name == "commands")
 	}
 	if cmd != nil {
 		if err := wc.Close(); err != nil {
@@ -58,29 +130,182 @@ func Question(p *Params) error {
 	return nil
 }
 
-// Quit is a General meta command (\q \quit). Quits the application.
+// Execute is a Query Execute meta command (\g and variants). Executes the
+// active query on the open database connection.
 //
 // Descs:
 //
-//	q	quit {{CommandName}}
-//	quit
-func Quit(p *Params) error {
-	p.Option.Quit = true
+//	g	[(OPTIONS)] [FILE] or ;	execute query (and send results to file or |pipe)
+//	go:g
+//	G	[(OPTIONS)] [FILE]	as \g, but forces vertical output mode
+//	ego:G
+//	gx	[(OPTIONS)] [FILE]	as \g, but forces expanded output mode
+//	gexec	execute query and execute each value of the result
+//	gset	[PREFIX]	execute query and store results in {{CommandName}} variables
+func Execute(p *Params) error {
+	p.Option.Exec = ExecOnly
+	switch p.Name {
+	case "g", "go", "G", "ego", "gx", "gset":
+		params, err := p.All(true)
+		switch {
+		case err != nil:
+			return err
+		case p.Name != "gset":
+			p.Option.ParseParams(params, "pipe")
+		}
+		switch p.Name {
+		case "G", "ego":
+			p.Option.Params["format"] = "vertical"
+		case "gx":
+			p.Option.Params["expanded"] = "on"
+		case "gset":
+			p.Option.Exec = ExecSet
+			p.Option.ParseParams(params, "prefix")
+		}
+	case "gexec":
+		p.Option.Exec = ExecExec
+	}
 	return nil
 }
 
-// Copyright is a General meta command (\copyright). Writes the
-// application's copyright message to the output.
+// Bind is a Query Execute meta command (\bind). Sets (or unsets) variables to
+// be used when executing a query.
 //
 // Descs:
 //
-//	copyright	show {{CommandName}} usage and distribution terms
-func Copyright(p *Params) error {
-	stdout := p.Handler.IO().Stdout()
-	if typ := env.TermGraphics(); typ.Available() {
-		typ.Encode(stdout, text.Logo)
+//	bind	[PARAM]...	set query parameters
+func Bind(p *Params) error {
+	bind, err := p.All(true)
+	if err != nil {
+		return err
 	}
-	fmt.Fprintln(stdout, text.Copyright)
+	var v []interface{}
+	if n := len(bind); n != 0 {
+		v = make([]interface{}, len(bind))
+		for i := range n {
+			v[i] = bind[i]
+		}
+	}
+	p.Handler.Bind(v)
+	return nil
+}
+
+// Timing is a Query Execute meta command (\timing). Sets (or toggles) writing
+// timing information for executed queries to the output.
+//
+// Descs:
+//
+//	timing	[on|off]	toggle timing of commands
+func Timing(p *Params) error {
+	v, err := p.Next(true)
+	switch {
+	case err != nil:
+		return err
+	case v == "":
+		p.Handler.SetTiming(!p.Handler.GetTiming())
+	default:
+		s, err := env.ParseBool(v, `\timing`)
+		if err != nil {
+			stderr := p.Handler.IO().Stderr()
+			fmt.Fprintf(stderr, "error: %v", err)
+			fmt.Fprintln(stderr)
+		}
+		var b bool
+		if s == "on" {
+			b = true
+		}
+		p.Handler.SetTiming(b)
+	}
+	setting := "off"
+	if p.Handler.GetTiming() {
+		setting = "on"
+	}
+	p.Handler.Print(text.TimingSet, setting)
+	return nil
+}
+
+// Crosstab is a Query View meta command (\crosstab). Executes the active query
+// on the open database connection and displays results in a crosstab view.
+//
+// Descs:
+//
+//	crosstab	[(OPTIONS)] [COLUMNS]	execute query and display results in crosstab
+//	crosstabview
+//	xtab
+func Crosstab(p *Params) error {
+	p.Option.Exec = ExecCrosstab
+	for i := 0; i < 4; i++ {
+		col, ok, err := p.NextOK(true)
+		if err != nil {
+			return err
+		}
+		p.Option.Crosstab = append(p.Option.Crosstab, col)
+		if !ok {
+			break
+		}
+	}
+	return nil
+}
+
+// Chart is a Query View meta command (\chart). Executes the active query on
+// the open database connection and displays results in a chart view.
+//
+// Descs:
+//
+//	chart	CHART [(OPTIONS)]	execute query and display results as a chart
+func Chart(p *Params) error {
+	p.Option.Exec = ExecChart
+	if p.Option.Params == nil {
+		p.Option.Params = make(map[string]string, 1)
+	}
+	params, err := p.All(true)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(params); i++ {
+		param := params[i]
+		if param == "help" {
+			p.Option.Params["help"] = ""
+			return nil
+		}
+		equal := strings.IndexByte(param, '=')
+		switch {
+		case equal == -1 && i >= len(params)-1:
+			return text.ErrWrongNumberOfArguments
+		case equal == -1:
+			i++
+			p.Option.Params[param] = params[i]
+		default:
+			p.Option.Params[param[:equal]] = param[equal+1:]
+		}
+	}
+	return nil
+}
+
+// Watch is a Query View meta command (\watch). Executes (and re-executes) the
+// active query on the open database connection until canceled by the user.
+//
+// Descs:
+//
+//	watch	[(OPTIONS)] [INTERVAL]	execute query every specified interval
+func Watch(p *Params) error {
+	p.Option.Exec = ExecWatch
+	p.Option.Watch = 2 * time.Second
+	switch s, ok, err := p.NextOK(true); {
+	case err != nil:
+		return err
+	case ok:
+		d, err := time.ParseDuration(s)
+		if err != nil {
+			if f, err := strconv.ParseFloat(s, 64); err == nil {
+				d = time.Duration(f * float64(time.Second))
+			}
+		}
+		if d == 0 {
+			return text.ErrInvalidWatchDuration
+		}
+		p.Option.Watch = d
+	}
 	return nil
 }
 
@@ -89,7 +314,7 @@ func Copyright(p *Params) error {
 //
 // Descs:
 //
-//	c	URL	connect to database URL
+//	c	DSN or \c NAME	connect to dsn or named database connection
 //	c	DRIVER PARAMS...	connect to database with driver and parameters
 //	connect
 func Connect(p *Params) error {
@@ -102,92 +327,12 @@ func Connect(p *Params) error {
 	return p.Handler.Open(ctx, vals...)
 }
 
-// SetConn is a Connection meta command (\cset). Sets a connection variable.
-//
-// Descs:
-//
-//	cset	show named connections
-//	cset	NAME URL	set named connection to URL
-//	cset	NAME DRIVER PARAMS...	set named connection for database driver and parameters
-func SetConn(p *Params) error {
-	switch n, ok, err := p.NextOK(true); {
-	case err != nil:
-		return err
-	case ok:
-		vals, err := p.All(true)
-		if err != nil {
-			return err
-		}
-		return env.Vars().SetConn(n, vals...)
-	}
-	return env.Vars().DumpConn(p.Handler.IO().Stdout())
-}
-
-// Copy is a Input/Output meta command (\copy). Copies data between databases.
-//
-// Descs:
-//
-//	copy	SRC DST QUERY TABLE	copy query from source url to table on destination url
-//	copy	SRC DST QUERY TABLE(A,...)	copy query from source url to columns of table on destination url
-func Copy(p *Params) error {
-	ctx := context.Background()
-	stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
-	srcDsn, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	srcURL, err := dburl.Parse(srcDsn)
-	if err != nil {
-		return err
-	}
-	destDsn, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	destURL, err := dburl.Parse(destDsn)
-	if err != nil {
-		return err
-	}
-	query, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	table, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	src, err := drivers.Open(ctx, srcURL, stdout, stderr)
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-	dest, err := drivers.Open(ctx, destURL, stdout, stderr)
-	if err != nil {
-		return err
-	}
-	defer dest.Close()
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
-	// get the result set
-	r, err := src.QueryContext(ctx, query)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-	n, err := drivers.Copy(ctx, destURL, stdout, stderr, r, table)
-	if err != nil {
-		return err
-	}
-	p.Handler.Print("COPY %d", n)
-	return nil
-}
-
 // Disconnect is a Connection meta command (\Z). Closes (disconnects) the
 // current database connection.
 //
 // Descs:
 //
-//	Z	close database connection
+//	Z	close (disconnect) database connection
 //	disconnect
 func Disconnect(p *Params) error {
 	return p.Handler.Close()
@@ -231,230 +376,13 @@ func ConnectionInfo(p *Params) error {
 	return nil
 }
 
-// Drivers is a General meta command (\drivers). Writes information about the
-// database drivers the application was built with to the output.
-//
-// Descs:
-//
-//	drivers	display information about available database drivers
-func Drivers(p *Params) error {
-	stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
-	var cmd *exec.Cmd
-	var wc io.WriteCloser
-	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
-		var err error
-		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
-			return err
-		}
-		stdout = wc
-	}
-	available := drivers.Available()
-	names := make([]string, len(available))
-	var z int
-	for k := range available {
-		names[z] = k
-		z++
-	}
-	sort.Strings(names)
-	fmt.Fprintln(stdout, text.AvailableDrivers)
-	for _, n := range names {
-		s := "  " + n
-		driver, aliases := dburl.SchemeDriverAndAliases(n)
-		if driver != n {
-			s += " (" + driver + ")"
-		}
-		if len(aliases) > 0 {
-			if len(aliases) > 0 {
-				s += " [" + strings.Join(aliases, ", ") + "]"
-			}
-		}
-		fmt.Fprintln(stdout, s)
-	}
-	if cmd != nil {
-		if err := wc.Close(); err != nil {
-			return err
-		}
-		return cmd.Wait()
-	}
-	return nil
-}
-
-// Describe is a Informational meta command (\d and variants). Queries the open
-// database connection for information about the database schema and writes the
-// information to the output.
-//
-// Descs:
-//
-//	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
-//	da[S+]	[PATTERN]	list aggregates
-//	df[S+]	[PATTERN]	list functions
-//	di[S+]	[PATTERN]	list indexes
-//	dm[S+]	[PATTERN]	list materialized views
-//	dn[S+]	[PATTERN]	list schemas
-//	dp[S]	[PATTERN]	list table, view, and sequence access privileges
-//	ds[S+]	[PATTERN]	list sequences
-//	dt[S+]	[PATTERN]	list tables
-//	dv[S+]	[PATTERN]	list views
-//	l[+]	list databases
-func Describe(p *Params) error {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
-	m, err := p.Handler.MetadataWriter(ctx)
-	if err != nil {
-		return err
-	}
-	verbose := strings.ContainsRune(p.Name, '+')
-	showSystem := strings.ContainsRune(p.Name, 'S')
-	name := strings.TrimRight(p.Name, "S+")
-	pattern, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	switch name {
-	case "d":
-		if pattern != "" {
-			return m.DescribeTableDetails(p.Handler.URL(), pattern, verbose, showSystem)
-		}
-		return m.ListTables(p.Handler.URL(), "tvmsE", pattern, verbose, showSystem)
-	case "df", "da":
-		return m.DescribeFunctions(p.Handler.URL(), name, pattern, verbose, showSystem)
-	case "dt", "dtv", "dtm", "dts", "dv", "dm", "ds":
-		return m.ListTables(p.Handler.URL(), name, pattern, verbose, showSystem)
-	case "dn":
-		return m.ListSchemas(p.Handler.URL(), pattern, verbose, showSystem)
-	case "di":
-		return m.ListIndexes(p.Handler.URL(), pattern, verbose, showSystem)
-	case "l":
-		return m.ListAllDbs(p.Handler.URL(), pattern, verbose)
-	case "dp":
-		return m.ListPrivilegeSummaries(p.Handler.URL(), pattern, showSystem)
-	}
-	return nil
-}
-
-// Execute is a Query Execute meta command (\g and variants). Executes the
-// active query on the open database connection.
-//
-// Descs:
-//
-//	g	[(OPTIONS)] [FILE] or ;	execute query (and send results to file or |pipe)
-//	go:g
-//	G	[(OPTIONS)] [FILE]	as \g, but forces vertical output mode
-//	ego:G
-//	gx	[(OPTIONS)] [FILE]	as \g, but forces expanded output mode
-//	gexec	execute query and execute each value of the result
-//	gset	[PREFIX]	execute query and store results in {{CommandName}} variables
-//	crosstabview	[(OPTIONS)] [COLUMNS]	execute query and display results in crosstab
-//	chart	CHART [(OPTIONS)]	execute query and display results as a chart
-//	watch	[(OPTIONS)] [DURATION]	execute query every specified interval
-func Execute(p *Params) error {
-	p.Option.Exec = ExecOnly
-	switch p.Name {
-	case "g", "go", "G", "ego", "gx", "gset":
-		params, err := p.All(true)
-		if err != nil {
-			return err
-		}
-		p.Option.ParseParams(params, "pipe")
-		switch p.Name {
-		case "G", "ego":
-			p.Option.Params["format"] = "vertical"
-		case "gx":
-			p.Option.Params["expanded"] = "on"
-		case "gset":
-			p.Option.Exec = ExecSet
-		}
-	case "gexec":
-		p.Option.Exec = ExecExec
-	case "crosstabview":
-		p.Option.Exec = ExecCrosstab
-		for i := 0; i < 4; i++ {
-			col, ok, err := p.NextOK(true)
-			if err != nil {
-				return err
-			}
-			p.Option.Crosstab = append(p.Option.Crosstab, col)
-			if !ok {
-				break
-			}
-		}
-	case "chart":
-		p.Option.Exec = ExecChart
-		if p.Option.Params == nil {
-			p.Option.Params = make(map[string]string, 1)
-		}
-		params, err := p.All(true)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < len(params); i++ {
-			param := params[i]
-			if param == "help" {
-				p.Option.Params["help"] = ""
-				return nil
-			}
-			equal := strings.IndexByte(param, '=')
-			switch {
-			case equal == -1 && i >= len(params)-1:
-				return text.ErrWrongNumberOfArguments
-			case equal == -1:
-				i++
-				p.Option.Params[param] = params[i]
-			default:
-				p.Option.Params[param[:equal]] = param[equal+1:]
-			}
-		}
-	case "watch":
-		p.Option.Exec = ExecWatch
-		p.Option.Watch = 2 * time.Second
-		switch s, ok, err := p.NextOK(true); {
-		case err != nil:
-			return err
-		case ok:
-			d, err := time.ParseDuration(s)
-			if err != nil {
-				if f, err := strconv.ParseFloat(s, 64); err == nil {
-					d = time.Duration(f * float64(time.Second))
-				}
-			}
-			if d == 0 {
-				return text.ErrInvalidWatchDuration
-			}
-			p.Option.Watch = d
-		}
-	}
-	return nil
-}
-
-// Bind is a Query Execute meta command (\bind). Sets (or unsets) variables to
-// be used when executing a query.
-//
-// Descs:
-//
-//	bind	[PARAM]...	set query parameters
-func Bind(p *Params) error {
-	bind, err := p.All(true)
-	if err != nil {
-		return err
-	}
-	var v []interface{}
-	if n := len(bind); n != 0 {
-		v = make([]interface{}, len(bind))
-		for i := 0; i < n; i++ {
-			v[i] = bind[i]
-		}
-	}
-	p.Handler.Bind(v)
-	return nil
-}
-
 // Edit is a Query Buffer meta command (\e \edit). Opens the query buffer for
 // editing in an external application.
 //
 // Descs:
 //
-//	e	[FILE] [LINE]	edit the query buffer (or file) with external editor
-//	edit	[-exec]	edit the query (or exec) buffer
+//	e	[-raw|-exec] [FILE] [LINE]	edit the query buffer, raw (non-interpolated) buffer, the exec buffer, or a file with external editor
+//	edit
 func Edit(p *Params) error {
 	var exec bool
 	path, ok, err := p.NextOpt(true)
@@ -499,10 +427,10 @@ func Edit(p *Params) error {
 //
 // Descs:
 //
-//	p	show the contents of the query buffer
+//	p	[-raw|-exec]	show the contents of the query buffer, the raw (non-interpolated) buffer or the exec buffer
 //	print
-//	raw	show the raw (non-interpolated) contents of the query buffer
-//	exec	show the contents of the exec buffer
+//	raw
+//	exec
 func Print(p *Params) error {
 	// get last statement
 	var s string
@@ -531,6 +459,26 @@ func Print(p *Params) error {
 	}
 	fmt.Fprintln(p.Handler.IO().Stdout(), s)
 	return nil
+}
+
+// Write is a Query Buffer meta command (\w \write). Writes the query buffer to
+// a file.
+//
+// Descs:
+//
+//	w	[-raw|-exec] FILE	write the contents of the query buffer, raw (non-interpolated) buffer, or exec buffer to file
+//	write
+func Write(p *Params) error {
+	// get last statement
+	s, buf := p.Handler.LastExec(), p.Handler.Buf()
+	if buf.Len != 0 {
+		s = buf.String()
+	}
+	name, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(name, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
 }
 
 // Reset is a Query Buffer meta command (\r, \reset). Clears (resets) the query
@@ -584,95 +532,6 @@ func Echo(p *Params) error {
 	return nil
 }
 
-// Write is a Query Buffer meta command (\w \write). Writes the query buffer to
-// a file.
-//
-// Descs:
-//
-//	w	FILE	write query buffer to file
-//	write
-func Write(p *Params) error {
-	// get last statement
-	s, buf := p.Handler.LastExec(), p.Handler.Buf()
-	if buf.Len != 0 {
-		s = buf.String()
-	}
-	name, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(name, []byte(strings.TrimSuffix(s, "\n")+"\n"), 0o644)
-}
-
-// Chdir is a Operating System/Environment meta command (\cd). Changes the
-// current directory for the Operating System/Environment.
-//
-// Descs:
-//
-//	cd	[DIR]	change the current working directory
-func Chdir(p *Params) error {
-	dir, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	return env.Chdir(p.Handler.User(), dir)
-}
-
-// Getenv is a Operating System/Environment meta command (\getenv). Sets the
-// application's variable value returned from the Operating
-// System/Environment's variables.
-//
-// Descs:
-//
-//	getenv	VARNAME ENVVAR	fetch environment variable
-func Getenv(p *Params) error {
-	n, err := p.Next(true)
-	switch {
-	case err != nil:
-		return err
-	case n == "":
-		return text.ErrMissingRequiredArgument
-	}
-	v, err := p.Next(true)
-	switch {
-	case err != nil:
-		return err
-	case v == "":
-		return text.ErrMissingRequiredArgument
-	}
-	value, _ := env.Getenv(v)
-	return env.Vars().Set(n, value)
-}
-
-// Setenv is a Operating System/Environment meta command (\setenv). Sets (or
-// unsets) a Operating System/Environment variable. Environment variables set
-// this way will be passed to any child processes.
-//
-// Descs:
-//
-//	setenv	NAME [VALUE]	set or unset environment variable
-func Setenv(p *Params) error {
-	n, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	v, err := p.Next(true)
-	if err != nil {
-		return err
-	}
-	return os.Setenv(n, v)
-}
-
-// Shell is a Operating System/Environment meta command (\!). Executes a
-// command using the Operating System/Environment's shell.
-//
-// Descs:
-//
-//	!	[COMMAND]	execute command in shell or start interactive shell
-func Shell(p *Params) error {
-	return env.Shell(p.Raw())
-}
-
 // Out is a Input/Output meta command (\o \out). Sets (redirects) the output to
 // a file or a command.
 //
@@ -703,8 +562,67 @@ func Out(p *Params) error {
 	return nil
 }
 
-// Include is a Input/Output meta command (\i, \include and variants). Includes
-// (runs) the specified file in the current execution environment.
+// Copy is a Input/Output meta command (\copy). Copies data between databases.
+//
+// Descs:
+//
+//	copy	SRC DST QUERY TABLE	copy results of query from source database into table on destination database
+//	copy	SRC DST QUERY TABLE(A,...)	copy results of query from source database into table's columns on destination database
+func Copy(p *Params) error {
+	srcstr, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	src, err := dburl.Parse(srcstr)
+	if err != nil {
+		return err
+	}
+	deststr, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	dest, err := dburl.Parse(deststr)
+	if err != nil {
+		return err
+	}
+	query, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	table, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
+	srcDb, err := drivers.Open(ctx, src, stdout, stderr)
+	if err != nil {
+		return err
+	}
+	defer srcDb.Close()
+	destDb, err := drivers.Open(ctx, dest, stdout, stderr)
+	if err != nil {
+		return err
+	}
+	defer destDb.Close()
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
+	// get the result set
+	r, err := srcDb.QueryContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	n, err := drivers.Copy(ctx, dest, stdout, stderr, r, table)
+	if err != nil {
+		return err
+	}
+	p.Handler.Print("COPY %d", n)
+	return nil
+}
+
+// Include is a Control/Conditional meta command (\i, \include and variants).
+// Includes (runs) the specified file in the current execution environment.
 //
 // Descs:
 //
@@ -725,13 +643,12 @@ func Include(p *Params) error {
 }
 
 // Transact is a Transaction meta command (\begin, \commit, \rollback). Begins,
-// commits, or rollsback the current database transaction on the open database
-// connection.
+// commits, or aborts (rollback) the current database transaction on the open
+// database connection.
 //
 // Descs:
 //
-//	begin	begin a transaction
-//	begin	-read-only ISOLATION	begin a transaction with isolation level
+//	begin	[-read-only [ISOLATION]]	begin transaction, with optional isolation level
 //	commit	commit current transaction
 //	rollback	rollback (abort) current transaction
 //	abort:rollback
@@ -786,47 +703,11 @@ func Transact(p *Params) error {
 	return p.Handler.Begin(txOpts)
 }
 
-// Prompt is a Variables meta command (\prompt). Prompts the user for input,
-// setting a application variable to the user's response.
+// Set is a Variables meta command (\set). Sets (or shows) the application variables.
 //
 // Descs:
 //
-//	prompt	[-TYPE] VAR [PROMPT]	prompt user to set variable
-func Prompt(p *Params) error {
-	typ := "string"
-	n, ok, err := p.NextOpt(true)
-	if err != nil {
-		return err
-	}
-	if ok {
-		typ = n
-		n, err = p.Next(true)
-		if err != nil {
-			return err
-		}
-	}
-	if n == "" {
-		return text.ErrMissingRequiredArgument
-	}
-	if err := env.ValidIdentifier(n); err != nil {
-		return err
-	}
-	vals, err := p.All(true)
-	if err != nil {
-		return err
-	}
-	v, err := p.Handler.ReadVar(typ, strings.Join(vals, " "))
-	if err != nil {
-		return err
-	}
-	return env.Vars().Set(n, v)
-}
-
-// Set is a Variables meta command (\set). Sets (or lists) the application variables.
-//
-// Descs:
-//
-//	set	[NAME [VALUE]]	set internal variable, or list all if no parameters
+//	set	[NAME [VALUE]]	set {{CommandName}} application variable, or show all {{CommandName}} application variables if no parameters
 func Set(p *Params) error {
 	switch n, ok, err := p.NextOK(true); {
 	case err != nil:
@@ -845,7 +726,7 @@ func Set(p *Params) error {
 //
 // Descs:
 //
-//	unset	NAME	unset (delete) internal variable
+//	unset	NAME	unset (delete) {{CommandName}} application variable
 func Unset(p *Params) error {
 	n, err := p.Next(true)
 	if err != nil {
@@ -859,14 +740,14 @@ func Unset(p *Params) error {
 //
 // Descs:
 //
-//	pset	[NAME [VALUE]]	set table output option
-//	a	toggle between unaligned and aligned output mode
-//	C	[TITLE]	set table title, or unset if none
-//	f	[SEPARATOR]	show or set field separator for unaligned query output
-//	H	toggle HTML output mode
-//	T	[ATTRIBUTES]	set HTML <table> tag attributes, or unset if none
-//	t	[on|off]	show only rows
-//	x	[on|off|auto]	toggle expanded output
+//	pset	[NAME [VALUE]]	set table print formatting option, or show all print formatting options if no parameters
+//	a		toggle between unaligned and aligned output mode	DEPRECATED
+//	C	[TITLE]	set table title, or unset if none	DEPRECATED
+//	f	[SEPARATOR]	show or set field separator for unaligned query output	DEPRECATED
+//	H		toggle HTML output mode	DEPRECATED
+//	T	[ATTRIBUTES]	set HTML <table> tag attributes, or unset if none	DEPRECATED
+//	t	[on|off]	show only rows	DEPRECATED
+//	x	[on|off|auto]	toggle expanded output	DEPRECATED
 func SetPrint(p *Params) error {
 	var ok bool
 	var val string
@@ -940,37 +821,112 @@ func SetPrint(p *Params) error {
 	return nil
 }
 
-// Timing is a Operating System/Environment meta command (\timing). Sets (or
-// toggles) writing timing information for executed queries to the output.
+// SetConn is a Variables meta command (\cset). Sets a connection variable.
 //
 // Descs:
 //
-//	timing	[on|off]	toggle timing of commands
-func Timing(p *Params) error {
-	v, err := p.Next(true)
+//	cset	[NAME [URL]]	set named connection, or show all named connections if no parameters
+//	cset	NAME DRIVER PARAMS...	set named connection for driver and parameters
+func SetConn(p *Params) error {
+	switch n, ok, err := p.NextOK(true); {
+	case err != nil:
+		return err
+	case ok:
+		vals, err := p.All(true)
+		if err != nil {
+			return err
+		}
+		return env.Vars().SetConn(n, vals...)
+	}
+	return env.Vars().DumpConn(p.Handler.IO().Stdout())
+}
+
+// Prompt is a Variables meta command (\prompt). Prompts the user for input,
+// setting a application variable to the user's response.
+//
+// Descs:
+//
+//	prompt	[-TYPE] VAR [PROMPT]	prompt user to set application variable
+func Prompt(p *Params) error {
+	typ := "string"
+	n, ok, err := p.NextOpt(true)
 	if err != nil {
 		return err
 	}
-	if v == "" {
-		p.Handler.SetTiming(!p.Handler.GetTiming())
-	} else {
-		s, err := env.ParseBool(v, `\timing`)
+	if ok {
+		typ = n
+		n, err = p.Next(true)
 		if err != nil {
-			stderr := p.Handler.IO().Stderr()
-			fmt.Fprintf(stderr, "error: %v", err)
-			fmt.Fprintln(stderr)
+			return err
 		}
-		var b bool
-		if s == "on" {
-			b = true
+	}
+	if n == "" {
+		return text.ErrMissingRequiredArgument
+	}
+	if err := env.ValidIdentifier(n); err != nil {
+		return err
+	}
+	vals, err := p.All(true)
+	if err != nil {
+		return err
+	}
+	v, err := p.Handler.ReadVar(typ, strings.Join(vals, " "))
+	if err != nil {
+		return err
+	}
+	return env.Vars().Set(n, v)
+}
+
+// Describe is a Informational meta command (\d and variants). Queries the open
+// database connection for information about the database schema and writes the
+// information to the output.
+//
+// Descs:
+//
+//	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
+//	da[S+]	[PATTERN]	list aggregates
+//	df[S+]	[PATTERN]	list functions
+//	di[S+]	[PATTERN]	list indexes
+//	dm[S+]	[PATTERN]	list materialized views
+//	dn[S+]	[PATTERN]	list schemas
+//	dp[S]	[PATTERN]	list table, view, and sequence access privileges
+//	ds[S+]	[PATTERN]	list sequences
+//	dt[S+]	[PATTERN]	list tables
+//	dv[S+]	[PATTERN]	list views
+//	l[+]	list databases
+func Describe(p *Params) error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	m, err := p.Handler.MetadataWriter(ctx)
+	if err != nil {
+		return err
+	}
+	verbose := strings.ContainsRune(p.Name, '+')
+	showSystem := strings.ContainsRune(p.Name, 'S')
+	name := strings.TrimRight(p.Name, "S+")
+	pattern, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	switch name {
+	case "d":
+		if pattern != "" {
+			return m.DescribeTableDetails(p.Handler.URL(), pattern, verbose, showSystem)
 		}
-		p.Handler.SetTiming(b)
+		return m.ListTables(p.Handler.URL(), "tvmsE", pattern, verbose, showSystem)
+	case "df", "da":
+		return m.DescribeFunctions(p.Handler.URL(), name, pattern, verbose, showSystem)
+	case "dt", "dtv", "dtm", "dts", "dv", "dm", "ds":
+		return m.ListTables(p.Handler.URL(), name, pattern, verbose, showSystem)
+	case "dn":
+		return m.ListSchemas(p.Handler.URL(), pattern, verbose, showSystem)
+	case "di":
+		return m.ListIndexes(p.Handler.URL(), pattern, verbose, showSystem)
+	case "l":
+		return m.ListAllDbs(p.Handler.URL(), pattern, verbose)
+	case "dp":
+		return m.ListPrivilegeSummaries(p.Handler.URL(), pattern, showSystem)
 	}
-	setting := "off"
-	if p.Handler.GetTiming() {
-		setting = "on"
-	}
-	p.Handler.Print(text.TimingSet, setting)
 	return nil
 }
 
@@ -1013,8 +969,9 @@ func Stats(p *Params) error {
 	return m.ShowStats(p.Handler.URL(), name, pattern, verbose, k)
 }
 
-// Conditional is a Conditional meta command (\if, \elif, \else, \endif).
-// Starts, closes, and ends a conditional block within the application.
+// Conditional is a Control/Conditional meta command (\if, \elif, \else,
+// \endif). Starts, closes, and ends a conditional block within the
+// application.
 //
 // Descs:
 //
@@ -1030,4 +987,73 @@ func Conditional(p *Params) error {
 	case "endif":
 	}
 	return nil
+}
+
+// Shell is a Operating System/Environment meta command (\!). Executes a
+// command using the Operating System/Environment's shell.
+//
+// Descs:
+//
+//	!	[COMMAND]	execute command in shell or start interactive shell
+func Shell(p *Params) error {
+	return env.Shell(p.Raw())
+}
+
+// Chdir is a Operating System/Environment meta command (\cd). Changes the
+// current directory for the Operating System/Environment.
+//
+// Descs:
+//
+//	cd	[DIR]	change the current working directory
+func Chdir(p *Params) error {
+	dir, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	return env.Chdir(p.Handler.User(), dir)
+}
+
+// Getenv is a Operating System/Environment meta command (\getenv). Sets the
+// application's variable value returned from the Operating
+// System/Environment's variables.
+//
+// Descs:
+//
+//	getenv	VARNAME ENVVAR	fetch environment variable
+func Getenv(p *Params) error {
+	n, err := p.Next(true)
+	switch {
+	case err != nil:
+		return err
+	case n == "":
+		return text.ErrMissingRequiredArgument
+	}
+	v, err := p.Next(true)
+	switch {
+	case err != nil:
+		return err
+	case v == "":
+		return text.ErrMissingRequiredArgument
+	}
+	value, _ := env.Getenv(v)
+	return env.Vars().Set(n, value)
+}
+
+// Setenv is a Operating System/Environment meta command (\setenv). Sets (or
+// unsets) a Operating System/Environment variable. Environment variables set
+// this way will be passed to any child processes.
+//
+// Descs:
+//
+//	setenv	NAME [VALUE]	set or unset environment variable
+func Setenv(p *Params) error {
+	n, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	v, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	return os.Setenv(n, v)
 }

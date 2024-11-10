@@ -16,7 +16,7 @@ import (
 
 // Listing writes a formatted listing of the special environment variables to
 // w, separated in sections based on variable type.
-func Listing(w io.Writer) {
+func Listing(w io.Writer) error {
 	varsWithDesc := make([]string, len(varNames))
 	for i, v := range varNames {
 		varsWithDesc[i] = v.String()
@@ -48,39 +48,9 @@ func Listing(w io.Writer) {
 	if configExtra != "" {
 		configExtra = " (" + configExtra + ")"
 	}
-
-	template := `List of specially treated variables
-
-%s variables:
-Usage:
-  %[1]s --set=NAME=VALUE
-  or \set NAME VALUE inside %[1]s
-
-%[2]s
-
-Display settings:
-Usage:
-  %[1]s --pset=NAME[=VALUE]
-  or \pset NAME [VALUE] inside %[1]s
-
-%[3]s
-
-Environment variables:
-Usage:
-  NAME=VALUE [NAME=VALUE] %[1]s ...
-  or \setenv NAME [VALUE] inside %[1]s
-
-%[4]s
-
-Connection variables:
-Usage:
-  %[1]s --cset NAME[=DSN]
-  or \cset NAME [DSN] inside %[1]s
-  or \cset NAME DRIVER PARAMS... inside %[1]s
-  or define in %[5]s%[6]s
-`
 	fmt.Fprintf(
-		w, template,
+		w,
+		variableTpl,
 		text.CommandName,
 		strings.TrimRightFunc(strings.Join(varsWithDesc, ""), unicode.IsSpace),
 		strings.TrimRightFunc(strings.Join(pvarsWithDesc, ""), unicode.IsSpace),
@@ -88,6 +58,7 @@ Usage:
 		configDir,
 		configExtra,
 	)
+	return nil
 }
 
 func buildConfigDir(configName string) (string, string) {
@@ -295,3 +266,34 @@ var envVarNames = []varName{
 		`shell used by the \! command`,
 	},
 }
+
+const variableTpl = `List of specially treated variables
+
+%s variables:
+Usage:
+  %[1]s --set=NAME=VALUE
+  or \set NAME VALUE inside %[1]s
+
+%[2]s
+
+Display settings:
+Usage:
+  %[1]s --pset=NAME[=VALUE]
+  or \pset NAME [VALUE] inside %[1]s
+
+%[3]s
+
+Environment variables:
+Usage:
+  NAME=VALUE [NAME=VALUE] %[1]s ...
+  or \setenv NAME [VALUE] inside %[1]s
+
+%[4]s
+
+Connection variables:
+Usage:
+  %[1]s --cset NAME[=DSN]
+  or \cset NAME [DSN] inside %[1]s
+  or \cset NAME DRIVER PARAMS... inside %[1]s
+  or define in %[5]s%[6]s
+`
