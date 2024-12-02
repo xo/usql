@@ -45,7 +45,7 @@ func init() {
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
 			return metadata.NewDefaultWriter(mymeta.NewReader(db, opts...))(db, w)
 		},
-		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
+		Copy: copyRows,
 		NewCompleter: mymeta.NewCompleter,
 	}, "memsql", "vitess", "tidb")
 }
