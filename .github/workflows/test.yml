@@ -52,6 +52,7 @@ jobs:
         ls -alh output.log
     - name: Archive output
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: output
         path: output.log
