@@ -119,10 +119,6 @@ func New(l rline.IO, user *user.User, wd string, charts billy.Filesystem, nopw b
 		nopw:   nopw,
 		buf:    stmt.New(f),
 	}
-	if iactive {
-		l.SetOutput(h.outputHighlighter)
-		l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
-	}
 	return h
 }
 
@@ -803,6 +799,11 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
+			if h.l.Interactive() {
+				h.l.SetOutput(h.outputHighlighter)
+				h.l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
+				h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOpts(), completer.WithConnStrings(h.connStrings())))
+			}
 			return h.Version(ctx)
 		}
 	}
