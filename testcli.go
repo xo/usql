@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	gexpect "github.com/google/goexpect"
@@ -119,6 +120,7 @@ func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) 
 		gexpect.SetEnv(test.env),
 		gexpect.Tee(&noopWriteCloser{os.Stdout}),
 	)
+	exp.Options(gexpect.Verbose(true))
 	if err != nil {
 		return err
 	}
@@ -127,8 +129,12 @@ func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) 
 		return err
 	}
 	for _, line := range bytes.Split(buf, []byte{'\n'}) {
-		if err := exp.Send(string(line) + "\n"); err != nil {
-			return err
+		lineStr := strings.TrimSpace(string(line))
+		if lineStr != "" { // technically only trailing empty lines are a problem but they are harder to check for
+			time.Sleep(100 * time.Millisecond)
+			if err := exp.Send(string(line) + "\n"); err != nil {
+				return err
+			}
 		}
 	}
 	select {
