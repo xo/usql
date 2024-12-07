@@ -60,8 +60,6 @@ insert into authors (name) values
 
 \echo `echo hello`
 
-select :"COLNAME" from authors where :COLNAME like '%' || :'NAME' || '%'
-
 \print \raw
 
 \g
