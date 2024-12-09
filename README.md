@@ -1575,5 +1575,5 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [foot]: https://codeberg.org/dnkl/foot
 [kitty]: https://sw.kovidgoyal.net/kitty/
 [arewesixelyet]: https://www.arewesixelyet.com
-[chart-command]: #chart-command "\\chart meta command"
 [yaml]: https://yaml.org
+[chart-command]: #chart-command "\\chart meta command"
