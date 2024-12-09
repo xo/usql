@@ -249,7 +249,6 @@ func init() {
 				{"gexec", "", "execute query and execute each value of the result"},
 				{"gset", "[PREFIX]", "execute query and store results in " + text.CommandName + " variables"},
 				{"crosstabview", "[(OPTIONS)] [COLUMNS]", "execute query and display results in crosstab"},
-				{"chart", "CHART [(OPTIONS)]", "execute query and display results as a chart"},
 				{"watch", "[(OPTIONS)] [DURATION]", "execute query every specified interval"},
 			},
 			Process: func(p *Params) error {
@@ -294,32 +293,6 @@ func init() {
 						p.Option.Crosstab = append(p.Option.Crosstab, col)
 						if !ok {
 							break
-						}
-					}
-				case "chart":
-					p.Option.Exec = ExecChart
-					if p.Option.Params == nil {
-						p.Option.Params = make(map[string]string, 1)
-					}
-					params, err := p.GetAll(true)
-					if err != nil {
-						return err
-					}
-					for i := 0; i < len(params); i++ {
-						param := params[i]
-						if param == "help" {
-							p.Option.Params["help"] = ""
-							return nil
-						}
-						equal := strings.IndexByte(param, '=')
-						switch {
-						case equal == -1 && i >= len(params)-1:
-							return text.ErrWrongNumberOfArguments
-						case equal == -1:
-							i++
-							p.Option.Params[param] = params[i]
-						default:
-							p.Option.Params[param[:equal]] = param[equal+1:]
 						}
 					}
 				case "watch":
