@@ -24,10 +24,6 @@ import (
 	"github.com/xo/usql/text"
 )
 
-func init() {
-	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
-}
-
 // DB is the common interface for database operations, compatible with
 // database/sql.DB and database/sql.Tx.
 type DB interface {
@@ -530,97 +526,110 @@ func Copy(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer, ro
 	return d.Copy(ctx, db, rows, table)
 }
 
-// CopyWithInsert builds a copy handler based on insert.
+// CopyWithInsert builds a typical copy handler based on insert.
 func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
 	if placeholder == nil {
 		placeholder = func(n int) string { return fmt.Sprintf("$%d", n) }
 	}
 	return func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-		columns, err := rows.Columns()
-		if err != nil {
-			return 0, fmt.Errorf("failed to fetch source rows columns: %w", err)
-		}
-		clen := len(columns)
-		query := table
-		if !strings.HasPrefix(strings.ToLower(query), "insert into") {
-			leftParen := strings.IndexRune(table, '(')
-			if leftParen == -1 {
-				colRows, err := db.QueryContext(ctx, "SELECT * FROM "+table+" WHERE 1=0")
-				if err != nil {
-					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
-				}
-				columns, err := colRows.Columns()
-				_ = colRows.Close()
-				if err != nil {
-					return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
-				}
-				table += "(" + strings.Join(columns, ", ") + ")"
+		return FlexibleCopyWithInsert(ctx, db, rows, table, placeholder, true)
+	}
+}
+
+func FlexibleCopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, table string, placeholder func(int) string, withTransaction bool) (int64, error) {
+	columns, err := rows.Columns()
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch source rows columns: %w", err)
+	}
+	clen := len(columns)
+	query := table
+	if !strings.HasPrefix(strings.ToLower(query), "insert into") {
+		leftParen := strings.IndexRune(table, '(')
+		if leftParen == -1 {
+			colRows, err := db.QueryContext(ctx, "SELECT * FROM "+table+" WHERE 1=0")
+			if err != nil {
+				return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
 			}
-			// TODO if the db supports multiple rows per insert, create batches of 100 rows
-			placeholders := make([]string, clen)
-			for i := 0; i < clen; i++ {
-				placeholders[i] = placeholder(i + 1)
+			columns, err := colRows.Columns()
+			_ = colRows.Close()
+			if err != nil {
+				return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
 			}
-			query = "INSERT INTO " + table + " VALUES (" + strings.Join(placeholders, ", ") + ")"
+			table += "(" + strings.Join(columns, ", ") + ")"
 		}
-		tx, err := db.BeginTx(ctx, nil)
+		// TODO if the db supports multiple rows per insert, create batches of 100 rows
+		placeholders := make([]string, clen)
+		for i := 0; i < clen; i++ {
+			placeholders[i] = placeholder(i + 1)
+		}
+		query = "INSERT INTO " + table + " VALUES (" + strings.Join(placeholders, ", ") + ")"
+	}
+	var stmt *sql.Stmt
+	var tx *sql.Tx
+	if withTransaction {
+		tx, err = db.BeginTx(ctx, nil)
 		if err != nil {
 			return 0, fmt.Errorf("failed to begin transaction: %w", err)
 		}
-		stmt, err := tx.PrepareContext(ctx, query)
+		stmt, err = tx.PrepareContext(ctx, query)
+	} else {
+		stmt, err = db.PrepareContext(ctx, query)
+	}
+	if err != nil {
+		return 0, fmt.Errorf("failed to prepare insert query: %w", err)
+	}
+	defer stmt.Close()
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch source column types: %w", err)
+	}
+	values := make([]interface{}, clen)
+	valueRefs := make([]reflect.Value, clen)
+	actuals := make([]interface{}, clen)
+	for i := 0; i < len(columnTypes); i++ {
+		valueRefs[i] = reflect.New(columnTypes[i].ScanType())
+		values[i] = valueRefs[i].Interface()
+	}
+	var n int64
+	for rows.Next() {
+		err = rows.Scan(values...)
 		if err != nil {
-			return 0, fmt.Errorf("failed to prepare insert query: %w", err)
+			return n, fmt.Errorf("failed to scan row: %w", err)
 		}
-		defer stmt.Close()
-		columnTypes, err := rows.ColumnTypes()
+		//We can't use values... in Exec() below, because some drivers
+		//don't accept pointer to an argument instead of the arg itself.
+		for i := range values {
+			actuals[i] = valueRefs[i].Elem().Interface()
+		}
+		res, err := stmt.ExecContext(ctx, actuals...)
 		if err != nil {
-			return 0, fmt.Errorf("failed to fetch source column types: %w", err)
+			return n, fmt.Errorf("failed to exec insert: %w", err)
 		}
-		values := make([]interface{}, clen)
-		valueRefs := make([]reflect.Value, clen)
-		actuals := make([]interface{}, clen)
-		for i := 0; i < len(columnTypes); i++ {
-			valueRefs[i] = reflect.New(columnTypes[i].ScanType())
-			values[i] = valueRefs[i].Interface()
+		rn, err := res.RowsAffected()
+		if err != nil {
+			return n, fmt.Errorf("failed to check rows affected: %w", err)
 		}
-		var n int64
-		for rows.Next() {
-			err = rows.Scan(values...)
-			if err != nil {
-				return n, fmt.Errorf("failed to scan row: %w", err)
-			}
-			// We can't use values... in Exec() below, because some drivers
-			// don't accept pointer to an argument instead of the arg itself.
-			for i := range values {
-				actuals[i] = valueRefs[i].Elem().Interface()
-			}
-			res, err := stmt.ExecContext(ctx, actuals...)
-			if err != nil {
-				return n, fmt.Errorf("failed to exec insert: %w", err)
-			}
-			rn, err := res.RowsAffected()
-			if err != nil {
-				return n, fmt.Errorf("failed to check rows affected: %w", err)
-			}
-			n += rn
-		}
-		// TODO if using batches, flush the last batch,
-		// TODO prepare another statement and count remaining rows
+		n += rn
+	}
+	// TODO if using batches, flush the last batch,
+	// TODO prepare another statement and count remaining rows
+	if tx != nil {
 		err = tx.Commit()
 		if err != nil {
 			return n, fmt.Errorf("failed to commit transaction: %w", err)
 		}
-		return n, rows.Err()
 	}
+	return n, rows.Err()
 }
 
-// StripTrailingSemicolon is a [Driver.Process] func that removes trailing
-// semicolons from SQL queries.
+func init() {
+	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
+}
+
+var endRE = regexp.MustCompile(`;?\s*$`)
+
 func StripTrailingSemicolon(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 	sqlstr = endRE.ReplaceAllString(sqlstr, "")
 	typ, q := QueryExecType(prefix, sqlstr)
 	return typ, sqlstr, q, nil
 }
-
-// endRE matches trailing semicolons.
-var endRE = regexp.MustCompile(`;?\s*$`)
