@@ -3,6 +3,7 @@ package sqshared
 import (
 	"database/sql"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/xo/usql/drivers"
@@ -125,8 +126,18 @@ FROM (
 		conds = append(conds, "table_name LIKE ?")
 	}
 	if len(f.Types) != 0 {
+		tableTypes := []string{
+			"BASE TABLE",
+			"TABLE",
+			"VIEW",
+			"GLOBAL TEMPORARY",
+		}
 		pholders := []string{}
 		for _, t := range f.Types {
+			if !slices.Contains(tableTypes, t) {
+				continue
+			}
+
 			vals = append(vals, t)
 			pholders = append(pholders, "?")
 		}

@@ -141,7 +141,7 @@ func TestSchemas(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
-	result, err := reader.Tables(metadata.Filter{Types: []string{"BASE TABLE", "TABLE", "VIEW"}})
+	result, err := reader.Tables(metadata.Filter{Types: []string{"BASE TABLE", "TABLE", "VIEW", "GLOBAL TEMPORARY"}})
 	if err != nil {
 		log.Fatalf("Could not read tables: %v", err)
 	}
