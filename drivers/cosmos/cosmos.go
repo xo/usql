@@ -9,5 +9,7 @@ import (
 )
 
 func init() {
-	drivers.Register("cosmos", drivers.Driver{})
+	drivers.Register("cosmos", drivers.Driver{
+		Process: drivers.StripTrailingSemicolon,
+	}, "gocosmos")
 }

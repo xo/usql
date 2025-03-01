@@ -6,17 +6,14 @@ package trino
 import (
 	"context"
 	"io"
-	"regexp"
 
 	_ "github.com/trinodb/trino-go-client/trino" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
-	endRE := regexp.MustCompile(`;?\s*$`)
 	newReader := func(db drivers.DB, opts ...metadata.ReaderOption) metadata.Reader {
 		ir := infos.New(
 			infos.WithPlaceholder(func(int) string { return "?" }),
@@ -40,11 +37,7 @@ func init() {
 	}
 	drivers.Register("trino", drivers.Driver{
 		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			sqlstr = endRE.ReplaceAllString(sqlstr, "")
-			typ, q := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, q, nil
-		},
+		Process:                drivers.StripTrailingSemicolon,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRowContext(

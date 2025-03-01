@@ -5,22 +5,15 @@ package athena
 
 import (
 	"context"
-	"regexp"
 
 	_ "github.com/uber/athenadriver/go" // DRIVER: awsathena
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	endRE := regexp.MustCompile(`;?\s*$`)
 	drivers.Register("awsathena", drivers.Driver{
 		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			sqlstr = endRE.ReplaceAllString(sqlstr, "")
-			typ, q := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, q, nil
-		},
+		Process:                drivers.StripTrailingSemicolon,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRowContext(
