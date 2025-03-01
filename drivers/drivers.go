@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -611,4 +612,12 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 
 func init() {
 	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
+}
+
+var endRE = regexp.MustCompile(`;?\s*$`)
+
+func StripTrailingSemicolon(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
+	sqlstr = endRE.ReplaceAllString(sqlstr, "")
+	typ, q := QueryExecType(prefix, sqlstr)
+	return typ, sqlstr, q, nil
 }

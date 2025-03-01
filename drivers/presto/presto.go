@@ -5,22 +5,15 @@ package presto
 
 import (
 	"context"
-	"regexp"
 
 	_ "github.com/prestodb/presto-go-client/presto" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	endRE := regexp.MustCompile(`;?\s*$`)
 	drivers.Register("presto", drivers.Driver{
 		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			sqlstr = endRE.ReplaceAllString(sqlstr, "")
-			typ, q := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, q, nil
-		},
+		Process:                drivers.StripTrailingSemicolon,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRowContext(
