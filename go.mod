@@ -60,7 +60,7 @@ require (
 	github.com/trinodb/trino-go-client v0.321.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.3
-	github.com/xo/dburl v0.23.3
+	github.com/xo/dburl v0.23.4
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.6.0
 	github.com/xo/tblfmt v0.15.0
