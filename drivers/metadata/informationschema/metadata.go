@@ -219,6 +219,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 		s.clauses[ColumnsNumericScale],
 		s.clauses[ColumnsNumericPrecRadix],
 		s.clauses[ColumnsCharOctetLength],
+		"COLUMN_COMMENT",
 	}
 
 	qstr := "SELECT\n  " + strings.Join(columns, ",\n  ") + " FROM information_schema.columns\n"
@@ -253,6 +254,7 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 			&rec.DecimalDigits,
 			&rec.NumPrecRadix,
 			&rec.CharOctetLength,
+			&rec.Comment,
 		)
 		if err != nil {
 			return nil, err
