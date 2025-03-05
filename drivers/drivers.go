@@ -24,6 +24,10 @@ import (
 	"github.com/xo/usql/text"
 )
 
+func init() {
+	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
+}
+
 // DB is the common interface for database operations, compatible with
 // database/sql.DB and database/sql.Tx.
 type DB interface {
@@ -585,8 +589,8 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 			if err != nil {
 				return n, fmt.Errorf("failed to scan row: %w", err)
 			}
-			//We can't use values... in Exec() below, because some drivers
-			//don't accept pointer to an argument instead of the arg itself.
+			// We can't use values... in Exec() below, because some drivers
+			// don't accept pointer to an argument instead of the arg itself.
 			for i := range values {
 				actuals[i] = valueRefs[i].Elem().Interface()
 			}
@@ -610,14 +614,13 @@ func CopyWithInsert(placeholder func(int) string) func(ctx context.Context, db *
 	}
 }
 
-func init() {
-	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
-}
-
-var endRE = regexp.MustCompile(`;?\s*$`)
-
+// StripTrailingSemicolon is a [Driver.Process] func that removes trailing
+// semicolons from SQL queries.
 func StripTrailingSemicolon(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
 	sqlstr = endRE.ReplaceAllString(sqlstr, "")
 	typ, q := QueryExecType(prefix, sqlstr)
 	return typ, sqlstr, q, nil
 }
+
+// endRE matches trailing semicolons.
+var endRE = regexp.MustCompile(`;?\s*$`)
