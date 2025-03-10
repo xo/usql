@@ -341,6 +341,7 @@ type Column struct {
 	NumPrecRadix    int
 	CharOctetLength int
 	IsNullable      Bool
+	Comment         string
 }
 
 type Bool string
