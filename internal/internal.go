@@ -20,7 +20,7 @@ func KnownBuildTags() map[string]string {
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
-		"duckdb":        "duckdb",        // github.com/marcboeker/go-duckdb
+		"duckdb":        "duckdb",        // github.com/marcboeker/go-duckdb/v2
 		"dynamodb":      "dynamodb",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
@@ -29,7 +29,7 @@ func KnownBuildTags() map[string]string {
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // sqlflow.org/gohive
 		"ignite":        "ignite",        // github.com/amsokol/ignite-go-client/sql
-		"impala":        "impala",        // github.com/bippio/go-impala
+		"impala":        "impala",        // github.com/sclgo/impala-go
 		"maxcompute":    "maxcompute",    // sqlflow.org/gomaxcompute
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
