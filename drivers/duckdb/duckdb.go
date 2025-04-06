@@ -10,7 +10,7 @@ import (
 	"io"
 	"strings"
 
-	_ "github.com/marcboeker/go-duckdb" // DRIVER
+	_ "github.com/marcboeker/go-duckdb/v2" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
