@@ -95,7 +95,7 @@ func createDb(location, name string) error {
 		return err
 	}
 
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func createDb(location, name string) error {
 	//	return err
 	//}
 
-	return cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	return cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 }
 
 func TestSchemas(t *testing.T) {
