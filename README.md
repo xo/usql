@@ -1469,7 +1469,7 @@ pg:booktest@=>
 ```
 
 While the `.usqlpass` functionality will not be removed, it is recommended to
-[define named connections][connection-vars] preferrably via [the `config.yaml`
+[define named connections][connection-vars] preferably via [the `config.yaml`
 file][config].
 
 <hr/>

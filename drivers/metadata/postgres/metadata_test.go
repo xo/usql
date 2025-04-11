@@ -257,7 +257,7 @@ func TestIndexes(t *testing.T) {
 		for _, v := range tests {
 			result, err := r.Indexes(metadata.Filter{Name: fmt.Sprintf("%s_index", v.indexType)})
 			if err != nil {
-				log.Fatalf("Could not get Index informatin: %s", err)
+				log.Fatalf("Could not get Index information: %s", err)
 			}
 			for result.Next() {
 				accessMethods = append(accessMethods, result.Get().Type)
@@ -274,7 +274,7 @@ func TestIndexes(t *testing.T) {
 	t.Run("Get info about index access method for all table indexes.", func(t *testing.T) {
 		result, err := r.Indexes(metadata.Filter{Schema: schema, Parent: table})
 		if err != nil {
-			log.Fatalf("Could not get Index informatin: %s", err)
+			log.Fatalf("Could not get Index information: %s", err)
 		}
 		accessMethods := []string{}
 		for result.Next() {
