@@ -94,7 +94,7 @@ func New(opts ...metadata.ReaderOption) func(drivers.DB, ...metadata.ReaderOptio
 		systemSchemas:     []string{"information_schema"},
 		dataTypeFormatter: func(col metadata.Column) string { return col.DataType },
 	}
-	// aply InformationSchema specific options
+	// apply InformationSchema specific options
 	for _, o := range opts {
 		o(s)
 	}
@@ -929,7 +929,7 @@ func (s InformationSchema) PrivilegeSummaries(f metadata.Filter) (*metadata.Priv
 	}
 
 	// In the query result, table and column level privileges will be on separate rows.
-	// Each table or column can have multple privileges (i.e rows).
+	// Each table or column can have multiple privileges (i.e rows).
 	// For table level privileges the `column_name` column is empty.
 	qstr := "SELECT * FROM (\n" + strings.Join(qstrs, "\nUNION ALL\n") + "\n) AS subquery"
 	rows, closeRows, err := s.query(

@@ -269,5 +269,5 @@ func (r LoggingReader) Query(q string, v ...interface{}) (*sql.Rows, CloseFunc, 
 	return rows, func() { rows.Close() }, err
 }
 
-// CloseFunc should be called when result wont be processed anymore
+// CloseFunc should be called when result won't be processed anymore
 type CloseFunc func()
