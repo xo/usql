@@ -14,9 +14,9 @@
 
 <br/>
 
-`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle
-Database, SQLite3, Microsoft SQL Server, [and many other databases][databases]
-including NoSQL and non-relational databases!
+`usql` is a universal command-line interface for PostgreSQL, MySQL, MariaDB,
+Oracle Database, TiDB, SQLite3, Microsoft SQL Server, [and many other
+databases][databases] including NoSQL and non-relational databases!
 
 `usql` provides a simple way to work with [SQL and NoSQL databases][databases]
 via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
