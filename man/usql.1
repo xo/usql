@@ -1,0 +1,262 @@
+.TH USQL "1" "April 2025" "usql 0.19.19" "User Commands"
+.SH NAME
+usql \- A universal command-line interface for SQL, NoSQL, and other databases
+.SH DESCRIPTION
+.B usql
+is a universal command-line interface for PostgreSQL, MySQL, MariaDB, Oracle Database, TiDB, SQLite3, Microsoft SQL Server, and many other databases including NoSQL and non-relational databases! Inspired by PostgreSQL's powerful command-line tool
+.BR psql .
+.LP
+.B usql
+provides a simple way to interact with numerous database systems using a consistent interface. It supports most core
+.BR psql
+features, such as variables, backticks, and backslash commands, while adding unique capabilities like syntax highlighting, context-based completion, native multi-database support via standard URL connection strings, copying data between different database systems, terminal graphics support, and more.
+.LP
+Database administrators and developers who prefer a
+.BR psql
+-like experience for non-PostgreSQL databases will find
+.B usql
+intuitive and powerful. It supports connecting to various database drivers (see the
+.B \edrivers
+command within usql), executing SQL commands, running scripts from files, and formatting output in various styles (aligned, unaligned, HTML, JSON, CSV, vertical, etc.).
+.SH OPTIONS
+.TP
+\fB\-c\fR, \fB\-\-command\fR COMMAND
+Run only single command (SQL or internal) and exit.
+.TP
+\fB\-f\fR, \fB\-\-file\fR FILE
+execute commands from file and exit
+.TP
+\fB\-w\fR, \fB\-\-no\-password\fR
+never prompt for password
+.TP
+\fB\-X\fR, \fB\-\-no\-init\fR
+do not execute initialization scripts (aliases: \fB\-\-no\-rc\fR \fB\-\-no\-psqlrc\fR \fB\-\-no\-usqlrc\fR)
+.TP
+\fB\-o\fR, \fB\-\-out\fR FILE
+output file
+.TP
+\fB\-W\fR, \fB\-\-password\fR
+force password prompt (should happen automatically)
+.TP
+\fB\-1\fR, \fB\-\-single\-transaction\fR
+execute as a single transaction (if non\-interactive)
+.TP
+\fB\-v\fR, \fB\-\-set\fR NAME=VALUE
+set variable NAME to VALUE (see \eset command, aliases: \fB\-\-var\fR \fB\-\-variable\fR)
+.TP
+\fB\-N\fR, \fB\-\-cset\fR NAME=DSN
+set named connection NAME to DSN (see \ecset command)
+.TP
+\fB\-P\fR, \fB\-\-pset\fR VAR=ARG
+set printing option VAR to ARG (see \epset command)
+.TP
+\fB\-F\fR, \fB\-\-field\-separator\fR FIELD\-SEPARATOR
+field separator for unaligned and CSV output (default "|" and ",")
+.TP
+\fB\-R\fR, \fB\-\-record\-separator\fR RECORD\-SEPARATOR
+record separator for unaligned and CSV output (default \en)
+.TP
+\fB\-T\fR, \fB\-\-table\-attr\fR TABLE\-ATTR
+set HTML table tag attributes (e.g., width, border)
+.TP
+\fB\-A\fR, \fB\-\-no\-align\fR
+unaligned table output mode
+.TP
+\fB\-H\fR, \fB\-\-html\fR
+HTML table output mode
+.TP
+\fB\-t\fR, \fB\-\-tuples\-only\fR
+print rows only
+.TP
+\fB\-x\fR, \fB\-\-expanded\fR
+turn on expanded table output
+.TP
+\fB\-z\fR, \fB\-\-field\-separator\-zero\fR
+set field separator for unaligned and CSV output to zero byte
+.TP
+\fB\-0\fR, \fB\-\-record\-separator\-zero\fR
+set record separator for unaligned and CSV output to zero byte
+.TP
+\fB\-J\fR, \fB\-\-json\fR
+JSON output mode
+.TP
+\fB\-C\fR, \fB\-\-csv\fR
+CSV output mode
+.TP
+\fB\-G\fR, \fB\-\-vertical\fR
+vertical output mode
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+run quietly (no messages, only query output)
+.TP
+\fB\-\-config\fR string
+config file
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+output version information, then exit
+.TP
+\-?, \fB\-\-help\fR
+Show this help, then exit.
+.SH CONNECTING TO DATABASES
+.B usql
+connects to databases using Data Source Name (DSN) URLs, typically in the format:
+.IP
+.B driver[+transport]://[user[:pass]@][host][:port][/dbname][?opt1=val1&opt2=val2]
+.LP
+Where:
+.RS
+.TP
+.I driver
+Is the primary scheme or alias for the database driver (e.g., `postgres`, `pg`, `mysql`, `my`, `sqlserver`, `ms`, `oracle`, `or`, `sqlite3`, `sq`, `csvq`). Use the `\edrivers` command in usql to see available drivers and aliases.
+.TP
+.I transport
+Is optional, usually `tcp`, `udp`, or `unix`. Some drivers like ODBC use it for sub-protocol specification.
+.TP
+.I user, pass, host, port
+Are standard connection credentials. Many parts are optional and defaults may apply (e.g., connecting via local Unix sockets).
+.TP
+.I dbname
+Represents the database name, service ID, instance, or sometimes a file path (for file-based databases like SQLite3 or DuckDB). For some drivers (e.g., SQL Server, Oracle), this can be `/instance/dbname`.
+.TP
+.I ?opt1=val1...
+Are driver-specific connection options passed as URL query parameters.
+.RE
+.LP
+.B usql
+can also connect to local files directly (e.g., `/path/to/db.sqlite3`) or named connections defined in the configuration file.
+.LP
+See the project's README.md for detailed examples and supported drivers.
+.SH COMMANDS
+.B usql
+interprets backslash (\e) commands for meta-operations, similar to
+.BR psql .
+These provide functionality beyond standard SQL. Use
+.B \e?
+within usql for a full list. Key commands include:
+.TP
+.B \ec\fR, \fB\econnect\fR DSN | NAME
+Connect to a database using a DSN URL or a pre-defined named connection.
+.TP
+.B \ecopy\fR SRC_DSN DST_DSN QUERY TABLE[(COLS)]
+Copy data between databases. Executes QUERY on SRC_DSN and inserts results into TABLE on DST_DSN.
+.TP
+.B \ed\fR[+] [PATTERN]
+List tables, views, sequences. Add '+' for more detail. Many variants exist (\edt, \edi, \ef, \dn, etc.) to list specific object types. Use \e? options for details.
+.TP
+.B \eg\fR, \fB\ego\fR [(OPTIONS)] [FILE]
+Execute the current query buffer, optionally sending results to a FILE or pipe.
+.TP
+.B \eG\fR, \fB\eego\fR [(OPTIONS)] [FILE]
+Execute query and force vertical output mode.
+.TP
+.B \egx\fR [(OPTIONS)] [FILE]
+Execute query and force expanded output mode.
+.TP
+.B \ei\fR, \fB\einclude\fR FILE
+Execute commands from FILE.
+.TP
+.B \ep\fR, \fB\eprint\fR [-raw|-exec]
+Show the contents of the query buffer (or the raw/exec buffer).
+.TP
+.B \er\fR, \fB\ereset\fR
+Clear the query buffer.
+.TP
+.B \eset\fR [NAME [VALUE]]
+Set or show runtime variables. Used for query interpolation.
+.TP
+.B \epset\fR [NAME [VALUE]]
+Set or show display formatting options (e.g., border, format, tuples_only).
+.TP
+.B \ecset\fR [NAME [DSN]]
+Set or show named connection DSNs.
+.TP
+.B \etiming\fR [on|off]
+Toggle display of command execution time.
+.TP
+.B \e!\fR [COMMAND]
+Execute a command in the system shell.
+.TP
+.B \eq\fR, \fB\equit\fR
+Quit usql.
+.SH VARIABLES
+.B usql
+utilizes variables for configuration and dynamic query generation:
+.TP
+.B Runtime Variables (\eset)
+Set with `\eset NAME VALUE`. Interpolated into queries using `:NAME` (direct substitution), `:'NAME'` (quoted as string literal), or `:"NAME"` (quoted as identifier). View all with `\eset`. Unset with `\eunset NAME`.
+.TP
+.B Connection Variables (\ecset)
+Set with `\ecset NAME DSN`. Provide aliases for database connection URLs used with `\ec` or `\ecopy`. View all with `\ecset`. Not used for query interpolation.
+.TP
+.B Display Formatting Variables (\epset)
+Set with `\epset NAME VALUE` or toggle commands like `\ea`, `\eH`, `\ex`, `\et`. Control table borders, output formats (aligned, csv, html, json, etc.), titles, timing display, etc. View all with `\epset`.
+.LP
+Special variables (set via `\eset`) control behavior like syntax highlighting (`SYNTAX_HL`, `SYNTAX_HL_STYLE`), host info display (`SHOW_HOST_INFORMATION`), prompts (`PROMPT1`, `PROMPT2`, `PROMPT3`), etc. Use `\e? variables` in usql for a comprehensive list.
+.SH FILES
+.TP
+.I $HOME/.config/usql/config.yaml
+Primary configuration file (path varies by OS: `%AppData%/usql/config.yaml` on Windows, `$HOME/Library/Application Support/usql/config.yaml` on macOS). Defines named connections (`connections:`), startup commands (`init:`), default settings, etc. Uses YAML format.
+.TP
+.I $HOME/.usqlrc
+Legacy startup script executed when `usql` starts interactively, unless `-X` is given. Useful for setting variables or running initial commands. The `init:` section in `config.yaml` is now preferred.
+.TP
+.I $HOME/.usqlpass
+Legacy file for storing database passwords (permissions must be `0600`). Format: `protocol:host:port:dbname:user:pass`. Using named connections in `config.yaml` is generally safer and more flexible.
+.SH ENVIRONMENT
+.TP
+.B EDITOR
+Specifies the editor used by the `\ee` command.
+.TP
+.B PAGER
+Specifies the pager program used for displaying help (`\e?`) and other long output.
+.TP
+.B SHELL
+Specifies the shell used by the `\e!` command.
+.TP
+.B USQL_CONFIG_DIR
+Overrides the default directory for configuration files (`config.yaml`, `.usqlrc`, `.usqlpass`).
+.TP
+.B USQL_SHOW_HOST_INFORMATION
+Set to `false` to prevent displaying database host/version information upon connection. Can also be controlled by the `SHOW_HOST_INFORMATION` variable via `\eset`.
+.TP
+.B USQL_TERM_GRAPHICS
+Force enable or disable terminal graphics support. Values: `kitty`, `iterm`, `sixel`, `none`. Overrides automatic detection.
+.TP
+.B TERM_GRAPHICS
+Alternative to `USQL_TERM_GRAPHICS`.
+.SH EXAMPLES
+Connect to a PostgreSQL database interactively:
+.IP
+.B usql pg://user:pass@localhost:5432/mydatabase
+.LP
+Connect to a local SQLite3 file (will create if not exists if scheme is present):
+.IP
+.B usql sqlite3://./data.db
+.LP
+Run a single SQL command against a MySQL database and exit:
+.IP
+.B usql -c "SELECT user, host FROM mysql.user;" my://root@localhost/
+.LP
+Execute commands from a script file against SQL Server:
+.IP
+.B usql -f setup.sql ms://sa:Password123@server.example.com/master
+.LP
+Connect using a named connection 'prod_db' defined in config.yaml:
+.IP
+.B usql prod_db
+.LP
+Set a variable on the command line and use it in a query:
+.IP
+.B usql -v SCHEMA=public -v TBL=users pg://... -c 'SELECT * FROM :"SCHEMA".:"TBL" LIMIT 10;'
+.LP
+Copy all data from a PostgreSQL table 'source_tbl' to an Oracle table 'TARGET_TBL':
+.IP
+.B usql -c "\\ecopy pg://... or://... 'SELECT * FROM source_tbl' 'TARGET_TBL'"
+.LP
+Connect to a CSV file in the current directory and query it:
+.IP
+.B usql csvq://. -c "SELECT column_a, column_b FROM 'data.csv' WHERE column_a > 10;"
+.SH SEE ALSO
+The full documentation, source code, and issue tracker can be found on GitHub:
+.IP
+.B https://github.com/xo/usql
