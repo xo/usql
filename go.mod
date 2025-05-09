@@ -164,7 +164,6 @@ require (
 	github.com/docker/cli v28.0.4+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/dromara/carbon/v2 v2.6.4 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.1.14 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.9 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.9 // indirect
@@ -199,7 +198,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
-	github.com/golang-module/carbon/v2 v2.5.9 // indirect
+	github.com/golang-module/carbon/v2 v2.4.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect

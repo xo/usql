@@ -923,8 +923,6 @@ github.com/docker/go-connections v0.5.0/go.mod h1:ov60Kzw0kKElRwhNs9UlUHAE/F9Fe6
 github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4=
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
-github.com/dromara/carbon/v2 v2.6.4 h1:cpIansyiEIEed3OlEIqo1IXj86qu0x6pf/E2keL2wYo=
-github.com/dromara/carbon/v2 v2.6.4/go.mod h1:Baj3A1uBBctJmpZWJd6/+WWnmIuY2pobR6IOpB6xigc=
 github.com/duckdb/duckdb-go-bindings v0.1.14 h1:57DCZuuKQ65gRQxFG+XGnqVQtMADKY/noozmCjYs+zE=
 github.com/duckdb/duckdb-go-bindings v0.1.14/go.mod h1:pBnfviMzANT/9hi4bg+zW4ykRZZPCXlVuvBWEcZofkc=
 github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.9 h1:K95YlR28Fb3+n3D6RcBzdznNVGcCnrGaAZqs52JUFOs=
@@ -1058,8 +1056,8 @@ github.com/golang-jwt/jwt/v4 v4.5.2 h1:YtQM7lnr8iZ+j5q71MGKkNw9Mn7AjHM68uc9g5fXe
 github.com/golang-jwt/jwt/v4 v4.5.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
 github.com/golang-jwt/jwt/v5 v5.2.2 h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8=
 github.com/golang-jwt/jwt/v5 v5.2.2/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
-github.com/golang-module/carbon/v2 v2.5.9 h1:QKotfr6/Fkk5RGIPyEfItaR5guF37QH2YyKCbn1EFxM=
-github.com/golang-module/carbon/v2 v2.5.9/go.mod h1:yAYXIP0OIq7ykDosUWpZpEyTGuvBXnSjGMQ/EaNagYQ=
+github.com/golang-module/carbon/v2 v2.4.1 h1:cYUD8T+rHeX+qIybGYpnJ8I90F10dvyEF67VNOO+zZM=
+github.com/golang-module/carbon/v2 v2.4.1/go.mod h1:1jP9AZ4k2+lmfgY/wZgmtsN52VcHC5YuPM6varKDTkM=
 github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 h1:au07oEsX2xN0ktxqI+Sida1w446QrXBRJ0nee3SNZlA=
 github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9/go.mod h1:8vg3r2VgvsThLBIFL93Qb5yWzgyZWhEmBwUJWevAkK0=
 github.com/golang-sql/sqlexp v0.1.0 h1:ZCD6MBpcuOVfGVqsEmY5/4FtYiKz6tSyUv9LPEDei6A=
