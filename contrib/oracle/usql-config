@@ -1,2 +1,2 @@
 DB="oracle://system:P4ssw0rd@localhost/free"
-VSQL="SELECT version FROM v\$instance"
+VSQL="SELECT banner as version FROM v\$version"

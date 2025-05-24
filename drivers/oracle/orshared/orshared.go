@@ -37,10 +37,10 @@ func Register(name string, err func(error) (string, string), isPasswordErr func(
 		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
-			if err := db.QueryRowContext(ctx, `SELECT version FROM v$instance`).Scan(&ver); err != nil {
+			if err := db.QueryRowContext(ctx, `SELECT banner FROM v$version`).Scan(&ver); err != nil {
 				return "", err
 			}
-			return "Oracle Database " + ver, nil
+			return ver, nil
 		},
 		User: func(ctx context.Context, db drivers.DB) (string, error) {
 			var user string
