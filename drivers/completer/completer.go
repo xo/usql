@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"

@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 )
 
 var (
@@ -47,8 +47,10 @@ type Rline struct {
 	Inst *readline.Instance
 	N    func() ([]rune, error)
 	C    func() error
-	Out  io.Writer
-	Err  io.Writer
+	Out  io.Writer // This is the currently active stdout writer (could be filtered)
+	Err  io.Writer // This is the currently active stderr writer
+	originalStdout io.WriteCloser // The base stdout writer, used for filtering
+	originalStderr io.Writer      // The base stderr writer
 	Int  bool
 	Cyg  bool
 	P    func(string)
@@ -123,9 +125,45 @@ func (l *Rline) Password(prompt string) (string, error) {
 	return "", ErrPasswordNotAvailable
 }
 
+// filterWriter implements io.Writer and applies a string filter.
+type filterWriter struct {
+	writer io.Writer
+	filter func(string) string
+}
+
+func (fw *filterWriter) Write(p []byte) (n int, err error) {
+	if fw.filter == nil {
+		return fw.writer.Write(p)
+	}
+	filtered := fw.filter(string(p))
+	return fw.writer.Write([]byte(filtered))
+}
+
+// Close implements io.Closer if the underlying writer is an io.Closer.
+func (fw *filterWriter) Close() error {
+	if closer, ok := fw.writer.(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
+}
+
 // SetOutput sets the output format func.
 func (l *Rline) SetOutput(f func(string) string) {
-	l.Inst.Config.Output = f
+	cfg := l.Inst.Config.Clone() // Get a mutable copy of the config
+
+	var currentWriter io.WriteCloser
+	if f != nil {
+		// Wrap the original stdout with the filter
+		currentWriter = &filterWriter{writer: l.originalStdout, filter: f}
+	} else {
+		// If filter is nil, revert to the original stdout
+		currentWriter = l.originalStdout
+	}
+
+	// Update both the Rline's exposed writer and the readline instance's config
+	l.Out = currentWriter
+	cfg.Stdout = currentWriter
+	l.Inst.SetConfig(cfg) // Apply the modified config to the readline instance
 }
 
 // New creates a new readline input/output handler.
@@ -173,8 +211,8 @@ func New(interactive, cygwin, forceNonInteractive bool, out, histfile string) (I
 		InterruptPrompt:        "^C",
 		HistorySearchFold:      true,
 		Stdin:                  stdin,
-		Stdout:                 stdout,
-		Stderr:                 stderr,
+		Stdout:                 stdout, // Pass the original stdout
+		Stderr:                 stderr, // Pass the original stderr
 		FuncIsTerminal: func() bool {
 			return interactive || cygwin
 		},
@@ -209,8 +247,10 @@ func New(interactive, cygwin, forceNonInteractive bool, out, histfile string) (I
 			}
 			return nil
 		},
-		Out: stdout,
-		Err: stderr,
+		Out:            stdout, // Rline.Stdout() returns this original writer initially
+		Err:            stderr, // Rline.Stderr() returns this original writer
+		originalStdout: stdout, // Store the original for filtering
+		originalStderr: stderr, // Store the original for filtering (though SetOutput only affects stdout)
 		Int: interactive || cygwin,
 		Cyg: cygwin,
 		P:   l.SetPrompt,
