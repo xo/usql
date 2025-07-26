@@ -16,7 +16,7 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"

@@ -19,6 +19,7 @@ require (
 	github.com/btnguyen2k/gocosmos v1.1.0
 	github.com/btnguyen2k/godynamo v1.3.0
 	github.com/chaisql/chai v0.16.1-0.20240218103834-23e406360fd2
+	github.com/chzyer/readline v1.5.2-0.20250620033330-9dfc369f8652
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databricks/databricks-sql-go v1.7.1
 	github.com/datafuselabs/databend-go v0.7.5
@@ -28,7 +29,6 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gocql/gocql v1.7.0
 	github.com/godror/godror v0.49.0
-	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.7.0
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/googleapis/go-sql-spanner v1.16.0

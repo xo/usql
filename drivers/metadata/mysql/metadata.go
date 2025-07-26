@@ -3,7 +3,7 @@ package mysql
 import (
 	"time"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
