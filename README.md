@@ -546,9 +546,6 @@ $ usql pg://
 See the relevant documentation [on database drivers][databases] for more
 information.
 
-You can set config file explicitly with `usql --config $PATH_TO_CONFIG_FILE` if your location differs 
-from the default ones.
-
 ### Connection Examples
 
 The following are example connection strings and additional ways to connect to
