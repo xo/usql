@@ -2,6 +2,10 @@
 
 set -e
 
+# Note: To be able to run this on a Debian/Ubuntu system, ensure you have these
+# dependencies installed:
+#   apt install -y golang ca-certificates file bzip2
+
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
 NAME=$(basename $SRC)
@@ -201,8 +205,42 @@ fi
     $OUTPUT
 )
 
-if [[ "$INSTALL" == "1" || "$BUILDONLY" == "1" ]]; then
-  exit
+# Install if requested
+if [ "$INSTALL" = "1" ]; then
+  echo "INSTALLING BINARY"
+  (set -x;
+    go install \
+      -v=$VERBOSE \
+      -x=$VERBOSE \
+      -ldflags="$LDFLAGS" \
+      -tags="$TAGS" \
+      -trimpath
+  )
+
+
+  if [[ "$PLATFORM" == "windows" ]]; then
+    echo "SKIP MAN PAGE ON WINDOWS"
+    exit 0
+  fi
+
+  # Install man page on non-Windows systems
+  MANDIR=${MANDIR:-/usr/local/share/man/man1}
+  echo "INSTALLING MAN PAGE to $MANDIR"
+  (set -x;
+    mkdir -p "$MANDIR"
+    install -m 0644 "$SRC/man/usql.1" "$MANDIR/"
+  )
+  # Update man database
+  if command -v mandb &>/dev/null; then
+    echo "UPDATING MAN DATABASE"
+    (set -x; mandb)
+  fi
+  exit 0
+fi
+
+# Exit if only building
+if [ "$BUILDONLY" = "1" ]; then
+    exit 0
 fi
 
 (set -x;
@@ -249,10 +287,11 @@ if [[ "$CHECK" == "1" ]]; then
 fi
 
 # pack
-cp $SRC/LICENSE $DIR
+cp $SRC/LICENSE $DIR/
+cp $SRC/man/usql.1 $DIR/
 case $EXT in
-  tar.bz2) $TAR -C $DIR -cjf $OUT $(basename $BIN) LICENSE ;;
-  zip) zip $OUT -j $BIN LICENSE ;;
+  tar.bz2) $TAR -C $DIR -cjf $OUT $(basename $BIN) LICENSE usql.1 ;;
+  zip) zip $OUT -j $BIN $DIR/LICENSE $DIR/usql.1 ;;
 esac
 
 # report
@@ -264,7 +303,7 @@ case $EXT in
 esac
 
 (set -x;
-  sha256sum $DIR/*
+  sha256sum $DIR/$(basename $BIN) $DIR/LICENSE $DIR/usql.1
 )
 
 popd &> /dev/null
