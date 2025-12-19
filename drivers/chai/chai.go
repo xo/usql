@@ -4,7 +4,7 @@
 package chai
 
 import (
-	_ "github.com/chaisql/chai/driver" // DRIVER
+	_ "github.com/chaisql/chai" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

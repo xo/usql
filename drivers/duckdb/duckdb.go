@@ -1,6 +1,6 @@
 // Package duckdb defines and registers usql's DuckDB driver. Requires CGO.
 //
-// See: https://github.com/marcboeker/go-duckdb
+// See: https://github.com/duckdb/duckdb-go
 package duckdb
 
 import (
@@ -10,7 +10,7 @@ import (
 	"io"
 	"strings"
 
-	_ "github.com/marcboeker/go-duckdb/v2" // DRIVER
+	_ "github.com/duckdb/duckdb-go/v2" // DRIVER
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
