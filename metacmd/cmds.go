@@ -573,17 +573,45 @@ func Copy(p *Params) error {
 	if err != nil {
 		return err
 	}
-	src, err := dburl.Parse(srcstr)
-	if err != nil {
-		return err
+	// resolve source connection variable if needed
+	srcParams := []string{srcstr}
+	if v, ok := env.Vars().GetConn(srcstr); ok {
+		srcParams = v
+	}
+	// parse or construct source URL
+	var src *dburl.URL
+	if len(srcParams) < 2 {
+		src, err = dburl.Parse(srcParams[0])
+		if err != nil {
+			return err
+		}
+	} else {
+		src = &dburl.URL{
+			Driver: srcParams[0],
+			DSN:    strings.Join(srcParams[1:], " "),
+		}
 	}
 	deststr, err := p.Next(true)
 	if err != nil {
 		return err
 	}
-	dest, err := dburl.Parse(deststr)
-	if err != nil {
-		return err
+	// resolve destination connection variable if needed
+	destParams := []string{deststr}
+	if v, ok := env.Vars().GetConn(deststr); ok {
+		destParams = v
+	}
+	// parse or construct destination URL
+	var dest *dburl.URL
+	if len(destParams) < 2 {
+		dest, err = dburl.Parse(destParams[0])
+		if err != nil {
+			return err
+		}
+	} else {
+		dest = &dburl.URL{
+			Driver: destParams[0],
+			DSN:    strings.Join(destParams[1:], " "),
+		}
 	}
 	query, err := p.Next(true)
 	if err != nil {
