@@ -4,8 +4,11 @@ on:
     types: [published]
 env:
   VER: ${{ github.ref_name }}
+  AUTHOR_NAME: Kenneth Shaw
+  AUTHOR_EMAIL: kenshaw@gmail.com
   HOMEBREW_REPO: https://kenshaw:${{ secrets.HOMEBREW_TOKEN }}@github.com/xo/homebrew-xo.git
   AUR_REPO: aur@aur.archlinux.org:usql.git
+  AUR_BIN_REPO: aur@aur.archlinux.org:usql-bin.git
 
 jobs:
   bump-aur-package:
@@ -40,8 +43,8 @@ jobs:
               |sed -e 's/\\r//g' -e 's/\[VirusTotal.*//'
           )
           git clone $AUR_REPO $REPO_PATH
-          git -C $REPO_PATH config user.name 'Kenneth Shaw'
-          git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
+          git -C $REPO_PATH config user.name "$AUTHOR_NAME"
+          git -C $REPO_PATH config user.email "$AUTHOR_EMAIL"
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
           sed -i "s/sha256sums=.*$/sha256sums=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
@@ -67,9 +70,9 @@ jobs:
               |jq -r .body \
               |sed -e 's/\\r//g' -e 's/\[VirusTotal.*//'
           )
-          git clone $AUR_REPO $REPO_PATH
-          git -C $REPO_PATH config user.name 'Kenneth Shaw'
-          git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
+          git clone $AUR_BIN_REPO $REPO_PATH
+          git -C $REPO_PATH config user.name "$AUTHOR_NAME"
+          git -C $REPO_PATH config user.email "$AUTHOR_EMAIL"
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
           sed -i "s/sha256sums\\([^=]*\\)=.*$/sha256sums\\1=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
@@ -102,8 +105,8 @@ jobs:
               |sed -e 's/\\r//g' -e 's/\[VirusTotal.*//'
           )
           git clone $HOMEBREW_REPO $REPO_PATH
-          git -C $REPO_PATH config user.name 'Kenneth Shaw'
-          git -C $REPO_PATH config user.email 'kenshaw@gmail.com'
+          git -C $REPO_PATH config user.name "$AUTHOR_NAME"
+          git -C $REPO_PATH config user.email "$AUTHOR_EMAIL"
           sed -i "s%url \".*$%url \"https://github.com/xo/usql/archive/${VER}.tar.gz\"%" $REPO_PATH/Formula/usql.rb
           sed -i "s/sha256 \".*$/sha256 \"$SHA256SUM\"/" $REPO_PATH/Formula/usql.rb
           git -C $REPO_PATH add Formula/usql.rb
