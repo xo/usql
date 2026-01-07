@@ -778,6 +778,9 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	// force error/check connection
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
+			if h.l.Interactive() {
+				h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOpts(), completer.WithConnStrings(h.connStrings())))
+			}
 			return h.Version(ctx)
 		}
 	}
