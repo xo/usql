@@ -10,11 +10,23 @@ env:
   AUR_REPO: aur@aur.archlinux.org:usql.git
   AUR_BIN_REPO: aur@aur.archlinux.org:usql-bin.git
 
+# cribbed from https://github.com/actions/runner/issues/691
 jobs:
+  configure:
+    runs-on: ubuntu-latest
+    outputs:
+      uid_gid: ${{ steps.get-user.outputs.uid_gid }}
+    steps:
+      - id: get-user
+        run: echo "::set-output name=uid_gid::$(id -u):$(id -g)"
+
   bump-aur-package:
     name: Bump AUR Package
     runs-on: ubuntu-latest
-    container: docker.io/library/archlinux:latest
+    needs: configure
+    container:
+      image: docker.io/library/archlinux:latest
+      options: --user ${{ needs.configure.outputs.uid_gid }}
     steps:
       - name: Add archlinux tools
         run: |
