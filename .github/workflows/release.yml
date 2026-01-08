@@ -224,7 +224,7 @@ jobs:
             name=$(sed -e 's/^\.\/scan\/\([^=]\+\)=.*/\1/' <<< "$line")
             vturl=$(sed -e 's/.*=\(https.*\)/\1/' <<< "$line")
             body+="* [$name]($vturl)$nl"
-          done <<< "${{ steps.virustotal.outputs.analysis }}"
+          done <<< "${{ steps.virustotal.outputs.analysis }},"
 
           # update release notes
           export body
