@@ -62,7 +62,7 @@ jobs:
           sed -i "s/sha256sums=.*$/sha256sums=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
           pushd $REPO_PATH &> /dev/null
-          sudo -s ${{ needs.configure.outputs.username }} bash << 'EOF'
+          sudo -u ${{ needs.configure.outputs.username }} bash << 'EOF'
             updpkgsums
           EOF
           pkgctl build
@@ -92,7 +92,7 @@ jobs:
           sed -i "s/sha256sums\\([^=]*\\)=.*$/sha256sums\\1=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
           pushd $REPO_PATH &> /dev/null
-          sudo -s ${{ needs.configure.outputs.username }} bash << 'EOF'
+          sudo -u ${{ needs.configure.outputs.username }} bash << 'EOF'
             updpkgsums
           EOF
           pkgctl build
