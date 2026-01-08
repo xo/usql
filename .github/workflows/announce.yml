@@ -76,8 +76,8 @@ jobs:
           chown -R ${{ needs.configure.outputs.username }} .
           sudo -u ${{ needs.configure.outputs.username }} bash << 'EOF'
             updpkgsums
-            pkgctl build
           EOF
+          pkgctl build
           du -sh *.zst
           popd &> /dev/null
           git -C $REPO_PATH add PKGBUILD .SRCINFO
