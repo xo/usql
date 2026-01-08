@@ -13,12 +13,14 @@ env:
 # cribbed from https://github.com/actions/runner/issues/691
 jobs:
   configure:
+    name: Configure
     runs-on: ubuntu-latest
     outputs:
-      uid_gid: ${{ steps.get-user.outputs.uid_gid }}
+      username: ${{ steps.get-user.outputs.username }}
     steps:
       - id: get-user
-        run: echo "::set-output name=uid_gid::$(id -u):$(id -g)"
+        name: Get User
+        run: echo "username=$(id -n -u)" >> $GITHUB_OUTPUT
 
   bump-aur-package:
     name: Bump AUR Package
@@ -26,7 +28,6 @@ jobs:
     needs: configure
     container:
       image: docker.io/library/archlinux:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
     steps:
       - name: Add archlinux tools
         run: |
@@ -61,7 +62,9 @@ jobs:
           sed -i "s/sha256sums=.*$/sha256sums=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
           pushd $REPO_PATH &> /dev/null
-          updpkgsums
+          sudo -s ${{ needs.configure.outputs.username }} bash << 'EOF'
+            updpkgsums
+          EOF
           pkgctl build
           du -sh *.zst
           popd &> /dev/null
@@ -89,7 +92,9 @@ jobs:
           sed -i "s/sha256sums\\([^=]*\\)=.*$/sha256sums\\1=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
           pushd $REPO_PATH &> /dev/null
-          updpkgsums
+          sudo -s ${{ needs.configure.outputs.username }} bash << 'EOF'
+            updpkgsums
+          EOF
           pkgctl build
           du -sh *.zst
           popd &> /dev/null
