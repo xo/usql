@@ -38,11 +38,12 @@ jobs:
     steps:
       - name: Setup
         run: |
+          export USERNAME=${{ needs.configure.outputs.username }}
           pacman-key --init
           pacman -Sy --noconfirm archlinux-keyring
           pacman -Sy --noconfirm git base-devel sudo pacman-contrib devtools
-          useradd -m ${{ needs.configure.outputs.username }}
-          echo "${{ needs.configure.outputs.username }} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          useradd -m $USERNAME
+          echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
       - name: Add AUR SSH key
         uses: shimataro/ssh-key-action@v2
@@ -56,8 +57,11 @@ jobs:
 
       - name: Bump AUR Package (${{ matrix.package }})
         run: |
-          export WORKDIR=$(mktemp -d /tmp/${{ matrix.package }}.XXXXXX)
-          export REPO_PATH=$WORKDIR/${{ matrix.package }}
+          export USERNAME=${{ needs.configure.outputs.username }}
+          export PACKAGE=${{ matrix.package }}
+          export REPO=${{ matrix.repo }}
+          export WORKDIR=$(mktemp -d /tmp/${PACKAGE}.XXXXXX)
+          export REPO_PATH=$WORKDIR/${PACKAGE}
           export CHANGELOG=$(
             curl \
               -s \
@@ -66,19 +70,16 @@ jobs:
               |jq -r .body \
               |sed -e 's/\\r//g' -e 's/\[VirusTotal.*//'
           )
-          git clone ${{ matrix.repo }} $REPO_PATH
+          git clone $REPO $REPO_PATH
           git -C $REPO_PATH config user.name "$AUTHOR_NAME"
           git -C $REPO_PATH config user.email "$AUTHOR_EMAIL"
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
           sed -i "s/sha256sums\\([^=]*\\)=.*$/sha256sums\\1=('SKIP')/" $REPO_PATH/PKGBUILD
           sed -i "s/pkgrel=.*$/pkgrel=1/" $REPO_PATH/PKGBUILD
+          chown -R ${USERNAME}:${USERNAME} $WORKDIR
           pushd $REPO_PATH &> /dev/null
-          chown -R ${{ needs.configure.outputs.username }} .
-          sudo -u ${{ needs.configure.outputs.username }} bash << 'EOF'
-            updpkgsums
-          EOF
-          pkgctl build
-          du -sh *.zst
+          sudo -u ${USERNAME} bash -c 'updpkgsums'
+          sudo -u ${USERNAME} bash -c 'makepkg --printsrcinfo > .SRCINFO'
           popd &> /dev/null
           git -C $REPO_PATH add PKGBUILD .SRCINFO
           git -C $REPO_PATH commit -m "$(printf %b "Update usql version to ${VER}\n\n${CHANGELOG}")"
