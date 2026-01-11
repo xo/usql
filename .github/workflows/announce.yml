@@ -71,6 +71,7 @@ jobs:
               |sed -e 's/\\r//g' -e 's/\[VirusTotal.*//'
           )
           git clone $REPO $REPO_PATH
+          git config --global --add safe.directory $REPO_PATH
           git -C $REPO_PATH config user.name "$AUTHOR_NAME"
           git -C $REPO_PATH config user.email "$AUTHOR_EMAIL"
           sed -i "s/pkgver=.*$/pkgver=${VER#v}/" $REPO_PATH/PKGBUILD
