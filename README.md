@@ -604,7 +604,11 @@ $ usql file:/path/to/dbname.sqlite3
 $ usql adodb://Microsoft.Jet.OLEDB.4.0/myfile.mdb
 $ usql "adodb://Microsoft.ACE.OLEDB.12.0/?Extended+Properties=\"Text;HDR=NO;FMT=Delimited\""
 
-# connect to a named connection in $HOME/.config/usql/config.yaml
+# connect to a named connection from config file
+# For linux and other UNIX default config file is typically located in $HOME/.config/usql/config.yaml or $XDG_CONFIG_HOME/usql/config.yaml
+# For macOS it is $HOME/Library/Application Support/usql/config.yaml
+# For Windows it is %AppData%/usql/config.yaml
+# You can also provide path to config file with connections explicitly with usql --config
 $ cat $HOME/.config/usql/config.yaml
 connections:
   my_named_connection: sqlserver://user:pass@localhost/
@@ -846,7 +850,10 @@ always appreciated][contributing]!
 During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
 file [`config.yaml`](contrib/config.yaml). On Windows this is `%AppData%/usql/config.yaml`,
 on macOS this is `$HOME/Library/Application Support/usql/config.yaml`, and on
-Linux and other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
+Linux and other Unix systems this is normally `$HOME/.config/usql/config.yaml` 
+or `$XDG_CONFIG_HOME/usql/config.yaml` if `$XDG_CONFIG_HOME` is set.
+
+You can provide config file explicitly with `usql --config $PATH_TO_CONFIG_FILE`.
 
 ##### `connections:`
 
