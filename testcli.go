@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	gexpect "github.com/google/goexpect"
@@ -127,8 +128,17 @@ func (test Test) do(ctx context.Context, binpath string, timeout time.Duration) 
 		return err
 	}
 	for _, line := range bytes.Split(buf, []byte{'\n'}) {
+		// give time to usql to react to sent commands so statements are close to their results in output
+		// this helps link failures to the statement that caused them
+		time.Sleep(100 * time.Millisecond)
 		if err := exp.Send(string(line) + "\n"); err != nil {
 			return err
+		}
+		command := strings.TrimSpace(string(line))
+		if command == `\q` || command == `\quit` {
+			break
+			// don't send any lines after quit command e.g. trailing empty lines
+			// Send() fails if the command has stopped
 		}
 	}
 	select {
