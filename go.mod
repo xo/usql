@@ -1,6 +1,6 @@
 module github.com/xo/usql
 
-go 1.25
+go 1.25.7
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.42.0
