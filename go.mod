@@ -61,7 +61,7 @@ require (
 	github.com/xo/dburl v0.24.2
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.6.0
-	github.com/xo/tblfmt v0.15.2
+	github.com/xo/tblfmt v0.16.0
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.127.2
 	github.com/yookoala/realpath v1.0.0
