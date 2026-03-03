@@ -132,6 +132,7 @@ if [ "$STATIC" = "1" ]; then
       TAGS+=(
         netgo
         osusergo
+        minicore_disabled
       )
       EXTLDFLAGS=(
         -static
