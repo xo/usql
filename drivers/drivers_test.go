@@ -7,11 +7,13 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -435,9 +437,11 @@ func TestCopy(t *testing.T) {
 
 	testCases := []struct {
 		dbName       string
+		testCase     string
 		setupQueries []setupQuery
 		src          string
 		dest         string
+		destCmpQuery string
 	}{
 		{
 			dbName: "pgsql",
@@ -449,7 +453,8 @@ func TestCopy(t *testing.T) {
 			dest: "staff_copy",
 		},
 		{
-			dbName: "pgsql",
+			dbName:   "pgsql",
+			testCase: "schemaInDest",
 			setupQueries: []setupQuery{
 				{query: "DROP TABLE staff_copy"},
 				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
@@ -466,8 +471,9 @@ func TestCopy(t *testing.T) {
 			src:  "select * from staff",
 			dest: "staff_copy",
 		},
-		{
-			dbName: "pgx",
+		{ // this holds even select iterates over table in a ran
+			dbName:   "pgx",
+			testCase: "schemaInDest",
 			setupQueries: []setupQuery{
 				{query: "DROP TABLE staff_copy"},
 				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
@@ -478,11 +484,21 @@ func TestCopy(t *testing.T) {
 		{
 			dbName: "mysql",
 			setupQueries: []setupQuery{
-				{query: "DROP TABLE staff_copy"},
 				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
 			},
 			src:  "select staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update from staff",
 			dest: "staff_copy(staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update)",
+		},
+		{
+			dbName:   "mysql",
+			testCase: "bulkCopy",
+			setupQueries: []setupQuery{
+				{query: "SET GLOBAL local_infile = ON"},
+				{query: "DROP TABLE staff_copy"},
+				{query: "CREATE TABLE staff_copy AS SELECT * FROM staff WHERE 0=1", check: true},
+			},
+			src:  "select staff_id, first_name, last_name, address_id, email, store_id, active, username, password, last_update from staff",
+			dest: "staff_copy(staff_id, first_name, last_name, address_id, email, store_id, active, username, password, last_update)",
 		},
 		{
 			dbName: "sqlserver",
@@ -497,9 +513,11 @@ func TestCopy(t *testing.T) {
 			dbName: "csvq",
 			setupQueries: []setupQuery{
 				{query: "CREATE TABLE IF NOT EXISTS staff_copy AS SELECT * FROM `staff.csv` WHERE 0=1", check: true},
+				{query: "DELETE from staff_copy", check: true},
 			},
-			src:  "select first_name, last_name, address_id, email, store_id, active, username, password, last_update from staff",
-			dest: "staff_copy",
+			src:          "select first_name, last_name, address_id, email, store_id, active, username, password, last_update from staff",
+			dest:         "staff_copy",
+			destCmpQuery: "select first_name, last_name, address_id, email, store_id, active, username, password, datetime(last_update) from staff_copy",
 		},
 	}
 	for _, test := range testCases {
@@ -508,7 +526,11 @@ func TestCopy(t *testing.T) {
 			continue
 		}
 
-		t.Run(test.dbName, func(t *testing.T) {
+		testName := test.dbName
+		if test.testCase != "" {
+			testName += "-" + test.testCase
+		}
+		t.Run(testName, func(t *testing.T) {
 
 			// TODO test copy from a different DB, maybe csvq?
 			// TODO test copy from same DB
@@ -524,7 +546,7 @@ func TestCopy(t *testing.T) {
 				t.Fatalf("Could not get rows to copy: %v", err)
 			}
 
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Second)
 			defer cancel()
 			var rlen int64 = 1
 			n, err := drivers.Copy(ctx, db.URL, nil, nil, rows, test.dest)
@@ -534,8 +556,93 @@ func TestCopy(t *testing.T) {
 			if n != rlen {
 				t.Fatalf("Expected to copy %d rows but got %d", rlen, n)
 			}
+
+			checkSameData(t, ctx, pg.DB, test.src, db.DB, test.destCmpQuery)
 		})
 	}
+}
+
+// checkSameData fails the test if the data in the srcDB."staff" table is different than destDB."staff_copy" table
+func checkSameData(t *testing.T, ctx context.Context, srcDB *sql.DB, srcQuery string, destDB *sql.DB, destCmpQuery string) {
+	if destCmpQuery == "" {
+		srcQuery = strings.ToLower(srcQuery)
+		if !strings.Contains(srcQuery, "from staff") {
+			t.Fatalf("destCmpQuery needs to be configured if src '%s' is not for table 'staff'", srcQuery)
+		}
+		// if destCmpQuery needs special syntax, configure it in the test case definitions above
+		destCmpQuery = strings.Replace(srcQuery, "from staff", "from staff_copy", 1)
+	}
+	srcValues, srcColumnTypes, err := getSrcRow(ctx, srcDB, srcQuery)
+	if err != nil {
+		t.Fatalf("Could not get src row from database: %v", err)
+	}
+	destValues, err := getDestRow(ctx, destDB, destCmpQuery, srcColumnTypes)
+	if err != nil {
+		t.Fatalf("Could not get dest row from database: %v", err)
+	}
+	// Comparing more than 1 row is more complex because SELECT result order is undefined without order by
+	adjustDates(srcValues, destValues)
+	if !reflect.DeepEqual(srcValues, destValues) {
+		t.Fatalf("Source and dest row don't match: \n%v\n vs \n%v", srcValues, destValues)
+	}
+}
+
+// adjustDates removes sub-second differences between any dates in the two rows, because
+// the difference are likely caused by difference in precision and not by a copy issue
+func adjustDates(src []interface{}, dest []interface{}) {
+	for i, v := range src {
+		srcDate, okSrc := v.(time.Time)
+		destDate, okDest := dest[i].(time.Time)
+		if okSrc && okDest && srcDate.Sub(destDate).Abs() <= time.Second {
+			dest[i] = srcDate
+		}
+	}
+}
+
+func getSrcRow(ctx context.Context, db *sql.DB, query string) ([]interface{}, []*sql.ColumnType, error) {
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, nil, err
+	}
+	values, err := readRow(rows, columnTypes)
+	return values, columnTypes, err
+}
+
+func getDestRow(ctx context.Context, db *sql.DB, query string, columnTypes []*sql.ColumnType) ([]interface{}, error) {
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return readRow(rows, columnTypes)
+}
+
+func readRow(rows *sql.Rows, columnTypes []*sql.ColumnType) ([]interface{}, error) {
+	if !rows.Next() {
+		return nil, errors.New("exactly one row expected but got 0")
+	}
+	// some DB drivers don't handle reading into *any well so use *reportedType instead
+	values := make([]interface{}, len(columnTypes))
+	for i := 0; i < len(columnTypes); i++ {
+		values[i] = reflect.New(columnTypes[i].ScanType()).Interface()
+	}
+	err := rows.Scan(values...)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Next() {
+		return nil, errors.New("exactly one row expected but more found")
+	}
+	// dereference the pointers
+	for i, v := range values {
+		values[i] = reflect.ValueOf(v).Elem().Interface()
+	}
+	return values, nil
 }
 
 // filesEqual compares the files at paths a and b and returns an error if
