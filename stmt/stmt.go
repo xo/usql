@@ -228,6 +228,7 @@ parse:
 				z, ok, _ := unquote(v.Name, true)
 				if v.Defined = ok || v.Quote == '?'; v.Defined {
 					b.r, b.rlen = v.Substitute(b.r, z, ok)
+					i-- // account for removal of the :
 				}
 				if b.Len != 0 {
 					v.I += b.Len + 1
