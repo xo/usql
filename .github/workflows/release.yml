@@ -43,7 +43,7 @@ jobs:
         run: |
           ./build.sh -v $VER -a ${{ matrix.arch }} -s
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-linux-${{ matrix.arch }}
           path: build/linux/**/*
@@ -69,7 +69,7 @@ jobs:
         run: |
           ./build.sh -v $VER -a ${{ matrix.arch }}
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-darwin-${{ matrix.arch }}
           path: build/darwin/**/*
@@ -116,7 +116,7 @@ jobs:
           ls -alh $WORKDIR/*
           sha256sum $WORKDIR/*
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-darwin-universal
           path: build/darwin/**/*
@@ -139,7 +139,7 @@ jobs:
         run: |
           ./build.sh -v $VER
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-windows
           path: build/windows/**/*
