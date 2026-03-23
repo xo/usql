@@ -180,7 +180,7 @@ jobs:
           sha256sum ./scan/*
       - name: Submit to VirusTotal
         id: virustotal
-        uses: crazy-max/ghaction-virustotal@v4
+        uses: crazy-max/ghaction-virustotal@v5
         with:
           vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
           request_rate: 4
