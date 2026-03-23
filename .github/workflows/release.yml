@@ -30,7 +30,7 @@ jobs:
             libc6-dev-arm64-cross \
             file
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -60,7 +60,7 @@ jobs:
         run: |
           brew install coreutils
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -129,7 +129,7 @@ jobs:
       - name: Install build dependencies
         run: choco install zip
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
