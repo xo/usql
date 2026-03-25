@@ -21,6 +21,7 @@ var queryMap = map[string]bool{
 	"TABLE":      true, // shortcut for select * from <table> (postgresql)
 	"CALL":       true,
 	"FROM":       true,
+	"UNPIVOT":    true,
 }
 
 // execMap is the map of SQL prefixes to execute.
