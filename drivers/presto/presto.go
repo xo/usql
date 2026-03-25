@@ -6,7 +6,7 @@ package presto
 import (
 	"context"
 
-	_ "github.com/prestodb/presto-go-client/presto" // DRIVER
+	_ "github.com/prestodb/presto-go-client/v2" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
