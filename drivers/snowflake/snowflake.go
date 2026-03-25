@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/snowflakedb/gosnowflake" // DRIVER
+	"github.com/snowflakedb/gosnowflake/v2" // DRIVER
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
