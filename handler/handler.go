@@ -182,6 +182,10 @@ func (h *Handler) Run() error {
 			return err
 		case cmd != "":
 			opt, cont, lastErr = h.apply(stdout, stderr, strings.TrimPrefix(cmd, `\`), paramstr)
+		default:
+			if iactive {
+				time.Sleep(time.Millisecond)
+			}
 		}
 		if cont {
 			continue
