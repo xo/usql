@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql.png" height="120">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/main/usql.png" height="120">
 </div>
 
 <div align="center">
@@ -187,7 +187,7 @@ Server, Oracle, CSVQ will be included in the build:
 ```sh
 # build/install with base drivers (PostgreSQL, MySQL, SQLite3, Microsoft SQL Server,
 # Oracle, CSVQ)
-$ go install github.com/xo/usql@master
+$ go install github.com/xo/usql@main
 ```
 
 Other databases can be enabled by specifying the [build tag for their database
@@ -195,7 +195,7 @@ driver][databases].
 
 ```sh
 # build/install with base, Avatica, and ODBC drivers
-$ go install -tags 'avatica odbc' github.com/xo/usql@master
+$ go install -tags 'avatica odbc' github.com/xo/usql@main
 ```
 
 For every build tag `<driver>`, there is also a `no_<driver>` build tag
@@ -203,7 +203,7 @@ that will disable the driver:
 
 ```sh
 # build/install most drivers, excluding Avatica, Couchbase, and PostgreSQL
-$ go install -tags 'most no_avatica no_couchbase no_postgres' github.com/xo/usql@master
+$ go install -tags 'most no_avatica no_couchbase no_postgres' github.com/xo/usql@main
 ```
 
 By specifying the build tags `most` or `all`, the build will include most, and
@@ -211,10 +211,10 @@ all SQL drivers, respectively:
 
 ```sh
 # build/install with most drivers (excludes CGO drivers and problematic drivers)
-$ go install -tags most github.com/xo/usql@master
+$ go install -tags most github.com/xo/usql@main
 
 # build/install all drivers (includes CGO drivers and problematic drivers)
-$ go install -tags all github.com/xo/usql@master
+$ go install -tags all github.com/xo/usql@main
 ```
 
 ## Database Support
@@ -1401,7 +1401,7 @@ When support is available, the logo will be displayed at the start of an
 interactive session:
 
 <div style="padding-left: 20px;">
-  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/usql-interactive.png" height="120">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/main/usql-interactive.png" height="120">
 </div>
 
 ##### Charts and Graphs
@@ -1410,7 +1410,7 @@ The [`\chart` command][chart-command] can be used to display a chart
 directly in the terminal:
 
 <div style="padding-left: 20px;">
-  <img src="https://raw.githubusercontent.com/xo/usql-logo/master/chart-example.png" height="120">
+  <img src="https://raw.githubusercontent.com/xo/usql-logo/main/chart-example.png" height="120">
 </div>
 
 See [the section on the `\chart` meta command][chart-command] for details.
