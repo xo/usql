@@ -102,6 +102,10 @@ var varNames = []varName{
 		`specifies the standard ` + text.CommandName + ` prompt`,
 	},
 	{
+		`PROMPT2`,
+		`specifies the continuation prompt for multi-line queries`,
+	},
+	{
 		`QUIET`,
 		`run quietly (same as -q option)`,
 	},
