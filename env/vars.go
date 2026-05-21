@@ -90,6 +90,7 @@ func NewDefaultVars() *Variables {
 			"ON_ERROR_STOP":         "off",
 			// prompts
 			"PROMPT1": "%S%N%m%/%R%# ",
+			"PROMPT2": "  ",
 			// syntax highlighting variables
 			"SYNTAX_HL":             enableSyntaxHL,
 			"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),

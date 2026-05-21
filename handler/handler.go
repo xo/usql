@@ -72,6 +72,8 @@ type Handler struct {
 	singleLineMode bool
 	// buf is the query statement buffer.
 	buf *stmt.Stmt
+	// lastPromptWidth is the visual width of the last rendered PROMPT1, used by %w in PROMPT2.
+	lastPromptWidth int
 	// lastExec is the last executed query statement.
 	lastExec string
 	// lastExecPrefix is the last executed query statement prefix.
@@ -98,9 +100,26 @@ type Handler struct {
 
 // New creates a new input handler.
 func New(l rline.IO, user *user.User, wd string, charts billy.Filesystem, nopw bool) *Handler {
-	f, iactive := l.Next, l.Interactive()
+	iactive := l.Interactive()
+	h := &Handler{
+		l:      l,
+		user:   user,
+		wd:     wd,
+		charts: charts,
+		nopw:   nopw,
+	}
+	f := l.Next
 	if iactive {
 		f = func() ([]rune, error) {
+			// set prompt: PROMPT1 for new statements, PROMPT2 for continuation lines
+			var rendered string
+			if h.buf != nil && h.buf.Len != 0 {
+				rendered = h.Prompt(env.Get("PROMPT2"))
+			} else {
+				rendered = h.Prompt(env.Get("PROMPT1"))
+				h.lastPromptWidth = visualWidth(rendered)
+			}
+			l.Prompt(rendered)
 			// next line
 			r, err := l.Next()
 			if err != nil {
@@ -111,14 +130,7 @@ func New(l rline.IO, user *user.User, wd string, charts billy.Filesystem, nopw b
 			return r, nil
 		}
 	}
-	h := &Handler{
-		l:      l,
-		user:   user,
-		wd:     wd,
-		charts: charts,
-		nopw:   nopw,
-		buf:    stmt.New(f),
-	}
+	h.buf = stmt.New(f)
 	if iactive {
 		l.SetOutput(h.outputHighlighter)
 		l.Completer(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
@@ -165,10 +177,6 @@ func (h *Handler) Run() error {
 	var execute bool
 	for {
 		execute = false
-		// set prompt
-		if iactive {
-			h.l.Prompt(h.Prompt(env.Get("PROMPT1")))
-		}
 		// read next statement/command
 		switch cmd, paramstr, err = h.buf.Next(env.Untick(h.user, env.Vars(), false)); {
 		case h.singleLineMode && err == nil:
@@ -686,10 +694,22 @@ func (h *Handler) Prompt(prompt string) string {
 		case '`': // value of the evaluated command
 		case '[', ']':
 		case 'w':
+			buf = append(buf, strings.Repeat(" ", h.lastPromptWidth)...)
 		}
 		i++
 	}
 	return string(buf)
+}
+
+// ansiEscapeRE matches ANSI terminal escape sequences so they can be excluded
+// from visual-width calculations.
+var ansiEscapeRE = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+// visualWidth returns the number of visible characters in s, ignoring ANSI
+// escape sequences and the %[ / %] prompt markers usql strips elsewhere.
+func visualWidth(s string) int {
+	s = ansiEscapeRE.ReplaceAllString(s, "")
+	return len([]rune(s))
 }
 
 // IO returns the io for the handler.
