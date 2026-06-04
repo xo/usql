@@ -833,6 +833,7 @@ An overview of `usql`'s features, functionality, and compatibility with `psql`:
 - [Syntax Highlighting][highlighting]
 - [Time Formatting][timefmt]
 - [Context Completion][completion]
+- [Prompt Formatting][prompt]
 - [Host Connection Information](#host-connection-information)
 - [Passwords][usqlpass]
 - [Runtime Configuration (RC) File][usqlrc]
@@ -1356,6 +1357,51 @@ time format value, and example display output:
   </i>
 </p>
 
+#### Prompt Formatting
+
+`usql`'s interactive prompt is generated from the `PROMPT1` [variable][variables],
+which can be `\set` to a string containing literal text and a set of percent
+(`%`) escape sequences. The default `PROMPT1` is `%S%N%m%/%R%# `, which renders
+as `pg:user@dbname=> ` (or `(not connected)=> ` when not connected to a
+database). The `PROMPT2` (continuation) and `PROMPT3` prompts use the same
+escape sequences.
+
+> **Note**
+>
+> `usql` supports a subset of `psql`'s prompt specifiers, and adds a few of its
+> own. Specifiers from `psql` that are not listed below are silently ignored.
+
+| Specifier | Description                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `%S`      | The short driver name followed by `:`, or `(not connected)` when not connected to a database.    |
+| `%u`      | The `dburl` short form of the connection URL (eg, `postgres://user@host/dbname`).                 |
+| `%M`      | The full host name of the database server (with domain), or empty when not connected.             |
+| `%m`      | The host name truncated at the first dot, or empty when not connected.                            |
+| `%>`      | The port number prefixed by `:` (eg, `:5432`), or empty if no port is set.                        |
+| `%N`      | The database session user name, followed by `@` (eg, `booktest@`).                                |
+| `%n`      | The database session user name, without the trailing `@`.                                         |
+| `%/`      | The name of the current database (the connection's path or opaque component).                     |
+| `%O`      | The opaque component of the connection URL, or empty when not connected.                          |
+| `%o`      | The base name of the opaque component of the connection URL.                                      |
+| `%P`      | The path component of the connection URL, or empty when not connected.                            |
+| `%p`      | The base name of the path component of the connection URL (eg, the SQLite database file name).   |
+| `%#`      | A `~` when in a transaction (or batch) block, otherwise `>`.                                      |
+| `%R`      | A single character reflecting the statement/connection state (eg, `-`, `*`, `'`, `"`, `$`, `(`).  |
+| `%[ ... %]` | Bracket a span of non-printing terminal control characters (eg, ANSI color escapes) so that line-editing width is computed correctly. |
+| `%%`      | A literal `%`.                                                                                    |
+| `%0nnn`   | A character with the given octal code (also accepts `%x` for hexadecimal).                        |
+
+For example, to colorize the prompt green and show the user, database, and
+transaction state, the following `PROMPT1` could be used:
+
+```sh
+\set PROMPT1 '%[%033[32m%]%n@%/%[%033[0m%]%x%# '
+```
+
+See the [section on variables][variables] for details on `\set`/`\unset`, or
+the [section on the runtime configuration file][usqlrc] for how to set the
+prompt on startup.
+
 #### Host Connection Information
 
 By default, `usql` displays connection information when connecting to a
@@ -1543,7 +1589,7 @@ dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicuuc.68.dylib
 Abort trap: 6
 ```
 
-Then missing library dependency can be fixed by installing
+Then the missing library dependency can be fixed by installing
 [`icu4c`](http://site.icu-project.org) using `brew`:
 
 ```sh
@@ -1594,6 +1640,7 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [copying]: #copying-between-databases "Copying Between Databases"
 [highlighting]: #syntax-highlighting "Syntax Highlighting"
 [termgraphics]: #terminal-graphics "Terminal Graphics"
+[prompt]: #prompt-formatting "Prompt Formatting"
 [timefmt]: #time-formatting "Time Formatting"
 [usqlpass]: #passwords "Passwords"
 [usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"

@@ -65,5 +65,5 @@ but it too can be replaced and/or extended.
 # Enabling autocomplete for a driver
 
 If a driver provides a metadata reader, the default completer will use it.
-A driver can provide it's own completer, by setting the `NewCompleter` property
+A driver can provide its own completer, by setting the `NewCompleter` property
 in the `drivers.Driver` structure passed to `drivers.Register()`.
