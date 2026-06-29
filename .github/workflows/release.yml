@@ -1,5 +1,9 @@
 name: Release
-on: push
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
 env:
   APP: usql
   VER: ${{ github.ref_name }}
@@ -241,7 +245,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             --variable '%tag_name' \
-            --varable '%target_commitish' \
+            --variable '%target_commitish' \
             --variable '%body' \
             --expand-data '{"tag_name": "{{tag_name:json}}", "body": "{{body:trim:json}}"}' \
             $url

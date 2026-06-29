@@ -83,11 +83,15 @@ type Catalog struct {
 	Encoding         string
 	Collate          string
 	Ctype            string
-	AccessPrivileges string
+	AccessPrivileges sql.NullString
 }
 
 func (s Catalog) Values() []interface{} {
-	return []interface{}{s.Catalog.Catalog, s.Owner, s.Encoding, s.Collate, s.Ctype, s.AccessPrivileges}
+	accessPrivileges := ""
+	if s.AccessPrivileges.Valid {
+		accessPrivileges = s.AccessPrivileges.String
+	}
+	return []interface{}{s.Catalog.Catalog, s.Owner, s.Encoding, s.Collate, s.Ctype, accessPrivileges}
 }
 
 func (s Catalog) GetCatalog() metadata.Catalog {
@@ -135,7 +139,7 @@ func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
   CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' ELSE 'unknown' END as "Type",
   COALESCE((c.reltuples / NULLIF(c.relpages, 0)) * (pg_catalog.pg_relation_size(c.oid) / current_setting('block_size')::int), 0)::bigint as "Rows",
   pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as "Size",
-  COALESCE(pg_catalog.obj_description(c.oid, 'pg_class'), '') as "Description"
+  pg_catalog.obj_description(c.oid, 'pg_class') as "Description"
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 `
@@ -182,10 +186,16 @@ FROM pg_catalog.pg_class c
 
 	results := []metadata.Table{}
 	for rows.Next() {
+		var description sql.NullString
 		rec := metadata.Table{}
-		err = rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Rows, &rec.Size, &rec.Comment)
+		err = rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Rows, &rec.Size, &description)
 		if err != nil {
 			return nil, err
+		}
+		if description.Valid {
+			rec.Comment = description.String
+		} else {
+			rec.Comment = ""
 		}
 		results = append(results, rec)
 	}
