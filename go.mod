@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/IBM/nzgo/v12 v12.0.10
 	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v1.16.2
@@ -26,6 +27,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.8.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gocql/gocql v1.7.0
+	github.com/godoes/gorm-dameng v0.7.3-0.20251122032434-c34203b95230
 	github.com/godror/godror v0.50.0
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.7.0
@@ -96,7 +98,6 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.6.0 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/ClickHouse/ch-go v0.71.0 // indirect
-	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
