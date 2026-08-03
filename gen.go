@@ -460,6 +460,12 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 	})
 	var rows [][]string
 	for i, v := range drivers {
+		// scheme displays the build tag for ordinary drivers.
+		scheme := "`" + v.Tag + "`"
+		// Dameng is a fork-local exception whose canonical URL scheme differs from its build tag.
+		if v.Tag == "dameng" {
+			scheme = "`dm` / `dameng`"
+		}
 		notes := ""
 		if v.CGO {
 			notes += " <sup>[†][f-cgo]</sup>"
@@ -469,7 +475,7 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 		}
 		rows = append(rows, []string{
 			v.Desc,
-			"`" + v.Tag + "`",
+			scheme,
 			buildAliases(v),
 			fmt.Sprintf("[%s][d-%s]%s", v.Pkg, v.Tag, notes),
 		})
@@ -482,23 +488,35 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 }
 
 func buildAliases(v DriverInfo) string {
+	// name is the scheme used to discover aliases from the upstream dburl registry.
 	name := v.Tag
+	// Wire-compatible rows use their actual database/sql driver name.
 	if v.Wire {
 		name = v.Driver
 	}
+	// aliases contains every scheme name registered upstream for this driver.
 	_, aliases := dburl.SchemeDriverAndAliases(name)
+	// The fork registers DM8 locally so its aliases are unavailable to the standalone generator.
+	if v.Tag == "dameng" {
+		aliases = append(aliases, "dm8", "dameng")
+	}
+	// Wire rows also display their primary scheme as an alias of the shared implementation.
 	if v.Wire {
 		aliases = append(aliases, name)
 	}
+	// Replace a duplicated tag with the underlying database/sql driver name for non-wire drivers.
 	for i := 0; i < len(aliases); i++ {
-		if !v.Wire && aliases[i] == v.Tag {
+		if !v.Wire && aliases[i] == v.Tag && v.Tag != "dameng" {
 			aliases[i] = v.Driver
 		}
 	}
+	// fileTypes identifies schemes that can also accept a local file path.
 	fileTypes := dburl.FileTypes()
+	// File-backed drivers expose file as an additional connection alias.
 	if slices.Contains(fileTypes, name) {
 		aliases = append(aliases, `file`)
 	}
+	// Render aliases only when at least one scheme alternative exists.
 	if len(aliases) > 0 {
 		return "`" + strings.Join(aliases, "`, `") + "`"
 	}

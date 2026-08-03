@@ -1,0 +1,5 @@
+# Use a pure Go Dameng driver
+
+Dameng support will use the MIT-licensed `database/sql` driver from `github.com/godoes/gorm-dameng/dm8` instead of DBX's Java/JDBC agent. The initial target is DM8 and the driver belongs to usql's `most` build group. This keeps usql a single binary and gives Dameng the same commands, permissions, metadata operations, output formats, and named-connection workflow as MySQL; a Dameng adapter will translate its DSN and metadata behavior internally so callers do not need a separate invocation model. PostgreSQL-style `sslmode=disable` is normalized to the driver's default non-SSL behavior, while unsupported secure `sslmode` values fail explicitly instead of silently weakening transport security.
+
+The upstream contribution guide normally requires adding a scheme to `dburl`. This fork instead registers `dm`, `dm8`, and `dameng` at runtime so it remains buildable and installable from one repository while upstream `dburl` has no Dameng scheme. The README generator carries the same local exception. If upstream `dburl` later accepts Dameng, upgrade that dependency and remove both fork-local registrations.
