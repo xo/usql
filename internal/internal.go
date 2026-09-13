@@ -18,6 +18,7 @@ func KnownBuildTags() map[string]string {
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
+		"dameng":        "dm",            // github.com/godoes/gorm-dameng/dm8
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
@@ -40,12 +41,12 @@ func KnownBuildTags() map[string]string {
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
 		"postgres":      "postgres",      // github.com/lib/pq
-		"presto":        "presto",        // github.com/prestodb/presto-go-client/presto
+		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
 		"ql":            "ql",            // modernc.org/ql
 		"ramsql":        "ramsql",        // github.com/proullon/ramsql/driver
 		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
-		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
+		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb

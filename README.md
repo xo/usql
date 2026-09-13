@@ -255,9 +255,8 @@ The following are the [Go SQL drivers][go-sql] that `usql` supports, the
 associated database, scheme / build tag, and scheme aliases:
 
 <!-- DRIVER DETAILS START -->
-
 | Database             | Scheme / Tag    | Scheme Aliases                                  | Driver Package / Notes                                                      |
-| -------------------- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+|----------------------|-----------------|-------------------------------------------------|-----------------------------------------------------------------------------|
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                     | [github.com/lib/pq][d-postgres]                                             |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`   | [github.com/go-sql-driver/mysql][d-mysql]                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                       | [github.com/microsoft/go-mssqldb][d-sqlserver]                              |
@@ -279,6 +278,7 @@ associated database, scheme / build tag, and scheme aliases:
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                        | [github.com/chaisql/chai][d-chai]                                           |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                                 |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                                      |
+| Dameng DM8           | `dameng`        | `dm`, `dm8`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
 | Databend             | `databend`      | `dd`, `bend`                                    | [github.com/datafuselabs/databend-go][d-databend]                           |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`            | [github.com/databricks/databricks-sql-go][d-databricks]                     |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                     | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup>            |
@@ -293,11 +293,11 @@ associated database, scheme / build tag, and scheme aliases:
 | MySQL MyMySQL        | `mymysql`       | `zm`, `mymy`                                    | [github.com/ziutek/mymysql/godrv][d-mymysql]                                |
 | Netezza              | `netezza`       | `nz`, `nzgo`                                    | [github.com/IBM/nzgo/v12][d-netezza]                                        |
 | PostgreSQL PGX       | `pgx`           | `px`                                            | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                     |
-| Presto               | `presto`        | `pr`, `prs`, `prestos`, `prestodb`, `prestodbs` | [github.com/prestodb/presto-go-client/presto][d-presto]                     |
+| Presto               | `presto`        | `pr`, `prs`, `prestos`, `prestodb`, `prestodbs` | [github.com/prestodb/presto-go-client/v2][d-presto]                         |
 | RamSQL               | `ramsql`        | `rm`, `ram`                                     | [github.com/proullon/ramsql/driver][d-ramsql]                               |
 | SAP ASE              | `sapase`        | `ax`, `ase`, `tds`                              | [github.com/thda/tds][d-sapase]                                             |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                                   |
-| Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake][d-snowflake]                           |
+| Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake/v2][d-snowflake]                        |
 | Trino                | `trino`         | `tr`, `trs`, `trinos`                           | [github.com/trinodb/trino-go-client/trino][d-trino]                         |
 | Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                              |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                 |
@@ -331,6 +331,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
 [d-couchbase]: https://github.com/couchbase/go_n1ql
 [d-csvq]: https://github.com/mithrandie/csvq-driver
+[d-dameng]: https://github.com/godoes/gorm-dameng
 [d-databend]: https://github.com/datafuselabs/databend-go
 [d-databricks]: https://github.com/databricks/databricks-sql-go
 [d-duckdb]: https://github.com/duckdb/duckdb-go
@@ -366,7 +367,6 @@ associated database, scheme / build tag, and scheme aliases:
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-ydb]: https://github.com/ydb-platform/ydb-go-sdk
-
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
