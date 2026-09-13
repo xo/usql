@@ -1,6 +1,7 @@
 package sqlserver_test
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -9,25 +10,38 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
-	dt "github.com/ory/dockertest/v3"
-	dc "github.com/ory/dockertest/v3/docker"
+	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/sqlserver"
 )
 
 type Database struct {
-	BuildArgs    []dc.BuildArg
-	RunOptions   *dt.RunOptions
+	BuildArgs    map[string]string
+	Image        string
+	RunOpts      []dt.RunOption
 	Exec         []string
 	Driver       string
 	URL          string
 	ReadinessURL string
 	DockerPort   string
-	Resource     *dt.Resource
+	Resource     dt.ClosableResource
 	DB           *sql.DB
 	Opts         []metadata.ReaderOption
 	Reader       metadata.BasicReader
+}
+
+// maxWait is how long to wait for a container to become ready.
+const maxWait = time.Minute
+
+// buildArgs converts name/value pairs to the form dockertest expects.
+func buildArgs(args map[string]string) map[string]*string {
+	m := make(map[string]*string, len(args))
+	for k, v := range args {
+		m[k] = &v
+	}
+	return m
 }
 
 var dbName string = "sakila"
@@ -35,15 +49,16 @@ var dbName string = "sakila"
 const pw = "yourStrong123_Password"
 
 var db = Database{
-	BuildArgs: []dc.BuildArg{
-		{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
-		{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql"},
-		{Name: "TARGET", Value: "/schema"},
-		{Name: "USER", Value: "mssql:0"},
+	BuildArgs: map[string]string{
+		"BASE_IMAGE": "mcr.microsoft.com/mssql/server:2019-latest",
+		"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql",
+		"TARGET":     "/schema",
+		"USER":       "mssql:0",
 	},
-	RunOptions: &dt.RunOptions{
-		Name: "usql-sqlserver",
-		Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
+	Image: "usql-sqlserver",
+	RunOpts: []dt.RunOption{
+		dt.WithEnv([]string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw}),
+		dt.WithLabels(map[string]string{"usql-test": "sqlserver"}),
 	},
 	Exec:         []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
 	Driver:       "sqlserver",
@@ -56,21 +71,18 @@ func TestMain(m *testing.M) {
 	cleanup := true
 	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
 	flag.Parse()
-	pool, err := dt.NewPool("")
+	ctx := context.Background()
+	pool, err := dt.NewPool(ctx, "")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	var ok bool
-	db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
-	if !ok {
-		buildOpts := &dt.BuildOptions{
-			ContextDir: "../testdata/docker",
-			BuildArgs:  db.BuildArgs,
-		}
-		db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)
-		if err != nil {
-			log.Fatal("Could not start resource: ", err)
-		}
+	buildOpts := &dt.BuildOptions{
+		ContextDir: "../testdata/docker",
+		BuildArgs:  buildArgs(db.BuildArgs),
+	}
+	db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)
+	if err != nil {
+		log.Fatal("Could not start resource: ", err)
 	}
 
 	url := db.URL
@@ -78,25 +90,22 @@ func TestMain(m *testing.M) {
 		url = db.ReadinessURL
 	}
 	port := db.Resource.GetPort(db.DockerPort)
-	if db.DB, err = waitForDbConnection(db.Driver, pool, url, port); err != nil {
+	if db.DB, err = waitForDbConnection(ctx, db.Driver, pool, url, port); err != nil {
 		log.Fatal("Timed out waiting for db: ", err)
 	}
 
 	if len(db.Exec) != 0 {
-		exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{
-			StdIn:  os.Stdin,
-			StdOut: os.Stdout,
-			StdErr: os.Stderr,
-			TTY:    true,
-		})
-		if err != nil || exitCode != 0 {
+		res, err := db.Resource.Exec(ctx, db.Exec)
+		fmt.Fprint(os.Stdout, res.StdOut)
+		fmt.Fprint(os.Stderr, res.StdErr)
+		if err != nil || res.ExitCode != 0 {
 			log.Fatal("Could not load schema: ", err)
 		}
 	}
 
 	// Reconnect with actual URL if a separate URL for readiness checking was used
 	if db.ReadinessURL != "" {
-		if db.DB, err = waitForDbConnection(db.Driver, pool, db.URL, port); err != nil {
+		if db.DB, err = waitForDbConnection(ctx, db.Driver, pool, db.URL, port); err != nil {
 			log.Fatal("Timed out waiting for db: ", err)
 		}
 	}
@@ -105,17 +114,17 @@ func TestMain(m *testing.M) {
 
 	// You can't defer this because os.Exit doesn't care for defer
 	if cleanup {
-		if err := pool.Purge(db.Resource); err != nil {
+		if err := pool.Close(ctx); err != nil {
 			log.Fatal("Could not purge resource: ", err)
 		}
 	}
 	os.Exit(code)
 }
 
-func waitForDbConnection(driver string, pool *dt.Pool, url string, port string) (*sql.DB, error) {
+func waitForDbConnection(ctx context.Context, driver string, pool dt.Pool, url string, port string) (*sql.DB, error) {
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	var db *sql.DB
-	if err := pool.Retry(func() error {
+	if err := pool.Retry(ctx, maxWait, func() error {
 		var err error
 		db, err = sql.Open(driver, fmt.Sprintf(url, port))
 		if err != nil {

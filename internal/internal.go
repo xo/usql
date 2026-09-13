@@ -36,16 +36,16 @@ func KnownBuildTags() map[string]string {
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"netezza":       "nzgo",          // github.com/IBM/nzgo/v12
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
-		"oracle":        "oracle",        // github.com/sijms/go-ora/v2
+		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
 		"postgres":      "postgres",      // github.com/lib/pq
-		"presto":        "presto",        // github.com/prestodb/presto-go-client/presto
+		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
 		"ql":            "ql",            // modernc.org/ql
 		"ramsql":        "ramsql",        // github.com/proullon/ramsql/driver
 		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
-		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake
+		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb

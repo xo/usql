@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	dt "github.com/ory/dockertest/v3"
+	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/usql/drivers/clickhouse"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/yookoala/realpath"
@@ -25,9 +25,12 @@ import (
 // db is the database connection.
 var db struct {
 	db  *sql.DB
-	res *dt.Resource
+	res dt.ClosableResource
 	r   metadata.BasicReader
 }
+
+// maxWait is how long to wait for a container to become ready.
+const maxWait = time.Minute
 
 func TestMain(m *testing.M) {
 	cleanup := flag.Bool("cleanup", true, "cleanup when finished")
@@ -51,28 +54,31 @@ func doMain(m *testing.M, cleanup bool) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	pool, err := dt.NewPool("")
+	ctx := context.Background()
+	pool, err := dt.NewPool(ctx, "")
 	if err != nil {
 		return 0, fmt.Errorf("could not connect to docker: %w", err)
 	}
-	db.res, err = pool.RunWithOptions(&dt.RunOptions{
-		Repository: "clickhouse/clickhouse-server",
-		Tag:        "22.7",
-		Mounts:     []string{filepath.Join(dir, "testdata") + ":/docker-entrypoint-initdb.d"},
-	})
+	db.res, err = pool.Run(
+		ctx,
+		"clickhouse/clickhouse-server",
+		dt.WithTag("22.7"),
+		dt.WithMounts([]string{filepath.Join(dir, "testdata") + ":/docker-entrypoint-initdb.d"}),
+		dt.WithLabels(map[string]string{"usql-test": "clickhouse"}),
+	)
 	if err != nil {
 		return 0, fmt.Errorf("unable to run: %w", err)
 	}
 	if cleanup {
 		defer func() {
-			if err := pool.Purge(db.res); err != nil {
+			if err := pool.Close(ctx); err != nil {
 				fmt.Fprintf(os.Stderr, "error: could not purge resource: %v\n", err)
 			}
 		}()
 	}
 	// exponential backoff-retry, because the application in the container
 	// might not be ready to accept connections yet
-	if err := pool.Retry(func() error {
+	if err := pool.Retry(ctx, maxWait, func() error {
 		port := db.res.GetPort("9000/tcp")
 		var err error
 		if db.db, err = sql.Open("clickhouse", fmt.Sprintf("clickhouse://127.0.0.1:%s", port)); err != nil {

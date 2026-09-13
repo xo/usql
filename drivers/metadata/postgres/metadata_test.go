@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -8,40 +9,54 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
-	dt "github.com/ory/dockertest/v3"
-	dc "github.com/ory/dockertest/v3/docker"
+	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/postgres"
 	_ "github.com/xo/usql/drivers/postgres"
 )
 
 type Database struct {
-	BuildArgs  []dc.BuildArg
-	RunOptions *dt.RunOptions
+	BuildArgs  map[string]string
+	Image      string
+	RunOpts    []dt.RunOption
 	Exec       []string
 	Driver     string
 	URL        string
 	DockerPort string
-	Resource   *dt.Resource
+	Resource   dt.ClosableResource
 	DB         *sql.DB
 	Opts       []metadata.ReaderOption
 	Reader     metadata.BasicReader
 }
 
+// maxWait is how long to wait for a container to become ready.
+const maxWait = time.Minute
+
+// buildArgs converts name/value pairs to the form dockertest expects.
+func buildArgs(args map[string]string) map[string]*string {
+	m := make(map[string]*string, len(args))
+	for k, v := range args {
+		m[k] = &v
+	}
+	return m
+}
+
 var dbName string = "postgres"
 
 var db = Database{
-	BuildArgs: []dc.BuildArg{
-		{Name: "BASE_IMAGE", Value: "postgres:13"},
-		{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
-		{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
-		{Name: "USER", Value: "root"},
+	BuildArgs: map[string]string{
+		"BASE_IMAGE": "postgres:13",
+		"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql",
+		"TARGET":     "/docker-entrypoint-initdb.d",
+		"USER":       "root",
 	},
-	RunOptions: &dt.RunOptions{
-		Name: "usql-pgsql",
-		Cmd:  []string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"},
-		Env:  []string{"POSTGRES_PASSWORD=pw"},
+	Image: "usql-pgsql",
+	RunOpts: []dt.RunOption{
+		dt.WithCmd([]string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"}),
+		dt.WithEnv([]string{"POSTGRES_PASSWORD=pw"}),
+		dt.WithLabels(map[string]string{"usql-test": "pgsql"}),
 	},
 	Driver:     "postgres",
 	URL:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
@@ -52,25 +67,22 @@ func TestMain(m *testing.M) {
 	cleanup := true
 	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
 	flag.Parse()
-	pool, err := dt.NewPool("")
+	ctx := context.Background()
+	pool, err := dt.NewPool(ctx, "")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	var ok bool
-	db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
-	if !ok {
-		buildOpts := &dt.BuildOptions{
-			ContextDir: "../../testdata/docker",
-			BuildArgs:  db.BuildArgs,
-		}
-		db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)
-		if err != nil {
-			log.Fatal("Could not start resource: ", err)
-		}
+	buildOpts := &dt.BuildOptions{
+		ContextDir: "../../testdata/docker",
+		BuildArgs:  buildArgs(db.BuildArgs),
+	}
+	db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)
+	if err != nil {
+		log.Fatal("Could not start resource: ", err)
 	}
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-	if err := pool.Retry(func() error {
+	if err := pool.Retry(ctx, maxWait, func() error {
 		hostPort := db.Resource.GetPort(db.DockerPort)
 		var err error
 		db.DB, err = sql.Open(db.Driver, fmt.Sprintf(db.URL, hostPort))
@@ -84,20 +96,17 @@ func TestMain(m *testing.M) {
 	db.Reader = postgres.NewReader()(db.DB).(metadata.BasicReader)
 
 	if len(db.Exec) != 0 {
-		exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{
-			StdIn:  os.Stdin,
-			StdOut: os.Stdout,
-			StdErr: os.Stderr,
-			TTY:    true,
-		})
-		if err != nil || exitCode != 0 {
+		res, err := db.Resource.Exec(ctx, db.Exec)
+		fmt.Fprint(os.Stdout, res.StdOut)
+		fmt.Fprint(os.Stderr, res.StdErr)
+		if err != nil || res.ExitCode != 0 {
 			log.Fatal("Could not load schema: ", err)
 		}
 	}
 	code := m.Run()
 	// You can't defer this because os.Exit doesn't care for defer
 	if cleanup {
-		if err := pool.Purge(db.Resource); err != nil {
+		if err := pool.Close(ctx); err != nil {
 			log.Fatal("Could not purge resource: ", err)
 		}
 	}

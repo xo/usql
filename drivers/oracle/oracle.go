@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/sijms/go-ora/v2" // DRIVER
+	_ "github.com/sijms/go-ora/v3" // DRIVER
 	"github.com/xo/usql/drivers/oracle/orshared"
 )
 

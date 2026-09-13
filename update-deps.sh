@@ -27,10 +27,11 @@ set -euo pipefail
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
-# modules never passed to `go get -u`
+# modules never passed to `go get -u`, one per line, eg:
+#
+#   # >= v1.4 dropped libcontainer/user, which ory/dockertest v3 imported
+#   github.com/opencontainers/runc
 SKIP=(
-  # >= v1.4 dropped libcontainer/user, which ory/dockertest still imports
-  github.com/opencontainers/runc
 )
 
 DRYRUN=0

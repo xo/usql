@@ -1,6 +1,10 @@
 // Package drivers_test runs integration tests for drivers package
-// on real databases running in containers. During development, to avoid rebuilding
-// containers every run, add the `-cleanup=false` flags when calling `go test github.com/xo/usql/drivers`.
+// on real databases running in containers. During development, add the
+// `-cleanup=false` flag when calling `go test github.com/xo/usql/drivers` to
+// leave the containers running for inspection afterwards; they are labeled
+// `usql-test`, and can be removed with:
+//
+//	docker container rm -f $(docker container ls -aq --filter label=usql-test)
 package drivers_test
 
 import (
@@ -17,8 +21,7 @@ import (
 	"testing"
 	"time"
 
-	dt "github.com/ory/dockertest/v3"
-	dc "github.com/ory/dockertest/v3/docker"
+	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
@@ -26,16 +29,29 @@ import (
 )
 
 type Database struct {
-	BuildArgs  []dc.BuildArg
-	RunOptions *dt.RunOptions
-	DSN        string
-	ReadyDSN   string
-	Exec       []string
+	BuildArgs map[string]string
+	Image     string
+	RunOpts   []dt.RunOption
+	DSN       string
+	ReadyDSN  string
+	Exec      []string
 
 	DockerPort string
-	Resource   *dt.Resource
+	Resource   dt.ClosableResource
 	URL        *dburl.URL
 	DB         *sql.DB
+}
+
+// maxWait is how long to wait for a container to become ready.
+const maxWait = time.Minute
+
+// buildArgs converts name/value pairs to the form dockertest expects.
+func buildArgs(args map[string]string) map[string]*string {
+	m := make(map[string]*string, len(args))
+	for k, v := range args {
+		m[k] = &v
+	}
+	return m
 }
 
 const (
@@ -45,60 +61,64 @@ const (
 var (
 	dbs = map[string]*Database{
 		"pgsql": {
-			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "postgres:13"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
-				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
-				{Name: "USER", Value: "root"},
+			BuildArgs: map[string]string{
+				"BASE_IMAGE": "postgres:13",
+				"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql",
+				"TARGET":     "/docker-entrypoint-initdb.d",
+				"USER":       "root",
 			},
-			RunOptions: &dt.RunOptions{
-				Name: "usql-pgsql",
-				Cmd:  []string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"},
-				Env:  []string{"POSTGRES_PASSWORD=pw"},
+			Image: "usql-pgsql",
+			RunOpts: []dt.RunOption{
+				dt.WithCmd([]string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"}),
+				dt.WithEnv([]string{"POSTGRES_PASSWORD=pw"}),
+				dt.WithLabels(map[string]string{"usql-test": "pgsql"}),
 			},
 			DSN:        "postgres://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
 		},
 		"pgx": {
-			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "postgres:13"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql"},
-				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
-				{Name: "USER", Value: "root"},
+			BuildArgs: map[string]string{
+				"BASE_IMAGE": "postgres:13",
+				"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql",
+				"TARGET":     "/docker-entrypoint-initdb.d",
+				"USER":       "root",
 			},
-			RunOptions: &dt.RunOptions{
-				Name: "usql-pgsql",
-				Cmd:  []string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"},
-				Env:  []string{"POSTGRES_PASSWORD=pw"},
+			Image: "usql-pgsql",
+			RunOpts: []dt.RunOption{
+				dt.WithCmd([]string{"-c", "log_statement=all", "-c", "log_min_duration_statement=0"}),
+				dt.WithEnv([]string{"POSTGRES_PASSWORD=pw"}),
+				dt.WithLabels(map[string]string{"usql-test": "pgsql"}),
 			},
 			DSN:        "pgx://postgres:pw@localhost:%s/postgres?sslmode=disable",
 			DockerPort: "5432/tcp",
 		},
 		"mysql": {
-			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "mysql:8"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-schema.sql"},
-				{Name: "TARGET", Value: "/docker-entrypoint-initdb.d"},
-				{Name: "USER", Value: "root"},
+			BuildArgs: map[string]string{
+				"BASE_IMAGE": "mysql:8",
+				"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-schema.sql",
+				"TARGET":     "/docker-entrypoint-initdb.d",
+				"USER":       "root",
 			},
-			RunOptions: &dt.RunOptions{
-				Name: "usql-mysql",
-				Cmd:  []string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log"},
-				Env:  []string{"MYSQL_ROOT_PASSWORD=pw"},
+			Image: "usql-mysql",
+			RunOpts: []dt.RunOption{
+				dt.WithCmd([]string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log"}),
+				dt.WithEnv([]string{"MYSQL_ROOT_PASSWORD=pw"}),
+				dt.WithLabels(map[string]string{"usql-test": "mysql"}),
 			},
 			DSN:        "mysql://root:pw@localhost:%s/sakila?parseTime=true",
 			DockerPort: "3306/tcp",
 		},
 		"sqlserver": {
-			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "mcr.microsoft.com/mssql/server:2019-latest"},
-				{Name: "SCHEMA_URL", Value: "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql"},
-				{Name: "TARGET", Value: "/schema"},
-				{Name: "USER", Value: "mssql:0"},
+			BuildArgs: map[string]string{
+				"BASE_IMAGE": "mcr.microsoft.com/mssql/server:2019-latest",
+				"SCHEMA_URL": "https://raw.githubusercontent.com/jOOQ/sakila/main/sql-server-sakila-db/sql-server-sakila-schema.sql",
+				"TARGET":     "/schema",
+				"USER":       "mssql:0",
 			},
-			RunOptions: &dt.RunOptions{
-				Name: "usql-sqlserver",
-				Env:  []string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw},
+			Image: "usql-sqlserver",
+			RunOpts: []dt.RunOption{
+				dt.WithEnv([]string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw}),
+				dt.WithLabels(map[string]string{"usql-test": "sqlserver"}),
 			},
 			DSN:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
 			ReadyDSN:   "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=master",
@@ -106,11 +126,12 @@ var (
 			DockerPort: "1433/tcp",
 		},
 		"trino": {
-			BuildArgs: []dc.BuildArg{
-				{Name: "BASE_IMAGE", Value: "trinodb/trino:359"},
+			BuildArgs: map[string]string{
+				"BASE_IMAGE": "trinodb/trino:359",
 			},
-			RunOptions: &dt.RunOptions{
-				Name: "usql-trino",
+			Image: "usql-trino",
+			RunOpts: []dt.RunOption{
+				dt.WithLabels(map[string]string{"usql-test": "trino"}),
 			},
 			DSN:        "trino://test@localhost:%s/tpch/sf1",
 			DockerPort: "8080/tcp",
@@ -142,13 +163,14 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	pool, err := dt.NewPool("")
+	ctx := context.Background()
+	pool, err := dt.NewPool(ctx, "")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
 	for dbName, db := range dbs {
-		dsn, hostPort := getConnInfo(dbName, db, pool)
+		dsn, hostPort := getConnInfo(ctx, dbName, db, pool)
 		db.URL, err = dburl.Parse(dsn)
 		if err != nil {
 			log.Fatalf("Failed to parse %s URL %s: %v", dbName, db.DSN, err)
@@ -166,8 +188,8 @@ func TestMain(m *testing.M) {
 			if err != nil {
 				log.Fatalf("Failed to parse %s ready URL %s: %v", dbName, db.ReadyDSN, err)
 			}
-			if err := pool.Retry(func() error {
-				readyDB, err := drivers.Open(context.Background(), readyURL, nil, nil)
+			if err := pool.Retry(ctx, maxWait, func() error {
+				readyDB, err := drivers.Open(ctx, readyURL, nil, nil)
 				if err != nil {
 					return err
 				}
@@ -175,17 +197,16 @@ func TestMain(m *testing.M) {
 			}); err != nil {
 				log.Fatalf("Timed out waiting for %s to be ready: %s", dbName, err)
 			}
-			// No TTY attached to facilitate debugging with delve
-			exitCode, err := db.Resource.Exec(db.Exec, dt.ExecOptions{})
-			if err != nil || exitCode != 0 {
-				log.Fatalf("Could not load schema for %s: %s", dbName, err)
+			res, err := db.Resource.Exec(ctx, db.Exec)
+			if err != nil || res.ExitCode != 0 {
+				log.Fatalf("Could not load schema for %s: %s\n%s\n%s", dbName, err, res.StdOut, res.StdErr)
 			}
 		}
 
 		// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 		var openErr error
-		if retryErr := pool.Retry(func() error {
-			db.DB, openErr = drivers.Open(context.Background(), db.URL, nil, nil)
+		if retryErr := pool.Retry(ctx, maxWait, func() error {
+			db.DB, openErr = drivers.Open(ctx, db.URL, nil, nil)
 			if openErr != nil {
 				return openErr
 			}
@@ -199,42 +220,29 @@ func TestMain(m *testing.M) {
 
 	// You can't defer this because os.Exit doesn't care for defer
 	if cleanup {
-		for _, db := range dbs {
-			if db.Resource != nil {
-				if err := pool.Purge(db.Resource); err != nil {
-					log.Fatal("Could not purge resource: ", err)
-				}
-			}
+		if err := pool.Close(ctx); err != nil {
+			log.Fatal("Could not purge resource: ", err)
 		}
 	}
 
 	os.Exit(code)
 }
 
-func getConnInfo(dbName string, db *Database, pool *dt.Pool) (string, string) {
-	if db.RunOptions == nil {
+func getConnInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool) (string, string) {
+	if db.Image == "" {
 		return db.DSN, ""
 	}
 
-	var ok bool
-	db.Resource, ok = pool.ContainerByName(db.RunOptions.Name)
-	if ok && !db.Resource.Container.State.Running {
-		err := db.Resource.Close()
-		if err != nil {
-			log.Fatalf("Failed to clean up stale container %s: %s", dbName, err)
-		}
-		ok = false
+	// containers are reused within a run, keyed on the built image -- dbs
+	// sharing an Image (pgsql and pgx) share a single container
+	buildOpts := &dt.BuildOptions{
+		ContextDir: "./testdata/docker",
+		BuildArgs:  buildArgs(db.BuildArgs),
 	}
-	if !ok {
-		buildOpts := &dt.BuildOptions{
-			ContextDir: "./testdata/docker",
-			BuildArgs:  db.BuildArgs,
-		}
-		var err error
-		db.Resource, err = pool.BuildAndRunWithBuildOptions(buildOpts, db.RunOptions)
-		if err != nil {
-			log.Fatalf("Failed to start %s: %s", dbName, err)
-		}
+	var err error
+	db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)
+	if err != nil {
+		log.Fatalf("Failed to start %s: %s", dbName, err)
 	}
 	hostPort := db.Resource.GetPort(db.DockerPort)
 	return fmt.Sprintf(db.DSN, hostPort), hostPort
