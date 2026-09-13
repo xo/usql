@@ -18,6 +18,7 @@ func KnownBuildTags() map[string]string {
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
+		"dameng":        "dm",            // github.com/godoes/gorm-dameng/dm8
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2

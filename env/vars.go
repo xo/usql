@@ -337,9 +337,11 @@ func (v *Variables) PrintTimeFormat() string {
 
 // SetConn sets a named connection variable.
 func (v *Variables) SetConn(name string, vals ...string) error {
-	if err := ValidIdentifier(name); err != nil {
+	// Connection names accept hyphens so existing CLI profile names remain unchanged.
+	if err := ValidIdentifier(strings.ReplaceAll(name, "-", "_")); err != nil {
 		return err
 	}
+	// Empty values remove an existing profile; non-empty values replace it with an isolated copy.
 	if _, ok := v.conn[name]; len(vals) == 0 || vals[0] == "" && ok {
 		delete(v.conn, name)
 	} else {

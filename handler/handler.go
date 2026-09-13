@@ -171,6 +171,10 @@ func (h *Handler) Run() error {
 		}
 		// read next statement/command
 		switch cmd, paramstr, err = h.buf.Next(env.Untick(h.user, env.Vars(), false)); {
+		// Dispatch meta commands before the single-line SQL fallback used by -c.
+		case cmd != "":
+			opt, cont, lastErr = h.apply(stdout, stderr, strings.TrimPrefix(cmd, `\`), paramstr)
+		// Execute a complete non-command buffer supplied through -c.
 		case h.singleLineMode && err == nil:
 			execute = h.buf.Len != 0
 		case err == rline.ErrInterrupt:
@@ -180,8 +184,6 @@ func (h *Handler) Run() error {
 			return lastErr
 		case err != nil:
 			return err
-		case cmd != "":
-			opt, cont, lastErr = h.apply(stdout, stderr, strings.TrimPrefix(cmd, `\`), paramstr)
 		}
 		if cont {
 			continue
