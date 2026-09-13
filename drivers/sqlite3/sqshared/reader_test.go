@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/archive"
+	"github.com/moby/go-archive"
 	"github.com/xo/usql/drivers/metadata"
 )
 
@@ -53,7 +53,7 @@ func createDb(location, name string) error {
 	baseImage := "centos:7"
 	schemaURL := "https://raw.githubusercontent.com/jOOQ/sakila/main/sqlite-sakila-db/sqlite-sakila-schema.sql"
 	target := "/schema"
-	buildOptions := types.ImageBuildOptions{
+	buildOptions := build.ImageBuildOptions{
 		Tags: []string{"usql-sqlite"},
 		BuildArgs: map[string]*string{
 			"BASE_IMAGE": &baseImage,
@@ -95,7 +95,7 @@ func createDb(location, name string) error {
 		return err
 	}
 
-	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func createDb(location, name string) error {
 	//	return err
 	//}
 
-	return cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+	return cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 }
 
 func TestSchemas(t *testing.T) {
