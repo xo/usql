@@ -12,6 +12,7 @@ CHECK=1
 INSTALL=0
 BUILDONLY=0
 VERBOSE=false
+PRINTTAGS=0
 CGO_ENABLED=1
 LDNAME=github.com/xo/usql/text.CommandName
 LDVERSION=github.com/xo/usql/text.CommandVersion
@@ -38,7 +39,7 @@ latest_tag() {
 }
 
 OPTIND=1
-while getopts "a:v:sfnibxt:r" opt; do
+while getopts "a:v:sfnibxt:rT" opt; do
 case "$opt" in
   a) ARCH=$OPTARG ;;
   v) VER=$OPTARG ;;
@@ -50,6 +51,7 @@ case "$opt" in
   x) VERBOSE=true ;;
   t) TAGS=($OPTARG) ;;
   r) VER=$(latest_tag) ;;
+  T) PRINTTAGS=1 ;;
 esac
 done
 
@@ -151,6 +153,12 @@ if [ "$STATIC" = "1" ]; then
       exit 1
     ;;
   esac
+fi
+
+# report resolved build tags (used by update-deps.sh)
+if [ "$PRINTTAGS" = "1" ]; then
+  echo "${TAGS[@]}"
+  exit
 fi
 
 # check not overwriting existing build artifacts
