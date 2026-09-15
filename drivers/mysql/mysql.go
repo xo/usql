@@ -22,6 +22,7 @@ func init() {
 	drivers.Register("mysql", drivers.Driver{
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
+		AllowBacktick:           true,
 		LexerName:              "mysql",
 		UseColumnTypes:         true,
 		ForceParams: drivers.ForceQueryParameters([]string{
