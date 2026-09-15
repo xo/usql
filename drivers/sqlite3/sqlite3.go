@@ -16,6 +16,7 @@ import (
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
 		AllowMultilineComments: true,
+		AllowBacktick:          true,
 		ForceParams: drivers.ForceQueryParameters([]string{
 			"loc", "auto",
 		}),

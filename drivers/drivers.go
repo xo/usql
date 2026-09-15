@@ -53,6 +53,9 @@ type Driver struct {
 	// AllowHashComments will be passed to query buffers to enable hash (#)
 	// style comments.
 	AllowHashComments bool
+	// AllowBacktick will be passed to query buffers to enable backtick-quoted
+	// identifiers (ie, `ident`), as used by MySQL/MariaDB/SQLite.
+	AllowBacktick bool
 	// RequirePreviousPassword will be used by RequirePreviousPassword.
 	RequirePreviousPassword bool
 	// LexerName is the name of the syntax lexer to use.
@@ -195,6 +198,7 @@ func stmtOpts(u *dburl.URL) []stmt.Option {
 				stmt.WithAllowMultilineComments(d.AllowMultilineComments),
 				stmt.WithAllowCComments(d.AllowCComments),
 				stmt.WithAllowHashComments(d.AllowHashComments),
+				stmt.WithAllowBacktick(d.AllowBacktick),
 			}
 		}
 	}
@@ -203,6 +207,7 @@ func stmtOpts(u *dburl.URL) []stmt.Option {
 		stmt.WithAllowMultilineComments(true),
 		stmt.WithAllowCComments(true),
 		stmt.WithAllowHashComments(true),
+		stmt.WithAllowBacktick(true),
 	}
 }
 

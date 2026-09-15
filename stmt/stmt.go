@@ -22,6 +22,10 @@ type Stmt struct {
 	allowCComments bool
 	// allowHashComments allows hash comments (ie, # ... )
 	allowHashComments bool
+	// allowBacktick allows backtick-quoted identifiers (ie, `ident`), as used by
+	// MySQL/MariaDB/SQLite. Without this, a ' inside a backtick identifier opens
+	// a phantom string and later \\ escapes can be collapsed before the server sees them.
+	allowBacktick bool
 	// Buf is the statement buffer
 	Buf []rune
 	// Len is the current len of any statement in Buf.
@@ -198,8 +202,8 @@ parse:
 		case b.multilineComment:
 			i, ok = readMultilineComment(b.r, i, b.rlen)
 			b.multilineComment = !ok
-		// start of single or double quoted string
-		case c == '\'' || c == '"':
+		// start of single, double, or (optionally) backtick quoted string/identifier
+		case c == '\'' || c == '"' || (b.allowBacktick && c == '`'):
 			b.quote = c
 		// start of dollar quoted string literal (postgres)
 		case b.allowDollar && c == '$' && (next == '$' || next == '_' || unicode.IsLetter(next)):
@@ -448,6 +452,14 @@ func WithAllowCComments(enable bool) Option {
 func WithAllowHashComments(enable bool) Option {
 	return func(b *Stmt) {
 		b.allowHashComments = enable
+	}
+}
+
+// WithAllowBacktick is a statement buffer option to set allowing backtick-quoted
+// identifiers (ie, `ident`), as used by MySQL/MariaDB/SQLite.
+func WithAllowBacktick(enable bool) Option {
+	return func(b *Stmt) {
+		b.allowBacktick = enable
 	}
 }
 

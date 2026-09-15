@@ -18,6 +18,7 @@ func init() {
 	drivers.Register("mymysql", drivers.Driver{
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
+		AllowBacktick:          true,
 		LexerName:              "mysql",
 		UseColumnTypes:         true,
 		Err: func(err error) (string, string) {
