@@ -1,0 +1,3 @@
+NAME=dameng
+IMAGE=localhost/dm8
+PUBLISH=5236:5236

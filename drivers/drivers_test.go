@@ -237,6 +237,7 @@ func getConnInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool)
 	// sharing an Image (pgsql and pgx) share a single container
 	buildOpts := &dt.BuildOptions{
 		ContextDir: "./testdata/docker",
+		Dockerfile: "Containerfile",
 		BuildArgs:  buildArgs(db.BuildArgs),
 	}
 	var err error

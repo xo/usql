@@ -78,6 +78,7 @@ func TestMain(m *testing.M) {
 	}
 	buildOpts := &dt.BuildOptions{
 		ContextDir: "../testdata/docker",
+		Dockerfile: "Containerfile",
 		BuildArgs:  buildArgs(db.BuildArgs),
 	}
 	db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)

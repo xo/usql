@@ -49,10 +49,8 @@ podman_run() {
     exit 1
   fi
 
-  # default network settings
-  if [ -z "$NETWORK" ]; then
-    NETWORK=slirp4netns
-  fi
+  # no default network: podman's own rootless default is used unless a
+  # podman-config sets NETWORK explicitly
 
   # setup params
   PARAMS=()
@@ -87,7 +85,7 @@ podman_run() {
 
   # update
   if [[ "$UPDATE" == "1" ]]; then
-    if [ ! -f $BASE/Dockerfile ]; then
+    if [ ! -f $BASE/Containerfile ]; then
       (set -ex;
         podman pull $IMAGE
       )

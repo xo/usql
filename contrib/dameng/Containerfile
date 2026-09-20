@@ -1,0 +1,107 @@
+# Builds a Dameng DM8 image from Dameng's own installer.
+#
+# Dameng publishes no DM8 image to a public registry. The container archive it
+# does publish is years behind the installer, so this builds a current DM8 from
+# the Ubuntu 22 installer instead.
+#
+# The installer is an ISO inside a zip. bsdtar reads ISO 9660 directly, so this
+# needs no loop mount and no privileged build.
+#
+# Dameng removes old releases, so DM_URL rots. To build a different release:
+#
+#   podman build \
+#     --build-arg DM_URL=https://download.dameng.com/eco/adapter/DM8/<YYYYMM>/<file>.zip \
+#     --build-arg DM_ISO=<file>.iso \
+#     --build-arg DM_SHA256=<sha256 of the iso> \
+#     -t localhost/dm8 .
+
+FROM ubuntu:22.04 AS builder
+
+ARG DM_URL=https://download.dameng.com/eco/adapter/DM8/202608/dm8_20260817_x86_Ubuntu22_64.zip
+ARG DM_ISO=dm8_20260817_x86_Ubuntu22_64.iso
+ARG DM_SHA256=fb631279a60fa2fb814179fa712d4847aef32c9a2e694da5f93241d0fdef9d54
+
+# SYSDBA_PWD must be 8 to 48 characters and must contain an uppercase letter, a
+# lowercase letter and a digit. The installer rejects anything else.
+ARG DM_PASSWORD=P4ssw0rd
+ARG DM_PORT=5236
+ARG DM_NAME=DAMENG
+ARG DM_INSTANCE=DMSERVER
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates curl libarchive-tools unzip \
+	&& rm -rf /var/lib/apt/lists/*
+
+# The installer refuses to run unless the dmdba user exists. The uid and gid are
+# the ones the DM8 install manual gives.
+RUN groupadd -g 12349 dinstall \
+	&& useradd -u 12345 -g dinstall -m -d /home/dmdba -s /bin/bash dmdba
+
+WORKDIR /build
+
+# The published checksum covers the ISO, not the zip, so verify after unzipping.
+RUN curl -fsSL -o dm8.zip "$DM_URL" \
+	&& unzip -o -q dm8.zip \
+	&& echo "$DM_SHA256  $DM_ISO" | sha256sum -c - \
+	&& bsdtar -xf "$DM_ISO" DMInstall.bin \
+	&& chmod +x DMInstall.bin \
+	&& rm -f dm8.zip "$DM_ISO"
+
+# INIT_DB=Y makes the installer create the instance, so no separate dminit run
+# is needed. CHARSET 1 is UTF-8, and PAGE_SIZE 16 means 16K pages.
+RUN printf '%s\n' \
+	'<?xml version="1.0"?>' \
+	'<DATABASE>' \
+	'  <LANGUAGE>EN</LANGUAGE>' \
+	'  <TIME_ZONE>+08:00</TIME_ZONE>' \
+	'  <KEY></KEY>' \
+	'  <INSTALL_TYPE>0</INSTALL_TYPE>' \
+	'  <INSTALL_PATH>/opt/dmdbms</INSTALL_PATH>' \
+	'  <INIT_DB>Y</INIT_DB>' \
+	'  <DB_PARAMS>' \
+	'    <PATH>/opt/dmdbms/data</PATH>' \
+	"    <DB_NAME>${DM_NAME}</DB_NAME>" \
+	"    <INSTANCE_NAME>${DM_INSTANCE}</INSTANCE_NAME>" \
+	"    <PORT_NUM>${DM_PORT}</PORT_NUM>" \
+	'    <EXTENT_SIZE>16</EXTENT_SIZE>' \
+	'    <PAGE_SIZE>16</PAGE_SIZE>' \
+	'    <LOG_SIZE>256</LOG_SIZE>' \
+	'    <CASE_SENSITIVE>Y</CASE_SENSITIVE>' \
+	'    <CHARSET>1</CHARSET>' \
+	"    <SYSDBA_PWD>${DM_PASSWORD}</SYSDBA_PWD>" \
+	"    <SYSAUDITOR_PWD>${DM_PASSWORD}</SYSAUDITOR_PWD>" \
+	'  </DB_PARAMS>' \
+	'  <CREATE_DB_SERVICE>N</CREATE_DB_SERVICE>' \
+	'  <STARTUP_DB_SERVICE>N</STARTUP_DB_SERVICE>' \
+	'</DATABASE>' \
+	> /build/dm_install.xml
+
+# The installer refuses to write into a directory that already exists and has
+# content, so it must create INSTALL_PATH itself.
+RUN ./DMInstall.bin -q /build/dm_install.xml
+
+# Record where the instance landed so the runtime stage does not have to guess.
+RUN find /opt/dmdbms/data -name dm.ini -print -quit > /opt/dmdbms/dm.ini.path \
+	&& test -s /opt/dmdbms/dm.ini.path \
+	&& rm -rf /build
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LD_LIBRARY_PATH=/opt/dmdbms/bin
+ENV PATH=/opt/dmdbms/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends libaio1 \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& groupadd -g 12349 dinstall \
+	&& useradd -u 12345 -g dinstall -m -d /home/dmdba -s /bin/bash dmdba
+
+COPY --from=builder --chown=dmdba:dinstall /opt/dmdbms /opt/dmdbms
+
+USER dmdba
+EXPOSE 5236
+
+CMD ["/bin/sh", "-c", "exec /opt/dmdbms/bin/dmserver \"$(cat /opt/dmdbms/dm.ini.path)\""]

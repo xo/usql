@@ -222,6 +222,7 @@ func TestMain(m *testing.M) {
 	for dbName, db := range dbs {
 		buildOpts := &dt.BuildOptions{
 			ContextDir: "../../testdata/docker",
+			Dockerfile: "Containerfile",
 			BuildArgs:  buildArgs(db.BuildArgs),
 		}
 		db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)
