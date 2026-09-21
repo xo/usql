@@ -156,28 +156,32 @@ jobs:
           gcc --version
           gcc -dumpmachine
           # The duckdb archives were built by MinGW-Builds GCC 14.2.0 for UCRT
-          # with posix-seh. Both the runtime and the major version have to
-          # match, and a mismatch only appears at link, with undefined symbols
-          # that name neither as the cause. Check here, where it can be said
-          # plainly.
+          # with posix-seh. A mismatch on either axis only appears at link,
+          # with undefined symbols that name neither as the cause, so describe
+          # the toolchain here where it can be read plainly.
           #
-          # Do not test gcc -dumpmachine: it reports x86_64-w64-mingw32 for
-          # the MSVCRT and the UCRT builds alike, because the target triple
-          # does not carry the runtime. The UCRT headers define _UCRT, so
-          # compile for it instead.
-          printf '#ifndef _UCRT\n#error not ucrt\n#endif\n' > ucrt-check.c
-          if ! gcc -fsyntax-only ucrt-check.c 2>/dev/null; then
-            echo "error: the duckdb archives need a UCRT toolchain, and this gcc targets MSVCRT" >&2
-            echo "       it fails at link on __stdio_common_vsnprintf_s and similar" >&2
-            exit 1
+          # This reports and never fails. The build that follows is the real
+          # test, and a wrong guess here must not be able to block a release.
+          #
+          # _UCRT comes from the UCRT headers rather than from the compiler,
+          # so a header has to be included before asking for it. Do not test
+          # gcc -dumpmachine either: it reports x86_64-w64-mingw32 for the
+          # MSVCRT and UCRT builds alike, because the target triple does not
+          # carry the runtime.
+          ucrt=no
+          if echo '#include <stdio.h>' | gcc -E -dM - 2>/dev/null | grep -q '^#define _UCRT'; then
+            ucrt=yes
           fi
-          rm -f ucrt-check.c
-          major=$(gcc -dumpversion | cut -d. -f1)
+          major=$(gcc -dumpversion 2>/dev/null | cut -d. -f1)
+          echo "runtime: UCRT=$ucrt  gcc major: $major"
+          if [ "$ucrt" != "yes" ]; then
+            echo "warning: this gcc targets MSVCRT, and the duckdb archives need UCRT." >&2
+            echo "         expect undefined references to __stdio_common_vsnprintf_s." >&2
+          fi
           if [ "$major" != "14" ]; then
-            echo "error: the duckdb archives need GCC 14, and this is $(gcc -dumpversion)" >&2
-            echo "       a newer libstdc++ drops emulated TLS and fails at link on" >&2
-            echo "       __emutls_v._ZSt11__once_call" >&2
-            exit 1
+            echo "warning: this gcc is $major, and the duckdb archives need 14." >&2
+            echo "         a newer libstdc++ drops emulated TLS, so expect an" >&2
+            echo "         undefined reference to __emutls_v._ZSt11__once_call." >&2
           fi
       - name: Build amd64
         shell: bash
