@@ -27,11 +27,13 @@ set -euo pipefail
 
 SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
-# modules never passed to `go get -u`, one per line, eg:
-#
-#   # >= v1.4 dropped libcontainer/user, which ory/dockertest v3 imported
-#   github.com/opencontainers/runc
+# modules never passed to `go get -u`, one per line
 SKIP=(
+  # v5.0.0+incompatible does not compile. It cannot be blocked with an
+  # exclude directive in go.mod, because `go install module@version` treats
+  # the named module as the main module and refuses any exclude or replace.
+  # See https://github.com/xo/usql/issues/590.
+  github.com/uber-go/tally
 )
 
 DRYRUN=0

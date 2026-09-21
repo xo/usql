@@ -366,6 +366,3 @@ require (
 	modernc.org/strutil v1.2.1 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )
-
-// v5.0.0+incompatible is a broken tag -- it does not compile
-exclude github.com/uber-go/tally v5.0.0+incompatible

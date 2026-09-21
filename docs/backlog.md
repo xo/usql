@@ -143,6 +143,26 @@ a single file. Part of it is generated: `gen.go` rebuilds the driver table and
 the link definitions from the build tags and from the dburl scheme registry, so
 any new site must either keep that generation step or replace it.
 
+## 10. Distribute through winget
+
+Publish usql to the Windows Package Manager, so that Windows users install it
+the way they install anything else:
+
+    winget install usql
+
+Windows is the platform with no first class route today. The release builds a
+zip, and the README points Windows users at the release page or at `go install`.
+Scoop was the previous answer and has been removed.
+
+A winget submission is a manifest in `microsoft/winget-pkgs`, holding the
+release URL, the SHA256 of the archive and the installer type. The release
+workflow already produces both the archive and its checksum, so the manifest
+can be generated and submitted from the same job that drafts the release.
+
+This became more worthwhile once duckdb started building on Windows, because
+the Windows binary now carries the same driver set as the others.
+
+
 ## Tier 2: GitHub issues and pull requests
 
 Items 1 to 9 are the programme. This section is the working list drawn from the
@@ -156,9 +176,12 @@ which stays as it is.
 
 ### Released defects, fix first
 
-Issue 590 breaks `go install`, and issue 589 broke the Dameng driver in the
-same release. Both are recorded under "Not yet scheduled" below with their
-causes and fixes. 589 is already fixed in dburl v0.25.2.
+Issue 590 broke `go install` and issue 589 broke the Dameng driver, both in
+release 0.21.5. Both are fixed now and both can be closed: 589 by dburl
+v0.25.2, which gave the dameng scheme an `Override` so that `u.Driver` is `dm`
+again, and 590 by replacing the `exclude` directive with an ordinary pin of
+`github.com/uber-go/tally v3.5.10+incompatible`, since `go install
+module@version` refuses any `exclude` or `replace`.
 
 ### Pull requests to merge
 
@@ -287,17 +310,6 @@ for more targets and the artifacts vendored, which grows the module and needs a
 Rust toolchain for each platform.
 
 ## Not yet scheduled
-
-The `exclude` directive in `go.mod` breaks `go install`. Version 0.21.5 cannot
-be installed with `go install github.com/xo/usql@latest`, because Go treats the
-named module as the main module and refuses any `exclude` or `replace`
-directive. Issue 590 reports it, and issue 394 was the same failure in 2023.
-The line is `exclude github.com/uber-go/tally v5.0.0+incompatible`, and it is
-present on `main` and on `release-21`. The fix is to pin
-`github.com/uber-go/tally v3.5.10+incompatible` as an ordinary requirement, and
-to add that module to the `SKIP` list in `update-deps.sh` so that `go get -u`
-does not raise it again. Nothing in the module graph needs version 5, because
-athenadriver requires version 3.3.17.
 
 Apply the `update-deps.sh` report fix to `release-21`. The `REMAINING:` report
 on that branch uses the module list from before the update. `go list -m -u`

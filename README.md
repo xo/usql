@@ -50,12 +50,11 @@ for other databases.
 ## Installing
 
 `usql` can be installed [via Release][], [via Homebrew][], [via AUR][], [via
-Scoop][], [via Go][], or [via Docker][]:
+Go][] or [via Docker][]:
 
 [via Release]: #installing-via-release
 [via Homebrew]: #installing-via-homebrew-macos-and-linux
 [via AUR]: #installing-via-aur-arch-linux
-[via Scoop]: #installing-via-scoop-windows
 [via Go]: #installing-via-go
 [via Docker]: #installing-via-docker
 
@@ -89,11 +88,20 @@ $ brew install --with-odbc usql
 
 ### Installing via AUR (Arch Linux)
 
-Install `usql` from the [Arch Linux AUR][aur] in the usual way with the [`yay`
-command][yay]:
+Install `usql` from the [Arch Linux AUR][aur-bin] in the usual way with the
+[`yay` command][yay]:
 
 ```sh
 # install usql with most drivers
+$ yay -S usql-bin
+```
+
+`usql-bin` installs the released binary. To build from source instead, use the
+[`usql`][aur] package, which takes considerably longer because it compiles
+every driver:
+
+```sh
+# build usql with most drivers from source
 $ yay -S usql
 ```
 
@@ -102,27 +110,6 @@ Alternately, build and [install using `makepkg`][arch-makepkg]:
 ```sh
 $ git clone https://aur.archlinux.org/usql.git && cd usql
 $ makepkg -si
-==> Making package: usql 0.12.10-1 (Fri 26 Aug 2022 05:56:09 AM WIB)
-==> Checking runtime dependencies...
-==> Checking buildtime dependencies...
-==> Retrieving sources...
-  -> Downloading usql-0.12.10.tar.gz...
-...
-```
-
-### Installing via Scoop (Windows)
-
-Install `usql` using [Scoop](https://scoop.sh):
-
-```powershell
-# Optional: Needed to run a remote script the first time
-> Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# install scoop if not already installed
-> irm get.scoop.sh | iex
-
-# install usql with scoop
-> scoop install usql
 ```
 
 ### Installing via Go
@@ -175,7 +162,7 @@ Type "help" for help.
 pg:postgres@localhost=> \q
 
 # run specific usql version
-$ docker run --rm -it docker.io/usql/usql:0.19.3
+$ docker run --rm -it docker.io/usql/usql:0.21.5
 ```
 
 ## Building
@@ -1585,6 +1572,7 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [chroma-style]: https://xyproto.github.io/splash/docs/all.html
 [help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
 [aur]: https://aur.archlinux.org/packages/usql
+[aur-bin]: https://aur.archlinux.org/packages/usql-bin
 [yay]: https://github.com/Jguer/yay
 [arch-makepkg]: https://wiki.archlinux.org/title/makepkg
 [backticks]: #backticks "Backticks"
