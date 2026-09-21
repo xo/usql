@@ -40,6 +40,27 @@ jobs:
           $bin = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT.LLVM_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin'
           if (-not (Test-Path $bin)) { throw "the toolchain is not at $bin" }
           "$bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      # A mismatched toolchain only shows at link, with undefined symbols that
+      # name neither the runtime nor the version as the cause. Say it here.
+      #
+      # Do not test gcc -dumpmachine: it reports x86_64-w64-mingw32 for the
+      # MSVCRT and the UCRT builds alike. The UCRT headers define _UCRT.
+      - name: Check the toolchain
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          gcc --version
+          printf '#ifndef _UCRT\n#error not ucrt\n#endif\n' > ucrt-check.c
+          if ! gcc -fsyntax-only ucrt-check.c 2>/dev/null; then
+            echo "error: the duckdb archives need a UCRT toolchain, and this gcc targets MSVCRT" >&2
+            exit 1
+          fi
+          rm -f ucrt-check.c
+          major=$(gcc -dumpversion | cut -d. -f1)
+          if [ "$major" != "14" ]; then
+            echo "error: the duckdb archives need GCC 14, and this is $(gcc -dumpversion)" >&2
+            exit 1
+          fi
       - name: Build
         shell: bash
         run: ./build.sh -b

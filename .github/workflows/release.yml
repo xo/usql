@@ -154,14 +154,31 @@ jobs:
         shell: bash
         run: |
           gcc --version
-          # The archives are posix-seh and UCRT. A mismatch fails at link with
-          # undefined symbols that do not name the version as the cause, so
-          # check it here where the message is clear.
           gcc -dumpmachine
-          case "$(gcc -dumpmachine)" in
-            *ucrt*) ;;
-            *) echo "error: the duckdb archives need a UCRT toolchain, got $(gcc -dumpmachine)" >&2; exit 1 ;;
-          esac
+          # The duckdb archives were built by MinGW-Builds GCC 14.2.0 for UCRT
+          # with posix-seh. Both the runtime and the major version have to
+          # match, and a mismatch only appears at link, with undefined symbols
+          # that name neither as the cause. Check here, where it can be said
+          # plainly.
+          #
+          # Do not test gcc -dumpmachine: it reports x86_64-w64-mingw32 for
+          # the MSVCRT and the UCRT builds alike, because the target triple
+          # does not carry the runtime. The UCRT headers define _UCRT, so
+          # compile for it instead.
+          printf '#ifndef _UCRT\n#error not ucrt\n#endif\n' > ucrt-check.c
+          if ! gcc -fsyntax-only ucrt-check.c 2>/dev/null; then
+            echo "error: the duckdb archives need a UCRT toolchain, and this gcc targets MSVCRT" >&2
+            echo "       it fails at link on __stdio_common_vsnprintf_s and similar" >&2
+            exit 1
+          fi
+          rm -f ucrt-check.c
+          major=$(gcc -dumpversion | cut -d. -f1)
+          if [ "$major" != "14" ]; then
+            echo "error: the duckdb archives need GCC 14, and this is $(gcc -dumpversion)" >&2
+            echo "       a newer libstdc++ drops emulated TLS and fails at link on" >&2
+            echo "       __emutls_v._ZSt11__once_call" >&2
+            exit 1
+          fi
       - name: Build amd64
         shell: bash
         run: |
