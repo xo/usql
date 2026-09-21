@@ -1,0 +1,121 @@
+# usql capture transcript v1
+session: error-recovery
+about: a failed statement reports an error and the prompt returns
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+Connected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 1
+send:
+select * from nonexistent;\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \e[38;5;231ms\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mse\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msel\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msele\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;231mf\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;231mfr\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;231mfro\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;81mno\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnon\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;81mnone\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonex\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexi\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexis\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexist\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexiste\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexisten\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexistent\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexistent\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexistent\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;197m*\e[0m\e[38;5;231m \e[0m\e[38;5;81mfrom\e[0m\e[38;5;231m \e[0m\e[38;5;231mnonexistent\e[0m\e[38;5;231m;\e[0m\r
+\n
+error: sqlite3: 1: no such table: nonexistent\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 2
+send:
+select 1 as still_works;\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \e[38;5;231ms\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mse\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msel\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msele\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;231ma\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231ms\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mst\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231msti\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstil\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_w\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_wo\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_wor\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_work\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_works\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_works\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_works\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mstill_works\e[0m\e[38;5;231m;\e[0m\r
+\n
+ still_works \r
+\n
+-------------\r
+\n
+           1 \r
+\n
+(1 row)\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 3
+send:
+\\q\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\r
+\n
+\e[J\e[2K\r
+

@@ -2,6 +2,7 @@
 //
 // See: https://github.com/sijms/go-ora
 // Group: base
+// Build: !(linux && arm)
 package oracle
 
 import (

@@ -1,0 +1,33 @@
+# usql capture transcript v1
+session: banner-and-quit
+about: usql prints its banner and a prompt, and \q leaves
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+Connected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 1
+send:
+\\q\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\r
+\n
+\e[J\e[2K\r
+

@@ -279,7 +279,7 @@ associated database, scheme / build tag, and scheme aliases:
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                        | [github.com/chaisql/chai][d-chai]                                           |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                                 |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                                      |
-| Dameng DM8           | `dameng`        | `dm`, `dm8`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
+| Dameng DM8           | `dameng`        | `dm8`, `dm`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
 | Databend             | `databend`      | `dd`, `bend`                                    | [github.com/datafuselabs/databend-go][d-databend]                           |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`            | [github.com/databricks/databricks-sql-go][d-databricks]                     |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                     | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup>            |

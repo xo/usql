@@ -1,0 +1,203 @@
+# usql capture transcript v1
+session: variables
+about: \set defines a variable, :name interpolates it, \unset removes it
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+Connected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 1
+send:
+\\set n 42\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\s\e[J\e[2K\r
+sq::memory:=> \\se\e[J\e[2K\r
+sq::memory:=> \\set\e[J\e[2K\r
+sq::memory:=> \\set \e[J\e[2K\r
+sq::memory:=> \\set n\e[J\e[2K\r
+sq::memory:=> \\set n \e[J\e[2K\r
+sq::memory:=> \\set n 4\e[J\e[2K\r
+sq::memory:=> \\set n 42\e[J\e[2K\r
+sq::memory:=> \\set n 42\e[J\e[2K\r
+sq::memory:=> \\set n 42\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 2
+send:
+\\set\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\s\e[J\e[2K\r
+sq::memory:=> \\se\e[J\e[2K\r
+sq::memory:=> \\set\e[J\e[2K\r
+sq::memory:=> \\set\e[J\e[2K\r
+sq::memory:=> \\set\r
+\n
+EDITOR = ''\r
+\n
+ON_ERROR_STOP = 'off'\r
+\n
+PAGER = 'less'\r
+\n
+PROMPT1 = '%S%N%m%/%R%# '\r
+\n
+QUIET = 'off'\r
+\n
+SHOW_HOST_INFORMATION = 'true'\r
+\n
+SSLMODE = 'retry'\r
+\n
+SYNTAX_HL = 'true'\r
+\n
+SYNTAX_HL_FORMAT = 'terminal256'\r
+\n
+SYNTAX_HL_OVERRIDE_BG = 'true'\r
+\n
+SYNTAX_HL_STYLE = 'monokai'\r
+\n
+TERM_GRAPHICS = ''\r
+\n
+n = '42'\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 3
+send:
+select :n as answer;\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \e[38;5;231ms\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mse\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msel\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msele\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;231ma\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231ma\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231man\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mans\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mansw\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231manswe\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231manswer\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231manswer\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231manswer\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;231m:\e[0m\e[38;5;231mn\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231manswer\e[0m\e[38;5;231m;\e[0m\r
+\n
+ answer \r
+\n
+--------\r
+\n
+     42 \r
+\n
+(1 row)\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 4
+send:
+\\unset n\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\u\e[J\e[2K\r
+sq::memory:=> \\un\e[J\e[2K\r
+sq::memory:=> \\uns\e[J\e[2K\r
+sq::memory:=> \\unse\e[J\e[2K\r
+sq::memory:=> \\unset\e[J\e[2K\r
+sq::memory:=> \\unset \e[J\e[2K\r
+sq::memory:=> \\unset n\e[J\e[2K\r
+sq::memory:=> \\unset n\e[J\e[2K\r
+sq::memory:=> \\unset n\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 5
+send:
+\\set\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\s\e[J\e[2K\r
+sq::memory:=> \\se\e[J\e[2K\r
+sq::memory:=> \\set\e[J\e[2K\r
+sq::memory:=> \\set\e[J\e[2K\r
+sq::memory:=> \\set\r
+\n
+EDITOR = ''\r
+\n
+ON_ERROR_STOP = 'off'\r
+\n
+PAGER = 'less'\r
+\n
+PROMPT1 = '%S%N%m%/%R%# '\r
+\n
+QUIET = 'off'\r
+\n
+SHOW_HOST_INFORMATION = 'true'\r
+\n
+SSLMODE = 'retry'\r
+\n
+SYNTAX_HL = 'true'\r
+\n
+SYNTAX_HL_FORMAT = 'terminal256'\r
+\n
+SYNTAX_HL_OVERRIDE_BG = 'true'\r
+\n
+SYNTAX_HL_STYLE = 'monokai'\r
+\n
+TERM_GRAPHICS = ''\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 6
+send:
+\\q\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\r
+\n
+\e[J\e[2K\r
+

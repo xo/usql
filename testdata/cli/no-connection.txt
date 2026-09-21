@@ -1,0 +1,55 @@
+# usql capture transcript v1
+session: no-connection
+about: usql starts without a database and reports the lack of one
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[J\e[2K\r
+(not connected)=>  \x08
+
+
+## step 1
+send:
+select 1;\r
+
+recv:
+\e[J\e[2K\r
+(not connected)=> \e[38;5;231ms\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;231mse\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;231msel\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;231msele\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m;\e[0m\e[J\e[2K\r
+(not connected)=> \e[38;5;81mselect\e[0m\e[38;5;231m \e[0m\e[38;5;141m1\e[0m\e[38;5;231m;\e[0m\r
+\n
+error: not connected\r
+\n
+\e[J\e[2K\r
+(not connected)=>  \x08
+
+
+## step 2
+send:
+\\q\r
+
+recv:
+\e[J\e[2K\r
+(not connected)=> \\\e[J\e[2K\r
+(not connected)=> \\q\e[J\e[2K\r
+(not connected)=> \\q\e[J\e[2K\r
+(not connected)=> \\q\r
+\n
+\e[J\e[2K\r
+

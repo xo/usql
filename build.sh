@@ -38,8 +38,65 @@ latest_tag() {
   popd &> /dev/null
 }
 
+usage() {
+  cat <<'END'
+usage: build.sh [options]
+
+Builds usql. With no options it builds version 0.0.0-dev for the host system,
+packs it, and checks that the binary reports the version it was built with.
+
+options:
+  -a, --arch ARCH     build for ARCH instead of the host architecture
+  -v, --version VER   build version VER, instead of 0.0.0-dev
+  -r, --release       build the most recent version tag
+  -t, --tags 'TAGS'   build with TAGS instead of the default set
+  -s, --static        build a fully static binary (linux only)
+  -b, --build-only    build only: do not write, check or pack a binary
+  -i, --install       run go install instead of go build
+  -n, --no-check      do not check that the binary reports its version
+  -f, --force         overwrite an existing archive
+  -x, --verbose       pass -v -x to go build
+  -T, --print-tags    print the build tags that would be used, then stop
+  -h, --help          show this text
+
+examples:
+  build.sh -b                     build for the host, keep nothing
+  build.sh -r                     build and pack the most recent tag
+  build.sh -a arm64 -v 1.2.3      cross build version 1.2.3 for arm64
+  build.sh -t 'all' -b            build with every driver
+  go test -tags "$(build.sh -T)"  test with the same tags as the build
+END
+}
+
+# Translate long options to their short forms, because getopts reads short
+# options alone. Anything else is passed through untouched.
+ARGS=()
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --arch)        ARGS+=(-a "$2"); shift 2 ;;
+    --version)     ARGS+=(-v "$2"); shift 2 ;;
+    --tags)        ARGS+=(-t "$2"); shift 2 ;;
+    --release)     ARGS+=(-r); shift ;;
+    --static)      ARGS+=(-s); shift ;;
+    --build-only)  ARGS+=(-b); shift ;;
+    --install)     ARGS+=(-i); shift ;;
+    --no-check)    ARGS+=(-n); shift ;;
+    --force)       ARGS+=(-f); shift ;;
+    --verbose)     ARGS+=(-x); shift ;;
+    --print-tags)  ARGS+=(-T); shift ;;
+    --help)        ARGS+=(-h); shift ;;
+    --*)
+      echo "error: unknown option $1" >&2
+      usage >&2
+      exit 1
+    ;;
+    *) ARGS+=("$1"); shift ;;
+  esac
+done
+set -- ${ARGS[@]+"${ARGS[@]}"}
+
 OPTIND=1
-while getopts "a:v:sfnibxt:rT" opt; do
+while getopts "a:v:sfnibxt:rTh" opt; do
 case "$opt" in
   a) ARCH=$OPTARG ;;
   v) VER=$OPTARG ;;
@@ -52,6 +109,8 @@ case "$opt" in
   t) TAGS=($OPTARG) ;;
   r) VER=$(latest_tag) ;;
   T) PRINTTAGS=1 ;;
+  h) usage; exit 0 ;;
+  *) usage >&2; exit 1 ;;
 esac
 done
 
@@ -113,10 +172,6 @@ if [[ "$PLATFORM" == "linux" && "$ARCH" != "$GOARCH" ]]; then
   CC=$LDARCH-linux-$GNUTYPE-gcc
   CXX=$LDARCH-linux-$GNUTYPE-c++
   EXTLD=$LDARCH-linux-$GNUTYPE-g++
-fi
-
-if [[ "$PLATFORM" == "linux" && "$ARCH" != "amd64" ]] || [[ "$PLATFORM" == "windows" ]]; then
-  TAGS+=(no_duckdb)
 fi
 
 LDFLAGS=(

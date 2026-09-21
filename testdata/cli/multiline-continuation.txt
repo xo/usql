@@ -1,0 +1,97 @@
+# usql capture transcript v1
+session: multiline-continuation
+about: an unterminated statement prompts for more input
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+Connected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 1
+send:
+select\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \e[38;5;231ms\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mse\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msel\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231msele\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
+sq::memory:=> \e[38;5;81mselect\e[0m\r
+\n
+\e[J\e[2K\r
+sq::memory:->  \x08
+
+
+## step 2
+send:
+  1 as n\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:->  \e[J\e[2K\r
+sq::memory:->   \e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;231ma\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\r
+\n
+\e[J\e[2K\r
+sq::memory:->  \x08
+
+
+## step 3
+send:
+;\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m;\e[0m\e[J\e[2K\r
+sq::memory:-> \e[38;5;231m;\e[0m\r
+\n
+ n \r
+\n
+---\r
+\n
+ 1 \r
+\n
+(1 row)\r
+\n
+\r
+\n
+\e[J\e[2K\r
+sq::memory:=>  \x08
+
+
+## step 4
+send:
+\\q\r
+
+recv:
+\e[J\e[2K\r
+sq::memory:=> \\\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\e[J\e[2K\r
+sq::memory:=> \\q\r
+\n
+\e[J\e[2K\r
+

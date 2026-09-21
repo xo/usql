@@ -1,59 +1,129 @@
 on: [push, pull_request]
 name: Test usql
 jobs:
+  # Build and run the tests that need no database, on every platform usql
+  # supports. These catch the platform problems, which is where usql breaks
+  # most often: the driver set differs per platform and cgo has to link.
   test:
-    name: Build and Test usql
-    runs-on: ubuntu-latest
-    services:
-      cassandra:
-        image: docker.io/usql/cassandra:latest
-        ports:
-          - 9042:9042
-      postgres:
-        image: docker.io/usql/postgres:latest
-        env:
-          POSTGRES_PASSWORD: P4ssw0rd
-        ports:
-          - 5432:5432
-      mysql:
-        image: docker.io/library/mariadb
-        env:
-          MYSQL_ROOT_PASSWORD: P4ssw0rd
-        ports:
-          - 3306:3306
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          MSSQL_PID: Express
-          SA_PASSWORD: Adm1nP@ssw0rd
-        ports:
-          - 1433:1433
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - windows-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: stable
-      - name: Install Packages
+      - name: Install packages
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get -qq update
           sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
+      # The duckdb driver links prebuilt static archives built by MinGW-Builds
+      # GCC 14.2.0 for x86_64, UCRT, posix-seh, and linking needs a toolchain
+      # matching all three. MSYS2 ships a newer gcc, which fails at link on
+      # __emutls_v._ZSt11__once_call, so the version is pinned with winget.
+      - name: Install MinGW toolchain for duckdb
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          winget install --id BrechtSanders.WinLibs.POSIX.UCRT.LLVM --exact --silent `
+            --accept-package-agreements --accept-source-agreements
+          $bin = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT.LLVM_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin'
+          if (-not (Test-Path $bin)) { throw "the toolchain is not at $bin" }
+          "$bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Build
+        shell: bash
+        run: ./build.sh -b
+      - name: Test
+        shell: bash
+        run: |
+          go test -tags "$(./build.sh -T)" \
+            ./stmt/... \
+            ./env/... \
+            ./handler/... \
+            ./drivers/completer/... \
+            ./drivers/metadata \
+            ./drivers/dameng/... \
+            ./drivers/sqlite3/sqshared/...
+
+  # Record terminal sessions against a real pseudo-terminal. usql turns off
+  # its prompt, line editor and colour when it does not own a terminal, so
+  # nothing else covers them. Windows has no pseudo-terminal device file, so
+  # it is absent here rather than skipped.
+  terminal:
+    name: Terminal sessions on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Unit Tests
-        run: |
-          go test -v ./stmt
-      - name: Build with all drivers
-        run: |
-          ./build.sh -b -t all
-      - name: Shell Tests
-        run: |
-          go run testcli.go &> output.log
-          ls -alh output.log
-      - name: Archive output
-        uses: actions/upload-artifact@v4
-        if: always()
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
         with:
-          name: output
-          path: output.log
-          if-no-files-found: error
+          go-version: stable
+      - name: Record and compare
+        run: go test -v -tags "sqlite3 no_base" -run TestCLI .
+
+  # Tests that start their own containers through dockertest. These run on
+  # Linux alone, because the hosted macOS and Windows runners have no Linux
+  # container runtime.
+  #
+  # -p 1 is required. Go runs packages in parallel by default, three of these
+  # packages each start a SQL Server container, and three at once exhaust the
+  # memory of a runner.
+  databases:
+    name: Database tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Install packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
+      - name: Test
+        run: |
+          go test -p 1 -timeout 30m -tags "$(./build.sh -T)" \
+            ./drivers/ \
+            ./drivers/clickhouse/... \
+            ./drivers/metadata/informationschema/... \
+            ./drivers/metadata/postgres/... \
+            ./drivers/sqlserver/...
+
+  # Build with every driver enabled. This is the build that breaks when a
+  # driver is added or a dependency moves, and it is slow, so it is its own
+  # job rather than part of the matrix.
+  build-all:
+    name: Build with all drivers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Install packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
+      - name: Build
+        run: ./build.sh -b -t all

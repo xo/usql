@@ -185,6 +185,12 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 			panic(v.Tag)
 		}
 		tags += " && !no_" + v.Tag
+		// A driver that cannot compile everywhere states so with Build: in
+		// its package comment, and that constraint is added here rather than
+		// in build.sh, so that `go build -tags ...` excludes it too.
+		if v.Build != "" {
+			tags = "(" + tags + ") && (" + v.Build + ")"
+		}
 		buf, err := format.Source([]byte(fmt.Sprintf(internalTagGo, tags, "github.com/xo/usql/drivers/"+v.Tag, v.Desc)))
 		if err != nil {
 			return err
@@ -297,6 +303,10 @@ type DriverInfo struct {
 	Wire bool
 	// Group is the build Group
 	Group string
+	// Build is the parsed Build: entry, an extra build constraint that is
+	// combined with the group constraint in the generated internal file. A
+	// driver uses it to exclude a platform it cannot compile for.
+	Build string
 }
 
 func parseDriverInfo(tag, filename string) (DriverInfo, error) {
@@ -351,6 +361,11 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	if groupm := groupRE.FindAllStringSubmatch(comment, -1); groupm != nil {
 		group = strings.TrimSpace(groupm[0][1])
 	}
+	// parse build:
+	var build string
+	if buildm := buildRE.FindAllStringSubmatch(comment, -1); buildm != nil {
+		build = strings.TrimSpace(buildm[0][1])
+	}
 	return DriverInfo{
 		Tag:     tag,
 		Driver:  name,
@@ -360,6 +375,7 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 		CGO:     strings.Contains(cleanRE.ReplaceAllString(comment, ""), "Requires CGO."),
 		Aliases: aliases,
 		Group:   group,
+		Build:   build,
 	}, nil
 }
 
@@ -664,6 +680,7 @@ var (
 	aliasRE = regexp.MustCompile(`(?m)^Alias:\s+(.*)$`)
 	seeRE   = regexp.MustCompile(`(?m)^See:\s+(.*)$`)
 	groupRE = regexp.MustCompile(`(?m)^Group:\s+(.*)$`)
+	buildRE = regexp.MustCompile(`(?m)^Build:\s+(.*)$`)
 	cleanRE = regexp.MustCompile(`[\r\n]`)
 	dirRE   = regexp.MustCompile(`^([^/]+)/([^\./]+)\.go$`)
 )

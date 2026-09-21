@@ -19,6 +19,47 @@ with code or documentation changes.
 5. Run all tests, build `usql` and see if the new driver works.
 6. Update `README.md`.
 
+A driver that cannot compile everywhere says so in its package comment with a
+`Build:` line, and `gen.go` adds that constraint to the file it generates in
+`internal`. The duckdb driver uses `Build: !(linux && arm) && !windows`, because
+its prebuilt library has no 32 bit arm build and no windows build. The oracle
+driver uses `Build: !(linux && arm)`, because go-ora writes a constant that
+overflows a 32 bit int.
+
+## Building duckdb on Windows
+
+The duckdb driver links prebuilt static archives rather than building DuckDB
+from source, and the archives are built by MinGW-Builds GCC 14.2.0 for x86_64,
+UCRT, posix-seh. Linking needs a toolchain that matches all three, and two out
+of three is not enough:
+
+- An MSVCRT gcc, which is the MSYS2 MINGW64 environment, fails on
+  `__stdio_common_vsnprintf_s` and other `__stdio_common_*` symbols. Those are
+  UCRT functions, so the runtime is wrong.
+- A newer UCRT gcc, which is the MSYS2 UCRT64 environment today, gets past the
+  runtime and fails on `__emutls_v._ZSt11__once_call`. The archives were built
+  by a GCC whose libstdc++ used emulated TLS for that, and a newer one does
+  not. The version is wrong.
+
+Install the matching toolchain and put it first on PATH:
+
+    winget install --id BrechtSanders.WinLibs.POSIX.UCRT.LLVM --exact --silent
+
+It lands under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\` in a
+`mingw64\bin` directory. `go build` finds `gcc` there and turns CGO on by
+itself. The workflows install the same package for the same reason.
+
+Checking that `go build ./drivers/duckdb/` succeeds is not enough. Building a
+package compiles it; the archives are only linked when an executable is
+produced, so every failure above appears at the binary link and not before.
+Build the binary.
+
+## Adding a platform constraint to a driver
+
+Put the constraint in the driver's package comment rather than in `build.sh`. A constraint in the
+generated file also excludes the driver from `go build -tags most`, while one in
+the script only applies to a build made through the script.
+
 > Tip: check out closed PRs for examples, and/or search the codebase
 > for names of databases you're familiar with.
 
@@ -66,6 +107,28 @@ after the tests return, and a fatal error in `TestMain` exits before it. Remove
 them before the next run, or the next run fails for lack of memory:
 
     podman ps -a --format '{{.ID}}\t{{.Image}}' | grep usql- | cut -f1 | xargs -r podman rm -f
+
+## Terminal tests
+
+usql turns off its prompt, line editor, completion and colour when it does not
+own a terminal, so piping input into it exercises none of them. `cli_test.go`
+records sessions against a real pseudo-terminal and compares them against the
+golden transcripts in `testdata/cli`:
+
+    go test -tags "sqlite3 no_base" -run TestCLI .
+
+Every session uses SQLite, so none of them needs a container. Linux and macOS
+record. Windows has no pseudo-terminal device file, so the test skips there.
+
+Re-record after a deliberate change to the output:
+
+    go test -tags "sqlite3 no_base" -run TestCLI -update .
+
+Read the diff before you keep a re-recording. A golden here records what usql
+does rather than what it ought to do, so accepting one blindly freezes whatever
+it does now, including a bug. Before trusting a new golden, break the code it
+covers on purpose and make sure that the golden fails. A break that does not
+fail it means the golden covers nothing.
 
 ## Command line tests
 

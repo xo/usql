@@ -1,6 +1,7 @@
 // Package duckdb defines and registers usql's DuckDB driver. Requires CGO.
 //
 // See: https://github.com/duckdb/duckdb-go
+// Build: !(linux && arm)
 package duckdb
 
 import (
