@@ -134,13 +134,28 @@ func TestColumns(t *testing.T) {
 
 func TestCopy(t *testing.T) {
 	// Tests with csvq source DB. That driver doesn't support ScanType()
-	for _, destTableSpec := range []string{
-		"copy_test.dest",
-		"copy_test.dest(StringCol, NumCol)",
-		"insert into copy_test.dest values(?, ?)",
+	for _, test := range []struct {
+		destTableSpec string
+		skip          string
+	}{
+		{destTableSpec: "copy_test.dest"},
+		{destTableSpec: "copy_test.dest(StringCol, NumCol)"},
+		{destTableSpec: "insert into copy_test.dest VALUES (?, ?)"},
+		{
+			destTableSpec: "insert into copy_test.dest values(?, ?)",
+			// clickhouse-go strips the parameter list with the regexp
+			// `\sVALUES\s.*$`, which is case sensitive and needs whitespace
+			// after VALUES. A lowercase "values(" therefore reaches the server
+			// with its placeholders intact and is rejected. Remove this skip
+			// once clickhouse-go accepts the lowercase form.
+			skip: "clickhouse-go only truncates an uppercase VALUES followed by whitespace",
+		},
 	} {
-		t.Run("csvq_"+destTableSpec, func(t *testing.T) {
-			testCopy(t, destTableSpec, "csvq:.")
+		t.Run("csvq_"+test.destTableSpec, func(t *testing.T) {
+			if test.skip != "" {
+				t.Skip(test.skip)
+			}
+			testCopy(t, test.destTableSpec, "csvq:.")
 		})
 	}
 	// Test with a driver that supports ScanType()

@@ -20,11 +20,12 @@ Indexes:
   "idx_title" BTREE (title)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id)
 Foreign-key constraints:
-  "fk_film_language" FOREIGN KEY (language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_language" FOREIGN KEY (language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT
 Referenced by:
-  TABLE "film" CONSTRAINT "fk_film_language" FOREIGN KEY (language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  TABLE "film" CONSTRAINT "fk_film_language_original" FOREIGN KEY (original_language_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film_actor" CONSTRAINT "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "film_category" CONSTRAINT "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  TABLE "inventory" CONSTRAINT "fk_inventory_film" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
                                       BASE TABLE "sakila.film_actor"
     Name     |     Type     | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
@@ -36,11 +37,8 @@ Indexes:
   "idx_fk_film_id" BTREE (film_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (actor_id, film_id)
 Foreign-key constraints:
-  "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
-Referenced by:
-  TABLE "film_actor" CONSTRAINT "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  TABLE "film_actor" CONSTRAINT "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film_actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_actor_actor" FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_actor_film" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
                                     BASE TABLE "sakila.film_category"
     Name     |     Type     | Nullable |      Default      | Size | Decimal Digits | Radix | Octet Length 
@@ -52,11 +50,8 @@ Indexes:
   "fk_film_category_category" BTREE (category_id)
   "PRIMARY" PRIMARY_KEY, UNIQUE, BTREE (film_id, category_id)
 Foreign-key constraints:
-  "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
-Referenced by:
-  TABLE "film_category" CONSTRAINT "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
-  TABLE "film_category" CONSTRAINT "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film_category(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_category_category" FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT
+  "fk_film_category_film" FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT
 
                                   BASE TABLE "sakila.film_text"
     Name     |     Type     | Nullable | Default | Size  | Decimal Digits | Radix | Octet Length 

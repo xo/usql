@@ -1,3 +1,8 @@
+
+
+
+
+
                                                                    table "public.film"
          Name         |              Type              | Nullable |                Default                | Size | Decimal Digits | Radix | Octet Length 
 ----------------------+--------------------------------+----------+---------------------------------------+------+----------------+-------+--------------
@@ -5,8 +10,8 @@
  title                | character varying(255)         | "NO"     |                                       |  255 |              0 |    10 |         1020 
  description          | text                           | "YES"    |                                       |    0 |              0 |    10 |   1073741824 
  release_year         | integer                        | "YES"    |                                       |   32 |              0 |     2 |            0 
- language_id          | smallint                       | "NO"     |                                       |   16 |              0 |     2 |            0 
- original_language_id | smallint                       | "YES"    |                                       |   16 |              0 |     2 |            0 
+ language_id          | integer                        | "NO"     |                                       |   32 |              0 |     2 |            0 
+ original_language_id | integer                        | "YES"    |                                       |   32 |              0 |     2 |            0 
  rental_duration      | smallint                       | "NO"     | 3                                     |   16 |              0 |     2 |            0 
  rental_rate          | numeric(4,2)                   | "NO"     | 4.99                                  |    4 |              2 |    10 |            0 
  length               | smallint                       | "YES"    |                                       |   16 |              0 |     2 |            0 
@@ -35,8 +40,8 @@ Triggers:
                                             table "public.film_actor"
     Name     |              Type              | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 -------------+--------------------------------+----------+---------+------+----------------+-------+--------------
- actor_id    | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
- film_id     | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ actor_id    | integer                        | "NO"     |         |   32 |              0 |     2 |            0 
+ film_id     | integer                        | "NO"     |         |   32 |              0 |     2 |            0 
  last_update | timestamp(6) without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 Indexes:
   "film_actor_pkey" PRIMARY_KEY, UNIQUE, btree (actor_id, film_id)
@@ -50,8 +55,8 @@ Triggers:
                                            table "public.film_category"
     Name     |              Type              | Nullable | Default | Size | Decimal Digits | Radix | Octet Length 
 -------------+--------------------------------+----------+---------+------+----------------+-------+--------------
- film_id     | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
- category_id | smallint                       | "NO"     |         |   16 |              0 |     2 |            0 
+ film_id     | integer                        | "NO"     |         |   32 |              0 |     2 |            0 
+ category_id | integer                        | "NO"     |         |   32 |              0 |     2 |            0 
  last_update | timestamp(6) without time zone | "NO"     | now()   |    6 |              0 |    10 |            0 
 Indexes:
   "film_category_pkey" PRIMARY_KEY, UNIQUE, btree (film_id, category_id)
@@ -77,27 +82,23 @@ Triggers:
   Type  | Start | Min |         Max         | Increment | Cycles? 
 --------+-------+-----+---------------------+-----------+---------
  bigint | 1     | 1   | 9223372036854775807 | 1         | "NO" 
-
 Index "public.film_actor_pkey"
-   Name   |   Type   
-----------+----------
- actor_id | smallint 
- film_id  | smallint 
+   Name   |  Type   
+----------+---------
+ actor_id | integer 
+ film_id  | integer 
 primary key, btree, for table film_actor
-
 Index "public.film_category_pkey"
-    Name     |   Type   
--------------+----------
- film_id     | smallint 
- category_id | smallint 
+    Name     |  Type   
+-------------+---------
+ film_id     | integer 
+ category_id | integer 
 primary key, btree, for table film_category
-
 Index "public.film_fulltext_idx"
    Name   |   Type    
 ----------+-----------
  fulltext | gtsvector 
 gist, for table film
-
 Index "public.film_pkey"
   Name   |  Type   
 ---------+---------

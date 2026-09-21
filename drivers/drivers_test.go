@@ -42,8 +42,9 @@ type Database struct {
 	DB         *sql.DB
 }
 
-// maxWait is how long to wait for a container to become ready.
-const maxWait = time.Minute
+// maxWait is how long to wait for a container to become ready. Loading the
+// sakila schema into mysql or starting trino takes well over a minute.
+const maxWait = 5 * time.Minute
 
 // buildArgs converts name/value pairs to the form dockertest expects.
 func buildArgs(args map[string]string) map[string]*string {
@@ -52,6 +53,30 @@ func buildArgs(args map[string]string) map[string]*string {
 		m[k] = &v
 	}
 	return m
+}
+
+// startResource starts the container for db. A database that declares no
+// SCHEMA_URL has nothing to add to its base image, and the shared build file
+// always runs ADD, so that case runs the base image directly instead.
+func startResource(ctx context.Context, pool dt.Pool, contextDir string, db *Database) (dt.ClosableResource, error) {
+	if db.BuildArgs["SCHEMA_URL"] == "" {
+		// Run takes a repository and a separate tag option, so a tagged
+		// reference has to be split or it ends up as "repo:tag:latest".
+		repository, tag := db.BuildArgs["BASE_IMAGE"], ""
+		if i := strings.LastIndex(repository, ":"); i != -1 && !strings.Contains(repository[i+1:], "/") {
+			repository, tag = repository[:i], repository[i+1:]
+		}
+		opts := db.RunOpts
+		if tag != "" {
+			opts = append(append([]dt.RunOption{}, opts...), dt.WithTag(tag))
+		}
+		return pool.Run(ctx, repository, opts...)
+	}
+	return pool.BuildAndRun(ctx, db.Image, &dt.BuildOptions{
+		ContextDir: contextDir,
+		Dockerfile: "Containerfile",
+		BuildArgs:  buildArgs(db.BuildArgs),
+	}, db.RunOpts...)
 }
 
 const (
@@ -101,7 +126,10 @@ var (
 			},
 			Image: "usql-mysql",
 			RunOpts: []dt.RunOption{
-				dt.WithCmd([]string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log"}),
+				// InnoDB cannot allocate AIO contexts when the host is near its
+				// fs.aio-max-nr limit, which is common under rootless podman, and
+				// mysqld then aborts at startup instead of starting slowly.
+				dt.WithCmd([]string{"--general-log=1", "--general-log-file=/var/lib/mysql/mysql.log", "--innodb-use-native-aio=0"}),
 				dt.WithEnv([]string{"MYSQL_ROOT_PASSWORD=pw"}),
 				dt.WithLabels(map[string]string{"usql-test": "mysql"}),
 			},
@@ -122,7 +150,7 @@ var (
 			},
 			DSN:        "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=sakila",
 			ReadyDSN:   "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=master",
-			Exec:       []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
+			Exec:       []string{"/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
 			DockerPort: "1433/tcp",
 		},
 		"trino": {
@@ -145,6 +173,12 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	// github.com/proullon/ramsql/engine/log calls slog.SetDefault from its
+	// init, which also redirects the standard log package into that handler at
+	// warning level. Every log.Print and log.Fatalf in this process is dropped
+	// as a result, so failures here exit silently. Put log back on stderr.
+	log.SetOutput(os.Stderr)
+
 	var only string
 	flag.BoolVar(&cleanup, "cleanup", true, "delete containers when finished")
 	flag.StringVar(&only, "dbs", "", "comma separated list of dbs to test: pgsql, mysql, sqlserver, trino")
@@ -210,7 +244,13 @@ func TestMain(m *testing.M) {
 			if openErr != nil {
 				return openErr
 			}
-			return db.DB.Ping()
+			if err := db.DB.Ping(); err != nil {
+				return err
+			}
+			// Ping alone is not a readiness signal. Trino answers it while it
+			// is still starting and then resets the first real query.
+			var ok int
+			return db.DB.QueryRowContext(ctx, "SELECT 1").Scan(&ok)
 		}); retryErr != nil {
 			log.Fatalf("Timed out waiting for %s:\n%s\n%s", dbName, retryErr, openErr)
 		}
@@ -235,13 +275,8 @@ func getConnInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool)
 
 	// containers are reused within a run, keyed on the built image -- dbs
 	// sharing an Image (pgsql and pgx) share a single container
-	buildOpts := &dt.BuildOptions{
-		ContextDir: "./testdata/docker",
-		Dockerfile: "Containerfile",
-		BuildArgs:  buildArgs(db.BuildArgs),
-	}
 	var err error
-	db.Resource, err = pool.BuildAndRun(ctx, db.Image, buildOpts, db.RunOpts...)
+	db.Resource, err = startResource(ctx, pool, "./testdata/docker", db)
 	if err != nil {
 		log.Fatalf("Failed to start %s: %s", dbName, err)
 	}

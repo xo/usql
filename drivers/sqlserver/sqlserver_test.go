@@ -32,8 +32,9 @@ type Database struct {
 	Reader       metadata.BasicReader
 }
 
-// maxWait is how long to wait for a container to become ready.
-const maxWait = time.Minute
+// maxWait is how long to wait for a container to become ready. Loading the
+// sakila schema into mysql or starting trino takes well over a minute.
+const maxWait = 5 * time.Minute
 
 // buildArgs converts name/value pairs to the form dockertest expects.
 func buildArgs(args map[string]string) map[string]*string {
@@ -60,7 +61,7 @@ var db = Database{
 		dt.WithEnv([]string{"ACCEPT_EULA=Y", "SA_PASSWORD=" + pw}),
 		dt.WithLabels(map[string]string{"usql-test": "sqlserver"}),
 	},
-	Exec:         []string{"/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
+	Exec:         []string{"/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost", "-U", "sa", "-P", pw, "-d", "master", "-i", "/schema/sql-server-sakila-schema.sql"},
 	Driver:       "sqlserver",
 	URL:          "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s?database=" + dbName,
 	ReadinessURL: "sqlserver://sa:" + url.QueryEscape(pw) + "@127.0.0.1:%s",
@@ -131,7 +132,13 @@ func waitForDbConnection(ctx context.Context, driver string, pool dt.Pool, url s
 		if err != nil {
 			return err
 		}
-		return db.Ping()
+		if err := db.Ping(); err != nil {
+			return err
+		}
+		// Ping alone is not a readiness signal. Trino answers it while it is
+		// still starting and then resets the first real query.
+		var ok int
+		return db.QueryRowContext(ctx, "SELECT 1").Scan(&ok)
 	}); err != nil {
 		return nil, err
 	}

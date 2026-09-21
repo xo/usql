@@ -21,7 +21,6 @@ require (
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
 	github.com/databricks/databricks-sql-go v1.15.1
 	github.com/datafuselabs/databend-go v0.9.3
-	github.com/docker/docker v28.5.2+incompatible
 	github.com/duckdb/duckdb-go/v2 v2.10505.0
 	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
@@ -46,7 +45,6 @@ require (
 	github.com/microsoft/go-mssqldb v1.11.0
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
-	github.com/moby/go-archive v0.3.3
 	github.com/nakagami/firebirdsql v0.9.20
 	github.com/ory/dockertest/v4 v4.0.0
 	github.com/prestodb/presto-go-client/v2 v2.1.2
@@ -61,7 +59,7 @@ require (
 	github.com/trinodb/trino-go-client v0.333.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
-	github.com/xo/dburl v0.25.2
+	github.com/xo/dburl v0.25.3
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.8.0
 	github.com/xo/tblfmt v0.18.3
@@ -163,7 +161,6 @@ require (
 	github.com/containerd/continuity v0.5.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
-	github.com/containerd/log v0.2.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.21.0 // indirect
 	github.com/couchbase/go-couchbase v0.1.1 // indirect
 	github.com/couchbase/gomemcached v0.3.4 // indirect
@@ -275,12 +272,7 @@ require (
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/moby/api v1.56.0 // indirect
 	github.com/moby/moby/client v0.6.0 // indirect
-	github.com/moby/patternmatcher v0.6.1 // indirect
-	github.com/moby/sys/atomicwriter v0.1.0 // indirect
-	github.com/moby/sys/sequential v0.7.0 // indirect
 	github.com/moby/sys/user v0.4.1 // indirect
-	github.com/moby/sys/userns v0.2.1 // indirect
-	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/murfffi/conncheck v0.2.1 // indirect
@@ -330,7 +322,6 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.71.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0 // indirect
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.46.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.46.0 // indirect
