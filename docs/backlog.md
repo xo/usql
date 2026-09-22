@@ -4,9 +4,9 @@ This file records planned work for usql and for the sibling repositories that
 usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
-Items 1 to 8 are Ken's work items, in his order. The resvg item at the end is
-lowest priority. The last section holds items that have been raised but have no
-priority yet.
+Items 1 to 9 are Ken's work items, in his order. Items 10 to 13 were added from
+work that followed. The last sections hold the GitHub working list, drivers that
+could be added, and items that have been raised but have no priority yet.
 
 ## 1. Bring CI and CD up to date
 
@@ -163,9 +163,115 @@ This became more worthwhile once duckdb started building on Windows, because
 the Windows binary now carries the same driver set as the others.
 
 
+## 11. Report the three size defects upstream
+
+Measured on 2026-09-22 on linux/amd64, stripped with `-trimpath -ldflags "-s
+-w"`. `docs/` holds no copy of the data; the numbers below are what the builds
+reported.
+
+### go-ora declares its character set tables as `int`
+
+`github.com/sijms/go-ora/v3/converters/string_conversion_new.go` is 11 MB of
+generated Go in 78,264 lines. It holds one `NewStringConverter` with 236 case
+arms, and each arm builds a converter from a `dBuffer []int` and an
+`eBuffer map[int]int`. That is 789,555 numbers in the slices and 403,054 pairs
+in the maps, 1,595,663 numbers in total.
+
+The element type is `int`, which is 8 bytes, so the tables occupy 12.17 MB. The
+binary reports 12.11 MB for them, so the two agree. No value in any table
+exceeds 65535. As `uint16` the tables would be 3.04 MB, which is 9.1 MB smaller,
+and usql carries Oracle in every default build, so that is 9.1 MB off every
+binary usql ships.
+
+The `eBuffer` maps cost again at run time. Go compiles a large map literal into
+two static arrays and code that inserts every entry, so building one converter
+allocates a map of up to tens of thousands of entries.
+
+Report both to sijms, together with the separate `0x80000000` overflow that is
+why `drivers/oracle/oracle.go` carries `Build: !(linux && arm)`.
+
+### duckdb-go-bindings passes -rdynamic
+
+`github.com/duckdb/duckdb-go-bindings/lib/linux-amd64` passes `-rdynamic` in its
+cgo LDFLAGS, which makes the linker export every symbol into the dynamic symbol
+table. That table survives `-s -w`. duckdb costs 54.1 MB of a `most` build, and
+almost all of it is that table.
+
+### gorm-dameng imports the plugin package
+
+`github.com/godoes/gorm-dameng/dm8/security` is the only importer of Go's
+`plugin` package anywhere in usql's dependency graph, and importing it has the
+same effect as `-rdynamic`. dameng cost 44.1 MB before it was demoted to the
+`all` group.
+
+Removing both drivers takes a `most` build from 258.5 MB to 159 MB, and takes
+`.dynsym` plus `.dynstr` from 37.1 MB to zero.
+
+
+## 12. `\chart file=NAME` should not need terminal graphics
+
+`doExecChart` in `handler/handler.go` returns `text.ErrGraphicsNotSupported`
+before it reads its arguments. When `file` is set the chart is written to a file
+as SVG and nothing is drawn in the terminal, so the check rejects a request it
+could have served. Reproduce it by piping a statement into a build made with
+`-tags charts`:
+
+    printf 'select 1 as a, 2 as b \\chart type bar file=/tmp/out.svg\n' | usql sqlite3://:memory:
+
+Move the check past the point where `cfg` is known, and apply it only when
+`cfg.File` is empty. This is older than the charts build tag and is not caused
+by it.
+
+
+## 13. Shrink the charts stack
+
+Charts are behind the `charts` build tag as of 2026-09-22, so this only affects
+a build made with `-tags charts` or `-tags all`. Measured on linux/amd64 by
+diffing a `-tags charts` build against a `-tags none` build, both stripped with
+`-trimpath -ldflags "-s -w"`. The tag costs 12.4 MB, which splits as:
+
+| part | cost |
+|---|---:|
+| `libresvg.a`, the Rust static library | 3.68 MB |
+| `github.com/dop251/goja` | 1.69 MB |
+| `golang.org/x/text` | 1.27 MB |
+| `echarts.min.js`, embedded | 1.20 MB |
+| Go standard library and runtime pulled in | 1.21 MB |
+| `.gopclntab`, `.go.type`, `.eh_frame`, `.data.rel.ro` | 2.9 MB |
+| `go:func` | 0.17 MB |
+
+Two of those are usql's own modules and can move.
+
+`echartsgoja.go:288` carries `//go:embed *.js`, which embeds `echarts.min.js`
+verbatim at 0.98 MB. Minified JavaScript compresses about four to one, so
+storing it gzipped and inflating it on first render would return roughly
+0.75 MB. `compress/gzip` is already linked into most usql builds.
+
+`libresvg.a` is the largest single piece. The xo/resvg session is designing this
+and has confirmed the scope: keep the `text` and `system-fonts` Cargo features,
+which are load-bearing, and drop `raster-images` and `svgz` for a lean variant
+while leaving them on by default for other consumers. Do not scope work around
+removing font shaping. A chart carries about ten `<text>` elements at
+`font-family:sans-serif`, covering the axis labels, the title, the subtitle and
+the legend, and `xo/resvg` sets `loadSystemFonts: true` at `resvg.go:89`.
+
+`raster-images` is safe to drop for usql specifically, and that is a guarantee
+rather than a sample: `metacmd/charts/charts.go` builds the option document from
+a closed struct with five fields, Title, Legend, XAxis, YAxis and Series, none
+of which can carry an image, a URL or a data URI. usql cannot emit `<image>`.
+
+The 1.27 MB of `golang.org/x/text` is the collation tables that goja links for
+locale-aware string comparison. It arrives through echartsgoja's dependency on
+goja and is only avoidable by changing engines, which is not worth it.
+
+That session is also weighing a blitz-style split into one Go module per
+platform. The download win is secondary now, but see the resvg item under
+Lowest priority for why the split would also resolve issue 494.
+
+
 ## Tier 2: GitHub issues and pull requests
 
-Items 1 to 9 are the programme. This section is the working list drawn from the
+Items 1 to 13 are the programme. This section is the working list drawn from the
 96 open issues and 25 open pull requests, reviewed on 2026-09-21.
 
 ### Add the official Oracle driver
@@ -283,31 +389,34 @@ an RPM as the upstream README now says, or drop the entry.
 
 ## Lowest priority
 
-Add a build tag that compiles out resvg and the chart commands on platforms
-other than Windows, macOS and Linux.
+### Confirm that the non-Windows, non-macOS, non-Linux builds now work
+
+Charts are behind the `charts` build tag as of this change, so resvg is linked
+only by `go build -tags charts` and `go build -tags all`. A default build and a
+`most` build no longer reference it at all.
 
 `github.com/xo/resvg` ships prebuilt static Rust artifacts instead of building
 from source. Version 0.8.0 contains six copies of `libresvg.a`, for
 `darwin_amd64`, `darwin_arm64`, `linux_amd64`, `linux_arm`, `linux_arm64` and
 `windows_amd64`. The cgo preamble in `resvg.go` names those same six pairs in
 its `#cgo <goos>,<goarch> LDFLAGS` lines. The file carries no build constraint,
-so no other platform can compile the package.
+so no other platform can compile the package. On any other platform the C code
+compiles, because `CFLAGS` still points at `libresvg/resvg.h`, but no `LDFLAGS`
+line matches. The linker therefore receives no `-L` and no `-lresvg`, and every
+`resvg_` symbol is undefined. Issue 494 is this failure on the FreeBSD port for
+arm64, armv7 and i386.
 
-On any other platform the C code compiles, because `CFLAGS` still points at
-`libresvg/resvg.h`, but no `LDFLAGS` line matches. The linker therefore
-receives no `-L` and no `-lresvg`, and every `resvg_` symbol is undefined.
-Issue 494 is this failure on the FreeBSD port for arm64, armv7 and i386.
+That failure should now be reachable only with the `charts` tag. Build usql on
+the freebsd-rline, netbsd-rline and omnios-rline machines to confirm it, then
+close issue 494 or report what still fails. Note that resvg may not be the only
+package those platforms cannot build, so a failure there is not by itself a sign
+that this gating is wrong.
 
-usql links resvg on every build today. `handler/handler.go` imports
-`github.com/xo/resvg` at line 36, in an ordinary file with no build tag, and
-there is no `no_resvg` tag to turn it off. This blocks NetBSD, FreeBSD and
-illumos builds whatever Go toolchain the host has.
-
-Two other approaches exist and cost more. resvg can learn to link a system
-`libresvg` when the platform provides one, which is what the FreeBSD port needs
-and which fixes issue 494 at the source. The Rust crate can also be cross-built
-for more targets and the artifacts vendored, which grows the module and needs a
-Rust toolchain for each platform.
+Fixing charts on those platforms is a separate job and costs more. resvg can
+learn to link a system `libresvg` when the platform provides one, which is what
+the FreeBSD port needs. The Rust crate can also be cross-built for more targets
+and the artifacts vendored, which grows the module and needs a Rust toolchain
+for each platform.
 
 ## Not yet scheduled
 

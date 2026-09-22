@@ -266,7 +266,6 @@ associated database, scheme / build tag, and scheme aliases:
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                        | [github.com/chaisql/chai][d-chai]                                           |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                                 |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql]                                                      |
-| Dameng DM8           | `dameng`        | `dm8`, `dm`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
 | Databend             | `databend`      | `dd`, `bend`                                    | [github.com/datafuselabs/databend-go][d-databend]                           |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`            | [github.com/databricks/databricks-sql-go][d-databricks]                     |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                     | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup>            |
@@ -291,6 +290,7 @@ associated database, scheme / build tag, and scheme aliases:
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                 |
 | YDB                  | `ydb`           | `yd`, `yds`, `ydbs`                             | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                              |
 |                      |                 |                                                 |                                                                             |
+| Dameng DM8           | `dameng`        | `dm8`, `dm`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
 | GO DRiver for ORacle | `godror`        | `gr`                                            | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>                  |
 | ODBC                 | `odbc`          | `od`                                            | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>                |
 |                      |                 |                                                 |                                                                             |
@@ -1403,6 +1403,12 @@ directly in the terminal:
 </div>
 
 See [the section on the `\chart` meta command][chart-command] for details.
+
+Charts are not part of a default build. The renderer runs Apache ECharts in a
+JavaScript engine and rasterizes the result with an SVG renderer, which together
+add about 12 MiB to the binary, so it is behind the `charts` build tag. Build
+with `-tags charts`, or with `-tags all`, to include it. A build without it
+reports that it has no chart renderer.
 
 ##### Enabling/Disabling Terminal Graphics
 

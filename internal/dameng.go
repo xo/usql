@@ -1,4 +1,4 @@
-//go:build (all || most || dameng) && !no_dameng
+//go:build (all || dameng) && !no_dameng
 
 package internal
 

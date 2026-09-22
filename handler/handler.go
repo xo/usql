@@ -32,8 +32,6 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/xo/dburl"
 	"github.com/xo/dburl/passfile"
-	"github.com/xo/echartsgoja"
-	"github.com/xo/resvg"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/completer"
@@ -1065,6 +1063,12 @@ func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Opti
 // doExecChart executes a single query against the database, displaying its output as a chart.
 func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	stdout, _, _ := h.l.Stdout(), h.l.Stderr(), h.l.Interactive()
+	// Report a missing renderer before anything else. Without one no terminal
+	// and no argument can make \chart work, and reporting the terminal first
+	// would name the wrong cause.
+	if !charts.Available() {
+		return text.ErrChartsNotSupported
+	}
 	typ := env.TermGraphics()
 	if !typ.Available() {
 		return text.ErrGraphicsNotSupported
@@ -1109,16 +1113,15 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	if err != nil {
 		return err
 	}
-	echarts := echartsgoja.New(echartsgoja.WithWidthHeight(cfg.W, cfg.H))
-	res, err := echarts.RenderOptions(ctx, data)
+	res, err := charts.RenderSVG(ctx, data, cfg.W, cfg.H)
 	if err != nil {
 		return err
 	}
 	if cfg.File != "" {
 		fmt.Println("writing to", cfg.File)
-		return os.WriteFile(cfg.File, []byte(res), 0o644)
+		return os.WriteFile(cfg.File, res, 0o644)
 	}
-	img, err := resvg.Render([]byte(res), resvg.WithBackground(cfg.Background))
+	img, err := charts.Rasterize(res, cfg.Background)
 	if err != nil {
 		return err
 	}

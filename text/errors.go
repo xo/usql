@@ -59,6 +59,8 @@ var (
 	ErrInvalidTimezoneLocation = errors.New(`\pset: invalid timezone location`)
 	// ErrGraphicsNotSupported is the graphics not supported error.
 	ErrGraphicsNotSupported = errors.New(`\chart: graphics not supported in terminal`)
+	// ErrChartsNotSupported is the charts not built in error.
+	ErrChartsNotSupported = errors.New(`\chart: this build of usql has no chart renderer (build with -tags charts)`)
 	// ErrNoNumericColumns is the no numeric columns error.
 	ErrNoNumericColumns = errors.New(`\chart: no numeric columns found`)
 	// ErrInvalidQuotedString is the invalid quoted string error.

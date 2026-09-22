@@ -93,6 +93,12 @@ jobs:
             ./drivers/metadata \
             ./drivers/dameng/... \
             ./drivers/sqlite3/sqshared/...
+      # The chart renderer is behind the charts build tag, so the job above
+      # never links it. Test it here: it is the one package whose failure the
+      # rest of the matrix cannot see, and it needs no database.
+      - name: Test the chart renderer
+        shell: bash
+        run: go test ./metacmd/charts/...
 
   # Record terminal sessions against a real pseudo-terminal. usql turns off
   # its prompt, line editor and colour when it does not own a terminal, so

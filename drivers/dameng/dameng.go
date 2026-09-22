@@ -1,7 +1,7 @@
 // Package dameng defines and registers usql's Dameng DM8 driver.
 //
 // See: https://github.com/godoes/gorm-dameng
-// Group: most
+// Group: all
 package dameng
 
 import (
