@@ -9,12 +9,17 @@
 # driver and test enabled and built with build.sh. On failure go.mod/go.sum are
 # restored (override with -k) and the modules that changed are reported.
 #
-# Two ways to keep a dependency from being updated:
+# To keep a dependency from being updated, add it to SKIP below and pin the
+# version you want with an ordinary require line in go.mod. SKIP keeps the
+# module away from `go get -u`, and the require line holds the version unless
+# another module's requirements pull it forward.
 #
-#   * add it to SKIP below -- it is not passed to `go get -u`, although another
-#     module's requirements can still pull it forward
-#   * `go mod edit -exclude=<module>@<version>` -- a hard block on a single
-#     broken release, recorded in go.mod and honored by every go command
+# Never add an exclude or a replace directive to this module's go.mod. Both are
+# refused by `go install github.com/xo/usql@<version>`, which treats the named
+# module as the main module and rejects any directive that would make it
+# resolve differently. An exclude directive broke every `go install` of v0.21.5.
+# See https://github.com/xo/usql/issues/590, and issue 394 for the same fault
+# in 2023.
 #
 # usage: update-deps.sh [-n] [-k] [-V] [-x] [extra go get flags]
 #
@@ -31,6 +36,10 @@ SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 SKIP=(
   # >= v1.4 dropped libcontainer/user, which ory/dockertest still imports
   github.com/opencontainers/runc
+  # v5.0.0+incompatible does not compile. Pinned to v3.5.10+incompatible by an
+  # ordinary require in go.mod, because an exclude directive cannot be used
+  # here. See the note above and https://github.com/xo/usql/issues/590.
+  github.com/uber-go/tally
 )
 
 DRYRUN=0
@@ -125,7 +134,7 @@ if [ "$VERIFY" = "1" ]; then
     (set -x; $SRC/build.sh -b) || OK=0
   fi
   if [ "$OK" = "0" ]; then
-    echo -e "\n\nERROR: verification failed -- pin the offending module with 'go mod edit -exclude=' or add it to SKIP in $0"
+    echo -e "\n\nERROR: verification failed -- add the offending module to SKIP in $0 and pin it with an ordinary require in go.mod. Do not use an exclude or a replace directive: they break 'go install github.com/xo/usql@<version>'."
     restore
     exit 1
   fi
