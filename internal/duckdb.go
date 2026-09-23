@@ -1,4 +1,4 @@
-//go:build (all || most || duckdb) && !no_duckdb && !(linux && arm)
+//go:build (!no_base || duckdb) && !no_duckdb && !(linux && arm)
 
 package internal
 
