@@ -290,7 +290,6 @@ associated database, scheme / build tag, and scheme aliases:
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                 |
 | YDB                  | `ydb`           | `yd`, `yds`, `ydbs`                             | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                              |
 |                      |                 |                                                 |                                                                             |
-| Dameng DM8           | `dameng`        | `dm8`, `dm`                                     | [github.com/godoes/gorm-dameng/dm8][d-dameng]                               |
 | GO DRiver for ORacle | `godror`        | `gr`                                            | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>                  |
 | ODBC                 | `odbc`          | `od`                                            | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>                |
 |                      |                 |                                                 |                                                                             |
@@ -319,7 +318,6 @@ associated database, scheme / build tag, and scheme aliases:
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
 [d-couchbase]: https://github.com/couchbase/go_n1ql
 [d-csvq]: https://github.com/mithrandie/csvq-driver
-[d-dameng]: https://github.com/godoes/gorm-dameng
 [d-databend]: https://github.com/datafuselabs/databend-go
 [d-databricks]: https://github.com/databricks/databricks-sql-go
 [d-duckdb]: https://github.com/duckdb/duckdb-go

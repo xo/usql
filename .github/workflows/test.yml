@@ -91,7 +91,6 @@ jobs:
             ./handler/... \
             ./drivers/completer/... \
             ./drivers/metadata \
-            ./drivers/dameng/... \
             ./drivers/sqlite3/sqshared/...
       # The chart renderer is behind the charts build tag, so the job above
       # never links it. Test it here: it is the one package whose failure the

@@ -109,7 +109,7 @@ Some tests need nothing. The rest start a database in a container.
 
 These run anywhere usql builds:
 
-    go test ./stmt/... ./env/... ./handler/... ./drivers/completer/... ./drivers/metadata ./drivers/dameng/...
+    go test ./stmt/... ./env/... ./handler/... ./drivers/completer/... ./drivers/metadata
 
 `drivers/sqlite3/sqshared` also belongs to this group. It builds its sakila
 database with the linked SQLite driver and caches the schema under

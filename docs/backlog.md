@@ -96,11 +96,20 @@ passed through `-f` with a trailing semicolon never runs, and any `-f` file
 whose last statement has no trailing semicolon is discarded at end of file. The
 code is in `stmt/parse.go`.
 
-## 5. Fix the Dameng issues
+## 5. Decide whether Dameng comes back
 
-Issue 589 reports `dameng://` failing with `driver not available` on version
-0.21.5, which contains the driver and dburl v0.25.1. All three schemes connect
-correctly in local testing on both branches, so the cause is not known yet.
+The driver was removed on 2026-09-23. It is not documented well enough to
+review, so it was taken out rather than left in while that is worked out. What
+went: `drivers/dameng`, `contrib/dameng`, `internal/dameng.go`, the ADR, the
+README row, and the `github.com/godoes/gorm-dameng` dependency.
+
+The `dm`, `dm8` and `dameng` schemes stay registered in dburl, which was left
+alone deliberately. usql no longer has a driver for them, so a `dameng://` URL
+now reports that the driver is not available.
+
+Before it returns, the driver needs reading rather than trusting. It also
+imports Go's `plugin` package through `dm8/security`, which was 44 MB of the
+`most` build on its own; see item 11.
 
 ## 6. Create a dbtest package
 
@@ -199,13 +208,15 @@ almost all of it is that table.
 
 ### gorm-dameng imports the plugin package
 
-`github.com/godoes/gorm-dameng/dm8/security` is the only importer of Go's
-`plugin` package anywhere in usql's dependency graph, and importing it has the
-same effect as `-rdynamic`. dameng cost 44.1 MB before it was demoted to the
-`all` group.
+No longer usql's problem, recorded because it decides whether the driver can
+come back. `github.com/godoes/gorm-dameng/dm8/security` was the only importer
+of Go's `plugin` package anywhere in usql's dependency graph, and importing it
+has the same effect as `-rdynamic`. It cost 44.1 MB of a `most` build. The
+driver was removed on 2026-09-23 for unrelated reasons; see item 5.
 
-Removing both drivers takes a `most` build from 258.5 MB to 159 MB, and takes
-`.dynsym` plus `.dynstr` from 37.1 MB to zero.
+With both that and duckdb gone, a `most` build went from 258.5 MB to 159 MB,
+and `.dynsym` plus `.dynstr` from 37.1 MB to zero. Only duckdb still carries
+this cost.
 
 
 ## 12. `\chart file=NAME` should not need terminal graphics
@@ -429,11 +440,12 @@ which stays as it is.
 ### Released defects, fix first
 
 Issue 590 broke `go install` and issue 589 broke the Dameng driver, both in
-release 0.21.5. Both are fixed now and both can be closed: 589 by dburl
-v0.25.2, which gave the dameng scheme an `Override` so that `u.Driver` is `dm`
-again, and 590 by replacing the `exclude` directive with an ordinary pin of
-`github.com/uber-go/tally v3.5.10+incompatible`, since `go install
-module@version` refuses any `exclude` or `replace`.
+release 0.21.5. 590 is fixed, by replacing the `exclude` directive with an
+ordinary pin of `github.com/uber-go/tally v3.5.10+incompatible`, since
+`go install module@version` refuses any `exclude` or `replace`. 589 was fixed
+by dburl v0.25.2, which gave the dameng scheme an `Override` so that
+`u.Driver` is `dm` again, but usql no longer ships a Dameng driver, so it
+should be closed as no longer applicable rather than as fixed. See item 5.
 
 ### Pull requests to merge
 
@@ -455,8 +467,9 @@ adds bulk load for MySQL and 542 adds connection variables to `\copy`.
 ### Pull requests to close
 
 418 and 535 both replace the readline layer and conflict with item 8. 571, 582
-and 584 duplicate the dependency and action work in item 1. 585 duplicates the
-Dameng driver that is already merged. 360 belongs in Discussions.
+and 584 duplicate the dependency and action work in item 1. 585 adds a Dameng
+driver, which usql removed on 2026-09-23; close it with item 5's reasoning. 360
+belongs in Discussions.
 
 ### Issues to close rather than fix
 

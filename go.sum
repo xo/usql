@@ -437,8 +437,6 @@ github.com/gocql/gocql v1.7.0 h1:O+7U7/1gSN7QTEAaMEsJc1Oq2QHXvCWoF3DFK9HDHus=
 github.com/gocql/gocql v1.7.0/go.mod h1:vnlvXyFZeLBF0Wy+RS8hrOdbn0UWsWtdg07XJnFxZ+4=
 github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 h1:ZpnhV/YsD2/4cESfV5+Hoeu/iUR3ruzNvZ+yQfO03a0=
 github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2/go.mod h1:bBOAhwG1umN6/6ZUMtDFBMQR8jRg9O75tm9K00oMsK4=
-github.com/godoes/gorm-dameng v0.7.3-0.20251122032434-c34203b95230 h1:QAyswRFapY6UddZlSlbtubPSbD28TSDUGp2kHf29w+I=
-github.com/godoes/gorm-dameng v0.7.3-0.20251122032434-c34203b95230/go.mod h1:ERCiHdTJ5OUTCuQpqn86BG2eCQq6fxGmpIyK/LXRwDk=
 github.com/godror/godror v0.51.4 h1:YAkSW4c4zTQlnDHGmi0Q8FM9f2JWz/ufwx3qGWeAtAA=
 github.com/godror/godror v0.51.4/go.mod h1:+KoBDSBRHogZIik9a3SpvH0pS7iK+G8K42YEjtunqfQ=
 github.com/godror/knownpb v0.3.0 h1:+caUdy8hTtl7X05aPl3tdL540TvCcaQA6woZQroLZMw=
@@ -849,8 +847,6 @@ github.com/xo/resvg/libresvg/linux_arm64 v0.48.1/go.mod h1:y2BXMICqpyBuPUsugmC5d
 github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 h1:LBksR6Lwo8V6N0uRPhzWVoIt/qE6h92N5VLxqndsdag=
 github.com/xo/resvg/libresvg/windows_amd64 v0.48.1/go.mod h1:tJzNhggMgS3S8xpZdjFANEN3U/FeUGLqguB0E7GAUw8=
 github.com/xo/tblfmt v0.0.0-20190609041254-28c54ec42ce8/go.mod h1:3U5kKQdIhwACye7ml3acccHmjGExY9WmUGU7rnDWgv0=
-github.com/xo/tblfmt v0.18.3 h1:2LTZxeK4KgB6wnQAzwm/yIAAMPNQNfBM5BFiA4ArDFI=
-github.com/xo/tblfmt v0.18.3/go.mod h1:9v9Ij0sQvW0FZWOCJIIpGBBguS6jUBQUaC9WeeJN8sc=
 github.com/xo/tblfmt v0.19.0 h1:jjqyXhmTP/RUJmVVKgD3gDluFetLinQSPZd1EEmToXE=
 github.com/xo/tblfmt v0.19.0/go.mod h1:5+hCrcH7VpOehXlXYQd5H3MBaeHwUNC9Gu+Fz1+8k/s=
 github.com/xo/terminfo v1.0.0 h1:2ZpYzqWzyyytjk3TP6aJVDhkMAkc99/1xKQdA3TDTBY=
