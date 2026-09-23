@@ -723,6 +723,34 @@ module@version` refuses any `exclude` or `replace`. 589 reported the Dameng
 driver failing; the driver has since been removed, so it was closed as not
 planned.
 
+### Make the completion test comprehensive
+
+`completion_test.go` drives a real tab keypress through a pseudo-terminal and
+asserts the table name is offered. It covers duckdb alone. Widen it.
+
+Completion is per driver. Each supplies its own metadata reader, and some
+supply their own completer, so a pass for one says nothing about the others.
+The duckdb bug this test was written for proves the point: the driver was
+registered with MySQL's completer, so every completion ran a MySQL function
+against duckdb, and it reached a release because nothing tested completion for
+any driver at all.
+
+What a comprehensive version needs. One case per driver that has a metadata
+reader, sharing a single recorded session shape rather than one test each. The
+containerised drivers need the same fixtures `drivers_test.go` already starts,
+so it probably belongs beside that rather than in the root package, and it must
+not start a second set of containers. The file-backed drivers, sqlite3,
+moderncsqlite, duckdb and csvq, need no container and are the cheap half.
+
+Two things to assert, because they fail differently. That the expected name is
+offered, and that the completer logged no metadata error: it swallows a failed
+query and carries on with no candidates, so a broken completer and a database
+with nothing to complete look identical on screen.
+
+It is slow. Recording a session takes seconds and the duckdb build needs cgo,
+so this wants its own CI job rather than a place in the matrix.
+
+
 ### Pull requests to merge
 
 These are one-file fixes from repeat contributors, most of them for NULL scan
