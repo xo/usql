@@ -711,14 +711,19 @@ func decodeCommandDescs(funcName string, doc string) ([]desc, error) {
 	return descs, nil
 }
 
+// baseOrder is the order the base drivers are listed in, in the README. Add an
+// entry when a driver joins the base group. One that is missing sorts as 0 and
+// ties with postgres, and sort.Slice is not stable, so the two rows swap on
+// every run and `go generate` churns the README.
 var baseOrder = map[string]int{
 	"postgres":   0,
 	"mysql":      1,
 	"sqlserver":  2,
 	"oracle":     3,
 	"sqlite3":    4,
-	"clickhouse": 5,
-	"csvq":       6,
+	"duckdb":     5,
+	"clickhouse": 6,
+	"csvq":       7,
 }
 
 // sections are the section names for meta commands.
