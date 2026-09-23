@@ -16,7 +16,6 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
-	mymeta "github.com/xo/usql/drivers/metadata/mysql"
 )
 
 type metaReader struct {
@@ -29,7 +28,10 @@ var (
 )
 
 func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
-	qstr := `SHOW catalogs`
+	// SHOW catalogs does not exist. duckdb_databases() is the documented
+	// table function, and the internal column excludes the system and temp
+	// databases, which are not catalogs a user can select from.
+	qstr := `SELECT database_name FROM duckdb_databases() WHERE NOT internal ORDER BY database_name`
 	rows, closeRows, err := r.Query(qstr)
 	if err != nil {
 		return nil, err
@@ -152,7 +154,6 @@ func init() {
 		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
 			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
 		},
-		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
-		NewCompleter: mymeta.NewCompleter,
+		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }
