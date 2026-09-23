@@ -4,31 +4,11 @@ This file records planned work for usql and for the sibling repositories that
 usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
-Items 1 to 9 are Ken's work items, in his order. Items 10 to 17 were added from
-work that followed. The last sections hold the GitHub working list, drivers that
-could be added, and items that have been raised but have no priority yet.
-
-## 1. Bring CI and CD up to date
-
-The repository has three workflows: `announce.yml`, `release.yml` and
-`test.yml`.
-
-1. Remove the AUR publishing steps from `.github/workflows/announce.yml`. That
-   publishing is automated elsewhere now.
-2. Update every action to its current major version. The workflows use
-   `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`,
-   `actions/download-artifact@v4`, `softprops/action-gh-release@v2`,
-   `crazy-max/ghaction-virustotal@v4` and `shimataro/ssh-key-action@v2`. Two
-   Dependabot branches are open for this: `actions/checkout-7` and
-   `softprops/action-gh-release-3`.
-3. Generate better commit logs in the draft release notes.
-4. Clean up `build.sh`. Add long options and a help output. Other improvements
-   are open for discussion.
-5. Run the tests on Ubuntu amd64, Ubuntu arm64, macos-latest and
-   windows-latest. `test.yml` runs only on `ubuntu-latest` today. `release.yml`
-   already builds on `macos-latest` and `windows-latest`, so the runners exist.
-
-Item 5 depends on item 2 below.
+Items 2 to 9 are Ken's work items, in his order. Items 10 to 15 were added from
+work that followed. Item 1, bringing CI and CD up to date, is finished and has
+been removed, as have the items that were completed. The last sections hold the
+GitHub working list, drivers that could be added, and items that have been
+raised but have no priority yet.
 
 ## 2. Fix the unit tests
 
@@ -83,33 +63,116 @@ a `\c` command or a `USE` statement.
 
 ## 4. Work through GitHub
 
-Fix the most important outstanding issues. There are 96 open. Move the
-repository from issues to discussions. Close the pull requests where closing
-makes sense.
+93 issues and 24 pull requests are open, reviewed on 2026-09-23. Gemini and
+DeepSeek were consulted on which are real; where they disagreed it is said so.
 
-The statement parsing bugs belong here. Issue 587 reports that a
-backtick-quoted identifier containing a single quote flips the lexer quote
-state in the MySQL and MariaDB dialect. The next string literal is then
-unescaped a second time, and usql exits with status 0 after sending different
-SQL than the user wrote. The same report names two silent no-ops. A statement
+### 4a. The nine scanner reports: close them
+
+Issues 543, 556, 567, 568, 574, 575, 579, 580 and 581 are all dependency
+scanner output from nine different users. `govulncheck` against the full build
+reports that nothing reachable is affected: 0 vulnerabilities in usql's code,
+0 in imported packages, and 3 in required modules that are never called, being
+GO-2026-5932, GO-2022-0646 and GO-2022-0635.
+
+They are not defects in usql and should be closed. Both models agreed that a
+shipped CLI is still operationally different from a library: enterprise
+scanners read `go.mod` from the binary's build info and ignore reachability, so
+a compliance gate can block the binary whatever `govulncheck` says. The reports
+will therefore keep arriving, and closing them without changing anything is
+only half an answer.
+
+They disagreed on whether to keep one umbrella issue. Gemini said do not, it
+attracts noise. DeepSeek said keep one for tracking. No umbrella issue is the
+better call for a project this size.
+
+### 4b. Stop the scanner reports recurring
+
+Both models converged on the same four, in rough order of effect:
+
+1. Run `govulncheck` in CI and publish its output, so the reachability answer
+   is a build artifact rather than a claim in a comment.
+2. Publish a VEX document with each release marking the unreachable findings
+   `not_affected`. Modern scanners consume it and suppress the false alarm.
+   This is the only mechanism that actually stops the reports at source.
+3. Add `SECURITY.md` stating that usql tracks vulnerabilities through
+   `govulncheck`, and that an unreachable transitive finding is ordinary
+   dependency maintenance rather than a security incident.
+4. Add an issue template for vulnerability reports that asks for `govulncheck`
+   output showing a call path.
+
+Keep taking the dependency bumps regardless. They are cheap and they clear most
+scanners without any argument.
+
+### 4c. Statement parsing
+
+Issue 587 reports that a backtick-quoted identifier containing a single quote
+flips the lexer quote state in the MySQL and MariaDB dialect. The next string
+literal is unescaped a second time, and usql exits 0 after sending different
+SQL than the user wrote. The same report names two silent no-ops: a statement
 passed through `-f` with a trailing semicolon never runs, and any `-f` file
-whose last statement has no trailing semicolon is discarded at end of file. The
-code is in `stmt/parse.go`.
+whose last statement lacks a trailing semicolon is discarded at end of file.
+The code is `stmt/parse.go`. Pull request 591 fixes the backtick half only and
+is rebased onto main locally as `pr-591`.
 
-## 5. Decide whether Dameng comes back
+Issues 165, 166 and 505 are the same area: the `\\` separator, quoted string
+processing, and a regression in quoted variable replacement. Fix them together
+with item 3 rather than piecemeal.
 
-The driver was removed on 2026-09-23. It is not documented well enough to
-review, so it was taken out rather than left in while that is worked out. What
-went: `drivers/dameng`, `contrib/dameng`, `internal/dameng.go`, the ADR, the
-README row, and the `github.com/godoes/gorm-dameng` dependency.
+### 4d. Stability, which outranks everything else here
 
-The `dm`, `dm8` and `dameng` schemes stay registered in dburl, which was left
-alone deliberately. usql no longer has a driver for them, so a `dameng://` URL
-now reports that the driver is not available.
+Issue 546, a busy loop at 100% CPU, and 464, a crash after executing a command.
+Both models put these first and they are right: a CLI that spins or dies is
+worse than one missing a feature. 546 is most likely the interactive loop
+polling on EOF or an unexpectedly closed pipe.
 
-Before it returns, the driver needs reading rather than trusting. It also
-imports Go's `plugin` package through `dm8/security`, which was 44 MB of the
-`most` build on its own; see item 11.
+Issue 371, high memory usage, has no heap profile attached. Ask for one and
+close it if none arrives.
+
+### 4e. `\copy`, which is the data path
+
+Issues 254, 322, 397, 427, 458, 462 and 495. Gemini called this the top
+priority after stability, on the grounds that a tool which mangles data or runs
+out of memory on a large load gets dropped immediately. 397, 254 and 462 are
+probably one fault, the NULL scan in `\copy`; see item 14. 322 is a 500 MB file
+failing, which suggests the copy reads a whole payload rather than streaming.
+
+### 4f. Output faults, cheap and visible
+
+Issue 448, numbers shown as `1.450817032e+`, is a formatting default and should
+be a small fix. Issue 509, control characters in a text field breaking the
+output, needs the cell sanitised. Issue 504, `\dt` listing SQLite system
+tables, is a missing `sqlite_%` filter. All three are quick and user facing.
+
+Issue 516, csv disabling the pager, Gemini read as intended behaviour, since
+csv is meant for redirection. Honour an explicitly set `\pset pager on` and
+leave the default as it is.
+
+### 4g. Driver-specific metadata: accept patches, do not write them
+
+Issues 375, athena has no `\d`, and 440, no foreign keys on SQL Server. Gemini
+was blunt and correct: one maintainer cannot write bespoke introspection for
+fifty databases, most of which are not run locally. Label these for help and
+merge contributions with tests. Do not spend core time on them.
+
+### 4h. The terminal cluster belongs to item 8
+
+Issues 93, 122, 236, 483, 490, 508, 552 and 472 are all readline behaviour:
+garbled input after alt-tab on Windows, DEL deleting a whole word, typing
+switching to Ctrl, vi key bindings, the pager and prompt alternating. These do
+not get fixed one at a time in usql. They close with the move to `xo/rline`.
+
+### 4i. Move questions to Discussions
+
+Issues 263, 469 and 485 are questions. 391 and 475 are environment problems
+rather than usql defects.
+
+### 4j. Be ruthless with the rest
+
+Both models said the same thing unprompted: for a project this size, close
+anything over a year old that has no reproduction, no stack trace and no heap
+profile, saying it can be reopened with one. Most will never be reopened. The
+alternative is that the real bugs above stay buried under sixty that are not.
+
 
 ## 6. Create a dbtest package
 
@@ -206,17 +269,12 @@ cgo LDFLAGS, which makes the linker export every symbol into the dynamic symbol
 table. That table survives `-s -w`. duckdb costs 54.1 MB of a `most` build, and
 almost all of it is that table.
 
-### gorm-dameng imports the plugin package
+### gorm-dameng imported the plugin package
 
-No longer usql's problem, recorded because it decides whether the driver can
-come back. `github.com/godoes/gorm-dameng/dm8/security` was the only importer
-of Go's `plugin` package anywhere in usql's dependency graph, and importing it
-has the same effect as `-rdynamic`. It cost 44.1 MB of a `most` build. The
-driver was removed on 2026-09-23 for unrelated reasons; see item 5.
-
-With both that and duckdb gone, a `most` build went from 258.5 MB to 159 MB,
-and `.dynsym` plus `.dynstr` from 37.1 MB to zero. Only duckdb still carries
-this cost.
+Resolved by removing the driver on 2026-09-23, not by a report. It was the only
+importer of Go's `plugin` package anywhere in the graph, and importing it has
+the same effect as `-rdynamic`. Removing it took a build with every driver from
+260.2 MB to 215.7 MB. duckdb still carries the same cost through `-rdynamic`.
 
 
 ## 12. `\chart file=NAME` should not need terminal graphics
@@ -290,146 +348,44 @@ either way, because it is the same archive. It does not resolve issue 494
 either. See the resvg item under Lowest priority for what 494 actually needs.
 
 
-## 14. NULL scan failures
+## 14. NULL scan failures that remain
 
-Partly fixed on 2026-09-23. `drivers.NullSafeColumnType` replaces
-`tblfmt.WithUseColumnTypes` for the drivers that set `UseColumnTypes`, which are
-mysql, mymysql and databend.
-
-The cause was that usql scanned straight into the Go type the driver names for
-a column. MySQL describes 37 of the 56 columns of `SHOW REPLICA STATUS` as not
-nullable, four of them as `uint32`, and then sends NULL for
-`SQL_Remaining_Delay`, so the scan failed with:
-
-    sql: Scan error on column index 43, name "SQL_Remaining_Delay":
-    converting NULL to uint32 is unsupported
-
-That is issues 307, 476 and 539, reported against MySQL 5.7 and 8.0.
-`drivers/columns_test.go` reproduces it with a driver that reports the same
-column shapes and returns NULL for all of them.
-
-The same change fixes a second fault that was not reported. A nullable
-`BIGINT UNSIGNED` arrives as `sql.Null[uint64]`, which nothing unwraps on the
-way out, so usql printed the JSON of the struct:
-
-    { "V": 0, "Valid": false }
-
-Both the value and the NULL are printed correctly now.
-
-Still open:
+The reported crash is fixed and released into main, and issues 307, 476 and 539
+are closed. `drivers.NullSafeColumnType` chooses a destination that tolerates a
+NULL while keeping the type information the alignment and time format need.
+What is left is the same fault in two other places.
 
 Pull requests 524, 526, 570 and 583 fix NULL scans in the metadata readers,
-which is a different path from the one fixed here: those build their own scan
-destinations rather than going through tblfmt. Review and merge them, then
-check whether a shared helper would serve them too.
+which build their own scan destinations rather than going through tblfmt.
+Review and merge them, then decide whether a shared helper would serve them.
 
-`drivers.go` has the same fault in the `\copy` path, at the
-`reflect.New(columnTypes[i].ScanType())` near line 595. A NULL in a source
-column fails the copy. It needs the same treatment, but the destination is
-handed to `ExecContext` rather than printed, so the mapping is not identical.
-
-The tblfmt fix raises that package's go directive to 1.27.1. main already
-declares `go 1.27.1` so it costs nothing there, but release-21 is `go 1.26.1`
-and release-20 is `go 1.25`, and both pin tblfmt v0.18.3. The fix therefore
-cannot be backported to either release branch without raising its Go floor,
-which is not a thing to do on a release branch. It reaches users through the
-next minor instead.
-
-The `sql.Null[T]` half of this is fixed in tblfmt v0.19.0, which usql is on.
-Verified by building usql with `WithUseColumnTypes(true)` in place of
-`NullSafeColumnType` and running against live MariaDB: tblfmt's own path now
-produces identical output for every format.
-
-`NullSafeColumnType` still stays, because the crash is not something tblfmt can
-fix. `WithUseColumnTypes` still builds `reflect.New(ct.ScanType())`, so
-`database/sql` refuses the NULL before the formatter ever sees the row.
-
-tblfmt has its own session. Route changes and questions there rather than
-editing the package.
+`\copy` has the identical fault at the `reflect.New(columnTypes[i].ScanType())`
+near `drivers/drivers.go:595`. A NULL in a source column fails the copy. That
+is issue 397, and issues 254 and 462 are probably the same fault. The
+destination there is handed to `ExecContext` rather than printed, so the
+mapping is not identical to `NullSafeColumnType`.
 
 
-## 15. `\pset numericlocale` corrupts the csv and json formats
+## 15. Output changes that came in with tblfmt v0.19.0
 
-Fixed in tblfmt on 2026-09-23, not yet released. No usql change is needed and
-no issue was filed.
+Landed, recorded because they change what users see and may draw reports.
 
-A locale formatted number was built with `newValue`, which marks a value Raw
-and unquoted, so it skipped escaping. So `\pset numericlocale on` with
-`\pset format json` emitted `[{"n":1,234,567}]`, which does not parse, and csv
-emitted a bare `1,234,567`, which a reader takes as three fields against a
-one-column header.
+`NaN`, `+Inf` and `-Inf` now print as `NaN`, `Infinity` and `-Infinity`, which
+is byte identical to psql 18.6. A uint64 is always a JSON string, so a MySQL
+`BIGINT UNSIGNED` column is one JSON type for every row. json output is
+indented rather than compact.
 
-The outcome differs by format, which is correct. csv applies the locale and
-quotes only the field that needs it, matching psql 18.6 byte for byte: `999`
-bare and `"1,000"` quoted. json ignores the locale entirely and numbers stay
-numbers, because csv has no type system and JSON does, so a column's JSON type
-must not follow a display option.
-
-Verified through usql against live MariaDB, including that output with
-numericlocale off is byte identical to before the fix.
-
-Untested: a locale whose grouping separator is not a comma, or whose decimal
-separator is a comma.
-
-
-## 16. The null string is not aligned the way psql aligns it
-
-Fixed in tblfmt on 2026-09-23, not yet released. No usql change is needed.
-
-psql aligns the null string to the column it lands in. tblfmt always aligned it
-left. Tested against psql 18.6 and a real Postgres:
-
-    psql -P null='(null)' -c "select 12345678901234567890::numeric as n,
-                                     'txt'::text as t
-                              union all select null, null;"
-
-              n           |   t
-    ----------------------+--------
-     12345678901234567890 | txt
-                   (null) | (null)
-
-Right-aligned under the numeric column, left-aligned under the text column.
-usql printed it left-aligned in both.
-
-The cause was one shared `empty` Value per encoder, built with a zero Align,
-with no knowledge of the column it was printed in. A null now follows its
-column's alignment in the table and template encoders, and a column of mixed
-type or of all nulls keeps the left default. tblfmt confirmed psql's `-H`
-output right-aligns an html null cell in a numeric column too.
-
-This was part of item 3, closing the gap against psql.
-
-
-## 17. Three user-visible changes from tblfmt v0.19.0
-
-usql is on v0.19.0. All three were verified against live MariaDB and Postgres.
-
-`NaN`, `+Inf` and `-Inf` now print as `NaN`, `Infinity` and `-Infinity` in
-every format, and as strings in json. This changes usql's default aligned
-output and is right: it is byte identical to psql 18.6 on the same query, and
-`to_jsonb` gives the same three as strings. The old spellings were Go's `%v`.
-
-A uint64 is always a JSON string, so a MySQL `BIGINT UNSIGNED` column gives
-`{"n":"42"}` as well as `{"n":"18446744073709551615"}`. usql argued against the
-earlier form of this, which quoted only above 2^63 and so changed a column's
-JSON type partway down. That is fixed: the column is now one type throughout,
-which is the property that matters. The remaining difference from PostgreSQL,
-where `to_jsonb(42::numeric)` is bare, is a judgement call rather than a
-defect, and the objection is withdrawn.
-
-json output is indented rather than compact. Nothing in usql depends on the old
-shape and no golden covers the json format, but anyone byte-comparing usql's
-json between versions will see every line move.
-
-Also: tblfmt now documents its last-column padding difference from psql as
-deliberate. Measuring it showed psql pads its header to full width and trims
-its data rows, so psql is inconsistent with itself. usql should not chase that.
+usql still passes `drivers.NullSafeColumnType` rather than
+`tblfmt.WithUseColumnTypes`, and must keep doing so: the latter still builds
+`reflect.New(ct.ScanType())`, which is the crash, and that is upstream of
+anything tblfmt can fix.
 
 
 ## Tier 2: GitHub issues and pull requests
 
-Items 1 to 17 are the programme. This section is the working list drawn from the
-96 open issues and 25 open pull requests, reviewed on 2026-09-21.
+Items 2 to 15 are the programme, and item 4 holds the issue triage. This section
+is the remaining working list, reviewed on 2026-09-21 and updated on
+2026-09-23, when 93 issues and 24 pull requests were open.
 
 ### Add the official Oracle driver
 
@@ -437,15 +393,14 @@ Add `github.com/oracle/go-oracledb`, Oracle's own driver for Go, as an
 additional Oracle driver. This does not replace `github.com/sijms/go-ora/v3`,
 which stays as it is.
 
-### Released defects, fix first
+### Released defects
 
-Issue 590 broke `go install` and issue 589 broke the Dameng driver, both in
-release 0.21.5. 590 is fixed, by replacing the `exclude` directive with an
-ordinary pin of `github.com/uber-go/tally v3.5.10+incompatible`, since
-`go install module@version` refuses any `exclude` or `replace`. 589 was fixed
-by dburl v0.25.2, which gave the dameng scheme an `Override` so that
-`u.Driver` is `dm` again, but usql no longer ships a Dameng driver, so it
-should be closed as no longer applicable rather than as fixed. See item 5.
+Both are resolved and both issues are closed. 590 broke `go install` on 0.21.5
+and was fixed by replacing the `exclude` directive with an ordinary pin of
+`github.com/uber-go/tally v3.5.10+incompatible`, since `go install
+module@version` refuses any `exclude` or `replace`. 589 reported the Dameng
+driver failing; the driver has since been removed, so it was closed as not
+planned.
 
 ### Pull requests to merge
 
@@ -467,9 +422,8 @@ adds bulk load for MySQL and 542 adds connection variables to `\copy`.
 ### Pull requests to close
 
 418 and 535 both replace the readline layer and conflict with item 8. 571, 582
-and 584 duplicate the dependency and action work in item 1. 585 adds a Dameng
-driver, which usql removed on 2026-09-23; close it with item 5's reasoning. 360
-belongs in Discussions.
+and 584 duplicate dependency and action work that is already done. 585 adds a
+Dameng driver, which usql removed on 2026-09-23. 360 belongs in Discussions.
 
 ### Issues to close rather than fix
 
