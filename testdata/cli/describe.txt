@@ -152,9 +152,9 @@ sq::memory:=> \\d films\r
 \n
 -------+------+----------+---------\r
 \n
- id    | INT  | "YES"    |  \r
+ id    | INT  | YES      |  \r
 \n
- title | TEXT | "YES"    |  \r
+ title | TEXT | YES      |  \r
 \n
 Indexes:\r
 \n

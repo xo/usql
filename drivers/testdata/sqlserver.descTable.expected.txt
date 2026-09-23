@@ -1,19 +1,19 @@
                                                BASE TABLE "dbo.film"
          Name         |     Type     | Nullable |   Default   |    Size    | Decimal Digits | Radix | Octet Length 
 ----------------------+--------------+----------+-------------+------------+----------------+-------+--------------
- film_id              | int          | "NO"     |             |         10 |              0 |    10 |            0 
- title                | varchar(255) | "NO"     |             |        255 |              0 |    10 |          255 
- description          | text         | "YES"    | (NULL)      | 2147483647 |              0 |    10 |   2147483647 
- release_year         | varchar(4)   | "YES"    |             |          4 |              0 |    10 |            4 
- language_id          | int          | "NO"     |             |         10 |              0 |    10 |            0 
- original_language_id | int          | "YES"    | (NULL)      |         10 |              0 |    10 |            0 
- rental_duration      | tinyint      | "NO"     | ((3))       |          3 |              0 |    10 |            0 
- rental_rate          | decimal(4,2) | "NO"     | ((4.99))    |          4 |              2 |    10 |            0 
- length               | smallint     | "YES"    | (NULL)      |          5 |              0 |    10 |            0 
- replacement_cost     | decimal(5,2) | "NO"     | ((19.99))   |          5 |              2 |    10 |            0 
- rating               | varchar(10)  | "YES"    | ('G')       |         10 |              0 |    10 |           10 
- special_features     | varchar(255) | "YES"    | (NULL)      |        255 |              0 |    10 |          255 
- last_update          | datetime     | "NO"     | (getdate()) |          3 |              0 |    10 |            0 
+ film_id              | int          | NO       |             |         10 |              0 |    10 |            0 
+ title                | varchar(255) | NO       |             |        255 |              0 |    10 |          255 
+ description          | text         | YES      | (NULL)      | 2147483647 |              0 |    10 |   2147483647 
+ release_year         | varchar(4)   | YES      |             |          4 |              0 |    10 |            4 
+ language_id          | int          | NO       |             |         10 |              0 |    10 |            0 
+ original_language_id | int          | YES      | (NULL)      |         10 |              0 |    10 |            0 
+ rental_duration      | tinyint      | NO       | ((3))       |          3 |              0 |    10 |            0 
+ rental_rate          | decimal(4,2) | NO       | ((4.99))    |          4 |              2 |    10 |            0 
+ length               | smallint     | YES      | (NULL)      |          5 |              0 |    10 |            0 
+ replacement_cost     | decimal(5,2) | NO       | ((19.99))   |          5 |              2 |    10 |            0 
+ rating               | varchar(10)  | YES      | ('G')       |         10 |              0 |    10 |           10 
+ special_features     | varchar(255) | YES      | (NULL)      |        255 |              0 |    10 |          255 
+ last_update          | datetime     | NO       | (getdate()) |          3 |              0 |    10 |            0 
 Indexes:
   "" HEAP (language_id, original_language_id, film_id)
   "idx_fk_language_id" NONCLUSTERED (language_id)
@@ -23,9 +23,9 @@ Indexes:
                                   BASE TABLE "dbo.film_actor"
     Name     |   Type   | Nullable |   Default   | Size | Decimal Digits | Radix | Octet Length 
 -------------+----------+----------+-------------+------+----------------+-------+--------------
- actor_id    | int      | "NO"     |             |   10 |              0 |    10 |            0 
- film_id     | int      | "NO"     |             |   10 |              0 |    10 |            0 
- last_update | datetime | "NO"     | (getdate()) |    3 |              0 |    10 |            0 
+ actor_id    | int      | NO       |             |   10 |              0 |    10 |            0 
+ film_id     | int      | NO       |             |   10 |              0 |    10 |            0 
+ last_update | datetime | NO       | (getdate()) |    3 |              0 |    10 |            0 
 Indexes:
   "" HEAP (actor_id, film_id, actor_id, film_id)
   "idx_fk_film_actor_actor" NONCLUSTERED (actor_id)
@@ -35,9 +35,9 @@ Indexes:
                                  BASE TABLE "dbo.film_category"
     Name     |   Type   | Nullable |   Default   | Size | Decimal Digits | Radix | Octet Length 
 -------------+----------+----------+-------------+------+----------------+-------+--------------
- film_id     | int      | "NO"     |             |   10 |              0 |    10 |            0 
- category_id | int      | "NO"     |             |   10 |              0 |    10 |            0 
- last_update | datetime | "NO"     | (getdate()) |    3 |              0 |    10 |            0 
+ film_id     | int      | NO       |             |   10 |              0 |    10 |            0 
+ category_id | int      | NO       |             |   10 |              0 |    10 |            0 
+ last_update | datetime | NO       | (getdate()) |    3 |              0 |    10 |            0 
 Indexes:
   "" HEAP (category_id, film_id, film_id, category_id)
   "idx_fk_film_category_category" NONCLUSTERED (category_id)
@@ -47,9 +47,9 @@ Indexes:
                                       BASE TABLE "dbo.film_text"
     Name     |     Type     | Nullable | Default |    Size    | Decimal Digits | Radix | Octet Length 
 -------------+--------------+----------+---------+------------+----------------+-------+--------------
- film_id     | int          | "NO"     |         |         10 |              0 |    10 |            0 
- title       | varchar(255) | "NO"     |         |        255 |              0 |    10 |          255 
- description | text         | "YES"    |         | 2147483647 |              0 |    10 |   2147483647 
+ film_id     | int          | NO       |         |         10 |              0 |    10 |            0 
+ title       | varchar(255) | NO       |         |        255 |              0 |    10 |          255 
+ description | text         | YES      |         | 2147483647 |              0 |    10 |   2147483647 
 Indexes:
   "" HEAP (film_id)
   "PK__film_tex__349764A85D245C83" PRIMARY_KEY, UNIQUE, NONCLUSTERED (film_id)
@@ -57,12 +57,12 @@ Indexes:
                                          VIEW "dbo.film_list"
     Name     |     Type     | Nullable | Default |    Size    | Decimal Digits | Radix | Octet Length 
 -------------+--------------+----------+---------+------------+----------------+-------+--------------
- FID         | int          | "YES"    |         |         10 |              0 |    10 |            0 
- title       | varchar(255) | "YES"    |         |        255 |              0 |    10 |          255 
- description | text         | "YES"    |         | 2147483647 |              0 |    10 |   2147483647 
- category    | varchar(25)  | "NO"     |         |         25 |              0 |    10 |           25 
- price       | decimal(4,2) | "YES"    |         |          4 |              2 |    10 |            0 
- length      | smallint     | "YES"    |         |          5 |              0 |    10 |            0 
- rating      | varchar(10)  | "YES"    |         |         10 |              0 |    10 |           10 
- actors      | varchar(91)  | "NO"     |         |         91 |              0 |    10 |           91 
+ FID         | int          | YES      |         |         10 |              0 |    10 |            0 
+ title       | varchar(255) | YES      |         |        255 |              0 |    10 |          255 
+ description | text         | YES      |         | 2147483647 |              0 |    10 |   2147483647 
+ category    | varchar(25)  | NO       |         |         25 |              0 |    10 |           25 
+ price       | decimal(4,2) | YES      |         |          4 |              2 |    10 |            0 
+ length      | smallint     | YES      |         |          5 |              0 |    10 |            0 
+ rating      | varchar(10)  | YES      |         |         10 |              0 |    10 |           10 
+ actors      | varchar(91)  | NO       |         |         91 |              0 |    10 |           91 
 
