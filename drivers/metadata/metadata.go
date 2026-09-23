@@ -343,6 +343,7 @@ type Column struct {
 	IsNullable      Bool
 }
 
+// Bool is a three valued flag, where the empty value means unknown.
 type Bool string
 
 var (
@@ -350,6 +351,17 @@ var (
 	YES     Bool = "YES"
 	NO      Bool = "NO"
 )
+
+// String satisfies the fmt.Stringer interface.
+//
+// A Bool is written into a result set as itself rather than as a string, and a
+// Go type switch does not match a named type to the type it is defined from.
+// Without this the value falls through to the encoder that prints anything it
+// does not recognise as JSON, so \d reported a nullable column as "YES", with
+// the quotes.
+func (b Bool) String() string {
+	return string(b)
+}
 
 func (c Column) Values() []interface{} {
 	return []interface{}{
