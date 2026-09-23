@@ -21,21 +21,20 @@ what is left.
 
 The container tests cannot run in parallel. `go test ./...` starts three SQL
 Server containers at once, and they exhaust the memory of a normal machine.
-Every run needs `-p 1`. CI must either use `-p 1` or give each package its own
-job.
+Every run needs `-p 1`, which CI does.
 
-A failing test leaks its containers. `TestMain` calls `pool.Close` after the
-tests return, and `log.Fatalf` exits before that, so every failure leaves its
-containers running. The leaked containers then starve the next run. Cleanup
-must happen even on a fatal error.
+Two of these are now fixed. A failing test no longer leaks its containers:
+`TestMain` is `os.Exit(run(m))` and `run` holds the deferred purge, so every
+exit path reaches it. And `package main` puts the standard logger and the
+default slog logger back on stderr in its own `init`, which undoes what
+ramsql's `engine/log` does from its.
 
-`ramsql` breaks logging for the whole binary. Its `engine/log` package calls
-`slog.SetDefault` from `init` at warning level, and that also redirects the
-standard `log` package, so every `log.Print` and `log.Fatalf` in usql is
-dropped. `drivers/drivers_test.go` now calls `log.SetOutput(os.Stderr)` to work
-around it, but usql itself has the same problem and nothing protects it.
-Decide whether to drop ramsql, patch it upstream, or restore the logger after
-driver registration.
+The ramsql problem is only contained, not solved. `drivers/drivers_test.go`
+still needs its own `log.SetOutput(os.Stderr)`, because the test binary does
+not link `package main` and gets no protection from the fix there. Any other
+consumer of usql's packages has the same gap. Report it upstream: a library
+should not call `slog.SetDefault` from `init`, and certainly not with a handler
+on `os.Stdout`. ramsql offers no way to prevent it, and v0.1.4 is the latest.
 
 Golden files record upstream drift rather than usql behavior. Four expected
 files were regenerated because jOOQ changed the sakila column types and because

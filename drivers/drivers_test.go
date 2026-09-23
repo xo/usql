@@ -173,10 +173,21 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	os.Exit(run(m))
+}
+
+// run sets up, runs the tests and tears down, returning the code to exit with.
+//
+// TestMain cannot do this itself. os.Exit skips deferred functions, so any
+// fatal error during setup used to leave behind every container started before
+// it, and those then starve the next run of memory. Everything here returns an
+// error instead, so the deferred purge always happens.
+func run(m *testing.M) int {
 	// github.com/proullon/ramsql/engine/log calls slog.SetDefault from its
 	// init, which also redirects the standard log package into that handler at
 	// warning level. Every log.Print and log.Fatalf in this process is dropped
 	// as a result, so failures here exit silently. Put log back on stderr.
+	// usql itself does the same thing in package main; see log.go there.
 	log.SetOutput(os.Stderr)
 
 	var only string
@@ -200,14 +211,35 @@ func TestMain(m *testing.M) {
 	ctx := context.Background()
 	pool, err := dt.NewPool(ctx, "")
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Printf("Could not connect to docker: %s", err)
+		return 1
 	}
+	// From here on a container may exist, so nothing may exit without this.
+	defer func() {
+		if !cleanup {
+			return
+		}
+		if err := pool.Close(ctx); err != nil {
+			log.Printf("Could not purge resource: %s", err)
+		}
+	}()
 
+	if err := setup(ctx, pool); err != nil {
+		log.Print(err)
+		return 1
+	}
+	return m.Run()
+}
+
+// setup starts a container for each database and waits for it to answer.
+func setup(ctx context.Context, pool dt.Pool) error {
 	for dbName, db := range dbs {
-		dsn, hostPort := getConnInfo(ctx, dbName, db, pool)
-		db.URL, err = dburl.Parse(dsn)
+		dsn, hostPort, err := connInfo(ctx, dbName, db, pool)
 		if err != nil {
-			log.Fatalf("Failed to parse %s URL %s: %v", dbName, db.DSN, err)
+			return err
+		}
+		if db.URL, err = dburl.Parse(dsn); err != nil {
+			return fmt.Errorf("parsing the %s URL %s: %w", dbName, db.DSN, err)
 		}
 
 		if len(db.Exec) != 0 {
@@ -220,7 +252,7 @@ func TestMain(m *testing.M) {
 			}
 			readyURL, err := dburl.Parse(readyDSN)
 			if err != nil {
-				log.Fatalf("Failed to parse %s ready URL %s: %v", dbName, db.ReadyDSN, err)
+				return fmt.Errorf("parsing the %s ready URL %s: %w", dbName, db.ReadyDSN, err)
 			}
 			if err := pool.Retry(ctx, maxWait, func() error {
 				readyDB, err := drivers.Open(ctx, readyURL, nil, nil)
@@ -229,11 +261,11 @@ func TestMain(m *testing.M) {
 				}
 				return readyDB.Ping()
 			}); err != nil {
-				log.Fatalf("Timed out waiting for %s to be ready: %s", dbName, err)
+				return fmt.Errorf("waiting for %s to be ready: %w", dbName, err)
 			}
 			res, err := db.Resource.Exec(ctx, db.Exec)
 			if err != nil || res.ExitCode != 0 {
-				log.Fatalf("Could not load schema for %s: %s\n%s\n%s", dbName, err, res.StdOut, res.StdErr)
+				return fmt.Errorf("loading the schema for %s: %w\n%s\n%s", dbName, err, res.StdOut, res.StdErr)
 			}
 		}
 
@@ -252,25 +284,17 @@ func TestMain(m *testing.M) {
 			var ok int
 			return db.DB.QueryRowContext(ctx, "SELECT 1").Scan(&ok)
 		}); retryErr != nil {
-			log.Fatalf("Timed out waiting for %s:\n%s\n%s", dbName, retryErr, openErr)
+			return fmt.Errorf("waiting for %s: %w (open: %v)", dbName, retryErr, openErr)
 		}
 	}
-
-	code := m.Run()
-
-	// You can't defer this because os.Exit doesn't care for defer
-	if cleanup {
-		if err := pool.Close(ctx); err != nil {
-			log.Fatal("Could not purge resource: ", err)
-		}
-	}
-
-	os.Exit(code)
+	return nil
 }
 
-func getConnInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool) (string, string) {
+// connInfo starts the container for db, if it needs one, and returns its DSN
+// and the host port it was published on.
+func connInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool) (string, string, error) {
 	if db.Image == "" {
-		return db.DSN, ""
+		return db.DSN, "", nil
 	}
 
 	// containers are reused within a run, keyed on the built image -- dbs
@@ -278,10 +302,10 @@ func getConnInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool)
 	var err error
 	db.Resource, err = startResource(ctx, pool, "./testdata/docker", db)
 	if err != nil {
-		log.Fatalf("Failed to start %s: %s", dbName, err)
+		return "", "", fmt.Errorf("starting %s: %w", dbName, err)
 	}
 	hostPort := db.Resource.GetPort(db.DockerPort)
-	return fmt.Sprintf(db.DSN, hostPort), hostPort
+	return fmt.Sprintf(db.DSN, hostPort), hostPort, nil
 }
 
 func TestWriter(t *testing.T) {
@@ -441,12 +465,12 @@ func TestWriter(t *testing.T) {
 			}
 			w, err := drivers.NewMetadataWriter(context.Background(), db.URL, db.DB, fo)
 			if err != nil {
-				log.Fatalf("Could not create writer %s %s: %v", test.dbName, testFunc.label, err)
+				t.Fatalf("Cannot create writer %s %s: %v", test.dbName, testFunc.label, err)
 			}
 
 			err = testFunc.f(w, db.URL)
 			if err != nil {
-				log.Fatalf("Could not write %s %s: %v", test.dbName, testFunc.label, err)
+				t.Fatalf("Cannot write %s %s: %v", test.dbName, testFunc.label, err)
 			}
 			err = fo.Close()
 			if err != nil {
