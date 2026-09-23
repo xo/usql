@@ -1266,7 +1266,10 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	case f != nil:
 		extra = append(extra, tblfmt.WithColumnTypesFunc(f))
 	case drivers.UseColumnTypes(h.u):
-		extra = append(extra, tblfmt.WithUseColumnTypes(true))
+		// Not tblfmt.WithUseColumnTypes, which scans straight into the type
+		// the driver names and so fails on a NULL in a column the driver
+		// described as not nullable. See drivers.NullSafeColumnType.
+		extra = append(extra, tblfmt.WithColumnTypesFunc(drivers.NullSafeColumnType))
 	}
 	resultSet := tblfmt.ResultSet(rows)
 	// wrap query with crosstab

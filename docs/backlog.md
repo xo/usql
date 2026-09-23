@@ -4,7 +4,7 @@ This file records planned work for usql and for the sibling repositories that
 usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
-Items 1 to 9 are Ken's work items, in his order. Items 10 to 13 were added from
+Items 1 to 9 are Ken's work items, in his order. Items 10 to 17 were added from
 work that followed. The last sections hold the GitHub working list, drivers that
 could be added, and items that have been raised but have no priority yet.
 
@@ -264,14 +264,160 @@ The 1.27 MB of `golang.org/x/text` is the collation tables that goja links for
 locale-aware string comparison. It arrives through echartsgoja's dependency on
 goja and is only avoidable by changing engines, which is not worth it.
 
-That session is also weighing a blitz-style split into one Go module per
-platform. The download win is secondary now, but see the resvg item under
-Lowest priority for why the split would also resolve issue 494.
+That session has also split libresvg into one Go module per platform, released
+in xo/resvg v0.9.1, with each `libresvg/<platform>` tagged v0.48.1 to match the
+vendored resvg version. usql is on v0.10.0, which adds an embedded font for
+that project's own tests and a `WithSansSerifFamily` option, and is the same
+size. Measured with an empty module cache, a
+linux/amd64 build now downloads 11 MiB of archives rather than the 184 MiB of
+the monolith, and each platform links only its own submodule. Note that
+`go mod tidy` still records all six as indirect requires, so `go mod download`
+with no arguments fetches all of them; a build does not.
+
+That is a download win, not a binary size win: the charts build is 58.2 MB
+either way, because it is the same archive. It does not resolve issue 494
+either. See the resvg item under Lowest priority for what 494 actually needs.
+
+
+## 14. NULL scan failures
+
+Partly fixed on 2026-09-23. `drivers.NullSafeColumnType` replaces
+`tblfmt.WithUseColumnTypes` for the drivers that set `UseColumnTypes`, which are
+mysql, mymysql and databend.
+
+The cause was that usql scanned straight into the Go type the driver names for
+a column. MySQL describes 37 of the 56 columns of `SHOW REPLICA STATUS` as not
+nullable, four of them as `uint32`, and then sends NULL for
+`SQL_Remaining_Delay`, so the scan failed with:
+
+    sql: Scan error on column index 43, name "SQL_Remaining_Delay":
+    converting NULL to uint32 is unsupported
+
+That is issues 307, 476 and 539, reported against MySQL 5.7 and 8.0.
+`drivers/columns_test.go` reproduces it with a driver that reports the same
+column shapes and returns NULL for all of them.
+
+The same change fixes a second fault that was not reported. A nullable
+`BIGINT UNSIGNED` arrives as `sql.Null[uint64]`, which nothing unwraps on the
+way out, so usql printed the JSON of the struct:
+
+    { "V": 0, "Valid": false }
+
+Both the value and the NULL are printed correctly now.
+
+Still open:
+
+Pull requests 524, 526, 570 and 583 fix NULL scans in the metadata readers,
+which is a different path from the one fixed here: those build their own scan
+destinations rather than going through tblfmt. Review and merge them, then
+check whether a shared helper would serve them too.
+
+`drivers.go` has the same fault in the `\copy` path, at the
+`reflect.New(columnTypes[i].ScanType())` near line 595. A NULL in a source
+column fails the copy. It needs the same treatment, but the destination is
+handed to `ExecContext` rather than printed, so the mapping is not identical.
+
+The tblfmt fix raises that package's go directive to 1.27.1. main already
+declares `go 1.27.1` so it costs nothing there, but release-21 is `go 1.26.1`
+and release-20 is `go 1.25`, and both pin tblfmt v0.18.3. The fix therefore
+cannot be backported to either release branch without raising its Go floor,
+which is not a thing to do on a release branch. It reaches users through the
+next minor instead.
+
+The `sql.Null[T]` half of this is fixed in tblfmt v0.19.0, which usql is on.
+Verified by building usql with `WithUseColumnTypes(true)` in place of
+`NullSafeColumnType` and running against live MariaDB: tblfmt's own path now
+produces identical output for every format.
+
+`NullSafeColumnType` still stays, because the crash is not something tblfmt can
+fix. `WithUseColumnTypes` still builds `reflect.New(ct.ScanType())`, so
+`database/sql` refuses the NULL before the formatter ever sees the row.
+
+tblfmt has its own session. Route changes and questions there rather than
+editing the package.
+
+
+## 15. `\pset numericlocale` corrupts the csv and json formats
+
+Fixed in tblfmt on 2026-09-23, not yet released. No usql change is needed and
+no issue was filed.
+
+A locale formatted number was built with `newValue`, which marks a value Raw
+and unquoted, so it skipped escaping. So `\pset numericlocale on` with
+`\pset format json` emitted `[{"n":1,234,567}]`, which does not parse, and csv
+emitted a bare `1,234,567`, which a reader takes as three fields against a
+one-column header.
+
+The outcome differs by format, which is correct. csv applies the locale and
+quotes only the field that needs it, matching psql 18.6 byte for byte: `999`
+bare and `"1,000"` quoted. json ignores the locale entirely and numbers stay
+numbers, because csv has no type system and JSON does, so a column's JSON type
+must not follow a display option.
+
+Verified through usql against live MariaDB, including that output with
+numericlocale off is byte identical to before the fix.
+
+Untested: a locale whose grouping separator is not a comma, or whose decimal
+separator is a comma.
+
+
+## 16. The null string is not aligned the way psql aligns it
+
+Fixed in tblfmt on 2026-09-23, not yet released. No usql change is needed.
+
+psql aligns the null string to the column it lands in. tblfmt always aligned it
+left. Tested against psql 18.6 and a real Postgres:
+
+    psql -P null='(null)' -c "select 12345678901234567890::numeric as n,
+                                     'txt'::text as t
+                              union all select null, null;"
+
+              n           |   t
+    ----------------------+--------
+     12345678901234567890 | txt
+                   (null) | (null)
+
+Right-aligned under the numeric column, left-aligned under the text column.
+usql printed it left-aligned in both.
+
+The cause was one shared `empty` Value per encoder, built with a zero Align,
+with no knowledge of the column it was printed in. A null now follows its
+column's alignment in the table and template encoders, and a column of mixed
+type or of all nulls keeps the left default. tblfmt confirmed psql's `-H`
+output right-aligns an html null cell in a numeric column too.
+
+This was part of item 3, closing the gap against psql.
+
+
+## 17. Three user-visible changes from tblfmt v0.19.0
+
+usql is on v0.19.0. All three were verified against live MariaDB and Postgres.
+
+`NaN`, `+Inf` and `-Inf` now print as `NaN`, `Infinity` and `-Infinity` in
+every format, and as strings in json. This changes usql's default aligned
+output and is right: it is byte identical to psql 18.6 on the same query, and
+`to_jsonb` gives the same three as strings. The old spellings were Go's `%v`.
+
+A uint64 is always a JSON string, so a MySQL `BIGINT UNSIGNED` column gives
+`{"n":"42"}` as well as `{"n":"18446744073709551615"}`. usql argued against the
+earlier form of this, which quoted only above 2^63 and so changed a column's
+JSON type partway down. That is fixed: the column is now one type throughout,
+which is the property that matters. The remaining difference from PostgreSQL,
+where `to_jsonb(42::numeric)` is bare, is a judgement call rather than a
+defect, and the objection is withdrawn.
+
+json output is indented rather than compact. Nothing in usql depends on the old
+shape and no golden covers the json format, but anyone byte-comparing usql's
+json between versions will see every line move.
+
+Also: tblfmt now documents its last-column padding difference from psql as
+deliberate. Measuring it showed psql pads its header to full width and trims
+its data rows, so psql is inconsistent with itself. usql should not chase that.
 
 
 ## Tier 2: GitHub issues and pull requests
 
-Items 1 to 13 are the programme. This section is the working list drawn from the
+Items 1 to 17 are the programme. This section is the working list drawn from the
 96 open issues and 25 open pull requests, reviewed on 2026-09-21.
 
 ### Add the official Oracle driver
@@ -406,11 +552,20 @@ line matches. The linker therefore receives no `-L` and no `-lresvg`, and every
 `resvg_` symbol is undefined. Issue 494 is this failure on the FreeBSD port for
 arm64, armv7 and i386.
 
-That failure should now be reachable only with the `charts` tag. Build usql on
-the freebsd-rline, netbsd-rline and omnios-rline machines to confirm it, then
-close issue 494 or report what still fails. Note that resvg may not be the only
-package those platforms cannot build, so a failure there is not by itself a sign
-that this gating is wrong.
+That failure should now be reachable only with the `charts` tag, so a default
+build and a `most` build should work on those platforms. Build usql on the
+freebsd-rline, netbsd-rline and omnios-rline machines to confirm it. Note that
+resvg may not be the only package those platforms cannot build, so a failure
+there is not by itself a sign that this gating is wrong.
+
+Gating does not close issue 494. The xo/resvg session established that a
+per-platform module split does not close it either, because the `#cgo CFLAGS`
+line in `resvg.go` carries no build constraint: the C still compiles on an
+unsupported platform and the link still fails on undefined `resvg_*` symbols,
+from a different set of files. Closing 494 needs an explicit build-tag-gated
+stub in xo/resvg that fails to build with a message naming the platform, or
+that compiles to a renderer which reports that it is unavailable. That work is
+recorded in xo/resvg's `libresvg/README.md`.
 
 Fixing charts on those platforms is a separate job and costs more. resvg can
 learn to link a system `libresvg` when the platform provides one, which is what
