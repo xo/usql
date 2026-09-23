@@ -23,18 +23,26 @@ The container tests cannot run in parallel. `go test ./...` starts three SQL
 Server containers at once, and they exhaust the memory of a normal machine.
 Every run needs `-p 1`, which CI does.
 
-Two of these are now fixed. A failing test no longer leaks its containers:
+Both of the other two are fixed. A failing test no longer leaks its containers:
 `TestMain` is `os.Exit(run(m))` and `run` holds the deferred purge, so every
-exit path reaches it. And `package main` puts the standard logger and the
-default slog logger back on stderr in its own `init`, which undoes what
-ramsql's `engine/log` does from its.
+exit path reaches it.
 
-The ramsql problem is only contained, not solved. `drivers/drivers_test.go`
-still needs its own `log.SetOutput(os.Stderr)`, because the test binary does
-not link `package main` and gets no protection from the fix there. Any other
-consumer of usql's packages has the same gap. Report it upstream: a library
-should not call `slog.SetDefault` from `init`, and certainly not with a handler
-on `os.Stdout`. ramsql offers no way to prevent it, and v0.1.4 is the latest.
+The logging problem is fixed by removing the RamSQL driver. Its `engine/log`
+called `slog.SetDefault` from `init` with a handler on `os.Stdout`, and a
+default slog logger also redirects the standard `log` package, so every
+`log.Print` and `slog` call vanished in any build that carried it. Writing to
+stdout was the worse half, because stdout carries the query results.
+
+A workaround in `package main` was written first and then reverted. It fixed
+the binary but not usql's packages when imported elsewhere, nor any test binary
+that does not link `main`. Gemini and DeepSeek were both asked whether the
+driver was worth keeping and both said drop it, independently and without
+hedging: mutating the process-wide logger from `init` is disqualifying for a
+CLI whose stdout is the data channel, and `sqlite3://:memory:` and the pure-Go
+`moderncsqlite` already cover every use for it.
+
+`drivers/drivers_test.go` keeps its `log.SetOutput(os.Stderr)`. It is one line
+and nothing stops the next driver doing the same thing.
 
 Golden files record upstream drift rather than usql behavior. Four expected
 files were regenerated because jOOQ changed the sakila column types and because

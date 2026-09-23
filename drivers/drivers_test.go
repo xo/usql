@@ -183,11 +183,12 @@ func TestMain(m *testing.M) {
 // it, and those then starve the next run of memory. Everything here returns an
 // error instead, so the deferred purge always happens.
 func run(m *testing.M) int {
-	// github.com/proullon/ramsql/engine/log calls slog.SetDefault from its
-	// init, which also redirects the standard log package into that handler at
-	// warning level. Every log.Print and log.Fatalf in this process is dropped
-	// as a result, so failures here exit silently. Put log back on stderr.
-	// usql itself does the same thing in package main; see log.go there.
+	// Keep the standard logger on stderr, so that a failure here cannot exit
+	// silently. A driver can take it away: calling slog.SetDefault from an
+	// init also redirects the standard log package into that handler, and one
+	// pointed anywhere but stderr swallows every log.Print and log.Fatalf in
+	// the process. The driver that did it has been removed, but this is one
+	// line and nothing stops the next one.
 	log.SetOutput(os.Stderr)
 
 	var only string

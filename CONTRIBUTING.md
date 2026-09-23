@@ -63,6 +63,117 @@ the script only applies to a build made through the script.
 > Tip: check out closed PRs for examples, and/or search the codebase
 > for names of databases you're familiar with.
 
+## When a driver is broken, and what to do about it
+
+Read this before adding a driver, and before deciding a reported fault is
+usql's. It is written for anyone working on the tree, including coding agents,
+because the judgement it describes is easy to get wrong in the direction of
+keeping something that has to go.
+
+usql links about fifty drivers into one process. A driver is therefore not
+judged on whether it works on its own. It is judged on whether it can share a
+process with forty-nine others and with a command line tool whose standard
+output is the data.
+
+### Put it in the `bad` group
+
+Set `Group: bad` in the driver's package comment and run `go generate`. The
+generated constraint becomes `(bad || <tag>) && !no_<tag>`, so the driver
+leaves the default, `most` and `all` builds and is reachable only with
+`-tags bad` or `-tags <driver>`.
+
+Do that for any of these. Each is detectable rather than a matter of taste, and
+the detection is worth running against the whole module, not just the driver
+package, because the fault is usually several levels down a transitive import.
+
+Mutating process-global state from `init`. That covers the standard logger, the
+default slog logger, `os.Stdout` and `os.Stderr`, signal handling,
+`flag.CommandLine`, `http.DefaultClient` and `http.DefaultTransport`,
+`runtime.GOMAXPROCS`, `time.Local`, `math/rand` seeding, and any crypto or TLS
+default. To find it:
+
+    go list -deps -f '{{.Dir}}' <driver import path> | while read d; do
+      grep -nE 'slog\.SetDefault|log\.SetOutput|os\.(Stdout|Stderr) *=|signal\.Notify|flag\.CommandLine|http\.Default(Client|Transport)|runtime\.GOMAXPROCS|time\.Local *=|rand\.Seed' "$d"/*.go 2>/dev/null
+    done
+
+Writing to standard output uninvited. Stdout carries the query results and is
+usually piped or redirected, so anything a driver prints there corrupts the
+output of the program rather than merely appearing in the wrong place. A test
+that replaces `os.Stdout` with a pipe, imports the driver and asserts nothing
+arrives catches it.
+
+Doing work in `init` that must not happen at import: dialling the network,
+reading files, sleeping, spawning a goroutine that outlives the call, or simply
+taking a long time. `GODEBUG=inittrace=1` reports the cost of every package's
+init.
+
+Exiting the process instead of returning an error. `os.Exit`, `log.Fatal` or a
+panic on an operational failure such as a bad DSN, a refused connection or a
+query error.
+
+Registering a `database/sql` name that another driver already uses, which
+panics at init and takes the whole binary with it.
+
+Needing cgo, shipping prebuilt object files, or linking on only some of the
+platforms usql releases for. That is not automatically disqualifying, because
+duckdb and sqlite3 both need cgo. A driver that cannot build on a release
+target needs a `Build:` constraint as well. See the section above.
+
+Module hygiene that breaks consumers. An `exclude` or `replace` directive in
+its own `go.mod`, a missing `go.mod`, or a `+incompatible` version that will
+not resolve. Confirm with a real install rather than reasoning about it:
+
+    cd $(mktemp -d) && go install github.com/xo/usql@latest
+
+A licence that is not compatible with usql's, or a size cost out of all
+proportion to what the driver offers.
+
+### Remove it entirely
+
+The `bad` group is triage, not a retirement home. A driver sits there while
+someone decides, and the decision is expected.
+
+Remove the driver outright when the fault cannot be contained by not linking
+it, or when upstream has stopped. The signals are concrete. The repository is archived. There is no release or
+commit for eighteen months. A security report goes unanswered. The module no
+longer resolves. Nobody replies.
+Removing means the driver directory, the generated file in `internal`, the
+dependency in `go.mod`, and the README row. `go generate` handles all of it
+except the directory and the dependency.
+
+The bar for keeping an unmaintained driver is not that someone could use it. It
+is whether usql can carry it without cost to everyone else. A driver that is both
+unmaintained and badly behaved does not get parked. It gets dropped.
+
+### What has actually happened
+
+The history is worth knowing, because it shows the group used in both
+directions rather than as a one-way door.
+
+`bad` was created in August 2022 to hold impala. hive was demoted a month
+later, briefly re-enabled in November 2023, and put straight back the same day.
+genji went in during July 2023 and left in January 2024 by being replaced with
+chai, which is maintained and is in the `most` group. impala came back in April 2025,
+three years after it went in. So a driver in `bad` is not written off.
+
+Removed outright, at various times: YQL in 2017, avatica in 2017, snowflake in
+2024, dameng in September 2026, and RamSQL in September 2026. avatica and
+snowflake later returned, which is the other half of the point: removal is not
+a judgement on the database, only on the driver as it stands.
+
+RamSQL is the case this section was written from. Its `engine/log` called
+`slog.SetDefault` from `init` with a handler on `os.Stdout`. A default slog
+logger also redirects the standard `log` package, so every `log.Print` and
+`slog` call in any build that carried it disappeared, and anything that had
+been printed would have landed in the query output. It offered no way to turn
+that off: the only exported control was a level threshold, the writer was fixed
+at construction, and raising the level discarded more rather than less. It was
+two years without a release, and `sqlite3://:memory:` and the pure-Go
+`moderncsqlite` already covered everything it was used for. A workaround was
+written in `package main` and then reverted, because it fixed the binary and
+left usql's packages, and anyone importing them, still broken. The driver was
+removed instead.
+
 ## Putting a feature behind a build tag
 
 A package that is not a driver can still be a large part of the size of the
