@@ -144,9 +144,9 @@ func (b *Stmt) Reset(r []rune) {
 // rune source. After a call to Next, the collected statement is available in
 // Stmt.Buf, or call Stmt.String() to convert it to a string.
 //
-// After a call to Next, Reset should be called if the extracted statement was
-// executed (ie, processed). Note that the rune source supplied to New will be
-// called again only after any remaining collected runes have been processed.
+// Call Reset after Next when the extracted statement has been executed. The
+// rune source supplied to New is called again only after every collected rune
+// has been processed.
 //
 // Example:
 //

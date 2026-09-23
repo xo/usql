@@ -260,8 +260,9 @@ var createIgnore = map[string]bool{
 	"UNLOGGED":   true,
 }
 
-// QueryExecType is the default way to determine the "EXEC" prefix for a SQL
-// query and whether or not it should be Exec'd or Query'd.
+// QueryExecType returns the "EXEC" prefix for a SQL query, and reports whether
+// the query returns rows. A query that returns rows is passed to Query, and
+// one that does not is passed to Exec.
 func QueryExecType(prefix, sqlstr string) (string, bool) {
 	if prefix == "" {
 		return "EXEC", false

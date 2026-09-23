@@ -119,18 +119,19 @@ type PrivilegeSummaryReader interface {
 // Reader of any database metadata in a structured format.
 type Reader interface{}
 
-// Filter objects returned by Readers
+// Filter selects the objects a Reader returns.
 type Filter struct {
-	// Catalog name pattern that objects must belong to;
-	// use Name to filter catalogs by name
+	// Catalog is the name pattern of the catalog an object belongs to. Use
+	// Name to filter catalogs themselves.
 	Catalog string
-	// Schema name pattern that objects must belong to;
-	// use Name to filter schemas by name
+	// Schema is the name pattern of the schema an object belongs to. Use Name
+	// to filter schemas themselves.
 	Schema string
-	// Parent name pattern that objects must belong to;
-	// does not apply to schema and catalog containing matching objects
+	// Parent is the name pattern of the parent an object belongs to. It does
+	// not apply to the schema or the catalog that contains a matching object.
 	Parent string
-	// Reference name pattern of other objects referencing this one,
+	// Reference is the name pattern of the other objects that refer to this
+	// one.
 	Reference string
 	// Name pattern that object name must match
 	Name string

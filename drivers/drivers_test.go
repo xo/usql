@@ -611,8 +611,8 @@ func TestCopy(t *testing.T) {
 // the content is not equal. Ignore is a regex. All matches will be removed
 // from the file contents before comparison.
 func filesEqual(a, b, ignore string) error {
-	// per comment, better to not read an entire file into memory
-	// this is simply a trivial example.
+	// Reading both files whole is not how this should work on a large file.
+	// The fixtures here are small enough that it does not matter.
 	f1, err := os.ReadFile(a)
 	if err != nil {
 		return fmt.Errorf("Cannot read file %s: %w", a, err)

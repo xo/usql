@@ -90,10 +90,10 @@ func init() {
 	})
 }
 
-// logger is a null logger that satisfies the gocql.StdLogger and the io.Writer
-// interfaces in order to capture the last error issued by the cql/gocql
-// packages, since the cql package does not (at this time) return any error
-// other than sql.ErrBadConn.
+// logger is a null logger satisfying gocql.StdLogger and io.Writer, so that it
+// can capture the last error the cql and gocql packages report. The cql
+// package returns no error other than sql.ErrBadConn at present, so the log is
+// the only place the real cause appears.
 type logger struct {
 	debug bool
 	last  string

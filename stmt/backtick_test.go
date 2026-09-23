@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// sp from stmt_test.go — local copy for this file's focused cases.
+// backtickSrc is a local copy of sp from stmt_test.go, for the cases here.
 func backtickSrc(s string) func() ([]rune, error) {
 	ch := make(chan []rune, 1)
 	ch <- []rune(s)

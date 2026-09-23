@@ -140,8 +140,8 @@ func Registered(name string) bool {
 	return ok
 }
 
-// LowerColumnNames returns whether or not column names should be converted to
-// lower case for a driver.
+// LowerColumnNames reports whether the driver converts column names to lower
+// case.
 func LowerColumnNames(u *dburl.URL) bool {
 	if d, ok := drivers[u.Driver]; ok {
 		return d.LowerColumnNames
@@ -149,7 +149,8 @@ func LowerColumnNames(u *dburl.URL) bool {
 	return false
 }
 
-// UseColumnTypes returns whether or not a driver should uses column types.
+// UseColumnTypes reports whether the driver takes its column types from the
+// database rather than from the raw bytes.
 func UseColumnTypes(u *dburl.URL) bool {
 	if d, ok := drivers[u.Driver]; ok {
 		return d.UseColumnTypes

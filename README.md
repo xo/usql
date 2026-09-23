@@ -18,8 +18,8 @@
 Database, SQLite3, Microsoft SQL Server, [and many other databases][databases]
 including NoSQL and non-relational databases!
 
-`usql` provides a simple way to work with [SQL and NoSQL databases][databases]
-via a command-line inspired by PostgreSQL's `psql`. `usql` supports most of the
+`usql` works with [SQL and NoSQL databases][databases] from a command line
+modelled on PostgreSQL's `psql`. `usql` supports most of the
 core `psql` features, such as [variables][variables], [backticks][backticks],
 [backslash commands][commands] and has additional features that `psql` does
 not, such as [multiple database support][databases], [copying between databases][copying],
@@ -663,8 +663,8 @@ pg:booktest@localhost=> select * from authors;
 pg:booktest@localhost=>
 ```
 
-Commands may accept one or more parameter, and can be quoted using either `'`
-or `"`. Command parameters [may also be backticked][backticks].
+A command takes one or more parameters. A parameter can be quoted with either
+`'` or `"`, and [can also be backticked][backticks].
 
 ### Backslash Commands
 
@@ -1270,9 +1270,8 @@ my:root@=> \g<Tab>
 \g     \gexec \gset  \gx
 ```
 
-Not all commands, contexts, or databases support completion. If you're
-interested in helping to make `usql`'s completion better, see [the section
-below on contributing][contributing].
+Not all commands, contexts, or databases support completion. To help improve
+it, see [the section below on contributing][contributing].
 
 Command completion can be canceled with `<Control-C>`.
 
@@ -1343,10 +1342,9 @@ time format value, and example display output:
 
 #### Host Connection Information
 
-By default, `usql` displays connection information when connecting to a
-database. This might cause problems with some databases or connections. This
-can be disabled by setting the system environment variable `USQL_SHOW_HOST_INFORMATION`
-to `false`:
+By default, `usql` displays connection information when it connects to a
+database. Some databases and connections do not work with this. Set the
+environment variable `USQL_SHOW_HOST_INFORMATION` to `false` to turn it off:
 
 ```sh
 $ export USQL_SHOW_HOST_INFORMATION=false
@@ -1467,8 +1465,8 @@ file][config].
 
 > **Note**
 >
-> The `.usqlpass` file cannot be readable by other users, and the permissions
-> should be set accordingly:
+> The `.usqlpass` file must not be readable by other users. Set its permissions
+> to `0600`:
 
 ```sh
 chmod 0600 ~/.usqlpass
@@ -1560,14 +1558,14 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 
 - [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing
   and opening database connection URLs
-- [xo][xo] - Go command-line tool to generate Go code from a database schema
+- [dbtpl][dbtpl] - Go command-line tool to generate Go code from a database schema
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
 [go-time]: https://pkg.go.dev/time#pkg-constants
 [go-sql]: https://pkg.go.dev/database/sql
 [homebrew]: https://brew.sh/
-[xo]: https://github.com/xo/xo
+[dbtpl]: https://github.com/xo/dbtpl
 [xo-tap]: https://github.com/xo/homebrew-xo
 [chroma]: https://github.com/alecthomas/chroma
 [chroma-formatter]: https://github.com/alecthomas/chroma#formatters
