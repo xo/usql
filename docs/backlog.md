@@ -5,10 +5,18 @@ usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
 Items 2 to 9 are Ken's work items, in his order. Items 10 to 15 were added from
-work that followed. Item 1, bringing CI and CD up to date, is finished and has
-been removed, as have the items that were completed. The last sections hold the
-GitHub working list, drivers that could be added, and items that have been
-raised but have no priority yet.
+work that followed. Item 16 is the roadmap that used to live in the GitHub
+issue tracker, and item 17 came from it. Item 1, bringing CI and CD up to
+date, is finished and has been removed, as have the items that were
+completed.
+
+This file is the source of truth for the roadmap. The issue tracker is for
+defects and for work that is ready for someone outside the project to pick up.
+Anything recorded in both places drifts, and the roadmap in the tracker was
+also hiding the real bug reports underneath it.
+
+The last sections hold the GitHub working list, drivers that could be added,
+and items that have been raised but have no priority yet.
 
 ## 2. Fix the unit tests
 
@@ -60,6 +68,14 @@ fixed.
 
 Compare usql against the current psql command line tool, feature by feature,
 and close the gaps that matter.
+
+`\prompt` must work in a non-interactive script. Issue 53, which Ken accepted
+in the thread after first closing it: psql allows `\prompt` in a
+non-interactive terminal, so usql should too, and "I will make it a point to
+have this fixed in the next major release" is the commitment. He also named the
+obstacle, which is that the readline package makes it hard to enable on
+scripts, so this is entangled with item 8. Without it a `-f` script cannot ask
+for a value, and `--set NAME=VALUE` is the only way to pass one in.
 
 The psql-compatible variables in `env/vars.go` are part of this. The prompt
 substitution escapes are the visible gap. `handler/handler.go` line 498 lists
@@ -168,10 +184,24 @@ garbled input after alt-tab on Windows, DEL deleting a whole word, typing
 switching to Ctrl, vi key bindings, the pager and prompt alternating. These do
 not get fixed one at a time in usql. They close with the move to `xo/rline`.
 
-### 4i. Move questions to Discussions
+### 4i. Questions, blocked on Discussions being enabled
 
-Issues 263, 469 and 485 are questions. 391 and 475 are environment problems
-rather than usql defects.
+Issues 263, 469 and 485 are questions, and pull request 360 is titled as one.
+None can move, because Discussions is switched off for the repository.
+Enabling it is a settings change and is Ken's call. Until then they stay open,
+because closing a question the author cannot re-ask elsewhere is worse than
+leaving it.
+
+475 was not an environment problem. gosnowflake printed a DBUS warning during
+`--version`, which is a driver writing uninvited output. It no longer
+reproduces: `--version` gives clean stdout and empty stderr with
+`DBUS_SESSION_BUS_ADDRESS` unset, and gosnowflake is still linked. Closed as
+fixed.
+
+391 is usql running inside the Emacs shell on Windows, which is not a terminal,
+so the prompt and the line editor are off. That is documented behaviour rather
+than a defect, but item 8 may change what is possible there, so it stays open
+until the rline switch lands.
 
 ### 4j. Be ruthless with the rest
 
@@ -179,6 +209,30 @@ Both models said the same thing unprompted: for a project this size, close
 anything over a year old that has no reproduction, no stack trace and no heap
 profile, saying it can be reopened with one. Most will never be reopened. The
 alternative is that the real bugs above stay buried under sixty that are not.
+
+
+## 5. `\echo -n` and `\warn -n` are erased by the line editor
+
+Issue 215, which stays open as an issue because it is a defect rather than a
+plan. Tier 1.
+
+`\echo -n` and `\warn -n` suppress the trailing newline correctly, and then the
+line editor clears the line before the next prompt is drawn, so the output is
+never seen:
+
+    (not connected)=> \echo -n foo
+    (not connected)=>
+
+psql leaves it in place and draws the prompt after it:
+
+    postgres=# \echo -n foo
+    foopostgres=#
+
+The output is being written and then overwritten, so the fix is in how the
+prompt is redrawn after a command that deliberately left the cursor mid-line.
+That makes it a question for item 8 as much as for the `\echo` implementation,
+and it should be checked against `xo/rline` before being fixed in the current
+in-tree editor.
 
 
 ## 6. Create a dbtest package
@@ -212,6 +266,69 @@ reports input alternating between the pager and the prompt. Issue 552 asks for
 vim mode. Issue 490 reports the delete key removing a whole word. Issue 483
 reports the terminal behaving as though Control is held down. Issue 472 reports
 that a tab character cannot be sent as input.
+
+
+### The readline label is the shared queue
+
+Anything tagged `readline` on the tracker is rline's to plan for, and that
+session has been told so. Thirteen issues carry it: 72, 93, 122, 215, 236, 320,
+414, 472, 483, 490, 508, 528 and 552.
+
+    https://github.com/xo/usql/issues?q=is%3Aissue+is%3Aopen+label%3Areadline
+
+Deliberately not tagged, so the boundary is on record. 196 and 282 are about
+which candidates autocomplete offers, which the metadata reader produces, not
+how the editor behaves. 467 is prompt content and 516 is pager configuration.
+422 and 342 are about where a password comes from rather than how it is read.
+
+546, a busy loop at 100% CPU against `usql_static`, is tagged but unconfirmed.
+The reporter's diagnosis, which they say came from an AI and nobody has
+verified, is that the read loop stops blocking in a static build and returns
+empty results. If that is right it is rline's; if not it is ours.
+
+### What the rline session found, 2026-09-23
+
+Two mechanisms behind the terminal cluster, worth recording because neither is
+guessable from the issue titles.
+
+The four-issue family, 93, 122, 483 and 490, where ordinary keys start acting
+as if Ctrl were held. rline's escape decoder maps `CSI I` to Tab and `CSI O` to
+F3. Those two sequences are focus-in and focus-out, which is what a terminal
+sends on alt-tab, the trigger two of the four reporters named. A focus
+notification therefore arrives as a keystroke, a spurious Tab opens the
+completion menu, and the keys afterwards do something other than insert
+themselves. The mis-decode is measured. That something else leaves focus
+reporting enabled, and that this explains all four reports, are separate claims
+and not yet shown.
+
+508, the pager, is a different seam and not the other end of the same one.
+dradtke reproduced it in twenty lines that import `usql/rline` directly with no
+database and no usql, running `less` as a child while calling `Next`, and
+confirmed with strace that `less` reads every other keypress. Two readers on
+one terminal, with the kernel giving each input to whichever reads first. usql
+starts the pager without suspending the line editor.
+
+The rline session then reproduced it against its own port, with a control:
+without a child holding the terminal the editor read 10 of 10 keys, and with
+one it read 0 of 10. The child there was `cat` rather than `less`, and the
+difference is the useful part. `cat` reads greedily in a loop and takes
+everything; `less` reads one key and waits, which is why the report describes a
+clean alternation rather than total starvation. **The split is a property of
+the other reader, not of the bug.** So a fix that tunes the sharing rather than
+ending it would behave differently against every program somebody sets `PAGER`
+to.
+
+rline needs an explicit contract for handing the terminal to a child and taking
+it back. Two constraints on that design. The first pager invocation after
+startup behaves and later ones do not, which the two-readers account does not
+explain on its own, since two readers should race the first time as readily as
+the tenth; either the first invocation differs, or it races and wins. And the
+fix has to end the sharing rather than tune it, for the reason above.
+
+472, sending a literal tab, is a feature request against rline rather than a
+usql regression: `key.CtrlV` exists as a code with nothing implementing
+literal-next, and bracketed paste is absent from the port and was absent from
+isocline before it.
 
 ## 9. Clean up the documentation
 
@@ -268,6 +385,71 @@ allocates a map of up to tens of thousands of entries.
 
 Report both to sijms, together with the separate `0x80000000` overflow that is
 why `drivers/oracle/oracle.go` carries `Build: !(linux && arm)`.
+
+### dburl v0.26.0 removes the Dameng schemes
+
+Recorded because it changes what a user sees and arrives through a dependency
+bump rather than through anything here. usql removed the Dameng driver on
+2026-09-23 and left dburl alone, so `dameng://` currently reports that the
+driver is not available. dburl is now removing the `dm` scheme and its `dm8`
+and `dameng` aliases as well, in v0.26.0, after the same question was put to
+that project separately. Once usql is on it the message becomes unknown
+database scheme, which is more accurate.
+
+usql is on v0.26.0, which removes them. The plan had been to pin to v0.25.4 and
+keep the release boring, and the evidence went the other way. On v0.25.4 a
+`dameng://` URL reports that the `dm` driver is not available and then prints
+usql's rebuild hint:
+
+    error: dm: driver not available
+
+    try:
+
+      go install -tags 'most dm' github.com/xo/usql@master
+
+That hint is wrong. The `dm` build tag was deleted along with the driver, so
+following it produces a binary that still cannot connect. v0.26.0 reports
+`unknown database scheme` and prints nothing further, which is accurate.
+
+**Put this in usql's release notes.** The error a user sees for a `dameng://`
+URL changes, and it changes through a dependency bump rather than through
+anything in usql's own history, so someone searching usql's changelog for it
+would find nothing. All three forms are affected: `dameng://`, `dm://` and
+`dm8://`. usql is clean either way, with no reference to `GenDameng` or to the
+schemes outside this file.
+
+### The duckdb promotion depends on dburl v0.25.4
+
+Blocking, and not obvious from the diff. dburl's duckdb header matcher was
+`regexp.MustCompile("^.{8}DUCK.{8}")`, and Go's `.` matches a rune rather than
+a byte, so a checksum containing a newline or a valid multi-byte UTF-8 sequence
+misaligns the magic. duckdb writes `DUCK` at offset 8 after an 8-byte checksum
+that covers the fixed header block, so the value is constant per storage
+version: detection is all-or-none per duckdb build, not per file.
+
+Three constants have been seen. `67274d4c681e71c3` and `2eb427ecd613b61e` pass.
+`06d76f27c2dab3b9` fails, and that is the one duckdb-go/v2 writes today, so
+every database created by the version usql links is undetectable. Every form
+fails once the file exists: `file:x.duckdb`, `x.duckdb`, `./x.duckdb` and an
+absolute path, with three different error messages between them because `Parse`
+reported any `SchemeType` failure as `ErrUnknownFileExtension`.
+
+Fixed in dburl v0.25.4, which usql is on. Verified against the released module
+with a file carrying the failing constant: all four forms, `file:x.duckdb`,
+`x.duckdb`, `./x.duckdb` and an absolute path, open it and return the row.
+
+dburl's own suite never caught it because `testdata/test.duckdb` has been
+byte-identical since it was added in `95e9c5f`, and its checksum is one of the
+passing ones. A real file was testing the matcher for its entire life and could
+not vary.
+
+duckdb is a base driver as of 2026-09-23, which makes the cost below apply to
+the default build rather than only to `most`. `go build` with no tags went from
+45.7 MB to 99.9 MB. Issue 446 asked for the promotion and had been declined
+because duckdb was not available on Windows out of the box; that stopped being
+true when the MinGW toolchain went into the release workflow. linux/arm still
+excludes it through the `Build:` constraint, so the 32-bit arm build is
+unaffected.
 
 ### duckdb-go-bindings passes -rdynamic
 
@@ -388,6 +570,138 @@ usql still passes `drivers.NullSafeColumnType` rather than
 anything tblfmt can fix.
 
 
+## 16. Roadmap, moved here from GitHub issues
+
+Eighteen issues that Ken filed, mostly in January 2021, as his own roadmap in
+issue form. They were never stale, only in the wrong place: a roadmap kept in
+an issue tracker and a roadmap kept in this file are two roadmaps, and the
+issue count then hides the real bug reports underneath them. Gemini and
+DeepSeek were both asked where they belonged, and both said the duplication was
+the problem; Gemini's answer, that this file is the source of truth and the
+tracker is for defects and contributor-ready work, is the one taken.
+
+They are closed on GitHub with a comment pointing here. Issue 215 stayed open
+as a defect and is item 5.
+
+Anything below that is ready for someone else to pick up should be re-filed as
+a narrow issue with acceptance criteria when that is true, rather than left
+here with `help wanted` on it. That was the one real cost of the move, and it
+is worth paying attention to: `is:issue label:"help wanted"` is how outside
+contributors and aggregators find work, and this file is not indexed by any of
+them.
+
+### Already owned by another item
+
+Four were closed because the work is described elsewhere in this file, not
+because it was dropped.
+
+137, a wrapper for the C readline library, wanted a standalone package with the
+same interface as `rline`, selectable by build tag. Item 8 supersedes it.
+
+165, the special `\\` separator. psql accepts an escaped backslash as a
+statement separator, and only the first one: `\x \\ select 1; \\ select * from
+foo;` runs the first two and then reports `invalid command \`. Item 3.
+
+166, quoted string processing and variable interpolation in metacmds. The
+issue carries a full side-by-side of psql against usql covering `:{?name}`,
+single and double quoted interpolation, standard escape decoding, `E''` style
+escaping, and backtick interpolation. `testdata/quotes.sql` is in the tree and
+is the reference. Item 3, and the largest single piece of it.
+
+217, additional variable types, evaluation and interpolation. A long proposal
+that deliberately breaks from psql: extended variable types with their own
+prefixes for connections and queries, plus shell and ruby style interpolation
+and expression evaluation. Item 3 should settle psql parity first, since this
+builds on top of it.
+
+### psql compatibility, still wanted
+
+141 and 142, LaTeX and troff table output, both for psql parity. These belong
+to tblfmt rather than usql.
+
+147, `\if`, `\elif`, `\else` and `\end`. Note that psql's condition evaluation
+is deliberately simplistic, treating any non-empty string as true, so parity
+here is easier than it looks.
+
+158, `\ef` and `\ev`, which need introspection in place first.
+
+160, `\errverbose`, to show the detailed error information a driver can give
+beyond the message.
+
+161, the `--echo-*` command line flags.
+
+374, document prompt formatting. The prompt escapes are item 3; this is the
+documentation half.
+
+### Proposals, not scheduled
+
+144, a shared buffer pool for table output. Recorded as needing a large
+overhaul of tblfmt, which now has its own session, so this is a question to put
+there rather than work to do here.
+
+146, a `\copy` proposal, which predates the `\copy` that exists. The open
+questions in it are still open, and item 4e holds the current `\copy` defects.
+
+154, an expanded test suite covering SELECT, INSERT, UPDATE and DELETE against
+each major database and syntax compatibility across all of them, plus the
+popular non-major ones. Item 2 has taken the container half of this; the
+per-database statement coverage has not been done.
+
+157, support for databases that have a Go API but no `database/sql` driver:
+Redis, InfluxDB and IQL, Aerospike AQL, ArangoDB AQL, OrientDB SQL, Cypher and
+SPARQL, JIRA JQL. Needs either a generic adapter or an overhaul of the drivers
+package to admit non-SQL backends. Tier 3 holds the drivers that do have a
+`database/sql` driver, and is the cheaper list.
+
+162, `\j*` metacommands for processing fields with JavaScript in flight, with
+`\jset` to define a function and `\j` to apply it to the current or last
+statement buffer, composing with `\copy` for ETL. Note that usql already links
+a JavaScript engine through the charts renderer, though only under the `charts`
+build tag, so the cost of this is lower than it was in 2021.
+
+216, a `\values` command producing an ephemeral result set from expressions,
+for testing, variable manipulation and named queries. Depends on 217's
+evaluation syntax.
+
+267, an `\import` proposal.
+
+
+## 17. A password command hook
+
+Issue 422, accepted by Ken in the thread and moved here. Not started.
+
+Let a user point usql at a command that returns a password, so a password
+manager can be the source instead of a plaintext `.usqlpass`. The reporter has
+twelve databases and keeps their passwords in KeePass; they explicitly did not
+ask for KeePass support, only a hook, so that 1Password, Bitwarden, Vault,
+`pass` and anything else can be wired up by the user.
+
+The obvious design does not work. Making `.usqlpass` executable and running it
+fails on Windows, which usql ships binaries for and where there is no execute
+bit and a program needs an extension. The reporter noticed this themselves in
+the thread and suggested naming the command in `.usqlrc` instead. Some setting
+that names a command is therefore the shape to take, not a mode bit on the
+existing file.
+
+Open questions from the thread. What the command is given: the reporter
+suggested the fields already used for a passfile lookup, meaning protocol,
+host, port, database and user, with the driver name expanded to its full form
+and the usual defaults filled in. And what the contract is: presumably the
+password on stdout, a non-zero exit meaning no password rather than an error,
+and a timeout so a hung helper does not hang usql.
+
+Prior art worth reading before designing it. git's credential helpers solve the
+same problem and have settled on a key-value protocol on stdin and stdout,
+which is more extensible than positional arguments. psql has no equivalent, so
+there is no compatibility constraint here and no reason to invent a
+psql-shaped answer.
+
+usql resolves passwords through `github.com/xo/dburl/passfile` today, called
+from `env/env.go`. That package matches entries out of a file and has no notion
+of running anything, so the hook belongs in usql above it rather than inside
+dburl.
+
+
 ## Tier 2: GitHub issues and pull requests
 
 Items 2 to 15 are the programme, and item 4 holds the issue triage. This section
@@ -434,11 +748,14 @@ Dameng driver, which usql removed on 2026-09-23. 360 belongs in Discussions.
 
 ### Issues to close rather than fix
 
-Item 8 subsumes the terminal cluster, so 122, 137, 236, 483, 490, 528 and 552
-close with it. Item 1 subsumes the ten dependency scanner reports, which are
-543, 556, 567, 568, 574, 575, 579, 580 and 581. 470 is already fixed on main.
-589 is fixed in dburl v0.25.2. 263, 469 and 485 are questions and move to
-Discussions. 391 and 475 are environment problems rather than usql defects.
+Done on 2026-09-23. The nine scanner reports 543, 556, 567, 568, 574, 575, 579,
+580 and 581 are closed as not planned, on the govulncheck evidence in item 4a.
+470 and 475 are closed as fixed, each reproduced against main first. 589 and
+590 were closed earlier, and 476 and 539 with the NULL fix.
+
+Still open and waiting on something. Item 8 subsumes the terminal cluster, so
+122, 137, 236, 483, 490, 528 and 552 close when the rline switch lands, not
+before. 263, 469 and 485 need Discussions enabled; see item 4i.
 
 ### The theme being underweighted
 
