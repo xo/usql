@@ -60,8 +60,8 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/dburl v0.25.3
 	github.com/xo/echartsgoja v0.1.1
-	github.com/xo/resvg v0.8.0
-	github.com/xo/tblfmt v0.18.3
+	github.com/xo/resvg v0.10.0
+	github.com/xo/tblfmt v0.19.0
 	github.com/xo/terminfo v1.0.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.151.3
 	github.com/yookoala/realpath v1.0.0
@@ -310,6 +310,12 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twmb/murmur3 v1.2.0 // indirect
 	github.com/uber-go/tally v3.5.10+incompatible // indirect
+	github.com/xo/resvg/libresvg/darwin_amd64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/darwin_arm64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/linux_amd64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/linux_arm v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/linux_arm64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
