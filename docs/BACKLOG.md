@@ -967,6 +967,29 @@ registers no version function. Oracle is not one of them: it registers one
 through `orshared.Register`, which an earlier draft of this item missed.
 Oracle's defect is different and is W22.
 
+### Moving Oracle costs `\l` until dbmeta answers it
+
+dbmeta's Oracle model registers no `Databases` query. Oracle is one of two
+dialects there that cannot answer `\l`, recorded on the grounds that Oracle has
+one database per instance and no list to read.
+
+usql answers `\l` for Oracle today, for administrators only, through
+`v$parameter`. So moving Oracle as things stand trades one command for
+correctness everywhere else, going from 11 of 11 to 10 of 11 on that axis.
+
+dbmeta will not write the query until somebody decides what `\l` means on a
+multitenant Oracle server. `SYS_CONTEXT('USERENV', 'DB_NAME')` returns the
+container name rather than the pluggable database name, and a listing that
+names the container when the connection is to a pluggable database is worse
+than no listing. If the answer is the pluggable databases visible to this
+connection, there is a view for it. If the answer is the one database you are
+attached to, it is a single row.
+
+That decision is a dependency on dbmeta, not usql work. Pull request 570 pairs
+`SYS_CONTEXT` with `all_db_links`, which lists links to other databases rather
+than databases, which suggests usql's Oracle catalogs query is answering two
+questions at once.
+
 ### The metadata layer is frozen
 
 Decided on 2026-09-26. `drivers/metadata` takes no more changes before the
@@ -993,58 +1016,95 @@ dbmeta has no release tag and its API is still moving. Whether usql depends on
 an unreleased module, and whose cadence wins, is Ken's call. The per-driver
 shape of the move limits the exposure without removing it.
 
-## W22. Metadata and version queries assume a privileged user
+## W22. Metadata and version queries assume a privileged user (Superseded by W21)
 
-Source: found on 2026-09-26 while triaging pull requests 524 and 570.
+Source: found on 2026-09-26 while triaging pull requests 524 and 570. Answered
+the same day.
 
-Two open pull requests report the same defect against Oracle from different
-directions. Neither is about SQL correctness. Both are about who is allowed to
-run the query.
+usql's Oracle queries cannot be run by an ordinary user.
+`drivers/oracle/orshared/orshared.go:38` reads the version from `v$instance`,
+and the catalogs query reads `v$parameter` and `dba_db_links`. All three are
+administrator objects. Pull requests 524 and 570 report this independently.
 
-`drivers/oracle/orshared/orshared.go:38` reads the version with `SELECT version
-FROM v$instance`. `v$instance` needs privileges an ordinary user does not have.
-`v$version` holds the same information and every user can read it. That is
-pull request 524.
+Nobody had asked usql's queries as anyone other than the administrator, because
+the tests connect as a privileged user, so a query an ordinary user cannot run
+passes every test here.
 
-The Oracle catalogs query reads `v$parameter` and `dba_db_links`. Both are
-administrator views. `SYS_CONTEXT('USERENV', 'DB_NAME')` and `all_db_links`
-give the same answers to an ordinary user. That is pull request 570.
+### Why this is superseded rather than open
 
-### Why this is an item and not two merges
+dbmeta already solves it, measured rather than asserted. Its Oracle model
+touches exactly one `v$` view in the whole model, which is the version query,
+and uses `all_` views everywhere else. On Oracle 26ai as a user granted only
+CREATE SESSION:
 
-Nobody has asked these queries as anyone other than the administrator. The
-tests connect as a privileged user, so a query that an ordinary user cannot run
-passes every test in this repository.
+    SELECT version FROM v$instance                 ORA-00942, no such view
+    SELECT banner FROM v$version WHERE ROWNUM = 1  answers
 
-Oracle is where this surfaced, not where it is confined. Every driver with a
-metadata reader is unchecked in the same way.
+So usql prints a version for an administrator and nothing for anybody else, and
+dbmeta prints one for both.
 
-### This is probably dbmeta's, not usql's
+It is also not a one-off audit there. dbmeta runs `TestPrivilegeParity` in CI
+on every push, asking every query as the administrator and as each lesser
+principal the product has, with the results checked in. A query that starts
+depending on who is asking fails their build.
 
-dbmeta found the identical class of defect on its own side by running each
-query as a user holding only the privileges a normal account has. It found six
-MariaDB queries refused outright for a user with ALL PRIVILEGES on its own
-database, because they read tables in the `mysql` database rather than views
-that filter themselves.
+The metadata layer here is frozen, so these queries move to dbmeta rather than
+being fixed in place. The defect does not survive the migration. Pull requests
+524 and 570 stay held.
 
-The metadata layer here is frozen, so these queries are moving to dbmeta rather
-than being fixed in place. dbmeta has been asked whether its models already
-read through views an unprivileged user can reach, and whether the unprivileged
-pass is something it runs routinely or was a one-off audit.
+### One caution that outlived the item
 
-If dbmeta already handles it, this item closes into W21 and nothing is built
-here. If dbmeta carries the same assumption, the defect survives the migration
-instead of being fixed by it, and that is the case worth knowing about early.
+`SELECT banner FROM v$version` returns five rows on Oracle 11.2, one each for
+the database, PL/SQL, CORE, TNS and NLSRTL. It became a single row in 18c.
+dbmeta's query carries `WHERE ROWNUM = 1` and has since it was written. Pull
+request 524 has no predicate and is nondeterministic on any server before 18c.
 
-### Two cautions for whoever writes the Oracle queries
+## W23. Variables need a scrub, and `\copy` does not resolve them
 
-`SELECT banner FROM v$version` returns several rows on Oracle 12c and earlier,
-one each for the database, PL/SQL, CORE, TNS and NLSRTL. It became a single row
-in 18c. A query that assumes one row is nondeterministic on older servers, and
-pull request 524 has that bug. The view is right. It needs a predicate.
+Source: issue 495 and pull request 542, triaged 2026-09-26.
 
-`SYS_CONTEXT('USERENV', 'DB_NAME')` returns the container name rather than the
-pluggable database name on a multitenant server.
+`\copy` goes straight to `dburl.Parse` on its source and destination, so a
+connection variable set with `\cset` is not resolved. Issue 495 reports it:
+
+    \cset MSSQL mssql://USER:PASS@HOST:PORT/DATABASE
+    \copy MSSQL csvq://. 'YYY'
+    error: invalid database scheme
+
+`\c MSSQL` works, and `\copy` with the URL spelled out works. Only the
+combination fails.
+
+Pull request 542 is closed rather than merged. It resolved the variable but
+then hand-built a `dburl.URL` from a driver and a DSN instead of going through
+`dburl.Parse`, which leaves `Host`, `User`, `Path`, `RawQuery` and `GoDriver`
+empty. `drivers.Open` passes the whole URL to any driver with its own `Open`,
+and six have one: cassandra, moderncsqlite, pgx, postgres, sqlserver and
+vertica. So it would have broken `\copy` for postgres and pgx, which are the
+drivers most likely to be used with it.
+
+The correct shape is to resolve the variable to a connection string and pass
+that string to `dburl.Parse`, so that one code path handles both cases.
+
+### This is part of a larger change
+
+Variables in general are getting a clean up, and this fix belongs inside it
+rather than ahead of it. Doing it piecemeal means touching `\copy` twice.
+
+## W24. Read a command or a script from standard input
+
+Source: pull request 479, triaged 2026-09-26. Planned for the next major
+release.
+
+`usql -c -` and `usql -f -` should read from standard input, which is what
+psql does.
+
+Pull request 479 is closed rather than merged. It called `scanner.Scan()`
+exactly once on a `bufio.Scanner` with the default line splitter, so it read
+only the first line and silently discarded the rest of a piped script. It also
+deleted two imports that are still used, and it predates two years of changes
+to `run.go`.
+
+The feature is wanted. Read all of standard input rather than one line, and
+decide what `-f -` does when it is given more than once.
 
 ## Tier 2: GitHub issues and pull requests
 
