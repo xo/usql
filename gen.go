@@ -19,28 +19,25 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
 	"github.com/mattn/go-runewidth"
 	"github.com/xo/dburl"
-	"github.com/yookoala/realpath"
 )
 
 func main() {
 	licenseStart := flag.Int("license-start", 2015, "license start year")
 	licenseAuthor := flag.String("license-author", "Kenneth Shaw", "license author")
-	dburlGen := flag.Bool("dburl-gen", false, "enable dburl generation")
-	dburlDir := flag.String("dburl-dir", getDburlDir(), "dburl dir")
-	dburlLicenseStart := flag.Int("dburl-license-start", 2015, "dburl license start year")
 	flag.Parse()
-	if err := run(*licenseStart, *licenseAuthor, *dburlGen, *dburlDir, *dburlLicenseStart); err != nil {
+	if err := run(*licenseStart, *licenseAuthor); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(licenseStart int, licenseAuthor string, dburlGen bool, dburlDir string, dburlLicenseStart int) error {
+func run(licenseStart int, licenseAuthor string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -62,14 +59,6 @@ func run(licenseStart int, licenseAuthor string, dburlGen bool, dburlDir string,
 	}
 	if err := writeCommands(filepath.Join(wd, "metacmd", "descs.go")); err != nil {
 		return err
-	}
-	if dburlGen {
-		if err := writeReadme(dburlDir, false); err != nil {
-			return err
-		}
-		if err := writeDburlLicense(dburlDir, dburlLicenseStart, licenseAuthor); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -104,15 +93,19 @@ func loadDrivers(wd string) error {
 			return fmt.Errorf("driver %s has invalid group %q", tag, driver.Group)
 		}
 		dest[tag] = driver
-		if dest[tag].Aliases != nil {
-			for _, alias := range dest[tag].Aliases {
-				wireDrivers[alias[0]] = DriverInfo{
-					Tag:    tag,
-					Driver: alias[0],
-					Pkg:    dest[tag].Pkg,
-					Desc:   alias[1],
-					Wire:   true,
-				}
+		// Wire compatible drivers are the dburl schemes that override to this
+		// one. They get their own README row.
+		for _, scheme := range dburl.BaseSchemes() {
+			if scheme.Override != driver.Driver {
+				continue
+			}
+			wireDrivers[scheme.Driver] = DriverInfo{
+				Tag:        tag,
+				Driver:     scheme.Driver,
+				Pkg:        driver.Pkg,
+				Desc:       scheme.Desc,
+				Deployment: scheme.Deployment,
+				Wire:       true,
 			}
 		}
 		return nil
@@ -265,14 +258,6 @@ func writeLicenseFiles(licenseStart int, licenseAuthor string) error {
 	return nil
 }
 
-func writeDburlLicense(dir string, licenseStart int, licenseAuthor string) error {
-	s := fmt.Sprintf(license, licenseStart, time.Now().Year(), licenseAuthor)
-	if err := os.WriteFile(filepath.Join(dir, "LICENSE"), append([]byte(s), '\n'), 0o644); err != nil {
-		return err
-	}
-	return nil
-}
-
 func writeCommands(name string) error {
 	// format and write internal.go
 	var names, descs string
@@ -324,10 +309,10 @@ type DriverInfo struct {
 	// CGO is whether or not the driver requires CGO, based on presence of
 	// 'Requires CGO.' in the comment
 	CGO bool
-	// Aliases are the parsed Alias: entries.
-	Aliases [][]string
 	// Wire indicates it is a Wire compatible driver.
 	Wire bool
+	// Deployment is the deployment kinds the database offers, from dburl.
+	Deployment dburl.Deployment
 	// Group is the build Group
 	Group string
 	// Build is the parsed Build: entry, an extra build constraint that is
@@ -376,48 +361,13 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	if err != nil {
 		return DriverInfo{}, err
 	}
-	name := tag
-	var pkg string
-	for _, imp := range f.Imports {
-		if imp.Comment == nil || len(imp.Comment.List) == 0 || !strings.Contains(imp.Comment.List[0].Text, "DRIVER") {
-			continue
-		}
-		pkg = imp.Path.Value[1 : len(imp.Path.Value)-1]
-		if i := strings.Index(imp.Comment.List[0].Text, ":"); i != -1 {
-			name = strings.TrimSpace(imp.Comment.List[0].Text[i+1:])
-		}
-		break
+	// The driver's facts come from dburl. Only the build system's own fields
+	// are parsed from the doc comment.
+	scheme, ok := schemeFor(tag)
+	if !ok {
+		return DriverInfo{}, fmt.Errorf("driver %q has no dburl scheme", tag)
 	}
-	// parse doc comment
 	comment := f.Doc.Text()
-	prefix := "Package " + tag + " defines and registers usql's "
-	if !strings.HasPrefix(comment, prefix) {
-		return DriverInfo{}, fmt.Errorf("invalid doc comment prefix for driver %q", tag)
-	}
-	desc := strings.TrimPrefix(comment, prefix)
-	i := strings.Index(desc, " driver.")
-	if i == -1 {
-		return DriverInfo{}, fmt.Errorf("cannot find description suffix for driver %q", tag)
-	}
-	desc = strings.TrimSpace(desc[:i])
-	if desc == "" {
-		return DriverInfo{}, fmt.Errorf("unable to parse description for driver %q", tag)
-	}
-	// parse alias:
-	var aliases [][]string
-	aliasesm := aliasRE.FindAllStringSubmatch(comment, -1)
-	for _, m := range aliasesm {
-		s := strings.Split(m[1], ",")
-		aliases = append(aliases, []string{
-			strings.TrimSpace(s[0]),
-			strings.TrimSpace(s[1]),
-		})
-	}
-	// parse see: url
-	urlm := seeRE.FindAllStringSubmatch(comment, -1)
-	if urlm == nil {
-		return DriverInfo{}, fmt.Errorf("missing See: <URL> for driver %q", tag)
-	}
 	// parse group:
 	group := "most"
 	if groupm := groupRE.FindAllStringSubmatch(comment, -1); groupm != nil {
@@ -429,16 +379,38 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 		build = strings.TrimSpace(buildm[0][1])
 	}
 	return DriverInfo{
-		Tag:     tag,
-		Driver:  name,
-		Pkg:     pkg,
-		Desc:    cleanRE.ReplaceAllString(desc, ""),
-		URL:     strings.TrimSpace(urlm[0][1]),
-		CGO:     strings.Contains(cleanRE.ReplaceAllString(comment, ""), "Requires CGO."),
-		Aliases: aliases,
-		Group:   group,
-		Build:   build,
+		Tag:        tag,
+		Driver:     scheme.Driver,
+		Pkg:        scheme.GoPackage,
+		Desc:       scheme.Desc,
+		URL:        scheme.DriverURL,
+		CGO:        scheme.RequiresCGO,
+		Deployment: scheme.Deployment,
+		Group:      group,
+		Build:      build,
 	}, nil
+}
+
+// schemes indexes dburl's schemes by driver name and by alias, so that a usql
+// build tag resolves even when it differs from the scheme, as dynamodb does
+// against godynamo.
+var schemes = sync.OnceValue(func() map[string]dburl.Scheme {
+	m := make(map[string]dburl.Scheme)
+	for _, scheme := range dburl.BaseSchemes() {
+		m[scheme.Driver] = scheme
+		for _, alias := range scheme.Aliases {
+			if _, ok := m[alias]; !ok {
+				m[alias] = scheme
+			}
+		}
+	}
+	return m
+})
+
+// schemeFor returns the dburl scheme for a usql build tag.
+func schemeFor(tag string) (dburl.Scheme, bool) {
+	scheme, ok := schemes()[tag]
+	return scheme, ok
 }
 
 // desc is a meta command description.
@@ -545,6 +517,17 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 		if v.Wire {
 			notes += " <sup>[‡][f-wire]</sup>"
 		}
+		// Both markers mean the same thing to a reader: there is nothing you
+		// can start. So both exclude a database that also ships a server
+		// anyone can run, as CockroachDB does.
+		if server := v.Deployment&dburl.DeploymentServer != 0; !server {
+			if v.Deployment&dburl.DeploymentEmbedded != 0 {
+				notes += " <sup>[§][f-embedded]</sup>"
+			}
+			if v.Deployment&dburl.DeploymentHosted != 0 {
+				notes += " <sup>[¶][f-hosted]</sup>"
+			}
+		}
 		rows = append(rows, []string{
 			v.Desc,
 			"`" + v.Tag + "`",
@@ -620,15 +603,6 @@ func buildTableLinks(drivers ...map[string]DriverInfo) string {
 		s += fmt.Sprintf("[d-%s]: %s\n", v.Tag, v.URL)
 	}
 	return s
-}
-
-func getDburlDir() string {
-	dir := filepath.Join(os.Getenv("GOPATH"), "src/github.com/xo/dburl")
-	var err error
-	if dir, err = realpath.Realpath(dir); err != nil {
-		panic(err)
-	}
-	return dir
 }
 
 // decodeCommand decodes a command.
@@ -744,8 +718,6 @@ var sections = []string{
 
 // regexps.
 var (
-	aliasRE = regexp.MustCompile(`(?m)^Alias:\s+(.*)$`)
-	seeRE   = regexp.MustCompile(`(?m)^See:\s+(.*)$`)
 	groupRE = regexp.MustCompile(`(?m)^Group:\s+(.*)$`)
 	buildRE = regexp.MustCompile(`(?m)^Build:\s+(.*)$`)
 	cleanRE = regexp.MustCompile(`[\r\n]`)

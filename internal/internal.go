@@ -21,7 +21,7 @@ func KnownBuildTags() map[string]string {
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
-		"dynamodb":      "dynamodb",      // github.com/btnguyen2k/godynamo
+		"dynamodb":      "godynamo",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver

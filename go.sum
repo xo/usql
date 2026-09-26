@@ -791,8 +791,8 @@ github.com/vertica/vertica-sql-go v1.3.8 h1:FomjkM3cam9yE6zSic31flNWPLdsZbYGK9ih
 github.com/vertica/vertica-sql-go v1.3.8/go.mod h1:c4OZ8lq1Ztc18w8a0nG+dzQh69BzJRcKN2LZOnYbERI=
 github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8Ydu2Bstc=
 github.com/xhit/go-str2duration/v2 v2.1.0/go.mod h1:ohY8p+0f07DiV6Em5LKB0s2YpLtXVyJfNt1+BlmyAsU=
-github.com/xo/dburl v0.27.1 h1:P9Z2nt60ZYc6MuQL49GlT0ArtaBrmzozsiQgg950NyE=
-github.com/xo/dburl v0.27.1/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
+github.com/xo/dburl v0.29.0 h1:sRvUNA/IESzRUQMeVWV14MlSFqhT0fECP1iVfUwNeBw=
+github.com/xo/dburl v0.29.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
 github.com/xo/echartsgoja v0.1.1 h1:9ZH7rhjovE/caGzWTFw1X5GItCsPw5eFV2Qwfgmjt7M=
 github.com/xo/echartsgoja v0.1.1/go.mod h1:u2iiKyIA1H3URjh9+8Nltj8cP33R19JHasXhSz/tWHI=
 github.com/xo/resvg v0.11.0 h1:dpZ3eSEz344tITxc7mQ2ZDGIn1LbhYykTF7yN0M5+ag=
