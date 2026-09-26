@@ -57,7 +57,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/dburl v0.27.1
 	github.com/xo/echartsgoja v0.1.1
-	github.com/xo/resvg v0.10.0
+	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.0
 	github.com/xo/terminfo v1.2.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.0
@@ -306,6 +306,7 @@ require (
 	github.com/xo/resvg/libresvg/darwin_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/darwin_arm64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_amd64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/linux_amd64_musl v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_arm v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_arm64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 // indirect
