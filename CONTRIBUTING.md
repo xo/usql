@@ -9,15 +9,24 @@ with code or documentation changes.
 
 # Adding a new driver
 
-1. Add a new schema in [dburl](https://github.com/xo/dburl).
-2. Create a new go package in `drivers`. It should have an `init()` function,
-   that would call `drivers.Register()`.
-3. Regenerate the `internal` package, the driver table in `README.md` and the
+The full procedure is in [docs/DRIVER.md](docs/DRIVER.md). Read it before you
+start, because two of the steps happen in a different repository and one of
+them must happen first.
+
+The short version:
+
+1. Answer the pre-flight questions. Is the upstream driver maintained, does it
+   touch global process state, what does it link, and can it be tested?
+2. Add the scheme in [dburl](https://github.com/xo/dburl).
+3. Create a package in `drivers` with an `init()` that calls
+   `drivers.Register()`.
+4. Regenerate the `internal` package, the driver tables in `README.md` and the
    license files by running `go run gen.go`.
-4. Add any new required modules using `go get` or by editing `go.mod` manually
-   and running `go mod tidy`.
-5. Run all tests, build `usql` and see if the new driver works.
-6. Update `README.md`.
+5. Add the module with `go get`, then run `go mod tidy`.
+6. Decide `CatalogReader` and `PrivilegeSummaryReader` explicitly, and record
+   the reason if you omit either.
+7. Verify against a live database. Compilation is not evidence, because nearly
+   every field of `drivers.Driver` is optional.
 
 A driver that cannot compile everywhere says so in its package comment with a
 `Build:` line, and `gen.go` adds that constraint to the file it generates in

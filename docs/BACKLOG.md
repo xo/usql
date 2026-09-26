@@ -4,21 +4,51 @@ This file records planned work for usql and for the sibling repositories that
 usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
-Items 2 to 9 are Ken's work items, in his order. Items 10 to 15 were added from
-work that followed. Item 16 is the roadmap that used to live in the GitHub
-issue tracker, and item 17 came from it. Item 1, bringing CI and CD up to
-date, is finished and has been removed, as have the items that were
-completed.
-
 This file is the source of truth for the roadmap. The issue tracker is for
 defects and for work that is ready for someone outside the project to pick up.
 Anything recorded in both places drifts, and the roadmap in the tracker was
 also hiding the real bug reports underneath it.
 
+## How to refer to an item
+
+Every item has an identifier of the form `W` followed by a number. Three rules
+govern it:
+
+1. Identifiers are append only. A new item takes the next unused number.
+2. An identifier is never reused. W1 is finished, and no later item becomes W1.
+3. An identifier is never renumbered. Removing W6 does not turn W7 into W6.
+
+An item that is finished or abandoned keeps its heading and gains a status in
+that heading. It does not disappear. A citation that silently starts pointing
+at different work is worse than one that points at nothing, because nothing
+tells the reader it moved.
+
+A heading with no status is open. The statuses in use are `Done`, `Dropped`
+and `Superseded by Wn`.
+
+These rules exist because the items are cited. They are cited in this file, in
+commit messages, and in conversation. Before these rules the numbers were
+positional, so removing an item renumbered every item after it and quietly
+invalidated every reference to them.
+
+Use a separate series for anything that is not a work item. The sibling
+repositories `dburl` and `dbmeta` number their design decisions `D1`, `D2` and
+so on, and the two series must not be confused where both appear in one commit
+message.
+
+## Where the items came from
+
+W2 to W9 are Ken's work items, in his order. W10 to W15 were added from work
+that followed. W16 is the roadmap that used to live in the GitHub issue
+tracker, and W17 came from it. W18 and after were added later, and each says
+where it came from.
+
+W1, bringing CI and CD up to date, is finished.
+
 The last sections hold the GitHub working list, drivers that could be added,
 and items that have been raised but have no priority yet.
 
-## 2. Fix the unit tests
+## W2. Fix the unit tests
 
 Make the unit tests work on every system, and against the databases that can
 run in GitHub workflows. PostgreSQL, SQLite3 and MySQL are the minimum.
@@ -64,7 +94,7 @@ whitespace after `VALUES`, so a lowercase `values(` reaches the server with its
 placeholders and is rejected. Report it upstream and remove the skip when it is
 fixed.
 
-## 3. Close the gap against psql
+## W3. Close the gap against psql
 
 Compare usql against the current psql command line tool, feature by feature,
 and close the gaps that matter.
@@ -74,7 +104,7 @@ in the thread after first closing it: psql allows `\prompt` in a
 non-interactive terminal, so usql should too, and "I will make it a point to
 have this fixed in the next major release" is the commitment. He also named the
 obstacle, which is that the readline package makes it hard to enable on
-scripts, so this is entangled with item 8. Without it a `-f` script cannot ask
+scripts, so this is entangled with W8. Without it a `-f` script cannot ask
 for a value, and `--set NAME=VALUE` is the only way to pass one in.
 
 The psql-compatible variables in `env/vars.go` are part of this. The prompt
@@ -84,12 +114,12 @@ the ones that are not implemented: `%M`, `%m`, `%>`, `%n`, `%/`, `%~`, `%#`,
 the database named in the connection URL instead of the database in use after
 a `\c` command or a `USE` statement.
 
-## 4. Work through GitHub
+## W4. Work through GitHub
 
 93 issues and 24 pull requests are open, reviewed on 2026-09-23. Gemini and
 DeepSeek were consulted on which are real; where they disagreed it is said so.
 
-### 4a. The nine scanner reports: close them
+### W4a. The nine scanner reports: close them
 
 Issues 543, 556, 567, 568, 574, 575, 579, 580 and 581 are all dependency
 scanner output from nine different users. `govulncheck` against the full build
@@ -108,7 +138,7 @@ They disagreed on whether to keep one umbrella issue. Gemini said do not, it
 attracts noise. DeepSeek said keep one for tracking. No umbrella issue is the
 better call for a project this size.
 
-### 4b. Stop the scanner reports recurring
+### W4b. Stop the scanner reports recurring
 
 Both models converged on the same four, in rough order of effect:
 
@@ -126,7 +156,7 @@ Both models converged on the same four, in rough order of effect:
 Keep taking the dependency bumps regardless. They are cheap and they clear most
 scanners without any argument.
 
-### 4c. Statement parsing
+### W4c. Statement parsing
 
 Issue 587 reports that a backtick-quoted identifier containing a single quote
 flips the lexer quote state in the MySQL and MariaDB dialect. The next string
@@ -139,9 +169,9 @@ is rebased onto main locally as `pr-591`.
 
 Issues 165, 166 and 505 are the same area: the `\\` separator, quoted string
 processing, and a regression in quoted variable replacement. Fix them together
-with item 3 rather than piecemeal.
+with W3 rather than piecemeal.
 
-### 4d. Stability, which outranks everything else here
+### W4d. Stability, which outranks everything else here
 
 Issue 546, a busy loop at 100% CPU, and 464, a crash after executing a command.
 Both models put these first and they are right: a CLI that spins or dies is
@@ -151,15 +181,15 @@ polling on EOF or an unexpectedly closed pipe.
 Issue 371, high memory usage, has no heap profile attached. Ask for one and
 close it if none arrives.
 
-### 4e. `\copy`, which is the data path
+### W4e. `\copy`, which is the data path
 
 Issues 254, 322, 397, 427, 458, 462 and 495. Gemini called this the top
 priority after stability, on the grounds that a tool which mangles data or runs
 out of memory on a large load gets dropped immediately. 397, 254 and 462 are
-probably one fault, the NULL scan in `\copy`; see item 14. 322 is a 500 MB file
+probably one fault, the NULL scan in `\copy`; see W14. 322 is a 500 MB file
 failing, which suggests the copy reads a whole payload rather than streaming.
 
-### 4f. Output faults, cheap and visible
+### W4f. Output faults, cheap and visible
 
 Issue 448, numbers shown as `1.450817032e+`, is a formatting default and should
 be a small fix. Issue 509, control characters in a text field breaking the
@@ -170,21 +200,21 @@ Issue 516, csv disabling the pager, Gemini read as intended behaviour, since
 csv is meant for redirection. Honour an explicitly set `\pset pager on` and
 leave the default as it is.
 
-### 4g. Driver-specific metadata: accept patches, do not write them
+### W4g. Driver-specific metadata: accept patches, do not write them
 
 Issues 375, athena has no `\d`, and 440, no foreign keys on SQL Server. Gemini
 was blunt and correct: one maintainer cannot write bespoke introspection for
 fifty databases, most of which are not run locally. Label these for help and
 merge contributions with tests. Do not spend core time on them.
 
-### 4h. The terminal cluster belongs to item 8
+### W4h. The terminal cluster belongs to W8
 
 Issues 93, 122, 236, 483, 490, 508, 552 and 472 are all readline behaviour:
 garbled input after alt-tab on Windows, DEL deleting a whole word, typing
 switching to Ctrl, vi key bindings, the pager and prompt alternating. These do
 not get fixed one at a time in usql. They close with the move to `xo/rline`.
 
-### 4i. Questions, blocked on Discussions being enabled
+### W4i. Questions, blocked on Discussions being enabled
 
 Issues 263, 469 and 485 are questions, and pull request 360 is titled as one.
 None can move, because Discussions is switched off for the repository.
@@ -200,10 +230,10 @@ fixed.
 
 391 is usql running inside the Emacs shell on Windows, which is not a terminal,
 so the prompt and the line editor are off. That is documented behaviour rather
-than a defect, but item 8 may change what is possible there, so it stays open
+than a defect, but W8 may change what is possible there, so it stays open
 until the rline switch lands.
 
-### 4j. Be ruthless with the rest
+### W4j. Be ruthless with the rest
 
 Both models said the same thing unprompted: for a project this size, close
 anything over a year old that has no reproduction, no stack trace and no heap
@@ -211,7 +241,7 @@ profile, saying it can be reopened with one. Most will never be reopened. The
 alternative is that the real bugs above stay buried under sixty that are not.
 
 
-## 5. `\echo -n` and `\warn -n` are erased by the line editor
+## W5. `\echo -n` and `\warn -n` are erased by the line editor
 
 Issue 215, which stays open as an issue because it is a defect rather than a
 plan. Tier 1.
@@ -230,30 +260,57 @@ psql leaves it in place and draws the prompt after it:
 
 The output is being written and then overwritten, so the fix is in how the
 prompt is redrawn after a command that deliberately left the cursor mid-line.
-That makes it a question for item 8 as much as for the `\echo` implementation,
+That makes it a question for W8 as much as for the `\echo` implementation,
 and it should be checked against `xo/rline` before being fixed in the current
 in-tree editor.
 
 
-## 6. Create a dbtest package
+## W6. Create a dbtest package (Dropped)
 
-Move the contrib podman scripts into their own repository, written in Go, that
-starts databases as containers through podman. The material is in `contrib/`:
-`podman-run.sh`, `podman-stop.sh`, `usql-test.sh`, and one directory for each
-database.
+Dropped on 2026-09-26. Do not start this work and do not reinstate it without
+reading what follows.
 
-Add an MCP tool to that repository, so that a caller can start a database for
-testing with a standard configuration.
+The plan was to move the podman scripts in `contrib/` into a separate Go
+repository that starts databases as containers, and to give that repository an
+MCP tool so a caller could start a database for testing with a standard
+configuration.
 
-## 7. Create a dbmeta package
+Most of what the package was for has been built in `dbmeta` instead. dbmeta
+runs databases in containers across several versions and flavors of each
+product, because it has to answer what each one supports, and that requires the
+same container handling this item described. Building a second thing that
+starts the same containers would leave two of them to keep working.
+
+What this item wanted that dbmeta does not already provide is the MCP tool.
+That is a small addition to dbmeta if it is still wanted, not a repository.
+
+The scripts in `contrib/` stay where they are. They work, and nothing here
+depends on moving them.
+
+## W7. Create a dbmeta package (In progress, outside this repository)
 
 Move the database metadata out of usql into its own repository, so that the
-dbtpl project can share it. The code is in `drivers/metadata/`.
+dbtpl project can share it. The code here is in `drivers/metadata/`.
 
-Expand the metadata to cover more databases. Then use dbtpl to generate the
-model code for the shared metadata.
+The repository exists and is being built. As of 2026-09-26 it has models for
+nine products and is working on SAP HANA. It records its design decisions in
+`docs/PLAN.md` and its per product notes in `docs/DIALECT.md`, and it keeps a
+`docs/USQL.md` describing how usql reads metadata today and what it would take
+to read it from dbmeta instead.
 
-## 8. Switch to xo/rline
+Nothing has been removed from usql yet, and this item stays open until it is.
+
+Two facts about usql that the work needs, measured on 2026-09-26 against
+`-tags all`:
+
+Of 51 registered names, 21 have a metadata reader and 30 have none. Of the 21,
+the gaps are only ever `\l` and `\dp`. See W18.
+
+usql declares 19 interfaces in `drivers/metadata/metadata.go`. Fourteen are
+leaf readers, aggregated by `ExtendedReader`. Seven of the fourteen decide
+whether a command runs at all. The other seven decide how much `\d+` prints.
+
+## W8. Switch to xo/rline
 
 Replace the readline implementation with `github.com/xo/rline`. usql currently
 depends on `github.com/gohxs/readline`, which has had no commits since 2017.
@@ -330,7 +387,7 @@ usql regression: `key.CtrlV` exists as a code with nothing implementing
 literal-next, and bracketed paste is absent from the port and was absent from
 isocline before it.
 
-## 9. Clean up the documentation
+## W9. Clean up the documentation
 
 Create a friendly website and documentation site at usql.app.
 
@@ -339,7 +396,7 @@ a single file. Part of it is generated: `gen.go` rebuilds the driver table and
 the link definitions from the build tags and from the dburl scheme registry, so
 any new site must either keep that generation step or replace it.
 
-## 10. Distribute through winget
+## W10. Distribute through winget
 
 Publish usql to the Windows Package Manager, so that Windows users install it
 the way they install anything else:
@@ -359,7 +416,7 @@ This became more worthwhile once duckdb started building on Windows, because
 the Windows binary now carries the same driver set as the others.
 
 
-## 11. Report the three size defects upstream
+## W11. Report the three size defects upstream
 
 Measured on 2026-09-22 on linux/amd64, stripped with `-trimpath -ldflags "-s
 -w"`. `docs/` holds no copy of the data; the numbers below are what the builds
@@ -466,7 +523,7 @@ the same effect as `-rdynamic`. Removing it took a build with every driver from
 260.2 MB to 215.7 MB. duckdb still carries the same cost through `-rdynamic`.
 
 
-## 12. `\chart file=NAME` should not need terminal graphics
+## W12. `\chart file=NAME` should not need terminal graphics
 
 `doExecChart` in `handler/handler.go` returns `text.ErrGraphicsNotSupported`
 before it reads its arguments. When `file` is set the chart is written to a file
@@ -481,7 +538,7 @@ Move the check past the point where `cfg` is known, and apply it only when
 by it.
 
 
-## 13. Shrink the charts stack
+## W13. Shrink the charts stack
 
 Charts are behind the `charts` build tag as of 2026-09-22, so this only affects
 a build made with `-tags charts` or `-tags all`. Measured on linux/amd64 by
@@ -537,7 +594,7 @@ either way, because it is the same archive. It does not resolve issue 494
 either. See the resvg item under Lowest priority for what 494 actually needs.
 
 
-## 14. NULL scan failures that remain
+## W14. NULL scan failures that remain
 
 The reported crash is fixed and released into main, and issues 307, 476 and 539
 are closed. `drivers.NullSafeColumnType` chooses a destination that tolerates a
@@ -555,7 +612,7 @@ destination there is handed to `ExecContext` rather than printed, so the
 mapping is not identical to `NullSafeColumnType`.
 
 
-## 15. Output changes that came in with tblfmt v0.19.0
+## W15. Output changes that came in with tblfmt v0.19.0
 
 Landed, recorded because they change what users see and may draw reports.
 
@@ -570,7 +627,7 @@ usql still passes `drivers.NullSafeColumnType` rather than
 anything tblfmt can fix.
 
 
-## 16. Roadmap, moved here from GitHub issues
+## W16. Roadmap, moved here from GitHub issues
 
 Eighteen issues that Ken filed, mostly in January 2021, as his own roadmap in
 issue form. They were never stale, only in the wrong place: a roadmap kept in
@@ -581,7 +638,7 @@ the problem; Gemini's answer, that this file is the source of truth and the
 tracker is for defects and contributor-ready work, is the one taken.
 
 They are closed on GitHub with a comment pointing here. Issue 215 stayed open
-as a defect and is item 5.
+as a defect and is W5.
 
 Anything below that is ready for someone else to pick up should be re-filed as
 a narrow issue with acceptance criteria when that is true, rather than left
@@ -596,22 +653,22 @@ Four were closed because the work is described elsewhere in this file, not
 because it was dropped.
 
 137, a wrapper for the C readline library, wanted a standalone package with the
-same interface as `rline`, selectable by build tag. Item 8 supersedes it.
+same interface as `rline`, selectable by build tag. W8 supersedes it.
 
 165, the special `\\` separator. psql accepts an escaped backslash as a
 statement separator, and only the first one: `\x \\ select 1; \\ select * from
-foo;` runs the first two and then reports `invalid command \`. Item 3.
+foo;` runs the first two and then reports `invalid command \`. W3.
 
 166, quoted string processing and variable interpolation in metacmds. The
 issue carries a full side-by-side of psql against usql covering `:{?name}`,
 single and double quoted interpolation, standard escape decoding, `E''` style
 escaping, and backtick interpolation. `testdata/quotes.sql` is in the tree and
-is the reference. Item 3, and the largest single piece of it.
+is the reference. W3, and the largest single piece of it.
 
 217, additional variable types, evaluation and interpolation. A long proposal
 that deliberately breaks from psql: extended variable types with their own
 prefixes for connections and queries, plus shell and ruby style interpolation
-and expression evaluation. Item 3 should settle psql parity first, since this
+and expression evaluation. W3 should settle psql parity first, since this
 builds on top of it.
 
 ### psql compatibility, still wanted
@@ -630,7 +687,7 @@ beyond the message.
 
 161, the `--echo-*` command line flags.
 
-374, document prompt formatting. The prompt escapes are item 3; this is the
+374, document prompt formatting. The prompt escapes are W3; this is the
 documentation half.
 
 ### Proposals, not scheduled
@@ -644,7 +701,7 @@ questions in it are still open, and item 4e holds the current `\copy` defects.
 
 154, an expanded test suite covering SELECT, INSERT, UPDATE and DELETE against
 each major database and syntax compatibility across all of them, plus the
-popular non-major ones. Item 2 has taken the container half of this; the
+popular non-major ones. W2 has taken the container half of this; the
 per-database statement coverage has not been done.
 
 157, support for databases that have a Go API but no `database/sql` driver:
@@ -666,7 +723,7 @@ evaluation syntax.
 267, an `\import` proposal.
 
 
-## 17. A password command hook
+## W17. A password command hook
 
 Issue 422, accepted by Ken in the thread and moved here. Not started.
 
@@ -702,9 +759,151 @@ of running anything, so the hook belongs in usql above it rather than inside
 dburl.
 
 
+## W18. Two missing interfaces account for every metadata gap
+
+Source: measured on 2026-09-26 while checking dbmeta's `docs/USQL.md`.
+
+Of 51 registered names under `-tags all`, 21 have a metadata reader. Every one
+of the 21 that fails a command fails on `\l`, on `\dp`, or on both. Nothing
+fails `\d`, `\dt` or `\dn`.
+
+    postgres pgx cockroachdb redshift sqlserver trino duckdb   11/11
+    mysql mymysql memsql tidb vitess nzgo databend snowflake   10/11  no \l
+    oracle godror                                              10/11  no \dp
+    sqlite3 moderncsqlite                                       9/11  no \dp, no \l
+    clickhouse                                                  8/11  no \di, \dp, \l
+    impala                                                      6/11  no \da, \df, \di, \dp, \l
+
+`\l` needs `CatalogReader`. `\dp` needs `PrivilegeSummaryReader`. So two
+interfaces, implemented where the product supports them, take almost every
+driver in usql to full coverage. That is a much smaller piece of work than a
+ratio column suggests, and a ratio column is what hid it.
+
+### Why the same gap appeared 21 times
+
+The instruction was "implement the readers you can". That cannot be checked,
+so it cannot fail, so it produced whatever happened. Naming the two interfaces
+in prose is the weaker half of the fix.
+
+The stronger half is a test over the driver registry: every registered name
+either implements `CatalogReader` or has an entry in an exemption map giving
+the reason it does not, and the same for `PrivilegeSummaryReader`. A
+contributor cannot pass it by doing nothing, and a contributor who genuinely
+cannot implement it writes one line saying why. The exemptions then become a
+readable list of product facts instead of a silence.
+
+Thirty of the 51 will need an entry on the first run. That is not the test
+failing, it is the first time the gap has been written down. Expect a good
+fraction of those entries to read "nobody tried" rather than "the product
+cannot", because today the two are indistinguishable.
+
+This shape is `TestEveryDialectIsMeasuredForParity` in dbmeta, which was
+written for the same problem.
+
+### One measurement artifact worth knowing
+
+`drivers/metadata/impala/metadata.go:69` returns `struct{}{}`, commented as a
+reader with no capabilities, when the handle is not a `*sql.DB`. It is
+deliberate, but impala is the only driver that can lose all metadata support
+without reporting anything.
+
+## W19. Guard the numbers that documentation states
+
+Source: an exchange with the dbmeta session on 2026-09-26, in which four
+separate figures across the two projects turned out to be wrong.
+
+Prose decays silently. Four wrong numbers were found in one afternoon: four
+open pull requests that were two, eight metadata commands that were eleven,
+eight gating readers that were seven, and 47 drivers that were 51.
+
+Every one of them was a right count of the wrong thing. So a test that checks
+a number without also checking what is being counted catches none of them.
+
+### Generate before testing
+
+usql already solves this for its largest table. `gen.go` builds both README
+driver tables from the dburl registry, so the table cannot drift, because there
+is nothing for it to drift from. Generation is stronger than a test: a test
+reports that prose is stale, generation means it never was.
+
+Where a number can be generated, generate it. The test is for the residue.
+
+### What the test looks like
+
+Count the real thing, then search each document for a number claiming to be
+it. Three details are load bearing:
+
+1. Assert that every pattern still matches something. A pattern that stops
+   matching is worse than a wrong number, because the test goes green and
+   guards nothing.
+2. Use one anchored pattern per claim. Two counts a sentence apart get read as
+   each other otherwise.
+3. Check the file the numbers are about, not only the files that cite it.
+   dbmeta checked three files, skipped the one the numbers described, and that
+   was the file that rotted.
+
+Write the numbers as digits. A test cannot read "eleven".
+
+Put the unit inside the sentence the test searches, so that changing the unit
+breaks the test. Match `(\d+) registered names with a reader` rather than
+`(\d+) drivers`.
+
+## W20. Test that no driver writes global process state
+
+Source: proposed by the dbmeta session on 2026-09-26, while writing
+[DRIVER.md](DRIVER.md).
+
+`docs/DRIVER.md` tells a contributor to read the upstream driver's `init()`
+and to stop if it writes global process state. That is a question a person has
+to remember to ask, which is the weaker form of the same check.
+
+Make it a test. Walk the driver packages, resolve each imported upstream
+driver module, and fail when package initialization calls any of:
+
+    slog.SetDefault      log.SetOutput         log.SetFlags
+    log.SetPrefix        flag.Parse            os.Setenv
+    http.DefaultClient   http.DefaultTransport
+    signal.Notify        rand.Seed             os.Exit
+
+A driver may register itself with `database/sql` and do nothing else.
+
+### Why this is worth building
+
+It would have caught RamSQL before the merge rather than after. Its
+`engine/log` called `slog.SetDefault` from `init` with a handler on
+`os.Stdout`, and a default `slog` logger also redirects the standard `log`
+package, so importing that one driver changed the output of the whole binary.
+It was found by watching the test suite misbehave, which took far longer than
+reading an import graph would have.
+
+### The design questions to settle first
+
+This is not a small test, and it is listed as an item rather than written into
+the documentation change for that reason.
+
+Deciding what counts as package initialization means following calls out of
+`init()` rather than pattern matching a single file. `go/packages` or
+`golang.org/x/tools/go/ssa` can do it. A cheap first version could search only
+the direct `init()` bodies of the imported driver package, which would still
+have caught RamSQL.
+
+A second question is what to do about a legitimate hit. An exemption map with
+a reason for each entry is the shape W18 already uses, and it keeps the test
+from becoming something people delete.
+
+A third is cost. Resolving every upstream module makes this slow, so it may
+belong behind a build tag or in CI rather than in `go test ./...`.
+
+### A cheaper version that is worth doing first
+
+An empty `main` that imports one driver, and asserts that `slog.Default()`,
+the standard `log` flags and prefix, `flag.CommandLine` and
+`http.DefaultClient` are unchanged after the import. It answers the question
+by observation rather than by analysis, and it needs no module resolution.
+
 ## Tier 2: GitHub issues and pull requests
 
-Items 2 to 15 are the programme, and item 4 holds the issue triage. This section
+W2 to W15 are the programme, and W4 holds the issue triage. This section
 is the remaining working list, reviewed on 2026-09-21 and updated on
 2026-09-23, when 93 issues and 24 pull requests were open.
 
@@ -770,7 +969,7 @@ adds bulk load for MySQL and 542 adds connection variables to `\copy`.
 
 ### Pull requests to close
 
-418 and 535 both replace the readline layer and conflict with item 8. 571, 582
+418 and 535 both replace the readline layer and conflict with W8. 571, 582
 and 584 duplicate dependency and action work that is already done. 585 adds a
 Dameng driver, which usql removed on 2026-09-23. 360 belongs in Discussions.
 
@@ -781,7 +980,7 @@ Done on 2026-09-23. The nine scanner reports 543, 556, 567, 568, 574, 575, 579,
 470 and 475 are closed as fixed, each reproduced against main first. 589 and
 590 were closed earlier, and 476 and 539 with the NULL fix.
 
-Still open and waiting on something. Item 8 subsumes the terminal cluster, so
+Still open and waiting on something. W8 subsumes the terminal cluster, so
 122, 137, 236, 483, 490, 528 and 552 close when the rline switch lands, not
 before. 263, 469 and 485 need Discussions enabled; see item 4i.
 
