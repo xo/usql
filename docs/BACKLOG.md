@@ -962,14 +962,89 @@ breaks it or sets the wrong thing. Correct escaping needs the server, because
 the rule is `sql_mode` on MySQL and MariaDB and `standard_conforming_strings`
 on PostgreSQL.
 
-`drivers.Version` falls back to `SELECT version();`, which Oracle does not
-have, and the oracle driver registers no version function.
+`drivers.Version` falls back to `SELECT version();` for any driver that
+registers no version function. Oracle is not one of them: it registers one
+through `orshared.Register`, which an earlier draft of this item missed.
+Oracle's defect is different and is W22.
+
+### The metadata layer is frozen
+
+Decided on 2026-09-26. `drivers/metadata` takes no more changes before the
+migration.
+
+Small fixes are still worth having in principle, and both external reviews
+argued for merging them, on the grounds that the migration has no date and
+main ships to users today. Ken decided the other way: the layer is being
+replaced, and churn in it costs merge pain for code that is going away.
+
+So pull requests against the metadata readers are held rather than merged, and
+the defects they report move to the migration instead. Held on this basis:
+
+    524   oracle version query needs privileges an ordinary user lacks
+    570   oracle catalogs query reads administrator-only views
+    583   postgres catalog access privileges crash on NULL
+
+A held pull request is not a closed one. Each defect has to survive the move,
+which means W21 inherits them and the new readers have to answer for them.
 
 ### Open decision
 
 dbmeta has no release tag and its API is still moving. Whether usql depends on
 an unreleased module, and whose cadence wins, is Ken's call. The per-driver
 shape of the move limits the exposure without removing it.
+
+## W22. Metadata and version queries assume a privileged user
+
+Source: found on 2026-09-26 while triaging pull requests 524 and 570.
+
+Two open pull requests report the same defect against Oracle from different
+directions. Neither is about SQL correctness. Both are about who is allowed to
+run the query.
+
+`drivers/oracle/orshared/orshared.go:38` reads the version with `SELECT version
+FROM v$instance`. `v$instance` needs privileges an ordinary user does not have.
+`v$version` holds the same information and every user can read it. That is
+pull request 524.
+
+The Oracle catalogs query reads `v$parameter` and `dba_db_links`. Both are
+administrator views. `SYS_CONTEXT('USERENV', 'DB_NAME')` and `all_db_links`
+give the same answers to an ordinary user. That is pull request 570.
+
+### Why this is an item and not two merges
+
+Nobody has asked these queries as anyone other than the administrator. The
+tests connect as a privileged user, so a query that an ordinary user cannot run
+passes every test in this repository.
+
+Oracle is where this surfaced, not where it is confined. Every driver with a
+metadata reader is unchecked in the same way.
+
+### This is probably dbmeta's, not usql's
+
+dbmeta found the identical class of defect on its own side by running each
+query as a user holding only the privileges a normal account has. It found six
+MariaDB queries refused outright for a user with ALL PRIVILEGES on its own
+database, because they read tables in the `mysql` database rather than views
+that filter themselves.
+
+The metadata layer here is frozen, so these queries are moving to dbmeta rather
+than being fixed in place. dbmeta has been asked whether its models already
+read through views an unprivileged user can reach, and whether the unprivileged
+pass is something it runs routinely or was a one-off audit.
+
+If dbmeta already handles it, this item closes into W21 and nothing is built
+here. If dbmeta carries the same assumption, the defect survives the migration
+instead of being fixed by it, and that is the case worth knowing about early.
+
+### Two cautions for whoever writes the Oracle queries
+
+`SELECT banner FROM v$version` returns several rows on Oracle 12c and earlier,
+one each for the database, PL/SQL, CORE, TNS and NLSRTL. It became a single row
+in 18c. A query that assumes one row is nondeterministic on older servers, and
+pull request 524 has that bug. The view is right. It needs a predicate.
+
+`SYS_CONTEXT('USERENV', 'DB_NAME')` returns the container name rather than the
+pluggable database name on a multitenant server.
 
 ## Tier 2: GitHub issues and pull requests
 

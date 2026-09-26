@@ -295,10 +295,18 @@ version set plus the display line.
 Two qualifications.
 
 usql keeps its own fallback for every name dbmeta does not cover. That fallback
-is `SELECT version();`, which Oracle does not have, and the oracle driver
-registers no version function. So the fallback stays wrong for Oracle until
-Oracle moves. dbmeta found this by comparing its version query against usql's,
-which is a comparison nobody had been asked to make.
+is `SELECT version();`, which several products do not have.
+
+Oracle is not one of the products that falls through to it. An earlier version
+of this document said Oracle registered no version function. That was wrong.
+`drivers/oracle/orshared/orshared.go:38` registers one, and both the oracle and
+godror drivers use it, because they register through `orshared.Register` rather
+than directly. That shared path is the same one that made an earlier count of
+registered schemes too low.
+
+Oracle has a different defect, and two open pull requests report it. Its
+version query is `SELECT version FROM v$instance`, and `v$instance` needs
+privileges an ordinary user does not have. See W22.
 
 The version is read once when the connection opens, because everything else
 resolves against it. That is a change to usql's connection path, not to a
@@ -321,29 +329,39 @@ The escaping cannot be done without the server. Whether a backslash escapes
 inside a string literal is `sql_mode` on MySQL and MariaDB, and
 `standard_conforming_strings` on PostgreSQL. dbmeta reads both.
 
-## Step 7. Decide what the three-valued answer prints
+## Step 7. Follow psql, including for the states usql cannot express today
 
-dbmeta can answer Supported, NotSupported, TooOld or NotBuilt for a query.
+Decided on 2026-09-26. usql follows psql's output.
 
-usql today cannot tell "this database has no such object" from "there are none
-of them". Both print an empty table.
+dbmeta can answer four things where usql has one: the object is supported, the
+product does not have it, the server is too old for it, or the model was not
+built. usql prints an empty table for all four today.
 
-Once it can tell them apart, somebody has to decide what each one prints.
-TooOld matters most, because it is actionable: the object exists in the product
-and this server is older than the release that added it. Firebird reports it
-for three commands on 3.0.
+The rule is that psql decides. Where psql prints `null` for a metadata command,
+usql prints `null`. Where psql leaves an empty cell, usql leaves an empty cell.
+Where psql has no equivalent state, usql does not invent a presentation for it.
 
-This is a user-visible behavior change. Decide it here rather than leaving it
-to whoever writes the first adapter.
+TooOld is the one with no psql equivalent, because psql talks to one product
+and does not have the problem. It is still worth carrying in the data even when
+nothing prints it, because the alternative is discarding it at the boundary and
+being unable to add it later.
 
-## Step 8. Decide what a NULL means
+## Step 8. Where the presentation code lives, undecided
 
-dbmeta records whether a NULL means the value is null or the server is too old
-to have the column.
+There is an open question about where the code that turns a metadata answer
+into a printable cell belongs. It is not decided and it does not block the
+earlier steps.
 
-usql has no way to express that and will render both as empty. Deciding is
-cheap. Forgetting is permanent, because once both render as empty nobody will
-know there was a distinction to make.
+Three candidates, and the argument is the same for each: other command line
+clients may want the same behavior, so it should sit somewhere a third party
+can use.
+
+1. dbmeta, next to the data that carries the distinction.
+2. tblfmt, which already owns rendering and output modes.
+3. A separate place that neither project owns.
+
+Decide it before Step 4 moves a native model, because that is the first point
+where a state usql cannot currently express reaches the output.
 
 ## Step 9. Share the container list
 
@@ -371,15 +389,22 @@ Identifier case and quoting differ by product. `\dt myTable` means different
 things on PostgreSQL and on Oracle. Pattern normalization belongs in the
 per-product reader, not in the command parser.
 
-## One question that is not technical
+## How usql depends on dbmeta while both move
 
-dbmeta has not been released. There is no tag, the API is still moving, and its
-container package changed twice on 2026-09-26.
+Decided on 2026-09-26.
 
-Whether usql takes a dependency on an unreleased module, and whose release
-cadence wins, is Ken's decision. The per-driver shape of the move means usql is
-never blocked on dbmeta for a product dbmeta does not cover, which limits the
-exposure but does not remove it.
+Development uses a Go workspace. `go.work` and `go.work.sum` point usql at a
+local dbmeta checkout, so neither project waits on the other and no version is
+pinned while the API is still moving.
+
+dbmeta is tagged when usql is ready to switch to it completely, and not before.
+The tag follows the work rather than leading it, because a tag published while
+the API still moves is a promise nobody can keep.
+
+Do not add dbmeta to `go.mod` before that tag exists.
+
+A point release during this period comes off a `release-*` branch. The main
+branch is expected to carry working changes for the length of this cycle.
 
 ## Two review disagreements, recorded
 
