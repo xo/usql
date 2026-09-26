@@ -323,7 +323,7 @@ jobs:
           echo -e "body:\n$body"
 
           # update release notes
-          export tag_name target_commitish body
+          export tag_name body
           curl \
             -s \
             -L \
@@ -332,7 +332,6 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             --variable '%tag_name' \
-            --varable '%target_commitish' \
             --variable '%body' \
             --expand-data '{"tag_name": "{{tag_name:json}}", "body": "{{body:trim:json}}"}' \
             $url
