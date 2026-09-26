@@ -9,7 +9,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gohxs/readline"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
@@ -110,7 +109,18 @@ var (
 	}
 )
 
-func NewDefaultCompleter(opts ...Option) readline.AutoCompleter {
+// Completer returns completion candidates for a line of input.
+//
+// It is the same shape as the line editor's own completer interface, declared
+// here so that the editor's package does not have to appear in the driver API.
+// See W25 in docs/BACKLOG.md.
+type Completer interface {
+	// Do returns the candidates for line at pos, and the length of the prefix
+	// they share.
+	Do(line []rune, pos int) (newLine [][]rune, length int)
+}
+
+func NewDefaultCompleter(opts ...Option) Completer {
 	c := completer{
 		// an empty struct satisfies the metadata.Reader interface, because it is actually empty
 		reader:           struct{}{},
