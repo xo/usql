@@ -13,6 +13,7 @@ at the bottom.
 | A driver that is broken or unmaintained | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Putting a feature behind a build tag | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Running the tests | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Moving metadata to dbmeta | [docs/DBMETA.md](docs/DBMETA.md) |
 | Planned work, and how to cite it | [docs/BACKLOG.md](docs/BACKLOG.md) |
 | What usql does, for a user | [README.md](README.md) |
 

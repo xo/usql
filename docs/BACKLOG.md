@@ -299,6 +299,7 @@ nine products and is working on SAP HANA. It records its design decisions in
 to read it from dbmeta instead.
 
 Nothing has been removed from usql yet, and this item stays open until it is.
+The migration plan is [DBMETA.md](DBMETA.md), and the work is W21.
 
 Two facts about usql that the work needs, measured on 2026-09-26 against
 `-tags all`:
@@ -900,6 +901,75 @@ An empty `main` that imports one driver, and asserts that `slog.Default()`,
 the standard `log` flags and prefix, `flag.CommandLine` and
 `http.DefaultClient` are unchanged after the import. It answers the question
 by observation rather than by analysis, and it needs no module resolution.
+
+## W21. Migrate metadata to dbmeta
+
+Source: planned on 2026-09-26 with the dbmeta session, gemini and deepseek.
+
+The plan is [DBMETA.md](DBMETA.md). This item exists so the work can be cited.
+W7 is the dbmeta repository itself. W21 is usql's side of the move.
+
+The boundary is that dbmeta reads, tblfmt renders, and usql decides what to
+print. The writer does not move.
+
+### The root cause this fixes
+
+`drivers/metadata/metadata.go:120` declares `type Reader interface{}`. The base
+reader is the empty interface, so every capability is a runtime type assertion,
+and there are 52 of them outside tests. A driver that satisfies nothing
+compiles, registers and passes the tests. That single line is why W18 exists.
+
+### Order, which is not the order it was first described in
+
+Two steps move earlier than first planned.
+
+The formatter work comes before the reader swap. It is entirely internal, no
+project outside usql imports `drivers/metadata`, and it is where the
+psql-matching behavior lives.
+
+Before even that, extract the psql-matching filtering out of `DefaultWriter`
+with the current readers still in place, and confirm the output is unchanged.
+dbmeta returns what the database says and does not shape results to match
+somebody's output. Swapping a reader before that filtering moves changes usql's
+output silently, as extra rows rather than as an error.
+
+That step has no visible result, which is why it is the one most likely to be
+skipped.
+
+### The early win is not a native model
+
+30 of 51 registered names have no reader. dbmeta's shared information schema
+model answers 12 object kinds against any database with a standard
+`information_schema`, with no per-driver query written. That adapter lands
+coverage across a set of names at once and should ship before any native model
+moves.
+
+MariaDB is the first native model to move. The command gain is one, `\l`,
+because the mysql family lacks only `CatalogReader`. The gain worth having is
+5 of 5 sections under `\d NAME` against the 4 answered today.
+
+The largest gains are four products where usql answers nothing at all, because
+their drivers register no reader: SAP HANA at 0 of 11 today against 11 of 11
+and 5 of 5 with dbmeta, Firebird at 10 of 11, Cassandra at 10 of 11 and Presto
+at 8 of 11. None can come early. SAP HANA has no `information_schema`, so it
+needs a native model rather than the shared adapter.
+
+### Two bugs this fixes rather than relocates
+
+usql changes a password in seven drivers and escapes nothing. Each concatenates
+the password into the statement, so a password holding a quote or a backslash
+breaks it or sets the wrong thing. Correct escaping needs the server, because
+the rule is `sql_mode` on MySQL and MariaDB and `standard_conforming_strings`
+on PostgreSQL.
+
+`drivers.Version` falls back to `SELECT version();`, which Oracle does not
+have, and the oracle driver registers no version function.
+
+### Open decision
+
+dbmeta has no release tag and its API is still moving. Whether usql depends on
+an unreleased module, and whose cadence wins, is Ken's call. The per-driver
+shape of the move limits the exposure without removing it.
 
 ## Tier 2: GitHub issues and pull requests
 
