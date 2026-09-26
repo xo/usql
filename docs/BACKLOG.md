@@ -326,6 +326,26 @@ reports the terminal behaving as though Control is held down. Issue 472 reports
 that a tab character cannot be sent as input.
 
 
+### Two replacement pull requests are closed
+
+Both are closed rather than merged, because neither library is the
+destination. 418 proposed `reeflective/readline` and 535 proposed
+`chzyer/readline`, which is the upstream `gohxs` forked eight years ago.
+
+535 was genuinely drop-in: chzyer's `AutoCompleter` is identical in shape to
+the fork's. Taking it would have removed the unmaintained dependency today.
+The cost is churn in a layer that is being replaced, which is the same
+reasoning that froze `drivers/metadata`.
+
+418 was mostly decoupling rather than a swap, and most of that work is already
+done. `rline/rline.go:20` already declares an `IO` interface. The only
+readline type that leaks outside `rline/` is `readline.AutoCompleter`, in
+three places: `drivers/drivers.go:110`, `drivers/drivers.go:494` and
+`drivers/completer/completer.go:113`. See W25.
+
+usql stays on `gohxs/readline` until rline is ready. It has had no commits
+since 2017.
+
 ### The readline label is the shared queue
 
 Anything tagged `readline` on the tracker is rline's to plan for, and that
@@ -1105,6 +1125,61 @@ to `run.go`.
 
 The feature is wanted. Read all of standard input rather than one line, and
 decide what `-f -` does when it is given more than once.
+
+## W25. Stop leaking `readline.AutoCompleter` out of the rline package
+
+Source: found on 2026-09-26 while triaging pull requests 418 and 535.
+
+`rline/rline.go:20` already declares an `IO` interface, so usql is mostly
+decoupled from its line editor already. One type escapes:
+
+    drivers/drivers.go:110              NewCompleter field on drivers.Driver
+    drivers/drivers.go:494              NewCompleter func
+    drivers/completer/completer.go:113  NewDefaultCompleter func
+
+`readline.AutoCompleter` is in the public `drivers.Driver` struct, so the line
+editing library reaches into the driver API. Every driver that supplies its own
+completer names the type.
+
+Declare the interface in usql and change the three signatures. The interface
+has one method, so this is not inventing an abstraction, it is naming one that
+already exists under a different package.
+
+This is deliberately not shaped for any particular library. It is the part of
+pull request 418 that is worth having regardless of which editor wins, and it
+means W8 does not have to change the driver API.
+
+## W26. Prompt formatting: PROMPT2, PROMPT3 and the documentation
+
+Source: pull requests 577 and 578, closed 2026-09-26. To be done differently.
+
+usql has `PROMPT1` and nothing else. `handler/handler.go:561` already documents
+`%w` as "Whitespace of the same width as the most recent output of PROMPT1.
+This can be used as a PROMPT2 setting", so the documentation already describes
+a variable that does not exist.
+
+Pull request 577 added `PROMPT2` with a default of two spaces and implemented
+`%w` by tracking the last rendered prompt width on the handler. Pull request
+578 added a prompt formatting section to the README and stated that `PROMPT2`
+and `PROMPT3` use the same escape sequences. Neither adds `PROMPT3`, so 578
+documented two variables that do not exist and one that another pull request
+was adding.
+
+Both are closed because this is being done differently and soon.
+
+### What has to be true when it is done
+
+`PROMPT2` is the continuation prompt for a statement spanning several lines.
+`PROMPT3` is what psql prints while reading `COPY` input, so it needs the copy
+input path rather than only a variable. Adding the variable without that path
+makes it inert.
+
+If `%w` is implemented, its width has to be measured in terminal columns rather
+than bytes or runes, because a prompt usually carries colour escapes and may
+carry wide characters.
+
+Do not document a prompt variable before it works. That is how the current
+state arose.
 
 ## Tier 2: GitHub issues and pull requests
 
