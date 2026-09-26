@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/IBM/nzgo/v12 v12.0.13
 	github.com/MichaelS11/go-cql-driver v0.1.1
-	github.com/SAP/go-hdb v1.18.4
+	github.com/SAP/go-hdb v1.18.11
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/alecthomas/chroma/v2 v2.27.0
 	github.com/alexbrainman/odbc v0.0.0-20250601004241-49e6b2bc0cf0
@@ -18,14 +18,14 @@ require (
 	github.com/btnguyen2k/godynamo v1.3.0
 	github.com/chaisql/chai v0.18.0
 	github.com/couchbase/go_n1ql v0.0.0-20220303011133-0ed4bf93e31d
-	github.com/databricks/databricks-sql-go v1.15.1
-	github.com/datafuselabs/databend-go v0.9.3
+	github.com/databricks/databricks-sql-go v1.16.0
+	github.com/datafuselabs/databend-go v0.9.4
 	github.com/duckdb/duckdb-go/v2 v2.10505.0
 	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/gocql/gocql v1.7.0
-	github.com/godror/godror v0.51.4
+	github.com/godror/godror v0.51.5
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.7.0
 	github.com/googleapis/go-sql-spanner v1.26.0
@@ -39,10 +39,10 @@ require (
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-runewidth v0.0.30
 	github.com/mattn/go-sqlite3 v1.14.52
-	github.com/microsoft/go-mssqldb v1.11.0
+	github.com/microsoft/go-mssqldb v1.11.2
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
-	github.com/nakagami/firebirdsql v0.9.20
+	github.com/nakagami/firebirdsql v0.9.21
 	github.com/ory/dockertest/v4 v4.0.0
 	github.com/prestodb/presto-go-client/v2 v2.1.2
 	github.com/sclgo/impala-go v1.8.0
@@ -52,20 +52,20 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/thda/tds v0.1.7
-	github.com/trinodb/trino-go-client v0.333.0
+	github.com/trinodb/trino-go-client v0.336.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
-	github.com/xo/dburl v0.26.1
+	github.com/xo/dburl v0.27.1
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.10.0
 	github.com/xo/tblfmt v0.19.0
-	github.com/xo/terminfo v1.0.0
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.151.3
+	github.com/xo/terminfo v1.2.0
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.0
 	github.com/yookoala/realpath v1.0.0
 	github.com/ziutek/mymysql v1.5.4
 	gorm.io/driver/bigquery v1.2.1
 	modernc.org/ql v1.7.0
-	modernc.org/sqlite v1.58.0
+	modernc.org/sqlite v1.59.0
 	sqlflow.org/gohive v0.0.0-20240730014249-8960223660e2
 	sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c
 )
@@ -155,7 +155,6 @@ require (
 	github.com/cockroachdb/redact v1.1.8 // indirect
 	github.com/cockroachdb/swiss v0.0.0-20260820225851-333444432258 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/containerd/continuity v0.5.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.21.0 // indirect
@@ -164,17 +163,16 @@ require (
 	github.com/couchbase/goutils v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/darwin_amd64 v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/darwin_arm64 v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_amd64 v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_arm v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_arm64 v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/windows_amd64 v1.0.0 // indirect
-	github.com/databricks/databricks-sql-kernel-bindings/lib/windows_arm64 v1.0.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/darwin_amd64 v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/darwin_arm64 v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_amd64 v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_arm v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/linux_arm64 v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/windows_amd64 v1.1.0 // indirect
+	github.com/databricks/databricks-sql-kernel-bindings/lib/windows_arm64 v1.1.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.8.0 // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
-	github.com/docker/cli v29.8.0+incompatible // indirect
 	github.com/docker/go-connections v0.8.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dop251/goja v0.0.0-20260911104922-fabc3b8078ad // indirect
@@ -268,7 +266,6 @@ require (
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/moby/api v1.56.0 // indirect
 	github.com/moby/moby/client v0.6.0 // indirect
-	github.com/moby/sys/user v0.4.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/murfffi/conncheck v0.2.1 // indirect
@@ -280,8 +277,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/paulmach/orb v0.13.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
-	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
-	github.com/pierrec/lz4/v4 v4.1.29 // indirect
+	github.com/pierrec/lz4/v4 v4.1.30 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
@@ -294,7 +290,6 @@ require (
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
-	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
