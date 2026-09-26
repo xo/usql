@@ -27,7 +27,7 @@ func KnownBuildTags() map[string]string {
 		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
-		"hive":          "hive",          // sqlflow.org/gohive
+		"hive":          "hive",          // github.com/beltran/gohive/v2
 		"ignite":        "ignite",        // github.com/amsokol/ignite-go-client/sql
 		"impala":        "impala",        // github.com/sclgo/impala-go
 		"maxcompute":    "maxcompute",    // sqlflow.org/gomaxcompute

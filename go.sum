@@ -178,8 +178,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.50.0 h1:khXV3+K5D3f4e8xtplaRdSFn1bEg
 github.com/aws/aws-sdk-go-v2/service/sts v1.50.0/go.mod h1:/8JRcdTt//hG0Q4BTmGbuOplT7ABe+5rdtqUHqXvYIM=
 github.com/aws/smithy-go v1.28.1 h1:R/nXH00c8qcfCzQVELtRw+eLQWtzv+VAIEFJ1/xxXlQ=
 github.com/aws/smithy-go v1.28.1/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
-github.com/beltran/gohive v1.8.1 h1:qlygmroy3mKtKIQSpV/FqXJHty1LsPxF+JTQA5mbjwU=
-github.com/beltran/gohive v1.8.1/go.mod h1:BCgNAhr/wnbyXfp2yN9ZY4pVrGrtVqG4hhNDDXIal1U=
+github.com/beltran/gohive/v2 v2.1.0 h1:+XPfODaLXsZkD8mEnKCYqinC4OmVMx4/oR4ys8IGKeI=
+github.com/beltran/gohive/v2 v2.1.0/go.mod h1:MrxyI0sdriG52I+Bo2lJpGR75bxjcI/Hx3+MBnYqR10=
 github.com/beltran/gosasl v1.0.0 h1:iiRtLxkvKhrNv3Ohh/n2NiyyfwIo/UbMzy/dZWiUHXE=
 github.com/beltran/gosasl v1.0.0/go.mod h1:Qx8cW6jkI8riyzmklj80kAIkv+iezFUTBiGU0qHhHes=
 github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab h1:ayfcn60tXOSYy5zUN1AMSTQo4nJCf7hrdzAVchpPst4=
@@ -409,8 +409,6 @@ github.com/go-sql-driver/mysql v1.10.1 h1:arlSnNLq6a5yxGxV7qg9lF4j0C+KwD6NbQyKr9
 github.com/go-sql-driver/mysql v1.10.1/go.mod h1:M+cqaI7+xxXGG9swrdeUIoPG3Y3KCkF0pZej+SK+nWk=
 github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=
 github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
-github.com/go-zookeeper/zk v1.0.4 h1:DPzxraQx7OrPyXq2phlGlNSIyWEsAox0RJmjTseMV6I=
-github.com/go-zookeeper/zk v1.0.4/go.mod h1:nOB03cncLtlp4t+UAkGSV+9beXP/akpekBwL+UX1Qcw=
 github.com/goccy/go-json v0.10.6 h1:p8HrPJzOakx/mn/bQtjgNjdTcN+/S6FcG2CTtQOrHVU=
 github.com/goccy/go-json v0.10.6/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/goccy/go-yaml v1.19.2 h1:PmFC1S6h8ljIz6gMRBopkjP1TVT7xuwrButHID66PoM=
@@ -1184,7 +1182,5 @@ modernc.org/zappy v1.1.0 h1:cAf9HrymATNo2hYMc9c37y0tiZJYuKM2xa1ZAP8THUw=
 modernc.org/zappy v1.1.0/go.mod h1:cxC0dWAgZuyMsJ+KL3ZBgo3twyKGBB/0By/umSZE2bQ=
 pgregory.net/rapid v1.2.0 h1:keKAYRcjm+e1F0oAuU5F5+YPAWcyxNNRK2wud503Gnk=
 pgregory.net/rapid v1.2.0/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
-sqlflow.org/gohive v0.0.0-20240730014249-8960223660e2 h1:zvkshqW4meDpDadU5rhwejwJrZVCfxo5qpJ4NoZeGbE=
-sqlflow.org/gohive v0.0.0-20240730014249-8960223660e2/go.mod h1:OAU0/vkmdKfZ363QgGTChI35KIBsS63sZWDNWcFFcBM=
 sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c h1:Zo3qlfUn/rlMx9vWHpGE/luEtweuXHwrYbrFZwTG978=
 sqlflow.org/gomaxcompute v0.0.0-20210805062559-c14ae028b44c/go.mod h1:MxRFJp6UEk1OfnnVOIL3Jc7ROBH0dOpwF/J14A9LNdM=

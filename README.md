@@ -258,7 +258,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                              | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots]                  |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                 | [github.com/apache/calcite-avatica-go/v5][d-avatica]                        |
 | Apache H2            | `h2`            |                                                 | [github.com/jmrobles/h2go][d-h2]                                            |
-| Apache Hive          | `hive`          | `hi`, `hive2`                                   | [sqlflow.org/gohive][d-hive]                                                |
+| Apache Hive          | `hive`          | `hi`, `hive2`                                   | [github.com/beltran/gohive/v2][d-hive]                                      |
 | Apache Ignite        | `ignite`        | `ig`, `gridgain`                                | [github.com/amsokol/ignite-go-client/sql][d-ignite]                         |
 | Apache Impala        | `impala`        | `im`                                            | [github.com/sclgo/impala-go][d-impala]                                      |
 | AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                        | [github.com/uber/athenadriver/go][d-athena]                                 |
@@ -326,7 +326,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-flightsql]: https://github.com/apache/arrow/tree/main/go/arrow/flight/flightsql/driver
 [d-godror]: https://github.com/godror/godror
 [d-h2]: https://github.com/jmrobles/h2go
-[d-hive]: https://github.com/sql-machine-learning/gohive
+[d-hive]: https://github.com/beltran/gohive
 [d-ignite]: https://github.com/amsokol/ignite-go-client
 [d-impala]: https://github.com/sclgo/impala-go
 [d-maxcompute]: https://github.com/sql-machine-learning/gomaxcompute
