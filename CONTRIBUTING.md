@@ -23,8 +23,9 @@ The short version:
 4. Regenerate the `internal` package, the driver tables in `README.md` and the
    license files by running `go run gen.go`.
 5. Add the module with `go get`, then run `go mod tidy`.
-6. Decide `CatalogReader` and `PrivilegeSummaryReader` explicitly, and record
-   the reason if you omit either.
+6. Write no metadata reader. Metadata is moving into
+   [dbmeta](https://github.com/xo/dbmeta), so describe commands on a new
+   driver report that they are not supported. See D3.
 7. Verify against a live database. Compilation is not evidence, because nearly
    every field of `drivers.Driver` is optional.
 
@@ -322,54 +323,14 @@ outside that limit.
 client setup for a few drivers. Sample `config.yaml`, `usqlrc` and `usqlpass`
 files are in `_samples/`.
 
-# Enabling metadata introspection for a driver
+# Metadata introspection
 
-For `\d*` commands to work, `usql` needs to know how to read the structure of a
-database. A driver must provide a metadata reader, by setting the
-`NewMetadataReader` property in the `drivers.Driver` structure passed to
-`drivers.Register()`. This needs to be a function that given a database and
-reader options, returns a reader instance for this particular driver.
-
-If the database has a `information_schema` schema, with standard tables like
-`tables` and `columns`, you can use an existing reader from the
-`drivers/informationschema` package. Since there are usually minor difference
-in objects defined in that schema in different databases, there's a set of
-options to configure this reader. Refer to the [package
-docs](https://pkg.go.dev/github.com/xo/usql/drivers/metadata/informationschema)
-for details.
-
-If you can't use the `informationschema` reader, consider implementing a new
-one. It should implement at least one of the following reader interfaces:
-
-- CatalogReader
-- SchemaReader
-- TableReader
-- ColumnReader
-- IndexReader
-- IndexColumnReader
-- FunctionReader
-- FunctionColumnReader
-- SequenceReader
-
-Every of these interfaces consist of a single function, that takes a `Filter`
-structure as an argument, and returns a set of results and an error.
-
-Example drivers using their own readers include:
-
-- `sqlite3`
-- `oracle` and `godror` sharing the same reader
-
-If you want to use the `informationschema` reader, but need to override one or
-more readers, use the `metadata.NewPluginReader(readers ...Reader)` function.
-It returns an object calling reader functions from the last reader passed in
-the arguments, that implements it.
-
-Example drivers extending an `informationschema` reader using a plugin reader:
-
-- `postgres`
-
-`\d*` commands are actually implemented by a metadata writer. There's currently
-only one, but it too can be replaced and/or extended.
+The `\d` family of commands reads the structure of a database through a
+metadata reader. The readers in `drivers/metadata` are being replaced by
+[dbmeta](https://github.com/xo/dbmeta), and until then they take no change.
+Do not write a new reader, and do not fix an existing one here. A gap or a
+defect in the metadata goes to `dbmeta`. See D3, and W21 in
+[docs/BACKLOG.md](docs/BACKLOG.md).
 
 # Enabling autocomplete for a driver
 

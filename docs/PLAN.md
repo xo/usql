@@ -13,8 +13,9 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
 
 - Connection string parsing lives in `dburl`, and the README driver tables are
   generated from its registry by `gen.go`.
-- Database metadata moves out of `drivers/metadata` into `dbmeta`. W7 and W21
-  track it, and [DBMETA.md](DBMETA.md) holds the steps.
+- Database metadata moves out of `drivers/metadata` into `dbmeta`, and no
+  metadata reader is written here (D3). W7 and W21 track it, and
+  [DBMETA.md](DBMETA.md) holds the steps.
 - New drivers for databases whose upstream Go driver is missing or dead come
   from `dbimp`, as Couchbase and SurrealDB did. W27 records the review that
   retired, replaced and regrouped the drivers.
@@ -26,7 +27,3 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
 1. Hard rule 3 in `AGENTS.md` says that `gen.go` reads dburl's source tree,
    so `GOPATH` must point at one. `gen.go` now reads the pinned dburl module,
    names no `GOPATH`, and runs with `GOPATH` empty. Should the rule be deleted?
-2. The SurrealDB driver has no metadata reader, so `\d` and the other describe
-   commands report that they are not supported. SurrealDB lists its objects
-   through `INFO FOR`, which returns one object rather than rows. Should usql
-   write a reader for it, or wait for a SurrealDB model in `dbmeta`?

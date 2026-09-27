@@ -21,3 +21,4 @@ reference to one of theirs names the repository, as in "dburl's D22".
 | --- | --- | --- |
 | [D1](D001-every-xo-repository-is-set-up-for-coding-agents-the-same-way.md) | Every xo repository is set up for coding agents the same way | Decided |
 | [D2](D002-a-large-project-keeps-one-file-per-decision.md) | A large project keeps one file per decision | Decided |
+| [D3](D003-no-metadata-reader-is-written-in-usql.md) | No metadata reader is written in usql | Decided |

@@ -784,9 +784,13 @@ of running anything, so the hook belongs in usql above it rather than inside
 dburl.
 
 
-## W18. Two missing interfaces account for every metadata gap
+## W18. Two missing interfaces account for every metadata gap (Superseded by W21)
 
 Source: measured on 2026-09-26 while checking dbmeta's `docs/USQL.md`.
+
+Superseded on 2026-09-27 by D3: no metadata reader is written in usql, so the
+two interfaces are not added here. The measurement below stays, because it
+says what W21 has to answer in `dbmeta`.
 
 Of 51 registered names under `-tags all`, 21 have a metadata reader. Every one
 of the 21 that fails a command fails on `\l`, on `\dp`, or on both. Nothing

@@ -274,61 +274,19 @@ Then add the module and tidy:
     go get github.com/example/mydb-go-driver@latest
     go mod tidy
 
-## Step 5. Metadata introspection
+## Step 5. Metadata goes to dbmeta
 
-This step has an instruction that used to be "implement the readers you can".
-That instruction produced the same gap twenty-one times, so it has been
-replaced.
+Do not write a metadata reader here. All database metadata is moving into
+[dbmeta](https://github.com/xo/dbmeta), and `drivers/metadata` takes no new
+reader and no change to an existing one. See D3.
 
-Of 51 registered names, 21 have a metadata reader. Every one of the 21 that
-fails a command fails on `\l`, on `\dp`, or on both. Nothing fails `\d`, `\dt`
-or `\dn`.
+A new driver sets neither `NewMetadataReader` nor `NewMetadataWriter`. Its
+describe commands, such as `\d`, `\dt`, `\l` and `\dp`, then report that they
+are not supported. That is the expected result until `dbmeta` answers them.
 
-`\l` needs `CatalogReader`. `\dp` needs `PrivilegeSummaryReader`.
-
-### What to do instead
-
-Decide each of these two interfaces explicitly, and record the decision:
-
-1. Does the product have a concept of catalogs or databases that a statement
-   can read? If yes, implement `CatalogReader`. If no, write one line saying
-   which upstream facility is absent and how you checked.
-2. Does the product have grants or roles that a statement can read? If yes,
-   implement `PrivilegeSummaryReader`. If no, write the same one line.
-
-Omission is allowed. Silent omission is not. "Nobody tried" and "the product
-cannot" look identical in the code, and today most of the thirty gaps cannot
-be told apart.
-
-### The rest of the readers
-
-`drivers/metadata/metadata.go` declares fourteen leaf reader interfaces,
-aggregated by `ExtendedReader`. Seven decide whether a command runs at all:
-
-    TableReader   ColumnReader   FunctionReader   IndexReader
-    SchemaReader  CatalogReader  PrivilegeSummaryReader
-
-The other seven decide how much detail is printed. `SequenceReader`,
-`IndexColumnReader`, `TriggerReader`, `ConstraintReader` and
-`ConstraintColumnReader` add sections to `\d+`. `FunctionColumnReader` adds
-detail to `\df`. `ColumnStatReader` serves `\ss`.
-
-### Use the shared reader where you can
-
-`drivers/metadata/informationschema` is a configurable reader for any product
-with a standard `information_schema`. Configure it with options rather than
-writing a reader from nothing:
-
-    infos.New(
-        infos.WithPlaceholder(func(int) string { return "?" }),
-        infos.WithSequences(false),
-        infos.WithSystemSchemas([]string{"mysql", "information_schema"}),
-    )
-
-Do not return a value that satisfies nothing when the handle is unexpected.
-The impala reader returns `struct{}{}` when the handle is not a `*sql.DB`,
-which means it loses all metadata support without reporting anything. It is
-the only driver that does this, and it is not a pattern to copy.
+The metadata for a new database is added in `dbmeta`, which models each
+product and says what it can answer. Ask there, or ask Ken. W21 in
+[BACKLOG.md](BACKLOG.md) holds the migration.
 
 ## Step 6. Verification
 
@@ -354,10 +312,10 @@ need containers. Everything else must pass.
 Start the database, then run each of these and keep the output:
 
     usql <dsn> -c 'select 1'
-    usql <dsn> -c '\l'
     usql <dsn> -c '\dt'
-    usql <dsn> -c '\d <table>'
-    usql <dsn> -c '\dp'
+
+The second one reports that describe commands are not supported, because a new
+driver has no metadata reader. See Step 5.
 
 Try every connection string form that dburl accepts for the scheme, including
 the short alias. Try one malformed connection string, and make sure that it
@@ -394,8 +352,6 @@ until somebody runs `go generate`, and then it disappears.
 | --- | --- |
 | `go build -tags all ./...` | A duplicate scheme or alias, which panics at registration |
 | `git diff` after `go run gen.go` | A generated file that was edited by hand |
-| `\l` against a live database | `CatalogReader` missing or wrong |
-| `\dp` against a live database | `PrivilegeSummaryReader` missing or wrong |
 | A malformed connection string | A panic where an error was wanted |
 | A file path that does not exist | A missing extension pattern in dburl |
 | A file path that does exist | A faulty header function in dburl |

@@ -89,6 +89,11 @@ add a row for it or delete it.
     use. usql publishes every alias in its README table, so an alias is
     advertised from the moment it exists, and removing one is a break.
 
+13. Do not write or change a metadata reader. All database metadata is moving
+    into `dbmeta`, and `drivers/metadata` takes no new reader and no fix. A
+    new driver registers no reader, so its describe commands report that they
+    are not supported. See D3.
+
 ## Writing
 
 Documentation and comments in this project are written in plain English.
