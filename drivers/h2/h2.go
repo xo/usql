@@ -1,6 +1,7 @@
 // Package h2 defines and registers usql's Apache H2 driver.
 //
 // See: https://github.com/jmrobles/h2go
+// Group: bad
 package h2
 
 import (

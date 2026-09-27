@@ -1185,6 +1185,59 @@ carry wide characters.
 Do not document a prompt variable before it works. That is how the current
 state arose.
 
+## W27. Retire, replace and regroup drivers
+
+Source: a review of every driver on 2026-09-27, with Gemini. DeepSeek was asked
+five times and returned nothing each time. Ken made the decisions below the
+same day. Module dates come from the Go proxy.
+
+Remove these four. Each also drops its scheme from dburl, which has been told:
+
+- mymysql, `github.com/ziutek/mymysql`, last released 2015-01-09.
+  `go-sql-driver/mysql` covers the same database.
+- adodb, `github.com/mattn/go-adodb`, last released 2018-05-15. odbc covers
+  it. The `oleodbc` override goes with it.
+- sapase, `github.com/thda/tds`, last released 2019-09-27. `SAP/go-ase` last
+  changed on 2025-05-22 and is not a replacement.
+- ignite, `github.com/amsokol/ignite-go-client`, last released 2019-01-04.
+
+Switch these three to a maintained module:
+
+- flightsql moves to `github.com/apache/arrow-go/v18`, v18.8.0. That module is
+  already an indirect dependency, so this removes a second Arrow tree.
+- maxcompute moves to `github.com/aliyun/aliyun-odps-go-sdk/sqldriver`,
+  v0.4.26. It registers as `odps` and takes a different DSN, so dburl's
+  generator changes with it. The SDK carries its own Arrow package, so check
+  the dependency weight before merging.
+- postgres moves from `github.com/lib/pq` to `github.com/jackc/pgx/v5/stdlib`.
+  DSN handling, error text and type mapping change, so re-record the
+  `cli_test.go` goldens and run it against a live database before release.
+
+Regroup these two:
+
+- csvq moves from `base` to `most`. It is finished rather than broken.
+- h2 moves to `bad`, as triage before removal. `github.com/jmrobles/h2go` last
+  released on 2020-11-14.
+
+Keep these two, on forks that Ken is starting:
+
+- cassandra. `github.com/MichaelS11/go-cql-driver` last released on
+  2020-09-20 and wraps `gocql/gocql`, which has since moved to
+  `github.com/apache/cassandra-gocql-driver/v2`.
+- couchbase. `github.com/couchbase/go_n1ql` last changed on 2022-03-03.
+
+Both forks bring the code up to modern Go. usql and dburl switch to them when
+they exist.
+
+As of 2026-09-27 the removals, both regroupings, and the flightsql and
+maxcompute switches are done, on dburl v0.31.0. usql registers the odps driver
+under `maxcompute` as well, because that is the name dburl gives the scheme.
+The postgres switch and the two forks remain.
+
+Most driver packages under `drivers/` have no `Group:` line and fall to
+`most` by default, which breaks rule 10 in `CLAUDE.md`. Add the line to each
+as they are touched.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section

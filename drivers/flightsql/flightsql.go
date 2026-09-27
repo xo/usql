@@ -1,10 +1,11 @@
 // Package flightsql defines and registers usql's FlightSQL driver.
 //
-// See: https://github.com/apache/arrow/tree/main/go/arrow/flight/flightsql/driver
+// See: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
+// Group: most
 package flightsql
 
 import (
-	_ "github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver" // DRIVER
+	_ "github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 

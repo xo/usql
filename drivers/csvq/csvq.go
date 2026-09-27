@@ -1,7 +1,7 @@
 // Package csvq defines and registers usql's CSVQ driver.
 //
 // See: https://github.com/mithrandie/csvq-driver
-// Group: base
+// Group: most
 package csvq
 
 import (

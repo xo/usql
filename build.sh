@@ -131,14 +131,12 @@ BIN=$DIR/$NAME
 
 case $PLATFORM in
   linux)
-    TAGS+=(no_adodb)
   ;;
   windows)
     EXT=zip
     BIN=$BIN.exe
   ;;
   darwin)
-    TAGS+=(no_adodb)
     TAR=gtar
   ;;
 esac

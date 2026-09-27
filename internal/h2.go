@@ -1,4 +1,4 @@
-//go:build (all || most || h2) && !no_h2
+//go:build (bad || h2) && !no_h2
 
 package internal
 

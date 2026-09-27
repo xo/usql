@@ -8,7 +8,6 @@ package internal
 // tags.
 func KnownBuildTags() map[string]string {
 	return map[string]string{
-		"adodb":         "adodb",         // github.com/mattn/go-adodb
 		"athena":        "awsathena",     // github.com/uber/athenadriver/go
 		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
@@ -24,15 +23,13 @@ func KnownBuildTags() map[string]string {
 		"dynamodb":      "godynamo",      // github.com/btnguyen2k/godynamo
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
-		"flightsql":     "flightsql",     // github.com/apache/arrow/go/v17/arrow/flight/flightsql/driver
+		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // github.com/beltran/gohive/v2
-		"ignite":        "ignite",        // github.com/amsokol/ignite-go-client/sql
 		"impala":        "impala",        // github.com/sclgo/impala-go
-		"maxcompute":    "maxcompute",    // sqlflow.org/gomaxcompute
+		"maxcompute":    "maxcompute",    // github.com/aliyun/aliyun-odps-go-sdk/sqldriver
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
-		"mymysql":       "mymysql",       // github.com/ziutek/mymysql/godrv
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"netezza":       "nzgo",          // github.com/IBM/nzgo/v12
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
@@ -42,7 +39,6 @@ func KnownBuildTags() map[string]string {
 		"postgres":      "postgres",      // github.com/lib/pq
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
 		"ql":            "ql",            // modernc.org/ql
-		"sapase":        "tds",           // github.com/thda/tds
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
