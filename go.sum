@@ -1550,8 +1550,8 @@ github.com/xo/resvg/libresvg/linux_arm64 v0.48.1 h1:zVgEslfjf54Oe8NJ9ksY9qbEZNIg
 github.com/xo/resvg/libresvg/linux_arm64 v0.48.1/go.mod h1:y2BXMICqpyBuPUsugmC5dSpYrDqFp1KR9Bmm21IjGO8=
 github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 h1:LBksR6Lwo8V6N0uRPhzWVoIt/qE6h92N5VLxqndsdag=
 github.com/xo/resvg/libresvg/windows_amd64 v0.48.1/go.mod h1:tJzNhggMgS3S8xpZdjFANEN3U/FeUGLqguB0E7GAUw8=
-github.com/xo/tblfmt v0.19.0 h1:jjqyXhmTP/RUJmVVKgD3gDluFetLinQSPZd1EEmToXE=
-github.com/xo/tblfmt v0.19.0/go.mod h1:5+hCrcH7VpOehXlXYQd5H3MBaeHwUNC9Gu+Fz1+8k/s=
+github.com/xo/tblfmt v0.19.1 h1:QvmL86VmoD/kjLjpwhgwsD2cilgwX71CdEYIhNg2QzI=
+github.com/xo/tblfmt v0.19.1/go.mod h1:KP2O1/iAKNeHEUhkss/B1mq2ecLF5Zw/Qn1O5sI4V1s=
 github.com/xo/terminfo v1.2.0 h1:d0ZTOCpuGE0lwSAOs0zcJjwz3jWQyqcRt9XbGJpCOl4=
 github.com/xo/terminfo v1.2.0/go.mod h1:lGzkSo8Fe7IRh/w+Gqz7n5mDog4FVXCj3gy/DYTBqio=
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=

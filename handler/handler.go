@@ -1286,15 +1286,23 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	if drivers.LowerColumnNames(h.u) {
 		params["lower_column_names"] = "true"
 	}
+	// a sqlserver EXEC can return a result set with no columns and nothing
+	// after it, so report it as an exec rather than as an empty result set
+	if h.u.Driver == "sqlserver" && strings.HasPrefix(typ, "EXEC") && opt.Exec != metacmd.ExecCrosstab {
+		cols, err := rows.Columns()
+		if err != nil {
+			return err
+		}
+		if len(cols) == 0 && !rows.NextResultSet() {
+			fmt.Fprintln(w, typ)
+			return nil
+		}
+	}
 	// encode and handle error conditions
 	switch err := tblfmt.EncodeAll(w, resultSet, params, extra...); {
 	case err != nil && cmd != nil && errors.Is(err, syscall.EPIPE):
 		// broken pipe means pager quit before consuming all data, which might be expected
 		return nil
-	case err != nil && h.u.Driver == "sqlserver" && err == tblfmt.ErrResultSetHasNoColumns && strings.HasPrefix(typ, "EXEC"):
-		// sqlserver EXEC statements sometimes do not have results, fake that
-		// it was executed as a exec and not a query
-		fmt.Fprintln(w, typ)
 	case err != nil:
 		return err
 	case params["format"] == "aligned":
