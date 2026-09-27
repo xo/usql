@@ -1,2 +1,0 @@
-DB="flightsql://flight_username:P4ssw0rd@localhost:31337?tls=skip-verify"
-VSQL="SELECT version() AS version;"

@@ -1,5 +1,0 @@
-NAME=cockroach
-IMAGE=docker.io/cockroachdb/cockroach:latest
-PUBLISH=26257:26257
-ENV="COCKROACH_DATABASE=cockroach COCKROACH_USER=cockroach COCKROACH_PASSWORD=P4ssw0rd"
-CMD=start-single-node

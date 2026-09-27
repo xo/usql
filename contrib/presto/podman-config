@@ -1,3 +1,0 @@
-NAME=presto
-IMAGE=docker.io/ahanaio/prestodb-sandbox
-PUBLISH=8080:8080

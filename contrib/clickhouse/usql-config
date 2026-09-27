@@ -1,2 +1,0 @@
-DB="clickhouse://clickhouse:P4ssw0rd@localhost"
-VSQL="select version() as version;"

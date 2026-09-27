@@ -1,4 +1,0 @@
-NAME=flightsql
-IMAGE=docker.io/voltrondata/flight-sql
-PUBLISH=31337:31337
-ENV="FLIGHT_PASSWORD=P4ssw0rd"

@@ -22,11 +22,9 @@ $ cat odbcinst.ini | sudo tee -a /etc/odbcinst.ini
 $ sudo cp {db2cli.ini,db2dsdriver.cfg} /opt/db2/clidriver/cfg/
 ```
 
-4. Run DB2 container:
-
-```sh
-$ ../podman-run.sh db2 -u
-```
+4. Run a Db2 container. dbmeta does not model Db2 yet. Its image, ports and
+   environment are recorded in dbmeta's `docs/EVALUATION.md`, under
+   "Candidates carried over from usql".
 
 5. Verify DB2 working:
 

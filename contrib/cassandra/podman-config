@@ -1,3 +1,0 @@
-NAME=cassandra
-IMAGE=docker.io/usql/cassandra
-PUBLISH=9042:9042

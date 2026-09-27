@@ -1,2 +1,0 @@
-DB="cassandra://cassandra:cassandra@localhost"
-VSQL="SELECT release_version AS version FROM system.local WHERE key = 'local';"

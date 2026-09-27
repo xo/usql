@@ -1,4 +1,0 @@
-NAME=mysql
-IMAGE=docker.io/library/mariadb
-PUBLISH=3306:3306
-ENV="MYSQL_ROOT_PASSWORD=P4ssw0rd"

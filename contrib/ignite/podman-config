@@ -1,4 +1,0 @@
-NAME=ignite
-IMAGE=docker.io/usql/ignite
-PUBLISH=10800:10800
-NETWORK=host

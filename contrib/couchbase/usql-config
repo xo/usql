@@ -1,3 +1,0 @@
-# NOTE: this will only work after setting up a database on http://localhost:8091/
-DB="couchbase://Administrator:P4ssw0rd@localhost"
-VSQL="select raw ds_version() as version;"

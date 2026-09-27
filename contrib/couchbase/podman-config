@@ -1,4 +1,0 @@
-NAME=couchbase
-IMAGE=docker.io/library/couchbase
-PUBLISH=8091-8094:8091-8094
-VOLUME=couchbase-data:/opt/couchbase/var

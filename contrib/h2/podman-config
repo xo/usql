@@ -1,3 +1,0 @@
-NAME=h2
-IMAGE=docker.io/buildo/h2database
-PUBLISH="8082:8082 9092:9092"

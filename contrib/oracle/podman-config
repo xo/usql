@@ -1,5 +1,0 @@
-NAME=oracle
-IMAGE=container-registry.oracle.com/database/free
-PUBLISH=1521:1521
-ENV="ORACLE_PDB=db1 ORACLE_PWD=P4ssw0rd"
-VOLUME=oracle-free-data:/opt/oracle/oradata

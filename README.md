@@ -833,7 +833,7 @@ always appreciated][contributing]!
 #### Configuration
 
 During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
-file [`config.yaml`](contrib/config.yaml). On Windows this is `%AppData%/usql/config.yaml`,
+file [`config.yaml`](_samples/config.yaml). On Windows this is `%AppData%/usql/config.yaml`,
 on macOS this is `$HOME/Library/Application Support/usql/config.yaml`, and on
 Linux and other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
 
@@ -885,7 +885,7 @@ interpreter.
 
 ##### Other Options
 
-Please see [`contrib/config.yaml`](contrib/config.yaml) for an overview of
+Please see [`_samples/config.yaml`](_samples/config.yaml) for an overview of
 available configuration options.
 
 #### Variables
@@ -1461,6 +1461,8 @@ Type "help" for help.
 pg:booktest@=>
 ```
 
+See [`_samples/usqlpass`](_samples/usqlpass) for a sample.
+
 While the `.usqlpass` functionality will not be removed, it is recommended to
 [define named connections][connection-vars] preferably via [the `config.yaml`
 file][config].
@@ -1498,6 +1500,8 @@ Type "help" for help.
 SYNTAX_HL_STYLE = 'paraiso-dark'
 (not connected)=>
 ```
+
+See [`_samples/usqlrc`](_samples/usqlrc) for a sample.
 
 The `.usqlrc` file is read at startup in the same way as a file passed on the
 command-line with `-f` / `--file`. It is commonly used to set startup

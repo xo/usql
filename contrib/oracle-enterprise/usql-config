@@ -1,2 +1,0 @@
-DB="oracle://system:P4ssw0rd@localhost:1522/db1"
-VSQL="SELECT version FROM v\$instance"

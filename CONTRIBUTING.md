@@ -290,16 +290,35 @@ fail it means the golden covers nothing.
 
 ## Command line tests
 
-`contrib/` holds a container definition and a connection string for each
-database. Start one and query it through usql:
+The container definitions live in [dbmeta](https://github.com/xo/dbmeta), and
+its `dbrun` command starts them. [dbmeta's DBRUN.md][dbrun] covers its commands
+and the rules for sharing a machine. It runs from a dbmeta checkout, because
+the test module there has a replace directive:
 
-    ./contrib/podman-run.sh postgres
-    ./contrib/usql-test.sh
+    git clone https://github.com/xo/dbmeta
+    cd dbmeta/test
+    go run ./cmd/dbrun start postgres-18
 
-`podman-run.sh` takes the name of any subdirectory of `contrib/` that holds a
-`podman-config` file, or `all`, or `test`. `usql-test.sh` builds nothing: it
-runs the `usql` binary in the repository root, or the one on your PATH, against
-every database that is currently running.
+A bare product name starts the newest release, and `postgres-12` names one
+release. dbrun assigns each release its own host port, so read the URL from
+`dbrun dsn` rather than writing it down. A plain `dsn` prints two columns, so
+take the URL from the JSON form. To run the usql you just built against it,
+from a usql checkout with dbmeta cloned beside it:
+
+    ./usql -c 'select 1' "$(cd ../dbmeta/test && go run ./cmd/dbrun dsn --json postgres-18 | jq -r '.[0].url')"
+
+`dbrun usql postgres-18` also opens usql on the server, but it runs the `usql`
+on your PATH and passes no flags. `dbrun stop postgres-18` stops the container.
+
+Start and stop only the databases you are testing. dbrun runs at most four at
+once. The container tests above start their own containers through dockertest,
+outside dbrun and outside that limit.
+
+[dbrun]: https://github.com/xo/dbmeta/blob/main/docs/DBRUN.md
+
+`contrib/` keeps only the scripts that usql runs against a database and the
+client setup for a few drivers. Sample `config.yaml`, `usqlrc` and `usqlpass`
+files are in `_samples/`.
 
 # Enabling metadata introspection for a driver
 

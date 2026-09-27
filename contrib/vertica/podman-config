@@ -1,4 +1,0 @@
-NAME=vertica
-IMAGE=docker.io/vertica/vertica-ce:latest
-PUBLISH=5433:5433
-ENV="APP_DB_USER=vertica APP_DB_PASSWORD=P4ssw0rd"

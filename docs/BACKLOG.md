@@ -284,8 +284,12 @@ starts the same containers would leave two of them to keep working.
 What this item wanted that dbmeta does not already provide is the MCP tool.
 That is a small addition to dbmeta if it is still wanted, not a repository.
 
-The scripts in `contrib/` stay where they are. They work, and nothing here
-depends on moving them.
+On 2026-09-27 the container configuration left `contrib/` as well. dbmeta's
+`container` package and `dbrun` command replace `podman-run.sh`,
+`podman-stop.sh`, `usql-test.sh` and every `podman-config` and `usql-config`
+file. dbmeta records the products it does not model yet, with their images,
+ports and setup steps, in its `docs/EVALUATION.md`. The sample `config.yaml`,
+`usqlrc` and `usqlpass` files moved to `_samples/`.
 
 ## W7. Create a dbmeta package (In progress, outside this repository)
 
@@ -1287,8 +1291,8 @@ not, and those were discarded.
 | rqlite              | `github.com/rqlite/gorqlite/stdlib`                | v0.0.0-20260504155303 | 2026-05-04 |
 | openGauss and MogDB | `gitee.com/opengauss/openGauss-connector-go-pq`    | v1.0.8                | 2025-08-20 |
 
-Db2 is the strongest candidate, because `contrib/db2/` already ships a
-container definition and no Db2 driver exists anywhere in the tree. It needs
+Db2 is the strongest candidate, because dbmeta's `docs/EVALUATION.md` already
+records a container for it and no Db2 driver exists anywhere in the tree. It needs
 cgo and a download of the IBM CLI driver.
 
 `github.com/ncruces/go-sqlite3/driver` v0.35.5 also qualifies, but usql already
@@ -1324,12 +1328,21 @@ already aliases odbc to adodb only on Windows and odbc covers it.
 
 ### The Vertica container is gone
 
-`contrib/vertica/podman-config` points at `docker.io/vertica/vertica-ce`, which
-no longer exists. OpenText moved to the `opentext/` namespace and published no
-`vertica-ce` there. `opentext/vertica-k8s` exists but ignores the
-`APP_DB_USER` and `APP_DB_PASSWORD` values the config sets, so substituting it
-would produce a config that silently does not work. Either build the image from
-an RPM as the upstream README now says, or drop the entry.
+Resolved on 2026-09-27. usql's `contrib/vertica/podman-config` pointed at
+`docker.io/vertica/vertica-ce`, which no longer exists. That file is gone along
+with the rest of the container configuration. dbmeta now models Vertica and
+starts releases 7.2, 9.1, 10.1 and 25.1 through `dbrun`. dbmeta's D88 records
+how.
+
+### vertica-sql-go splits a statement at every semicolon
+
+`github.com/vertica/vertica-sql-go` splits each statement at its semicolons
+before it sends it. It does not know that the `BEGIN ... END` body of a SQL
+function contains them. `CREATE FUNCTION ... BEGIN RETURN ...; END` therefore
+cannot be sent through usql at all, and the semicolon cannot be left out. A
+PL/vSQL procedure works, because its body is dollar quoted and survives the
+split. dbmeta found this while building its Vertica model, and its D88 has the
+details. Report it upstream.
 
 ## Lowest priority
 

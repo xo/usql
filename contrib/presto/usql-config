@@ -1,2 +1,0 @@
-DB="presto://localhost"
-VSQL="SELECT node_version AS version FROM system.runtime.nodes LIMIT 1;"
