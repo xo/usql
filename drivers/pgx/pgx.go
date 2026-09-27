@@ -1,6 +1,11 @@
 // Package pgx defines and registers usql's PostgreSQL PGX driver.
 //
+// dburl sends postgres://, pgx://, cockroachdb:// and redshift:// URLs to it.
+// It answers to the postgres build tag as well as to pgx.
+//
 // See: https://github.com/jackc/pgx
+// Group: base
+// Tags: postgres
 package pgx
 
 import (

@@ -5,7 +5,6 @@ go 1.27.1
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/IBM/nzgo/v12 v12.0.13
-	github.com/MichaelS11/go-cql-driver v0.1.1
 	github.com/SAP/go-hdb v1.18.11
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/alecthomas/chroma/v2 v2.27.0
@@ -14,6 +13,7 @@ require (
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
 	github.com/apache/arrow-go/v18 v18.8.0
 	github.com/apache/calcite-avatica-go/v5 v5.4.0
+	github.com/apache/cassandra-gocql-driver/v2 v2.1.2
 	github.com/beltran/gohive/v2 v2.1.0
 	github.com/btnguyen2k/gocosmos v1.1.0
 	github.com/btnguyen2k/godynamo v1.3.0
@@ -25,7 +25,6 @@ require (
 	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-sql-driver/mysql v1.10.1
-	github.com/gocql/gocql v1.7.0
 	github.com/godror/godror v0.51.5
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/google/go-cmp v0.7.0
@@ -54,7 +53,8 @@ require (
 	github.com/trinodb/trino-go-client v0.336.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
-	github.com/xo/dburl v0.31.0
+	github.com/xo/cql v0.1.0
+	github.com/xo/dburl v0.32.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.0
@@ -221,7 +221,6 @@ require (
 	github.com/googleapis/gax-go/v2 v2.24.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
-	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect

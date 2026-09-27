@@ -11,7 +11,7 @@ func KnownBuildTags() map[string]string {
 		"athena":        "awsathena",     // github.com/uber/athenadriver/go
 		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
-		"cassandra":     "cql",           // github.com/MichaelS11/go-cql-driver
+		"cassandra":     "cql",           // github.com/xo/cql
 		"chai":          "chai",          // github.com/chaisql/chai
 		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
@@ -28,6 +28,7 @@ func KnownBuildTags() map[string]string {
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // github.com/beltran/gohive/v2
 		"impala":        "impala",        // github.com/sclgo/impala-go
+		"libpq":         "postgres",      // github.com/lib/pq
 		"maxcompute":    "maxcompute",    // github.com/aliyun/aliyun-odps-go-sdk/sqldriver
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
@@ -36,7 +37,6 @@ func KnownBuildTags() map[string]string {
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
-		"postgres":      "postgres",      // github.com/lib/pq
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
 		"ql":            "ql",            // modernc.org/ql
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
@@ -48,5 +48,6 @@ func KnownBuildTags() map[string]string {
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient
 		"ydb":           "ydb",           // github.com/ydb-platform/ydb-go-sdk/v3
+		"postgres":      "pgx",           // github.com/jackc/pgx/v5/stdlib
 	}
 }

@@ -206,7 +206,7 @@ find the driver package by searching for it.
 
 ### The package comment carries machine readable lines
 
-`gen.go` reads the package comment. Two lines in it are not decoration.
+`gen.go` reads the package comment. Three lines in it are not decoration.
 
 A `Build:` line gives a constraint for drivers that cannot compile everywhere,
 and `gen.go` copies it into the generated file under `internal`:
@@ -227,6 +227,17 @@ ships in regular builds, and that is rarely what a new driver should do. Write
 
 Promoting a driver to `most` or `base` is a decision for the maintainer, not
 part of adding it.
+
+A `Tags:` line names further build tags that select the driver. Each one
+selects it as the driver's own tag does, and its `no_` form leaves the driver
+out. The pgx driver answers to the `postgres` tag this way, because dburl sends
+`postgres://` URLs to it:
+
+    // Tags: postgres
+
+Most drivers have no `Tags:` line. A `Build:` line cannot do this job, because
+`gen.go` combines it with the group constraint using `&&`, so it can only
+narrow where a driver builds.
 
 ### Promoting to base needs one more edit
 

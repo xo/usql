@@ -1,6 +1,7 @@
 // Package cassandra defines and registers usql's Cassandra driver.
 //
-// See: https://github.com/MichaelS11/go-cql-driver
+// See: https://github.com/xo/cql
+// Group: most
 package cassandra
 
 import (
@@ -14,8 +15,8 @@ import (
 	"regexp"
 	"strings"
 
-	cql "github.com/MichaelS11/go-cql-driver" // DRIVER: cql
-	"github.com/gocql/gocql"
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	"github.com/xo/cql" // DRIVER: cql
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
@@ -29,7 +30,6 @@ func init() {
 	// error regexp's
 	authReqRE := regexp.MustCompile(`authentication required`)
 	passwordErrRE := regexp.MustCompile(`Provided username (.*)and/or password are incorrect`)
-	var l *logger
 	drivers.Register("cql", drivers.Driver{
 		AllowDollar:            true,
 		AllowMultilineComments: true,
@@ -42,10 +42,17 @@ func init() {
 			}
 		},
 		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
-			// override cql and gocql loggers
-			l = &logger{debug: debug}
-			gocql.Logger, cql.CqlDriver.Logger = l, log.New(l, "", 0)
-			return sql.Open, nil
+			return func(_, dsn string) (*sql.DB, error) {
+				cfg, err := cql.ParseDSN(dsn)
+				if err != nil {
+					return nil, err
+				}
+				// gocql logs nothing unless it is given a logger
+				if debug {
+					cfg.Logger = gocql.NewLogger(gocql.LogLevelDebug)
+				}
+				return sql.OpenDB(cql.NewConnector(cfg)), nil
+			}, nil
 		},
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var release, protocol, cql string
@@ -63,13 +70,13 @@ func init() {
 			return err
 		},
 		IsPasswordErr: func(err error) bool {
-			return passwordErrRE.MatchString(l.last)
+			return passwordErrRE.MatchString(err.Error())
 		},
 		Err: func(err error) (string, string) {
-			if authReqRE.MatchString(l.last) {
+			if authReqRE.MatchString(err.Error()) {
 				return "", "authentication required"
 			}
-			if m := passwordErrRE.FindStringSubmatch(l.last); m != nil {
+			if m := passwordErrRE.FindStringSubmatch(err.Error()); m != nil {
 				return "", fmt.Sprintf("invalid username %sor password", m[1])
 			}
 			return "", strings.TrimPrefix(strings.TrimPrefix(err.Error(), "driver: "), "gocql: ")
@@ -88,39 +95,4 @@ func init() {
 			"BEGIN BATCH": "APPLY BATCH",
 		},
 	})
-}
-
-// logger is a null logger satisfying gocql.StdLogger and io.Writer, so that it
-// can capture the last error the cql and gocql packages report. The cql
-// package returns no error other than sql.ErrBadConn at present, so the log is
-// the only place the real cause appears.
-type logger struct {
-	debug bool
-	last  string
-}
-
-func (l *logger) Print(v ...interface{}) {
-	if l.debug {
-		log.Print(v...)
-	}
-}
-
-func (l *logger) Printf(s string, v ...interface{}) {
-	if l.debug {
-		log.Printf(s, v...)
-	}
-}
-
-func (l *logger) Println(v ...interface{}) {
-	if l.debug {
-		log.Println(v...)
-	}
-}
-
-func (l *logger) Write(buf []byte) (int, error) {
-	if l.debug {
-		log.Printf("WRITE: %s", string(buf))
-	}
-	l.last = string(buf)
-	return len(buf), nil
 }

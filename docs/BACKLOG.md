@@ -1040,6 +1040,13 @@ dbmeta has no release tag and its API is still moving. Whether usql depends on
 an unreleased module, and whose cadence wins, is Ken's call. The per-driver
 shape of the move limits the exposure without removing it.
 
+When usql calls dbmeta, choose the dialect from `u.Dialect`, which dburl
+v0.32.0 sets, and never from `u.Driver`. Every PostgreSQL URL now has Driver
+`pgx`, which is not a dbmeta dialect. `u.Dialect` is `postgres` for all of them,
+`sqlite3` for moderncsqlite, `oracle` for godror, and `mysql` for TiDB,
+SingleStore and Vitess. dbmeta's `docs/COMMANDS.md` says the same under "Wiring
+usql up".
+
 ## W22. Metadata and version queries assume a privileged user (Superseded by W21)
 
 Source: found on 2026-09-26 while triaging pull requests 524 and 570. Answered
@@ -1232,7 +1239,18 @@ they exist.
 As of 2026-09-27 the removals, both regroupings, and the flightsql and
 maxcompute switches are done, on dburl v0.31.0. usql registers the odps driver
 under `maxcompute` as well, because that is the name dburl gives the scheme.
-The postgres switch and the two forks remain.
+
+The postgres switch is done too, on dburl v0.32.0, following dburl's D22.
+`postgres://`, `cockroachdb://` and `redshift://` reach pgx, which is now in
+`base` and also answers to the `postgres` build tag. lib/pq stays supported
+as `drivers/libpq`, in `most`, and dburl sends `pq://` and `libpq://` to it.
+It still registers as `postgres`, which is lib/pq's name in `database/sql`.
+
+The Cassandra fork is done. The cassandra driver uses `github.com/xo/cql`
+v0.1.0, which wraps `github.com/apache/cassandra-gocql-driver/v2`. It returns
+the real connection error, so usql no longer captures the gocql log to find
+it. A NULL now shows as empty rather than as a zero value. The Couchbase fork
+remains.
 
 Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `CLAUDE.md`. Add the line to each

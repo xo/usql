@@ -14,7 +14,7 @@ import (
 	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/postgres"
-	_ "github.com/xo/usql/drivers/postgres"
+	_ "github.com/xo/usql/drivers/libpq"
 )
 
 type Database struct {

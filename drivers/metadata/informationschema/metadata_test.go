@@ -27,7 +27,7 @@ import (
 	_ "github.com/trinodb/trino-go-client/trino"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
-	_ "github.com/xo/usql/drivers/postgres"
+	_ "github.com/xo/usql/drivers/libpq"
 )
 
 type Database struct {

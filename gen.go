@@ -96,10 +96,12 @@ func loadDrivers(wd string) error {
 		// Wire compatible drivers are the dburl schemes that override to this
 		// one. They get their own README row.
 		for _, scheme := range dburl.BaseSchemes() {
-			if scheme.Override != driver.Driver {
+			// a scheme with a package of its own documents itself, as dburl's
+			// README does, so it is not a wire row
+			if scheme.Override != driver.Driver || scheme.GoPackage != "" {
 				continue
 			}
-			wireDrivers[scheme.Driver] = DriverInfo{
+			info := DriverInfo{
 				Tag:        tag,
 				Driver:     scheme.Driver,
 				Pkg:        driver.Pkg,
@@ -107,6 +109,14 @@ func loadDrivers(wd string) error {
 				Deployment: scheme.Deployment,
 				Wire:       true,
 			}
+			// a wire scheme that heads the table, as postgres does now that
+			// it reaches pgx, is listed with the base drivers
+			if _, ok := baseOrder[scheme.Driver]; ok && driver.Group == "base" {
+				info.Group = "base"
+				baseDrivers[scheme.Driver] = info
+				continue
+			}
+			wireDrivers[scheme.Driver] = info
 		}
 		return nil
 	})
@@ -144,6 +154,10 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	var known []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
+			// a wire row is a scheme, not a driver package
+			if v.Wire {
+				continue
+			}
 			known = append(known, v)
 		}
 	}
@@ -152,8 +166,17 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	})
 	knownStr := ""
 	for _, v := range known {
-		knownStr += fmt.Sprintf("\n%q: %q, // %s", v.Tag, v.Driver, v.Pkg)
+		knownStr += fmt.Sprintf("\n%q: %q, // %s", v.Tag, v.Name, v.Pkg)
 	}
+	// a driver's extra tags report the same driver
+	var extra []string
+	for _, v := range known {
+		for _, tag := range v.Tags {
+			extra = append(extra, fmt.Sprintf("\n%q: %q, // %s", tag, v.Name, v.Pkg))
+		}
+	}
+	sort.Strings(extra)
+	knownStr += strings.Join(extra, "")
 	// format and write internal.go
 	buf, err := format.Source([]byte(fmt.Sprintf(internalGo, knownStr)))
 	if err != nil {
@@ -164,7 +187,7 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	}
 	// write <tag>.go
 	for _, v := range known {
-		tags, err := buildConstraint(v.Group, v.Tag, v.Build)
+		tags, err := buildConstraint(v.Group, v.Tag, v.Tags, v.Build)
 		if err != nil {
 			return err
 		}
@@ -180,7 +203,7 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	// not drivers: they register no URL scheme and they are absent from
 	// KnownBuildTags and from the driver table in the README.
 	for _, v := range features {
-		tags, err := buildConstraint(v.Group, v.Tag, v.Build)
+		tags, err := buildConstraint(v.Group, v.Tag, nil, v.Build)
 		if err != nil {
 			return err
 		}
@@ -198,24 +221,30 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 // buildConstraint returns the //go:build constraint for a driver or a feature
 // in group, named by tag.
 //
+// also are further tags that select the driver, taken from a Tags: entry. Each
+// selects it as its own tag does, and each no_ form excludes it.
+//
 // extra is a constraint of its own, taken from a Build: entry. A driver or a
 // feature that cannot compile everywhere states so there, and it is combined
 // here rather than in build.sh, so that `go build -tags ...` excludes it too.
-func buildConstraint(group, tag, extra string) (string, error) {
+func buildConstraint(group, tag string, also []string, extra string) (string, error) {
+	names := strings.Join(append([]string{tag}, also...), " || ")
 	var tags string
 	switch group {
 	case "base":
-		tags = "(!no_base || " + tag + ")"
+		tags = "(!no_base || " + names + ")"
 	case "most":
-		tags = "(all || most || " + tag + ")"
+		tags = "(all || most || " + names + ")"
 	case "all":
-		tags = "(all || " + tag + ")"
+		tags = "(all || " + names + ")"
 	case "bad":
-		tags = "(bad || " + tag + ")"
+		tags = "(bad || " + names + ")"
 	default:
 		return "", fmt.Errorf("%s has invalid group %q", tag, group)
 	}
-	tags += " && !no_" + tag
+	for _, t := range append([]string{tag}, also...) {
+		tags += " && !no_" + t
+	}
 	if extra != "" {
 		tags = "(" + tags + ") && (" + extra + ")"
 	}
@@ -295,9 +324,15 @@ var cmds map[string][]desc
 type DriverInfo struct {
 	// Tag is the build Tag / name of the directory the driver lives in.
 	Tag string
-	// Driver is the Go SQL Driver Driver (parsed from the import tagged with //
-	// DRIVER: <Driver>), otherwise same as the tag / directory Driver.
+	// Driver is the dburl scheme the driver documents.
 	Driver string
+	// Name is the name the driver registers under, which is the Driver that
+	// dburl sets on a URL. It differs from Driver when the scheme reaches the
+	// driver through Override, as pq does.
+	Name string
+	// Tags are further build tags that select the driver, parsed from the doc
+	// comment's "Tags:" entry.
+	Tags []string
 	// Pkg is the imported driver package, taken from the import tagged with
 	// DRIVER.
 	Pkg string
@@ -378,9 +413,20 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	if buildm := buildRE.FindAllStringSubmatch(comment, -1); buildm != nil {
 		build = strings.TrimSpace(buildm[0][1])
 	}
+	// parse tags:
+	var tags []string
+	if tagsm := tagsRE.FindAllStringSubmatch(comment, -1); tagsm != nil {
+		tags = strings.Fields(strings.ReplaceAll(tagsm[0][1], ",", " "))
+	}
+	name := scheme.Driver
+	if scheme.Override != "" {
+		name = scheme.Override
+	}
 	return DriverInfo{
 		Tag:        tag,
 		Driver:     scheme.Driver,
+		Name:       name,
+		Tags:       tags,
 		Pkg:        scheme.GoPackage,
 		Desc:       scheme.Desc,
 		URL:        scheme.DriverURL,
@@ -556,6 +602,14 @@ func buildAliases(v DriverInfo) string {
 			aliases[i] = v.Driver
 		}
 	}
+	// replacing the tag with the driver name can repeat a name, as it does for
+	// libpq, whose scheme pq is also among the aliases
+	seen := make(map[string]bool)
+	aliases = slices.DeleteFunc(aliases, func(a string) bool {
+		dup := seen[a]
+		seen[a] = true
+		return dup
+	})
 	fileTypes := dburl.FileTypes()
 	if slices.Contains(fileTypes, name) {
 		aliases = append(aliases, `file`)
@@ -592,6 +646,10 @@ func buildTableLinks(drivers ...map[string]DriverInfo) string {
 	var d []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
+			// a wire row links to the driver it reaches, which has its own
+			if v.Wire {
+				continue
+			}
 			d = append(d, v)
 		}
 	}
@@ -691,13 +749,13 @@ func decodeCommandDescs(funcName string, doc string) ([]desc, error) {
 // every run and `go generate` churns the README.
 var baseOrder = map[string]int{
 	"postgres":   0,
-	"mysql":      1,
-	"sqlserver":  2,
-	"oracle":     3,
-	"sqlite3":    4,
-	"duckdb":     5,
-	"clickhouse": 6,
-	"csvq":       7,
+	"pgx":        1,
+	"mysql":      2,
+	"sqlserver":  3,
+	"oracle":     4,
+	"sqlite3":    5,
+	"duckdb":     6,
+	"clickhouse": 7,
 }
 
 // sections are the section names for meta commands.
@@ -720,6 +778,7 @@ var sections = []string{
 var (
 	groupRE = regexp.MustCompile(`(?m)^Group:\s+(.*)$`)
 	buildRE = regexp.MustCompile(`(?m)^Build:\s+(.*)$`)
+	tagsRE  = regexp.MustCompile(`(?m)^Tags:\s+(.*)$`)
 	cleanRE = regexp.MustCompile(`[\r\n]`)
 	dirRE   = regexp.MustCompile(`^([^/]+)/([^\./]+)\.go$`)
 )

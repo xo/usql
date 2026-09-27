@@ -1,11 +1,11 @@
-// Package postgres defines and registers usql's PostgreSQL driver.
+// Package libpq defines and registers usql's PostgreSQL lib/pq driver.
 //
-// Alias: cockroachdb, CockroachDB
-// Alias: redshift, Amazon Redshift
+// It registers as postgres, which is the name lib/pq takes in database/sql.
+// dburl sends pq:// URLs to it. postgres:// URLs go to the pgx driver.
 //
 // See: https://github.com/lib/pq
-// Group: base
-package postgres
+// Group: most
+package libpq
 
 import (
 	"context"
@@ -51,11 +51,6 @@ func init() {
 		AllowDollar:            true,
 		AllowMultilineComments: true,
 		LexerName:              "postgres",
-		ForceParams: func(u *dburl.URL) {
-			if u.Scheme == "cockroachdb" {
-				drivers.ForceQueryParameters([]string{"sslmode", "disable"})(u)
-			}
-		},
 		Open: func(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_, dsn string) (*sql.DB, error) {
 				conn, err := openConn(stdout, stderr, dsn)
