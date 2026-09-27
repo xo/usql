@@ -310,9 +310,11 @@ from a usql checkout with dbmeta cloned beside it:
 `dbrun usql postgres-18` also opens usql on the server, but it runs the `usql`
 on your PATH and passes no flags. `dbrun stop postgres-18` stops the container.
 
-Start and stop only the databases you are testing. dbrun runs at most four at
-once. The container tests above start their own containers through dockertest,
-outside dbrun and outside that limit.
+Start and stop only the databases you are testing, and test on the newest
+release. dbrun limits how many servers run at once, and DBRUN.md gives the
+limit and the rules for a server that another session started. The container
+tests above start their own containers through dockertest, outside dbrun and
+outside that limit.
 
 [dbrun]: https://github.com/xo/dbmeta/blob/main/docs/DBRUN.md
 
