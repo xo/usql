@@ -413,4 +413,4 @@ document is read.
 | A driver that is broken or unmaintained | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Running the tests | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Planned work | [BACKLOG.md](BACKLOG.md) |
-| Rules for agents working here | [CLAUDE.md](../CLAUDE.md) |
+| Rules for agents working here | [AGENTS.md](../AGENTS.md) |

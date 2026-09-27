@@ -1261,7 +1261,7 @@ after 15 seconds by default. It does not set `durability_level`, and a
 single-node server needs `durability_level=none` to commit a transaction.
 
 Most driver packages under `drivers/` have no `Group:` line and fall to
-`most` by default, which breaks rule 10 in `CLAUDE.md`. Add the line to each
+`most` by default, which breaks rule 10 in `AGENTS.md`. Add the line to each
 as they are touched.
 
 ## Tier 2: GitHub issues and pull requests
