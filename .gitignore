@@ -8,6 +8,13 @@
 .usql_history*
 .[a-f0-9]*
 
+# the agent skills are committed (D1), but the rest of .claude is one
+# person's settings and worktrees
+!/.agents/
+!/.claude/
+/.claude/settings.local.json
+/.claude/worktrees/
+
 *.ini
 *.csv
 *.db
