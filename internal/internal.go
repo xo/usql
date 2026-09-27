@@ -44,6 +44,7 @@ func KnownBuildTags() map[string]string {
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
+		"surrealdb":     "surrealdb",     // github.com/xo/dbimp/surrealdb
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient

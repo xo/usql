@@ -280,6 +280,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Presto               | `presto`        | `pr`, `prestodb`                                | [github.com/prestodb/presto-go-client/v2][d-presto]                                         |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                      | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
 | Snowflake            | `snowflake`     | `sf`                                            | [github.com/snowflakedb/gosnowflake/v2][d-snowflake] <sup>[¶][f-hosted]</sup>               |
+| SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                          | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
 | Trino                | `trino`         | `tr`, `trs`, `trinos`                           | [github.com/trinodb/trino-go-client/trino][d-trino]                                         |
 | Vertica              | `vertica`       | `ve`                                            | [github.com/vertica/vertica-sql-go][d-vertica]                                              |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                             | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                                 |
@@ -338,6 +339,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-spanner]: https://github.com/googleapis/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
+[d-surrealdb]: https://github.com/xo/dbimp
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go

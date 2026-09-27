@@ -55,22 +55,27 @@ func TestDriverSeeMatchesDburl(t *testing.T) {
 	}
 }
 
-// TestDriverSeeIsNotDuplicated checks that no two drivers claim the same
-// upstream, which would mean one of them names the wrong project.
-func TestDriverSeeIsNotDuplicated(t *testing.T) {
+// TestDriverPackageIsNotDuplicated checks that no two drivers claim the same
+// upstream package, which would mean one of them names the wrong one.
+//
+// It compares dburl's GoPackage rather than the See: lines. A See: line is
+// dburl's DriverURL, which names a repository, and one repository can hold
+// several drivers: github.com/xo/dbimp holds both couchbase and surrealdb.
+func TestDriverPackageIsNotDuplicated(t *testing.T) {
 	t.Parallel()
+	schemes := schemeIndex()
 	seen := make(map[string]string)
 	for _, tag := range driverTags(t) {
-		see, ok := driverSee(t, tag)
-		if !ok {
+		scheme, ok := schemes[tag]
+		if !ok || scheme.GoPackage == "" {
 			continue
 		}
-		if other, dup := seen[see]; dup {
-			t.Errorf("drivers %s and %s both say See: %s.\n"+
-				"Two drivers cannot share one upstream project.", other, tag, see)
+		if other, dup := seen[scheme.GoPackage]; dup {
+			t.Errorf("drivers %s and %s both use the package %s.\n"+
+				"Two drivers cannot share one upstream package.", other, tag, scheme.GoPackage)
 			continue
 		}
-		seen[see] = tag
+		seen[scheme.GoPackage] = tag
 	}
 }
 
