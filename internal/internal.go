@@ -15,7 +15,7 @@ func KnownBuildTags() map[string]string {
 		"chai":          "chai",          // github.com/chaisql/chai
 		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
-		"couchbase":     "n1ql",          // github.com/couchbase/go_n1ql
+		"couchbase":     "couchbase",     // github.com/xo/dbimp/couchbase
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go

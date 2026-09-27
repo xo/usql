@@ -263,7 +263,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Azure CosmosDB       | `cosmos`        | `cm`, `gocosmos`                                | [github.com/btnguyen2k/gocosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                         |
 | Cassandra            | `cassandra`     | `ca`, `scy`, `scylla`, `datastax`, `cql`        | [github.com/xo/cql][d-cassandra]                                                            |
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                        | [github.com/chaisql/chai][d-chai] <sup>[§][f-embedded]</sup>                                |
-| Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/couchbase/go_n1ql][d-couchbase]                                                 |
+| Couchbase            | `couchbase`     | `n1`, `n1ql`                                    | [github.com/xo/dbimp/couchbase][d-couchbase]                                                |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                      | [github.com/mithrandie/csvq-driver][d-csvq] <sup>[§][f-embedded]</sup>                      |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                              | [modernc.org/ql][d-ql] <sup>[§][f-embedded]</sup>                                           |
 | Databend             | `databend`      | `dd`, `bend`                                    | [github.com/datafuselabs/databend-go][d-databend]                                           |
@@ -309,7 +309,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-chai]: https://github.com/chaisql/chai
 [d-clickhouse]: https://github.com/ClickHouse/clickhouse-go
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
-[d-couchbase]: https://github.com/couchbase/go_n1ql
+[d-couchbase]: https://github.com/xo/dbimp
 [d-csvq]: https://github.com/mithrandie/csvq-driver
 [d-databend]: https://github.com/datafuselabs/databend-go
 [d-databricks]: https://github.com/databricks/databricks-sql-go
@@ -1546,6 +1546,32 @@ Running `brew update --auto-update`...
 
 $ usql
 (not connected)=>
+```
+
+### Couchbase FAQ
+
+#### Why does a transaction fail to commit with error 17007?
+
+The server could not meet the durability that the transaction asked for. By
+default a transaction asks for `majority`, which a single-node server cannot
+meet. `usql` does not change the durability unless you ask it to. Set `durability_level=none` in the URL for a single-node server,
+such as a local development server:
+
+```sh
+$ usql "couchbase://user:pass@localhost/?durability_level=none"
+```
+
+The other values are `majority`, `majorityAndPersistActive` and
+`persistToMajority`.
+
+#### Why does a transaction stay open longer than the server's default?
+
+The server ends a transaction after 15 seconds by default, which is too short
+for a person typing into one. `usql` sets `txtimeout=30m` when the URL does not
+set `txtimeout`. Set it in the URL to choose another value:
+
+```sh
+$ usql "couchbase://user:pass@localhost/?txtimeout=2m"
 ```
 
 ## Contributing

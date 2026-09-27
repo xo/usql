@@ -1249,8 +1249,16 @@ It still registers as `postgres`, which is lib/pq's name in `database/sql`.
 The Cassandra fork is done. The cassandra driver uses `github.com/xo/cql`
 v0.1.0, which wraps `github.com/apache/cassandra-gocql-driver/v2`. It returns
 the real connection error, so usql no longer captures the gocql log to find
-it. A NULL now shows as empty rather than as a zero value. The Couchbase fork
-remains.
+it. A NULL now shows as empty rather than as a zero value.
+
+The Couchbase driver is replaced by `github.com/xo/dbimp/couchbase` v0.1.0,
+written in dbimp rather than forked from `go_n1ql`. It registers as
+`couchbase` and takes only a `couchbase://user:pass@host:port/` URL. It
+landed with dburl v0.33.0, which renamed the scheme from `n1ql` and keeps
+`n1ql` and `n1` as aliases, following dburl's D25. usql adds
+`txtimeout=30m` to a URL that has none, because the server ends a transaction
+after 15 seconds by default. It does not set `durability_level`, and a
+single-node server needs `durability_level=none` to commit a transaction.
 
 Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `CLAUDE.md`. Add the line to each
