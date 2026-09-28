@@ -14,8 +14,10 @@ func KnownBuildTags() map[string]string {
 		"cassandra":     "cql",           // github.com/xo/cql
 		"chai":          "chai",          // github.com/chaisql/chai
 		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
+		"cockroachdb":   "cockroachdb",   // github.com/jackc/pgx/v5/stdlib
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "couchbase",     // github.com/xo/dbimp/couchbase
+		"cratedb":       "cratedb",       // github.com/jackc/pgx/v5/stdlib
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/datafuselabs/databend-go
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
@@ -28,10 +30,13 @@ func KnownBuildTags() map[string]string {
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // github.com/beltran/gohive/v2
 		"impala":        "impala",        // github.com/sclgo/impala-go
+		"influxdb":      "influxdb",      // github.com/xo/dbimp/influxdb
+		"influxql":      "influxql",      // github.com/xo/dbimp/influxdb
 		"libpq":         "postgres",      // github.com/lib/pq
 		"maxcompute":    "maxcompute",    // github.com/aliyun/aliyun-odps-go-sdk/sqldriver
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
+		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
 		"netezza":       "nzgo",          // github.com/IBM/nzgo/v12
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3

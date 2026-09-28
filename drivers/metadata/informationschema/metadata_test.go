@@ -25,9 +25,9 @@ import (
 	_ "github.com/microsoft/go-mssqldb" // DRIVER: sqlserver
 	dt "github.com/ory/dockertest/v4"
 	_ "github.com/trinodb/trino-go-client/trino"
+	_ "github.com/xo/usql/drivers/libpq"
 	"github.com/xo/usql/drivers/metadata"
 	infos "github.com/xo/usql/drivers/metadata/informationschema"
-	_ "github.com/xo/usql/drivers/libpq"
 )
 
 type Database struct {

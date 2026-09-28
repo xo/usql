@@ -181,5 +181,5 @@ func init() {
 
 			return n, rows.Err()
 		},
-	}, "cockroachdb", "redshift")
+	})
 }

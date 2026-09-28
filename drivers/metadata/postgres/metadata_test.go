@@ -12,9 +12,9 @@ import (
 	"time"
 
 	dt "github.com/ory/dockertest/v4"
+	_ "github.com/xo/usql/drivers/libpq"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/drivers/metadata/postgres"
-	_ "github.com/xo/usql/drivers/libpq"
 )
 
 type Database struct {

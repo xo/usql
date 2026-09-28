@@ -748,14 +748,16 @@ func decodeCommandDescs(funcName string, doc string) ([]desc, error) {
 // ties with postgres, and sort.Slice is not stable, so the two rows swap on
 // every run and `go generate` churns the README.
 var baseOrder = map[string]int{
-	"postgres":   0,
-	"pgx":        1,
-	"mysql":      2,
-	"sqlserver":  3,
-	"oracle":     4,
-	"sqlite3":    5,
-	"duckdb":     6,
-	"clickhouse": 7,
+	"postgres":    0,
+	"pgx":         1,
+	"mysql":       2,
+	"sqlserver":   3,
+	"oracle":      4,
+	"sqlite3":     5,
+	"duckdb":      6,
+	"clickhouse":  7,
+	"cockroachdb": 8,
+	"cratedb":     9,
 }
 
 // sections are the section names for meta commands.
