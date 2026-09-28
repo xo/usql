@@ -74,7 +74,7 @@ func Drivers(p *Params) error {
 	fmt.Fprintln(stdout, text.AvailableDrivers)
 	for _, n := range names {
 		s := "  " + n
-		driver, aliases := dburl.SchemeDriverAndAliases(n)
+		driver, aliases := dburl.SchemeNameAndAliases(n)
 		if driver != n {
 			s += " (" + driver + ")"
 		}
@@ -370,7 +370,7 @@ func Password(p *Params) error {
 func ConnectionInfo(p *Params) error {
 	s := text.NotConnected
 	if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
-		s = fmt.Sprintf(text.ConnInfo, u.Driver, u.DSN)
+		s = fmt.Sprintf(text.ConnInfo, u.SchemeName, u.DSN)
 	}
 	fmt.Fprintln(p.Handler.IO().Stdout(), s)
 	return nil

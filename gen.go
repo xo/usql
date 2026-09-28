@@ -93,31 +93,6 @@ func loadDrivers(wd string) error {
 			return fmt.Errorf("driver %s has invalid group %q", tag, driver.Group)
 		}
 		dest[tag] = driver
-		// Wire compatible drivers are the dburl schemes that override to this
-		// one. They get their own README row.
-		for _, scheme := range dburl.BaseSchemes() {
-			// a scheme with a package of its own documents itself, as dburl's
-			// README does, so it is not a wire row
-			if scheme.Override != driver.Driver || scheme.GoPackage != "" {
-				continue
-			}
-			info := DriverInfo{
-				Tag:        tag,
-				Driver:     scheme.Driver,
-				Pkg:        driver.Pkg,
-				Desc:       scheme.Desc,
-				Deployment: scheme.Deployment,
-				Wire:       true,
-			}
-			// a wire scheme that heads the table, as postgres does now that
-			// it reaches pgx, is listed with the base drivers
-			if _, ok := baseOrder[scheme.Driver]; ok && driver.Group == "base" {
-				info.Group = "base"
-				baseDrivers[scheme.Driver] = info
-				continue
-			}
-			wireDrivers[scheme.Driver] = info
-		}
 		return nil
 	})
 	return err
@@ -154,10 +129,6 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	var known []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
-			// a wire row is a scheme, not a driver package
-			if v.Wire {
-				continue
-			}
 			known = append(known, v)
 		}
 	}
@@ -314,8 +285,6 @@ var (
 	allDrivers = map[string]DriverInfo{}
 	// badDrivers are drivers forced to 'bad' build tag.
 	badDrivers = map[string]DriverInfo{}
-	// wireDrivers are the wire compatible drivers.
-	wireDrivers = map[string]DriverInfo{}
 )
 
 // cmds are the meta command descriptions.
@@ -326,9 +295,8 @@ type DriverInfo struct {
 	Tag string
 	// Driver is the dburl scheme the driver documents.
 	Driver string
-	// Name is the name the driver registers under, which is the Driver that
-	// dburl sets on a URL. It differs from Driver when the scheme reaches the
-	// driver through Override, as pq does.
+	// Name is the name the driver registers under in usql, which is the
+	// SchemeName that dburl sets on a URL.
 	Name string
 	// Tags are further build tags that select the driver, parsed from the doc
 	// comment's "Tags:" entry.
@@ -344,8 +312,6 @@ type DriverInfo struct {
 	// CGO is whether or not the driver requires CGO, based on presence of
 	// 'Requires CGO.' in the comment
 	CGO bool
-	// Wire indicates it is a Wire compatible driver.
-	Wire bool
 	// Deployment is the deployment kinds the database offers, from dburl.
 	Deployment dburl.Deployment
 	// Group is the build Group
@@ -418,14 +384,10 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	if tagsm := tagsRE.FindAllStringSubmatch(comment, -1); tagsm != nil {
 		tags = strings.Fields(strings.ReplaceAll(tagsm[0][1], ",", " "))
 	}
-	name := scheme.Driver
-	if scheme.Override != "" {
-		name = scheme.Override
-	}
 	return DriverInfo{
 		Tag:        tag,
-		Driver:     scheme.Driver,
-		Name:       name,
+		Driver:     scheme.Name,
+		Name:       scheme.Name,
 		Tags:       tags,
 		Pkg:        scheme.GoPackage,
 		Desc:       scheme.Desc,
@@ -443,7 +405,7 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 var schemes = sync.OnceValue(func() map[string]dburl.Scheme {
 	m := make(map[string]dburl.Scheme)
 	for _, scheme := range dburl.BaseSchemes() {
-		m[scheme.Driver] = scheme
+		m[scheme.Name] = scheme
 		for _, alias := range scheme.Aliases {
 			if _, ok := m[alias]; !ok {
 				m[alias] = scheme
@@ -517,7 +479,6 @@ func buildDriverTable(includeTagSummary bool) string {
 	mostRows, widths := buildRows(mostDrivers, widths)
 	allRows, widths := buildRows(allDrivers, widths)
 	badRows, widths := buildRows(badDrivers, widths)
-	wireRows, widths := buildRows(wireDrivers, widths)
 	s := tableRows(widths, ' ', hdr)
 	s += tableRows(widths, '-')
 	s += tableRows(widths, ' ', baseRows...)
@@ -525,8 +486,6 @@ func buildDriverTable(includeTagSummary bool) string {
 	s += tableRows(widths, ' ', mostRows...)
 	s += tableRows(widths, ' ')
 	s += tableRows(widths, ' ', allRows...)
-	s += tableRows(widths, ' ')
-	s += tableRows(widths, ' ', wireRows...)
 	s += tableRows(widths, ' ')
 	s += tableRows(widths, ' ', badRows...)
 	if includeTagSummary {
@@ -560,9 +519,6 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 		if v.CGO {
 			notes += " <sup>[†][f-cgo]</sup>"
 		}
-		if v.Wire {
-			notes += " <sup>[‡][f-wire]</sup>"
-		}
 		// Both markers mean the same thing to a reader: there is nothing you
 		// can start. So both exclude a database that also ships a server
 		// anyone can run, as CockroachDB does.
@@ -590,15 +546,9 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 
 func buildAliases(v DriverInfo) string {
 	name := v.Tag
-	if v.Wire {
-		name = v.Driver
-	}
-	_, aliases := dburl.SchemeDriverAndAliases(name)
-	if v.Wire {
-		aliases = append(aliases, name)
-	}
+	_, aliases := dburl.SchemeNameAndAliases(name)
 	for i := 0; i < len(aliases); i++ {
-		if !v.Wire && aliases[i] == v.Tag {
+		if aliases[i] == v.Tag {
 			aliases[i] = v.Driver
 		}
 	}
@@ -646,10 +596,6 @@ func buildTableLinks(drivers ...map[string]DriverInfo) string {
 	var d []DriverInfo
 	for _, m := range drivers {
 		for _, v := range m {
-			// a wire row links to the driver it reaches, which has its own
-			if v.Wire {
-				continue
-			}
 			d = append(d, v)
 		}
 	}
@@ -758,6 +704,10 @@ var baseOrder = map[string]int{
 	"clickhouse":  7,
 	"cockroachdb": 8,
 	"cratedb":     9,
+	"redshift":    10,
+	"memsql":      11,
+	"tidb":        12,
+	"vitess":      13,
 }
 
 // sections are the section names for meta commands.

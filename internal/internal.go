@@ -26,14 +26,16 @@ func KnownBuildTags() map[string]string {
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
+		"gizmosql":      "gizmosql",      // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
 		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // github.com/beltran/gohive/v2
 		"impala":        "impala",        // github.com/sclgo/impala-go
 		"influxdb":      "influxdb",      // github.com/xo/dbimp/influxdb
 		"influxql":      "influxql",      // github.com/xo/dbimp/influxdb
-		"libpq":         "postgres",      // github.com/lib/pq
+		"libpq":         "pq",            // github.com/lib/pq
 		"maxcompute":    "maxcompute",    // github.com/aliyun/aliyun-odps-go-sdk/sqldriver
+		"memsql":        "memsql",        // github.com/go-sql-driver/mysql
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
@@ -42,18 +44,22 @@ func KnownBuildTags() map[string]string {
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
+		"postgres":      "postgres",      // github.com/jackc/pgx/v5/stdlib
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
 		"ql":            "ql",            // modernc.org/ql
+		"questdb":       "questdb",       // github.com/jackc/pgx/v5/stdlib
+		"redshift":      "redshift",      // github.com/jackc/pgx/v5/stdlib
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
 		"surrealdb":     "surrealdb",     // github.com/xo/dbimp/surrealdb
+		"tidb":          "tidb",          // github.com/go-sql-driver/mysql
 		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
+		"vitess":        "vitess",        // github.com/go-sql-driver/mysql
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient
 		"ydb":           "ydb",           // github.com/ydb-platform/ydb-go-sdk/v3
-		"postgres":      "pgx",           // github.com/jackc/pgx/v5/stdlib
 	}
 }

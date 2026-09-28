@@ -37,8 +37,8 @@ func init() {
 }
 
 // Driver returns the InfluxDB driver. dburl opens an influxql:// URL through
-// the same driver by its GoDriver, and the influxql package registers it under
-// that name.
+// the same driver, and the influxql package registers it under the name
+// influxql.
 func Driver() drivers.Driver {
 	return drivers.Driver{
 		AllowMultilineComments: true,

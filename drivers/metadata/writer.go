@@ -93,7 +93,7 @@ func WithListAllDbs(f func(string, bool) error) WriterOption {
 func (w DefaultWriter) DescribeFunctions(u *dburl.URL, funcTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(FunctionReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\df`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\df`, u.SchemeName)
 	}
 	types := []string{}
 	for k, v := range w.funcTypes {
@@ -551,7 +551,7 @@ func (w DefaultWriter) ListAllDbs(u *dburl.URL, pattern string, verbose bool) er
 	}
 	r, ok := w.r.(CatalogReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\l`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\l`, u.SchemeName)
 	}
 	res, err := r.Catalogs(Filter{Name: pattern})
 	if err != nil {
@@ -568,7 +568,7 @@ func (w DefaultWriter) ListAllDbs(u *dburl.URL, pattern string, verbose bool) er
 func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(TableReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\dt`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\dt`, u.SchemeName)
 	}
 	types := []string{}
 	for k, v := range w.tableTypes {
@@ -620,7 +620,7 @@ func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verb
 func (w DefaultWriter) ListSchemas(u *dburl.URL, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(SchemaReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\d`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\d`, u.SchemeName)
 	}
 	res, err := r.Schemas(Filter{Name: pattern, WithSystem: showSystem})
 	if err != nil {
@@ -644,7 +644,7 @@ func (w DefaultWriter) ListSchemas(u *dburl.URL, pattern string, verbose, showSy
 func (w DefaultWriter) ListIndexes(u *dburl.URL, pattern string, verbose, showSystem bool) error {
 	r, ok := w.r.(IndexReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\di`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\di`, u.SchemeName)
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
@@ -692,7 +692,7 @@ func (w DefaultWriter) ListIndexes(u *dburl.URL, pattern string, verbose, showSy
 func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbose bool, k int) error {
 	r, ok := w.r.(ColumnStatReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\ss`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\ss`, u.SchemeName)
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {
@@ -776,7 +776,7 @@ func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbos
 func (w DefaultWriter) ListPrivilegeSummaries(u *dburl.URL, pattern string, showSystem bool) error {
 	r, ok := w.r.(PrivilegeSummaryReader)
 	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\dp`, u.Driver)
+		return fmt.Errorf(text.NotSupportedByDriver, `\dp`, u.SchemeName)
 	}
 	sp, tp, err := parsePattern(pattern)
 	if err != nil {

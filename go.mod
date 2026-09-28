@@ -54,7 +54,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cql v0.1.0
 	github.com/xo/dbimp v0.4.0
-	github.com/xo/dburl v0.35.0
+	github.com/xo/dburl v0.36.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1

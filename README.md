@@ -245,7 +245,7 @@ associated database, scheme / build tag, and scheme aliases:
 
 | Database             | Scheme / Tag    | Scheme Aliases                                | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| PostgreSQL           | `pgx`           | `pg`, `pgsql`, `postgresql`, `postgres`       | [github.com/jackc/pgx/v5/stdlib][d-pgx] <sup>[‡][f-wire]</sup>                              |
+| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                   | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
 | PostgreSQL PGX       | `pgx`           | `px`                                          | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona` | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                     | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
@@ -255,6 +255,10 @@ associated database, scheme / build tag, and scheme aliases:
 | ClickHouse           | `clickhouse`    | `ch`                                          | [github.com/ClickHouse/clickhouse-go/v2][d-clickhouse]                                      |
 | CockroachDB          | `cockroachdb`   | `cr`, `cdb`, `crdb`, `cockroach`              | [github.com/jackc/pgx/v5/stdlib][d-cockroachdb]                                             |
 | CrateDB              | `cratedb`       | `ct`, `crate`                                 | [github.com/jackc/pgx/v5/stdlib][d-cratedb]                                                 |
+| Amazon Redshift      | `redshift`      | `rs`                                          | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
+| SingleStore MemSQL   | `memsql`        | `me`                                          | [github.com/go-sql-driver/mysql][d-memsql]                                                  |
+| TiDB                 | `tidb`          | `ti`                                          | [github.com/go-sql-driver/mysql][d-tidb]                                                    |
+| Vitess Database      | `vitess`        | `vt`                                          | [github.com/go-sql-driver/mysql][d-vitess]                                                  |
 |                      |                 |                                               |                                                                                             |
 | Alibaba MaxCompute   | `maxcompute`    | `mc`                                          | [github.com/aliyun/aliyun-odps-go-sdk/sqldriver][d-maxcompute] <sup>[¶][f-hosted]</sup>     |
 | Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                            | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots] <sup>[¶][f-hosted]</sup>         |
@@ -283,6 +287,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Netezza              | `netezza`       | `nz`, `nzgo`                                  | [github.com/IBM/nzgo/v12][d-netezza]                                                        |
 | PostgreSQL lib/pq    | `libpq`         | `pq`                                          | [github.com/lib/pq][d-libpq]                                                                |
 | Presto               | `presto`        | `pr`, `prestodb`                              | [github.com/prestodb/presto-go-client/v2][d-presto]                                         |
+| QuestDB              | `questdb`       | `qs`                                          | [github.com/jackc/pgx/v5/stdlib][d-questdb]                                                 |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                    | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
 | Snowflake            | `snowflake`     | `sf`                                          | [github.com/snowflakedb/gosnowflake/v2][d-snowflake] <sup>[¶][f-hosted]</sup>               |
 | SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                        | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
@@ -294,12 +299,8 @@ associated database, scheme / build tag, and scheme aliases:
 | GO DRiver for ORacle | `godror`        | `gr`                                          | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>                                  |
 | ODBC                 | `odbc`          | `od`                                          | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>                                |
 |                      |                 |                                               |                                                                                             |
-| Amazon Redshift      | `pgx`           | `rs`, `redshift`                              | [github.com/jackc/pgx/v5/stdlib][d-pgx] <sup>[‡][f-wire]</sup> <sup>[¶][f-hosted]</sup>     |
-| SingleStore MemSQL   | `mysql`         | `me`, `memsql`                                | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup>                            |
-| TiDB                 | `mysql`         | `ti`, `tidb`                                  | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup>                            |
-| Vitess Database      | `mysql`         | `vt`, `vitess`                                | [github.com/go-sql-driver/mysql][d-mysql] <sup>[‡][f-wire]</sup>                            |
-|                      |                 |                                               |                                                                                             |
 | Apache H2            | `h2`            |                                               | [github.com/jmrobles/h2go][d-h2]                                                            |
+| GizmoSQL             | `gizmosql`      | `gz`, `gizmo`                                 | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-gizmosql]                  |
 |                      |                 |                                               |                                                                                             |
 | **NO DRIVERS**       | `no_base`       |                                               | _no base drivers (useful for development)_                                                  |
 | **MOST DRIVERS**     | `most`          |                                               | _all stable drivers_                                                                        |
@@ -325,6 +326,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-exasol]: https://github.com/exasol/exasol-driver-go
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-flightsql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
+[d-gizmosql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
 [d-godror]: https://github.com/godror/godror
 [d-h2]: https://github.com/jmrobles/h2go
 [d-hive]: https://github.com/beltran/gohive
@@ -333,6 +335,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-influxql]: https://github.com/xo/dbimp
 [d-libpq]: https://github.com/lib/pq
 [d-maxcompute]: https://github.com/aliyun/aliyun-odps-go-sdk
+[d-memsql]: https://github.com/go-sql-driver/mysql
 [d-moderncsqlite]: https://gitlab.com/cznic/sqlite
 [d-mysql]: https://github.com/go-sql-driver/mysql
 [d-neo4j]: https://github.com/xo/dbimp
@@ -341,30 +344,33 @@ associated database, scheme / build tag, and scheme aliases:
 [d-oracle]: https://github.com/sijms/go-ora
 [d-ots]: https://github.com/aliyun/aliyun-tablestore-go-sql-driver
 [d-pgx]: https://github.com/jackc/pgx
+[d-postgres]: https://github.com/jackc/pgx
 [d-presto]: https://github.com/prestodb/presto-go-client
 [d-ql]: https://gitlab.com/cznic/ql
+[d-questdb]: https://github.com/jackc/pgx
+[d-redshift]: https://github.com/jackc/pgx
 [d-saphana]: https://github.com/SAP/go-hdb
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
 [d-spanner]: https://github.com/googleapis/go-sql-spanner
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-surrealdb]: https://github.com/xo/dbimp
+[d-tidb]: https://github.com/go-sql-driver/mysql
 [d-trino]: https://github.com/trinodb/trino-go-client
 [d-vertica]: https://github.com/vertica/vertica-sql-go
+[d-vitess]: https://github.com/go-sql-driver/mysql
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
 [d-ydb]: https://github.com/ydb-platform/ydb-go-sdk
 
 <!-- DRIVER DETAILS END -->
 
 [f-cgo]: #f-cgo "Requires CGO"
-[f-wire]: #f-wire "Wire compatible"
 [f-embedded]: #f-embedded "Embedded"
 [f-hosted]: #f-hosted "Hosted service"
 
 <p>
   <i>
     <a id="f-cgo"><sup>†</sup> Requires CGO</a><br>
-    <a id="f-wire"><sup>‡</sup> Wire compatible (see respective driver)</a><br>
     <a id="f-embedded"><sup>§</sup> Embedded, with no server to run</a><br>
     <a id="f-hosted"><sup>¶</sup> Hosted service, with no server you can run</a>
   </i>
@@ -1473,8 +1479,9 @@ An entry applies to a URL when each of its fields is `*` or equal to the
 URL's. An entry never replaces a user that the URL names, and an entry for one
 database applies only to that database. The protocol matches every scheme of
 the same database, so a `postgres:` entry also covers `pg://`, `pgx://` and
-`pq://`. CockroachDB is a database of its own, so it needs a `cockroachdb:`
-entry.
+`pq://`. A database that only speaks another's protocol is a database of its
+own, so CockroachDB, CrateDB and Redshift each need their own entry, and so do
+TiDB, SingleStore and Vitess. A `mysql:` entry does not cover `tidb://`.
 
 While the `.usqlpass` functionality will not be removed, it is recommended to
 [define named connections][connection-vars] preferably via [the `config.yaml`

@@ -3,13 +3,17 @@ package main
 import (
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/internal"
 )
 
 // seeRE matches the See: line in a driver's package comment.
@@ -61,7 +65,7 @@ func TestDriverSeeMatchesDburl(t *testing.T) {
 func schemeIndex() map[string]dburl.Scheme {
 	m := make(map[string]dburl.Scheme)
 	for _, scheme := range dburl.BaseSchemes() {
-		m[scheme.Driver] = scheme
+		m[scheme.Name] = scheme
 		for _, alias := range scheme.Aliases {
 			if _, ok := m[alias]; !ok {
 				m[alias] = scheme
@@ -110,4 +114,46 @@ func driverSee(t *testing.T, tag string) (string, bool) {
 		return "", false
 	}
 	return strings.TrimSpace(m[1]), true
+}
+
+// TestRegistryIsKeyedByScheme checks that usql's driver registry is keyed by
+// dburl's scheme name, which is URL.SchemeName, and not by the name that
+// database/sql opens, which is URL.Driver.
+//
+// The two names differ for tidb://, whose Driver is mysql, and for
+// postgres://, whose Driver is pgx. A registry entry under the wrong one
+// compiles and registers, and the URL then gets another database's hooks, or
+// none. This test is the only thing that notices.
+func TestRegistryIsKeyedByScheme(t *testing.T) {
+	t.Parallel()
+	names := make(map[string]bool)
+	for _, scheme := range dburl.BaseSchemes() {
+		names[scheme.Name] = true
+	}
+	registered := drivers.Available()
+	for _, name := range slices.Sorted(maps.Keys(registered)) {
+		if !names[name] {
+			t.Errorf("driver %s is registered under a name that is not a dburl scheme."+
+				" Register it under its scheme's Name, which is what URL.SchemeName holds.", name)
+		}
+	}
+	// gen.go writes each driver package's scheme Name into KnownBuildTags.
+	// A registered name that no package documents is one registered under
+	// the wrong name, and registering one name twice already panics.
+	documented := make(map[string]string)
+	for tag, name := range internal.KnownBuildTags() {
+		if !names[name] {
+			t.Errorf("KnownBuildTags maps %s to %s, which is not a dburl scheme", tag, name)
+		}
+		documented[name] = tag
+	}
+	for _, name := range slices.Sorted(maps.Keys(registered)) {
+		if _, ok := documented[name]; !ok {
+			t.Errorf("driver %s is registered, and no driver package documents"+
+				" the scheme %s", name, name)
+		}
+	}
+	if len(registered) < 20 {
+		t.Errorf("found %d registered drivers, expected at least 20", len(registered))
+	}
 }

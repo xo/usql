@@ -1,12 +1,11 @@
 // Package pgx defines and registers usql's PostgreSQL PGX driver.
 //
-// dburl sends postgres://, pgx:// and redshift:// URLs to it. It answers to
-// the postgres build tag as well as to pgx. The cockroachdb and cratedb
-// drivers register the same driver under their own names, through Driver.
+// dburl opens pgx:// URLs with it. The postgres, redshift, cockroachdb,
+// cratedb and questdb drivers register the same driver under their own names,
+// through Driver.
 //
 // See: https://github.com/jackc/pgx
 // Group: base
-// Tags: postgres
 package pgx
 
 import (
@@ -32,8 +31,8 @@ func init() {
 }
 
 // Driver returns the pgx driver. dburl opens a database that speaks the
-// PostgreSQL protocol, such as CockroachDB, through pgx by its GoDriver, and
-// usql registers this driver under that database's own name.
+// PostgreSQL protocol, such as CockroachDB, through pgx, which it names in
+// URL.Driver, and usql registers this driver under that database's own name.
 func Driver() drivers.Driver {
 	return drivers.Driver{
 		AllowDollar:            true,

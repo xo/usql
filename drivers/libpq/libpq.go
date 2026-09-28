@@ -1,7 +1,8 @@
 // Package libpq defines and registers usql's PostgreSQL lib/pq driver.
 //
-// It registers as postgres, which is the name lib/pq takes in database/sql.
-// dburl sends pq:// URLs to it. postgres:// URLs go to the pgx driver.
+// It registers as pq, the scheme that dburl gives pq:// and libpq:// URLs.
+// lib/pq itself registers as postgres in database/sql, which is the driver
+// dburl opens. postgres:// URLs go to the pgx driver.
 //
 // See: https://github.com/lib/pq
 // Group: most
@@ -46,7 +47,7 @@ func init() {
 		})
 		return sql.OpenDB(notificationConn), nil
 	}
-	drivers.Register("postgres", drivers.Driver{
+	drivers.Register("pq", drivers.Driver{
 		Name:                   "pq",
 		AllowDollar:            true,
 		AllowMultilineComments: true,

@@ -1,8 +1,8 @@
 // Package cratedb defines and registers usql's CrateDB driver.
 //
-// CrateDB speaks the PostgreSQL protocol, and dburl opens it through pgx by
-// its GoDriver. This package registers the pgx driver under the name
-// cratedb, which dburl sets on a cratedb:// URL.
+// CrateDB speaks the PostgreSQL protocol, and dburl opens it through pgx.
+// This package registers the pgx driver under the name cratedb, which dburl
+// sets as the scheme of a cratedb:// URL.
 //
 // Metadata: none. The pgx driver's reader is PostgreSQL's, and CrateDB
 // refuses its queries, so this driver drops it. All metadata is moving into

@@ -438,7 +438,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	// determine type and pre process string
 	prefix, sqlstr, qtyp, err := drivers.Process(h.u, prefix, sqlstr)
 	if err != nil {
-		return drivers.WrapErr(h.u.Driver, err)
+		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	// start a transaction if forced
 	if forceTrans {
@@ -457,7 +457,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	case metacmd.ExecChart:
 		f = h.doExecChart
 	}
-	if err = drivers.WrapErr(h.u.Driver, f(ctx, w, opt, prefix, sqlstr, qtyp, bind)); err != nil {
+	if err = drivers.WrapErr(h.u.SchemeName, f(ctx, w, opt, prefix, sqlstr, qtyp, bind)); err != nil {
 		if forceTrans {
 			defer h.tx.Rollback()
 			h.tx = nil
@@ -580,7 +580,7 @@ func (h *Handler) Prompt(prompt string) string {
 			if connected {
 				s := dburl.ShortAlias(h.u.Scheme)
 				if s == "" {
-					s = dburl.ShortAlias(h.u.Driver)
+					s = dburl.ShortAlias(h.u.SchemeName)
 				}
 				if s == "" {
 					s = text.UnknownShortAlias
@@ -837,7 +837,7 @@ func (h *Handler) connStrings() []string {
 	available := drivers.Available()
 	names := make([]string, 0, len(available)+len(entries))
 	for schema := range available {
-		_, aliases := dburl.SchemeDriverAndAliases(schema)
+		_, aliases := dburl.SchemeNameAndAliases(schema)
 		// TODO should we create all combinations of space, :, :// and +transport ?
 		names = append(names, schema)
 		names = append(names, aliases...)
@@ -917,7 +917,7 @@ func (h *Handler) Close() error {
 	}
 	if h.db != nil {
 		err := h.db.Close()
-		drv := h.u.Driver
+		drv := h.u.SchemeName
 		h.db, h.u = nil, nil
 		return drivers.WrapErr(drv, err)
 	}
@@ -1027,7 +1027,7 @@ func (h *Handler) Version(ctx context.Context) error {
 	case ver == "":
 		ver = "<unknown>"
 	}
-	h.Print(text.ConnInfo, h.u.Driver, ver)
+	h.Print(text.ConnInfo, h.u.SchemeName, ver)
 	return nil
 }
 
@@ -1288,7 +1288,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	}
 	// a sqlserver EXEC can return a result set with no columns and nothing
 	// after it, so report it as an exec rather than as an empty result set
-	if h.u.Driver == "sqlserver" && strings.HasPrefix(typ, "EXEC") && opt.Exec != metacmd.ExecCrosstab {
+	if h.u.SchemeName == "sqlserver" && strings.HasPrefix(typ, "EXEC") && opt.Exec != metacmd.ExecCrosstab {
 		cols, err := rows.Columns()
 		if err != nil {
 			return err
@@ -1442,7 +1442,7 @@ func (h *Handler) BeginTx(ctx context.Context, txOpts *sql.TxOptions) error {
 	var err error
 	h.tx, err = h.db.BeginTx(ctx, txOpts)
 	if err != nil {
-		return drivers.WrapErr(h.u.Driver, err)
+		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	return nil
 }
@@ -1458,7 +1458,7 @@ func (h *Handler) Commit() error {
 	tx := h.tx
 	h.tx = nil
 	if err := tx.Commit(); err != nil {
-		return drivers.WrapErr(h.u.Driver, err)
+		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	return nil
 }
@@ -1474,7 +1474,7 @@ func (h *Handler) Rollback() error {
 	tx := h.tx
 	h.tx = nil
 	if err := tx.Rollback(); err != nil {
-		return drivers.WrapErr(h.u.Driver, err)
+		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	return nil
 }

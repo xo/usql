@@ -1,8 +1,7 @@
 // Package mysql defines and registers usql's MySQL driver.
 //
-// Alias: memsql, SingleStore MemSQL
-// Alias: vitess, Vitess Database
-// Alias: tidb, TiDB
+// The memsql, tidb and vitess drivers register the same driver under their
+// own names, through Driver.
 //
 // See: https://github.com/go-sql-driver/mysql
 // Group: base
@@ -19,7 +18,14 @@ import (
 )
 
 func init() {
-	drivers.Register("mysql", drivers.Driver{
+	drivers.Register("mysql", Driver())
+}
+
+// Driver returns the MySQL driver. dburl opens a database that speaks the
+// MySQL protocol, such as TiDB, through the mysql driver, and usql registers
+// this driver under that database's own name.
+func Driver() drivers.Driver {
+	return drivers.Driver{
 		AllowMultilineComments: true,
 		AllowHashComments:      true,
 		AllowBacktick:          true,
@@ -48,5 +54,5 @@ func init() {
 		},
 		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
 		NewCompleter: mymeta.NewCompleter,
-	}, "memsql", "vitess", "tidb")
+	}
 }

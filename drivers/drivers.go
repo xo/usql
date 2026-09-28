@@ -142,7 +142,7 @@ func Registered(name string) bool {
 // LowerColumnNames reports whether the driver converts column names to lower
 // case.
 func LowerColumnNames(u *dburl.URL) bool {
-	if d, ok := drivers[u.Driver]; ok {
+	if d, ok := drivers[u.SchemeName]; ok {
 		return d.LowerColumnNames
 	}
 	return false
@@ -151,7 +151,7 @@ func LowerColumnNames(u *dburl.URL) bool {
 // UseColumnTypes reports whether the driver takes its column types from the
 // database rather than from the raw bytes.
 func UseColumnTypes(u *dburl.URL) bool {
-	if d, ok := drivers[u.Driver]; ok {
+	if d, ok := drivers[u.SchemeName]; ok {
 		return d.UseColumnTypes
 	}
 	return false
@@ -159,7 +159,7 @@ func UseColumnTypes(u *dburl.URL) bool {
 
 // ForceParams forces parameters on the DSN for a driver.
 func ForceParams(u *dburl.URL) {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if ok && d.ForceParams != nil {
 		d.ForceParams(u)
 	}
@@ -167,24 +167,21 @@ func ForceParams(u *dburl.URL) {
 
 // Open opens a sql.DB connection for a driver.
 func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*sql.DB, error) {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if !ok {
-		return nil, WrapErr(u.Driver, text.ErrDriverNotAvailable)
+		return nil, WrapErr(u.SchemeName, text.ErrDriverNotAvailable)
 	}
 	f := sql.Open
 	if d.Open != nil {
 		var err error
 		if f, err = d.Open(ctx, u, stdout, stderr); err != nil {
-			return nil, WrapErr(u.Driver, err)
+			return nil, WrapErr(u.SchemeName, err)
 		}
 	}
-	driver := u.Driver
-	if u.GoDriver != "" {
-		driver = u.GoDriver
-	}
-	db, err := f(driver, u.DSN)
+	// the registry is keyed by the scheme, and database/sql by the driver
+	db, err := f(u.Driver, u.DSN)
 	if err != nil {
-		return nil, WrapErr(u.Driver, err)
+		return nil, WrapErr(u.SchemeName, err)
 	}
 	return db, nil
 }
@@ -192,7 +189,7 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 // stmtOpts returns statement options for a driver.
 func stmtOpts(u *dburl.URL) []stmt.Option {
 	if u != nil {
-		if d, ok := drivers[u.Driver]; ok {
+		if d, ok := drivers[u.SchemeName]; ok {
 			return []stmt.Option{
 				stmt.WithAllowDollar(d.AllowDollar),
 				stmt.WithAllowMultilineComments(d.AllowMultilineComments),
@@ -228,9 +225,9 @@ func ConfigStmt(u *dburl.URL, s *stmt.Stmt) {
 
 // Version returns information about the database connection for a driver.
 func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.Version != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.Version != nil {
 		ver, err := d.Version(ctx, db)
-		return ver, WrapErr(u.Driver, err)
+		return ver, WrapErr(u.SchemeName, err)
 	}
 	var ver string
 	err := db.QueryRowContext(ctx, `SELECT version();`).Scan(&ver)
@@ -242,9 +239,9 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 
 // User returns the current database user for a driver.
 func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.User != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.User != nil {
 		user, err := d.User(ctx, db)
-		return user, WrapErr(u.Driver, err)
+		return user, WrapErr(u.SchemeName, err)
 	}
 	var user string
 	_ = db.QueryRowContext(ctx, `SELECT current_user`).Scan(&user)
@@ -253,9 +250,9 @@ func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 
 // Process processes the sql query for a driver.
 func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) {
-	if d, ok := drivers[u.Driver]; ok && d.Process != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.Process != nil {
 		a, b, c, err := d.Process(u, prefix, sqlstr)
-		return a, b, c, WrapErr(u.Driver, err)
+		return a, b, c, WrapErr(u.SchemeName, err)
 	}
 	typ, q := QueryExecType(prefix, sqlstr)
 	return typ, sqlstr, q, nil
@@ -263,12 +260,12 @@ func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) 
 
 // ColumnTypes returns the column types callback for a driver.
 func ColumnTypes(u *dburl.URL) func(*sql.ColumnType) (interface{}, error) {
-	return drivers[u.Driver].ColumnTypes
+	return drivers[u.SchemeName].ColumnTypes
 }
 
 // IsPasswordErr returns true if an err is a password error for a driver.
 func IsPasswordErr(u *dburl.URL, err error) bool {
-	drv := u.Driver
+	drv := u.SchemeName
 	if e, ok := err.(*Error); ok {
 		drv, err = e.Driver, e.Err
 	}
@@ -281,7 +278,7 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 // RequirePreviousPassword returns true if a driver requires a previous
 // password when changing a user's password.
 func RequirePreviousPassword(u *dburl.URL) bool {
-	if d, ok := drivers[u.Driver]; ok {
+	if d, ok := drivers[u.SchemeName]; ok {
 		return d.RequirePreviousPassword
 	}
 	return false
@@ -290,7 +287,7 @@ func RequirePreviousPassword(u *dburl.URL) bool {
 // CanChangePassword returns whether or not the a driver supports changing
 // passwords.
 func CanChangePassword(u *dburl.URL) error {
-	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ChangePassword != nil {
 		return nil
 	}
 	return text.ErrPasswordNotSupportedByDriver
@@ -299,7 +296,7 @@ func CanChangePassword(u *dburl.URL) error {
 // ChangePassword initiates a user password change for the a driver. If user is
 // not supplied, then the current user will be retrieved from User.
 func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ChangePassword != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ChangePassword != nil {
 		if user == "" {
 			var err error
 			if user, err = User(context.Background(), u, db); err != nil {
@@ -315,9 +312,9 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 	cols, err := rows.Columns()
 	if err != nil {
-		return nil, WrapErr(u.Driver, err)
+		return nil, WrapErr(u.SchemeName, err)
 	}
-	if drivers[u.Driver].LowerColumnNames {
+	if drivers[u.SchemeName].LowerColumnNames {
 		for i, s := range cols {
 			if j := strings.IndexFunc(s, func(r rune) bool {
 				return unicode.IsLetter(r) && unicode.IsLower(r)
@@ -336,7 +333,7 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 
 // ConvertBytes returns a func to handle converting bytes for a driver.
 func ConvertBytes(u *dburl.URL) func([]byte, string) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ConvertBytes != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ConvertBytes != nil {
 		return d.ConvertBytes
 	}
 	return func(buf []byte, _ string) (string, error) {
@@ -347,7 +344,7 @@ func ConvertBytes(u *dburl.URL) func([]byte, string) (string, error) {
 // ConvertMap returns a func to handle converting a map[string]interface{} for
 // a driver.
 func ConvertMap(u *dburl.URL) func(map[string]interface{}) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ConvertMap != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ConvertMap != nil {
 		return d.ConvertMap
 	}
 	return func(v map[string]interface{}) (string, error) {
@@ -362,7 +359,7 @@ func ConvertMap(u *dburl.URL) func(map[string]interface{}) (string, error) {
 // ConvertSlice returns a func to handle converting a []interface{} for a
 // driver.
 func ConvertSlice(u *dburl.URL) func([]interface{}) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ConvertSlice != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ConvertSlice != nil {
 		return d.ConvertSlice
 	}
 	return func(v []interface{}) (string, error) {
@@ -377,7 +374,7 @@ func ConvertSlice(u *dburl.URL) func([]interface{}) (string, error) {
 // ConvertDefault returns a func to handle converting a interface{} for a
 // driver.
 func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
-	if d, ok := drivers[u.Driver]; ok && d.ConvertDefault != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.ConvertDefault != nil {
 		return d.ConvertDefault
 	}
 	return func(v interface{}) (string, error) {
@@ -388,7 +385,7 @@ func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
 // BatchAsTransaction returns whether or not a driver requires batched queries
 // to be done within a transaction block.
 func BatchAsTransaction(u *dburl.URL) bool {
-	if d, ok := drivers[u.Driver]; ok {
+	if d, ok := drivers[u.SchemeName]; ok {
 		return d.BatchAsTransaction
 	}
 	return false
@@ -400,7 +397,7 @@ func BatchAsTransaction(u *dburl.URL) bool {
 func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
 	// normalize
 	typ, q := QueryExecType(prefix, "")
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if q || !ok || d.BatchQueryPrefixes == nil {
 		return typ, "", false
 	}
@@ -412,7 +409,7 @@ func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
 func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 	var count int64
 	var err error
-	if d, ok := drivers[u.Driver]; ok && d.RowsAffected != nil {
+	if d, ok := drivers[u.SchemeName]; ok && d.RowsAffected != nil {
 		count, err = d.RowsAffected(res)
 	} else {
 		count, err = res.RowsAffected()
@@ -421,21 +418,21 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 		return 0, nil
 	}
 	if err != nil {
-		return 0, WrapErr(u.Driver, err)
+		return 0, WrapErr(u.SchemeName, err)
 	}
 	return count, nil
 }
 
 // Ping pings the database for a driver.
 func Ping(ctx context.Context, u *dburl.URL, db *sql.DB) error {
-	return WrapErr(u.Driver, db.PingContext(ctx))
+	return WrapErr(u.SchemeName, db.PingContext(ctx))
 }
 
 // Lexer returns the syntax lexer for a driver.
 func Lexer(u *dburl.URL) chroma.Lexer {
 	var l chroma.Lexer
 	if u != nil {
-		if d, ok := drivers[u.Driver]; ok && d.LexerName != "" {
+		if d, ok := drivers[u.SchemeName]; ok && d.LexerName != "" {
 			l = lexers.Get(d.LexerName)
 		}
 	}
@@ -465,24 +462,24 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 
 // NewMetadataReader wraps creating a new database introspector for a driver.
 func NewMetadataReader(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if !ok || d.NewMetadataReader == nil {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
 	return d.NewMetadataReader(db, opts...), nil
 }
 
 // NewMetadataWriter wraps creating a new database metadata printer for a driver.
 func NewMetadataWriter(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if !ok {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
 	if d.NewMetadataWriter != nil {
 		return d.NewMetadataWriter(db, w, opts...), nil
 	}
 	if d.NewMetadataReader == nil {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.Driver)
+		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
 	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db, opts...))
 	return newMetadataWriter(db, w), nil
@@ -491,7 +488,7 @@ func NewMetadataWriter(ctx context.Context, u *dburl.URL, db DB, w io.Writer, op
 // NewCompleter creates a metadata completer for a driver and database
 // connection.
 func NewCompleter(ctx context.Context, u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts ...completer.Option) completer.Completer {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if !ok {
 		return nil
 	}
@@ -516,12 +513,12 @@ func NewCompleter(ctx context.Context, u *dburl.URL, db DB, readerOpts []metadat
 
 // Copy copies the result set to the destination sql.DB.
 func Copy(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer, rows *sql.Rows, table string) (int64, error) {
-	d, ok := drivers[u.Driver]
+	d, ok := drivers[u.SchemeName]
 	if !ok {
-		return 0, WrapErr(u.Driver, text.ErrDriverNotAvailable)
+		return 0, WrapErr(u.SchemeName, text.ErrDriverNotAvailable)
 	}
 	if d.Copy == nil {
-		return 0, fmt.Errorf(text.NotSupportedByDriver, "copy", u.Driver)
+		return 0, fmt.Errorf(text.NotSupportedByDriver, "copy", u.SchemeName)
 	}
 	db, err := Open(ctx, u, stdout, stderr)
 	if err != nil {

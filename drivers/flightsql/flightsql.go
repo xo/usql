@@ -10,5 +10,11 @@ import (
 )
 
 func init() {
-	drivers.Register("flightsql", drivers.Driver{})
+	drivers.Register("flightsql", Driver())
+}
+
+// Driver returns the FlightSQL driver. dburl opens GizmoSQL through the
+// flightsql driver, and usql registers this driver under that name too.
+func Driver() drivers.Driver {
+	return drivers.Driver{}
 }
