@@ -615,12 +615,6 @@ $ usql my_named_connection
 
 # connect with ODBC driver (requires building with odbc tag)
 $ cat /etc/odbcinst.ini
-[DB2]
-Description=DB2 driver
-Driver=/opt/db2/clidriver/lib/libdb2.so
-FileUsage = 1
-DontDLClose = 1
-
 [PostgreSQL ANSI]
 Description=PostgreSQL ODBC driver (ANSI version)
 Driver=psqlodbca.so
@@ -629,8 +623,7 @@ Debug=0
 CommLog=1
 UsageCount=1
 
-# connect to db2, postgres databases using odbc config above
-$ usql odbc+DB2://user:pass@localhost/dbname
+# connect to a postgres database using the odbc config above
 $ usql odbc+PostgreSQL+ANSI://user:pass@localhost/dbname?TraceFile=/path/to/trace.log
 ```
 

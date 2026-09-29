@@ -1366,7 +1366,6 @@ not, and those were discarded.
 
 | Database            | Module                                             | Latest                | Released   |
 | ------------------- | -------------------------------------------------- | --------------------- | ---------- |
-| IBM Db2             | `github.com/ibmdb/go_ibm_db`                       | v0.5.4                | 2025-10-07 |
 | libSQL and Turso    | `github.com/tursodatabase/libsql-client-go/libsql` | v0.0.0-20260528064733 | 2026-05-28 |
 | TDengine            | `github.com/taosdata/driver-go/v3`                 | v3.8.2                | 2026-07-09 |
 | Dolt                | `github.com/dolthub/driver`                        | v1.88.1               | 2026-05-07 |
@@ -1374,9 +1373,9 @@ not, and those were discarded.
 | rqlite              | `github.com/rqlite/gorqlite/stdlib`                | v0.0.0-20260504155303 | 2026-05-04 |
 | openGauss and MogDB | `gitee.com/opengauss/openGauss-connector-go-pq`    | v1.0.8                | 2025-08-20 |
 
-Db2 is the strongest candidate, because dbmeta's `docs/EVALUATION.md` already
-records a container for it and no Db2 driver exists anywhere in the tree. It needs
-cgo and a download of the IBM CLI driver.
+IBM Db2 is out of scope. Ken decided on 2026-09-29 that it cannot be tested
+here, so usql removed its Db2 client setup from `contrib/` and does not add a
+Db2 driver. dbmeta records the decision as its D130.
 
 `github.com/ncruces/go-sqlite3/driver` v0.35.5 also qualifies, but usql already
 links two SQLite drivers, so it is the weakest of these.
