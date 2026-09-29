@@ -265,6 +265,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                               | [github.com/apache/calcite-avatica-go/v5][d-avatica]                                        |
 | Apache Hive          | `hive`          | `hi`, `hive2`                                 | [github.com/beltran/gohive/v2][d-hive]                                                      |
 | Apache Impala        | `impala`        | `im`                                          | [github.com/sclgo/impala-go][d-impala]                                                      |
+| ArangoDB             | `arangodb`      | `ar`, `arango`                                | [github.com/xo/dbimp/arangodb][d-arangodb]                                                  |
 | AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                      | [github.com/uber/athenadriver/go][d-athena] <sup>[¶][f-hosted]</sup>                        |
 | Azure CosmosDB       | `cosmos`        | `cm`, `gocosmos`                              | [github.com/btnguyen2k/gocosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                         |
 | Cassandra            | `cassandra`     | `ca`, `scy`, `scylla`, `datastax`, `cql`      | [github.com/xo/cql][d-cassandra]                                                            |
@@ -308,6 +309,7 @@ associated database, scheme / build tag, and scheme aliases:
 | **BAD DRIVERS**      | `bad`           |                                               | _bad drivers (broken/non-working drivers)_                                                  |
 | **NO &lt;TAG&gt;**   | `no_<tag>`      |                                               | _exclude driver with `<tag>`_                                                               |
 
+[d-arangodb]: https://github.com/xo/dbimp
 [d-athena]: https://github.com/uber/athenadriver
 [d-avatica]: https://github.com/apache/calcite-avatica-go
 [d-bigquery]: https://github.com/go-gorm/bigquery

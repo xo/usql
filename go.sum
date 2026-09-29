@@ -1528,8 +1528,8 @@ github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8
 github.com/xhit/go-str2duration/v2 v2.1.0/go.mod h1:ohY8p+0f07DiV6Em5LKB0s2YpLtXVyJfNt1+BlmyAsU=
 github.com/xo/cql v0.1.0 h1:Gc7OwnPpIOoKRNbK+5CFW1bvYo+bXCGzx16zXuPf9xc=
 github.com/xo/cql v0.1.0/go.mod h1:VUz46cVi0f5+MSRL2q2EWlBe9gLKIgX6KZ8Ave6EcxU=
-github.com/xo/dbimp v0.4.0 h1:UyLmXKcM8A+Chw3YYb7Bz+ueWw9qrpFBdk9dAh4ww4M=
-github.com/xo/dbimp v0.4.0/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
+github.com/xo/dbimp v0.5.0 h1:JBoU4/UePV1Drm38Cv9RlMJzx/F7949eeEmX5EuKp6U=
+github.com/xo/dbimp v0.5.0/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
 github.com/xo/dburl v0.36.0 h1:wOrqoJeqmGsXEcFIzdsiKNtebVYRYbSPk67RUSe6yfs=
 github.com/xo/dburl v0.36.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
 github.com/xo/echartsgoja v0.1.1 h1:9ZH7rhjovE/caGzWTFw1X5GItCsPw5eFV2Qwfgmjt7M=
