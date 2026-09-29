@@ -20,7 +20,7 @@ func KnownBuildTags() map[string]string {
 		"couchbase":     "couchbase",     // github.com/xo/dbimp/couchbase
 		"cratedb":       "cratedb",       // github.com/jackc/pgx/v5/stdlib
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
-		"databend":      "databend",      // github.com/datafuselabs/databend-go
+		"databend":      "databend",      // github.com/xo/dbimp/databend
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
 		"dynamodb":      "godynamo",      // github.com/btnguyen2k/godynamo

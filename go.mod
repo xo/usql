@@ -18,7 +18,6 @@ require (
 	github.com/btnguyen2k/godynamo v1.3.0
 	github.com/chaisql/chai v0.18.0
 	github.com/databricks/databricks-sql-go v1.16.0
-	github.com/datafuselabs/databend-go v0.9.4
 	github.com/duckdb/duckdb-go/v2 v2.10505.0
 	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
@@ -52,8 +51,8 @@ require (
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cql v0.1.0
-	github.com/xo/dbimp v0.5.0
-	github.com/xo/dburl v0.36.0
+	github.com/xo/dbimp v0.6.1
+	github.com/xo/dburl v0.38.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1
@@ -102,7 +101,6 @@ require (
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/apache/thrift v0.24.0 // indirect
-	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect

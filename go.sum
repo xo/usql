@@ -732,8 +732,6 @@ github.com/apache/cassandra-gocql-driver/v2 v2.1.2/go.mod h1:QH/asJjB3mHvY6Dot6Z
 github.com/apache/thrift v0.16.0/go.mod h1:PHK3hniurgQaNMZYaCLEqXKsYK8upmhPbmdP2FXSqgU=
 github.com/apache/thrift v0.24.0 h1:zy31L1a49QTNB2bG1BBfMXol3yJrTH975G3pPubQVLQ=
 github.com/apache/thrift v0.24.0/go.mod h1:zPt6WxgvTOM6hF92y8C+MkEM5LMxZuk4JcQOiU4Esvs=
-github.com/avast/retry-go v3.0.0+incompatible h1:4SOWQ7Qs+oroOTQOYnAHqelpCO0biHSxpiH9JdtuBj0=
-github.com/avast/retry-go v3.0.0+incompatible/go.mod h1:XtSnn+n/sHqQIpZ10K1qAevBhOOCWBLXXy3hyiqqBrY=
 github.com/aws/aws-sdk-go v1.37.32/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.55.8 h1:JRmEUbU52aJQZ2AjX4q4Wu7t4uZjOu71uyNmaWlUkJQ=
 github.com/aws/aws-sdk-go v1.55.8/go.mod h1:ZkViS9AqA6otK+JBBNH2++sx1sgxrPKcSzPPvQkUtXk=
@@ -905,8 +903,6 @@ github.com/databricks/databricks-sql-kernel-bindings/lib/windows_amd64 v1.1.0 h1
 github.com/databricks/databricks-sql-kernel-bindings/lib/windows_amd64 v1.1.0/go.mod h1:OaUVov84uK1IJz1gNk5TIoae0rj0vx+4N1qqRT88MdU=
 github.com/databricks/databricks-sql-kernel-bindings/lib/windows_arm64 v1.1.0 h1:bwwnCx3xh1p+Xn+qtVk7plG8BOdkaymOlQNJO5cfnOc=
 github.com/databricks/databricks-sql-kernel-bindings/lib/windows_arm64 v1.1.0/go.mod h1:Z8JD951Nk66P1J8hL6YhkyMp1YAnrRzxE2JMTYRblxc=
-github.com/datafuselabs/databend-go v0.9.4 h1:GXhm0rshyITNJ+FVyVvK8b27PMBJr4asBinlSwdirxs=
-github.com/datafuselabs/databend-go v0.9.4/go.mod h1:4gZSxuLaYCITyrPz5I9VI0gLwf2KHIasfhedYDpmb10=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
@@ -1526,10 +1522,10 @@ github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8
 github.com/xhit/go-str2duration/v2 v2.1.0/go.mod h1:ohY8p+0f07DiV6Em5LKB0s2YpLtXVyJfNt1+BlmyAsU=
 github.com/xo/cql v0.1.0 h1:Gc7OwnPpIOoKRNbK+5CFW1bvYo+bXCGzx16zXuPf9xc=
 github.com/xo/cql v0.1.0/go.mod h1:VUz46cVi0f5+MSRL2q2EWlBe9gLKIgX6KZ8Ave6EcxU=
-github.com/xo/dbimp v0.5.0 h1:JBoU4/UePV1Drm38Cv9RlMJzx/F7949eeEmX5EuKp6U=
-github.com/xo/dbimp v0.5.0/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
-github.com/xo/dburl v0.36.0 h1:wOrqoJeqmGsXEcFIzdsiKNtebVYRYbSPk67RUSe6yfs=
-github.com/xo/dburl v0.36.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
+github.com/xo/dbimp v0.6.1 h1:6JuorxitPyYfEu5SUAMimQ0TxMJQthvL7fWUSPYzAgk=
+github.com/xo/dbimp v0.6.1/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
+github.com/xo/dburl v0.38.0 h1:RiH8ENhd2oDPCJl2lqVQiuDaRubWWzL+SyF+AjpfHDk=
+github.com/xo/dburl v0.38.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
 github.com/xo/echartsgoja v0.1.1 h1:9ZH7rhjovE/caGzWTFw1X5GItCsPw5eFV2Qwfgmjt7M=
 github.com/xo/echartsgoja v0.1.1/go.mod h1:u2iiKyIA1H3URjh9+8Nltj8cP33R19JHasXhSz/tWHI=
 github.com/xo/resvg v0.11.0 h1:dpZ3eSEz344tITxc7mQ2ZDGIn1LbhYykTF7yN0M5+ag=

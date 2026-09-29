@@ -273,7 +273,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                  | [github.com/xo/dbimp/couchbase][d-couchbase]                                                |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                    | [github.com/mithrandie/csvq-driver][d-csvq] <sup>[§][f-embedded]</sup>                      |
 | Cznic QL             | `ql`            | `cznic`, `cznicql`                            | [modernc.org/ql][d-ql] <sup>[§][f-embedded]</sup>                                           |
-| Databend             | `databend`      | `dd`, `bend`                                  | [github.com/datafuselabs/databend-go][d-databend]                                           |
+| Databend             | `databend`      | `dd`, `bend`                                  | [github.com/xo/dbimp/databend][d-databend]                                                  |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`          | [github.com/databricks/databricks-sql-go][d-databricks] <sup>[¶][f-hosted]</sup>            |
 | DynamoDb             | `dynamodb`      | `dy`, `dyn`, `dynamo`, `godynamo`             | [github.com/btnguyen2k/godynamo][d-dynamodb] <sup>[¶][f-hosted]</sup>                       |
 | Exasol               | `exasol`        | `ex`, `exa`                                   | [github.com/exasol/exasol-driver-go][d-exasol]                                              |
@@ -320,7 +320,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-couchbase]: https://github.com/xo/dbimp
 [d-cratedb]: https://github.com/jackc/pgx
 [d-csvq]: https://github.com/mithrandie/csvq-driver
-[d-databend]: https://github.com/datafuselabs/databend-go
+[d-databend]: https://github.com/xo/dbimp
 [d-databricks]: https://github.com/databricks/databricks-sql-go
 [d-duckdb]: https://github.com/duckdb/duckdb-go
 [d-dynamodb]: https://github.com/btnguyen2k/godynamo
