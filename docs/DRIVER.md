@@ -114,8 +114,8 @@ usql's README table has a column headed `Scheme / Tag`. It holds the build
 tag, which is the directory name under `drivers/`, and not the scheme.
 
 They are allowed to differ and sometimes do. DynamoDB is `godynamo` in dburl's
-registry and `dynamodb` in usql's table. Netezza is `nzgo` against `netezza`.
-Both work, because the tag is also registered as an alias.
+registry and `dynamodb` in usql's table. It works, because the tag is also a
+dburl alias of the scheme.
 
 You are choosing two names. Do not assume they must match.
 

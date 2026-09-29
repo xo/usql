@@ -4,7 +4,6 @@ go 1.27.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
-	github.com/IBM/nzgo/v12 v12.0.13
 	github.com/SAP/go-hdb v1.18.11
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/alecthomas/chroma/v2 v2.27.0

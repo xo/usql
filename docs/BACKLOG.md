@@ -1264,6 +1264,10 @@ landed with dburl v0.33.0, which renamed the scheme from `n1ql` and keeps
 after 15 seconds by default. It does not set `durability_level`, and a
 single-node server needs `durability_level=none` to commit a transaction.
 
+Netezza was removed on 2026-09-29, and its scheme goes from dburl. Ken
+decided it: the driver was never tested, nobody is known to use it, and no
+copy of Netezza is available to test with.
+
 Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `AGENTS.md`. Add the line to each
 as they are touched.

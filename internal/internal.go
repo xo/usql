@@ -40,7 +40,6 @@ func KnownBuildTags() map[string]string {
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
-		"netezza":       "nzgo",          // github.com/IBM/nzgo/v12
 		"odbc":          "odbc",          // github.com/alexbrainman/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
