@@ -6,7 +6,6 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/SAP/go-hdb v1.18.11
 	github.com/VoltDB/voltdb-client-go v1.0.18
-	github.com/alecthomas/chroma/v2 v2.27.0
 	github.com/alexbrainman/odbc v0.0.0-20250601004241-49e6b2bc0cf0
 	github.com/aliyun/aliyun-odps-go-sdk v0.4.26
 	github.com/aliyun/aliyun-tablestore-go-sql-driver v0.0.0-20220418015234-4d337cb3eed9
@@ -23,7 +22,6 @@ require (
 	github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/godror/godror v0.51.5
-	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/googleapis/go-sql-spanner v1.26.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade

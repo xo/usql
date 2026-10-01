@@ -38,19 +38,19 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
 
 ## What is left
 
-1. `run.go` and `main.go`: create the session with `rline.New`, with
-   `WithContinue` calling `Handler.Continue`, `WithHistoryFile`,
-   `WithHints(false)` and `WithPrompt("", "")`. Create the handler with
-   `handler.New(l, l, ...)`, which now also returns an error. Send `-o` to
-   `Handler.SetOutput`. Run `-c` through `Handler.RunCommand`. Use
-   `rline.ErrInterrupted`. Drop the cygwin flag. `usql` does not build until
-   this is done.
-2. Delete `rline/` (usql's own package) and `stmt/`.
-3. Fix the tests that call the old API: `handler/handler_test.go`, and
-   `metacmd/metacmd_test.go`, whose `Decode` now takes a `feed.Item`.
-4. Run the tests one package at a time, then run the binary by hand at a
-   terminal: rows that continue, `\prompt`, `\e`, `\i`, Ctrl-C and the
-   history.
+1. Done on 2026-10-02: run.go and main.go use rline and feed, `rline/` and
+   `stmt/` are deleted, chroma and gohxs/readline are out of `go.mod`, and
+   the handler, metacmd and feed tests pass.
+2. Checked by hand on SQLite, piped: statements across lines, `\set` and
+   variables, `\g` for a statement with no `;`, `\echo`, `\i` with a
+   variable that it sets, `\prompt`, `\p` and `\r`. Checked at a
+   pseudo-terminal: an entry over two rows, variables and `\q`.
+3. Not checked yet: Ctrl-C, `\e`, the history, and `\c` to a database of
+   another family of dialects.
+4. TestCLI fails in all nine sessions, because the recordings hold the
+   colors of the old highlighting. Ken fixes the recordings himself. The
+   session line-editing also runs into its limit of 30 seconds, which may be
+   the fault below.
 
 Open points that are known:
 
@@ -61,8 +61,11 @@ Open points that are known:
   output is not a terminal. run.go turns color off unless both input and
   output are a terminal. Tell rline: its session was not running on
   2026-10-02.
-- `go.mod` still lists gohxs/readline and chroma. Remove them by hand, and do
-  not run `go mod tidy`, which adds dbmeta, rline and transit before they
+- At a pseudo-terminal under `script`, the first keys typed after start are
+  lost, and later keys are not. rline may ask the terminal a question when
+  it starts and read the answer from the input. Tell rline. It may also lose
+  type-ahead at a real terminal.
+- Do not run `go mod tidy`, which adds dbmeta, rline and transit before they
   have tags.
 
 ## How to build
