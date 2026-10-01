@@ -1,8 +1,8 @@
 # Progress
 
 This file says where the work in progress stands, so that a session that
-stops can be picked up again. It is about the branch `wip/feed`, which W36
-in [BACKLOG.md](BACKLOG.md) describes. Update it at each checkpoint.
+stops can be picked up again. It is about W36 in
+[BACKLOG.md](BACKLOG.md). Update it at each checkpoint.
 
 ## Work modes
 
@@ -12,7 +12,9 @@ mode:
 - Build one package at a time. Do not run the whole test suite, and run no
   more than one test package at once.
 - Start no containers and no background jobs unless Ken asks.
-- Commit a checkpoint to `wip/feed` before a long step. Do not push.
+- Commit a checkpoint before a long step, on `main`, as a commit with a
+  proper message. Ken wants no work branches and no WIP commits. Do not
+  push.
 
 ## What W36 changes
 
@@ -45,8 +47,9 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
    variables, `\g` for a statement with no `;`, `\echo`, `\i` with a
    variable that it sets, `\prompt`, `\p` and `\r`. Checked at a
    pseudo-terminal: an entry over two rows, variables and `\q`.
-3. Not checked yet: Ctrl-C, `\e`, the history, and `\c` to a database of
-   another family of dialects.
+3. Checked on 2026-10-02: Ctrl-C gives up an open entry, `\e` runs the
+   edited text and goes on, and `\c` from SQLite to DuckDB parses what
+   follows in DuckDB's family. The history is not saved: see below.
 4. TestCLI fails in all nine sessions, because the recordings hold the
    colors of the old highlighting. Ken fixes the recordings himself. The
    session line-editing also runs into its limit of 30 seconds, which may be
@@ -65,6 +68,14 @@ Open points that are known:
   lost, and later keys are not. rline may ask the terminal a question when
   it starts and read the answer from the input. Tell rline. It may also lose
   type-ahead at a real terminal.
+- The history is never saved for a user who has a history file from
+  gohxs/readline. rline's format escapes a backslash, so the first line such
+  as `\q` stops the read, and rline then refuses to save, to keep the rest of
+  the file. It ignores the error at start. This is for Ken: migrate the file,
+  use a new file name, or have rline read the old format.
+- dbmeta measured DuckDB 1.5.5 on 2026-10-02, and its Syntax now has
+  DollarQuotes, staged in dbmeta. With it, `\c dk:` then `$$x;y$$` reads as
+  one string. usql needs that dbmeta change committed and tagged.
 - Do not run `go mod tidy`, which adds dbmeta, rline and transit before they
   have tags.
 
