@@ -117,10 +117,10 @@ type spec[T any] struct {
 
 // named returns the arguments for pattern. It is split into a schema and a
 // name where the query takes a schema.
-func (s spec[T]) named(f *Formatter, pattern string) args {
-	var a args
+func (s spec[T]) named(f *Formatter, pattern string) dbmeta.Args {
+	var a dbmeta.Args
 	if f.takes(s.q, "schema") {
-		a.Schema, a.Name = f.pattern(pattern)
+		a.Schema, a.Name = f.meta.Dialect().Pattern(pattern)
 	} else {
 		a.Name = f.fold(pattern)
 	}
@@ -128,7 +128,7 @@ func (s spec[T]) named(f *Formatter, pattern string) args {
 }
 
 // read returns the rows of the query for a.
-func (s spec[T]) read(ctx context.Context, f *Formatter, c Call, a args) ([]T, error) {
+func (s spec[T]) read(ctx context.Context, f *Formatter, c Call, a dbmeta.Args) ([]T, error) {
 	a.WithSystem = c.System
 	res, err := all(ctx, f, s.q, a)
 	if err != nil {
@@ -175,7 +175,7 @@ func list[T any](s spec[T]) command {
 // the name.
 func byAccessMethod[T any](s spec[T]) command {
 	return func(ctx context.Context, f *Formatter, c Call) error {
-		a := args{AccessMethod: f.fold(c.pattern(0)), Name: f.fold(c.pattern(1))}
+		a := dbmeta.Args{AccessMethod: f.fold(c.pattern(0)), Name: f.fold(c.pattern(1))}
 		res, err := s.read(ctx, f, c, a)
 		if err != nil {
 			return err
@@ -623,7 +623,7 @@ func publications(ctx context.Context, f *Formatter, c Call) error {
 		return cmp.Compare(a.Name, b.Name)
 	})
 	for _, p := range pubs {
-		tables, err := optional(all(ctx, f, dbmeta.PublicationTables, args{Name: p.Name}))
+		tables, err := optional(all(ctx, f, dbmeta.PublicationTables, dbmeta.Args{Name: p.Name}))
 		if err != nil {
 			return err
 		}
@@ -700,7 +700,7 @@ func textSearchConfigs(ctx context.Context, f *Formatter, c Call) error {
 		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
 	})
 	for _, t := range configs {
-		maps, err := all(ctx, f, dbmeta.TextSearchConfigMaps, args{Schema: t.Schema, Name: t.Name, WithSystem: true})
+		maps, err := all(ctx, f, dbmeta.TextSearchConfigMaps, dbmeta.Args{Schema: t.Schema, Name: t.Name, WithSystem: true})
 		if err != nil {
 			return f.check(`\dF+`, err)
 		}
@@ -828,7 +828,7 @@ func extensions(ctx context.Context, f *Formatter, c Call) error {
 		return cmp.Compare(a.Name, b.Name)
 	})
 	for _, e := range exts {
-		objects, err := all(ctx, f, dbmeta.ExtensionObjects, args{Name: e.Name})
+		objects, err := all(ctx, f, dbmeta.ExtensionObjects, dbmeta.Args{Name: e.Name})
 		if err != nil {
 			return f.check(`\dx+`, err)
 		}
@@ -860,8 +860,8 @@ func qualify(schema, name string) string {
 func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool) error {
 	pattern, argTypes, hasArgs := strings.Cut(name, "(")
 	argTypes = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(argTypes), ")"))
-	schema, n := f.pattern(strings.TrimSpace(pattern))
-	funcs, err := all(ctx, f, dbmeta.Functions, args{Schema: schema, Name: n, WithSystem: true})
+	schema, n := f.meta.Dialect().Pattern(strings.TrimSpace(pattern))
+	funcs, err := all(ctx, f, dbmeta.Functions, dbmeta.Args{Schema: schema, Name: n, WithSystem: true})
 	if err != nil {
 		return f.check(`\sf`, err)
 	}
@@ -917,7 +917,7 @@ func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool)
 // matches schema and name, keyed by the ID of the routine and written as
 // typeList writes them.
 func (f *Formatter) routineTypes(ctx context.Context, schema, name string) (map[string]string, error) {
-	params, err := optional(all(ctx, f, dbmeta.RoutineParameters, args{Schema: schema, Parent: name, WithSystem: true}))
+	params, err := optional(all(ctx, f, dbmeta.RoutineParameters, dbmeta.Args{Schema: schema, Parent: name, WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
@@ -953,8 +953,8 @@ func typeList(types []string) string {
 // ShowView prints the definition of each view that matches pattern, for \sv.
 // verbose numbers the lines.
 func (f *Formatter) ShowView(ctx context.Context, pattern string, verbose bool) error {
-	schema, name := f.pattern(pattern)
-	views, err := all(ctx, f, dbmeta.Views, args{Schema: schema, Name: name, WithSystem: true})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	views, err := all(ctx, f, dbmeta.Views, dbmeta.Args{Schema: schema, Name: name, WithSystem: true})
 	if err != nil {
 		return f.check(`\sv`, err)
 	}

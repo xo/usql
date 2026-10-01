@@ -25,18 +25,18 @@ func (s source) Objects(kind complete.Kind, f complete.Filter) ([]complete.Objec
 	// a completion must not hang on a slow database
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	a := args{Catalog: f.Catalog, Schema: f.Schema, Name: f.Name, WithSystem: f.WithSystem}
+	a := dbmeta.Args{Catalog: f.Catalog, Schema: f.Schema, Name: f.Name, WithSystem: f.WithSystem}
 	var objs []complete.Object
 	switch kind {
 	case complete.Catalogs:
-		dbs, err := all(ctx, s.f, dbmeta.Databases, args{Name: f.Name})
+		dbs, err := all(ctx, s.f, dbmeta.Databases, dbmeta.Args{Name: f.Name})
 		for _, d := range dbs {
 			objs = append(objs, complete.Object{Name: d.Name})
 		}
 		return objs, err
 	case complete.Schemas:
 		// a qualified name completes the schemas of a catalog
-		a := args{Name: f.Name, WithSystem: true}
+		a := dbmeta.Args{Name: f.Name, WithSystem: true}
 		if f.Schema != "" {
 			a.Catalog = f.Schema
 		}
@@ -80,7 +80,7 @@ func (s source) Objects(kind complete.Kind, f complete.Filter) ([]complete.Objec
 		}
 		return objs, err
 	case complete.Columns:
-		columns, err := all(ctx, s.f, dbmeta.Columns, args{Catalog: f.Catalog, Schema: f.Schema, Parent: f.Parent, WithSystem: f.WithSystem})
+		columns, err := all(ctx, s.f, dbmeta.Columns, dbmeta.Args{Catalog: f.Catalog, Schema: f.Schema, Parent: f.Parent, WithSystem: f.WithSystem})
 		for _, c := range columns {
 			objs = append(objs, complete.Object{Catalog: c.Catalog, Schema: c.Schema, Name: c.Name})
 		}

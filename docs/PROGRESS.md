@@ -76,6 +76,9 @@ Open points that are known:
 - dbmeta measured DuckDB 1.5.5 on 2026-10-02, and its Syntax now has
   DollarQuotes, staged in dbmeta. With it, `\c dk:` then `$$x;y$$` reads as
   one string. usql needs that dbmeta change committed and tagged.
+- `metacmd/describe` uses dbmeta's `Query.Each`, `Args`, `Dialect.Pattern`
+  and `Open` (dbmeta's D169), which are staged in dbmeta and not committed
+  on 2026-10-02.
 - Do not run `go mod tidy`, which adds dbmeta, rline and transit before they
   have tags.
 

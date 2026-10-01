@@ -121,8 +121,8 @@ func classes(types string) map[rune]bool {
 // name. When sequences are asked for and the database lists them apart from
 // its tables, they are added.
 func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bool, want map[rune]bool) ([]dbmeta.Table, error) {
-	schema, name := f.pattern(pattern)
-	tables, err := all(ctx, f, dbmeta.Tables, args{Schema: schema, Name: name, WithSystem: withSystem})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	tables, err := all(ctx, f, dbmeta.Tables, dbmeta.Args{Schema: schema, Name: name, WithSystem: withSystem})
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bo
 		}
 	}
 	if want[classSequence] && f.supports(dbmeta.Sequences) {
-		sequences, err := all(ctx, f, dbmeta.Sequences, args{Schema: schema, Name: name, WithSystem: withSystem})
+		sequences, err := all(ctx, f, dbmeta.Sequences, dbmeta.Args{Schema: schema, Name: name, WithSystem: withSystem})
 		if err != nil {
 			return nil, err
 		}
@@ -223,7 +223,7 @@ func title(class rune, schema, name string) string {
 // describeRelation prints the columns of a table or a view, and below them its
 // indexes, constraints, references and triggers.
 func (f *Formatter) describeRelation(ctx context.Context, t dbmeta.Table, verbose bool) error {
-	columns, err := all(ctx, f, dbmeta.Columns, args{Schema: t.Schema, Parent: t.Name, WithSystem: true})
+	columns, err := all(ctx, f, dbmeta.Columns, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true})
 	if err != nil {
 		return f.check(`\d`, err)
 	}
@@ -313,7 +313,7 @@ func optional[T any](rows []T, err error) ([]T, error) {
 // indexColumns returns the columns of each index of a table, keyed by the
 // name of the index, in their order in the index.
 func (f *Formatter) indexColumns(ctx context.Context, schema, table string) (map[string][]string, error) {
-	cols, err := optional(all(ctx, f, dbmeta.IndexColumns, args{Schema: schema, Parent: table, WithSystem: true}))
+	cols, err := optional(all(ctx, f, dbmeta.IndexColumns, dbmeta.Args{Schema: schema, Parent: table, WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func indexLine(i dbmeta.Index, cols []string) string {
 
 // tableIndexes returns a line for each index of a table.
 func (f *Formatter) tableIndexes(ctx context.Context, t dbmeta.Table) ([]string, error) {
-	indexes, err := optional(all(ctx, f, dbmeta.Indexes, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	indexes, err := optional(all(ctx, f, dbmeta.Indexes, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
 	if err != nil || len(indexes) == 0 {
 		return nil, err
 	}
@@ -406,7 +406,7 @@ func kind(typ string) string {
 // constraintColumns returns the columns of each constraint of a table, and the
 // columns and table that each one refers to, keyed by the name of the
 // constraint.
-func (f *Formatter) constraintColumns(ctx context.Context, a args) (map[string]*reference, error) {
+func (f *Formatter) constraintColumns(ctx context.Context, a dbmeta.Args) (map[string]*reference, error) {
 	cols, err := optional(all(ctx, f, dbmeta.ConstraintColumns, a))
 	if err != nil {
 		return nil, err
@@ -458,7 +458,7 @@ func isForeignKey(def string) bool {
 // tableConstraints returns a line for each check constraint and each foreign
 // key of a table.
 func (f *Formatter) tableConstraints(ctx context.Context, t dbmeta.Table) ([]string, []string, error) {
-	constraints, err := optional(all(ctx, f, dbmeta.Constraints, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	constraints, err := optional(all(ctx, f, dbmeta.Constraints, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
 	if err != nil || len(constraints) == 0 {
 		return nil, nil, err
 	}
@@ -482,7 +482,7 @@ func (f *Formatter) tableConstraints(ctx context.Context, t dbmeta.Table) ([]str
 		case "foreign key":
 			if !isForeignKey(def) {
 				if refs == nil {
-					if refs, err = f.constraintColumns(ctx, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}); err != nil {
+					if refs, err = f.constraintColumns(ctx, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true}); err != nil {
 						return nil, nil, err
 					}
 				}
@@ -502,7 +502,7 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 	if !f.supports(dbmeta.ConstraintColumns) {
 		return nil, nil
 	}
-	refs, err := f.constraintColumns(ctx, args{Schema: t.Schema, WithSystem: true})
+	refs, err := f.constraintColumns(ctx, dbmeta.Args{Schema: t.Schema, WithSystem: true})
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +517,7 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 	}
 	// the definitions come from the constraints of the tables that refer
 	defs := make(map[string]string)
-	constraints, err := optional(all(ctx, f, dbmeta.Constraints, args{Schema: t.Schema, WithSystem: true}))
+	constraints, err := optional(all(ctx, f, dbmeta.Constraints, dbmeta.Args{Schema: t.Schema, WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +542,7 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 
 // tableTriggers returns a line for each trigger of a table.
 func (f *Formatter) tableTriggers(ctx context.Context, t dbmeta.Table) ([]string, error) {
-	triggers, err := optional(all(ctx, f, dbmeta.Triggers, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	triggers, err := optional(all(ctx, f, dbmeta.Triggers, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +578,7 @@ func cutPrefixFold(s, prefix string) (string, bool) {
 
 // describeSequence prints one sequence.
 func (f *Formatter) describeSequence(ctx context.Context, t dbmeta.Table) error {
-	sequences, err := optional(all(ctx, f, dbmeta.Sequences, args{Schema: t.Schema, Name: t.Name, WithSystem: true}))
+	sequences, err := optional(all(ctx, f, dbmeta.Sequences, dbmeta.Args{Schema: t.Schema, Name: t.Name, WithSystem: true}))
 	if err != nil {
 		return err
 	}
@@ -615,8 +615,8 @@ func (f *Formatter) describeIndexes(ctx context.Context, pattern string, showSys
 	if !f.supports(dbmeta.Indexes) {
 		return 0, nil
 	}
-	schema, name := f.pattern(pattern)
-	indexes, err := all(ctx, f, dbmeta.Indexes, args{Schema: schema, Name: name, WithSystem: showSystem})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	indexes, err := all(ctx, f, dbmeta.Indexes, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
 		return 0, f.check(`\d`, err)
 	}
@@ -693,8 +693,8 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 			want = map[rune]bool{'a': true}
 		}
 	}
-	schema, name := f.pattern(pattern)
-	funcs, err := all(ctx, f, q, args{Schema: schema, Name: name, WithSystem: showSystem})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	funcs, err := all(ctx, f, q, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
 		return f.check(cmd, err)
 	}
@@ -735,7 +735,7 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 
 // ListAllDbs prints the databases that match pattern, for \l.
 func (f *Formatter) ListAllDbs(ctx context.Context, pattern string, verbose bool) error {
-	dbs, err := all(ctx, f, dbmeta.Databases, args{Name: like(pattern)})
+	dbs, err := all(ctx, f, dbmeta.Databases, dbmeta.Args{Name: like(pattern)})
 	if err != nil {
 		return f.check(`\l`, err)
 	}
@@ -758,7 +758,7 @@ func (f *Formatter) ListAllDbs(ctx context.Context, pattern string, verbose bool
 
 // ListSchemas prints the schemas that match pattern, for \dn.
 func (f *Formatter) ListSchemas(ctx context.Context, pattern string, verbose, showSystem bool) error {
-	schemas, err := all(ctx, f, dbmeta.Schemas, args{Name: like(pattern), WithSystem: showSystem})
+	schemas, err := all(ctx, f, dbmeta.Schemas, dbmeta.Args{Name: like(pattern), WithSystem: showSystem})
 	if err != nil {
 		return f.check(`\dn`, err)
 	}
@@ -781,8 +781,8 @@ func (f *Formatter) ListSchemas(ctx context.Context, pattern string, verbose, sh
 
 // ListIndexes prints the indexes that match pattern, for \di.
 func (f *Formatter) ListIndexes(ctx context.Context, pattern string, verbose, showSystem bool) error {
-	schema, name := f.pattern(pattern)
-	indexes, err := all(ctx, f, dbmeta.Indexes, args{Schema: schema, Name: name, WithSystem: showSystem})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	indexes, err := all(ctx, f, dbmeta.Indexes, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
 		return f.check(`\di`, err)
 	}
@@ -809,8 +809,8 @@ func (f *Formatter) ListIndexes(ctx context.Context, pattern string, verbose, sh
 // ShowStats prints the statistics of the columns of the tables that match
 // pattern, for \ss. k limits the number of common values shown.
 func (f *Formatter) ShowStats(ctx context.Context, pattern string, verbose bool, k int) error {
-	schema, name := f.pattern(pattern)
-	stats, err := all(ctx, f, dbmeta.ColumnStats, args{Schema: schema, Parent: name})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	stats, err := all(ctx, f, dbmeta.ColumnStats, dbmeta.Args{Schema: schema, Parent: name})
 	if err != nil {
 		return f.check(`\ss`, err)
 	}
@@ -855,8 +855,8 @@ func top(s string, k int) string {
 // ListPrivilegeSummaries prints the access privileges of the relations that
 // match pattern, for \dp.
 func (f *Formatter) ListPrivilegeSummaries(ctx context.Context, pattern string, showSystem bool) error {
-	schema, name := f.pattern(pattern)
-	privs, err := all(ctx, f, dbmeta.Privileges, args{Schema: schema, Name: name, WithSystem: showSystem})
+	schema, name := f.meta.Dialect().Pattern(pattern)
+	privs, err := all(ctx, f, dbmeta.Privileges, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
 		return f.check(`\dp`, err)
 	}

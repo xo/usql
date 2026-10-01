@@ -68,49 +68,12 @@ func (f *Formatter) queryer() dbmeta.Queryer {
 	return logging{db: f.db, logger: f.logger, dryRun: f.dryRun}
 }
 
-// args are the arguments of one query. Schema, Name and Parent are SQL LIKE
-// patterns, and an empty one matches everything.
-type args struct {
-	Catalog      string
-	Schema       string
-	Parent       string
-	Name         string
-	AccessMethod string
-	Server       string
-	Database     string
-	WithSystem   bool
-}
-
-// all runs q and returns every row. It passes only the arguments that q takes
-// on this database, and it returns ErrNotSupported when the database cannot
-// answer q.
-func all[T any](ctx context.Context, f *Formatter, q *dbmeta.Query[T], a args) ([]T, error) {
+// all runs q and returns every row. dbmeta passes only the arguments that q
+// takes. It returns ErrNotSupported when the database cannot answer q, and
+// no rows for a dry run.
+func all[T any](ctx context.Context, f *Formatter, q *dbmeta.Query[T], a dbmeta.Args) ([]T, error) {
 	if !f.supports(q) {
 		return nil, ErrNotSupported
-	}
-	params, err := q.Params(f.meta)
-	if err != nil {
-		return nil, err
-	}
-	takes := make(map[string]bool, len(params))
-	for _, p := range params {
-		takes[p.Name] = true
-	}
-	values := make(map[string]any)
-	set := func(name, value string) {
-		if value != "" && takes[name] {
-			values[name] = value
-		}
-	}
-	set("catalog", a.Catalog)
-	set("schema", a.Schema)
-	set("parent", a.Parent)
-	set("name", a.Name)
-	set("access_method", a.AccessMethod)
-	set("server", a.Server)
-	set("database", a.Database)
-	if a.WithSystem && takes["with_system"] {
-		values["with_system"] = true
 	}
 	if f.timeout != 0 {
 		var cancel context.CancelFunc
@@ -118,7 +81,7 @@ func all[T any](ctx context.Context, f *Formatter, q *dbmeta.Query[T], a args) (
 		defer cancel()
 	}
 	var rows []T
-	for row, err := range q.All(ctx, f.meta, f.queryer(), values) {
+	for row, err := range q.Each(ctx, f.meta, f.queryer(), a) {
 		switch {
 		case errors.Is(err, errDryRun):
 			return nil, nil
@@ -149,34 +112,6 @@ func (l logging) QueryContext(ctx context.Context, query string, v ...any) (*sql
 		return nil, errDryRun
 	}
 	return l.db.QueryContext(ctx, query, v...)
-}
-
-// pattern splits a psql pattern such as public.film* into a schema and a
-// name, each an SQL LIKE pattern. Each part is folded as the database folds a
-// name that is not quoted, as psql does, so \d book finds BOOK on Oracle. A
-// part between double quotes keeps its case.
-func (f *Formatter) pattern(pattern string) (string, string) {
-	schema, name := "", pattern
-	if i := dot(pattern); i != -1 {
-		schema, name = pattern[:i], pattern[i+1:]
-	}
-	d := f.meta.Dialect()
-	return like(d.FoldIdentifier(schema)), like(d.FoldIdentifier(name))
-}
-
-// dot returns the index of the first '.' in s that is not between double
-// quotes, or -1.
-func dot(s string) int {
-	var quoted bool
-	for i, c := range s {
-		switch {
-		case c == '"':
-			quoted = !quoted
-		case c == '.' && !quoted:
-			return i
-		}
-	}
-	return -1
 }
 
 // like turns a psql wildcard pattern into an SQL LIKE pattern.

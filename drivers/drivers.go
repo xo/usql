@@ -440,12 +440,11 @@ func Meta(ctx context.Context, u *dburl.URL, db DB) (*dbmeta.Meta, error) {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
 	// an unknown version selects the newest form of every query, so a version
-	// that cannot be read is not an error
-	versions, err := d.Version(ctx, db)
-	if err != nil {
-		versions = dbmeta.VersionSet{}
+	// that cannot be read is not an error here
+	if m, err := dbmeta.Open(ctx, d, db); err == nil {
+		return m, nil
 	}
-	return dbmeta.New(d, versions)
+	return dbmeta.New(d, dbmeta.VersionSet{})
 }
 
 // Copy copies the result set to the destination sql.DB.
