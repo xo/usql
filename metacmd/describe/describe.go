@@ -1,10 +1,10 @@
-// Package metadata reads the structure of a database through
-// github.com/xo/dbmeta, and prints it the way psql does.
+// Package describe formats the answers of usql's describe commands, such as
+// \d, \dt and \df, the way psql formats them.
 //
-// dbmeta reads, tblfmt renders, and usql decides what to print. usql writes no
-// query of its own here (D3). A database that dbmeta has no model for answers
-// none of the describe commands.
-package metadata
+// dbmeta reads, tblfmt renders, and this package decides what to print. It
+// writes no query of its own (D3). A database that dbmeta has no model for
+// answers none of the describe commands.
+package describe
 
 import (
 	"context"
@@ -30,86 +30,42 @@ type Logger interface {
 	Println(...any)
 }
 
-// Option is an option for New.
-type Option func(*Meta)
+// Option is an option of a Formatter.
+type Option func(*Formatter)
 
 // WithLogger prints every query before it runs.
 func WithLogger(l Logger) Option {
-	return func(m *Meta) {
-		m.logger = l
+	return func(f *Formatter) {
+		f.logger = l
 	}
 }
 
 // WithDryRun prints the queries without running them.
 func WithDryRun(dryRun bool) Option {
-	return func(m *Meta) {
-		m.dryRun = dryRun
+	return func(f *Formatter) {
+		f.dryRun = dryRun
 	}
 }
 
 // WithTimeout limits how long one query may run.
 func WithTimeout(timeout time.Duration) Option {
-	return func(m *Meta) {
-		m.timeout = timeout
+	return func(f *Formatter) {
+		f.timeout = timeout
 	}
 }
 
-// Meta reads the structure of one database.
-type Meta struct {
-	meta    *dbmeta.Meta
-	db      dbmeta.Queryer
-	logger  Logger
-	dryRun  bool
-	timeout time.Duration
-}
-
-// New returns a Meta for the database db, whose dialect is dialect, the
-// URL.Dialect that dburl sets. It reads the version of the server once,
-// because every query is chosen by it. It returns ErrNotSupported when
-// dbmeta has no model for the dialect.
-func New(ctx context.Context, dialect string, db dbmeta.Queryer, opts ...Option) (*Meta, error) {
-	m := &Meta{db: db}
-	for _, o := range opts {
-		o(m)
-	}
-	d := dbmeta.Dialect(dialect)
-	if _, ok := d.Info(); !ok {
-		return nil, ErrNotSupported
-	}
-	// an unknown version selects the newest form of every query, so a version
-	// that cannot be read is not an error
-	versions, err := d.Version(ctx, m.queryer())
-	if err != nil {
-		versions = dbmeta.VersionSet{}
-	}
-	if m.meta, err = dbmeta.New(d, versions); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// String returns the display line of the server, such as "PostgreSQL 18.1".
-func (m *Meta) String() string {
-	return m.meta.String()
-}
-
-// Dialect returns the dialect.
-func (m *Meta) Dialect() string {
-	return string(m.meta.Dialect())
-}
-
-// Supports reports whether the database answers the query q.
-func (m *Meta) Supports(q dbmeta.AnyQuery) bool {
-	return q.Support(m.meta) == dbmeta.Supported
+// supports reports whether the database answers the query q.
+func (f *Formatter) supports(q dbmeta.AnyQuery) bool {
+	return q.Support(f.meta) == dbmeta.Supported
 }
 
 // queryer returns the handle that the queries run through, which prints each
 // query first and runs none of them for a dry run.
-func (m *Meta) queryer() dbmeta.Queryer {
-	if m.logger == nil && !m.dryRun {
-		return m.db
+func (f *Formatter) queryer() dbmeta.Queryer {
+	if f.logger == nil && !f.dryRun {
+		return f.db
 	}
-	return logging{db: m.db, logger: m.logger, dryRun: m.dryRun}
+	return logging{db: f.db, logger: f.logger, dryRun: f.dryRun}
 }
 
 // args are the arguments of one query. Schema, Name and Parent are SQL LIKE
@@ -128,11 +84,11 @@ type args struct {
 // all runs q and returns every row. It passes only the arguments that q takes
 // on this database, and it returns ErrNotSupported when the database cannot
 // answer q.
-func all[T any](ctx context.Context, m *Meta, q *dbmeta.Query[T], a args) ([]T, error) {
-	if !m.Supports(q) {
+func all[T any](ctx context.Context, f *Formatter, q *dbmeta.Query[T], a args) ([]T, error) {
+	if !f.supports(q) {
 		return nil, ErrNotSupported
 	}
-	params, err := q.Params(m.meta)
+	params, err := q.Params(f.meta)
 	if err != nil {
 		return nil, err
 	}
@@ -156,13 +112,13 @@ func all[T any](ctx context.Context, m *Meta, q *dbmeta.Query[T], a args) ([]T, 
 	if a.WithSystem && takes["with_system"] {
 		values["with_system"] = true
 	}
-	if m.timeout != 0 {
+	if f.timeout != 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, m.timeout)
+		ctx, cancel = context.WithTimeout(ctx, f.timeout)
 		defer cancel()
 	}
 	var rows []T
-	for row, err := range q.All(ctx, m.meta, m.queryer(), values) {
+	for row, err := range q.All(ctx, f.meta, f.queryer(), values) {
 		switch {
 		case errors.Is(err, errDryRun):
 			return nil, nil
@@ -195,16 +151,16 @@ func (l logging) QueryContext(ctx context.Context, query string, v ...any) (*sql
 	return l.db.QueryContext(ctx, query, v...)
 }
 
-// Pattern splits a psql pattern such as public.film* into a schema and a
+// pattern splits a psql pattern such as public.film* into a schema and a
 // name, each an SQL LIKE pattern. Each part is folded as the database folds a
 // name that is not quoted, as psql does, so \d book finds BOOK on Oracle. A
 // part between double quotes keeps its case.
-func (m *Meta) Pattern(pattern string) (string, string) {
+func (f *Formatter) pattern(pattern string) (string, string) {
 	schema, name := "", pattern
 	if i := dot(pattern); i != -1 {
 		schema, name = pattern[:i], pattern[i+1:]
 	}
-	d := m.meta.Dialect()
+	d := f.meta.Dialect()
 	return like(d.FoldIdentifier(schema)), like(d.FoldIdentifier(name))
 }
 
@@ -242,32 +198,4 @@ func qualified(schema, name string) string {
 		return `"` + name + `"`
 	}
 	return `"` + schema + "." + name + `"`
-}
-
-// Has reports whether dbmeta has a model for dialect.
-func Has(dialect string) bool {
-	_, ok := dbmeta.Dialect(dialect).Info()
-	return ok
-}
-
-// With returns a copy of m with opts applied. The options of a session, such
-// as ECHO_HIDDEN, can change between commands, so each command applies them.
-func (m *Meta) With(opts ...Option) *Meta {
-	c := *m
-	for _, o := range opts {
-		o(&c)
-	}
-	return &c
-}
-
-// CurrentUser returns the name of the current user.
-func (m *Meta) CurrentUser(ctx context.Context) (string, error) {
-	if !m.Supports(dbmeta.CurrentUser) {
-		return "", ErrNotSupported
-	}
-	u, ok, err := dbmeta.First(dbmeta.CurrentUser.All(ctx, m.meta, m.queryer(), nil))
-	if err != nil || !ok {
-		return "", err
-	}
-	return u.Name, nil
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/xo/usql/feed"
-	"github.com/xo/usql/metadata"
+	"github.com/xo/usql/metacmd/describe"
 )
 
 func TestNames(t *testing.T) {
@@ -54,7 +54,7 @@ func TestRelations(t *testing.T) {
 // is reachable as a command, with its S and + forms where psql has them.
 func TestEveryListIsACommand(t *testing.T) {
 	t.Parallel()
-	for _, name := range metadata.Commands() {
+	for _, name := range describe.Commands() {
 		if cmds[name] == nil {
 			t.Errorf("\\%s is printed by the metadata package, and no command reaches it", name)
 		}

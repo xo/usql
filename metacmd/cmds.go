@@ -16,7 +16,7 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
-	"github.com/xo/usql/metadata"
+	"github.com/xo/usql/metacmd/describe"
 	"github.com/xo/usql/text"
 )
 
@@ -947,7 +947,7 @@ func Prompt(p *Params) error {
 func Describe(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
-	m, err := p.Handler.MetadataWriter(ctx)
+	m, err := p.Handler.Formatter(ctx)
 	if err != nil {
 		return err
 	}
@@ -987,7 +987,7 @@ func Describe(p *Params) error {
 	case name == "lo_list":
 		name = "dl"
 	}
-	_, err = m.Run(ctx, metadata.Call{Name: name, Patterns: patterns, Verbose: verbose, System: showSystem})
+	_, err = m.Run(ctx, describe.Call{Name: name, Patterns: patterns, Verbose: verbose, System: showSystem})
 	return err
 }
 
@@ -1001,7 +1001,7 @@ func Describe(p *Params) error {
 func ShowSource(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
-	m, err := p.Handler.MetadataWriter(ctx)
+	m, err := p.Handler.Formatter(ctx)
 	if err != nil {
 		return err
 	}
@@ -1030,7 +1030,7 @@ func ShowSource(p *Params) error {
 func Stats(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
-	m, err := p.Handler.MetadataWriter(ctx)
+	m, err := p.Handler.Formatter(ctx)
 	if err != nil {
 		return err
 	}

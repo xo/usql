@@ -6,7 +6,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -15,11 +14,10 @@ import (
 	"unicode"
 
 	"github.com/xo/dbmeta"
+	_ "github.com/xo/dbmeta/all" // every model
 	"github.com/xo/dburl"
 	"github.com/xo/transit"
-	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/feed"
-	"github.com/xo/usql/metadata"
 	"github.com/xo/usql/text"
 )
 
@@ -179,8 +177,8 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 		ver, err := d.Version(ctx, db)
 		return ver, WrapErr(u.SchemeName, err)
 	}
-	if metadata.Has(u.Dialect) {
-		m, err := metadata.New(ctx, u.Dialect, db)
+	if _, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
+		m, err := Meta(ctx, u, db)
 		if err != nil {
 			return "", WrapErr(u.SchemeName, err)
 		}
@@ -203,13 +201,13 @@ func OwnVersion(u *dburl.URL) bool {
 
 // User returns the current database user for a driver.
 func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
-	if metadata.Has(u.Dialect) {
-		m, err := metadata.New(ctx, u.Dialect, db)
+	if _, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
+		m, err := Meta(ctx, u, db)
 		if err != nil {
 			return "", WrapErr(u.SchemeName, err)
 		}
-		if user, err := m.CurrentUser(ctx); err == nil && user != "" {
-			return user, nil
+		if user, ok, err := dbmeta.First(dbmeta.CurrentUser.All(ctx, m, db, nil)); err == nil && ok && user.Name != "" {
+			return user.Name, nil
 		}
 	}
 	var user string
@@ -432,21 +430,22 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 	}
 }
 
-// NewMeta returns the metadata of the database, which the describe commands
-// and the completer read. It fails for a database that dbmeta has no model
-// for.
-func NewMeta(ctx context.Context, u *dburl.URL, db DB, opts ...metadata.Option) (*metadata.Meta, error) {
-	m, err := metadata.New(ctx, u.Dialect, db, opts...)
-	if errors.Is(err, metadata.ErrNotSupported) {
+// Meta returns dbmeta's model of the database of a connection. It reads the
+// version of the server, because dbmeta chooses every query by it. A
+// database that dbmeta has no model for answers none of the describe
+// commands.
+func Meta(ctx context.Context, u *dburl.URL, db DB) (*dbmeta.Meta, error) {
+	d := dbmeta.Dialect(u.Dialect)
+	if _, ok := d.Info(); !ok {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
-	return m, err
-}
-
-// NewCompleter returns a completer that completes the names of the objects
-// in the database that m reads.
-func NewCompleter(m *metadata.Meta, opts ...completer.Option) completer.Completer {
-	return completer.NewDefaultCompleter(append([]completer.Option{completer.WithSource(m.Source())}, opts...)...)
+	// an unknown version selects the newest form of every query, so a version
+	// that cannot be read is not an error
+	versions, err := d.Version(ctx, db)
+	if err != nil {
+		versions = dbmeta.VersionSet{}
+	}
+	return dbmeta.New(d, versions)
 }
 
 // Copy copies the result set to the destination sql.DB.

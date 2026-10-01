@@ -246,7 +246,7 @@ Some tests need nothing. The rest start a database in a container.
 
 These run anywhere usql builds:
 
-    go test ./feed/... ./env/... ./handler/... ./drivers/completer/... ./metadata/...
+    go test ./feed/... ./env/... ./handler/... ./drivers/completer/... ./metacmd/...
 
 ## Tests that need a container runtime
 
@@ -337,8 +337,8 @@ files are in `_samples/`.
 
 The `\d` family of commands, and the names that tab completion offers, read
 the structure of a database through [dbmeta](https://github.com/xo/dbmeta).
-`metadata` picks dbmeta's model by the dialect that dburl sets on the
-URL, and prints the answers the way psql does. usql writes no query of its
+`drivers.Meta` picks dbmeta's model by the dialect that dburl sets on the
+URL, and `metacmd/describe` formats the answers the way psql does. usql writes no query of its
 own for this (D3).
 
 A driver does nothing to take part. A database that dbmeta has a model for

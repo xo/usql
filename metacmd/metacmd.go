@@ -17,7 +17,7 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
-	"github.com/xo/usql/metadata"
+	"github.com/xo/usql/metacmd/describe"
 	"github.com/xo/usql/text"
 )
 
@@ -70,8 +70,8 @@ type Handler interface {
 	GetOutput() io.Writer
 	// SetOutput writer.
 	SetOutput(io.WriteCloser)
-	// MetadataWriter retrieves the metadata writer for the handler.
-	MetadataWriter(context.Context) (*metadata.Writer, error)
+	// Formatter returns the formatter of the describe commands.
+	Formatter(context.Context) (*describe.Formatter, error)
 	// Print formats according to a format specifier and writes to handler's standard output.
 	Print(string, ...interface{})
 }

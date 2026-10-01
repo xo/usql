@@ -5,9 +5,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/metadata"
 )
 
 // noModel names each driver whose database dbmeta has no model for, and why.
@@ -50,7 +50,7 @@ func TestEveryDriverReadsThroughDbmeta(t *testing.T) {
 	}
 	var read int
 	for _, name := range slices.Sorted(maps.Keys(drivers.Available())) {
-		has := metadata.Has(dialect[name])
+		_, has := dbmeta.Dialect(dialect[name]).Info()
 		reason, exempt := noModel[name]
 		switch {
 		case has && exempt:

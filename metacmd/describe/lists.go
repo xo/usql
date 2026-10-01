@@ -1,4 +1,4 @@
-package metadata
+package describe
 
 import (
 	"cmp"
@@ -35,7 +35,7 @@ func (c Call) pattern(i int) string {
 }
 
 // command runs one describe command.
-type command func(context.Context, *Writer, Call) error
+type command func(context.Context, *Formatter, Call) error
 
 // commands are the describe commands that print one list, keyed by name.
 // Commands that print more than a list, such as \d NAME, are methods of
@@ -90,12 +90,12 @@ func Commands() []string {
 
 // Run runs the describe command c. It returns false when no such command
 // exists.
-func (w *Writer) Run(ctx context.Context, c Call) (bool, error) {
-	f, ok := commands[c.Name]
+func (f *Formatter) Run(ctx context.Context, c Call) (bool, error) {
+	cmd, ok := commands[c.Name]
 	if !ok {
 		return false, nil
 	}
-	return true, f(ctx, w, c)
+	return true, cmd(ctx, f, c)
 }
 
 // field is one column that a list prints, and how to read it from a row.
@@ -117,28 +117,28 @@ type spec[T any] struct {
 
 // named returns the arguments for pattern. It is split into a schema and a
 // name where the query takes a schema.
-func (s spec[T]) named(w *Writer, pattern string) args {
+func (s spec[T]) named(f *Formatter, pattern string) args {
 	var a args
-	if w.m.takes(s.q, "schema") {
-		a.Schema, a.Name = w.m.Pattern(pattern)
+	if f.takes(s.q, "schema") {
+		a.Schema, a.Name = f.pattern(pattern)
 	} else {
-		a.Name = w.m.name(pattern)
+		a.Name = f.fold(pattern)
 	}
 	return a
 }
 
 // read returns the rows of the query for a.
-func (s spec[T]) read(ctx context.Context, w *Writer, c Call, a args) ([]T, error) {
+func (s spec[T]) read(ctx context.Context, f *Formatter, c Call, a args) ([]T, error) {
 	a.WithSystem = c.System
-	res, err := all(ctx, w.m, s.q, a)
+	res, err := all(ctx, f, s.q, a)
 	if err != nil {
-		return nil, w.check(s.cmd, err)
+		return nil, f.check(s.cmd, err)
 	}
 	return res, nil
 }
 
 // print prints res.
-func (s spec[T]) print(w io.Writer, res []T, verbose bool) error {
+func (s spec[T]) print(out io.Writer, res []T, verbose bool) error {
 	r := &rows{}
 	for _, f := range s.fields {
 		if verbose || !f.verbose {
@@ -156,17 +156,17 @@ func (s spec[T]) print(w io.Writer, res []T, verbose bool) error {
 	}
 	// psql orders each list by its leading columns
 	slices.SortStableFunc(r.values, compareRows)
-	return encode(w, r, s.title, nil, nil)
+	return encode(out, r, s.title, nil, nil)
 }
 
 // list returns the command that prints s.
 func list[T any](s spec[T]) command {
-	return func(ctx context.Context, w *Writer, c Call) error {
-		res, err := s.read(ctx, w, c, s.named(w, c.pattern(0)))
+	return func(ctx context.Context, f *Formatter, c Call) error {
+		res, err := s.read(ctx, f, c, s.named(f, c.pattern(0)))
 		if err != nil {
 			return err
 		}
-		return s.print(w.w, res, c.Verbose)
+		return s.print(f.out, res, c.Verbose)
 	}
 }
 
@@ -174,13 +174,13 @@ func list[T any](s spec[T]) command {
 // whose first pattern matches the access method and whose second matches
 // the name.
 func byAccessMethod[T any](s spec[T]) command {
-	return func(ctx context.Context, w *Writer, c Call) error {
-		a := args{AccessMethod: w.m.name(c.pattern(0)), Name: w.m.name(c.pattern(1))}
-		res, err := s.read(ctx, w, c, a)
+	return func(ctx context.Context, f *Formatter, c Call) error {
+		a := args{AccessMethod: f.fold(c.pattern(0)), Name: f.fold(c.pattern(1))}
+		res, err := s.read(ctx, f, c, a)
 		if err != nil {
 			return err
 		}
-		return s.print(w.w, res, c.Verbose)
+		return s.print(f.out, res, c.Verbose)
 	}
 }
 
@@ -203,8 +203,8 @@ func compareRows(a, b []any) int {
 }
 
 // takes reports whether q takes the parameter named name.
-func (m *Meta) takes(q dbmeta.AnyQuery, name string) bool {
-	params, err := q.Params(m.meta)
+func (f *Formatter) takes(q dbmeta.AnyQuery, name string) bool {
+	params, err := q.Params(f.meta)
 	if err != nil {
 		return false
 	}
@@ -213,10 +213,10 @@ func (m *Meta) takes(q dbmeta.AnyQuery, name string) bool {
 	})
 }
 
-// name returns a pattern for an object that no schema holds, such as a role,
+// fold returns a pattern for an object that no schema holds, such as a role,
 // folded as the database folds a name that is not quoted.
-func (m *Meta) name(pattern string) string {
-	return like(m.meta.Dialect().FoldIdentifier(pattern))
+func (f *Formatter) fold(pattern string) string {
+	return like(f.meta.Dialect().FoldIdentifier(pattern))
 }
 
 // tf returns a boolean the way psql prints one.
@@ -369,7 +369,7 @@ func attributes(r dbmeta.Role) string {
 	return strings.Join(v, ", ")
 }
 
-var roleSettings = func(ctx context.Context, w *Writer, c Call) error {
+var roleSettings = func(ctx context.Context, f *Formatter, c Call) error {
 	s := spec[dbmeta.RoleSetting]{
 		cmd: `\drds`, title: text.ListOfRoleSettings, q: dbmeta.RoleSettings,
 		fields: []field[dbmeta.RoleSetting]{
@@ -378,13 +378,13 @@ var roleSettings = func(ctx context.Context, w *Writer, c Call) error {
 			{name: "Settings", value: func(r dbmeta.RoleSetting) any { return null(r.Settings) }},
 		},
 	}
-	a := s.named(w, c.pattern(0))
-	a.Database = w.m.name(c.pattern(1))
-	res, err := s.read(ctx, w, c, a)
+	a := s.named(f, c.pattern(0))
+	a.Database = f.fold(c.pattern(1))
+	res, err := s.read(ctx, f, c, a)
 	if err != nil {
 		return err
 	}
-	return s.print(w.w, res, c.Verbose)
+	return s.print(f.out, res, c.Verbose)
 }
 
 var roleGrants = list(spec[dbmeta.RoleGrant]{
@@ -611,19 +611,19 @@ var publicationList = spec[dbmeta.Publication]{
 	},
 }
 
-func publications(ctx context.Context, w *Writer, c Call) error {
-	pubs, err := publicationList.read(ctx, w, c, publicationList.named(w, c.pattern(0)))
+func publications(ctx context.Context, f *Formatter, c Call) error {
+	pubs, err := publicationList.read(ctx, f, c, publicationList.named(f, c.pattern(0)))
 	switch {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return publicationList.print(w.w, pubs, false)
+		return publicationList.print(f.out, pubs, false)
 	}
 	slices.SortStableFunc(pubs, func(a, b dbmeta.Publication) int {
 		return cmp.Compare(a.Name, b.Name)
 	})
 	for _, p := range pubs {
-		tables, err := optional(all(ctx, w.m, dbmeta.PublicationTables, args{Name: p.Name}))
+		tables, err := optional(all(ctx, f, dbmeta.PublicationTables, args{Name: p.Name}))
 		if err != nil {
 			return err
 		}
@@ -657,7 +657,7 @@ func publications(ctx context.Context, w *Writer, c Call) error {
 			row = append(row, f.value(p))
 		}
 		r.add(row...)
-		if err := encode(w.w, r, fmt.Sprintf(text.Publication, p.Name), footer, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.Publication, p.Name), footer, nil); err != nil {
 			return err
 		}
 	}
@@ -688,21 +688,21 @@ var configList = spec[dbmeta.TextSearchConfig]{
 	},
 }
 
-func textSearchConfigs(ctx context.Context, w *Writer, c Call) error {
-	configs, err := configList.read(ctx, w, c, configList.named(w, c.pattern(0)))
+func textSearchConfigs(ctx context.Context, f *Formatter, c Call) error {
+	configs, err := configList.read(ctx, f, c, configList.named(f, c.pattern(0)))
 	switch {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return configList.print(w.w, configs, false)
+		return configList.print(f.out, configs, false)
 	}
 	slices.SortStableFunc(configs, func(a, b dbmeta.TextSearchConfig) int {
 		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
 	})
 	for _, t := range configs {
-		maps, err := all(ctx, w.m, dbmeta.TextSearchConfigMaps, args{Schema: t.Schema, Name: t.Name, WithSystem: true})
+		maps, err := all(ctx, f, dbmeta.TextSearchConfigMaps, args{Schema: t.Schema, Name: t.Name, WithSystem: true})
 		if err != nil {
-			return w.check(`\dF+`, err)
+			return f.check(`\dF+`, err)
 		}
 		slices.SortStableFunc(maps, func(a, b dbmeta.TextSearchConfigMap) int {
 			return cmp.Or(cmp.Compare(a.Token, b.Token), cmp.Compare(a.Position, b.Position))
@@ -720,7 +720,7 @@ func textSearchConfigs(ctx context.Context, w *Writer, c Call) error {
 			r.add(m.Token, m.Dictionary)
 		}
 		title := fmt.Sprintf(text.TSConfig, t.Schema+"."+t.Name) + "\n" + fmt.Sprintf(text.TSConfigParser, qualify(null(t.ParserSchema), t.Parser))
-		if err := encode(w.w, r, title, noFooter, nil); err != nil {
+		if err := encode(f.out, r, title, noFooter, nil); err != nil {
 			return err
 		}
 	}
@@ -816,21 +816,21 @@ var extensionList = spec[dbmeta.Extension]{
 	},
 }
 
-func extensions(ctx context.Context, w *Writer, c Call) error {
-	exts, err := extensionList.read(ctx, w, c, extensionList.named(w, c.pattern(0)))
+func extensions(ctx context.Context, f *Formatter, c Call) error {
+	exts, err := extensionList.read(ctx, f, c, extensionList.named(f, c.pattern(0)))
 	switch {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return extensionList.print(w.w, exts, false)
+		return extensionList.print(f.out, exts, false)
 	}
 	slices.SortStableFunc(exts, func(a, b dbmeta.Extension) int {
 		return cmp.Compare(a.Name, b.Name)
 	})
 	for _, e := range exts {
-		objects, err := all(ctx, w.m, dbmeta.ExtensionObjects, args{Name: e.Name})
+		objects, err := all(ctx, f, dbmeta.ExtensionObjects, args{Name: e.Name})
 		if err != nil {
-			return w.check(`\dx+`, err)
+			return f.check(`\dx+`, err)
 		}
 		r := &rows{columns: []string{"Object description"}}
 		for _, o := range objects {
@@ -839,7 +839,7 @@ func extensions(ctx context.Context, w *Writer, c Call) error {
 			}
 		}
 		slices.SortStableFunc(r.values, compareRows)
-		if err := encode(w.w, r, fmt.Sprintf(text.ObjectsInExtension, `"`+e.Name+`"`), noFooter, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.ObjectsInExtension, `"`+e.Name+`"`), noFooter, nil); err != nil {
 			return err
 		}
 	}
@@ -857,18 +857,18 @@ func qualify(schema, name string) string {
 // ShowFunction prints the definition of the function that name names, for
 // \sf. name may carry the argument types, as in f(integer), to pick one of
 // several functions with the name. verbose numbers the lines of the body.
-func (w *Writer) ShowFunction(ctx context.Context, name string, verbose bool) error {
+func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool) error {
 	pattern, argTypes, hasArgs := strings.Cut(name, "(")
 	argTypes = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(argTypes), ")"))
-	schema, n := w.m.Pattern(strings.TrimSpace(pattern))
-	funcs, err := all(ctx, w.m, dbmeta.Functions, args{Schema: schema, Name: n, WithSystem: true})
+	schema, n := f.pattern(strings.TrimSpace(pattern))
+	funcs, err := all(ctx, f, dbmeta.Functions, args{Schema: schema, Name: n, WithSystem: true})
 	if err != nil {
-		return w.check(`\sf`, err)
+		return f.check(`\sf`, err)
 	}
 	var match []dbmeta.Function
 	if hasArgs {
 		want := typeList(strings.Split(argTypes, ","))
-		params, err := w.routineTypes(ctx, schema, n)
+		params, err := f.routineTypes(ctx, schema, n)
 		if err != nil {
 			return err
 		}
@@ -906,7 +906,7 @@ func (w *Writer) ShowFunction(ctx context.Context, name string, verbose bool) er
 		case verbose:
 			line = fmt.Sprintf("%-7d %s", i-body+1, line)
 		}
-		if _, err := fmt.Fprintln(w.w, line); err != nil {
+		if _, err := fmt.Fprintln(f.out, line); err != nil {
 			return err
 		}
 	}
@@ -916,8 +916,8 @@ func (w *Writer) ShowFunction(ctx context.Context, name string, verbose bool) er
 // routineTypes returns the types of the arguments of each routine that
 // matches schema and name, keyed by the ID of the routine and written as
 // typeList writes them.
-func (w *Writer) routineTypes(ctx context.Context, schema, name string) (map[string]string, error) {
-	params, err := optional(all(ctx, w.m, dbmeta.RoutineParameters, args{Schema: schema, Parent: name, WithSystem: true}))
+func (f *Formatter) routineTypes(ctx context.Context, schema, name string) (map[string]string, error) {
+	params, err := optional(all(ctx, f, dbmeta.RoutineParameters, args{Schema: schema, Parent: name, WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
@@ -952,14 +952,14 @@ func typeList(types []string) string {
 
 // ShowView prints the definition of each view that matches pattern, for \sv.
 // verbose numbers the lines.
-func (w *Writer) ShowView(ctx context.Context, pattern string, verbose bool) error {
-	schema, name := w.m.Pattern(pattern)
-	views, err := all(ctx, w.m, dbmeta.Views, args{Schema: schema, Name: name, WithSystem: true})
+func (f *Formatter) ShowView(ctx context.Context, pattern string, verbose bool) error {
+	schema, name := f.pattern(pattern)
+	views, err := all(ctx, f, dbmeta.Views, args{Schema: schema, Name: name, WithSystem: true})
 	if err != nil {
-		return w.check(`\sv`, err)
+		return f.check(`\sv`, err)
 	}
 	if len(views) == 0 {
-		_, err := fmt.Fprintf(w.w, text.ViewNotFound+"\n", pattern)
+		_, err := fmt.Fprintf(f.out, text.ViewNotFound+"\n", pattern)
 		return err
 	}
 	for _, v := range views {
@@ -977,7 +977,7 @@ func (w *Writer) ShowView(ctx context.Context, pattern string, verbose bool) err
 			if verbose {
 				line = fmt.Sprintf("%-7d %s", i+1, line)
 			}
-			if _, err := fmt.Fprintln(w.w, line); err != nil {
+			if _, err := fmt.Fprintln(f.out, line); err != nil {
 				return err
 			}
 		}

@@ -24,6 +24,7 @@ import (
 	"unicode"
 
 	"github.com/go-git/go-billy/v5"
+	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
 	"github.com/xo/dburl/passfile"
 	"github.com/xo/rline"
@@ -34,7 +35,7 @@ import (
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/metacmd/charts"
-	"github.com/xo/usql/metadata"
+	"github.com/xo/usql/metacmd/describe"
 	"github.com/xo/usql/text"
 )
 
@@ -89,7 +90,7 @@ type Handler struct {
 	db *sql.DB
 	// meta reads the structure of the database, and is built the first time
 	// it is needed.
-	meta *metadata.Meta
+	meta *dbmeta.Meta
 	// tx is the active transaction, if any.
 	tx *sql.Tx
 	// out file or pipe
@@ -720,7 +721,10 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 			if h.l.Interactive() {
 				c := completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings()))
 				if m, err := h.metadata(ctx); err == nil {
-					c = drivers.NewCompleter(m, completer.WithConnStrings(h.connStrings()))
+					c = completer.NewDefaultCompleter(
+						completer.WithSource(describe.Source(m, h.db)),
+						completer.WithConnStrings(h.connStrings()),
+					)
 				}
 				h.l.SetCompleter(c)
 			}
@@ -947,8 +951,8 @@ func (h *Handler) Version(ctx context.Context) error {
 	}
 	var ver string
 	var err error
-	if metadata.Has(h.u.Dialect) && !drivers.OwnVersion(h.u) {
-		var m *metadata.Meta
+	if _, ok := dbmeta.Dialect(h.u.Dialect).Info(); ok && !drivers.OwnVersion(h.u) {
+		var m *dbmeta.Meta
 		if m, err = h.metadata(ctx); err == nil {
 			ver = m.String()
 		}
@@ -1468,30 +1472,31 @@ func (h *Handler) Include(path string, relative bool) error {
 	return h.IncludeReader(f, path)
 }
 
-// MetadataWriter returns the writer of the describe commands, such as \d. It
-// writes to the output of the session, so \o redirects it, as it does in psql.
-func (h *Handler) MetadataWriter(ctx context.Context) (*metadata.Writer, error) {
+// Formatter returns the formatter of the describe commands, such as \d, with
+// the options of the session, such as ECHO_HIDDEN, applied. It writes to the
+// output of the session, so \o redirects it, as it does in psql.
+func (h *Handler) Formatter(ctx context.Context) (*describe.Formatter, error) {
 	m, err := h.metadata(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return metadata.NewWriter(m, h.GetOutput(), h.u.SchemeName), nil
+	return describe.NewFormatter(m, h.db, h.GetOutput(), h.u.SchemeName, formatterOpts()...), nil
 }
 
-// metadata returns the reader of the structure of the database, with the
-// options of the session, such as ECHO_HIDDEN, applied.
-func (h *Handler) metadata(ctx context.Context) (*metadata.Meta, error) {
+// metadata returns dbmeta's model of the database. It is read once for each
+// connection.
+func (h *Handler) metadata(ctx context.Context) (*dbmeta.Meta, error) {
 	if h.db == nil {
 		return nil, text.ErrNotConnected
 	}
 	if h.meta == nil {
-		m, err := drivers.NewMeta(ctx, h.u, h.db, readerOpts()...)
+		m, err := drivers.Meta(ctx, h.u, h.db)
 		if err != nil {
 			return nil, err
 		}
 		h.meta = m
 	}
-	return h.meta.With(readerOpts()...), nil
+	return h.meta, nil
 }
 
 // GetOutput gets the output writer.
@@ -1541,17 +1546,18 @@ func (e *Error) Unwrap() error {
 	return e.Err
 }
 
-// readerOpts returns the options of the metadata reader that ECHO_HIDDEN sets.
-func readerOpts() []metadata.Option {
-	opts := []metadata.Option{metadata.WithLogger(nil), metadata.WithDryRun(false), metadata.WithTimeout(0)}
+// formatterOpts returns the options of the describe commands that
+// ECHO_HIDDEN sets.
+func formatterOpts() []describe.Option {
+	var opts []describe.Option
 	if env.Get("ECHO_HIDDEN") == "on" || env.Get("ECHO_HIDDEN") == "noexec" {
 		if env.Get("ECHO_HIDDEN") == "noexec" {
-			opts = append(opts, metadata.WithDryRun(true))
+			opts = append(opts, describe.WithDryRun(true))
 		}
 		opts = append(
 			opts,
-			metadata.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)),
-			metadata.WithTimeout(30*time.Second),
+			describe.WithLogger(log.New(os.Stdout, "DEBUG: ", log.LstdFlags)),
+			describe.WithTimeout(30*time.Second),
 		)
 	}
 	return opts

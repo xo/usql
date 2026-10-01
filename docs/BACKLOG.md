@@ -1043,7 +1043,7 @@ which means W21 inherits them and the new readers have to answer for them.
 Implemented on 2026-09-30 and staged for review, following D4. usql reads all
 of its metadata from dbmeta: the describe commands, tab completion, the
 version, the current user and the change of a password. Every usql reader is
-gone. `metadata` holds the commands, which print dbmeta's answers the
+gone. `metacmd/describe` holds the commands, which print dbmeta's answers the
 way psql prints them, and a small source of names for the completer.
 
 It builds against a dbmeta checkout through a local `go.work`, and is not
@@ -1357,7 +1357,7 @@ reads metadata, runs DDL or changes a password. These remain:
   their client library.
 - Two fallbacks in `drivers/drivers.go` for a database with no model:
   `SELECT version();` in `Version` and `SELECT current_user` in `User`.
-- Text in `metadata` that is printed and never run: the
+- Text in `metacmd/describe` that is printed and never run: the
   `FOREIGN KEY ... REFERENCES` line built for SQLite, the `CHECK (...)` around
   an expression from information_schema, and the `CREATE OR REPLACE VIEW`
   line that `\sv` puts above a definition.
@@ -1402,7 +1402,7 @@ Source: Ken, on 2026-09-30, once W21 put all of usql's metadata on dbmeta.
 Status: Implemented, waiting for W21 to be committed.
 
 usql now answers every command in dbmeta's `docs/COMMANDS.md` that dbmeta has
-a query for. `metadata/lists.go` holds one spec for each: the query,
+a query for. `metacmd/describe/lists.go` holds one spec for each: the query,
 psql's title, and psql's columns. `metacmd/cmds.go` routes the commands, and
 `TestEveryListIsACommand` checks that each spec is reachable. The new commands
 are `\dA`, `\dAc`, `\dAf`, `\dAo`, `\dAp`, `\db`, `\dc`, `\dconfig`,

@@ -286,10 +286,10 @@ Then add the module and tidy:
 ## Step 5. Metadata goes to dbmeta
 
 Do not write a metadata reader here. All database metadata is moving into
-[dbmeta](https://github.com/xo/dbmeta), and `metadata` takes no new
+[dbmeta](https://github.com/xo/dbmeta), and `metacmd/describe` takes no new
 reader and no change to an existing one. See D3.
 
-`metadata` reads the metadata of every driver from dbmeta, by the
+usql reads the metadata of every driver from dbmeta, by the
 dialect that dburl sets. A driver whose database dbmeta has no model for
 reports that its describe commands, such as `\d`, `\dt`, `\l` and `\dp`, are
 not supported. Add it to `noModel` in `metadata_test.go` with the reason,
