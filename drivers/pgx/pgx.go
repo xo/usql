@@ -21,8 +21,6 @@ import (
 	"github.com/jackc/pgx/v5/stdlib" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
-	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
 	"github.com/xo/usql/text"
 )
 
@@ -35,9 +33,6 @@ func init() {
 // URL.Driver, and usql registers this driver under that database's own name.
 func Driver() drivers.Driver {
 	return drivers.Driver{
-		AllowDollar:            true,
-		AllowMultilineComments: true,
-		LexerName:              "postgres",
 		Open: func(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_, dsn string) (*sql.DB, error) {
 				config, err := pgx.ParseConfig(dsn)
@@ -65,18 +60,6 @@ func Driver() drivers.Driver {
 				return stdlib.OpenDB(*config), nil
 			}, nil
 		},
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			err := db.QueryRowContext(ctx, `SHOW server_version`).Scan(&ver)
-			if err != nil {
-				return "", err
-			}
-			return "PostgreSQL " + ver, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` PASSWORD '` + newpw + `'`)
-			return err
-		},
 		Err: func(err error) (string, string) {
 			var e *pgconn.PgError
 			if errors.As(err, &e) {
@@ -90,10 +73,6 @@ func Driver() drivers.Driver {
 				return e.Code == "28P01"
 			}
 			return false
-		},
-		NewMetadataReader: pgmeta.NewReader(),
-		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(pgmeta.NewReader()(db, opts...))(db, w)
 		},
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
 			conn, err := db.Conn(context.Background())

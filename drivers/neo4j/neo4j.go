@@ -23,20 +23,15 @@ import (
 	"strings"
 
 	"github.com/xo/dbimp/neo4j" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
 	drivers.Register("neo4j", drivers.Driver{
-		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			// Neo4j sends no count of rows affected, and a Cypher statement
-			// such as MATCH is not one that usql knows returns rows, so each
-			// statement is run as a query
-			typ, _ := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, true, nil
-		},
+		// Neo4j sends no count of rows affected, and a Cypher statement
+		// such as MATCH is not one that usql knows returns rows, so each
+		// statement is run as a query
+		AlwaysQuery: true,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver, edition string
 			err := db.QueryRowContext(ctx, `CALL dbms.components() YIELD name, versions, edition `+

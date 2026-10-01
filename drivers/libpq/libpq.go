@@ -19,8 +19,6 @@ import (
 	"github.com/lib/pq" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
-	pgmeta "github.com/xo/usql/drivers/metadata/postgres"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
@@ -48,10 +46,7 @@ func init() {
 		return sql.OpenDB(notificationConn), nil
 	}
 	drivers.Register("pq", drivers.Driver{
-		Name:                   "pq",
-		AllowDollar:            true,
-		AllowMultilineComments: true,
-		LexerName:              "postgres",
+		Name: "pq",
 		Open: func(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_, dsn string) (*sql.DB, error) {
 				conn, err := openConn(stdout, stderr, dsn)
@@ -75,20 +70,6 @@ func init() {
 				return conn, nil
 			}, nil
 		},
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			// numeric version
-			// SHOW server_version_num;
-			var ver string
-			err := db.QueryRowContext(ctx, `SHOW server_version`).Scan(&ver)
-			if err != nil {
-				return "", err
-			}
-			return "PostgreSQL " + ver, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` PASSWORD '` + newpw + `'`)
-			return err
-		},
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*pq.Error); ok {
 				return string(e.Code), e.Message
@@ -100,10 +81,6 @@ func init() {
 				return e.Code.Name() == "invalid_password"
 			}
 			return false
-		},
-		NewMetadataReader: pgmeta.NewReader(),
-		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(pgmeta.NewReader()(db, opts...))(db, w)
 		},
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
 			columns, err := rows.Columns()

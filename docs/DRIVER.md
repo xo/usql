@@ -195,11 +195,16 @@ A minimal driver is short, because nearly every hook is optional:
     )
 
     func init() {
-        drivers.Register("mydb", drivers.Driver{
-            AllowMultilineComments: true,
-            Process:                drivers.StripTrailingSemicolon,
-        })
+        drivers.Register("mydb", drivers.Driver{})
     }
+
+A field that describes the database rather than the Go driver is not set
+here. dbmeta holds it, keyed by the dialect: the comment and quoting forms
+the lexer allows, what happens to a trailing semicolon, the statements that
+open and close a batch, whether a password change needs the old password, and
+how the database folds the case of a name. D5 records this. A database with
+no dbmeta model gets only block comments. W28 holds the four drivers whose
+statement handling waits for dbmeta.
 
 Keep the `// DRIVER` comment on the driver import. Other tools in the family
 find the driver package by searching for it.
@@ -221,12 +226,16 @@ A `Group:` line puts the driver in a build group. The groups are `base`, which
 is the default build, `most`, `all`, and `bad` for drivers that are known to be
 broken.
 
-Always write the `Group:` line. A driver that omits it lands in `most`, which
-ships in regular builds, and that is rarely what a new driver should do. Write
-`Group: all` unless the maintainer decides otherwise.
+Always write the `Group:` line, even where it says what the default would.
+A driver that omits it lands in `most` without anyone having decided that.
 
-Promoting a driver to `most` or `base` is a decision for the maintainer, not
-part of adding it.
+Ken's rule decides between `most` and `all`. A driver goes in `most` when its
+dburl scheme names a dialect and it does not need cgo. A driver that needs cgo
+goes in `all`, as godror and odbc do. A driver that is known to be broken goes
+in `bad`.
+
+Promoting a driver to `base` is a decision for the maintainer, not part of
+adding it.
 
 A `Tags:` line names further build tags that select the driver. Each one
 selects it as the driver's own tag does, and its `no_` form leaves the driver
@@ -252,11 +261,11 @@ README.
 
 Run the generator:
 
-    GOPATH=$(go env GOPATH) go run gen.go
+    go run gen.go
 
-It needs `GOPATH` to point at a tree that contains a `dburl` checkout at
-`src/github.com/xo/dburl`, because it reads dburl's source rather than the
-module cache. It panics with a confusing `lstat` error when `GOPATH` is empty.
+It reads dburl's scheme registry from the version pinned in `go.mod`. So the
+scheme from Step 2 reaches usql only after `go.mod` moves to the dburl release
+that holds it.
 
 These files are generated. Do not edit them by hand:
 
@@ -280,9 +289,11 @@ Do not write a metadata reader here. All database metadata is moving into
 [dbmeta](https://github.com/xo/dbmeta), and `drivers/metadata` takes no new
 reader and no change to an existing one. See D3.
 
-A new driver sets neither `NewMetadataReader` nor `NewMetadataWriter`. Its
-describe commands, such as `\d`, `\dt`, `\l` and `\dp`, then report that they
-are not supported. That is the expected result until `dbmeta` answers them.
+`drivers/metadata` reads the metadata of every driver from dbmeta, by the
+dialect that dburl sets. A driver whose database dbmeta has no model for
+reports that its describe commands, such as `\d`, `\dt`, `\l` and `\dp`, are
+not supported. Add it to `noModel` in `metadata_test.go` with the reason,
+because `TestEveryDriverReadsThroughDbmeta` fails until it is there.
 
 The metadata for a new database is added in `dbmeta`, which models each
 product and says what it can answer. Ask there, or ask Ken. W21 in
@@ -304,7 +315,7 @@ than a summary of it.
 The `-tags all` build matters on its own, because a duplicate scheme or alias
 panics at registration time rather than at compile time.
 
-Most test failures without a container runtime are expected. Five packages
+Most test failures without a container runtime are expected. Two packages
 need containers. Everything else must pass.
 
 ### With a database

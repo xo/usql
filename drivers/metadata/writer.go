@@ -1,838 +1,858 @@
 package metadata
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
-	"github.com/xo/dburl"
-	"github.com/xo/tblfmt"
-	"github.com/xo/usql/env"
+	"github.com/xo/dbmeta"
 	"github.com/xo/usql/text"
 )
 
-// DB is the common interface for database operations, compatible with
-// database/sql.DB and database/sql.Tx.
-type DB interface {
-	Exec(string, ...interface{}) (sql.Result, error)
-	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
-	Query(string, ...interface{}) (*sql.Rows, error)
-	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
-	QueryRow(string, ...interface{}) *sql.Row
-	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
-	Prepare(string) (*sql.Stmt, error)
-	PrepareContext(context.Context, string) (*sql.Stmt, error)
+// Writer prints the answers of the describe commands, such as \d and \dt, the
+// way psql prints them.
+type Writer struct {
+	m *Meta
+	w io.Writer
+	// name is the name of the driver, for the message when a command is not
+	// supported.
+	name string
 }
 
-// DefaultWriter using an existing db introspector
-type DefaultWriter struct {
-	r             Reader
-	db            DB
-	w             io.Writer
-	tableTypes    map[rune][]string
-	funcTypes     map[rune][]string
-	systemSchemas map[string]struct{}
-
-	// custom functions for easier overloading
-	listAllDbs func(string, bool) error
+// NewWriter returns a Writer that prints to w. name names the driver in the
+// message for a command that the database cannot answer.
+func NewWriter(m *Meta, w io.Writer, name string) *Writer {
+	return &Writer{m: m, w: w, name: name}
 }
 
-func NewDefaultWriter(r Reader, opts ...WriterOption) func(db DB, w io.Writer) Writer {
-	defaultWriter := &DefaultWriter{
-		r: r,
-		tableTypes: map[rune][]string{
-			't': {"TABLE", "BASE TABLE", "SYSTEM TABLE", "SYNONYM", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"},
-			'v': {"VIEW", "SYSTEM VIEW"},
-			'm': {"MATERIALIZED VIEW"},
-			's': {"SEQUENCE"},
-		},
-		funcTypes: map[rune][]string{
-			'a': {"AGGREGATE"},
-			'n': {"FUNCTION"},
-			'p': {"PROCEDURE", "PACKAGE"},
-			't': {"TRIGGER"},
-			'w': {"WINDOW"},
-		},
-		systemSchemas: map[string]struct{}{
-			"information_schema": {},
-		},
-	}
-	for _, o := range opts {
-		o(defaultWriter)
-	}
-	return func(db DB, w io.Writer) Writer {
-		defaultWriter.db = db
-		defaultWriter.w = w
-		return defaultWriter
-	}
+// notSupported returns the error for a command that the database cannot
+// answer.
+func (w *Writer) notSupported(cmd string) error {
+	return fmt.Errorf(text.NotSupportedByDriver, cmd, w.name)
 }
 
-// WriterOption to configure the DefaultWriter
-type WriterOption func(*DefaultWriter)
+// check turns ErrNotSupported into the message for cmd.
+func (w *Writer) check(cmd string, err error) error {
+	if errors.Is(err, ErrNotSupported) {
+		return w.notSupported(cmd)
+	}
+	return err
+}
 
-// WithSystemSchemas that are ignored unless showSystem is true
-func WithSystemSchemas(schemas []string) WriterOption {
-	return func(w *DefaultWriter) {
-		w.systemSchemas = make(map[string]struct{}, len(schemas))
-		for _, s := range schemas {
-			w.systemSchemas[s] = struct{}{}
+// The classes of relation that \d lists, keyed by the letter of the command:
+// \dt tables, \dv views, \dm materialized views, \ds sequences and \dE
+// foreign tables.
+const (
+	classTable        = 't'
+	classView         = 'v'
+	classMaterialized = 'm'
+	classSequence     = 's'
+	classForeign      = 'E'
+)
+
+// classOf returns the class of a relation from its type, which each database
+// spells its own way, such as "BASE TABLE" or "materialized view".
+func classOf(typ string) rune {
+	switch t := strings.ToLower(typ); {
+	case strings.Contains(t, "materialized"):
+		return classMaterialized
+	case strings.Contains(t, "sequence"):
+		return classSequence
+	case strings.Contains(t, "foreign"):
+		return classForeign
+	case strings.Contains(t, "view"):
+		return classView
+	}
+	return classTable
+}
+
+// className returns the name that psql prints for a class.
+func className(class rune) string {
+	switch class {
+	case classView:
+		return "view"
+	case classMaterialized:
+		return "materialized view"
+	case classSequence:
+		return "sequence"
+	case classForeign:
+		return "foreign table"
+	}
+	return "table"
+}
+
+// classes returns the classes named by the letters of types, such as "tv".
+// No letter means every class.
+func classes(types string) map[rune]bool {
+	m := make(map[rune]bool)
+	for _, c := range types {
+		switch c {
+		case classTable, classView, classMaterialized, classSequence, classForeign:
+			m[c] = true
 		}
 	}
-}
-
-// WithListAllDbs that lists all catalogs
-func WithListAllDbs(f func(string, bool) error) WriterOption {
-	return func(w *DefaultWriter) {
-		w.listAllDbs = f
-	}
-}
-
-// DescribeFunctions matching pattern
-func (w DefaultWriter) DescribeFunctions(u *dburl.URL, funcTypes, pattern string, verbose, showSystem bool) error {
-	r, ok := w.r.(FunctionReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\df`, u.SchemeName)
-	}
-	types := []string{}
-	for k, v := range w.funcTypes {
-		if strings.ContainsRune(funcTypes, k) {
-			types = append(types, v...)
+	if len(m) == 0 {
+		for _, c := range "tvmsE" {
+			m[c] = true
 		}
 	}
-	sp, tp, err := parsePattern(pattern)
+	return m
+}
+
+// relations returns the relations that match pattern, sorted by schema and
+// name. When sequences are asked for and the database lists them apart from
+// its tables, they are added.
+func (w *Writer) relations(ctx context.Context, pattern string, withSystem bool, want map[rune]bool) ([]dbmeta.Table, error) {
+	schema, name := w.m.Pattern(pattern)
+	tables, err := all(ctx, w.m, dbmeta.Tables, args{Schema: schema, Name: name, WithSystem: withSystem})
 	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
+		return nil, err
 	}
-	res, err := r.Functions(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
-	if err != nil {
-		return fmt.Errorf("failed to list functions: %w", err)
-	}
-	defer res.Close()
-
-	if !showSystem {
-		// in case the reader doesn't implement WithSystem
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Function).Schema]
-			return !ok
-		})
-	}
-
-	if _, ok := w.r.(FunctionColumnReader); ok {
-		for res.Next() {
-			f := res.Get()
-			f.ArgTypes, err = w.getFunctionColumns(f.Catalog, f.Schema, f.SpecificName)
-			if err != nil {
-				return fmt.Errorf("failed to get columns of function %s.%s: %w", f.Schema, f.SpecificName, err)
-			}
+	var res []dbmeta.Table
+	seen := make(map[string]bool)
+	for _, t := range tables {
+		if want[classOf(t.Type)] {
+			res = append(res, t)
+			seen[t.Schema+"."+t.Name] = true
 		}
-		res.Reset()
 	}
-
-	columns := []string{"Schema", "Name", "Result data type", "Argument data types", "Type"}
-	if verbose {
-		columns = append(columns, "Volatility", "Security", "Language", "Source code")
-	}
-	res.SetColumns(columns)
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*Function)
-		v := []interface{}{f.Schema, f.Name, f.ResultType, f.ArgTypes, f.Type}
-		if verbose {
-			v = append(v, f.Volatility, f.Security, f.Language, f.Source)
-		}
-		return v
-	})
-	params := env.Vars().Print()
-	params["title"] = "List of functions"
-	return tblfmt.EncodeAll(w.w, res, params)
-}
-
-func (w DefaultWriter) getFunctionColumns(c, s, f string) (string, error) {
-	r := w.r.(FunctionColumnReader)
-	cols, err := r.FunctionColumns(Filter{Catalog: c, Schema: s, Parent: f})
-	if err != nil {
-		return "", err
-	}
-	args := []string{}
-	for cols.Next() {
-		c := cols.Get()
-		// skip result params
-		if c.OrdinalPosition == 0 {
-			continue
-		}
-		typ := ""
-		if c.Type != "IN" && c.Type != "" {
-			typ = c.Type + " "
-		}
-		name := c.Name
-		if name != "" {
-			name += " "
-		}
-		args = append(args, fmt.Sprintf("%s%s%s", typ, name, c.DataType))
-	}
-	return strings.Join(args, ", "), nil
-}
-
-// DescribeTableDetails matching pattern
-func (w DefaultWriter) DescribeTableDetails(u *dburl.URL, pattern string, verbose, showSystem bool) error {
-	sp, tp, err := parsePattern(pattern)
-	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
-	}
-
-	found := 0
-
-	tr, isTR := w.r.(TableReader)
-	_, isCR := w.r.(ColumnReader)
-	if isTR && isCR {
-		res, err := tr.Tables(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
+	if want[classSequence] && w.m.Supports(dbmeta.Sequences) {
+		sequences, err := all(ctx, w.m, dbmeta.Sequences, args{Schema: schema, Name: name, WithSystem: withSystem})
 		if err != nil {
-			return fmt.Errorf("failed to list tables: %w", err)
+			return nil, err
 		}
-		defer res.Close()
-		if !showSystem {
-			// in case the reader doesn't implement WithSystem
-			res.SetFilter(func(r Result) bool {
-				_, ok := w.systemSchemas[r.(*Table).Schema]
-				return !ok
-			})
-		}
-		for res.Next() {
-			t := res.Get()
-			err = w.describeTableDetails(t.Type, t.Schema, t.Name, verbose, showSystem)
-			if err != nil {
-				return fmt.Errorf("failed to describe %s %s.%s: %w", t.Type, t.Schema, t.Name, err)
-			}
-			found++
-		}
-	}
-
-	if _, ok := w.r.(SequenceReader); ok {
-		foundSeq, err := w.describeSequences(sp, tp, verbose, showSystem)
-		if err != nil {
-			return fmt.Errorf("failed to describe sequences: %w", err)
-		}
-		found += foundSeq
-	}
-
-	ir, isIR := w.r.(IndexReader)
-	_, isICR := w.r.(IndexColumnReader)
-	if isIR && isICR {
-		res, err := ir.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
-		if err != nil && err != text.ErrNotSupported {
-			return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
-		}
-		if res != nil {
-			defer res.Close()
-			if !showSystem {
-				// in case the reader doesn't implement WithSystem
-				res.SetFilter(func(r Result) bool {
-					_, ok := w.systemSchemas[r.(*Index).Schema]
-					return !ok
-				})
-			}
-			for res.Next() {
-				i := res.Get()
-				err = w.describeIndex(i)
-				if err != nil {
-					return fmt.Errorf("failed to describe index %s from table %s.%s: %w", i.Name, i.Schema, i.Table, err)
-				}
-				found++
+		for _, s := range sequences {
+			if !seen[s.Schema+"."+s.Name] {
+				res = append(res, dbmeta.Table{Schema: s.Schema, Name: s.Name, Type: "sequence", Comment: s.Comment})
 			}
 		}
 	}
-
-	if found == 0 {
-		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
-		fmt.Fprintln(w.w)
-	}
-	return nil
-}
-
-func (w DefaultWriter) describeTableDetails(typ, sp, tp string, verbose, showSystem bool) error {
-	r := w.r.(ColumnReader)
-	res, err := r.Columns(Filter{Schema: sp, Parent: tp, WithSystem: showSystem})
-	if err != nil {
-		return fmt.Errorf("failed to list columns for table %s: %w", tp, err)
-	}
-	defer res.Close()
-
-	columns := []string{"Name", "Type", "Nullable", "Default"}
-	if verbose {
-		columns = append(columns, "Size", "Decimal Digits", "Radix", "Octet Length")
-	}
-	res.SetColumns(columns)
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*Column)
-		v := []interface{}{f.Name, f.DataType, f.IsNullable, f.Default}
-		if verbose {
-			v = append(v, f.ColumnSize, f.DecimalDigits, f.NumPrecRadix, f.CharOctetLength)
-		}
-		return v
+	slices.SortStableFunc(res, func(a, b dbmeta.Table) int {
+		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
 	})
-	params := env.Vars().Print()
-	params["title"] = fmt.Sprintf("%s %s\n", typ, qualifiedIdentifier(sp, tp))
-	return w.encodeWithSummary(res, params, w.tableDetailsSummary(sp, tp))
+	return res, nil
 }
 
-func (w DefaultWriter) encodeWithSummary(res tblfmt.ResultSet, params map[string]string, summary func(io.Writer, int) (int, error)) error {
-	newEnc, opts := tblfmt.FromMap(params)
-	opts = append(opts, tblfmt.WithSummary(
-		map[int]func(io.Writer, int) (int, error){
-			-1: summary,
-		},
-	))
-	enc, err := newEnc(res, opts...)
-	if err != nil {
+// notFound prints the line that psql prints when nothing matches.
+func (w *Writer) notFound(pattern string) error {
+	if pattern == "" {
+		_, err := fmt.Fprintln(w.w, text.NoRelationsFound)
 		return err
 	}
-	return enc.EncodeAll(w.w)
+	_, err := fmt.Fprintf(w.w, text.RelationNotFound+"\n", pattern)
+	return err
 }
 
-func (w DefaultWriter) tableDetailsSummary(sp, tp string) func(io.Writer, int) (int, error) {
-	return func(out io.Writer, _ int) (int, error) {
-		err := w.describeTableIndexes(out, sp, tp)
-		if err != nil {
-			return 0, err
-		}
-		err = w.describeTableConstraints(
-			out,
-			Filter{Schema: sp, Parent: tp},
-			func(r Result) bool {
-				c := r.(*Constraint)
-				return c.Type == "CHECK" && c.CheckClause != "" && !strings.HasSuffix(c.CheckClause, " IS NOT NULL")
-			},
-			"Check constraints:",
-			func(out io.Writer, c *Constraint) error {
-				_, err := fmt.Fprintf(out, "  \"%s\" %s (%s)\n", c.Name, c.Type, c.CheckClause)
-				return err
-			},
-		)
-		if err != nil {
-			return 0, err
-		}
-		err = w.describeTableConstraints(
-			out,
-			Filter{Schema: sp, Parent: tp},
-			func(r Result) bool { return r.(*Constraint).Type == "FOREIGN KEY" },
-			"Foreign-key constraints:",
-			func(out io.Writer, c *Constraint) error {
-				columns, foreignColumns, err := w.getConstraintColumns(c.Catalog, c.Schema, c.Table, c.Name)
-				if err != nil {
-					return err
-				}
-				_, err = fmt.Fprintf(out, "  \"%s\" %s (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s\n",
-					c.Name,
-					c.Type,
-					columns,
-					c.ForeignTable,
-					foreignColumns,
-					c.UpdateRule,
-					c.DeleteRule)
-				return err
-			},
-		)
-		if err != nil {
-			return 0, err
-		}
-		err = w.describeTableConstraints(
-			out,
-			Filter{Schema: sp, Reference: tp},
-			func(r Result) bool { return r.(*Constraint).Type == "FOREIGN KEY" },
-			"Referenced by:",
-			func(out io.Writer, c *Constraint) error {
-				columns, foreignColumns, err := w.getConstraintColumns(c.Catalog, c.Schema, c.Table, c.Name)
-				if err != nil {
-					return err
-				}
-				_, err = fmt.Fprintf(out, "  TABLE \"%s\" CONSTRAINT \"%s\" %s (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s\n",
-					c.Table,
-					c.Name,
-					c.Type,
-					columns,
-					c.ForeignTable,
-					foreignColumns,
-					c.UpdateRule,
-					c.DeleteRule)
-				return err
-			},
-		)
-		err = w.describeTableTriggers(out, sp, tp)
-		if err != nil {
-			return 0, err
-		}
-		return 0, err
-	}
-}
-
-func (w DefaultWriter) describeTableTriggers(out io.Writer, sp, tp string) error {
-	r, ok := w.r.(TriggerReader)
-	if !ok {
-		return nil
-	}
-	res, err := r.Triggers(Filter{Schema: sp, Parent: tp})
-	if err != nil && err != text.ErrNotSupported {
-		return fmt.Errorf("failed to list triggers for table %s: %w", tp, err)
-	}
-	if res == nil {
-		return nil
-	}
-	defer res.Close()
-
-	if res.Len() == 0 {
-		return nil
-	}
-	fmt.Fprintln(out, "Triggers:")
-	for res.Next() {
-		t := res.Get()
-		fmt.Fprintf(out, "  \"%s\" %s\n", t.Name, t.Definition)
-	}
-	return nil
-}
-
-func (w DefaultWriter) describeTableIndexes(out io.Writer, sp, tp string) error {
-	r, ok := w.r.(IndexReader)
-	if !ok {
-		return nil
-	}
-	res, err := r.Indexes(Filter{Schema: sp, Parent: tp})
-	if err != nil && err != text.ErrNotSupported {
-		return fmt.Errorf("failed to list indexes for table %s: %w", tp, err)
-	}
-	if res == nil {
-		return nil
-	}
-	defer res.Close()
-
-	if res.Len() == 0 {
-		return nil
-	}
-	fmt.Fprintln(out, "Indexes:")
-	for res.Next() {
-		i := res.Get()
-		primary := ""
-		unique := ""
-		if i.IsPrimary == YES {
-			primary = "PRIMARY_KEY, "
-		}
-		if i.IsUnique == YES {
-			unique = "UNIQUE, "
-		}
-		i.Columns, err = w.getIndexColumns(i.Catalog, i.Schema, i.Table, i.Name)
-		if err != nil {
-			return fmt.Errorf("failed to get columns of index %s: %w", i.Name, err)
-		}
-		fmt.Fprintf(out, "  \"%s\" %s%s%s (%s)\n", i.Name, primary, unique, i.Type, i.Columns)
-	}
-	return nil
-}
-
-func (w DefaultWriter) getIndexColumns(c, s, t, i string) (string, error) {
-	r := w.r.(IndexColumnReader)
-	cols, err := r.IndexColumns(Filter{Catalog: c, Schema: s, Parent: t, Name: i})
+// ListTables prints the relations of the classes named by types that match
+// pattern, for \dt, \dv, \dm, \ds and \d with no pattern.
+func (w *Writer) ListTables(ctx context.Context, types, pattern string, verbose, showSystem bool) error {
+	tables, err := w.relations(ctx, pattern, showSystem, classes(types))
 	if err != nil {
-		return "", err
+		return w.check(`\dt`, err)
 	}
-	result := []string{}
-	for cols.Next() {
-		result = append(result, cols.Get().Name)
+	if len(tables) == 0 {
+		return w.notFound(pattern)
 	}
-	return strings.Join(result, ", "), nil
+	r := &rows{columns: []string{"Schema", "Name", "Type"}}
+	if verbose {
+		r.columns = append(r.columns, "Description")
+	}
+	for _, t := range tables {
+		v := []any{t.Schema, t.Name, className(classOf(t.Type))}
+		if verbose {
+			v = append(v, null(t.Comment))
+		}
+		r.add(v...)
+	}
+	return encode(w.w, r, text.ListOfRelations, nil, nil)
 }
 
-func (w DefaultWriter) describeTableConstraints(out io.Writer, filter Filter, postFilter func(r Result) bool, label string, printer func(io.Writer, *Constraint) error) error {
-	r, ok := w.r.(ConstraintReader)
-	if !ok {
-		return nil
+// DescribeTableDetails prints each relation and each index that matches
+// pattern, for \d NAME.
+func (w *Writer) DescribeTableDetails(ctx context.Context, pattern string, verbose, showSystem bool) error {
+	tables, err := w.relations(ctx, pattern, showSystem, classes(""))
+	if err != nil {
+		return w.check(`\d`, err)
 	}
-	res, err := r.Constraints(filter)
-	if err != nil && err != text.ErrNotSupported {
-		return fmt.Errorf("failed to list constraints: %w", err)
-	}
-	if res == nil {
-		return nil
-	}
-	defer res.Close()
-
-	res.SetFilter(postFilter)
-	if res.Len() == 0 {
-		return nil
-	}
-	fmt.Fprintln(out, label)
-	for res.Next() {
-		c := res.Get()
-		err := printer(out, c)
+	var found bool
+	for _, t := range tables {
+		found = true
+		if classOf(t.Type) == classSequence {
+			err = w.describeSequence(ctx, t)
+		} else {
+			err = w.describeRelation(ctx, t, verbose)
+		}
 		if err != nil {
 			return err
 		}
 	}
+	n, err := w.describeIndexes(ctx, pattern, showSystem)
+	if err != nil {
+		return err
+	}
+	if !found && n == 0 {
+		return w.notFound(pattern)
+	}
 	return nil
 }
 
-func (w DefaultWriter) getConstraintColumns(c, s, t, n string) (string, string, error) {
-	r := w.r.(ConstraintColumnReader)
-	cols, err := r.ConstraintColumns(Filter{Catalog: c, Schema: s, Parent: t, Name: n})
-	if err != nil {
-		return "", "", err
-	}
-	columns := []string{}
-	foreignColumns := []string{}
-	for cols.Next() {
-		columns = append(columns, cols.Get().Name)
-		foreignColumns = append(foreignColumns, cols.Get().ForeignName)
-	}
-	return strings.Join(columns, ", "), strings.Join(foreignColumns, ", "), nil
+// title returns the title of a relation, such as `Table "public.film"`.
+func title(class rune, schema, name string) string {
+	s := className(class)
+	return strings.ToUpper(s[:1]) + s[1:] + " " + qualified(schema, name)
 }
 
-func (w DefaultWriter) describeSequences(sp, tp string, verbose, showSystem bool) (int, error) {
-	r := w.r.(SequenceReader)
-	res, err := r.Sequences(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
-	if err != nil && err != text.ErrNotSupported {
-		return 0, err
+// describeRelation prints the columns of a table or a view, and below them its
+// indexes, constraints, references and triggers.
+func (w *Writer) describeRelation(ctx context.Context, t dbmeta.Table, verbose bool) error {
+	columns, err := all(ctx, w.m, dbmeta.Columns, args{Schema: t.Schema, Parent: t.Name, WithSystem: true})
+	if err != nil {
+		return w.check(`\d`, err)
 	}
-	if res == nil {
+	slices.SortStableFunc(columns, func(a, b dbmeta.Column) int {
+		return cmp.Compare(a.Ordinal, b.Ordinal)
+	})
+	r := &rows{columns: []string{"Column", "Type", "Nullable", "Default"}}
+	if verbose {
+		r.columns = append(r.columns, "Description")
+	}
+	for _, c := range columns {
+		// the columns of another table whose name the pattern also matches
+		if c.Table != t.Name {
+			continue
+		}
+		nullable := ""
+		if !c.Nullable {
+			nullable = "not null"
+		}
+		v := []any{c.Name, c.DataType, nullable, null(c.Default)}
+		if verbose {
+			v = append(v, null(c.Comment))
+		}
+		r.add(v...)
+	}
+	footer, err := w.relationFooter(ctx, t)
+	if err != nil {
+		return err
+	}
+	return encode(w.w, r, title(classOf(t.Type), t.Schema, t.Name), footer, nil)
+}
+
+// relationFooter returns the lines that psql prints below the columns of a
+// table: its indexes, check constraints, foreign keys, the foreign keys that
+// refer to it, and its triggers. A section the database cannot answer is left
+// out.
+func (w *Writer) relationFooter(ctx context.Context, t dbmeta.Table) (func(io.Writer) error, error) {
+	var lines []string
+	section := func(header string, items []string) {
+		if len(items) == 0 {
+			return
+		}
+		lines = append(lines, header+":")
+		for _, s := range items {
+			lines = append(lines, "    "+s)
+		}
+	}
+	indexes, err := w.tableIndexes(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+	section("Indexes", indexes)
+	checks, foreign, err := w.tableConstraints(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+	section("Check constraints", checks)
+	section("Foreign-key constraints", foreign)
+	referenced, err := w.referencedBy(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+	section("Referenced by", referenced)
+	triggers, err := w.tableTriggers(ctx, t)
+	if err != nil {
+		return nil, err
+	}
+	section("Triggers", triggers)
+	if len(lines) == 0 {
+		return noFooter, nil
+	}
+	return func(out io.Writer) error {
+		_, err := fmt.Fprintln(out, strings.Join(lines, "\n"))
+		return err
+	}, nil
+}
+
+// optional returns rows, or none when the database cannot answer the query,
+// so that a section it cannot answer is left out rather than failing \d.
+func optional[T any](rows []T, err error) ([]T, error) {
+	if errors.Is(err, ErrNotSupported) {
+		return nil, nil
+	}
+	return rows, err
+}
+
+// indexColumns returns the columns of each index of a table, keyed by the
+// name of the index, in their order in the index.
+func (w *Writer) indexColumns(ctx context.Context, schema, table string) (map[string][]string, error) {
+	cols, err := optional(all(ctx, w.m, dbmeta.IndexColumns, args{Schema: schema, Parent: table, WithSystem: true}))
+	if err != nil {
+		return nil, err
+	}
+	slices.SortStableFunc(cols, func(a, b dbmeta.IndexColumn) int {
+		return cmp.Compare(a.Ordinal, b.Ordinal)
+	})
+	m := make(map[string][]string)
+	for _, c := range cols {
+		if c.Table != table {
+			continue
+		}
+		name := null(c.Name)
+		if name == "" {
+			name = null(c.Expression)
+		}
+		if c.Descending {
+			name += " DESC"
+		}
+		m[c.Index] = append(m[c.Index], name)
+	}
+	return m, nil
+}
+
+// method returns the access method of an index in lower case, such as btree.
+// SQLite reports how the index came to be instead, such as "primary key",
+// which repeats what the line already says, so that is left out.
+func method(i dbmeta.Index) string {
+	switch t := strings.ToLower(strings.TrimSpace(i.Type)); t {
+	case "primary key", "unique", "pk", "u":
+		return ""
+	default:
+		return t
+	}
+}
+
+// indexLine returns the line of one index, the way psql writes it, such as
+// `"film_pkey" PRIMARY KEY, btree (film_id)`.
+func indexLine(i dbmeta.Index, cols []string) string {
+	var parts []string
+	switch {
+	case i.Primary:
+		parts = append(parts, "PRIMARY KEY")
+	case i.Unique:
+		parts = append(parts, "UNIQUE")
+	}
+	if t := method(i); t != "" {
+		parts = append(parts, t)
+	}
+	s := `"` + i.Name + `"`
+	if len(parts) != 0 {
+		s += " " + strings.Join(parts, ", ")
+	}
+	return s + " (" + strings.Join(cols, ", ") + ")"
+}
+
+// tableIndexes returns a line for each index of a table.
+func (w *Writer) tableIndexes(ctx context.Context, t dbmeta.Table) ([]string, error) {
+	indexes, err := optional(all(ctx, w.m, dbmeta.Indexes, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	if err != nil || len(indexes) == 0 {
+		return nil, err
+	}
+	cols, err := w.indexColumns(ctx, t.Schema, t.Name)
+	if err != nil {
+		return nil, err
+	}
+	// psql lists the primary key first, then the rest by name
+	slices.SortStableFunc(indexes, func(a, b dbmeta.Index) int {
+		if a.Primary != b.Primary {
+			if a.Primary {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(a.Name, b.Name)
+	})
+	var lines []string
+	for _, i := range indexes {
+		if i.Table == t.Name {
+			lines = append(lines, indexLine(i, cols[i.Name]))
+		}
+	}
+	return lines, nil
+}
+
+// kind returns the kind of a constraint in lower case, such as "foreign key".
+func kind(typ string) string {
+	return strings.ToLower(strings.TrimSpace(typ))
+}
+
+// constraintColumns returns the columns of each constraint of a table, and the
+// columns and table that each one refers to, keyed by the name of the
+// constraint.
+func (w *Writer) constraintColumns(ctx context.Context, a args) (map[string]*reference, error) {
+	cols, err := optional(all(ctx, w.m, dbmeta.ConstraintColumns, a))
+	if err != nil {
+		return nil, err
+	}
+	slices.SortStableFunc(cols, func(a, b dbmeta.ConstraintColumn) int {
+		return cmp.Compare(a.Ordinal, b.Ordinal)
+	})
+	m := make(map[string]*reference)
+	for _, c := range cols {
+		key := c.Table + "." + c.Constraint
+		r, ok := m[key]
+		if !ok {
+			r = &reference{table: c.Table, name: c.Constraint, foreignSchema: null(c.ForeignSchema), foreignTable: null(c.ForeignTable)}
+			m[key] = r
+		}
+		r.columns = append(r.columns, c.Name)
+		if n := null(c.ForeignName); n != "" {
+			r.foreign = append(r.foreign, n)
+		}
+	}
+	return m, nil
+}
+
+// reference is a foreign key, read from its columns.
+type reference struct {
+	table         string
+	name          string
+	columns       []string
+	foreignSchema string
+	foreignTable  string
+	foreign       []string
+}
+
+// definition returns the definition of a foreign key built from its columns,
+// for a database that records no definition of its own.
+func (r *reference) definition() string {
+	return fmt.Sprintf("FOREIGN KEY (%s) REFERENCES %s(%s)",
+		strings.Join(r.columns, ", "), r.foreignTable, strings.Join(r.foreign, ", "))
+}
+
+// isForeignKey reports whether def is the definition of a foreign key written
+// as SQL, the way psql prints one. A database that records no definition, such
+// as SQLite, gets one built from the columns of the key.
+func isForeignKey(def string) bool {
+	_, ok := cutPrefixFold(def, "FOREIGN KEY")
+	return ok
+}
+
+// tableConstraints returns a line for each check constraint and each foreign
+// key of a table.
+func (w *Writer) tableConstraints(ctx context.Context, t dbmeta.Table) ([]string, []string, error) {
+	constraints, err := optional(all(ctx, w.m, dbmeta.Constraints, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	if err != nil || len(constraints) == 0 {
+		return nil, nil, err
+	}
+	var refs map[string]*reference
+	slices.SortStableFunc(constraints, func(a, b dbmeta.Constraint) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+	var checks, foreign []string
+	for _, c := range constraints {
+		if c.Table != t.Name {
+			continue
+		}
+		def := null(c.Definition)
+		switch kind(c.Type) {
+		case "check":
+			// information_schema records only the expression
+			if !strings.HasPrefix(strings.ToUpper(def), "CHECK") {
+				def = "CHECK (" + def + ")"
+			}
+			checks = append(checks, `"`+c.Name+`" `+def)
+		case "foreign key":
+			if !isForeignKey(def) {
+				if refs == nil {
+					if refs, err = w.constraintColumns(ctx, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}); err != nil {
+						return nil, nil, err
+					}
+				}
+				if r, ok := refs[t.Name+"."+c.Name]; ok {
+					def = r.definition()
+				}
+			}
+			foreign = append(foreign, `"`+c.Name+`" `+def)
+		}
+	}
+	return checks, foreign, nil
+}
+
+// referencedBy returns a line for each foreign key of another table that
+// refers to a table.
+func (w *Writer) referencedBy(ctx context.Context, t dbmeta.Table) ([]string, error) {
+	if !w.m.Supports(dbmeta.ConstraintColumns) {
+		return nil, nil
+	}
+	refs, err := w.constraintColumns(ctx, args{Schema: t.Schema, WithSystem: true})
+	if err != nil {
+		return nil, err
+	}
+	var matched []*reference
+	for _, r := range refs {
+		if r.foreignTable == t.Name && (r.foreignSchema == "" || t.Schema == "" || r.foreignSchema == t.Schema) {
+			matched = append(matched, r)
+		}
+	}
+	if len(matched) == 0 {
+		return nil, nil
+	}
+	// the definitions come from the constraints of the tables that refer
+	defs := make(map[string]string)
+	constraints, err := optional(all(ctx, w.m, dbmeta.Constraints, args{Schema: t.Schema, WithSystem: true}))
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range constraints {
+		if kind(c.Type) == "foreign key" {
+			defs[c.Table+"."+c.Name] = null(c.Definition)
+		}
+	}
+	slices.SortStableFunc(matched, func(a, b *reference) int {
+		return cmp.Or(cmp.Compare(a.table, b.table), cmp.Compare(a.name, b.name))
+	})
+	var lines []string
+	for _, r := range matched {
+		def := defs[r.table+"."+r.name]
+		if !isForeignKey(def) {
+			def = r.definition()
+		}
+		lines = append(lines, fmt.Sprintf(`TABLE "%s" CONSTRAINT "%s" %s`, r.table, r.name, def))
+	}
+	return lines, nil
+}
+
+// tableTriggers returns a line for each trigger of a table.
+func (w *Writer) tableTriggers(ctx context.Context, t dbmeta.Table) ([]string, error) {
+	triggers, err := optional(all(ctx, w.m, dbmeta.Triggers, args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	if err != nil {
+		return nil, err
+	}
+	slices.SortStableFunc(triggers, func(a, b dbmeta.Trigger) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+	var lines []string
+	for _, tr := range triggers {
+		if tr.Table != t.Name {
+			continue
+		}
+		def := strings.TrimSpace(tr.Definition)
+		// psql prints what follows CREATE TRIGGER
+		if s, ok := cutPrefixFold(def, "CREATE TRIGGER "); ok {
+			def = s
+		}
+		// a definition that does not name the trigger, as MySQL's, gets its name
+		if !strings.Contains(def, tr.Name) {
+			def = strings.TrimSpace(tr.Name + " " + def)
+		}
+		lines = append(lines, def)
+	}
+	return lines, nil
+}
+
+// cutPrefixFold is strings.CutPrefix, ignoring case.
+func cutPrefixFold(s, prefix string) (string, bool) {
+	if len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix) {
+		return s[len(prefix):], true
+	}
+	return s, false
+}
+
+// describeSequence prints one sequence.
+func (w *Writer) describeSequence(ctx context.Context, t dbmeta.Table) error {
+	sequences, err := optional(all(ctx, w.m, dbmeta.Sequences, args{Schema: t.Schema, Name: t.Name, WithSystem: true}))
+	if err != nil {
+		return err
+	}
+	r := &rows{columns: []string{"Type", "Start", "Minimum", "Maximum", "Increment", "Cycles?"}}
+	var ownedBy string
+	for _, s := range sequences {
+		if s.Name != t.Name || s.Schema != t.Schema {
+			continue
+		}
+		cycles := ""
+		if s.Cycles.Valid {
+			cycles = "no"
+			if s.Cycles.V {
+				cycles = "yes"
+			}
+		}
+		r.add(null(s.DataType), null(s.Start), null(s.Minimum), null(s.Maximum), null(s.Increment), cycles)
+		ownedBy = s.OwnedBy
+		break
+	}
+	footer := noFooter
+	if ownedBy != "" {
+		footer = func(out io.Writer) error {
+			_, err := fmt.Fprintln(out, "Owned by: "+ownedBy)
+			return err
+		}
+	}
+	return encode(w.w, r, title(classSequence, t.Schema, t.Name), footer, nil)
+}
+
+// describeIndexes prints each index whose name matches pattern, and returns
+// how many it printed.
+func (w *Writer) describeIndexes(ctx context.Context, pattern string, showSystem bool) (int, error) {
+	if !w.m.Supports(dbmeta.Indexes) {
 		return 0, nil
 	}
-	defer res.Close()
-
-	found := 0
-	for res.Next() {
-		s := res.Get()
-		// wrap current record into a separate recordSet
-		rows := NewSequenceSet([]Sequence{*s})
-		params := env.Vars().Print()
-		params["footer"] = "off"
-		params["title"] = fmt.Sprintf("Sequence \"%s.%s\"\n", s.Schema, s.Name)
-		err = tblfmt.EncodeAll(w.w, rows, params)
+	schema, name := w.m.Pattern(pattern)
+	indexes, err := all(ctx, w.m, dbmeta.Indexes, args{Schema: schema, Name: name, WithSystem: showSystem})
+	if err != nil {
+		return 0, w.check(`\d`, err)
+	}
+	slices.SortStableFunc(indexes, func(a, b dbmeta.Index) int {
+		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
+	})
+	var n int
+	for _, i := range indexes {
+		cols, err := w.indexColumns(ctx, i.Schema, i.Table)
 		if err != nil {
-			return 0, err
+			return n, err
 		}
-		// TODO footer should say which table this sequence belongs to
-		found++
+		r := &rows{columns: []string{"Column"}}
+		for _, c := range cols[i.Name] {
+			r.add(c)
+		}
+		var parts []string
+		switch {
+		case i.Primary:
+			parts = append(parts, "primary key")
+		case i.Unique:
+			parts = append(parts, "unique")
+		}
+		if t := method(i); t != "" {
+			parts = append(parts, t)
+		}
+		parts = append(parts, "for table "+qualified(i.Schema, i.Table))
+		footer := func(out io.Writer) error {
+			_, err := fmt.Fprintln(out, strings.Join(parts, ", "))
+			return err
+		}
+		if err := encode(w.w, r, "Index "+qualified(i.Schema, i.Name), footer, nil); err != nil {
+			return n, err
+		}
+		n++
 	}
-
-	return found, nil
+	return n, nil
 }
 
-func (w DefaultWriter) describeIndex(i *Index) error {
-	r := w.r.(IndexColumnReader)
-	res, err := r.IndexColumns(Filter{Schema: i.Schema, Parent: i.Table, Name: i.Name})
-	if err != nil {
-		return fmt.Errorf("failed to get index columns: %w", err)
+// functionKind returns the name that psql prints for the kind of a function,
+// and the letter of \df that selects it: a aggregate, n normal, p procedure,
+// t trigger and w window.
+func functionKind(kind string) (string, rune) {
+	switch k := strings.ToLower(kind); {
+	case strings.HasPrefix(k, "agg"):
+		return "agg", 'a'
+	case strings.HasPrefix(k, "proc"):
+		return "proc", 'p'
+	case strings.HasPrefix(k, "trigger"):
+		return "trigger", 't'
+	case strings.HasPrefix(k, "window"):
+		return "window", 'w'
 	}
-	defer res.Close()
-	if res.Len() == 0 {
-		return nil
-	}
+	return "func", 'n'
+}
 
-	res.SetColumns([]string{"Name", "Type"})
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*IndexColumn)
-		return []interface{}{f.Name, f.DataType}
+// DescribeFunctions prints the functions that match pattern, for \df and
+// \da. funcTypes is the name of the command, and a letter after its first
+// two, as in dfn, selects the kinds of function.
+func (w *Writer) DescribeFunctions(ctx context.Context, funcTypes, pattern string, verbose, showSystem bool) error {
+	cmd := `\` + funcTypes
+	aggregates := strings.HasPrefix(funcTypes, "da")
+	want := make(map[rune]bool)
+	if len(funcTypes) > 2 {
+		for _, c := range funcTypes[2:] {
+			want[c] = true
+		}
+	}
+	q := dbmeta.Functions
+	if aggregates {
+		if w.m.Supports(dbmeta.Aggregates) {
+			q = dbmeta.Aggregates
+		} else {
+			want = map[rune]bool{'a': true}
+		}
+	}
+	schema, name := w.m.Pattern(pattern)
+	funcs, err := all(ctx, w.m, q, args{Schema: schema, Name: name, WithSystem: showSystem})
+	if err != nil {
+		return w.check(cmd, err)
+	}
+	slices.SortStableFunc(funcs, func(a, b dbmeta.Function) int {
+		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name), cmp.Compare(null(a.ArgTypes), null(b.ArgTypes)))
 	})
-
-	params := env.Vars().Print()
-	params["title"] = fmt.Sprintf("Index %s\n", qualifiedIdentifier(i.Schema, i.Name))
-	return w.encodeWithSummary(res, params, func(out io.Writer, _ int) (int, error) {
-		primary := ""
-		if i.IsPrimary == YES {
-			primary = "primary key, "
+	r := &rows{columns: []string{"Schema", "Name", "Result data type", "Argument data types"}}
+	switch {
+	case aggregates:
+		r.columns = append(r.columns, "Description")
+	case verbose:
+		r.columns = append(r.columns, "Type", "Volatility", "Parallel", "Owner", "Security", "Access privileges", "Language", "Source code", "Description")
+	default:
+		r.columns = append(r.columns, "Type")
+	}
+	for _, f := range funcs {
+		typ, letter := functionKind(f.Kind)
+		if len(want) != 0 && !want[letter] {
+			continue
 		}
-		_, err := fmt.Fprintf(out, "%s%s, for table %s", primary, i.Type, i.Table)
-		return 0, err
+		v := []any{f.Schema, f.Name, null(f.ResultType), null(f.ArgTypes)}
+		switch {
+		case aggregates:
+			v = append(v, null(f.Comment))
+		case verbose:
+			v = append(v, typ, f.Volatility, f.Parallel, null(f.Owner), f.Security, null(f.Access), f.Language, null(f.Source), null(f.Comment))
+		default:
+			v = append(v, typ)
+		}
+		r.add(v...)
+	}
+	title := text.ListOfFunctions
+	if aggregates {
+		title = text.ListOfAggregates
+	}
+	return encode(w.w, r, title, nil, nil)
+}
+
+// ListAllDbs prints the databases that match pattern, for \l.
+func (w *Writer) ListAllDbs(ctx context.Context, pattern string, verbose bool) error {
+	dbs, err := all(ctx, w.m, dbmeta.Databases, args{Name: like(pattern)})
+	if err != nil {
+		return w.check(`\l`, err)
+	}
+	slices.SortStableFunc(dbs, func(a, b dbmeta.Database) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
-}
-
-// ListAllDbs matching pattern
-func (w DefaultWriter) ListAllDbs(u *dburl.URL, pattern string, verbose bool) error {
-	if w.listAllDbs != nil {
-		return w.listAllDbs(pattern, verbose)
-	}
-	r, ok := w.r.(CatalogReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\l`, u.SchemeName)
-	}
-	res, err := r.Catalogs(Filter{Name: pattern})
-	if err != nil {
-		return fmt.Errorf("failed to list catalogs: %w", err)
-	}
-	defer res.Close()
-
-	params := env.Vars().Print()
-	params["title"] = "List of databases"
-	return tblfmt.EncodeAll(w.w, res, params)
-}
-
-// ListTables matching pattern
-func (w DefaultWriter) ListTables(u *dburl.URL, tableTypes, pattern string, verbose, showSystem bool) error {
-	r, ok := w.r.(TableReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\dt`, u.SchemeName)
-	}
-	types := []string{}
-	for k, v := range w.tableTypes {
-		if strings.ContainsRune(tableTypes, k) {
-			types = append(types, v...)
-		}
-	}
-	sp, tp, err := parsePattern(pattern)
-	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
-	}
-	res, err := r.Tables(Filter{Schema: sp, Name: tp, Types: types, WithSystem: showSystem})
-	if err != nil {
-		return fmt.Errorf("failed to list tables: %w", err)
-	}
-	defer res.Close()
-	if !showSystem {
-		// in case the reader doesn't implement WithSystem
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Table).Schema]
-			return !ok
-		})
-	}
-	if res.Len() == 0 {
-		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
-		fmt.Fprintln(w.w)
-		return nil
-	}
-	columns := []string{"Schema", "Name", "Type"}
+	r := &rows{columns: []string{"Name", "Owner", "Encoding", "Collate", "Ctype", "Access privileges"}}
 	if verbose {
-		columns = append(columns, "Rows", "Size", "Comment")
+		r.columns = append(r.columns, "Size", "Tablespace", "Description")
 	}
-	res.SetColumns(columns)
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*Table)
-		v := []interface{}{f.Schema, f.Name, f.Type}
+	for _, d := range dbs {
+		v := []any{d.Name, d.Owner, d.Encoding, d.Collate, d.CType, null(d.Access)}
 		if verbose {
-			v = append(v, f.Rows, f.Size, f.Comment)
+			v = append(v, null(d.Size), null(d.Tablespace), null(d.Comment))
 		}
-		return v
+		r.add(v...)
+	}
+	return encode(w.w, r, text.ListOfDatabases, nil, nil)
+}
+
+// ListSchemas prints the schemas that match pattern, for \dn.
+func (w *Writer) ListSchemas(ctx context.Context, pattern string, verbose, showSystem bool) error {
+	schemas, err := all(ctx, w.m, dbmeta.Schemas, args{Name: like(pattern), WithSystem: showSystem})
+	if err != nil {
+		return w.check(`\dn`, err)
+	}
+	slices.SortStableFunc(schemas, func(a, b dbmeta.Schema) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
-
-	params := env.Vars().Print()
-	params["title"] = "List of relations"
-	return tblfmt.EncodeAll(w.w, res, params)
-}
-
-// ListSchemas matching pattern
-func (w DefaultWriter) ListSchemas(u *dburl.URL, pattern string, verbose, showSystem bool) error {
-	r, ok := w.r.(SchemaReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\d`, u.SchemeName)
-	}
-	res, err := r.Schemas(Filter{Name: pattern, WithSystem: showSystem})
-	if err != nil {
-		return fmt.Errorf("failed to list schemas: %w", err)
-	}
-	defer res.Close()
-
-	if !showSystem {
-		// in case the reader doesn't implement WithSystem
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Schema).Schema]
-			return !ok
-		})
-	}
-	params := env.Vars().Print()
-	params["title"] = "List of schemas"
-	return tblfmt.EncodeAll(w.w, res, params)
-}
-
-// ListIndexes matching pattern
-func (w DefaultWriter) ListIndexes(u *dburl.URL, pattern string, verbose, showSystem bool) error {
-	r, ok := w.r.(IndexReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\di`, u.SchemeName)
-	}
-	sp, tp, err := parsePattern(pattern)
-	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
-	}
-	res, err := r.Indexes(Filter{Schema: sp, Name: tp, WithSystem: showSystem})
-	if err != nil {
-		return fmt.Errorf("failed to list indexes: %w", err)
-	}
-	defer res.Close()
-
-	if !showSystem {
-		// in case the reader doesn't implement WithSystem
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*Index).Schema]
-			return !ok
-		})
-	}
-	if res.Len() == 0 {
-		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
-		fmt.Fprintln(w.w)
-		return nil
-	}
-
-	columns := []string{"Schema", "Name", "Type", "Table"}
+	r := &rows{columns: []string{"Name", "Owner"}}
 	if verbose {
-		columns = append(columns, "Primary?", "Unique?")
+		r.columns = append(r.columns, "Description")
 	}
-	res.SetColumns(columns)
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*Index)
-		v := []interface{}{f.Schema, f.Name, f.Type, f.Table}
+	for _, s := range schemas {
+		v := []any{s.Name, s.Owner}
 		if verbose {
-			v = append(v, f.IsPrimary, f.IsUnique)
+			v = append(v, null(s.Comment))
 		}
-		return v
-	})
-
-	params := env.Vars().Print()
-	params["title"] = "List of indexes"
-	return tblfmt.EncodeAll(w.w, res, params)
+		r.add(v...)
+	}
+	return encode(w.w, r, text.ListOfSchemas, nil, nil)
 }
 
-// ShowStats of columns for tables matching pattern
-func (w DefaultWriter) ShowStats(u *dburl.URL, statTypes, pattern string, verbose bool, k int) error {
-	r, ok := w.r.(ColumnStatReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\ss`, u.SchemeName)
-	}
-	sp, tp, err := parsePattern(pattern)
+// ListIndexes prints the indexes that match pattern, for \di.
+func (w *Writer) ListIndexes(ctx context.Context, pattern string, verbose, showSystem bool) error {
+	schema, name := w.m.Pattern(pattern)
+	indexes, err := all(ctx, w.m, dbmeta.Indexes, args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
+		return w.check(`\di`, err)
 	}
-
-	rows := int64(0)
-	tr, ok := w.r.(TableReader)
-	if ok {
-		tables, err := tr.Tables(Filter{Schema: sp, Name: tp})
-		if err != nil {
-			return fmt.Errorf("failed to get table entry: %w", err)
-		}
-		defer tables.Close()
-		if tables.Next() {
-			rows = tables.Get().Rows
-		}
-	}
-
-	types := []string{"basic"}
+	slices.SortStableFunc(indexes, func(a, b dbmeta.Index) int {
+		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
+	})
+	r := &rows{columns: []string{"Schema", "Name", "Type", "Table"}}
 	if verbose {
-		types = append(types, "extended")
+		r.columns = append(r.columns, "Access method", "Description")
 	}
-	res, err := r.ColumnStats(Filter{Schema: sp, Parent: tp, Types: types})
-	if err != nil {
-		return fmt.Errorf("failed to get column stats: %w", err)
-	}
-	defer res.Close()
-
-	if res.Len() == 0 {
-		fmt.Fprintf(w.w, text.RelationNotFound, pattern)
-		fmt.Fprintln(w.w)
-		return nil
-	}
-	columns := []string{"Schema", "Table", "Name", "Average width", "Nulls fraction", "Distinct values", "Dist. fraction"}
-	if verbose {
-		columns = append(columns, "Minimum value", "Maximum value", "Mean value", "Top N common values", "Top N values freqs")
-	}
-	res.SetColumns(columns)
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*ColumnStat)
-		freqs := []string{}
-		for _, freq := range f.TopNFreqs {
-			freqs = append(freqs, fmt.Sprintf("%.4f", freq))
-		}
-		n := k
-		if n > len(freqs) {
-			n = len(freqs)
-		}
-		distFrac := 1.0
-		if rows != 0 && f.NumDistinct != rows {
-			distFrac = float64(f.NumDistinct) / float64(rows)
-		}
-		v := []interface{}{
-			f.Schema,
-			f.Table,
-			f.Name,
-			f.AvgWidth,
-			f.NullFrac,
-			f.NumDistinct,
-			fmt.Sprintf("%.4f", distFrac),
-		}
+	for _, i := range indexes {
+		v := []any{i.Schema, i.Name, "index", i.Table}
 		if verbose {
-			v = append(v,
-				f.Min,
-				f.Max,
-				f.Mean,
-				strings.Join(f.TopN[:n], ", "),
-				strings.Join(freqs[:n], ", "),
-			)
+			v = append(v, method(i), null(i.Comment))
 		}
-		return v
-	})
-
-	params := env.Vars().Print()
-	params["title"] = "Column stats"
-	return tblfmt.EncodeAll(w.w, res, params)
+		r.add(v...)
+	}
+	if len(r.values) == 0 {
+		return w.notFound(pattern)
+	}
+	return encode(w.w, r, text.ListOfRelations, nil, nil)
 }
 
-// ListPrivilegeSummaries matching pattern
-func (w DefaultWriter) ListPrivilegeSummaries(u *dburl.URL, pattern string, showSystem bool) error {
-	r, ok := w.r.(PrivilegeSummaryReader)
-	if !ok {
-		return fmt.Errorf(text.NotSupportedByDriver, `\dp`, u.SchemeName)
-	}
-	sp, tp, err := parsePattern(pattern)
+// ShowStats prints the statistics of the columns of the tables that match
+// pattern, for \ss. k limits the number of common values shown.
+func (w *Writer) ShowStats(ctx context.Context, pattern string, verbose bool, k int) error {
+	schema, name := w.m.Pattern(pattern)
+	stats, err := all(ctx, w.m, dbmeta.ColumnStats, args{Schema: schema, Parent: name})
 	if err != nil {
-		return fmt.Errorf("failed to parse search pattern: %w", err)
+		return w.check(`\ss`, err)
 	}
-	// filter for tables, views and sequences
-	const tableTypes = "tvms"
-	types := []string{}
-	for k, v := range w.tableTypes {
-		if strings.ContainsRune(tableTypes, k) {
-			types = append(types, v...)
+	if len(stats) == 0 {
+		return w.notFound(pattern)
+	}
+	r := &rows{columns: []string{"Schema", "Table", "Name", "Average width", "Nulls fraction", "Distinct values"}}
+	if verbose {
+		r.columns = append(r.columns, "Minimum value", "Maximum value", "Mean value", "Top N common values", "Top N values freqs")
+	}
+	for _, s := range stats {
+		v := []any{s.Schema, s.Table, s.Name, null(s.AvgWidth), float(s.NullFrac), float(s.Distinct)}
+		if verbose {
+			v = append(v, null(s.Min), null(s.Max), null(s.Mean), top(null(s.TopN), k), top(null(s.TopNFreqs), k))
 		}
+		r.add(v...)
 	}
-	res, err := r.PrivilegeSummaries(Filter{Schema: sp, Name: tp, WithSystem: showSystem, Types: types})
+	return encode(w.w, r, text.ColumnStats, nil, nil)
+}
+
+// float returns a fraction as psql prints it, or an empty string for NULL.
+func float(v sql.Null[float64]) string {
+	if !v.Valid {
+		return ""
+	}
+	return fmt.Sprintf("%.4f", v.V)
+}
+
+// top returns the first k of a list of values separated by commas, or all of
+// them when k is 0.
+func top(s string, k int) string {
+	if k <= 0 || s == "" {
+		return s
+	}
+	parts := strings.Split(s, ",")
+	if len(parts) > k {
+		parts = parts[:k]
+	}
+	return strings.Join(parts, ",")
+}
+
+// ListPrivilegeSummaries prints the access privileges of the relations that
+// match pattern, for \dp.
+func (w *Writer) ListPrivilegeSummaries(ctx context.Context, pattern string, showSystem bool) error {
+	schema, name := w.m.Pattern(pattern)
+	privs, err := all(ctx, w.m, dbmeta.Privileges, args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
-		return fmt.Errorf("failed to list table privileges: %w", err)
+		return w.check(`\dp`, err)
 	}
-	defer res.Close()
-	if !showSystem {
-		// in case the reader doesn't implement WithSystem
-		res.SetFilter(func(r Result) bool {
-			_, ok := w.systemSchemas[r.(*PrivilegeSummary).Schema]
-			return !ok
-		})
-	}
-
-	res.SetScanValues(func(r Result) []interface{} {
-		f := r.(*PrivilegeSummary)
-
-		v := []interface{}{
-			f.Schema,
-			f.Name,
-			f.ObjectType,
-			f.ObjectPrivileges,
-			f.ColumnPrivileges,
-		}
-		return v
+	slices.SortStableFunc(privs, func(a, b dbmeta.Privilege) int {
+		return cmp.Or(cmp.Compare(null(a.Schema), null(b.Schema)), cmp.Compare(a.Name, b.Name))
 	})
-
-	params := env.Vars().Print()
-	params["title"] = "Access privileges"
-	return tblfmt.EncodeAll(w.w, res, params)
-}
-
-func parsePattern(pattern string) (string, string, error) {
-	// TODO do proper escaping, quoting etc
-	if strings.ContainsRune(pattern, '.') {
-		parts := strings.SplitN(pattern, ".", 2)
-		return strings.ReplaceAll(parts[0], "*", "%"), strings.ReplaceAll(parts[1], "*", "%"), nil
+	r := &rows{columns: []string{"Schema", "Name", "Type", "Access privileges", "Column privileges", "Policies"}}
+	for _, p := range privs {
+		r.add(null(p.Schema), p.Name, strings.ToLower(p.Type), null(p.Access), null(p.ColumnAccess), null(p.Policies))
 	}
-	return "", strings.ReplaceAll(pattern, "*", "%"), nil
-}
-
-func qualifiedIdentifier(schema, name string) string {
-	if schema == "" {
-		return fmt.Sprintf("\"%s\"", name)
-	}
-	return fmt.Sprintf("\"%s.%s\"", schema, name)
+	return encode(w.w, r, text.AccessPrivileges, nil, nil)
 }

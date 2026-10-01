@@ -27,6 +27,7 @@ every other agent read the same rules. Edit this file, not that one.
 | A driver that is broken or unmaintained | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Putting a feature behind a build tag | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Running the tests | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Measuring what each driver adds to the binary | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Moving metadata to dbmeta | [docs/DBMETA.md](docs/DBMETA.md) |
 | Planned work, and how to cite it | [docs/BACKLOG.md](docs/BACKLOG.md) |
 | The plan, and the questions open for Ken | [docs/PLAN.md](docs/PLAN.md) |
@@ -46,10 +47,10 @@ add a row for it or delete it.
 2. Do not write connection string parsing in this repository. All of it lives
    in `github.com/xo/dburl`. A scheme must exist there before usql can use it.
 
-3. Run `GOPATH=$(go env GOPATH) go run gen.go` to regenerate. It reads dburl's
-   source tree rather than the module cache, so `GOPATH` must point at a tree
-   containing `src/github.com/xo/dburl`. With `GOPATH` empty it panics with a
-   confusing `lstat` error.
+3. Run `go run gen.go` to regenerate. It reads dburl's scheme registry from
+   the version pinned in `go.mod`, not from a dburl checkout. A change in
+   dburl reaches the README tables only after `go.mod` moves to a dburl
+   release that holds it.
 
 4. Build with `-tags all` before claiming that a driver change works. A
    duplicate scheme or alias panics at registration time, which the default
@@ -59,15 +60,14 @@ add a row for it or delete it.
    `drivers.Driver` is optional, so a driver that cannot connect still
    compiles, registers, and passes `go test ./...`.
 
-6. Five test packages need a container runtime: `drivers`,
-   `drivers/clickhouse`, `drivers/sqlserver`,
-   `drivers/metadata/informationschema` and `drivers/metadata/postgres`.
-   Their failure without podman or docker is expected. Any other failure is
-   not.
+6. Two test packages need a container runtime: `drivers` and
+   `drivers/clickhouse`. Their failure without podman or docker is expected.
+   Any other failure is not.
 
-7. Container tests cannot run in parallel. Use `go test -p 1`, which is what
-   CI does. Without it the run starts three SQL Server containers at once and
-   exhausts memory.
+7. Run the container tests one package at a time with `go test -p 1`, which
+   is what CI does. `drivers` starts PostgreSQL, MySQL, SQL Server and Trino,
+   and running `drivers/clickhouse` beside it adds a fifth container to the
+   memory they already take.
 
 8. Backlog identifiers are append only. Never reuse a `W` number and never
    renumber one. An item that is finished or abandoned keeps its heading and

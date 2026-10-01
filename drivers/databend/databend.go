@@ -11,26 +11,13 @@ package databend
 import (
 	"database/sql"
 	"errors"
-	"io"
 
 	"github.com/xo/dbimp"
 	_ "github.com/xo/dbimp/databend" // DRIVER
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
-	infos "github.com/xo/usql/drivers/metadata/informationschema"
 )
 
 func init() {
-	newReader := infos.New(
-		infos.WithPlaceholder(func(int) string { return "?" }),
-		infos.WithCustomClauses(map[infos.ClauseName]string{
-			infos.SequenceColumnsIncrement: "''",
-		}),
-		infos.WithFunctions(false),
-		infos.WithIndexes(false),
-		infos.WithConstraints(false),
-		infos.WithColumnPrivileges(false),
-	)
 	drivers.Register("databend", drivers.Driver{
 		UseColumnTypes: true,
 		// a statement such as CREATE TABLE sends no count of rows affected,
@@ -41,10 +28,6 @@ func init() {
 				return 0, nil
 			}
 			return n, err
-		},
-		NewMetadataReader: newReader,
-		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(newReader(db, opts...))(db, w)
 		},
 	})
 }

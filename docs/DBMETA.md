@@ -1,7 +1,10 @@
 # Migrating metadata to dbmeta
 
 This is the plan for moving usql off its own metadata `Reader` and `Writer` and
-onto [dbmeta](https://github.com/xo/dbmeta). No code has been written.
+onto [dbmeta](https://github.com/xo/dbmeta). It was implemented on 2026-09-30,
+all at once rather than driver by driver (D4). W21 in
+[BACKLOG.md](BACKLOG.md) records what was done and what waits for dbmeta. The
+rest of this document is the plan as it was written.
 
 It is a plan, not a decision. The ordering in it differs from the order the
 work was first described, and the reason is in "Why the order changed".

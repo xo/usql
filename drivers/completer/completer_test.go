@@ -3,7 +3,7 @@ package completer
 import (
 	"testing"
 
-	"github.com/xo/usql/drivers/metadata"
+	"github.com/xo/usql/text"
 )
 
 func TestCompleter(t *testing.T) {
@@ -324,7 +324,7 @@ func TestCompleter(t *testing.T) {
 		},
 	}
 
-	completer := NewDefaultCompleter(WithReader(mockReader{}), WithConnStrings([]string{"pg://"}))
+	completer := NewDefaultCompleter(WithSource(mockSource{}), WithConnStrings([]string{"pg://"}))
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			suggestions, length := completer.Do([]rune(test.line), test.start)
@@ -360,70 +360,27 @@ func TestCompleter(t *testing.T) {
 	}
 }
 
-type mockReader struct{}
+// mockSource answers a fixed set of objects, the way a database would.
+type mockSource struct{}
 
-var _ metadata.CatalogReader = &mockReader{}
-var _ metadata.BasicReader = &mockReader{}
+var _ Source = mockSource{}
 
-func (r mockReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
-	return metadata.NewCatalogSet([]metadata.Catalog{
-		{
-			Catalog: "main",
-		},
-		{
-			Catalog: "remote",
-		},
-	}), nil
-}
-
-func (r mockReader) Schemas(metadata.Filter) (*metadata.SchemaSet, error) {
-	return metadata.NewSchemaSet([]metadata.Schema{
-		{
-			Schema:  "default",
-			Catalog: "main",
-		},
-		{
-			Schema:  "system",
-			Catalog: "main",
-		},
-	}), nil
-}
-
-func (r mockReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
-	return metadata.NewTableSet([]metadata.Table{
-		{
-			Catalog: f.Catalog,
-			Schema:  f.Schema,
-			Name:    "film",
-		},
-		{
-			Catalog: f.Catalog,
-			Schema:  f.Schema,
-			Name:    "factory",
-		},
-	}), nil
-}
-
-func (r mockReader) Columns(f metadata.Filter) (*metadata.ColumnSet, error) {
-	if f.Parent == "film" {
-		return metadata.NewColumnSet([]metadata.Column{
-			{
-				Name: "id",
-			},
-			{
-				Name: "name",
-			},
-		}), nil
+func (mockSource) Objects(kind Kind, f Filter) ([]Object, error) {
+	switch kind {
+	case Catalogs:
+		return []Object{{Name: "main"}, {Name: "remote"}}, nil
+	case Schemas:
+		return []Object{{Catalog: "main", Name: "default"}, {Catalog: "main", Name: "system"}}, nil
+	case Tables:
+		return []Object{
+			{Catalog: f.Catalog, Schema: f.Schema, Name: "film"},
+			{Catalog: f.Catalog, Schema: f.Schema, Name: "factory"},
+		}, nil
+	case Columns:
+		if f.Parent == "film" {
+			return []Object{{Name: "id"}, {Name: "name"}}, nil
+		}
+		return []Object{{Name: f.Catalog}, {Name: f.Schema}, {Name: f.Name}}, nil
 	}
-	return metadata.NewColumnSet([]metadata.Column{
-		{
-			Name: f.Catalog,
-		},
-		{
-			Name: f.Schema,
-		},
-		{
-			Name: f.Name,
-		},
-	}), nil
+	return nil, text.ErrNotSupported
 }

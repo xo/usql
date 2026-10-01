@@ -5,7 +5,6 @@
 package sqlite3
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/mattn/go-sqlite3" // DRIVER
@@ -15,19 +14,9 @@ import (
 
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
-		AllowMultilineComments: true,
-		AllowBacktick:          true,
 		ForceParams: drivers.ForceQueryParameters([]string{
 			"loc", "auto",
 		}),
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			err := db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&ver)
-			if err != nil {
-				return "", err
-			}
-			return "SQLite3 " + ver, nil
-		},
 		Err: func(err error) (string, string) {
 			if e, ok := err.(sqlite3.Error); ok {
 				return strconv.Itoa(int(e.Code)), e.Error()
@@ -38,8 +27,7 @@ func init() {
 			}
 			return code, msg
 		},
-		ConvertBytes:      sqshared.ConvertBytes,
-		NewMetadataReader: sqshared.NewMetadataReader,
-		Copy:              drivers.CopyWithInsert(func(int) string { return "?" }),
+		ConvertBytes: sqshared.ConvertBytes,
+		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

@@ -24,7 +24,6 @@ require (
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/godror/godror v0.51.5
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
-	github.com/google/go-cmp v0.7.0
 	github.com/googleapis/go-sql-spanner v1.26.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
@@ -42,7 +41,7 @@ require (
 	github.com/ory/dockertest/v4 v4.0.0
 	github.com/prestodb/presto-go-client/v2 v2.1.2
 	github.com/sclgo/impala-go v1.8.0
-	github.com/sijms/go-ora/v3 v3.0.1
+	github.com/sijms/go-ora/v3 v3.0.2-0.20260914154503-360b4b7ac9e9
 	github.com/snowflakedb/gosnowflake/v2 v2.2.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -51,8 +50,8 @@ require (
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cql v0.1.0
-	github.com/xo/dbimp v0.6.1
-	github.com/xo/dburl v0.38.0
+	github.com/xo/dbimp v0.9.0
+	github.com/xo/dburl v0.40.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1
@@ -60,7 +59,6 @@ require (
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.0
 	github.com/yookoala/realpath v1.0.0
 	gorm.io/driver/bigquery v1.2.1
-	modernc.org/ql v1.7.0
 	modernc.org/sqlite v1.59.0
 )
 
@@ -177,7 +175,6 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10505.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.11.0 // indirect
-	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/elastic/go-sysinfo v1.15.5 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.39.0 // indirect
@@ -343,17 +340,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/gotestsum v1.13.0 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/b v1.1.0 // indirect
-	modernc.org/db v1.4.0 // indirect
-	modernc.org/file v1.1.4 // indirect
-	modernc.org/fileutil v1.4.0 // indirect
-	modernc.org/golex v1.1.0 // indirect
-	modernc.org/internal v1.1.12 // indirect
 	modernc.org/libc v1.75.7 // indirect
-	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sortutil v1.2.1 // indirect
-	modernc.org/strutil v1.2.1 // indirect
-	modernc.org/zappy v1.1.0 // indirect
 )

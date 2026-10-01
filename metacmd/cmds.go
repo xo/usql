@@ -16,6 +16,7 @@ import (
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
@@ -884,16 +885,55 @@ func Prompt(p *Params) error {
 // Descs:
 //
 //	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
-//	da[S+]	[PATTERN]	list aggregates
-//	df[S+]	[PATTERN]	list functions
+//	d[tvmsE][S+]
+//	da[S]	[PATTERN]	list aggregates
+//	dA[+]	[PATTERN]	list access methods
+//	dAc[+]	[AMPTRN [PATTERN]]	list operator classes
+//	dAf[+]	[AMPTRN [PATTERN]]	list operator families
+//	dAo[+]	[AMPTRN [PATTERN]]	list operators of operator families
+//	dAp[+]	[AMPTRN [PATTERN]]	list support functions of operator families
+//	db[+]	[PATTERN]	list tablespaces
+//	dc[S+]	[PATTERN]	list conversions
+//	dconfig[+]	[PATTERN]	list configuration parameters
+//	dC[+]	[PATTERN]	list casts
+//	dd[S]	[PATTERN]	show object descriptions not displayed elsewhere
+//	dD[S+]	[PATTERN]	list domains
+//	ddp	[PATTERN]	list default privileges
+//	dE[S+]	[PATTERN]	list foreign tables
+//	des[+]	[PATTERN]	list foreign servers
+//	det[+]	[PATTERN]	list foreign tables and their servers
+//	deu[+]	[PATTERN]	list user mappings
+//	dew[+]	[PATTERN]	list foreign-data wrappers
+//	df[anptw][S+]	[PATTERN]	list [only agg/normal/procedure/trigger/window] functions
+//	dF[+]	[PATTERN]	list text search configurations
+//	dFd[+]	[PATTERN]	list text search dictionaries
+//	dFp[+]	[PATTERN]	list text search parsers
+//	dFt[+]	[PATTERN]	list text search templates
+//	dg[S+]	[PATTERN]	list roles
 //	di[S+]	[PATTERN]	list indexes
+//	dl[+]	list large objects, same as \lo_list
+//	dL[S+]	[PATTERN]	list procedural languages
 //	dm[S+]	[PATTERN]	list materialized views
 //	dn[S+]	[PATTERN]	list schemas
+//	do[S+]	[PATTERN]	list operators
+//	dO[S+]	[PATTERN]	list collations
 //	dp[S]	[PATTERN]	list table, view, and sequence access privileges
+//	dP[+]	[PATTERN]	list partitioned relations
+//	drds	[ROLEPTRN [DBPTRN]]	list per-database role settings
+//	drg[S]	[PATTERN]	list role grants
+//	dRp[+]	[PATTERN]	list replication publications
+//	dRs[+]	[PATTERN]	list replication subscriptions
 //	ds[S+]	[PATTERN]	list sequences
 //	dt[S+]	[PATTERN]	list tables
+//	dT[S+]	[PATTERN]	list data types
+//	du[S+]	[PATTERN]	list roles
 //	dv[S+]	[PATTERN]	list views
-//	l[+]	list databases
+//	dx[+]	[PATTERN]	list extensions
+//	dX	[PATTERN]	list extended statistics
+//	dy[+]	[PATTERN]	list event triggers
+//	l[+]	[PATTERN]	list databases
+//	lo_list[+]:dl
+//	z[S]	[PATTERN]	same as \dp
 func Describe(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -904,30 +944,71 @@ func Describe(p *Params) error {
 	verbose := strings.ContainsRune(p.Name, '+')
 	showSystem := strings.ContainsRune(p.Name, 'S')
 	name := strings.TrimRight(p.Name, "S+")
-	pattern, err := p.Next(true)
+	patterns, err := p.Patterns()
 	if err != nil {
 		return err
 	}
-	switch name {
-	case "d":
-		if pattern != "" {
-			return m.DescribeTableDetails(p.Handler.URL(), pattern, verbose, showSystem)
-		}
-		return m.ListTables(p.Handler.URL(), "tvmsE", pattern, verbose, showSystem)
-	case "df", "da":
-		return m.DescribeFunctions(p.Handler.URL(), name, pattern, verbose, showSystem)
-	case "dt", "dtv", "dtm", "dts", "dv", "dm", "ds":
-		return m.ListTables(p.Handler.URL(), name, pattern, verbose, showSystem)
-	case "dn":
-		return m.ListSchemas(p.Handler.URL(), pattern, verbose, showSystem)
-	case "di":
-		return m.ListIndexes(p.Handler.URL(), pattern, verbose, showSystem)
-	case "l":
-		return m.ListAllDbs(p.Handler.URL(), pattern, verbose)
-	case "dp":
-		return m.ListPrivilegeSummaries(p.Handler.URL(), pattern, showSystem)
+	var pattern string
+	if len(patterns) != 0 {
+		pattern = patterns[0]
+		// psql hides the objects of the system only when neither S nor a
+		// pattern is given
+		showSystem = true
 	}
-	return nil
+	switch {
+	case name == "d":
+		if pattern != "" {
+			return m.DescribeTableDetails(ctx, pattern, verbose, showSystem)
+		}
+		return m.ListTables(ctx, "tvmsE", pattern, verbose, showSystem)
+	case name == "da", strings.HasPrefix(name, "df"):
+		return m.DescribeFunctions(ctx, name, pattern, verbose, showSystem)
+	case name == "dp", name == "z":
+		return m.ListPrivilegeSummaries(ctx, pattern, showSystem)
+	case name[0] == 'd' && strings.Trim(name[1:], "tvmsE") == "":
+		// any combination of the classes, such as \dtv
+		return m.ListTables(ctx, name, pattern, verbose, showSystem)
+	case name == "dn":
+		return m.ListSchemas(ctx, pattern, verbose, showSystem)
+	case name == "di":
+		return m.ListIndexes(ctx, pattern, verbose, showSystem)
+	case name == "l":
+		return m.ListAllDbs(ctx, pattern, verbose)
+	case name == "lo_list":
+		name = "dl"
+	}
+	_, err = m.Run(ctx, metadata.Call{Name: name, Patterns: patterns, Verbose: verbose, System: showSystem})
+	return err
+}
+
+// ShowSource is a Informational meta command (\sf, \sv). Writes the
+// definition of a function or a view.
+//
+// Descs:
+//
+//	sf[+]	FUNCNAME	show a function's definition
+//	sv[+]	VIEWNAME	show a view's definition
+func ShowSource(p *Params) error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	m, err := p.Handler.MetadataWriter(ctx)
+	if err != nil {
+		return err
+	}
+	// a function's argument types can hold spaces, as in f(integer, text)
+	params, err := p.Patterns()
+	name := strings.Join(params, " ")
+	switch {
+	case err != nil:
+		return err
+	case name == "":
+		return text.ErrMissingRequiredArgument
+	}
+	verbose := strings.HasSuffix(p.Name, "+")
+	if strings.HasPrefix(p.Name, "sf") {
+		return m.ShowFunction(ctx, name, verbose)
+	}
+	return m.ShowView(ctx, name, verbose)
 }
 
 // Stats is a Informational meta command (\ss and variants). Queries the open
@@ -944,17 +1025,13 @@ func Stats(p *Params) error {
 		return err
 	}
 	verbose := strings.ContainsRune(p.Name, '+')
-	name := strings.TrimRight(p.Name, "+")
-	pattern, err := p.Next(true)
+	pattern, err := p.NextPattern()
 	if err != nil {
 		return err
 	}
 	k := 0
 	if verbose {
 		k = 3
-	}
-	if name == "ss" {
-		name = "sswnulhmkf"
 	}
 	val, ok, err := p.NextOK(true)
 	switch {
@@ -966,7 +1043,7 @@ func Stats(p *Params) error {
 			return err
 		}
 	}
-	return m.ShowStats(p.Handler.URL(), name, pattern, verbose, k)
+	return m.ShowStats(ctx, pattern, verbose, k)
 }
 
 // Conditional is a Control/Conditional meta command (\if, \elif, \else,

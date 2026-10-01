@@ -35,6 +35,7 @@ func KnownBuildTags() map[string]string {
 		"influxdb":      "influxdb",      // github.com/xo/dbimp/influxdb
 		"influxql":      "influxql",      // github.com/xo/dbimp/influxdb
 		"libpq":         "pq",            // github.com/lib/pq
+		"libsql":        "libsql",        // github.com/xo/dbimp/libsql
 		"maxcompute":    "maxcompute",    // github.com/aliyun/aliyun-odps-go-sdk/sqldriver
 		"memsql":        "memsql",        // github.com/go-sql-driver/mysql
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
@@ -44,11 +45,12 @@ func KnownBuildTags() map[string]string {
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
+		"pinot":         "pinot",         // github.com/xo/dbimp/pinot
 		"postgres":      "postgres",      // github.com/jackc/pgx/v5/stdlib
 		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
-		"ql":            "ql",            // modernc.org/ql
 		"questdb":       "questdb",       // github.com/jackc/pgx/v5/stdlib
 		"redshift":      "redshift",      // github.com/jackc/pgx/v5/stdlib
+		"rqlite":        "rqlite",        // github.com/xo/dbimp/rqlite
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner

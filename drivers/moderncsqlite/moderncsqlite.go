@@ -18,20 +18,10 @@ import (
 
 func init() {
 	drivers.Register("moderncsqlite", drivers.Driver{
-		AllowMultilineComments: true,
-		AllowBacktick:          true,
 		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_ string, params string) (*sql.DB, error) {
 				return sql.Open("sqlite", params)
 			}, nil
-		},
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			err := db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&ver)
-			if err != nil {
-				return "", err
-			}
-			return "ModernC SQLite " + ver, nil
 		},
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*sqlite.Error); ok {
@@ -39,8 +29,7 @@ func init() {
 			}
 			return "", err.Error()
 		},
-		ConvertBytes:      sqshared.ConvertBytes,
-		NewMetadataReader: sqshared.NewMetadataReader,
-		Copy:              drivers.CopyWithInsert(func(int) string { return "?" }),
+		ConvertBytes: sqshared.ConvertBytes,
+		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

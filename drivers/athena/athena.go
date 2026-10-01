@@ -12,8 +12,6 @@ import (
 
 func init() {
 	drivers.Register("awsathena", drivers.Driver{
-		AllowMultilineComments: true,
-		Process:                drivers.StripTrailingSemicolon,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			err := db.QueryRowContext(

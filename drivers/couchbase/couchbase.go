@@ -5,7 +5,6 @@
 package couchbase
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -17,7 +16,6 @@ import (
 
 func init() {
 	drivers.Register("couchbase", drivers.Driver{
-		AllowMultilineComments: true,
 		ForceParams: func(u *dburl.URL) {
 			// the server ends a transaction after 15 seconds by default,
 			// which is too short for a person typing into one
@@ -25,14 +23,6 @@ func init() {
 				q.Set("txtimeout", "30m")
 				u.RawQuery = q.Encode()
 			}
-		},
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			ver := "<unknown>"
-			var v string
-			if err := db.QueryRowContext(ctx, `SELECT RAW ds_version()`).Scan(&v); err == nil {
-				ver = v
-			}
-			return "Couchbase " + ver, nil
 		},
 		Err: func(err error) (string, string) {
 			// a response can hold several errors, and only a single one is

@@ -70,7 +70,7 @@ type Handler interface {
 	// SetOutput writer.
 	SetOutput(io.WriteCloser)
 	// MetadataWriter retrieves the metadata writer for the handler.
-	MetadataWriter(context.Context) (metadata.Writer, error)
+	MetadataWriter(context.Context) (*metadata.Writer, error)
 	// Print formats according to a format specifier and writes to handler's standard output.
 	Print(string, ...interface{})
 }
@@ -102,6 +102,9 @@ func Dump(w io.Writer, hidden bool) error {
 // Decode converts a command name (or alias) into a Runner.
 func Decode(name string, params *stmt.Params) (func(Handler) (Option, error), error) {
 	f, ok := cmds[name]
+	if !ok {
+		f, ok = cmds[relations(name)]
+	}
 	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
 	}
@@ -114,6 +117,23 @@ func Decode(name string, params *stmt.Params) (func(Handler) (Option, error), er
 		err := f(p)
 		return p.Option, err
 	}, nil
+}
+
+// relations returns name with the class letters of \d in the order that
+// they are registered in, so that \dvt finds \dtv, as psql allows.
+func relations(name string) string {
+	base := strings.TrimRight(name, "S+")
+	if len(base) < 2 || base[0] != 'd' || strings.Trim(base[1:], "tvmsE") != "" {
+		return name
+	}
+	var b strings.Builder
+	b.WriteByte('d')
+	for _, c := range "tvmsE" {
+		if strings.ContainsRune(base[1:], c) {
+			b.WriteRune(c)
+		}
+	}
+	return b.String() + name[len(base):]
 }
 
 // Params wraps metacmd parameters.
@@ -139,6 +159,32 @@ func (p *Params) Next(exec bool) (string, error) {
 		return "", err
 	}
 	return v, nil
+}
+
+// patternUntick is env.Untick for a psql pattern. It leaves a name between
+// double quotes as it is, quotes and all, so that the pattern can tell it from
+// a name that the database folds.
+func (p *Params) patternUntick() func(string, bool) (string, bool, error) {
+	untick := env.Untick(p.Handler.User(), env.Vars(), true)
+	return func(s string, isvar bool) (string, bool, error) {
+		if !isvar && len(s) >= 2 && s[0] == '"' {
+			return "", false, nil
+		}
+		return untick(s, isvar)
+	}
+}
+
+// Patterns returns the remaining command parameters as psql patterns. See
+// patternUntick.
+func (p *Params) Patterns() ([]string, error) {
+	return p.Params.All(p.patternUntick())
+}
+
+// NextPattern returns the next command parameter as a psql pattern. See
+// patternUntick.
+func (p *Params) NextPattern() (string, error) {
+	v, _, err := p.Params.Next(p.patternUntick())
+	return v, err
 }
 
 // NextOK returns the next command parameter, using env.Untick.
@@ -257,21 +303,28 @@ type desc struct {
 	Deprecated bool
 }
 
-// Names returns the names for the command.
+// Names returns the names for the command. Each group of letters between
+// brackets adds every combination of its letters, in their order, so d[S+]
+// is d, dS, d+ and dS+, and df[an][S+] adds dfa, dfan, dfaS+ and the rest.
 func (d desc) Names() []string {
-	switch i := strings.Index(d.Name, "["); {
-	case i == -1:
+	i := strings.Index(d.Name, "[")
+	if i == -1 {
 		return []string{d.Name}
-	case !strings.HasSuffix(d.Name, "]"):
-		panic(fmt.Sprintf("invalid command %q", d.Name))
-	default:
-		name := d.Name[:i]
-		v := []string{name}
-		for _, s := range d.Name[i+1 : len(d.Name)-1] {
-			v = append(v, name+string(s))
-		}
-		return v
 	}
+	names := []string{d.Name[:i]}
+	for s := d.Name[i:]; s != ""; {
+		j := strings.Index(s, "]")
+		if s[0] != '[' || j == -1 {
+			panic(fmt.Sprintf("invalid command %q", d.Name))
+		}
+		for _, c := range s[1:j] {
+			for _, n := range names {
+				names = append(names, n+string(c))
+			}
+		}
+		s = s[j+1:]
+	}
+	return names
 }
 
 // wrap wraps a line of text to the specified width, and adding the prefix to

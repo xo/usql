@@ -10,12 +10,10 @@ import (
 
 	"github.com/sclgo/impala-go" // DRIVER
 	"github.com/xo/usql/drivers"
-	meta "github.com/xo/usql/drivers/metadata/impala"
 )
 
 func init() {
 	drivers.Register("impala", drivers.Driver{
-		NewMetadataReader: meta.New,
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
 			placeholder := func(int) string {
 				return "?"

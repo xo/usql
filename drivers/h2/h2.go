@@ -10,9 +10,5 @@ import (
 )
 
 func init() {
-	drivers.Register("h2", drivers.Driver{
-		AllowDollar:            true,
-		AllowMultilineComments: true,
-		AllowCComments:         true,
-	})
+	drivers.Register("h2", drivers.Driver{})
 }

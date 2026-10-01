@@ -8,13 +8,10 @@
 package mysql
 
 import (
-	"io"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql" // DRIVER
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
-	mymeta "github.com/xo/usql/drivers/metadata/mysql"
 )
 
 func init() {
@@ -26,11 +23,7 @@ func init() {
 // this driver under that database's own name.
 func Driver() drivers.Driver {
 	return drivers.Driver{
-		AllowMultilineComments: true,
-		AllowHashComments:      true,
-		AllowBacktick:          true,
-		LexerName:              "mysql",
-		UseColumnTypes:         true,
+		UseColumnTypes: true,
 		ForceParams: drivers.ForceQueryParameters([]string{
 			"parseTime", "true",
 			"loc", "Local",
@@ -48,11 +41,6 @@ func Driver() drivers.Driver {
 			}
 			return false
 		},
-		NewMetadataReader: mymeta.NewReader,
-		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(mymeta.NewReader(db, opts...))(db, w)
-		},
-		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
-		NewCompleter: mymeta.NewCompleter,
+		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	}
 }

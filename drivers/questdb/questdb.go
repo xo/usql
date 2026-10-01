@@ -1,10 +1,8 @@
 // Package questdb defines and registers usql's QuestDB driver.
 //
-// QuestDB speaks the PostgreSQL protocol, and dburl opens it through pgx.
-// This package registers the pgx driver under the name questdb.
-//
-// Metadata: none. The pgx driver's reader is PostgreSQL's, so this driver
-// drops it. All metadata is moving into dbmeta (D3).
+// QuestDB speaks the PostgreSQL protocol, and dburl opens it through pgx. This
+// package registers the pgx driver under the name questdb, which dburl sets as
+// the scheme of a questdb:// URL. dbmeta reads its metadata and its version.
 //
 // See: https://github.com/jackc/pgx
 // Group: most
@@ -16,7 +14,5 @@ import (
 )
 
 func init() {
-	d := pgx.Driver()
-	d.NewMetadataReader, d.NewMetadataWriter = nil, nil
-	drivers.Register("questdb", d)
+	drivers.Register("questdb", pgx.Driver())
 }

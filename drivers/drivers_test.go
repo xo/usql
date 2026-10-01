@@ -312,7 +312,7 @@ func connInfo(ctx context.Context, dbName string, db *Database, pool dt.Pool) (s
 func TestWriter(t *testing.T) {
 	type testFunc struct {
 		label  string
-		f      func(w metadata.Writer, u *dburl.URL) error
+		f      func(w *metadata.Writer, ctx context.Context) error
 		ignore string
 	}
 	testCases := []struct {
@@ -324,32 +324,32 @@ func TestWriter(t *testing.T) {
 			funcs: []testFunc{
 				{
 					label: "descTable",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeTableDetails(u, "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeTableDetails(ctx, "film*", true, false)
 					},
 				},
 				{
 					label: "listTables",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListTables(u, "tvmsE", "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListTables(ctx, "tvmsE", "film*", true, false)
 					},
 				},
 				{
 					label: "listFuncs",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeFunctions(u, "", "", false, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeFunctions(ctx, "", "", false, false)
 					},
 				},
 				{
 					label: "listIndexes",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListIndexes(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListIndexes(ctx, "", true, false)
 					},
 				},
 				{
 					label: "listSchemas",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListSchemas(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListSchemas(ctx, "", true, false)
 					},
 				},
 			},
@@ -359,32 +359,32 @@ func TestWriter(t *testing.T) {
 			funcs: []testFunc{
 				{
 					label: "descTable",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeTableDetails(u, "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeTableDetails(ctx, "film*", true, false)
 					},
 				},
 				{
 					label: "listTables",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListTables(u, "tvmsE", "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListTables(ctx, "tvmsE", "film*", true, false)
 					},
 				},
 				{
 					label: "listFuncs",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeFunctions(u, "", "", false, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeFunctions(ctx, "", "", false, false)
 					},
 				},
 				{
 					label: "listIndexes",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListIndexes(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListIndexes(ctx, "", true, false)
 					},
 				},
 				{
 					label: "listSchemas",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListSchemas(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListSchemas(ctx, "", true, false)
 					},
 				},
 			},
@@ -394,36 +394,36 @@ func TestWriter(t *testing.T) {
 			funcs: []testFunc{
 				{
 					label: "descTable",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeTableDetails(u, "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeTableDetails(ctx, "film*", true, false)
 					},
 					// primary key indices get random names; ignore them
 					ignore: "PK__.*__.{16}",
 				},
 				{
 					label: "listTables",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListTables(u, "tvmsE", "film*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListTables(ctx, "tvmsE", "film*", true, false)
 					},
 				},
 				{
 					label: "listFuncs",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeFunctions(u, "", "", false, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeFunctions(ctx, "", "", false, false)
 					},
 				},
 				{
 					label: "listIndexes",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListIndexes(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListIndexes(ctx, "", true, false)
 					},
 					// primary key indices get random names; ignore them
 					ignore: "PK__.*__.{16}",
 				},
 				{
 					label: "listSchemas",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListSchemas(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListSchemas(ctx, "", true, false)
 					},
 				},
 			},
@@ -433,20 +433,20 @@ func TestWriter(t *testing.T) {
 			funcs: []testFunc{
 				{
 					label: "descTable",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.DescribeTableDetails(u, "order*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.DescribeTableDetails(ctx, "order*", true, false)
 					},
 				},
 				{
 					label: "listTables",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListTables(u, "tvmsE", "order*", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListTables(ctx, "tvmsE", "order*", true, false)
 					},
 				},
 				{
 					label: "listSchemas",
-					f: func(w metadata.Writer, u *dburl.URL) error {
-						return w.ListSchemas(u, "", true, false)
+					f: func(w *metadata.Writer, ctx context.Context) error {
+						return w.ListSchemas(ctx, "", true, false)
 					},
 				},
 			},
@@ -464,12 +464,14 @@ func TestWriter(t *testing.T) {
 			if !ok {
 				continue
 			}
-			w, err := drivers.NewMetadataWriter(context.Background(), db.URL, db.DB, fo)
+			ctx := context.Background()
+			m, err := drivers.NewMeta(ctx, db.URL, db.DB)
 			if err != nil {
-				t.Fatalf("Cannot create writer %s %s: %v", test.dbName, testFunc.label, err)
+				t.Fatalf("Cannot read metadata %s %s: %v", test.dbName, testFunc.label, err)
 			}
+			w := metadata.NewWriter(m, fo, db.URL.SchemeName)
 
-			err = testFunc.f(w, db.URL)
+			err = testFunc.f(w, ctx)
 			if err != nil {
 				t.Fatalf("Cannot write %s %s: %v", test.dbName, testFunc.label, err)
 			}

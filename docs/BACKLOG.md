@@ -1038,6 +1038,20 @@ the defects they report move to the migration instead. Held on this basis:
 A held pull request is not a closed one. Each defect has to survive the move,
 which means W21 inherits them and the new readers have to answer for them.
 
+### Implemented, waiting for a dbmeta tag
+
+Implemented on 2026-09-30 and staged for review, following D4. usql reads all
+of its metadata from dbmeta: the describe commands, tab completion, the
+version, the current user and the change of a password. Every usql reader is
+gone. `drivers/metadata` holds the commands, which print dbmeta's answers the
+way psql prints them, and a small source of names for the completer.
+
+It builds against a dbmeta checkout through a local `go.work`, and is not
+committed until dbmeta has a tag for `go.mod` to require. The steps of
+`docs/DBMETA.md` it covers are 0 to 2, 4 to 6, and the count of step 4.
+Step 3, the information schema model for a database with no model of its own,
+is dbmeta's to register, and Ken is deciding which databases get one.
+
 ### Open decision
 
 dbmeta has no release tag and its API is still moving. Whether usql depends on
@@ -1272,6 +1286,303 @@ Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `AGENTS.md`. Add the line to each
 as they are touched.
 
+## W28. Statement handling for ODBC, csvq, Athena and Cosmos
+
+Source: Ken, on 2026-09-30, while dbmeta took over the grammar of each
+database as its D143.
+
+Four drivers changed a statement before usql ran it, through the `Process`
+field of `drivers.Driver`. Ken removed those hooks. What a database does with a
+statement belongs in dbmeta's syntax options, applied for every driver of it,
+and that needs a larger design than D143. Each database is taken on its own.
+
+What each hook did, and what is lost until this item is done:
+
+- ODBC stripped a trailing semicolon, unless the statement ended with `END;`,
+  when the URL set `usql_trim`. The key is now ignored.
+  `dburl.OdbcIgnoreQueryPrefixes` still keeps `usql_` keys out of the DSN.
+- csvq ran a `SHOW` statement as exec and pointed csvq's output at standard
+  output, because csvq prints the answer to `SHOW` rather than returning rows.
+  `SHOW` now prints nothing.
+- Athena and Cosmos stripped a trailing semicolon.
+
+The other `Process` hooks, in arangodb, influxdb, neo4j and surrealdb, did
+nothing but run every statement as a query. That is now the `AlwaysQuery`
+field, and `Process` is no longer a field of `drivers.Driver`.
+
+### Open for discussion
+
+Ken may remove ODBC, Athena and Cosmos, because none of them can be tested
+against a server that CI can start. He would keep csvq, and wants to discuss
+it with others first. Nothing is removed until that discussion.
+
+### What has to be true when it is done
+
+- dbmeta holds the rule for each of the four that is kept, and usql applies it
+  with no code for that database.
+- No code in usql changes a statement's text for one database.
+
+## W29. Move the SQL of \copy into dbmeta
+
+Source: Ken, on 2026-09-30. After the metadata readers went to dbmeta (D4),
+the `Copy` hook of `drivers.Driver` holds the last SQL that usql writes for
+one database or another. It needs a careful design, like W28.
+
+What `\copy` builds today:
+
+- `drivers.CopyWithInsert` and `drivers.FlexibleCopyWithInsert`, in
+  `drivers/drivers.go`, write `INSERT INTO table VALUES (...)`. Each driver
+  passes the placeholder of its database: `$1` by default, `?` for ClickHouse,
+  csvq, DuckDB, Exasol, MySQL, SQLite and Trino, `:1` for Oracle, and SQL
+  Server's own. Impala runs the inserts outside a transaction.
+- The same code, and the pgx and libpq drivers, find the columns of the target
+  with `SELECT * FROM table WHERE 1=0`, or `SELECT cols FROM table WHERE 1=0`
+  when the target names its columns.
+- pgx and libpq then use the COPY protocol of their Go driver, through
+  `CopyFrom` and `pq.CopyIn`. That is a feature of the driver, and D5 keeps it
+  in the driver.
+
+The placeholder, the insert statement and the query for the columns of a
+table all describe the database, so by D5 they belong in dbmeta. The design
+has to decide how a client asks dbmeta for them, and what happens for a
+database that dbmeta has no model for.
+
+### Other SQL that is still in usql
+
+A search of every Go file outside the tests found no other statement that
+reads metadata, runs DDL or changes a password. These remain:
+
+- `Version` hooks for seven databases that dbmeta has no model for: Athena,
+  csvq, ArangoDB, Neo4j and YDB run a query, and SurrealDB and InfluxDB call
+  their client library.
+- Two fallbacks in `drivers/drivers.go` for a database with no model:
+  `SELECT version();` in `Version` and `SELECT current_user` in `User`.
+- Text in `drivers/metadata` that is printed and never run: the
+  `FOREIGN KEY ... REFERENCES` line built for SQLite, the `CHECK (...)` around
+  an expression from information_schema, and the `CREATE OR REPLACE VIEW`
+  line that `\sv` puts above a definition.
+- The keyword tables in `drivers/qtype.go`, which decide whether a statement
+  returns rows. They hold statements of PostgreSQL, MySQL and CQL.
+
+Ken decides which of these move to dbmeta, and in which item.
+
+## W30. Research an ODBC driver written on purego
+
+Source: Ken, on 2026-09-30.
+
+Research a new ODBC driver for `database/sql`, written from the start on
+`github.com/ebitengine/purego`. purego calls C functions from Go without cgo,
+by loading the shared library at run time.
+
+usql's `odbc` driver uses `github.com/alexbrainman/odbc`, and the README marks
+it as needing cgo. So it is left out of a build without cgo, and CI installs
+`unixodbc-dev` to build it. A driver on purego would load the ODBC driver
+manager, such as `libodbc` from unixODBC, iODBC or `odbc32.dll`, when a
+connection opens.
+
+Questions for the research:
+
+- Which platforms purego supports, and whether it can call every ODBC
+  function the driver needs, including those that take callbacks or pass
+  structs by value.
+- How the driver finds the driver manager on each platform, and what error a
+  user sees when there is none.
+- How the data types of ODBC map to Go, and how that compares with
+  `alexbrainman/odbc`.
+- How to test it in CI against a real database through a real ODBC driver.
+- Whether it lives in the xo family, and under which name.
+
+This bears on W28, which asks whether ODBC stays in usql at all. A driver
+without cgo could join the `most` group, and it could be tested.
+
+## W31. The rest of psql's describe commands
+
+Source: Ken, on 2026-09-30, once W21 put all of usql's metadata on dbmeta.
+
+Status: Implemented, waiting for W21 to be committed.
+
+usql now answers every command in dbmeta's `docs/COMMANDS.md` that dbmeta has
+a query for. `drivers/metadata/lists.go` holds one spec for each: the query,
+psql's title, and psql's columns. `metacmd/cmds.go` routes the commands, and
+`TestEveryListIsACommand` checks that each spec is reachable. The new commands
+are `\dA`, `\dAc`, `\dAf`, `\dAo`, `\dAp`, `\db`, `\dc`, `\dconfig`,
+`\dC`, `\dd`, `\dD`, `\ddp`, `\dE`, `\des`, `\det`, `\deu`, `\dew`,
+`\df` with `anptw`, `\dF`, `\dFd`, `\dFp`, `\dFt`, `\dg`, `\dl`,
+`\lo_list`, `\dL`, `\do`, `\dO`, `\dP`, `\drds`, `\drg`, `\dRp`,
+`\dRs`, `\dT`, `\du`, `\dx`, `\dX`, `\dy`, `\sf`, `\sv` and `\z`.
+
+Two fixes came with them. `\dS+`, `\dtS+` and every other form with both S
+and + were unknown commands, because a command name expanded each letter in
+brackets alone. And a pattern now shows the objects of the system, as psql
+does, which checks `!showSystem && !pattern`.
+
+### What is still different from psql
+
+dbmeta added the fields these commands lacked as its D147: the whole
+definition of a function for `\sf`, the value with its unit for `\dconfig`,
+the size for `\dT+`, the storage type for `\dAc`, the applicable types for
+`\dAf`, the ICU rules for `\dO`, psql's columns for `\dX`, and the token map
+for `\dF+`. usql prints all of them. These differences remain:
+
+- An empty result prints `(0 rows)` with no title and no header. tblfmt does
+  this for every result, not only for describe commands.
+- The second pattern of `\dAc` and `\dAf` matches the name of the class or
+  family, where psql matches the input type. dbmeta takes a name.
+- `\dP` takes no `itn` letters.
+
+A describe command now reads a name between double quotes as it is written,
+as psql does. Before, usql removed the quotes before the pattern was folded,
+so `\d "Foo"` looked up `foo`.
+
+## W32. Review the size that each driver adds to the binary
+
+Source: Ken, on 2026-10-01. Measure again at each of these times:
+
+- Before a release.
+- After `update-deps.sh` moves the dependencies.
+- When a driver is added or switched to another module.
+
+Run `./size.sh -g most`, which measures the drivers that a release ships,
+and replace the table below. CONTRIBUTING.md says how the script works. A
+driver whose share grows a lot is a question for Ken: keep it in `most`,
+move it to `all`, or find a smaller module.
+
+### The measurement of 2026-10-01
+
+A release build with every driver of `most` was 203.1 MB, stripped, with
+go1.27.1 on linux/amd64. The ten largest drivers make up 133.9 MB of it, and
+29 of the 51 drivers add less than 1 MB each.
+
+| MB saved | Driver left out | What it brings |
+| ---: | --- | --- |
+| 54.2 | duckdb | the C++ library of DuckDB, with 4 MB of ICU data |
+| 17.4 | spanner | the Google Cloud SDK, gRPC, and the protos of Envoy |
+| 13.5 | oracle | the character set tables of go-ora |
+| 10.9 | snowflake | the clients of S3 and Azure Blob storage, and Arrow |
+| 9.6 | chai | Pebble, the storage engine of CockroachDB |
+| 7.6 | athena | version 1 of the AWS SDK |
+| 7.1 | ydb | the YDB SDK and its gRPC protos |
+| 4.8 | clickhouse | ch-go and clickhouse-go |
+| 4.6 | databricks | its SDK, with Arrow v12 |
+| 4.2 | bigquery | the Google Cloud SDK, with Arrow v15 |
+| 3.6 | moderncsqlite | SQLite translated to Go |
+| 3.2 | csvq | the csvq engine |
+| 2.7 | dynamodb | the DynamoDB client of AWS SDK v2 |
+| 2.5 | sqlserver | go-mssqldb |
+| 2.2 | ots | the Tablestore SDK |
+| 1.9 | maxcompute | the ODPS SDK |
+| 1.7 | sqlite3 | the C library of SQLite |
+
+Three things to read the table by:
+
+- A number is what leaving out that one driver saves. Two drivers that share
+  a module each save only what the other does not use. So pgx and mysql show
+  almost nothing, because postgres, cockroachdb, memsql and the other aliases
+  import them.
+- The build holds three versions of Apache Arrow: arrow-go v18 for flightsql,
+  v15 for bigquery and v12 for databricks. A driver that moved to v18 would
+  share it.
+- `bad` drivers are not measured, because no release builds them.
+
+## W33. Make the README a landing page
+
+Source: Ken, on 2026-10-01, after a review with Gemini and DeepSeek.
+
+README.md is 1662 lines. 714 of them are Features and Compatibility, and 184
+are pasted output of `--help` and `\?`. Both reviewers proposed that the
+README answers a visitor's first questions, and that docs/ holds the
+reference. Their merged proposal is about 230 lines:
+
+| Section | Lines |
+| --- | ---: |
+| Header, pitch and badges | 10 |
+| Install commands | 25 |
+| First five minutes: install, connect, query | 40 |
+| Supported databases, a compact generated list | 25 |
+| Common connection examples | 30 |
+| Backslash commands, an overview | 25 |
+| Features, each linked into docs/ | 50 |
+| Documentation index | 15 |
+| Contributing | 10 |
+
+The reference moves under docs/, with the listings generated by gen.go: the
+full driver table, the output of `--help`, the `\?` listing, and the
+variables. The configuration, copying, terminal graphics, time formats and
+troubleshooting become pages of their own. The two reviewers agreed that the
+database names stay in the README, because a visitor and GitHub's search look
+for them there.
+
+Open for Ken: the names of the files under docs/, and whether one generator
+writes the README sections, docs/ and the man pages of W34 from one source.
+
+## W34. Man pages for usql
+
+Source: Ken, on 2026-10-01, after a review with Gemini and DeepSeek. The man
+pages are generated from code, a person can edit their prose, and every
+release package installs them.
+
+The pages:
+
+- usql(1): the command line, the environment and the files.
+- usql-commands(1): the backslash commands and the variables. Both reviewers
+  first said section 7, and then agreed that section 7 is for conventions,
+  not for the use of a program.
+- usqlrc(5): the formats of config.yaml, .usqlpass and the RC file.
+
+How they are made:
+
+- gen.go fills templates from the data that the code already holds: the cobra
+  flags in run.go, the descriptions in metacmd/descs.go, and env's
+  variables. A person writes the prose of each page in the template.
+- Both reviewers said that go-md2man cannot write the definition lists that
+  120 commands need. That is wrong. go-md2man v2 turns a Markdown definition
+  list into roff `.TP`, which is the list a man page uses. So the prose can be
+  Markdown. Writing man(7) directly is the other choice, and it is harder for
+  a contributor to edit.
+- A backslash in the text is escaped for roff. Unescaped, `\d` is a roff
+  command that moves the text down.
+- The generated pages are committed under man/, and a test fails when they
+  differ from what the generator writes.
+- The date in `.TH` is set when a release is tagged, with SOURCE_DATE_EPOCH
+  as an override for packagers. A date from the last commit would change the
+  pages, and fail the test, on every commit.
+
+How they are installed:
+
+- The tarball and the zip of build.sh hold man/ next to the binary.
+- The Homebrew formula in xo/homebrew-xo calls man1.install and man5.install.
+- The AUR packages install them with `install -Dm644` under
+  /usr/share/man.
+- A hidden flag prints a page, for Docker and Windows, which have no man(1).
+  It is a flag and not a subcommand, because a bare word on the command line
+  is a DSN, such as a named connection. usql prints its completion scripts
+  through flags too, such as `--completion-script-bash`.
+
+Open for Ken: Markdown or man(7) for the prose, the name of the flag, and how
+the version in `.TH` gets into a committed page.
+
+## W35. Match usql to transit's usql grammar
+
+Source: Ken decided the design of transit's usql grammar on 2026-10-01, as
+transit's D101 and D102. The grammar parses usql's input: the meta commands,
+the variables, and the SQL that it hands to a SQL grammar for the dialect.
+Nothing is due until usql uses the grammar. Two points touch usql:
+
+- Outside a string, `\\` is psql's separator meta command. It ends the
+  arguments of the meta command before it, and the rest of the line is SQL.
+  usql's splitter reads `\\` as an escaped backslash today (stmt/stmt.go), so
+  the two differ there until usql follows psql.
+- The grammar splits a meta command's name into its base and its modifiers,
+  such as `dtS+`, from usql's command list in metacmd/descs.go. So a new or
+  renamed meta command in usql needs a change to the grammar too.
+
+The rest of the design is transit's. The grammar has one variant for each
+family of dialects that usql's lexer options make: postgres, mysql, sqlite,
+block comments only, cql, and no options. Variables reach the SQL grammar as
+placeholders of the same length. Each meta command is one node, with a name
+and typed arguments that usql maps to the kinds it completes. `\if` and its
+branches are flat commands, as in psql.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section
@@ -1298,8 +1609,8 @@ planned.
 `completion_test.go` drives a real tab keypress through a pseudo-terminal and
 asserts the table name is offered. It covers duckdb alone. Widen it.
 
-Completion is per driver. Each supplies its own metadata reader, and some
-supply their own completer, so a pass for one says nothing about the others.
+Completion is per database. It reads names from dbmeta's model of each one,
+so a pass for one says nothing about the others.
 The duckdb bug this test was written for proves the point: the driver was
 registered with MySQL's completer, so every completion ran a MySQL function
 against duckdb, and it reached a release because nothing tested completion for
@@ -1371,7 +1682,6 @@ not, and those were discarded.
 | Database            | Module                                             | Latest                | Released   |
 | ------------------- | -------------------------------------------------- | --------------------- | ---------- |
 | libSQL and Turso    | `github.com/tursodatabase/libsql-client-go/libsql` | v0.0.0-20260528064733 | 2026-05-28 |
-| TDengine            | `github.com/taosdata/driver-go/v3`                 | v3.8.2                | 2026-07-09 |
 | Dolt                | `github.com/dolthub/driver`                        | v1.88.1               | 2026-05-07 |
 | MonetDB             | `github.com/MonetDB/MonetDB-Go/v2`                 | v2.0.3                | 2025-08-24 |
 | rqlite              | `github.com/rqlite/gorqlite/stdlib`                | v0.0.0-20260504155303 | 2026-05-04 |
@@ -1380,6 +1690,9 @@ not, and those were discarded.
 IBM Db2 is out of scope. Ken decided on 2026-09-29 that it cannot be tested
 here, so usql removed its Db2 client setup from `contrib/` and does not add a
 Db2 driver. dbmeta records the decision as its D130.
+
+TDengine is dropped as well. dbimp writes no TDengine driver (its D127), and
+dburl v0.38.0 removed the provisional scheme (its D41).
 
 `github.com/ncruces/go-sqlite3/driver` v0.35.5 also qualifies, but usql already
 links two SQLite drivers, so it is the weakest of these.

@@ -13,8 +13,6 @@ import (
 
 func init() {
 	drivers.Register("avatica", drivers.Driver{
-		AllowMultilineComments: true,
-		AllowCComments:         true,
 		Err: func(err error) (string, string) {
 			if e, ok := err.(avaticaerrors.ResponseError); ok {
 				return strconv.Itoa(int(e.ErrorCode)), e.ErrorMessage

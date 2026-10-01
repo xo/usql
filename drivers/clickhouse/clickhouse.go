@@ -15,13 +15,8 @@ import (
 
 func init() {
 	drivers.Register("clickhouse", drivers.Driver{
-		AllowMultilineComments: true,
 		RowsAffected: func(sql.Result) (int64, error) {
 			return 0, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, oldpw string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY '` + newpw + `'`)
-			return err
 		},
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*clickhouse.Exception); ok {
@@ -35,7 +30,6 @@ func init() {
 			}
 			return false
 		},
-		Copy:              drivers.CopyWithInsert(func(int) string { return "?" }),
-		NewMetadataReader: NewMetadataReader,
+		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

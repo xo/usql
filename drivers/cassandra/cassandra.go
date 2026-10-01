@@ -31,10 +31,6 @@ func init() {
 	authReqRE := regexp.MustCompile(`authentication required`)
 	passwordErrRE := regexp.MustCompile(`Provided username (.*)and/or password are incorrect`)
 	drivers.Register("cql", drivers.Driver{
-		AllowDollar:            true,
-		AllowMultilineComments: true,
-		AllowCComments:         true,
-		LexerName:              "cql",
 		ForceParams: func(u *dburl.URL) {
 			if q := u.Query(); q.Get("timeout") == "" {
 				q.Set("timeout", "300s")
@@ -53,21 +49,6 @@ func init() {
 				}
 				return sql.OpenDB(cql.NewConnector(cfg)), nil
 			}, nil
-		},
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var release, protocol, cql string
-			err := db.QueryRowContext(
-				ctx,
-				`SELECT release_version, cql_version, native_protocol_version FROM system.local WHERE key = 'local'`,
-			).Scan(&release, &cql, &protocol)
-			if err != nil {
-				return "", err
-			}
-			return "Cassandra " + release + ", CQL " + cql + ", Protocol v" + protocol, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
-			_, err := db.Exec(`ALTER ROLE ` + user + ` WITH PASSWORD = '` + newpw + `'`)
-			return err
 		},
 		IsPasswordErr: func(err error) bool {
 			return passwordErrRE.MatchString(err.Error())
@@ -90,9 +71,6 @@ func init() {
 				return "", err
 			}
 			return string(buf), nil
-		},
-		BatchQueryPrefixes: map[string]string{
-			"BEGIN BATCH": "APPLY BATCH",
 		},
 	})
 }

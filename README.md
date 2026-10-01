@@ -40,7 +40,7 @@ for other databases.
 [usql-ci-status]: https://github.com/xo/usql/actions/workflows/test.yml/badge.svg "Test CI"
 [goref-usql]: https://pkg.go.dev/github.com/xo/usql "Go Reference"
 [goref-usql-status]: https://pkg.go.dev/badge/github.com/xo/usql.svg "Go Reference"
-[release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag&sort=semver "Latest Release"
+[release-status]: https://img.shields.io/github/v/release/xo/usql?display_name=tag "Latest Release"
 [discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 [installing]: #installing "Installing"
@@ -265,6 +265,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                               | [github.com/apache/calcite-avatica-go/v5][d-avatica]                                        |
 | Apache Hive          | `hive`          | `hi`, `hive2`                                 | [github.com/beltran/gohive/v2][d-hive]                                                      |
 | Apache Impala        | `impala`        | `im`                                          | [github.com/sclgo/impala-go][d-impala]                                                      |
+| Apache Pinot         | `pinot`         | `pi`                                          | [github.com/xo/dbimp/pinot][d-pinot]                                                        |
 | ArangoDB             | `arangodb`      | `ar`, `arango`                                | [github.com/xo/dbimp/arangodb][d-arangodb]                                                  |
 | AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                      | [github.com/uber/athenadriver/go][d-athena] <sup>[¶][f-hosted]</sup>                        |
 | Azure CosmosDB       | `cosmos`        | `cm`, `gocosmos`                              | [github.com/btnguyen2k/gocosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                         |
@@ -272,7 +273,6 @@ associated database, scheme / build tag, and scheme aliases:
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                      | [github.com/chaisql/chai][d-chai] <sup>[§][f-embedded]</sup>                                |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                  | [github.com/xo/dbimp/couchbase][d-couchbase]                                                |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                    | [github.com/mithrandie/csvq-driver][d-csvq] <sup>[§][f-embedded]</sup>                      |
-| Cznic QL             | `ql`            | `cznic`, `cznicql`                            | [modernc.org/ql][d-ql] <sup>[§][f-embedded]</sup>                                           |
 | Databend             | `databend`      | `dd`, `bend`                                  | [github.com/xo/dbimp/databend][d-databend]                                                  |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`          | [github.com/databricks/databricks-sql-go][d-databricks] <sup>[¶][f-hosted]</sup>            |
 | DynamoDb             | `dynamodb`      | `dy`, `dyn`, `dynamo`, `godynamo`             | [github.com/btnguyen2k/godynamo][d-dynamodb] <sup>[¶][f-hosted]</sup>                       |
@@ -283,11 +283,13 @@ associated database, scheme / build tag, and scheme aliases:
 | Google Spanner       | `spanner`       | `sp`                                          | [github.com/googleapis/go-sql-spanner][d-spanner] <sup>[¶][f-hosted]</sup>                  |
 | InfluxDB             | `influxdb`      | `in`, `influx`                                | [github.com/xo/dbimp/influxdb][d-influxdb]                                                  |
 | InfluxDB InfluxQL    | `influxql`      | `iq`                                          | [github.com/xo/dbimp/influxdb][d-influxql]                                                  |
+| libSQL               | `libsql`        | `ls`, `turso`                                 | [github.com/xo/dbimp/libsql][d-libsql]                                                      |
 | ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                          | [modernc.org/sqlite][d-moderncsqlite] <sup>[§][f-embedded]</sup>                            |
 | Neo4j                | `neo4j`         | `nj`, `neo`, `n4j`                            | [github.com/xo/dbimp/neo4j][d-neo4j]                                                        |
 | PostgreSQL lib/pq    | `libpq`         | `pq`                                          | [github.com/lib/pq][d-libpq]                                                                |
 | Presto               | `presto`        | `pr`, `prestodb`                              | [github.com/prestodb/presto-go-client/v2][d-presto]                                         |
 | QuestDB              | `questdb`       | `qs`                                          | [github.com/jackc/pgx/v5/stdlib][d-questdb]                                                 |
+| rqlite               | `rqlite`        | `rq`                                          | [github.com/xo/dbimp/rqlite][d-rqlite]                                                      |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                    | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
 | Snowflake            | `snowflake`     | `sf`                                          | [github.com/snowflakedb/gosnowflake/v2][d-snowflake] <sup>[¶][f-hosted]</sup>               |
 | SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                        | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
@@ -335,6 +337,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-influxdb]: https://github.com/xo/dbimp
 [d-influxql]: https://github.com/xo/dbimp
 [d-libpq]: https://github.com/lib/pq
+[d-libsql]: https://github.com/xo/dbimp
 [d-maxcompute]: https://github.com/aliyun/aliyun-odps-go-sdk
 [d-memsql]: https://github.com/go-sql-driver/mysql
 [d-moderncsqlite]: https://gitlab.com/cznic/sqlite
@@ -344,11 +347,12 @@ associated database, scheme / build tag, and scheme aliases:
 [d-oracle]: https://github.com/sijms/go-ora
 [d-ots]: https://github.com/aliyun/aliyun-tablestore-go-sql-driver
 [d-pgx]: https://github.com/jackc/pgx
+[d-pinot]: https://github.com/xo/dbimp
 [d-postgres]: https://github.com/jackc/pgx
 [d-presto]: https://github.com/prestodb/presto-go-client
-[d-ql]: https://gitlab.com/cznic/ql
 [d-questdb]: https://github.com/jackc/pgx
 [d-redshift]: https://github.com/jackc/pgx
+[d-rqlite]: https://github.com/xo/dbimp
 [d-saphana]: https://github.com/SAP/go-hdb
 [d-snowflake]: https://github.com/snowflakedb/gosnowflake
 [d-spanner]: https://github.com/googleapis/go-sql-spanner
@@ -1601,18 +1605,25 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 
 [_Pick up an issue today, and submit a PR tomorrow!_][help-wanted]
 
-## Related Projects
+<br/>
 
-- [dburl][dburl] - Go package providing a standard, URL-style mechanism for parsing
-  and opening database connection URLs
-- [dbtpl][dbtpl] - Go command-line tool to generate Go code from a database schema
+<div align="center">
+  <a href="https://github.com/xo/usql" title="A command line client for many databases, this project">usql</a> |
+  <a href="https://github.com/xo/dburl" title="Database connection URLs">dburl</a> |
+  <a href="https://github.com/xo/dbmeta" title="Database metadata">dbmeta</a> |
+  <a href="https://github.com/xo/dbimp" title="Database drivers in pure Go">dbimp</a> |
+  <a href="https://github.com/xo/cql" title="A database/sql driver for Cassandra">cql</a> |
+  <a href="https://github.com/xo/dbtpl" title="Go code generated from a database">dbtpl</a> |
+  <a href="https://github.com/xo/tblfmt" title="Tables of database results">tblfmt</a> |
+  <a href="https://github.com/xo/rline" title="The line editor of usql">rline</a> |
+  <a href="https://github.com/xo/transit" title="tree-sitter in pure Go">transit</a>
+</div>
 
 [dburl]: https://github.com/xo/dburl
 [dburl-schemes]: https://github.com/xo/dburl#protocol-schemes-and-aliases
 [go-time]: https://pkg.go.dev/time#pkg-constants
 [go-sql]: https://pkg.go.dev/database/sql
 [homebrew]: https://brew.sh/
-[dbtpl]: https://github.com/xo/dbtpl
 [xo-tap]: https://github.com/xo/homebrew-xo
 [chroma]: https://github.com/alecthomas/chroma
 [chroma-formatter]: https://github.com/alecthomas/chroma#formatters

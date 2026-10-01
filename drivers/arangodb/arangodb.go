@@ -25,19 +25,14 @@ import (
 
 	"github.com/xo/dbimp"
 	"github.com/xo/dbimp/arangodb" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
 	drivers.Register("arangodb", drivers.Driver{
-		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			// an AQL statement such as FOR ... RETURN is not one that usql
-			// knows returns rows, so each statement is run as a query
-			typ, _ := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, true, nil
-		},
+		// an AQL statement such as FOR ... RETURN is not one that usql
+		// knows returns rows, so each statement is run as a query
+		AlwaysQuery: true,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			var ver string
 			if err := db.QueryRowContext(ctx, `RETURN VERSION()`).Scan(&ver); err != nil {

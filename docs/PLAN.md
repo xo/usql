@@ -24,6 +24,4 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
 
 ## Open questions
 
-1. Hard rule 3 in `AGENTS.md` says that `gen.go` reads dburl's source tree,
-   so `GOPATH` must point at one. `gen.go` now reads the pinned dburl module,
-   names no `GOPATH`, and runs with `GOPATH` empty. Should the rule be deleted?
+None at present.

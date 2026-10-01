@@ -32,20 +32,15 @@ import (
 
 	"github.com/xo/dbimp"
 	"github.com/xo/dbimp/surrealdb" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
 	drivers.Register("surrealdb", drivers.Driver{
-		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			// every statement of SurrealQL returns a result, even CREATE and
-			// DEFINE, and the server sends no count of rows affected, so each
-			// statement is run as a query
-			typ, _ := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, true, nil
-		},
+		// every statement of SurrealQL returns a result, even CREATE and
+		// DEFINE, and the server sends no count of rows affected, so each
+		// statement is run as a query
+		AlwaysQuery: true,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// no statement of SurrealQL returns the version, so it is read
 			// through the driver's connection

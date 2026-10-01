@@ -2,6 +2,7 @@
 package completer
 
 import (
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
@@ -122,8 +122,6 @@ type Completer interface {
 
 func NewDefaultCompleter(opts ...Option) Completer {
 	c := completer{
-		// an empty struct satisfies the metadata.Reader interface, because it is actually empty
-		reader:           struct{}{},
 		logger:           log.New(os.Stdout, "ERROR: ", log.LstdFlags),
 		sqlStartCommands: CommonSqlStartCommands,
 		// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
@@ -221,17 +219,10 @@ func NewDefaultCompleter(opts ...Option) Completer {
 // Option to configure the reader
 type Option func(*completer)
 
-// WithDB option
-func WithDB(db metadata.DB) Option {
+// WithSource sets the source of the names of the objects in the database.
+func WithSource(s Source) Option {
 	return func(c *completer) {
-		c.db = db
-	}
-}
-
-// WithReader option
-func WithReader(r metadata.Reader) Option {
-	return func(c *completer) {
-		c.reader = r
+		c.source = s
 	}
 }
 
@@ -272,8 +263,7 @@ func WithBeforeComplete(f CompleteFunc) Option {
 
 // completer based on https://github.com/postgres/postgres/blob/9f3665fbfc34b963933e51778c7feaa8134ac885/src/bin/psql/tab-complete.c
 type completer struct {
-	db                metadata.DB
-	reader            metadata.Reader
+	source            Source
 	logger            logger
 	sqlStartCommands  []string
 	sqlCommands       []string
@@ -474,10 +464,10 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		return nil
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\da*`) {
-		return c.completeWithFunctions(text, []string{"AGGREGATE"})
+		return c.completeWithFunctions(text, true)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\df*`) {
-		return c.completeWithFunctions(text, []string{})
+		return c.completeWithFunctions(text, false)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\di*`) {
 		return c.completeWithIndexes(text)
@@ -489,13 +479,13 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		return c.completeWithSequences(text)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\dt*`) {
-		return c.completeWithTables(text, []string{"TABLE", "BASE TABLE", "SYSTEM TABLE", "SYNONYM", "LOCAL TEMPORARY", "GLOBAL TEMPORARY"})
+		return c.completeWithTables(text, "t")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\dv*`) {
-		return c.completeWithTables(text, []string{"VIEW", "SYSTEM VIEW"})
+		return c.completeWithTables(text, "v")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\dm*`) {
-		return c.completeWithTables(text, []string{"MATERIALIZED VIEW"})
+		return c.completeWithTables(text, "m")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\d*`) {
 		return c.completeWithSelectables(text)
@@ -724,271 +714,139 @@ func completeFromVariables(text []rune, prefix, suffix string, needValue bool) [
 func (c completer) completeWithSelectables(text []rune) [][]rune {
 	filter := parseIdentifier(string(text))
 	names := c.getNamespaces(filter)
-	if r, ok := c.reader.(metadata.TableReader); ok {
-		tables := c.getNames(
-			func() (iterator, error) {
-				return r.Tables(filter)
-			},
-			func(res interface{}) string {
-				t := res.(*metadata.TableSet).Get()
-				return qualifiedIdentifier(filter, t.Catalog, t.Schema, t.Name)
-			},
-		)
-		names = append(names, tables...)
-	}
-	if r, ok := c.reader.(metadata.FunctionReader); ok {
-		functions := c.getNames(
-			func() (iterator, error) {
-				return r.Functions(filter)
-			},
-			func(res interface{}) string {
-				f := res.(*metadata.FunctionSet).Get()
-				return qualifiedIdentifier(filter, f.Catalog, f.Schema, f.Name)
-			},
-		)
-		names = append(names, functions...)
-	}
-	if r, ok := c.reader.(metadata.SequenceReader); ok {
-		sequences := c.getNames(
-			func() (iterator, error) {
-				return r.Sequences(filter)
-			},
-			func(res interface{}) string {
-				s := res.(*metadata.SequenceSet).Get()
-				return qualifiedIdentifier(filter, s.Catalog, s.Schema, s.Name)
-			},
-		)
-		names = append(names, sequences...)
+	for _, kind := range []Kind{Tables, Functions, Sequences} {
+		names = append(names, c.getNames(kind, filter)...)
 	}
 	sort.Strings(names)
 	// TODO make sure CompleteFromList would properly handle quoted identifiers
 	return CompleteFromList(text, names...)
 }
 
-func (c completer) completeWithTables(text []rune, types []string) [][]rune {
-	r, ok := c.reader.(metadata.TableReader)
-	if !ok {
-		return [][]rune{}
-	}
-
+func (c completer) completeWithTables(text []rune, types string) [][]rune {
 	filter := parseIdentifier(string(text))
 	filter.Types = types
-	names := c.getNamespaces(filter)
-	tables := c.getNames(
-		func() (iterator, error) {
-			return r.Tables(filter)
-		},
-		func(res interface{}) string {
-			t := res.(*metadata.TableSet).Get()
-			return qualifiedIdentifier(filter, t.Catalog, t.Schema, t.Name)
-		},
-	)
-	names = append(names, tables...)
+	names := append(c.getNamespaces(filter), c.getNames(Tables, filter)...)
 	sort.Strings(names)
 	return CompleteFromList(text, names...)
 }
 
-func (c completer) completeWithFunctions(text []rune, types []string) [][]rune {
-	r, ok := c.reader.(metadata.FunctionReader)
-	if !ok {
-		return [][]rune{}
-	}
+func (c completer) completeWithFunctions(text []rune, aggregates bool) [][]rune {
 	filter := parseIdentifier(string(text))
-	filter.Types = types
-	names := c.getNamespaces(filter)
-	functions := c.getNames(
-		func() (iterator, error) {
-			return r.Functions(filter)
-		},
-		func(res interface{}) string {
-			f := res.(*metadata.FunctionSet).Get()
-			return qualifiedIdentifier(filter, f.Catalog, f.Schema, f.Name)
-		},
-	)
-	names = append(names, functions...)
+	filter.Aggregates = aggregates
+	names := append(c.getNamespaces(filter), c.getNames(Functions, filter)...)
 	sort.Strings(names)
 	return CompleteFromList(text, names...)
 }
 
 func (c completer) completeWithIndexes(text []rune) [][]rune {
-	r, ok := c.reader.(metadata.IndexReader)
-	if !ok {
-		return [][]rune{}
-	}
 	filter := parseIdentifier(string(text))
-	names := c.getNamespaces(filter)
-	indexes := c.getNames(
-		func() (iterator, error) {
-			return r.Indexes(filter)
-		},
-		func(res interface{}) string {
-			f := res.(*metadata.IndexSet).Get()
-			return qualifiedIdentifier(filter, f.Catalog, f.Schema, f.Name)
-		},
-	)
-	names = append(names, indexes...)
+	names := append(c.getNamespaces(filter), c.getNames(Indexes, filter)...)
 	sort.Strings(names)
 	return CompleteFromList(text, names...)
 }
 
 func (c completer) completeWithSequences(text []rune) [][]rune {
-	r, ok := c.reader.(metadata.SequenceReader)
-	if !ok {
-		return [][]rune{}
-	}
 	filter := parseIdentifier(string(text))
-	names := c.getNamespaces(filter)
-	sequences := c.getNames(
-		func() (iterator, error) {
-			return r.Sequences(filter)
-		},
-		func(res interface{}) string {
-			s := res.(*metadata.SequenceSet).Get()
-			return qualifiedIdentifier(filter, s.Catalog, s.Schema, s.Name)
-		},
-	)
-	names = append(names, sequences...)
+	names := append(c.getNamespaces(filter), c.getNames(Sequences, filter)...)
 	sort.Strings(names)
 	return CompleteFromList(text, names...)
 }
 
 func (c completer) completeWithSchemas(text []rune) [][]rune {
-	r, ok := c.reader.(metadata.SchemaReader)
-	if !ok {
-		return [][]rune{}
-	}
 	filter := parseIdentifier(string(text))
-	names := c.getNames(
-		func() (iterator, error) {
-			if filter.Schema != "" {
-				// name should already have a wildcard appended
-				return r.Schemas(metadata.Filter{Catalog: filter.Schema, Name: filter.Name, WithSystem: true})
-			}
-			return r.Schemas(filter)
-		},
-		func(res interface{}) string {
-			s := res.(*metadata.SchemaSet).Get()
-			return qualifiedIdentifier(filter, "", s.Catalog, s.Schema)
-		},
-	)
-	return CompleteFromList(text, names...)
+	return CompleteFromList(text, c.getNames(Schemas, filter)...)
 }
 
 func (c completer) completeWithCatalogs(text []rune) [][]rune {
-	r, ok := c.reader.(metadata.CatalogReader)
-	if !ok {
-		return [][]rune{}
-	}
 	filter := parseIdentifier(string(text))
-	names := c.getNames(
-		func() (iterator, error) {
-			return r.Catalogs(filter)
-		},
-		func(res interface{}) string {
-			s := res.(*metadata.CatalogSet).Get()
-			return s.Catalog
-		},
-	)
-	return CompleteFromList(text, names...)
+	return CompleteFromList(text, c.getNames(Catalogs, filter)...)
 }
 
 func (c completer) completeWithUpdatables(text []rune) [][]rune {
 	filter := parseIdentifier(string(text))
-	names := c.getNamespaces(filter)
-	if r, ok := c.reader.(metadata.TableReader); ok {
-		// exclude materialized views, sequences, system tables, synonyms
-		filter.Types = []string{"TABLE", "BASE TABLE", "LOCAL TEMPORARY", "GLOBAL TEMPORARY", "VIEW"}
-		tables := c.getNames(
-			func() (iterator, error) {
-				return r.Tables(filter)
-			},
-			func(res interface{}) string {
-				t := res.(*metadata.TableSet).Get()
-				return qualifiedIdentifier(filter, t.Catalog, t.Schema, t.Name)
-			},
-		)
-		names = append(names, tables...)
-	}
+	// tables and views, and not materialized views or sequences
+	filter.Types = "tv"
+	names := append(c.getNamespaces(filter), c.getNames(Tables, filter)...)
 	sort.Strings(names)
 	// TODO make sure CompleteFromList would properly handle quoted identifiers
 	return CompleteFromList(text, names...)
 }
 
-func (c completer) getNamespaces(f metadata.Filter) []string {
+func (c completer) getNamespaces(f Filter) []string {
 	names := make([]string, 0, 10)
 	if f.Catalog == "" && f.Schema == "" {
-		if r, ok := c.reader.(metadata.CatalogReader); ok {
-			catalogs := c.getNames(
-				func() (iterator, error) { return r.Catalogs(metadata.Filter{}) },
-				func(res interface{}) string {
-					return res.(*metadata.CatalogSet).Get().Catalog
-				},
-			)
-			names = append(names, catalogs...)
-		}
+		names = append(names, c.getNames(Catalogs, Filter{})...)
 	}
 	if f.Catalog != "" {
 		// filter is already fully qualified, so don't return any namespaces
 		return names
 	}
-	if r, ok := c.reader.(metadata.SchemaReader); ok {
-		schemas := c.getNames(
-			func() (iterator, error) {
-				if f.Schema != "" {
-					// name should already have a wildcard appended
-					return r.Schemas(metadata.Filter{Catalog: f.Schema, Name: f.Name, WithSystem: true})
-				}
-				return r.Schemas(f)
-			},
-			func(res interface{}) string {
-				s := res.(*metadata.SchemaSet).Get()
-				return qualifiedIdentifier(f, "", s.Catalog, s.Schema)
-			},
-		)
-		names = append(names, schemas...)
-	}
-	return names
+	return append(names, c.getNames(Schemas, f)...)
 }
 
 func (c completer) completeWithAttributes(_ caseType, selectable string, text []rune, options ...string) [][]rune {
 	names := make([]string, 0, 10)
-	if r, ok := c.reader.(metadata.ColumnReader); ok {
-		parent := parseParentIdentifier(selectable)
-		columns := c.getNames(
-			func() (iterator, error) {
-				return r.Columns(parent)
-			},
-			func(res interface{}) string {
-				return res.(*metadata.ColumnSet).Get().Name
-			},
-		)
-		names = append(names, columns...)
+	for _, o := range c.objects(Columns, parseParentIdentifier(selectable)) {
+		names = append(names, o.Name)
 	}
-	if r, ok := c.reader.(metadata.FunctionReader); ok {
-		filter := parseIdentifier(string(text))
-		// functions don't have to be fully qualified to be callable
-		filter.OnlyVisible = false
-		functions := c.getNames(
-			func() (iterator, error) {
-				return r.Functions(filter)
-			},
-			func(res interface{}) string {
-				return res.(*metadata.FunctionSet).Get().Name
-			},
-		)
-		names = append(names, functions...)
+	// functions don't have to be fully qualified to be callable
+	for _, o := range c.objects(Functions, parseIdentifier(string(text))) {
+		names = append(names, o.Name)
 	}
 	names = append(names, options...)
 	return CompleteFromList(text, names...)
 }
 
+// Kind is a kind of object that a completion names.
+type Kind int
+
+// The kinds of object.
+const (
+	Catalogs Kind = iota
+	Schemas
+	Tables
+	Functions
+	Sequences
+	Indexes
+	Columns
+)
+
+// Filter selects the objects of one kind. Catalog, Schema, Parent and Name
+// are SQL LIKE patterns, and an empty one matches everything.
+type Filter struct {
+	Catalog string
+	Schema  string
+	// Parent is the table of the columns.
+	Parent string
+	Name   string
+	// Types are the classes of relation, as the letters of \d: t tables, v
+	// views, m materialized views and s sequences. None means every class.
+	Types string
+	// Aggregates selects only aggregate functions.
+	Aggregates bool
+	// WithSystem includes the objects the database keeps for itself.
+	WithSystem bool
+}
+
+// Object is one object that a completion names.
+type Object struct {
+	Catalog string
+	Schema  string
+	Name    string
+}
+
+// Source answers the objects of a database. It returns text.ErrNotSupported
+// for a kind that the database cannot list.
+type Source interface {
+	Objects(kind Kind, f Filter) ([]Object, error)
+}
+
 // parseIdentifier into catalog, schema and name
-func parseIdentifier(name string) metadata.Filter {
+func parseIdentifier(name string) Filter {
 	// TODO handle quoted identifiers
-	result := metadata.Filter{}
+	result := Filter{}
 	if !strings.ContainsRune(name, '.') {
 		result.Name = name + "%"
-		result.OnlyVisible = true
 	} else {
 		parts := strings.SplitN(name, ".", 3)
 		if len(parts) == 2 {
@@ -1000,7 +858,6 @@ func parseIdentifier(name string) metadata.Filter {
 			result.Name = parts[2] + "%"
 		}
 	}
-
 	if result.Schema != "" || len(result.Name) > 3 {
 		result.WithSystem = true
 	}
@@ -1008,12 +865,11 @@ func parseIdentifier(name string) metadata.Filter {
 }
 
 // parseParentIdentifier into catalog, schema and parent
-func parseParentIdentifier(name string) metadata.Filter {
+func parseParentIdentifier(name string) Filter {
 	// TODO handle quoted identifiers
-	result := metadata.Filter{}
+	result := Filter{}
 	if !strings.ContainsRune(name, '.') {
 		result.Parent = name
-		result.OnlyVisible = true
 	} else {
 		parts := strings.SplitN(name, ".", 3)
 		if len(parts) == 2 {
@@ -1025,14 +881,13 @@ func parseParentIdentifier(name string) metadata.Filter {
 			result.Parent = parts[2]
 		}
 	}
-
 	if result.Schema != "" {
 		result.WithSystem = true
 	}
 	return result
 }
 
-func qualifiedIdentifier(filter metadata.Filter, catalog, schema, name string) string {
+func qualifiedIdentifier(filter Filter, catalog, schema, name string) string {
 	// TODO handle quoted identifiers
 	if filter.Catalog != "" && filter.Schema != "" {
 		return catalog + "." + schema + "." + name
@@ -1043,31 +898,42 @@ func qualifiedIdentifier(filter metadata.Filter, catalog, schema, name string) s
 	return name
 }
 
-func (c completer) getNames(query func() (iterator, error), mapper func(interface{}) string) []string {
-	res, err := query()
+// objects returns the objects of kind that f selects. It logs an error other
+// than one for a kind that the database cannot list.
+func (c completer) objects(kind Kind, f Filter) []Object {
+	if c.source == nil {
+		return nil
+	}
+	objs, err := c.source.Objects(kind, f)
 	if err != nil {
-		if err != text.ErrNotSupported {
+		if !errors.Is(err, text.ErrNotSupported) {
 			c.logger.Println("Error getting selectables", err)
 		}
 		return nil
 	}
-	defer res.Close()
+	return objs
+}
 
+// getNames returns the qualified names of the objects of kind that f
+// selects, without duplicates.
+func (c completer) getNames(kind Kind, f Filter) []string {
 	// there can be duplicates if names are not qualified
 	values := make(map[string]struct{}, 10)
-	for res.Next() {
-		values[mapper(res)] = struct{}{}
+	for _, o := range c.objects(kind, f) {
+		switch kind {
+		case Catalogs:
+			values[o.Name] = struct{}{}
+		case Schemas:
+			values[qualifiedIdentifier(f, "", o.Catalog, o.Name)] = struct{}{}
+		default:
+			values[qualifiedIdentifier(f, o.Catalog, o.Schema, o.Name)] = struct{}{}
+		}
 	}
 	result := make([]string, 0, len(values))
 	for v := range values {
 		result = append(result, v)
 	}
 	return result
-}
-
-type iterator interface {
-	Next() bool
-	Close() error
 }
 
 func completeFromFiles(text []rune) [][]rune {

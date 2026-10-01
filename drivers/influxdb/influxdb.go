@@ -11,8 +11,13 @@
 //     influxdb-3.11.5.
 //
 // The influxql driver registers the same driver under the name influxql,
-// through Driver. Metadata: none, because all metadata is moving into dbmeta
-// (D3).
+// through Driver.
+//
+// Metadata: dbmeta's InfluxDB 3 model, for the SQL of influxdb://. dbmeta
+// reads the version too, which is the release of Apache DataFusion that the
+// server runs. InfluxQL has no model, so an influxql:// connection has no
+// describe commands, and its version comes from Version below, which reads
+// the release of InfluxDB.
 //
 // See: https://github.com/xo/dbimp
 // Group: most
@@ -28,7 +33,6 @@ import (
 
 	"github.com/xo/dbimp"
 	"github.com/xo/dbimp/influxdb" // DRIVER
-	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
@@ -41,14 +45,10 @@ func init() {
 // influxql.
 func Driver() drivers.Driver {
 	return drivers.Driver{
-		AllowMultilineComments: true,
-		Process: func(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-			// InfluxDB sends no count of rows affected, and InfluxQL has
-			// statements such as SHOW MEASUREMENTS that return rows, so each
-			// statement is run as a query
-			typ, _ := drivers.QueryExecType(prefix, sqlstr)
-			return typ, sqlstr, true, nil
-		},
+		// InfluxDB sends no count of rows affected, and InfluxQL has
+		// statements such as SHOW MEASUREMENTS that return rows, so each
+		// statement is run as a query
+		AlwaysQuery: true,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// the release comes from GET /ping, through the driver's
 			// connection, and no statement returns it

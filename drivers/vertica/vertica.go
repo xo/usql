@@ -29,15 +29,6 @@ func init() {
 
 	errCodeRE := regexp.MustCompile(`(?i)^\[([0-9a-z]+)\]\s+(.+)`)
 	drivers.Register("vertica", drivers.Driver{
-		AllowDollar:            true,
-		AllowMultilineComments: true,
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			if err := db.QueryRowContext(ctx, `SELECT version()`).Scan(&ver); err != nil {
-				return "", err
-			}
-			return ver, nil
-		},
 		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(driver, dsn string) (*sql.DB, error) {
 				u, err := url.Parse(dsn)
@@ -62,10 +53,6 @@ func init() {
 				}
 				return sql.Open(driver, u.String())
 			}, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, _ string) error {
-			_, err := db.Exec(`ALTER USER ` + user + ` IDENTIFIED BY '` + newpw + `'`)
-			return err
 		},
 		Err: func(err error) (string, string) {
 			msg := strings.TrimSpace(strings.TrimPrefix(err.Error(), "Error:"))

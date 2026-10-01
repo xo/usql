@@ -9,7 +9,5 @@ import (
 )
 
 func init() {
-	drivers.Register("voltdb", drivers.Driver{
-		AllowMultilineComments: true,
-	})
+	drivers.Register("voltdb", drivers.Driver{})
 }

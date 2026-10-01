@@ -4,26 +4,10 @@
 package presto
 
 import (
-	"context"
-
 	_ "github.com/prestodb/presto-go-client/v2" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("presto", drivers.Driver{
-		AllowMultilineComments: true,
-		Process:                drivers.StripTrailingSemicolon,
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			err := db.QueryRowContext(
-				ctx,
-				`SELECT node_version FROM system.runtime.nodes LIMIT 1`,
-			).Scan(&ver)
-			if err != nil {
-				return "", err
-			}
-			return "Presto " + ver, nil
-		},
-	})
+	drivers.Register("presto", drivers.Driver{})
 }

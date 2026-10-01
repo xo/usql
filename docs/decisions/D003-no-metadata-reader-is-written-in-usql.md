@@ -12,9 +12,9 @@ That covered the existing readers. This decision covers new ones too.
 
 ## What it means for a driver
 
-- A new driver sets no `NewMetadataReader` and no `NewMetadataWriter`. Its
-  describe commands, such as `\d`, `\dt`, `\l` and `\dp`, report that they are
-  not supported until `dbmeta` answers them.
+- A new driver registers no metadata reader. Its describe commands, such as
+  `\d`, `\dt`, `\l` and `\dp`, report that they are not supported until
+  `dbmeta` answers them. D4 later removed usql's readers altogether.
 - A gap in an existing reader, such as a missing `CatalogReader` or
   `PrivilegeSummaryReader`, is fixed in `dbmeta`, not here. W18 measured those
   gaps, and it is superseded by W21, which holds the migration.

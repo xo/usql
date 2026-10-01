@@ -5,17 +5,14 @@
 package sqlserver
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
 	mssql "github.com/microsoft/go-mssqldb"
 	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
 
 	// needed for azuresql authentication, named pipes, and shared memory transport protocols
 	_ "github.com/microsoft/go-mssqldb/azuread"
@@ -25,9 +22,6 @@ import (
 
 func init() {
 	drivers.Register("sqlserver", drivers.Driver{
-		AllowMultilineComments:  true,
-		RequirePreviousPassword: true,
-		LexerName:               "tsql",
 		/*
 			// NOTE: this has been commented out, as it is not necessary. if
 			// NOTE: the azuread.DriverName is changed from `azuresql`, then
@@ -46,21 +40,6 @@ func init() {
 				}, nil
 			},
 		*/
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver, level, edition string
-			err := db.QueryRowContext(
-				ctx,
-				`SELECT SERVERPROPERTY('productversion'), SERVERPROPERTY ('productlevel'), SERVERPROPERTY ('edition')`,
-			).Scan(&ver, &level, &edition)
-			if err != nil {
-				return "", err
-			}
-			return "Microsoft SQL Server " + ver + ", " + level + ", " + edition, nil
-		},
-		ChangePassword: func(db drivers.DB, user, newpw, oldpw string) error {
-			_, err := db.Exec(`ALTER LOGIN ` + user + ` WITH password = '` + newpw + `' old_password = '` + oldpw + `'`)
-			return err
-		},
 		ColumnTypes: func(col *sql.ColumnType) (interface{}, error) {
 			switch col.DatabaseTypeName() {
 			case "UNIQUEIDENTIFIER":
@@ -83,10 +62,6 @@ func init() {
 		},
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
-		},
-		NewMetadataReader: NewReader,
-		NewMetadataWriter: func(db drivers.DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer {
-			return metadata.NewDefaultWriter(NewReader(db, opts...))(db, w)
 		},
 		Copy: drivers.CopyWithInsert(placeholder),
 	})

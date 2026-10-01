@@ -88,6 +88,9 @@ type Handler struct {
 	u *dburl.URL
 	// db is the active database connection.
 	db *sql.DB
+	// meta reads the structure of the database, and is built the first time
+	// it is needed.
+	meta *metadata.Meta
 	// tx is the active transaction, if any.
 	tx *sql.Tx
 	// out file or pipe
@@ -260,19 +263,13 @@ func (h *Handler) Run() error {
 			}
 			// log.Printf(">> PROCESS EXECUTE: (%s) `%s`", h.lastPrefix, h.last)
 			if !h.batch && h.lastExec != "" && h.lastExec != ";" {
-				// force a transaction for batched queries for certain drivers
-				var forceBatch bool
-				if h.u != nil {
-					_, _, forceBatch = drivers.IsBatchQueryPrefix(h.u, stmt.FindPrefix(h.lastExec, true, true, true))
-					forceBatch = forceBatch && drivers.BatchAsTransaction(h.u)
-				}
 				// execute
 				out := stdout
 				if h.out != nil {
 					out = h.out
 				}
 				ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-				if err = h.Execute(ctx, out, opt, h.lastExecPrefix, h.lastExec, forceBatch, h.unbind()...); err != nil {
+				if err = h.Execute(ctx, out, opt, h.lastExecPrefix, h.lastExec, h.unbind()...); err != nil {
 					lastErr = WrapErr(h.lastExec, err)
 					if env.Get("ON_ERROR_STOP") == "on" {
 						if iactive {
@@ -431,21 +428,12 @@ loop:
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, forceTrans bool, bind ...interface{}) error {
+func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, bind ...interface{}) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
 	// determine type and pre process string
-	prefix, sqlstr, qtyp, err := drivers.Process(h.u, prefix, sqlstr)
-	if err != nil {
-		return drivers.WrapErr(h.u.SchemeName, err)
-	}
-	// start a transaction if forced
-	if forceTrans {
-		if err = h.BeginTx(ctx, nil); err != nil {
-			return err
-		}
-	}
+	prefix, sqlstr, qtyp := drivers.Process(h.u, prefix, sqlstr)
 	f := h.doExecSingle
 	switch opt.Exec {
 	case metacmd.ExecExec:
@@ -457,17 +445,7 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	case metacmd.ExecChart:
 		f = h.doExecChart
 	}
-	if err = drivers.WrapErr(h.u.SchemeName, f(ctx, w, opt, prefix, sqlstr, qtyp, bind)); err != nil {
-		if forceTrans {
-			defer h.tx.Rollback()
-			h.tx = nil
-		}
-		return err
-	}
-	if forceTrans {
-		return h.Commit()
-	}
-	return nil
+	return drivers.WrapErr(h.u.SchemeName, f(ctx, w, opt, prefix, sqlstr, qtyp, bind))
 }
 
 // Reset resets the handler's query statement buffer.
@@ -804,7 +782,11 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
 			if h.l.Interactive() {
-				h.l.Completer(drivers.NewCompleter(ctx, h.u, h.db, readerOpts(), completer.WithConnStrings(h.connStrings())))
+				c := completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings()))
+				if m, err := h.metadata(ctx); err == nil {
+					c = drivers.NewCompleter(m, completer.WithConnStrings(h.connStrings()))
+				}
+				h.l.Completer(c)
 			}
 			return h.Version(ctx)
 		}
@@ -918,7 +900,7 @@ func (h *Handler) Close() error {
 	if h.db != nil {
 		err := h.db.Close()
 		drv := h.u.SchemeName
-		h.db, h.u = nil, nil
+		h.db, h.u, h.meta = nil, nil, nil
 		return drivers.WrapErr(drv, err)
 	}
 	return nil
@@ -1020,7 +1002,16 @@ func (h *Handler) Version(ctx context.Context) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-	ver, err := drivers.Version(ctx, h.u, h.DB())
+	var ver string
+	var err error
+	if metadata.Has(h.u.Dialect) {
+		var m *metadata.Meta
+		if m, err = h.metadata(ctx); err == nil {
+			ver = m.String()
+		}
+	} else {
+		ver, err = drivers.Version(ctx, h.u, h.DB())
+	}
 	switch {
 	case err != nil:
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
@@ -1337,7 +1328,7 @@ func (h *Handler) doExecRows(ctx context.Context, w io.Writer, rows *sql.Rows) e
 			}
 			// execute
 			for _, sqlstr := range row {
-				if err = h.Execute(ctx, w, res, stmt.FindPrefix(sqlstr, true, true, true), sqlstr, false); err != nil {
+				if err = h.Execute(ctx, w, res, stmt.FindPrefix(sqlstr, true, true, true), sqlstr); err != nil {
 					return err
 				}
 			}
@@ -1560,12 +1551,30 @@ func (h *Handler) Include(path string, relative bool) error {
 	return h.IncludeReader(f, path)
 }
 
-// MetadataWriter loads the metadata writer for the
-func (h *Handler) MetadataWriter(ctx context.Context) (metadata.Writer, error) {
+// MetadataWriter returns the writer of the describe commands, such as \d. It
+// writes to the output of the session, so \o redirects it, as it does in psql.
+func (h *Handler) MetadataWriter(ctx context.Context) (*metadata.Writer, error) {
+	m, err := h.metadata(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return metadata.NewWriter(m, h.GetOutput(), h.u.SchemeName), nil
+}
+
+// metadata returns the reader of the structure of the database, with the
+// options of the session, such as ECHO_HIDDEN, applied.
+func (h *Handler) metadata(ctx context.Context) (*metadata.Meta, error) {
 	if h.db == nil {
 		return nil, text.ErrNotConnected
 	}
-	return drivers.NewMetadataWriter(ctx, h.u, h.db, h.l.Stdout(), readerOpts()...)
+	if h.meta == nil {
+		m, err := drivers.NewMeta(ctx, h.u, h.db, readerOpts()...)
+		if err != nil {
+			return nil, err
+		}
+		h.meta = m
+	}
+	return h.meta.With(readerOpts()...), nil
 }
 
 // GetOutput gets the output writer.
@@ -1615,8 +1624,9 @@ func (e *Error) Unwrap() error {
 	return e.Err
 }
 
-func readerOpts() []metadata.ReaderOption {
-	var opts []metadata.ReaderOption
+// readerOpts returns the options of the metadata reader that ECHO_HIDDEN sets.
+func readerOpts() []metadata.Option {
+	opts := []metadata.Option{metadata.WithLogger(nil), metadata.WithDryRun(false), metadata.WithTimeout(0)}
 	if env.Get("ECHO_HIDDEN") == "on" || env.Get("ECHO_HIDDEN") == "noexec" {
 		if env.Get("ECHO_HIDDEN") == "noexec" {
 			opts = append(opts, metadata.WithDryRun(true))

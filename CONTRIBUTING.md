@@ -184,6 +184,22 @@ written in `package main` and then reverted, because it fixed the binary and
 left usql's packages, and anyone importing them, still broken. The driver was
 removed instead.
 
+## Measuring the size of a driver
+
+`size.sh` measures how much each driver adds to the usql binary. It builds
+usql once with every driver of a group, and once more for each driver with
+only that driver left out. The difference is what removing that driver saves.
+The builds are stripped, as `build.sh` strips a release.
+
+    ./size.sh              # every driver, in the all group
+    ./size.sh -g most      # the drivers that a release ships
+
+Two drivers that share a module each save only what the other does not use.
+So the savings do not add up to the size of the binary.
+
+The run takes one build for each driver. W32 in `docs/BACKLOG.md` holds the
+last measurement, and when to measure again.
+
 ## Putting a feature behind a build tag
 
 A package that is not a driver can still be a large part of the size of the
@@ -219,8 +235,8 @@ package that costs nothing, have the gated package register itself from its
 `metacmd/charts/echarts/echarts.go` for the implementation. Without that, the
 import in the caller links the package back in and the tag does nothing.
 
-Run `go generate` after editing `gen.go`. It needs `GOPATH` set, and
-`github.com/xo/dburl` checked out beside usql.
+Run `go generate` after editing `gen.go`. It reads dburl from the version
+pinned in `go.mod`.
 
 # Running the tests
 
@@ -232,16 +248,10 @@ These run anywhere usql builds:
 
     go test ./stmt/... ./env/... ./handler/... ./drivers/completer/... ./drivers/metadata
 
-`drivers/sqlite3/sqshared` also belongs to this group. It builds its sakila
-database with the linked SQLite driver and caches the schema under
-`drivers/sqlite3/sqshared/testdata`, so it needs the network only on the first
-run.
-
 ## Tests that need a container runtime
 
-`drivers`, `drivers/clickhouse`, `drivers/metadata/informationschema`,
-`drivers/metadata/postgres` and `drivers/sqlserver` each start their own
-containers through `ory/dockertest`.
+`drivers` and `drivers/clickhouse` start their own containers through
+`ory/dockertest`.
 
 With podman, point the tests at the podman socket first. dockertest speaks the
 Docker API, and podman serves it:
@@ -253,9 +263,9 @@ Run the whole suite one package at a time:
 
     go test -p 1 -tags "$(./build.sh -T)" ./...
 
-Use `-p 1`. Go runs packages in parallel by default, three of these packages
-each start a SQL Server container, and three at once exhaust the memory on a
-normal workstation. Every one of them then times out.
+Use `-p 1`. Go runs packages in parallel by default, and `drivers` alone
+starts PostgreSQL, MySQL, SQL Server and Trino. Running `drivers/clickhouse`
+beside it adds a fifth container to the memory the four already take.
 
 Keep about 8 GB free for the containers. SQL Server alone takes around 1.5 GB.
 
@@ -325,18 +335,17 @@ files are in `_samples/`.
 
 # Metadata introspection
 
-The `\d` family of commands reads the structure of a database through a
-metadata reader. The readers in `drivers/metadata` are being replaced by
-[dbmeta](https://github.com/xo/dbmeta), and until then they take no change.
-Do not write a new reader, and do not fix an existing one here. A gap or a
-defect in the metadata goes to `dbmeta`. See D3, and W21 in
-[docs/BACKLOG.md](docs/BACKLOG.md).
+The `\d` family of commands, and the names that tab completion offers, read
+the structure of a database through [dbmeta](https://github.com/xo/dbmeta).
+`drivers/metadata` picks dbmeta's model by the dialect that dburl sets on the
+URL, and prints the answers the way psql does. usql writes no query of its
+own for this (D3).
 
-# Enabling autocomplete for a driver
-
-If a driver provides a metadata reader, the default completer will use it. A
-driver can provide it's own completer, by setting the `NewCompleter` property
-in the `drivers.Driver` structure passed to `drivers.Register()`.
+A driver does nothing to take part. A database that dbmeta has a model for
+answers the describe commands and completes names. One that it has none for
+reports that the describe commands are not supported, and is listed in
+`noModel` in `metadata_test.go` with the reason. A gap or a defect in what a
+database answers goes to dbmeta.
 
 # Agent skills
 

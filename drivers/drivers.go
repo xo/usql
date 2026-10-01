@@ -6,16 +6,17 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
@@ -40,27 +41,6 @@ type DB interface {
 type Driver struct {
 	// Name is a name to override the driver name with.
 	Name string
-	// AllowDollar will be passed to query buffers to enable dollar ($$) style
-	// strings.
-	AllowDollar bool
-	// AllowMultilineComments will be passed to query buffers to enable
-	// multiline (/**/) style comments.
-	AllowMultilineComments bool
-	// AllowCComments will be passed to query buffers to enable C (//) style
-	// comments.
-	AllowCComments bool
-	// AllowHashComments will be passed to query buffers to enable hash (#)
-	// style comments.
-	AllowHashComments bool
-	// AllowBacktick will be passed to query buffers to enable backtick-quoted
-	// identifiers (ie, `ident`), as used by MySQL/MariaDB/SQLite.
-	AllowBacktick bool
-	// RequirePreviousPassword will be used by RequirePreviousPassword.
-	RequirePreviousPassword bool
-	// LexerName is the name of the syntax lexer to use.
-	LexerName string
-	// LowerColumnNames will cause column names to be lowered cased.
-	LowerColumnNames bool
 	// UseColumnTypes will cause database's ColumnTypes func to be used for
 	// types.
 	UseColumnTypes bool
@@ -68,16 +48,15 @@ type Driver struct {
 	ForceParams func(*dburl.URL)
 	// Open will be used by Open if defined.
 	Open func(context.Context, *dburl.URL, func() io.Writer, func() io.Writer) (func(string, string) (*sql.DB, error), error)
-	// Version will be used by Version if defined.
+	// Version will be used by Version if defined, for a database that dbmeta
+	// has no model for. dbmeta reads the version of every other one.
 	Version func(context.Context, DB) (string, error)
-	// User will be used by User if defined.
-	User func(context.Context, DB) (string, error)
-	// ChangePassword will be used by ChangePassword if defined.
-	ChangePassword func(DB, string, string, string) error
 	// IsPasswordErr will be used by IsPasswordErr if defined.
 	IsPasswordErr func(error) bool
-	// Process will be used by Process if defined.
-	Process func(*dburl.URL, string, string) (string, string, bool, error)
+	// AlwaysQuery runs every statement as a query, for a database whose
+	// statements return rows that usql would otherwise run as exec, or that
+	// sends no count of rows affected.
+	AlwaysQuery bool
 	// ColumnTypes is a callback that will be used if
 	ColumnTypes func(*sql.ColumnType) (interface{}, error)
 	// RowsAffected will be used by RowsAffected if defined.
@@ -96,17 +75,6 @@ type Driver struct {
 	// ConvertDefault will be used by ConvertDefault to convert a interface{}
 	// to a string if defined.
 	ConvertDefault func(interface{}) (string, error)
-	// BatchAsTransaction will cause batched queries to be done in a
-	// transaction block.
-	BatchAsTransaction bool
-	// BatchQueryPrefixes will be used by BatchQueryPrefixes if defined.
-	BatchQueryPrefixes map[string]string
-	// NewMetadataReader returns a db metadata introspector.
-	NewMetadataReader func(db DB, opts ...metadata.ReaderOption) metadata.Reader
-	// NewMetadataWriter returns a db metadata printer.
-	NewMetadataWriter func(db DB, w io.Writer, opts ...metadata.ReaderOption) metadata.Writer
-	// NewCompleter returns a db auto-completer.
-	NewCompleter func(db DB, opts ...completer.Option) completer.Completer
 	// Copy rows into the database table
 	Copy func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error)
 }
@@ -139,13 +107,12 @@ func Registered(name string) bool {
 	return ok
 }
 
-// LowerColumnNames reports whether the driver converts column names to lower
-// case.
+// LowerColumnNames reports whether column names are shown in lower case,
+// which is so for a database that stores a name that is not quoted in upper
+// case, such as Oracle.
 func LowerColumnNames(u *dburl.URL) bool {
-	if d, ok := drivers[u.SchemeName]; ok {
-		return d.LowerColumnNames
-	}
-	return false
+	info, ok := dbmeta.Dialect(u.Dialect).Info()
+	return ok && info.Fold == dbmeta.FoldUpper
 }
 
 // UseColumnTypes reports whether the driver takes its column types from the
@@ -187,24 +154,32 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 }
 
 // stmtOpts returns statement options for a driver.
+//
+// dbmeta gives the grammar of each database it models. With no connection,
+// every form is allowed. A database that dbmeta has no model for allows only
+// block comments, which is what nearly every such driver set before dbmeta
+// held the grammar. Allowing more is not safe: a hash comment would swallow
+// SQL Server's #temp table names over ODBC.
 func stmtOpts(u *dburl.URL) []stmt.Option {
+	s := dbmeta.Syntax{
+		DollarQuotes:  true,
+		BlockComments: true,
+		SlashComments: true,
+		HashComments:  true,
+		Backticks:     true,
+	}
 	if u != nil {
-		if d, ok := drivers[u.SchemeName]; ok {
-			return []stmt.Option{
-				stmt.WithAllowDollar(d.AllowDollar),
-				stmt.WithAllowMultilineComments(d.AllowMultilineComments),
-				stmt.WithAllowCComments(d.AllowCComments),
-				stmt.WithAllowHashComments(d.AllowHashComments),
-				stmt.WithAllowBacktick(d.AllowBacktick),
-			}
+		var ok bool
+		if s, ok = dbmeta.Dialect(u.Dialect).Syntax(); !ok {
+			s = dbmeta.Syntax{BlockComments: true}
 		}
 	}
 	return []stmt.Option{
-		stmt.WithAllowDollar(true),
-		stmt.WithAllowMultilineComments(true),
-		stmt.WithAllowCComments(true),
-		stmt.WithAllowHashComments(true),
-		stmt.WithAllowBacktick(true),
+		stmt.WithAllowDollar(s.DollarQuotes),
+		stmt.WithAllowMultilineComments(s.BlockComments),
+		stmt.WithAllowCComments(s.SlashComments),
+		stmt.WithAllowHashComments(s.HashComments),
+		stmt.WithAllowBacktick(s.Backticks),
 	}
 }
 
@@ -224,7 +199,15 @@ func ConfigStmt(u *dburl.URL, s *stmt.Stmt) {
 }
 
 // Version returns information about the database connection for a driver.
+// dbmeta reads it for every database it has a model for.
 func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
+	if metadata.Has(u.Dialect) {
+		m, err := metadata.New(ctx, u.Dialect, db)
+		if err != nil {
+			return "", WrapErr(u.SchemeName, err)
+		}
+		return m.String(), nil
+	}
 	if d, ok := drivers[u.SchemeName]; ok && d.Version != nil {
 		ver, err := d.Version(ctx, db)
 		return ver, WrapErr(u.SchemeName, err)
@@ -239,23 +222,36 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 
 // User returns the current database user for a driver.
 func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
-	if d, ok := drivers[u.SchemeName]; ok && d.User != nil {
-		user, err := d.User(ctx, db)
-		return user, WrapErr(u.SchemeName, err)
+	if metadata.Has(u.Dialect) {
+		m, err := metadata.New(ctx, u.Dialect, db)
+		if err != nil {
+			return "", WrapErr(u.SchemeName, err)
+		}
+		if user, err := m.CurrentUser(ctx); err == nil && user != "" {
+			return user, nil
+		}
 	}
 	var user string
 	_ = db.QueryRowContext(ctx, `SELECT current_user`).Scan(&user)
 	return user, nil
 }
 
-// Process processes the sql query for a driver.
-func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool, error) {
-	if d, ok := drivers[u.SchemeName]; ok && d.Process != nil {
-		a, b, c, err := d.Process(u, prefix, sqlstr)
-		return a, b, c, WrapErr(u.SchemeName, err)
+// Process returns the type of the statement sqlstr, whose first words are
+// prefix, the statement to run, and whether to run it as a query. It removes
+// a trailing semicolon where dbmeta says the database refuses one.
+func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool) {
+	if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
+		switch info.Terminator {
+		case dbmeta.TerminatorStripped:
+			sqlstr = endRE.ReplaceAllString(sqlstr, "")
+		case dbmeta.TerminatorStrippedUnlessEnd:
+			if !endAnchorRE.MatchString(sqlstr) {
+				sqlstr = endRE.ReplaceAllString(sqlstr, "")
+			}
+		}
 	}
 	typ, q := QueryExecType(prefix, sqlstr)
-	return typ, sqlstr, q, nil
+	return typ, sqlstr, q || drivers[u.SchemeName].AlwaysQuery
 }
 
 // ColumnTypes returns the column types callback for a driver.
@@ -275,19 +271,17 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 	return false
 }
 
-// RequirePreviousPassword returns true if a driver requires a previous
-// password when changing a user's password.
+// RequirePreviousPassword returns true if the database requires the previous
+// password when a user changes their own password.
 func RequirePreviousPassword(u *dburl.URL) bool {
-	if d, ok := drivers[u.SchemeName]; ok {
-		return d.RequirePreviousPassword
-	}
-	return false
+	info, ok := dbmeta.Dialect(u.Dialect).Info()
+	return ok && info.OldPassword
 }
 
 // CanChangePassword returns whether or not the a driver supports changing
 // passwords.
 func CanChangePassword(u *dburl.URL) error {
-	if d, ok := drivers[u.SchemeName]; ok && d.ChangePassword != nil {
+	if metadata.CanChangePassword(u.Dialect) {
 		return nil
 	}
 	return text.ErrPasswordNotSupportedByDriver
@@ -295,17 +289,26 @@ func CanChangePassword(u *dburl.URL) error {
 
 // ChangePassword initiates a user password change for the a driver. If user is
 // not supplied, then the current user will be retrieved from User.
+//
+// dbmeta builds the statement, with the quoting rules of the database, and
+// usql runs it.
 func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) {
-	if d, ok := drivers[u.SchemeName]; ok && d.ChangePassword != nil {
-		if user == "" {
-			var err error
-			if user, err = User(context.Background(), u, db); err != nil {
-				return "", err
-			}
-		}
-		return user, d.ChangePassword(db, user, new, old)
+	if err := CanChangePassword(u); err != nil {
+		return "", err
 	}
-	return "", text.ErrPasswordNotSupportedByDriver
+	ctx := context.Background()
+	if user == "" {
+		var err error
+		if user, err = User(ctx, u, db); err != nil {
+			return "", err
+		}
+	}
+	stmt, err := metadata.ChangePassword(ctx, u.Dialect, db, user, new, old)
+	if err != nil {
+		return "", WrapErr(u.SchemeName, err)
+	}
+	_, err = db.ExecContext(ctx, stmt)
+	return user, WrapErr(u.SchemeName, err)
 }
 
 // Columns returns the column names for the SQL row result for a driver.
@@ -314,7 +317,7 @@ func Columns(u *dburl.URL, rows *sql.Rows) ([]string, error) {
 	if err != nil {
 		return nil, WrapErr(u.SchemeName, err)
 	}
-	if drivers[u.SchemeName].LowerColumnNames {
+	if LowerColumnNames(u) {
 		for i, s := range cols {
 			if j := strings.IndexFunc(s, func(r rune) bool {
 				return unicode.IsLetter(r) && unicode.IsLower(r)
@@ -382,27 +385,23 @@ func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
 	}
 }
 
-// BatchAsTransaction returns whether or not a driver requires batched queries
-// to be done within a transaction block.
-func BatchAsTransaction(u *dburl.URL) bool {
-	if d, ok := drivers[u.SchemeName]; ok {
-		return d.BatchAsTransaction
-	}
-	return false
-}
-
 // IsBatchQueryPrefix returns whether or not the supplied query prefix is a
 // batch query prefix, and the closing prefix. Used to direct the handler to
 // continue accumulating statements.
 func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
 	// normalize
 	typ, q := QueryExecType(prefix, "")
-	d, ok := drivers[u.SchemeName]
-	if q || !ok || d.BatchQueryPrefixes == nil {
+	if q {
 		return typ, "", false
 	}
-	end, ok := d.BatchQueryPrefixes[typ]
-	return typ, end, ok
+	if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
+		for _, b := range info.Batches {
+			if b.Begin == typ {
+				return typ, b.End, true
+			}
+		}
+	}
+	return typ, "", false
 }
 
 // RowsAffected returns the rows affected for the SQL result for a driver.
@@ -428,12 +427,29 @@ func Ping(ctx context.Context, u *dburl.URL, db *sql.DB) error {
 	return WrapErr(u.SchemeName, db.PingContext(ctx))
 }
 
-// Lexer returns the syntax lexer for a driver.
+// lexerNames are the names of the Chroma lexers that highlight the SQL of a
+// dialect. A dialect with none uses the generic SQL lexer.
+var lexerNames = map[string]string{
+	"cockroachdb": "postgres",
+	"cql":         "cql",
+	"cratedb":     "postgres",
+	"memsql":      "mysql",
+	"mysql":       "mysql",
+	"odbc":        "tsql",
+	"postgres":    "postgres",
+	"questdb":     "postgres",
+	"redshift":    "postgres",
+	"sqlserver":   "tsql",
+	"tidb":        "mysql",
+	"vitess":      "mysql",
+}
+
+// Lexer returns the syntax lexer for the dialect of a URL.
 func Lexer(u *dburl.URL) chroma.Lexer {
 	var l chroma.Lexer
 	if u != nil {
-		if d, ok := drivers[u.SchemeName]; ok && d.LexerName != "" {
-			l = lexers.Get(d.LexerName)
+		if name, ok := lexerNames[u.Dialect]; ok {
+			l = lexers.Get(name)
 		}
 	}
 	if l == nil {
@@ -460,55 +476,21 @@ func ForceQueryParameters(params []string) func(*dburl.URL) {
 	}
 }
 
-// NewMetadataReader wraps creating a new database introspector for a driver.
-func NewMetadataReader(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Reader, error) {
-	d, ok := drivers[u.SchemeName]
-	if !ok || d.NewMetadataReader == nil {
+// NewMeta returns the metadata of the database, which the describe commands
+// and the completer read. It fails for a database that dbmeta has no model
+// for.
+func NewMeta(ctx context.Context, u *dburl.URL, db DB, opts ...metadata.Option) (*metadata.Meta, error) {
+	m, err := metadata.New(ctx, u.Dialect, db, opts...)
+	if errors.Is(err, metadata.ErrNotSupported) {
 		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
 	}
-	return d.NewMetadataReader(db, opts...), nil
+	return m, err
 }
 
-// NewMetadataWriter wraps creating a new database metadata printer for a driver.
-func NewMetadataWriter(ctx context.Context, u *dburl.URL, db DB, w io.Writer, opts ...metadata.ReaderOption) (metadata.Writer, error) {
-	d, ok := drivers[u.SchemeName]
-	if !ok {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
-	}
-	if d.NewMetadataWriter != nil {
-		return d.NewMetadataWriter(db, w, opts...), nil
-	}
-	if d.NewMetadataReader == nil {
-		return nil, fmt.Errorf(text.NotSupportedByDriver, `describe commands`, u.SchemeName)
-	}
-	newMetadataWriter := metadata.NewDefaultWriter(d.NewMetadataReader(db, opts...))
-	return newMetadataWriter(db, w), nil
-}
-
-// NewCompleter creates a metadata completer for a driver and database
-// connection.
-func NewCompleter(ctx context.Context, u *dburl.URL, db DB, readerOpts []metadata.ReaderOption, opts ...completer.Option) completer.Completer {
-	d, ok := drivers[u.SchemeName]
-	if !ok {
-		return nil
-	}
-	if d.NewCompleter != nil {
-		return d.NewCompleter(db, opts...)
-	}
-	if d.NewMetadataReader == nil {
-		return nil
-	}
-	// prepend to allow to override default options
-	readerOpts = append([]metadata.ReaderOption{
-		// this needs to be relatively low, since autocomplete is very interactive
-		metadata.WithTimeout(3 * time.Second),
-		metadata.WithLimit(1000),
-	}, readerOpts...)
-	opts = append([]completer.Option{
-		completer.WithReader(d.NewMetadataReader(db, readerOpts...)),
-		completer.WithDB(db),
-	}, opts...)
-	return completer.NewDefaultCompleter(opts...)
+// NewCompleter returns a completer that completes the names of the objects
+// in the database that m reads.
+func NewCompleter(m *metadata.Meta, opts ...completer.Option) completer.Completer {
+	return completer.NewDefaultCompleter(append([]completer.Option{completer.WithSource(m.Source())}, opts...)...)
 }
 
 // Copy copies the result set to the destination sql.DB.
@@ -628,10 +610,7 @@ func init() {
 	dburl.OdbcIgnoreQueryPrefixes = []string{"usql_"}
 }
 
-var endRE = regexp.MustCompile(`;?\s*$`)
-
-func StripTrailingSemicolon(_ *dburl.URL, prefix string, sqlstr string) (string, string, bool, error) {
-	sqlstr = endRE.ReplaceAllString(sqlstr, "")
-	typ, q := QueryExecType(prefix, sqlstr)
-	return typ, sqlstr, q, nil
-}
+var (
+	endRE       = regexp.MustCompile(`;?\s*$`)
+	endAnchorRE = regexp.MustCompile(`(?i)\send\s*;\s*$`)
+)
