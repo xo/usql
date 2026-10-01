@@ -13,11 +13,13 @@
 // The influxql driver registers the same driver under the name influxql,
 // through Driver.
 //
-// Metadata: dbmeta's InfluxDB 3 model, for the SQL of influxdb://. dbmeta
-// reads the version too, which is the release of Apache DataFusion that the
-// server runs. InfluxQL has no model, so an influxql:// connection has no
-// describe commands, and its version comes from Version below, which reads
-// the release of InfluxDB.
+// Metadata: dbmeta's InfluxDB 3 model, for the SQL of influxdb://. InfluxQL
+// has no model, so an influxql:// connection has no describe commands.
+//
+// The version that usql shows is the release of InfluxDB, which Version below
+// reads from GET /ping, for both, because no statement names it. Ken decided
+// this on 2026-10-02 (dbmeta's D166). dbmeta's model reads the release of
+// Apache DataFusion, which it uses only to choose its statements.
 //
 // See: https://github.com/xo/dbimp
 // Group: most

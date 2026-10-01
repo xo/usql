@@ -14,13 +14,12 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/alecthomas/chroma/v2"
-	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
+	"github.com/xo/transit"
 	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/stmt"
+	"github.com/xo/usql/feed"
 	"github.com/xo/usql/text"
 )
 
@@ -153,54 +152,33 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 	return db, nil
 }
 
-// stmtOpts returns statement options for a driver.
+// Language returns the usql grammar for the dialect of a connection.
 //
-// dbmeta gives the grammar of each database it models. With no connection,
-// every form is allowed. A database that dbmeta has no model for allows only
-// block comments, which is what nearly every such driver set before dbmeta
-// held the grammar. Allowing more is not safe: a hash comment would swallow
-// SQL Server's #temp table names over ODBC.
-func stmtOpts(u *dburl.URL) []stmt.Option {
-	s := dbmeta.Syntax{
-		DollarQuotes:  true,
-		BlockComments: true,
-		SlashComments: true,
-		HashComments:  true,
-		Backticks:     true,
-	}
+// dbmeta gives the lexical forms of each database it models. Before a
+// connection, the forms of PostgreSQL apply, as in psql. A database that
+// dbmeta has no model for allows only block comments, which is what nearly
+// every such driver set before dbmeta held the grammar. Allowing more is not
+// safe: a hash comment would swallow SQL Server's #temp table names over ODBC.
+func Language(u *dburl.URL) *transit.Language {
+	s := dbmeta.Syntax{DollarQuotes: true, BlockComments: true}
 	if u != nil {
 		var ok bool
 		if s, ok = dbmeta.Dialect(u.Dialect).Syntax(); !ok {
 			s = dbmeta.Syntax{BlockComments: true}
 		}
 	}
-	return []stmt.Option{
-		stmt.WithAllowDollar(s.DollarQuotes),
-		stmt.WithAllowMultilineComments(s.BlockComments),
-		stmt.WithAllowCComments(s.SlashComments),
-		stmt.WithAllowHashComments(s.HashComments),
-		stmt.WithAllowBacktick(s.Backticks),
-	}
-}
-
-// NewStmt wraps creating a new stmt.Stmt for a driver.
-func NewStmt(u *dburl.URL, f func() ([]rune, error), opts ...stmt.Option) *stmt.Stmt {
-	return stmt.New(f, append(opts, stmtOpts(u)...)...)
-}
-
-// ConfigStmt sets the stmt.Stmt options for a driver.
-func ConfigStmt(u *dburl.URL, s *stmt.Stmt) {
-	if u == nil {
-		return
-	}
-	for _, o := range stmtOpts(u) {
-		o(s)
-	}
+	return feed.Language(s)
 }
 
 // Version returns information about the database connection for a driver.
 // dbmeta reads it for every database it has a model for.
 func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
+	// a driver that reads the release itself wins, as InfluxDB's does from
+	// GET /ping, because no statement of InfluxDB names its release
+	if d, ok := drivers[u.SchemeName]; ok && d.Version != nil {
+		ver, err := d.Version(ctx, db)
+		return ver, WrapErr(u.SchemeName, err)
+	}
 	if metadata.Has(u.Dialect) {
 		m, err := metadata.New(ctx, u.Dialect, db)
 		if err != nil {
@@ -208,16 +186,19 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 		}
 		return m.String(), nil
 	}
-	if d, ok := drivers[u.SchemeName]; ok && d.Version != nil {
-		ver, err := d.Version(ctx, db)
-		return ver, WrapErr(u.SchemeName, err)
-	}
 	var ver string
 	err := db.QueryRowContext(ctx, `SELECT version();`).Scan(&ver)
 	if err != nil || ver == "" {
 		ver = "<unknown>"
 	}
 	return ver, nil
+}
+
+// OwnVersion reports whether the driver of u reads the release of its
+// database itself, rather than through dbmeta.
+func OwnVersion(u *dburl.URL) bool {
+	d, ok := drivers[u.SchemeName]
+	return ok && d.Version != nil
 }
 
 // User returns the current database user for a driver.
@@ -425,38 +406,6 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 // Ping pings the database for a driver.
 func Ping(ctx context.Context, u *dburl.URL, db *sql.DB) error {
 	return WrapErr(u.SchemeName, db.PingContext(ctx))
-}
-
-// lexerNames are the names of the Chroma lexers that highlight the SQL of a
-// dialect. A dialect with none uses the generic SQL lexer.
-var lexerNames = map[string]string{
-	"cockroachdb": "postgres",
-	"cql":         "cql",
-	"cratedb":     "postgres",
-	"memsql":      "mysql",
-	"mysql":       "mysql",
-	"odbc":        "tsql",
-	"postgres":    "postgres",
-	"questdb":     "postgres",
-	"redshift":    "postgres",
-	"sqlserver":   "tsql",
-	"tidb":        "mysql",
-	"vitess":      "mysql",
-}
-
-// Lexer returns the syntax lexer for the dialect of a URL.
-func Lexer(u *dburl.URL) chroma.Lexer {
-	var l chroma.Lexer
-	if u != nil {
-		if name, ok := lexerNames[u.Dialect]; ok {
-			l = lexers.Get(name)
-		}
-	}
-	if l == nil {
-		l = lexers.Get("sql")
-	}
-	l.Config().EnsureNL = false
-	return l
 }
 
 // ForceQueryParameters is a utility func that wraps forcing params of name,

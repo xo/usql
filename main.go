@@ -13,10 +13,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/xo/rline"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/handler"
 	"github.com/xo/usql/internal"
-	"github.com/xo/usql/rline"
 	"github.com/xo/usql/text"
 )
 
@@ -39,7 +39,7 @@ func main() {
 		return
 	}
 	// run
-	if err := New(os.Args).ExecuteContext(context.Background()); err != nil && err != io.EOF && err != rline.ErrInterrupt {
+	if err := New(os.Args).ExecuteContext(context.Background()); err != nil && err != io.EOF && !errors.Is(err, rline.ErrInterrupted) {
 		var he *handler.Error
 		if !errors.As(err, &he) {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)

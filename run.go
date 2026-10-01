@@ -17,9 +17,10 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/xo/dburl"
+	"github.com/xo/rline"
 	"github.com/xo/usql/env"
+	"github.com/xo/usql/feed"
 	"github.com/xo/usql/handler"
-	"github.com/xo/usql/rline"
 	"github.com/xo/usql/text"
 )
 
@@ -231,11 +232,10 @@ func Run(ctx context.Context, args *Args) error {
 
 	// determine if interactive
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
-	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 	forceNonInteractive := len(args.CommandOrFiles) != 0
 
 	// enable term graphics
-	if !forceNonInteractive && interactive && !cygwin {
+	if !forceNonInteractive && interactive {
 		// NOTE: this is done here and not in the env.init() package, because
 		// NOTE: we need to determine if it is interactive first, otherwise it
 		// NOTE: could mess up the non-interactive output with control characters
@@ -301,14 +301,43 @@ func Run(ctx context.Context, args *Args) error {
 			}
 		}
 	}
-	// create input/output
-	l, err := rline.New(interactive, cygwin, forceNonInteractive, args.Out, env.HistoryFile(u))
+	// create the line editor, which asks the handler whether an entry needs
+	// more input
+	var h *handler.Handler
+	l, err := rline.New(
+		rline.WithHistoryFile(env.HistoryFile(u)),
+		rline.WithContinue(func(text string) bool {
+			return h != nil && h.Continue(text)
+		}),
+		// a hint runs the completer as keys are typed, and the completer can
+		// query the database
+		rline.WithHints(false),
+		// the prompt text is the whole prompt, so the editor adds no marker
+		rline.WithPrompt("", ""),
+		// no escape codes reach a pipe or a file
+		rline.WithColor(interactive),
+	)
 	if err != nil {
 		return err
 	}
 	defer l.Close()
-	// create handler
-	h := handler.New(l, u, wd, args.Charts, args.NoPassword)
+	// with -c or -f the commands and files are the input, and the terminal
+	// is not read
+	var r feed.LineReader = l
+	if forceNonInteractive {
+		r = feed.NewLines(strings.NewReader(""))
+	}
+	if h, err = handler.New(l, r, u, wd, args.Charts, args.NoPassword); err != nil {
+		return err
+	}
+	// -o sends the results to a file, as \o does
+	if args.Out != "" {
+		f, err := os.OpenFile(args.Out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err != nil {
+			return err
+		}
+		h.SetOutput(f)
+	}
 	// force password
 	dsn := args.DSN
 	if args.ForcePassword {
@@ -322,7 +351,7 @@ func Run(ctx context.Context, args *Args) error {
 	}
 	// start transaction
 	if args.SingleTransaction {
-		if h.IO().Interactive() {
+		if h.Interactive() {
 			return text.ErrSingleTransactionCannotBeUsedWithInteractiveMode
 		}
 		if err = h.BeginTx(ctx, nil); err != nil {
@@ -523,10 +552,8 @@ func setConn(name string, value interface{}) error {
 func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func() error {
 	return func() error {
 		for _, c := range commandsOrFiles {
-			h.SetSingleLineMode(c.Command)
 			if c.Command {
-				h.Reset([]rune(c.Value))
-				if err := h.Run(); err != nil {
+				if err := h.RunCommand(c.Value); err != nil {
 					return err
 				}
 			} else {

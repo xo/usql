@@ -31,6 +31,7 @@ every other agent read the same rules. Edit this file, not that one.
 | Moving metadata to dbmeta | [docs/DBMETA.md](docs/DBMETA.md) |
 | Planned work, and how to cite it | [docs/BACKLOG.md](docs/BACKLOG.md) |
 | The plan, and the questions open for Ken | [docs/PLAN.md](docs/PLAN.md) |
+| Picking up the work in progress | [docs/PROGRESS.md](docs/PROGRESS.md) |
 | Why something is the way it is | [docs/decisions/README.md](docs/decisions/README.md) |
 | Installing the agent skills | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | What usql does, for a user | [README.md](README.md) |

@@ -9,6 +9,9 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+	"unicode/utf8"
+
+	"github.com/xo/rline"
 
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
@@ -109,15 +112,31 @@ var (
 	}
 )
 
-// Completer returns completion candidates for a line of input.
-//
-// It is the same shape as the line editor's own completer interface, declared
-// here so that the editor's package does not have to appear in the driver API.
-// See W25 in docs/BACKLOG.md.
+// Completer returns completion candidates for a line of input. It is an
+// rline.Completer, so the line editor takes it as it is.
 type Completer interface {
+	rline.Completer
 	// Do returns the candidates for line at pos, and the length of the prefix
-	// they share.
+	// they share. Each candidate is what follows that prefix.
 	Do(line []rune, pos int) (newLine [][]rune, length int)
+}
+
+// Complete satisfies rline.Completer. rline hands it the whole entry and the
+// cursor. Each candidate replaces the word before the cursor, which is why it
+// is added with the word deleted before it, counted in bytes.
+func (c completer) Complete(comp *rline.Completion, prefix string) {
+	line := []rune(comp.Text())
+	pos := utf8.RuneCountInString(prefix)
+	suffixes, length := c.Do(line, pos)
+	if length > pos {
+		length = pos
+	}
+	word := string(line[pos-length : pos])
+	for _, s := range suffixes {
+		if !comp.AddCandidate(rline.Candidate{Replacement: word + string(s), DeleteBefore: len(word)}) {
+			return
+		}
+	}
 }
 
 func NewDefaultCompleter(opts ...Option) Completer {

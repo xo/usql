@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/xo/usql/drivers/metadata"
+	"github.com/xo/usql/feed"
 )
 
 func TestNames(t *testing.T) {
@@ -43,7 +44,7 @@ func TestRelations(t *testing.T) {
 		if got := relations(test.name); got != test.exp {
 			t.Errorf("%s: expected %q, got %q", test.name, test.exp, got)
 		}
-		if _, err := Decode(test.name, nil); err != nil && test.name != `q` {
+		if _, err := Decode(feed.Item{Kind: feed.Command, Name: test.name}); err != nil && test.name != `q` {
 			t.Errorf("%s: expected no error, got: %v", test.name, err)
 		}
 	}

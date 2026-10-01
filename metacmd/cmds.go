@@ -1,7 +1,6 @@
 package metacmd
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
@@ -39,7 +38,7 @@ func Quit(p *Params) error {
 //
 //	copyright	show usage and distribution terms for {{CommandName}}
 func Copyright(p *Params) error {
-	stdout := p.Handler.IO().Stdout()
+	stdout := p.Handler.IO()
 	if typ := env.TermGraphics(); typ.Available() {
 		typ.Encode(stdout, text.Logo)
 	}
@@ -54,7 +53,7 @@ func Copyright(p *Params) error {
 //
 //	drivers	show database drivers available to {{CommandName}}
 func Drivers(p *Params) error {
-	stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
+	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
 	var cmd *exec.Cmd
 	var wc io.WriteCloser
 	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
@@ -105,7 +104,7 @@ func Help(p *Params) error {
 	if err != nil {
 		return err
 	}
-	stdout, stderr := p.Handler.IO().Stdout(), p.Handler.IO().Stderr()
+	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
 	var cmd *exec.Cmd
 	var wc io.WriteCloser
 	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
@@ -147,12 +146,31 @@ func Execute(p *Params) error {
 	p.Option.Exec = ExecOnly
 	switch p.Name {
 	case "g", "go", "G", "ego", "gx", "gset":
-		params, err := p.All(true)
-		switch {
-		case err != nil:
+		p.Option.Params = make(map[string]string)
+		for _, o := range p.Options() {
+			if o.Value == "" {
+				return text.ErrInvalidFormatOption
+			}
+			v := o.Value
+			if c := v[0]; c == '\'' || c == '"' {
+				var err error
+				if v, err = env.Unquote(v); err != nil {
+					return err
+				}
+			}
+			p.Option.Params[o.Key] = v
+		}
+		// the rest is the file or the pipe, or the prefix of \gset
+		rest, err := p.All(true)
+		if err != nil {
 			return err
-		case p.Name != "gset":
-			p.Option.ParseParams(params, "pipe")
+		}
+		key := "pipe"
+		if p.Name == "gset" {
+			key = "prefix"
+		}
+		if len(rest) != 0 {
+			p.Option.Params[key] = strings.Join(rest, " ")
 		}
 		switch p.Name {
 		case "G", "ego":
@@ -161,7 +179,6 @@ func Execute(p *Params) error {
 			p.Option.Params["expanded"] = "on"
 		case "gset":
 			p.Option.Exec = ExecSet
-			p.Option.ParseParams(params, "prefix")
 		}
 	case "gexec":
 		p.Option.Exec = ExecExec
@@ -373,7 +390,7 @@ func ConnectionInfo(p *Params) error {
 	if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
 		s = fmt.Sprintf(text.ConnInfo, u.SchemeName, u.DSN)
 	}
-	fmt.Fprintln(p.Handler.IO().Stdout(), s)
+	fmt.Fprintln(p.Handler.IO(), s)
 	return nil
 }
 
@@ -397,12 +414,12 @@ func Edit(p *Params) error {
 		}
 	}
 	// get last statement
-	s, buf := "", p.Handler.Buf()
+	s, buf := "", p.Handler.Buffer()
 	switch {
-	case buf.Len != 0 && exec:
-		s = buf.String()
-	case buf.Len != 0:
-		s = buf.RawString()
+	case !buf.Empty() && exec:
+		s = buf.Expand(p.Handler.Lookup)
+	case !buf.Empty():
+		s = buf.Raw()
 	case exec:
 		s = p.Handler.LastExec()
 	default:
@@ -417,9 +434,10 @@ func Edit(p *Params) error {
 	if err != nil {
 		return err
 	}
-	// save edited buffer to history
-	p.Handler.IO().Save(string(out))
-	buf.Reset([]rune(string(out)))
+	// the edited query is saved to the history, and read as input again
+	p.Handler.IO().AddHistory(string(out))
+	buf.Reset()
+	p.Handler.Push(string(out))
 	return nil
 }
 
@@ -433,32 +451,23 @@ func Edit(p *Params) error {
 //	raw
 //	exec
 func Print(p *Params) error {
-	// get last statement
+	// \p and \exec print the buffer as it is sent, with its variables
+	// replaced, and \raw prints it as it was written
 	var s string
-	switch buf := p.Handler.Buf(); {
-	case buf.Len != 0 && p.Name == "exec":
-		s = buf.String()
-	case buf.Len != 0 && p.Name == "raw":
-		s = buf.RawString()
-	case buf.Len != 0:
-		s = buf.PrintString()
-	case p.Name == "exec":
-		s = p.Handler.LastExec()
+	switch buf := p.Handler.Buffer(); {
+	case !buf.Empty() && p.Name == "raw":
+		s = buf.Raw()
+	case !buf.Empty():
+		s = buf.Expand(p.Handler.Lookup)
 	case p.Name == "raw":
 		s = p.Handler.LastRaw()
 	default:
-		s = p.Handler.LastPrint()
+		s = p.Handler.LastExec()
 	}
-	switch {
-	case s == "":
+	if s == "" {
 		s = text.QueryBufferEmpty
-	case p.Handler.IO().Interactive() && env.Get("SYNTAX_HL") == "true":
-		b := new(bytes.Buffer)
-		if p.Handler.Highlight(b, s) == nil {
-			s = b.String()
-		}
 	}
-	fmt.Fprintln(p.Handler.IO().Stdout(), s)
+	fmt.Fprintln(p.Handler.IO(), s)
 	return nil
 }
 
@@ -471,9 +480,9 @@ func Print(p *Params) error {
 //	write
 func Write(p *Params) error {
 	// get last statement
-	s, buf := p.Handler.LastExec(), p.Handler.Buf()
-	if buf.Len != 0 {
-		s = buf.String()
+	s, buf := p.Handler.LastExec(), p.Handler.Buffer()
+	if !buf.Empty() {
+		s = buf.Expand(p.Handler.Lookup)
 	}
 	name, err := p.Next(true)
 	if err != nil {
@@ -490,7 +499,7 @@ func Write(p *Params) error {
 //	r	reset (clear) the query buffer
 //	reset
 func Reset(p *Params) error {
-	p.Handler.Reset(nil)
+	p.Handler.Reset()
 	p.Handler.Print(text.QueryBufferReset)
 	return nil
 }
@@ -522,7 +531,7 @@ func Echo(p *Params) error {
 	if err != nil {
 		return err
 	}
-	out := p.Handler.IO().Stdout()
+	var out io.Writer = p.Handler.IO()
 	switch o := p.Handler.GetOutput(); {
 	case p.Name == "qecho" && o != nil:
 		out = o
@@ -552,7 +561,7 @@ func Out(p *Params) error {
 	}
 	var out io.WriteCloser
 	if pipe[0] == '|' {
-		out, _, err = env.Pipe(p.Handler.IO().Stdout(), p.Handler.IO().Stderr(), pipe[1:])
+		out, _, err = env.Pipe(p.Handler.IO(), p.Handler.IO().Stderr(), pipe[1:])
 	} else {
 		out, err = os.OpenFile(pipe, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 	}
@@ -595,7 +604,8 @@ func Copy(p *Params) error {
 		return err
 	}
 	ctx := context.Background()
-	stdout, stderr := p.Handler.IO().Stdout, p.Handler.IO().Stderr
+	stdout := func() io.Writer { return p.Handler.IO() }
+	stderr := p.Handler.IO().Stderr
 	srcDb, err := drivers.Open(ctx, src, stdout, stderr)
 	if err != nil {
 		return err
@@ -720,7 +730,7 @@ func Set(p *Params) error {
 		}
 		return env.Vars().Set(n, strings.Join(vals, " "))
 	}
-	return env.Vars().Dump(p.Handler.IO().Stdout())
+	return env.Vars().Dump(p.Handler.IO())
 }
 
 // Unset is a Variables meta command (\unset). Unsets a application variable.
@@ -762,7 +772,7 @@ func SetPrint(p *Params) error {
 	}
 	// display variables
 	if p.Name == "pset" && !ok {
-		return env.Vars().DumpPrint(p.Handler.IO().Stdout())
+		return env.Vars().DumpPrint(p.Handler.IO())
 	}
 	var field, extra string
 	switch p.Name {
@@ -839,7 +849,7 @@ func SetConn(p *Params) error {
 		}
 		return env.Vars().SetConn(n, vals...)
 	}
-	return env.Vars().DumpConn(p.Handler.IO().Stdout())
+	return env.Vars().DumpConn(p.Handler.IO())
 }
 
 // Prompt is a Variables meta command (\prompt). Prompts the user for input,

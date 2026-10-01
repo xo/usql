@@ -1,0 +1,95 @@
+# Progress
+
+This file says where the work in progress stands, so that a session that
+stops can be picked up again. It is about the branch `wip/feed`, which W36
+in [BACKLOG.md](BACKLOG.md) describes. Update it at each checkpoint.
+
+## Work modes
+
+Ken's machine has crashed from resource exhaustion. Work in a low-resource
+mode:
+
+- Build one package at a time. Do not run the whole test suite, and run no
+  more than one test package at once.
+- Start no containers and no background jobs unless Ken asks.
+- Commit a checkpoint to `wip/feed` before a long step. Do not push.
+
+## What W36 changes
+
+usql reads its input through rline and the usql grammar of transit, in place
+of gohxs/readline, usql's own `rline` package and the `stmt` package.
+
+- `feed` is new. It parses input with the usql grammar, holds psql's query
+  buffer, says when an entry typed in the editor is finished, feeds
+  statements and meta commands one at a time from the editor or from lines,
+  and expands variables when a statement runs. Its tests pass.
+- `metacmd` reads the arguments of a meta command from the grammar's parts.
+  `\g` reads its option list from the grammar. `\e`, `\p`, `\w` and `\r`
+  work on the feed buffer. It builds.
+- `handler` reads through `feed` and talks to the user through
+  `*rline.Prompt`. Its loop is new. The chroma highlighting is gone. It
+  builds.
+- `drivers` has `Language(u)` in place of the stmt options, and no chroma
+  lexer. A driver's own Version wins over dbmeta's, for InfluxDB's release
+  from GET /ping (dbmeta's D166).
+- `drivers/completer` is an `rline.Completer`. It adds candidates with
+  `AddCandidate`, because `Completion.Add` deletes nothing before it.
+- `styles` is removed.
+
+## What is left
+
+1. `run.go` and `main.go`: create the session with `rline.New`, with
+   `WithContinue` calling `Handler.Continue`, `WithHistoryFile`,
+   `WithHints(false)` and `WithPrompt("", "")`. Create the handler with
+   `handler.New(l, l, ...)`, which now also returns an error. Send `-o` to
+   `Handler.SetOutput`. Run `-c` through `Handler.RunCommand`. Use
+   `rline.ErrInterrupted`. Drop the cygwin flag. `usql` does not build until
+   this is done.
+2. Delete `rline/` (usql's own package) and `stmt/`.
+3. Fix the tests that call the old API: `handler/handler_test.go`, and
+   `metacmd/metacmd_test.go`, whose `Decode` now takes a `feed.Item`.
+4. Run the tests one package at a time, then run the binary by hand at a
+   terminal: rows that continue, `\prompt`, `\e`, `\i`, Ctrl-C and the
+   history.
+
+Open points that are known:
+
+- `%R` shows only `=` or `-`, because rline draws one prompt for an entry.
+  A prompt for each row waits on rline's backlog item 33.
+- The SYNTAX_HL variables do nothing until transit's SQL grammars come.
+- rline writes `\x1b[m` before the first text when color is on and the
+  output is not a terminal. run.go turns color off unless both input and
+  output are a terminal. Tell rline: its session was not running on
+  2026-10-02.
+- `go.mod` still lists gohxs/readline and chroma. Remove them by hand, and do
+  not run `go mod tidy`, which adds dbmeta, rline and transit before they
+  have tags.
+
+## How to build
+
+usql builds only against local checkouts of dbmeta, rline and transit,
+because none of them has a tag. `go.work` is not committed. It reads:
+
+    go 1.27.1
+
+    use (
+        .
+        ../dbmeta
+        ../rline
+        ../transit
+        ../transit/grammars/usql
+        ../transit/styles
+    )
+
+    replace github.com/google/flatbuffers/go => /path/to/flatbuffers-go-empty
+
+The replace points at an empty module, a directory with only a `go.mod` that
+reads `module github.com/google/flatbuffers/go` and `go 1.21`. Workspace mode
+loads two modules that both provide that package, and the empty one ends the
+conflict. A crash can delete it if it is under a temporary directory.
+
+The checkouts were at these commits on 2026-10-02: dbmeta 724e64e, rline
+bef86da, transit 8c1c1d8.
+
+The recordings in `drivers/testdata` and `testdata/cli` are changed and not
+committed, by Ken's decision. Keep them out of every commit.

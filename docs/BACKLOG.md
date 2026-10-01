@@ -1583,6 +1583,83 @@ placeholders of the same length. Each meta command is one node, with a name
 and typed arguments that usql maps to the kinds it completes. `\if` and its
 branches are flat commands, as in psql.
 
+## W36. Read input through rline and the usql grammar
+
+Source: Ken, on 2026-10-01. The usql grammar of transit replaces the stmt
+package, and rline replaces gohxs/readline and usql's rline package. usql has
+no API to keep, and it takes the API of rline and transit as they are. This
+design came from transit, rline, Gemini and DeepSeek. Where they disagreed,
+psql decides.
+
+### What the grammar gives
+
+The root of the tree is a list of statements and meta commands. A statement
+ends at a `;` outside parentheses, at a meta command, or at the end of the
+input. An open string, quoted identifier, dollar quote or block comment is one
+token to the end of the input, never an ERROR node. A variable is a node with
+a byte range. Each family of dialects is its own language, so a change of
+family on `\c` parses the unfinished text again, with no old tree. The
+grammar joins nothing across a `;`, so a PL/SQL or T-SQL block, a CQL batch,
+Oracle's `/` and T-SQL's GO are usql's to handle, as today.
+
+### The design
+
+- The query buffer stays, with psql's meaning. It is the raw text of the
+  statements that are not sent yet.
+  - A statement that ends in `;` joins the buffer, the buffer runs, and it
+    becomes the last query.
+  - A statement with no `;` stays in the buffer.
+  - `\g` sends the buffer once, or the last query when the buffer is
+    empty. `\p`, `\r`, `\e` and `\w` act on the buffer, as in psql.
+  - A first reviewer proposed to replace the buffer with the last statement.
+    That runs `select 1 \g` twice, so it is not taken.
+- An entry is finished when its last top-level node is a statement that ends
+  in `;`, or a meta command. An open string, comment or parenthesis keeps it
+  open. An entry of only white space or a comment is finished when the
+  buffer is empty. rline's WithContinue asks this.
+- The parse is kept with the text it came from, and is shared by
+  WithContinue, the highlighter and the completer. A parse runs only when the
+  text differs, after an edit of the old tree. rline calls the three in no
+  promised order, and does not always give them the same text.
+- With no terminal, rline reads plain lines and calls none of the three.
+  usql collects the lines itself. It parses from the first byte that has not
+  run, runs every complete node except the last, and counts the lines that
+  ran, for the line numbers of errors. This covers pipes, `-f` files, `\i`
+  and the RC file. A `-c` string is parsed whole.
+- A variable is replaced when its node runs, by its byte range, so the value
+  is never scanned again. That fixes the splicing of `:'x'` and the colon of
+  `::`. `:'x'` and `:"x"` double the quote in the value, as psql does.
+- `\if`, `\elif`, `\else` and `\endif` get psql's meaning: a stack, and
+  an inactive branch runs nothing and expands nothing.
+- help, quit and exit are recognized when an entry is only that word.
+- CQL batches keep the joining that usql does today, from dbmeta's Batches.
+- The stmt package goes after a differential test passes. The test runs the
+  old splitter and the new one over a corpus: the stmt tests, testdata and
+  the grammar's corpus. The two known bugs of stmt are listed as expected
+  differences.
+
+### What waits for rline
+
+These are rline's backlog items 33, 34 and 35, which are for Ken:
+
+- A prompt for each row of an entry, for `%R`. Until then, a fixed
+  continuation marker.
+- Text to start ReadLine with, for `\e`. Until then, the edited text goes
+  into the query buffer and is printed.
+- A way to change WithContinue for `\prompt`. Until then, the function
+  knows when usql reads for `\prompt`. The answer is also taken out of the
+  history.
+
+### Decided
+
+Ken decided on 2026-10-01 that the chroma lexer goes, with no temporary
+highlighter in its place. Highlighting comes back from transit's grammars,
+whose tag is due soon. Until then, input has no color.
+
+Ken also decided that usql does not add T-SQL's GO. Taken as defaults, for
+Ken to change: Oracle's `/` stays out too, as in psql, and the package that
+replaces stmt is named `input`.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section

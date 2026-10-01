@@ -16,15 +16,16 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
-	"github.com/xo/usql/rline"
-	"github.com/xo/usql/stmt"
+	"github.com/xo/rline"
+	"github.com/xo/usql/feed"
 	"github.com/xo/usql/text"
 )
 
 // Handler is the shared interface for a command handler.
 type Handler interface {
-	// IO handles the handler's IO.
-	IO() rline.IO
+	// IO returns the session of the line editor, which is also where the
+	// handler writes.
+	IO() *rline.Prompt
 	// User returns the current user.
 	User() *user.User
 	// URL returns the current database URL.
@@ -33,14 +34,16 @@ type Handler interface {
 	DB() drivers.DB
 	// LastExec returns the last executed query.
 	LastExec() string
-	// LastPrint returns the last executed printable query.
-	LastPrint() string
 	// LastRaw returns the last raw (non-interpolated) query.
 	LastRaw() string
-	// Buf returns the current query buffer.
-	Buf() *stmt.Stmt
-	// Reset resets the last and current query buffer.
-	Reset([]rune)
+	// Buffer returns the query buffer.
+	Buffer() *feed.Buffer
+	// Lookup returns the value of a variable, for expanding the buffer.
+	Lookup(string) (string, bool)
+	// Reset empties the query buffer and forgets the last query.
+	Reset()
+	// Push puts text in front of the input, as \e does with the edited query.
+	Push(string)
 	// Bind binds query parameters.
 	Bind([]interface{})
 	// Open opens a database connection.
@@ -59,8 +62,6 @@ type Handler interface {
 	Commit() error
 	// Rollback aborts the current transaction.
 	Rollback() error
-	// Highlight highlights the statement.
-	Highlight(io.Writer, string) error
 	// GetTiming mode.
 	GetTiming() bool
 	// SetTiming mode.
@@ -99,8 +100,11 @@ func Dump(w io.Writer, hidden bool) error {
 	return nil
 }
 
-// Decode converts a command name (or alias) into a Runner.
-func Decode(name string, params *stmt.Params) (func(Handler) (Option, error), error) {
+// Decode returns the function that runs the meta command it. The function
+// returns the options of the command, and each argument that the command did
+// not read.
+func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
+	name := it.Name
 	f, ok := cmds[name]
 	if !ok {
 		f, ok = cmds[relations(name)]
@@ -108,14 +112,14 @@ func Decode(name string, params *stmt.Params) (func(Handler) (Option, error), er
 	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
 	}
-	return func(h Handler) (Option, error) {
+	return func(h Handler) (Option, []string, error) {
 		p := &Params{
 			Handler: h,
 			Name:    name,
-			Params:  params,
+			item:    it,
 		}
 		err := f(p)
-		return p.Option, err
+		return p.Option, p.Unread(), err
 	}, nil
 }
 
@@ -136,69 +140,121 @@ func relations(name string) string {
 	return b.String() + name[len(base):]
 }
 
-// Params wraps metacmd parameters.
+// Params are the name and the arguments of one meta command, as the usql
+// grammar parsed them. A command reads its arguments in order, and the
+// handler reports the ones that it did not read.
 type Params struct {
 	// Handler is the process handler.
 	Handler Handler
 	// Name is the name of the metacmd.
 	Name string
-	// Params are the actual statement parameters.
-	Params *stmt.Params
 	// Option contains resulting command execution options.
 	Option Option
+
+	// item is the meta command.
+	item feed.Item
+	// next is the index of the next argument to read.
+	next int
+	// options is set once the option list of \g has been read.
+	options bool
 }
 
-// Next returns the next command parameter, using env.Untick.
-func (p *Params) Next(exec bool) (string, error) {
-	v, _, err := p.Params.Next(env.Untick(
-		p.Handler.User(),
-		env.Vars(),
-		exec,
-	))
-	if err != nil {
-		return "", err
-	}
-	return v, nil
-}
-
-// patternUntick is env.Untick for a psql pattern. It leaves a name between
-// double quotes as it is, quotes and all, so that the pattern can tell it from
-// a name that the database folds.
-func (p *Params) patternUntick() func(string, bool) (string, bool, error) {
-	untick := env.Untick(p.Handler.User(), env.Vars(), true)
-	return func(s string, isvar bool) (string, bool, error) {
-		if !isvar && len(s) >= 2 && s[0] == '"' {
-			return "", false, nil
+// arg returns the next argument that is not an option list, and moves past
+// it. It returns false when no argument is left.
+func (p *Params) arg() (feed.Arg, bool) {
+	for p.next < len(p.item.Args) {
+		a := p.item.Args[p.next]
+		p.next++
+		if a.Parts[0].Kind != feed.Options {
+			return a, true
 		}
-		return untick(s, isvar)
 	}
+	return feed.Arg{}, false
 }
 
-// Patterns returns the remaining command parameters as psql patterns. See
-// patternUntick.
-func (p *Params) Patterns() ([]string, error) {
-	return p.Params.All(p.patternUntick())
+// value returns the value of an argument.
+//
+// A string and a quoted name lose their quotes, and a variable is replaced by
+// its value: :'name' as a quoted string and :"name" as a quoted name, as in
+// psql. A shell command between backticks runs when exec is set. A quoted
+// name keeps its quotes when pattern is set, so that a psql pattern can tell
+// it from a name that the database folds.
+func (p *Params) value(a feed.Arg, exec, pattern bool) (string, error) {
+	var b strings.Builder
+	for _, part := range a.Parts {
+		raw := p.item.Text[part.Start:part.End]
+		switch part.Kind {
+		case feed.String:
+			s, err := env.Unquote(raw)
+			if err != nil {
+				return "", err
+			}
+			b.WriteString(s)
+		case feed.QuotedIdentifier:
+			if pattern {
+				b.WriteString(raw)
+				continue
+			}
+			s, err := env.Unquote(raw)
+			if err != nil {
+				return "", err
+			}
+			b.WriteString(s)
+		case feed.Variable:
+			v, ok := env.Vars().Get(part.Name)
+			switch {
+			case part.Quote == '?' && ok:
+				b.WriteString("TRUE")
+			case part.Quote == '?':
+				b.WriteString("FALSE")
+			case !ok:
+				b.WriteString(raw)
+			case part.Quote == '\'' || part.Quote == '"':
+				q := string(part.Quote)
+				b.WriteString(q + strings.ReplaceAll(v, q, q+q) + q)
+			default:
+				b.WriteString(v)
+			}
+		case feed.Backtick:
+			if !exec {
+				b.WriteString(raw)
+				continue
+			}
+			out, err := env.Exec(part.Value)
+			if err != nil {
+				return "", err
+			}
+			b.WriteString(out)
+		case feed.Pipe:
+			b.WriteString("|" + part.Value)
+		case feed.Shell:
+			b.WriteString(part.Value)
+		default:
+			b.WriteString(raw)
+		}
+	}
+	return b.String(), nil
 }
 
-// NextPattern returns the next command parameter as a psql pattern. See
-// patternUntick.
-func (p *Params) NextPattern() (string, error) {
-	v, _, err := p.Params.Next(p.patternUntick())
+// Next returns the value of the next argument, or an empty string when none
+// is left. A shell command between backticks runs when exec is set.
+func (p *Params) Next(exec bool) (string, error) {
+	v, _, err := p.NextOK(exec)
 	return v, err
 }
 
-// NextOK returns the next command parameter, using env.Untick.
+// NextOK returns the value of the next argument, and false when none is left.
 func (p *Params) NextOK(exec bool) (string, bool, error) {
-	return p.Params.Next(env.Untick(
-		p.Handler.User(),
-		env.Vars(),
-		exec,
-	))
+	a, ok := p.arg()
+	if !ok {
+		return "", false, nil
+	}
+	v, err := p.value(a, exec, false)
+	return v, err == nil, err
 }
 
-// NextOpt returns the next command parameter, using env.Untick. Returns true
-// when the value is prefixed with a "-", along with the value sans the "-"
-// prefix. Otherwise returns false and the value.
+// NextOpt returns the value of the next argument. It returns true when the
+// value starts with a "-", along with the value without the "-".
 func (p *Params) NextOpt(exec bool) (string, bool, error) {
 	v, err := p.Next(exec)
 	switch {
@@ -210,21 +266,82 @@ func (p *Params) NextOpt(exec bool) (string, bool, error) {
 	return v, false, nil
 }
 
-// All gets all remaining command parameters using env.Untick.
+// All returns the values of the arguments that are left.
 func (p *Params) All(exec bool) ([]string, error) {
-	return p.Params.All(env.Untick(
-		p.Handler.User(),
-		env.Vars(),
-		exec,
-	))
+	var v []string
+	for {
+		s, ok, err := p.NextOK(exec)
+		switch {
+		case err != nil:
+			return nil, err
+		case !ok:
+			return v, nil
+		}
+		v = append(v, s)
+	}
 }
 
-// Raw returns the remaining command parameters as a raw string.
-//
-// Note: no other processing is done to interpolate variables or to decode
-// string values.
+// NextPattern returns the value of the next argument as a psql pattern, in
+// which a quoted name keeps its quotes.
+func (p *Params) NextPattern() (string, error) {
+	a, ok := p.arg()
+	if !ok {
+		return "", nil
+	}
+	return p.value(a, true, true)
+}
+
+// Patterns returns the values of the arguments that are left, as psql
+// patterns. See NextPattern.
+func (p *Params) Patterns() ([]string, error) {
+	var v []string
+	for {
+		a, ok := p.arg()
+		if !ok {
+			return v, nil
+		}
+		s, err := p.value(a, true, true)
+		if err != nil {
+			return nil, err
+		}
+		v = append(v, s)
+	}
+}
+
+// Raw returns the shell command of \!, as it is written.
 func (p *Params) Raw() string {
-	return p.Params.Raw()
+	a, ok := p.arg()
+	if !ok {
+		return ""
+	}
+	s, _ := p.value(a, false, false)
+	return s
+}
+
+// Options returns the keys and values of the option list of \g and its forms,
+// such as (format=csv), in order.
+func (p *Params) Options() []feed.Option {
+	p.options = true
+	for _, a := range p.item.Args {
+		if a.Parts[0].Kind == feed.Options {
+			return a.Parts[0].Options
+		}
+	}
+	return nil
+}
+
+// Unread returns each argument that the command did not read, as it is
+// written, so that the handler can report it as ignored.
+func (p *Params) Unread() []string {
+	var v []string
+	for _, a := range p.item.Args[p.next:] {
+		if a.Parts[0].Kind == feed.Options && p.options {
+			continue
+		}
+		first, last := a.Parts[0], a.Parts[len(a.Parts)-1]
+		v = append(v, p.item.Text[first.Start:last.End])
+	}
+	return v
 }
 
 // Option contains parsed result options of a metacmd.
@@ -241,34 +358,6 @@ type Option struct {
 	Watch time.Duration
 }
 
-func (opt *Option) ParseParams(params []string, defaultKey string) error {
-	if opt.Params == nil {
-		opt.Params = make(map[string]string, len(params))
-	}
-	formatOpts := false
-	for i, param := range params {
-		if len(param) == 0 {
-			continue
-		}
-		if !formatOpts {
-			if param[0] == '(' {
-				formatOpts = true
-			} else {
-				opt.Params[defaultKey] = strings.Join(params[i:], " ")
-				return nil
-			}
-		}
-		parts := strings.SplitN(param, "=", 2)
-		if len(parts) == 1 {
-			return text.ErrInvalidFormatOption
-		}
-		opt.Params[strings.TrimLeft(parts[0], "(")] = strings.TrimRight(parts[1], ")")
-		if formatOpts && param[len(param)-1] == ')' {
-			formatOpts = false
-		}
-	}
-	return nil
-}
 
 // ExecType represents the type of execution requested.
 type ExecType int

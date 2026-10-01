@@ -4,30 +4,36 @@ import (
 	"bytes"
 	"io"
 	"os/user"
+	"strings"
 	"testing"
 
 	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/xo/usql/rline"
+	"github.com/xo/rline"
+	"github.com/xo/usql/feed"
 )
 
-// TestRunSingleLineMetaCommand verifies that -c dispatches a standalone meta command.
-func TestRunSingleLineMetaCommand(t *testing.T) {
-	// stdout captures the user-visible result of the meta command.
+// TestRunCommandMetaCommand checks that the text of -c runs a meta command
+// that stands alone.
+func TestRunCommandMetaCommand(t *testing.T) {
+	// stdout captures what the meta command writes
 	stdout := new(bytes.Buffer)
-	// line supplies non-interactive IO without reading from the terminal.
-	line := &rline.Rline{Out: stdout, Err: io.Discard}
-	// commandHandler runs the same single-line path used by the -c flag.
-	commandHandler := New(line, &user.User{}, ".", memfs.New(), true)
-	// Enable the non-interactive execution mode selected by the CLI's -c flag.
-	commandHandler.SetSingleLineMode(true)
-	// Seed the command buffer with the standalone meta command being reproduced.
-	commandHandler.Reset([]rune(`\echo hello`))
-
-	// Running the handler must execute the meta command before reaching EOF.
-	if err := commandHandler.Run(); err != nil {
-		t.Fatalf("Run() unexpected error: %v", err)
+	l, err := rline.New(
+		rline.WithStdin(strings.NewReader("")),
+		rline.WithStdout(stdout),
+		rline.WithStderr(io.Discard),
+		rline.WithColor(false),
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
-	// The echo result proves that single-line mode did not mask command dispatch.
+	defer l.Close()
+	h, err := New(l, feed.NewLines(strings.NewReader("")), &user.User{}, ".", memfs.New(), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := h.RunCommand(`\echo hello`); err != nil {
+		t.Fatalf("RunCommand: %v", err)
+	}
 	if got, want := stdout.String(), "hello\n"; got != want {
 		t.Fatalf("stdout = %q, want %q", got, want)
 	}
