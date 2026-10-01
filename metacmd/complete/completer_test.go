@@ -1,4 +1,4 @@
-package completer
+package complete
 
 import (
 	"testing"
@@ -324,7 +324,7 @@ func TestCompleter(t *testing.T) {
 		},
 	}
 
-	completer := NewDefaultCompleter(WithSource(mockSource{}), WithConnStrings([]string{"pg://"}))
+	completer := New(WithSource(mockSource{}), WithConnStrings([]string{"pg://"}))
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			suggestions, length := completer.Do([]rune(test.line), test.start)

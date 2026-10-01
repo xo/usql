@@ -34,7 +34,7 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
 - `drivers` has `Language(u)` in place of the stmt options, and no chroma
   lexer. A driver's own Version wins over dbmeta's, for InfluxDB's release
   from GET /ping (dbmeta's D166).
-- `drivers/completer` is an `rline.Completer`. It adds candidates with
+- `metacmd/complete`, which was `drivers/completer`, is an `rline.Completer`. It adds candidates with
   `AddCandidate`, because `Completion.Add` deletes nothing before it.
 - `styles` is removed.
 

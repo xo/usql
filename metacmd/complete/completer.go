@@ -1,5 +1,6 @@
-// completer package provides a generic SQL command line completer
-package completer
+// Package complete completes SQL and meta commands at the cursor, for usql's
+// line editor.
+package complete
 
 import (
 	"errors"
@@ -139,7 +140,7 @@ func (c completer) Complete(comp *rline.Completion, prefix string) {
 	}
 }
 
-func NewDefaultCompleter(opts ...Option) Completer {
+func New(opts ...Option) Completer {
 	c := completer{
 		logger:           log.New(os.Stdout, "ERROR: ", log.LstdFlags),
 		sqlStartCommands: CommonSqlStartCommands,

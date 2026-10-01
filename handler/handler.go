@@ -30,11 +30,11 @@ import (
 	"github.com/xo/rline"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/completer"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/metacmd/charts"
+	"github.com/xo/usql/metacmd/complete"
 	"github.com/xo/usql/metacmd/describe"
 	"github.com/xo/usql/text"
 )
@@ -112,7 +112,7 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 	var prompt func() string
 	if h.iactive {
 		prompt = h.prompt
-		l.SetCompleter(completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings())))
+		l.SetCompleter(complete.New(complete.WithConnStrings(h.connStrings())))
 	}
 	var err error
 	if h.src, err = feed.NewSource(r, drivers.Language(nil), prompt); err != nil {
@@ -719,11 +719,11 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
 			if h.l.Interactive() {
-				c := completer.NewDefaultCompleter(completer.WithConnStrings(h.connStrings()))
+				c := complete.New(complete.WithConnStrings(h.connStrings()))
 				if m, err := h.metadata(ctx); err == nil {
-					c = completer.NewDefaultCompleter(
-						completer.WithSource(describe.Source(m, h.db)),
-						completer.WithConnStrings(h.connStrings()),
+					c = complete.New(
+						complete.WithSource(describe.Source(m, h.db)),
+						complete.WithConnStrings(h.connStrings()),
 					)
 				}
 				h.l.SetCompleter(c)

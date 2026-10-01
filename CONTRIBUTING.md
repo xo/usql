@@ -246,7 +246,7 @@ Some tests need nothing. The rest start a database in a container.
 
 These run anywhere usql builds:
 
-    go test ./feed/... ./env/... ./handler/... ./drivers/completer/... ./metacmd/...
+    go test ./feed/... ./env/... ./handler/... ./metacmd/...
 
 ## Tests that need a container runtime
 
