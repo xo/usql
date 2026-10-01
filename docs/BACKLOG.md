@@ -1326,7 +1326,8 @@ it with others first. Nothing is removed until that discussion.
 
 Source: Ken, on 2026-09-30. After the metadata readers went to dbmeta (D4),
 the `Copy` hook of `drivers.Driver` holds the last SQL that usql writes for
-one database or another. It needs a careful design, like W28.
+one database or another. It needs a careful design, like W28. Ken set it due
+before the next release, on 2026-10-02.
 
 What `\copy` builds today:
 

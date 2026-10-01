@@ -35,6 +35,9 @@ Read these first. Some of them can stop the release.
   W38 runs CI on every database. Both are due before the release.
 - The sessions of TestCLI in `testdata/cli` hold the old output, and every
   one fails against it. W37 records them again.
+- `\copy` still writes its own SQL: the INSERT, the placeholder of each
+  database, and the query for the columns of the target. W29 moves them to
+  dbmeta, and is due before the release.
 
 ## What changed
 
