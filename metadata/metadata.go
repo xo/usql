@@ -271,23 +271,3 @@ func (m *Meta) CurrentUser(ctx context.Context) (string, error) {
 	}
 	return u.Name, nil
 }
-
-// CanChangePassword reports whether dbmeta builds the statement that changes a
-// password for dialect.
-func CanChangePassword(dialect string) bool {
-	info, ok := dbmeta.Dialect(dialect).Info()
-	return ok && info.ChangePassword != nil
-}
-
-// ChangePassword returns the statement that changes the password of user on
-// db. old is the password being replaced, which only some databases take. The
-// statement holds the password, so it must not be logged.
-func ChangePassword(ctx context.Context, dialect string, db dbmeta.Queryer, user, password, old string) (string, error) {
-	d := dbmeta.Dialect(dialect)
-	// how a string is quoted can depend on a setting of the server
-	q, err := d.Quoting(ctx, db)
-	if err != nil {
-		return "", err
-	}
-	return d.ChangePassword(dbmeta.PasswordChange{User: user, Password: password, Old: old}, q)
-}

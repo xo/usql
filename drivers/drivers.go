@@ -262,7 +262,7 @@ func RequirePreviousPassword(u *dburl.URL) bool {
 // CanChangePassword returns whether or not the a driver supports changing
 // passwords.
 func CanChangePassword(u *dburl.URL) error {
-	if metadata.CanChangePassword(u.Dialect) {
+	if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok && info.ChangePassword != nil {
 		return nil
 	}
 	return text.ErrPasswordNotSupportedByDriver
@@ -284,7 +284,14 @@ func ChangePassword(u *dburl.URL, db DB, user, new, old string) (string, error) 
 			return "", err
 		}
 	}
-	stmt, err := metadata.ChangePassword(ctx, u.Dialect, db, user, new, old)
+	// how a string is quoted can depend on a setting of the server. The
+	// statement holds the password, so it is never logged.
+	d := dbmeta.Dialect(u.Dialect)
+	q, err := d.Quoting(ctx, db)
+	if err != nil {
+		return "", WrapErr(u.SchemeName, err)
+	}
+	stmt, err := d.ChangePassword(dbmeta.PasswordChange{User: user, Password: new, Old: old}, q)
 	if err != nil {
 		return "", WrapErr(u.SchemeName, err)
 	}
