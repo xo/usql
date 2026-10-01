@@ -1660,6 +1660,56 @@ Ken also decided that usql does not add T-SQL's GO. Taken as defaults, for
 Ken to change: Oracle's `/` stays out too, as in psql, and the package that
 replaces stmt is named `input`.
 
+## W37. Bring back the tests against databases, and their recordings
+
+Source: Ken, on 2026-10-02. Due before the next release.
+
+The tests of `drivers` and `drivers/clickhouse` started their own containers
+through `ory/dockertest`, and loaded jOOQ's Sakila schema into PostgreSQL,
+MySQL, SQL Server, Trino and ClickHouse. Ken had them removed on 2026-10-02,
+with their recordings, because dbmeta owns every container setup. These went:
+
+- TestWriter, which compared the output of the describe commands with the
+  recordings in `drivers/testdata`
+- the TestCopy of `drivers` and of `drivers/clickhouse`, which copied rows
+  between databases with `\copy`
+- the image definition, `gen-golden.sh`, and the fixtures in
+  `drivers/testdata` and `drivers/clickhouse/testdata`
+- `github.com/ory/dockertest/v4`, and the job of CI that ran them
+
+Much of the output of the describe commands still needs fixing, and the rest
+of usql's plumbing is updated first. Then:
+
+- Write the tests again against servers that dbmeta's `dbrun` starts. A test
+  takes the URL of its server from the environment, and skips when it is not
+  set.
+- Load a fixture of the test's own over the connection, rather than build an
+  image.
+- Record the output of the describe commands again, and the sessions of
+  TestCLI in `testdata/cli`.
+- Cover `\copy` between two databases again.
+
+## W38. Run CI on every database, through dbmeta and dbrun
+
+Source: Ken, on 2026-10-02. Due before the next release.
+
+Overhaul usql's workflows, so that they test usql against every database
+that can run on GitHub's runners, through dbmeta's `dbrun`. usql writes no
+container setup of its own.
+
+dbmeta's `test.yml` shows the shape. One job builds `dbrun` and prints the
+list of releases with `dbrun list --json --names tested`, and `nightly` for
+the full list. A matrix runs one job for each release. Each job starts its
+server with `dbrun`, takes the URL from `dbrun dsn`, and runs the tests. The
+workflow names no database, so the list lives only in dbmeta.
+
+- Choose which of dbmeta's selectors usql runs on each push, and which every
+  night.
+- Run W37's tests, TestCLI and the manual checks of `docs/RELEASE.md` that can
+  be automated, such as changing passwords and the describe commands.
+- Keep the jobs that build every driver, the static builds and the release
+  archives.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section

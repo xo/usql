@@ -240,42 +240,16 @@ pinned in `go.mod`.
 
 # Running the tests
 
-Some tests need nothing. The rest start a database in a container.
+Every test runs without a database, wherever usql builds:
 
-## Tests that need no container
+    go test ./...
 
-These run anywhere usql builds:
+On a machine with little memory, run one package at a time with `-p 1`.
 
-    go test ./feed/... ./env/... ./handler/... ./metacmd/...
-
-## Tests that need a container runtime
-
-`drivers` and `drivers/clickhouse` start their own containers through
-`ory/dockertest`.
-
-With podman, point the tests at the podman socket first. dockertest speaks the
-Docker API, and podman serves it:
-
-    systemctl --user start podman.socket
-    export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-
-Run the whole suite one package at a time:
-
-    go test -p 1 -tags "$(./build.sh -T)" ./...
-
-Use `-p 1`. Go runs packages in parallel by default, and `drivers` alone
-starts PostgreSQL, MySQL, SQL Server and Trino. Running `drivers/clickhouse`
-beside it adds a fifth container to the memory the four already take.
-
-Keep about 8 GB free for the containers. SQL Server alone takes around 1.5 GB.
-
-## When a test fails
-
-A failing test leaves its containers running. The container cleanup happens
-after the tests return, and a fatal error in `TestMain` exits before it. Remove
-them before the next run, or the next run fails for lack of memory:
-
-    podman ps -a --format '{{.ID}}\t{{.Image}}' | grep usql- | cut -f1 | xargs -r podman rm -f
+No test of usql starts a database. To try usql against one, start it with
+dbmeta's `dbrun`, which owns every container setup. The tests that ran
+against databases were removed, and W37 in `docs/BACKLOG.md` brings them
+back.
 
 ## Terminal tests
 
@@ -323,9 +297,7 @@ on your PATH and passes no flags. `dbrun stop postgres-18` stops the container.
 
 Start and stop only the databases you are testing, and test on the newest
 release. dbrun limits how many servers run at once, and DBRUN.md gives the
-limit and the rules for a server that another session started. The container
-tests above start their own containers through dockertest, outside dbrun and
-outside that limit.
+limit and the rules for a server that another session started.
 
 [dbrun]: https://github.com/xo/dbmeta/blob/main/docs/DBRUN.md
 

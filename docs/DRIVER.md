@@ -315,8 +315,7 @@ than a summary of it.
 The `-tags all` build matters on its own, because a duplicate scheme or alias
 panics at registration time rather than at compile time.
 
-Most test failures without a container runtime are expected. Two packages
-need containers. Everything else must pass.
+Every test must pass. No test of usql needs a database.
 
 ### With a database
 

@@ -105,5 +105,6 @@ conflict. A crash can delete it if it is under a temporary directory.
 The checkouts were at these commits on 2026-10-02: dbmeta 724e64e, rline
 bef86da, transit 8c1c1d8.
 
-The recordings in `drivers/testdata` and `testdata/cli` are changed and not
-committed, by Ken's decision. Keep them out of every commit.
+The recordings in `testdata/cli` are changed and not committed, by Ken's
+decision. Keep them out of every commit. The recordings in `drivers/testdata`
+were removed with the tests against databases. W37 brings them back.

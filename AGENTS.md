@@ -62,14 +62,12 @@ add a row for it or delete it.
    `drivers.Driver` is optional, so a driver that cannot connect still
    compiles, registers, and passes `go test ./...`.
 
-6. Two test packages need a container runtime: `drivers` and
-   `drivers/clickhouse`. Their failure without podman or docker is expected.
-   Any other failure is not.
+6. No test of usql starts a database, and every test must pass wherever
+   usql builds. The tests that ran against databases were removed, and W37
+   in `docs/BACKLOG.md` brings them back.
 
-7. Run the container tests one package at a time with `go test -p 1`, which
-   is what CI does. `drivers` starts PostgreSQL, MySQL, SQL Server and Trino,
-   and running `drivers/clickhouse` beside it adds a fifth container to the
-   memory they already take.
+7. Start a database only with dbmeta's `dbrun`, never with a container
+   command of usql's own. dbmeta owns every container setup.
 
 8. Backlog identifiers are append only. Never reuse a `W` number and never
    renumber one. An item that is finished or abandoned keeps its heading and

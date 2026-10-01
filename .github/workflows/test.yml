@@ -89,12 +89,13 @@ jobs:
         shell: bash
         run: |
           go test -tags "$(./build.sh -T)" \
-            ./stmt/... \
+            ./feed/... \
             ./env/... \
             ./handler/... \
-            ./drivers/completer/... \
-            ./drivers/metadata \
-            ./drivers/sqlite3/sqshared/...
+            ./metacmd \
+            ./metacmd/complete \
+            ./metacmd/describe \
+            ./drivers
       # The chart renderer is behind the charts build tag, so the job above
       # never links it. Test it here: it is the one package whose failure the
       # rest of the matrix cannot see, and it needs no database.
@@ -124,36 +125,6 @@ jobs:
           go-version: stable
       - name: Record and compare
         run: go test -v -tags "sqlite3 no_base" -run TestCLI .
-
-  # Tests that start their own containers through dockertest. These run on
-  # Linux alone, because the hosted macOS and Windows runners have no Linux
-  # container runtime.
-  #
-  # -p 1 is required. Go runs packages in parallel by default, three of these
-  # packages each start a SQL Server container, and three at once exhaust the
-  # memory of a runner.
-  databases:
-    name: Database tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-      - name: Install Go
-        uses: actions/setup-go@v7
-        with:
-          go-version: stable
-      - name: Install packages
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
-      - name: Test
-        run: |
-          go test -p 1 -timeout 30m -tags "$(./build.sh -T)" \
-            ./drivers/ \
-            ./drivers/clickhouse/... \
-            ./drivers/metadata/informationschema/... \
-            ./drivers/metadata/postgres/... \
-            ./drivers/sqlserver/...
 
   # Build with every driver enabled. This is the build that breaks when a
   # driver is added or a dependency moves, and it is slow, so it is its own

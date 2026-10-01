@@ -30,8 +30,11 @@ Read these first. Some of them can stop the release.
 - dbmeta, rline and transit have no tags. usql builds against local
   checkouts through a `go.work` that is not committed. The release needs a
   tag of each, required in `go.mod`.
-- The recordings in `drivers/testdata` and `testdata/cli` hold the old
-  output, and every TestCLI session fails against them. Ken fixes them.
+- The tests against databases and their recordings were removed, because
+  they started their own containers. W37 brings them back on `dbrun`, and
+  W38 runs CI on every database. Both are due before the release.
+- The sessions of TestCLI in `testdata/cli` hold the old output, and every
+  one fails against it. W37 records them again.
 
 ## What changed
 
@@ -117,7 +120,7 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 - `size.sh` measures what each driver adds to the binary (W32).
 - The Releases badge drops `sort=semver`, on which shields.io times out.
 - The README ends with the bar of links to the sister projects.
-- The backlog gains W28 to W36.
+- The backlog gains W28 to W38.
 
 ## What to check by hand
 
