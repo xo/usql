@@ -77,8 +77,8 @@ Open points that are known:
   DollarQuotes, staged in dbmeta. With it, `\c dk:` then `$$x;y$$` reads as
   one string. usql needs that dbmeta change committed and tagged.
 - `metacmd/describe` uses dbmeta's `Query.Each`, `Args`, `Dialect.Pattern`
-  and `Open` (dbmeta's D169), which are staged in dbmeta and not committed
-  on 2026-10-02.
+  and `Open` (dbmeta's D169). They are pushed to dbmeta's main as 380e597,
+  with no tag yet.
 - Do not run `go mod tidy`, which adds dbmeta, rline and transit before they
   have tags.
 
