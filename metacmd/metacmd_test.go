@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/feed"
+	"github.com/xo/usql/metadata"
 )
 
 func TestNames(t *testing.T) {

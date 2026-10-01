@@ -19,12 +19,6 @@ import (
 	"github.com/xo/usql/text"
 )
 
-// DB is what the queries run against. A *sql.DB, a *sql.Tx and a *sql.Conn
-// all satisfy it.
-type DB interface {
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-}
-
 // ErrNotSupported is returned when the database cannot answer a command.
 var ErrNotSupported = text.ErrNotSupported
 
@@ -63,7 +57,7 @@ func WithTimeout(timeout time.Duration) Option {
 // Meta reads the structure of one database.
 type Meta struct {
 	meta    *dbmeta.Meta
-	db      DB
+	db      dbmeta.Queryer
 	logger  Logger
 	dryRun  bool
 	timeout time.Duration
@@ -73,7 +67,7 @@ type Meta struct {
 // URL.Dialect that dburl sets. It reads the version of the server once,
 // because every query is chosen by it. It returns ErrNotSupported when
 // dbmeta has no model for the dialect.
-func New(ctx context.Context, dialect string, db DB, opts ...Option) (*Meta, error) {
+func New(ctx context.Context, dialect string, db dbmeta.Queryer, opts ...Option) (*Meta, error) {
 	m := &Meta{db: db}
 	for _, o := range opts {
 		o(m)
@@ -111,7 +105,7 @@ func (m *Meta) Supports(q dbmeta.AnyQuery) bool {
 
 // queryer returns the handle that the queries run through, which prints each
 // query first and runs none of them for a dry run.
-func (m *Meta) queryer() DB {
+func (m *Meta) queryer() dbmeta.Queryer {
 	if m.logger == nil && !m.dryRun {
 		return m.db
 	}
@@ -182,12 +176,12 @@ func all[T any](ctx context.Context, m *Meta, q *dbmeta.Query[T], a args) ([]T, 
 
 // logging prints each query before it runs.
 type logging struct {
-	db     DB
+	db     dbmeta.Queryer
 	logger Logger
 	dryRun bool
 }
 
-// QueryContext satisfies DB.
+// QueryContext satisfies dbmeta.Queryer.
 func (l logging) QueryContext(ctx context.Context, query string, v ...any) (*sql.Rows, error) {
 	if l.logger != nil {
 		l.logger.Println(query)
@@ -288,7 +282,7 @@ func CanChangePassword(dialect string) bool {
 // ChangePassword returns the statement that changes the password of user on
 // db. old is the password being replaced, which only some databases take. The
 // statement holds the password, so it must not be logged.
-func ChangePassword(ctx context.Context, dialect string, db DB, user, password, old string) (string, error) {
+func ChangePassword(ctx context.Context, dialect string, db dbmeta.Queryer, user, password, old string) (string, error) {
 	d := dbmeta.Dialect(dialect)
 	// how a string is quoted can depend on a setting of the server
 	q, err := d.Quoting(ctx, db)

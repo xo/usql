@@ -13,11 +13,11 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/xo/dburl"
-	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
-	"github.com/xo/usql/env"
 	"github.com/xo/rline"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
+	"github.com/xo/usql/metadata"
 	"github.com/xo/usql/text"
 )
 
@@ -357,7 +357,6 @@ type Option struct {
 	// Watch is the watch duration interval.
 	Watch time.Duration
 }
-
 
 // ExecType represents the type of execution requested.
 type ExecType int

@@ -91,7 +91,7 @@ add a row for it or delete it.
     advertised from the moment it exists, and removing one is a break.
 
 13. Do not write or change a metadata reader. All database metadata is moving
-    into `dbmeta`, and `drivers/metadata` takes no new reader and no fix. A
+    into `dbmeta`, and `metadata` takes no new reader and no fix. A
     new driver registers no reader, so its describe commands report that they
     are not supported. See D3.
 
@@ -119,7 +119,7 @@ between them.
 | Repository | What it holds |
 | --- | --- |
 | `xo/dburl` | Connection string parsing, schemes, aliases, file types |
-| `xo/dbmeta` | Database metadata, being moved out of `drivers/metadata` |
+| `xo/dbmeta` | Database metadata, which usql's `metadata` package reads |
 | `xo/tblfmt` | Result set formatting |
 | `xo/rline` | Line editing, intended to replace `gohxs/readline` |
 | `xo/dbtpl` | Code generation from database schemas |

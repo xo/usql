@@ -24,8 +24,8 @@ import (
 	dt "github.com/ory/dockertest/v4"
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
 	_ "github.com/xo/usql/internal"
+	"github.com/xo/usql/metadata"
 )
 
 type Database struct {

@@ -30,11 +30,11 @@ import (
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/completer"
-	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/metacmd/charts"
+	"github.com/xo/usql/metadata"
 	"github.com/xo/usql/text"
 )
 

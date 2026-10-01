@@ -7,7 +7,7 @@ import (
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
+	"github.com/xo/usql/metadata"
 )
 
 // noModel names each driver whose database dbmeta has no model for, and why.

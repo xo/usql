@@ -15,8 +15,8 @@ import (
 
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/env"
+	"github.com/xo/usql/metadata"
 	"github.com/xo/usql/text"
 )
 

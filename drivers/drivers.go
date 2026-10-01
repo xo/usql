@@ -18,8 +18,8 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/transit"
 	"github.com/xo/usql/drivers/completer"
-	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/feed"
+	"github.com/xo/usql/metadata"
 	"github.com/xo/usql/text"
 )
 
