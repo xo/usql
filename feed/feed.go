@@ -14,32 +14,20 @@ import (
 
 	"github.com/xo/dbmeta"
 	"github.com/xo/transit"
-	"github.com/xo/transit/grammars/usql/usqlcql"
-	"github.com/xo/transit/grammars/usql/usqlmysql"
-	"github.com/xo/transit/grammars/usql/usqlplain"
-	"github.com/xo/transit/grammars/usql/usqlpostgres"
-	"github.com/xo/transit/grammars/usql/usqlsqlite"
-	"github.com/xo/transit/grammars/usql/usqlstandard"
+	"github.com/xo/transit/grammars/usql"
 )
 
 // Language returns the usql grammar for a dialect with the lexical forms s.
-// The usql grammar has one family for each set of forms that a dialect
-// uses. A set that matches no family gets the family of the closest set
-// below it.
+// The grammar is one language, and its scanner reads the forms of the dialect
+// as its options (transit's D108).
 func Language(s dbmeta.Syntax) *transit.Language {
-	switch {
-	case s.DollarQuotes && s.SlashComments:
-		return usqlcql.Language()
-	case s.DollarQuotes:
-		return usqlpostgres.Language()
-	case s.HashComments:
-		return usqlmysql.Language()
-	case s.Backticks:
-		return usqlsqlite.Language()
-	case s.BlockComments:
-		return usqlstandard.Language()
-	}
-	return usqlplain.Language()
+	return usql.LanguageFor(usql.Options{
+		DollarQuotes:  s.DollarQuotes,
+		BlockComments: s.BlockComments,
+		SlashComments: s.SlashComments,
+		HashComments:  s.HashComments,
+		Backticks:     s.Backticks,
+	})
 }
 
 // Kind is the kind of an Item.

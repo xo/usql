@@ -246,24 +246,28 @@ func TestSourcePush(t *testing.T) {
 
 func TestLanguage(t *testing.T) {
 	t.Parallel()
-	names := func(s dbmeta.Syntax) string {
-		return Language(s).Name()
+	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true}
+	if Language(postgres) != Language(postgres) {
+		t.Error("expected the same language for the same forms")
 	}
-	tests := []struct {
-		s   dbmeta.Syntax
-		exp string
-	}{
-		{dbmeta.Syntax{DollarQuotes: true, BlockComments: true}, "usql_postgres"},
-		{dbmeta.Syntax{DollarQuotes: true, BlockComments: true, SlashComments: true}, "usql_cql"},
-		{dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true}, "usql_mysql"},
-		{dbmeta.Syntax{BlockComments: true, Backticks: true}, "usql_sqlite"},
-		{dbmeta.Syntax{BlockComments: true}, "usql_standard"},
-		{dbmeta.Syntax{}, "usql_plain"},
+	if Language(postgres) == Language(mysql) {
+		t.Error("expected a different language for different forms")
 	}
-	for _, test := range tests {
-		if got := names(test.s); got != test.exp {
-			t.Errorf("%+v: expected %s, got %s", test.s, test.exp, got)
-		}
+	// the forms decide what is a comment: # is one for MySQL and not for
+	// PostgreSQL
+	p, err := NewParser(Language(mysql))
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, err := p.Parse("select 1 # a; comment\n;")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, exp := summary(items), "S:select 1 # a; comment\n;"; got != exp {
+		t.Errorf("mysql:\n got: %s\nwant: %s", got, exp)
+	}
+	if got := summary(parse(t, "select 1 # a; b;")); !strings.HasPrefix(got, "S:select 1 # a; |") {
+		t.Errorf("postgres: expected # not to be a comment, got %s", got)
 	}
 }
 
