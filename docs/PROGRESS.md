@@ -49,7 +49,7 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
    pseudo-terminal: an entry over two rows, variables and `\q`.
 3. Checked on 2026-10-02: Ctrl-C gives up an open entry, `\e` runs the
    edited text and goes on, and `\c` from SQLite to DuckDB parses what
-   follows in DuckDB's family. The history is not saved: see below.
+   follows with DuckDB's forms. The history is not saved: see below.
 4. TestCLI fails in all nine sessions, because the recordings hold the
    colors of the old highlighting. Ken fixes the recordings himself. The
    session line-editing also runs into its limit of 30 seconds, which may be
@@ -73,25 +73,21 @@ Open points that are known:
   as `\q` stops the read, and rline then refuses to save, to keep the rest of
   the file. It ignores the error at start. This is for Ken: migrate the file,
   use a new file name, or have rline read the old format.
-- dbmeta measured DuckDB 1.5.5 on 2026-10-02, and its Syntax now has
-  DollarQuotes, staged in dbmeta. With it, `\c dk:` then `$$x;y$$` reads as
-  one string. usql needs that dbmeta change committed and tagged.
-- `metacmd/describe` uses dbmeta's `Query.Each`, `Args`, `Dialect.Pattern`
-  and `Open` (dbmeta's D169). They are pushed to dbmeta's main as 380e597,
-  with no tag yet.
-- Do not run `go mod tidy`, which adds dbmeta, rline and transit before they
-  have tags.
+- dbmeta v0.1.0 holds DuckDB's dollar quotes, and the `Query.Each`, `Args`,
+  `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's D169).
+- Do not run `go mod tidy`, which adds rline and transit before they have
+  tags.
 
 ## How to build
 
-usql builds only against local checkouts of dbmeta, rline and transit,
-because none of them has a tag. `go.work` is not committed. It reads:
+usql requires dbmeta v0.1.0 in `go.mod`. It builds against local checkouts
+of rline and transit, because neither has a tag. `go.work` is not committed.
+It reads:
 
     go 1.27.1
 
     use (
         .
-        ../dbmeta
         ../rline
         ../transit
         ../transit/grammars/usql
@@ -105,8 +101,9 @@ reads `module github.com/google/flatbuffers/go` and `go 1.21`. Workspace mode
 loads two modules that both provide that package, and the empty one ends the
 conflict. A crash can delete it if it is under a temporary directory.
 
-The checkouts were at these commits on 2026-10-02: dbmeta 724e64e, rline
-bef86da, transit 8c1c1d8.
+The checkouts were at these commits on 2026-10-02: rline bef86da and transit
+0b3e678. transit's D108 made the usql grammar one language that takes the
+lexical forms of the dialect as options, in place of six packages.
 
 The recordings in `testdata/cli` are changed and not committed, by Ken's
 decision. Keep them out of every commit. The recordings in `drivers/testdata`

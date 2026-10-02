@@ -27,9 +27,9 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- dbmeta, rline and transit have no tags. usql builds against local
-  checkouts through a `go.work` that is not committed. The release needs a
-  tag of each, required in `go.mod`.
+- usql requires dbmeta v0.1.0. rline and transit have no tags, so usql builds
+  against local checkouts of them through a `go.work` that is not committed.
+  The release needs a tag of each, required in `go.mod`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
@@ -55,8 +55,10 @@ package and the `stmt` package (W36).
 - A variable is replaced when its statement runs, by its range in the
   input. A defined `:'x'` no longer opens a string, and the second colon of
   `::` is no longer a variable.
-- The grammar has one family for each set of lexical forms. The family
-  follows the dialect of the connection, from dbmeta, and changes on `\c`.
+- The grammar is one language, and its scanner takes the lexical forms of
+  the dialect as options (transit's D108): dollar quotes, block comments,
+  `//` and `#` comments, and backticks. They come from dbmeta, and follow the
+  dialect of the connection, so they change on `\c`.
 - The arguments of a meta command come from the grammar. `\g` reads its
   option list, such as `(format=csv)`, from the grammar.
 - `-o FILE` sends the results to the file, as `\o` does. `\echo` still goes
@@ -154,11 +156,12 @@ sqlserver, tidb and vertica.
 - On SQL Server, check that usql asks for the old password.
 - Use a password that holds a quote, a backslash and a space.
 
-### Input, for each family of dialects
+### Input, for each set of lexical forms
 
-The usql grammar has six families. Check each with one of its databases:
+The dialects of dbmeta use six sets of lexical forms. Check each set with one
+of its databases:
 
-| Family | Databases |
+| Forms like | Databases |
 | --- | --- |
 | postgres | cockroachdb, cratedb, duckdb, postgres, questdb, redshift, snowflake, vertica |
 | cql | cql |
@@ -169,15 +172,15 @@ The usql grammar has six families. Check each with one of its databases:
 
 For each, check:
 
-- a `;` inside a string, a quoted name, a comment, and, where the family has
-  them, a dollar quote and a backtick
+- a `;` inside a string, a quoted name, a comment, and, where the dialect
+  has them, a dollar quote and a backtick
 - a statement over several rows, at a terminal and in a script
 - `select 1 \g`, `\g` on an empty buffer, `\gx`, `\gset`, `\gexec`, and
   `\g (format=csv) FILE`
 - variables: `:x`, `:'x'`, `:"x"`, `:{?x}`, a value that holds a `;` or a
   quote, and a `::` cast
-- `\c` to a database of another family, then a statement that the new
-  family reads differently
+- `\c` to a database with other forms, then a statement that the new forms
+  read differently
 - CQL: `BEGIN BATCH` … `APPLY BATCH`
 - Oracle: a statement with a trailing `;`, and a PL/SQL block that ends with
   `END;`
@@ -186,7 +189,7 @@ For each, check:
 ### Syntax highlighting
 
 When transit's SQL grammars come, check the color of keywords, strings,
-comments, variables and meta commands for each family above, in two styles,
+comments, variables and meta commands for each set above, in two styles,
 at a light and a dark background. Until then, check that no color appears
 and nothing breaks with SYNTAX_HL on.
 
