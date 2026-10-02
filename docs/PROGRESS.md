@@ -75,23 +75,19 @@ Open points that are known:
   use a new file name, or have rline read the old format.
 - dbmeta v0.1.0 holds DuckDB's dollar quotes, and the `Query.Each`, `Args`,
   `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's D169).
-- Do not run `go mod tidy`, which adds rline and transit before they have
-  tags.
+- Do not run `go mod tidy`, which adds rline before it has a tag.
 
 ## How to build
 
-usql requires dbmeta v0.1.0 in `go.mod`. It builds against local checkouts
-of rline and transit, because neither has a tag. `go.work` is not committed.
-It reads:
+usql requires dbmeta v0.1.0, transit v0.2.0 and transit's usql grammar
+v0.2.0 in `go.mod`. It builds against a local checkout of rline, which has
+no tag. `go.work` is not committed. It reads:
 
     go 1.27.1
 
     use (
         .
         ../rline
-        ../transit
-        ../transit/grammars/usql
-        ../transit/styles
     )
 
     replace github.com/google/flatbuffers/go => /path/to/flatbuffers-go-empty
@@ -101,9 +97,9 @@ reads `module github.com/google/flatbuffers/go` and `go 1.21`. Workspace mode
 loads two modules that both provide that package, and the empty one ends the
 conflict. A crash can delete it if it is under a temporary directory.
 
-The checkouts were at these commits on 2026-10-02: rline bef86da and transit
-0b3e678. transit's D108 made the usql grammar one language that takes the
-lexical forms of the dialect as options, in place of six packages.
+The rline checkout was at bef86da on 2026-10-02. transit's D108 made the usql
+grammar one language that takes the lexical forms of the dialect as options,
+in place of six packages.
 
 The recordings in `testdata/cli` are changed and not committed, by Ken's
 decision. Keep them out of every commit. The recordings in `drivers/testdata`

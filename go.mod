@@ -54,6 +54,8 @@ require (
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1
 	github.com/xo/terminfo v1.2.0
+	github.com/xo/transit v0.2.0
+	github.com/xo/transit/grammars/usql v0.2.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.0
 	github.com/yookoala/realpath v1.0.0
 	gorm.io/driver/bigquery v1.2.1

@@ -27,9 +27,9 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.1.0. rline and transit have no tags, so usql builds
-  against local checkouts of them through a `go.work` that is not committed.
-  The release needs a tag of each, required in `go.mod`.
+- usql requires dbmeta v0.1.0 and transit v0.2.0. rline has no tag, so usql
+  builds against a local checkout of it through a `go.work` that is not
+  committed. The release needs a tag of rline, required in `go.mod`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
