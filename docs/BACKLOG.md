@@ -1744,6 +1744,28 @@ the banner, a table of several types with NULLs, a syntax error, a missing
 table, a duplicate key, a rollback and a commit, and a wrong password.
 avatica-1.28.0 was not run.
 
+## W40. Move ODBC, Trino and Presto to the drivers that dburl now names
+
+Source: dburl, on 2026-10-07. Ken decided three scheme moves in dburl that
+day (its D49 and D50). They are staged there and not released. Do nothing in
+usql until dburl sends the tag.
+
+- ODBC moves to `github.com/xo/odbc`, which needs no cgo. The registered name
+  stays `odbc`, and the connection string is passed on as it is. The package
+  has no commit or tag yet. This bears on W30, which researched an ODBC
+  driver on purego, and on W28, which asked whether to keep ODBC at all.
+  Take both to Ken when the tag comes.
+- Trino and Presto both move to `github.com/xo/dbimp/trino`, which registers
+  `trino`. For `presto`, `URL.SchemeName` is `presto` and `URL.Driver` is
+  `trino`, with the dialect `presto`. usql needs a registry entry keyed
+  `presto` that opens the `trino` driver. It replaces `trino-go-client` and
+  `presto-go-client`. The DSN
+  `trino://user:password@host:port/catalog/schema` is a guess until dbimp
+  tags the driver.
+- The old ports 8080 and 8443, the forced user `user` and the default catalog
+  are gone from both generators. Check what usql's Trino and Presto drivers
+  assumed from them.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section
