@@ -116,6 +116,9 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, maxcompute to the ODPS SDK, and hive to
   gohive v2.
+- Avatica moves to `github.com/xo/dbimp` (W39). Its URL is
+  `avatica://user:password@host:port` and not `http://`. Check it against
+  the standalone server and Phoenix.
 - The registry is keyed by the scheme of dburl.
 - A driver goes in the group `most` when its scheme names a dialect and it
   needs no cgo. Pinot, rqlite and libSQL are in `most`.

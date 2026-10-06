@@ -10,7 +10,7 @@ func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"arangodb":      "arangodb",      // github.com/xo/dbimp/arangodb
 		"athena":        "awsathena",     // github.com/uber/athenadriver/go
-		"avatica":       "avatica",       // github.com/apache/calcite-avatica-go/v5
+		"avatica":       "avatica",       // github.com/xo/dbimp/avatica
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
 		"cassandra":     "cql",           // github.com/xo/cql
 		"chai":          "chai",          // github.com/chaisql/chai

@@ -1711,33 +1711,38 @@ workflow names no database, so the list lives only in dbmeta.
 - Keep the jobs that build every driver, the static builds and the release
   archives.
 
-## W39. Move Avatica to dbimp's driver
+## W39. Move Avatica to dbimp's driver: Done
 
 Source: dbimp, on 2026-10-07. dbimp released an Avatica driver in v0.10.0
 (its W24), and asks usql to use it in place of
 `github.com/apache/calcite-avatica-go/v5`. That drops protobuf, the Kerberos
 library and the digest library from `go.mod`.
 
-Waiting for dburl. Its latest release is v0.40.0, and its `avatica` scheme
-still names the Apache driver. dburl staged the change on 2026-10-07 as its
-D47, and Ken has not approved the commit or the release yet. dburl will
-message usql when the tag is out. dburl must release a scheme for
-`github.com/xo/dbimp/avatica` first, with the DSN
-`avatica://user:password@host:port`, with no port added and no path, and
-the keys `tls` and `auth`. phoenix stays an alias. A driver
-that is registered under a scheme dburl does not know fails
-`TestRegistryIsKeyedByScheme`.
+Done on 2026-10-07, on dburl v0.41.0 and dbimp v0.10.1. dburl's D47 made the
+`avatica` scheme name `github.com/xo/dbimp/avatica`, with the DSN
+`avatica://user:password@host:port`, no port added and no path, and the keys
+`tls` and `auth`. phoenix stays an alias. The old DSN was `http://`, which
+the new driver refuses. A driver registered under a scheme that dburl does
+not know fails `TestRegistryIsKeyedByScheme`.
 
-Then, in `drivers/avatica/avatica.go`:
+In `drivers/avatica/avatica.go`:
 
-- Import `github.com/xo/dbimp/avatica` on dbimp v0.10.1, the newest tag.
+- It imports `github.com/xo/dbimp/avatica`. The Apache driver and the modules
+  that only it needed, and some left over from earlier removals, are out of
+  `go.mod`.
 - `Err` reads `Code` and `Message` of `*avatica.Error`.
+- `IsPasswordErr` takes HTTP 401, and also the error that the server gives a
+  wrong password: HTTP 500 with the exception `SQLInvalidAuthorizationSpec`.
 - `Version` runs `VALUES (DATABASE_VERSION())`, which works on the standalone
-  server (HSQLDB). The Phoenix Query Server has no such statement, and the
-  driver does not send `databaseProperties`, so the release of Phoenix has to
-  come from dbmeta.
-- Check against dbmeta's avatica-1.28.0, avatica-1.29.0 and phoenix-2.0-5.0,
-  with `dbrun`: a query, an error, a wrong password, and a transaction.
+  server and returns the release of HSQLDB, not of Avatica. The Phoenix Query
+  Server has no such statement, and the driver does not send
+  `databaseProperties`, so there the banner says the release is unknown. A
+  dbmeta model for Avatica would be the place for it.
+
+Checked on 2026-10-07 with `dbrun`, on avatica-1.29.0 and phoenix-2.0-5.0:
+the banner, a table of several types with NULLs, a syntax error, a missing
+table, a duplicate key, a rollback and a commit, and a wrong password.
+avatica-1.28.0 was not run.
 
 ## Tier 2: GitHub issues and pull requests
 

@@ -262,7 +262,7 @@ associated database, scheme / build tag, and scheme aliases:
 |                      |                 |                                               |                                                                                             |
 | Alibaba MaxCompute   | `maxcompute`    | `mc`                                          | [github.com/aliyun/aliyun-odps-go-sdk/sqldriver][d-maxcompute] <sup>[¶][f-hosted]</sup>     |
 | Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                            | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots] <sup>[¶][f-hosted]</sup>         |
-| Apache Avatica       | `avatica`       | `av`, `phoenix`                               | [github.com/apache/calcite-avatica-go/v5][d-avatica]                                        |
+| Apache Avatica       | `avatica`       | `av`, `phoenix`                               | [github.com/xo/dbimp/avatica][d-avatica]                                                    |
 | Apache Hive          | `hive`          | `hi`, `hive2`                                 | [github.com/beltran/gohive/v2][d-hive]                                                      |
 | Apache Impala        | `impala`        | `im`                                          | [github.com/sclgo/impala-go][d-impala]                                                      |
 | Apache Pinot         | `pinot`         | `pi`                                          | [github.com/xo/dbimp/pinot][d-pinot]                                                        |
@@ -312,7 +312,7 @@ associated database, scheme / build tag, and scheme aliases:
 
 [d-arangodb]: https://github.com/xo/dbimp
 [d-athena]: https://github.com/uber/athenadriver
-[d-avatica]: https://github.com/apache/calcite-avatica-go
+[d-avatica]: https://github.com/xo/dbimp
 [d-bigquery]: https://github.com/go-gorm/bigquery
 [d-cassandra]: https://github.com/xo/cql
 [d-chai]: https://github.com/chaisql/chai
