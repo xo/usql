@@ -1766,6 +1766,33 @@ usql until dburl sends the tag.
   are gone from both generators. Check what usql's Trino and Presto drivers
   assumed from them.
 
+## W41. Follow dburl's removal of TLS by scheme
+
+Source: dburl, on 2026-10-07. Ken decided that no scheme chooses TLS by its
+scheme or transport any more, because the dbimp drivers read `tls=true`
+(dburl's D51). It is staged in dburl, not committed or released. Wait for the
+tag, which Ken has not decided.
+
+- ydb: the aliases `yds` and `ydbs` go, and return an unknown scheme error.
+  `ydb://host?tls=true` writes grpcs on port 2135, and `ydb://` stays grpc on
+  port 2136. `yd` stays.
+- maxcompute and ots (alias `tablestore`): the `+http` and `+https`
+  transports go, so `mc+https://` is an invalid transport. TLS is on by
+  default, because they are hosted services, and `tls=false` writes http.
+- dburl removes the `tls` key from the query, because the drivers do not
+  know it.
+- clickhouse keeps `+http` and `+https` until dbimp writes its driver.
+
+What usql has to change when it bumps:
+
+- README.md: the MaxCompute example `mc+http://accessid:accesskey@host/api`.
+  Write it with `?tls=false` in its place. Check the line above it and the
+  note below it.
+- The row of YDB in the generated table loses `yds` and `ydbs` when
+  `gen.go` runs again. Do not edit it by hand.
+- No test, sample or other document of usql uses a scheme that goes. A
+  search on 2026-10-07 found only the two places above.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section
