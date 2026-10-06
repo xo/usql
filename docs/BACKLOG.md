@@ -1711,6 +1711,31 @@ workflow names no database, so the list lives only in dbmeta.
 - Keep the jobs that build every driver, the static builds and the release
   archives.
 
+## W39. Move Avatica to dbimp's driver
+
+Source: dbimp, on 2026-10-07. dbimp released an Avatica driver in v0.10.0
+(its W24), and asks usql to use it in place of
+`github.com/apache/calcite-avatica-go/v5`. That drops protobuf, the Kerberos
+library and the digest library from `go.mod`.
+
+Waiting for dburl. Its latest release is v0.40.0, and its `avatica` scheme
+still names the Apache driver. dburl must release a scheme for
+`github.com/xo/dbimp/avatica` first, with the DSN
+`avatica://user:password@host:port` and the keys `tls` and `auth`. A driver
+that is registered under a scheme dburl does not know fails
+`TestRegistryIsKeyedByScheme`.
+
+Then, in `drivers/avatica/avatica.go`:
+
+- Import `github.com/xo/dbimp/avatica` on dbimp v0.10.1, the newest tag.
+- `Err` reads `Code` and `Message` of `*avatica.Error`.
+- `Version` runs `VALUES (DATABASE_VERSION())`, which works on the standalone
+  server (HSQLDB). The Phoenix Query Server has no such statement, and the
+  driver does not send `databaseProperties`, so the release of Phoenix has to
+  come from dbmeta.
+- Check against dbmeta's avatica-1.28.0, avatica-1.29.0 and phoenix-2.0-5.0,
+  with `dbrun`: a query, an error, a wrong password, and a transaction.
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section
