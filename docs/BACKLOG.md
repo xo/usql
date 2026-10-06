@@ -1719,9 +1719,12 @@ Source: dbimp, on 2026-10-07. dbimp released an Avatica driver in v0.10.0
 library and the digest library from `go.mod`.
 
 Waiting for dburl. Its latest release is v0.40.0, and its `avatica` scheme
-still names the Apache driver. dburl must release a scheme for
+still names the Apache driver. dburl staged the change on 2026-10-07 as its
+D47, and Ken has not approved the commit or the release yet. dburl will
+message usql when the tag is out. dburl must release a scheme for
 `github.com/xo/dbimp/avatica` first, with the DSN
-`avatica://user:password@host:port` and the keys `tls` and `auth`. A driver
+`avatica://user:password@host:port`, with no port added and no path, and
+the keys `tls` and `auth`. phoenix stays an alias. A driver
 that is registered under a scheme dburl does not know fails
 `TestRegistryIsKeyedByScheme`.
 
