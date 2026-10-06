@@ -73,18 +73,20 @@ Open points that are known:
   as `\q` stops the read, and rline then refuses to save, to keep the rest of
   the file. It ignores the error at start. This is for Ken: migrate the file,
   use a new file name, or have rline read the old format.
-- dbmeta v0.1.0 holds DuckDB's dollar quotes, and the `Query.Each`, `Args`,
-  `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's D169).
-- dbmeta v0.1.0 has models for arangodb, influxql, libsql, neo4j, surrealdb
-  and ydb. The Version hooks of arangodb, neo4j, surrealdb and ydb were kept
-  only for databases that dbmeta did not model (D4). Check dbmeta's version
-  for each against a server, and remove the hook that it makes redundant.
-  InfluxDB and InfluxQL keep theirs, by Ken's decision (dbmeta's D166).
+- dbmeta holds, since v0.1.0, DuckDB's dollar quotes, and the `Query.Each`,
+  `Args`, `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's
+  D169).
+- dbmeta has had models since v0.1.0 for arangodb, influxql, libsql, neo4j,
+  surrealdb and ydb. The Version hooks of arangodb, neo4j, surrealdb and ydb
+  were kept only for databases that dbmeta did not model (D4). Check dbmeta's
+  version for each against a server, and remove the hook that it makes
+  redundant. InfluxDB and InfluxQL keep theirs, by Ken's decision (dbmeta's
+  D166).
 - Do not run `go mod tidy`, which adds rline before it has a tag.
 
 ## How to build
 
-usql requires dbmeta v0.1.0, transit v0.2.0 and transit's usql grammar
+usql requires dbmeta v0.2.0, transit v0.2.0 and transit's usql grammar
 v0.2.0 in `go.mod`. It builds against a local checkout of rline, which has
 no tag. `go.work` is not committed. It reads:
 

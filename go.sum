@@ -826,6 +826,7 @@ github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWR
 github.com/chzyer/logex v1.2.1 h1:XHDu3E6q+gdHgsdTPH6ImJMIp436vR6MPtH8gP05QzM=
 github.com/chzyer/logex v1.2.1/go.mod h1:JLbx6lG2kDbNRFnfkgvh4eRJRPX1QCoOIWomwysCBrQ=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
+github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/clipperhouse/uax29/v2 v2.7.0 h1:+gs4oBZ2gPfVrKPthwbMzWZDaAFPGYK72F0NJv2v7Vk=
 github.com/clipperhouse/uax29/v2 v2.7.0/go.mod h1:EFJ2TJMRUaplDxHKj1qAEhCtQPW2tJSwu5BF98AuoVM=
@@ -1494,6 +1495,8 @@ github.com/xo/dbimp v0.10.1 h1:Kt/wC1mZGeTDl+LQ0NBIbbT3JON7oxgD/MOmHOCHDGg=
 github.com/xo/dbimp v0.10.1/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
 github.com/xo/dbmeta v0.1.0 h1:A5tw53IH2mzRf4baPfCV7DXGf7UuyEqX50Ax8pIi8w8=
 github.com/xo/dbmeta v0.1.0/go.mod h1:MDuDrRxVooo2zNsM8kOFfDrJ7Y0N4998MlaKDEvegk4=
+github.com/xo/dbmeta v0.2.0 h1:XsiVlD6BHXykdpFpXlJpzIb+X66FJIIPoBhE8czLpck=
+github.com/xo/dbmeta v0.2.0/go.mod h1:MDuDrRxVooo2zNsM8kOFfDrJ7Y0N4998MlaKDEvegk4=
 github.com/xo/dburl v0.38.0 h1:RiH8ENhd2oDPCJl2lqVQiuDaRubWWzL+SyF+AjpfHDk=
 github.com/xo/dburl v0.38.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
 github.com/xo/dburl v0.39.0 h1:MnwNF6NdOgKvO3keAJjj0z1CVVEN6v6uv5E+fczbKvA=
