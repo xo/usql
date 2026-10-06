@@ -14,8 +14,7 @@
 // URL. A transaction ends when no statement runs on it for 10 seconds, and
 // the server then rolls it back.
 //
-// Metadata: none. All metadata is moving into dbmeta, so usql writes no
-// reader for libSQL (D3).
+// Metadata: dbmeta's libSQL model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most

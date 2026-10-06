@@ -9,8 +9,7 @@
 //   - Tested: the vendor's image, which dbmeta's dbrun starts as
 //     neo4j-2026.09.0.
 //
-// Metadata: none. All metadata is moving into dbmeta, so usql writes no
-// reader for Neo4j (D3).
+// Metadata: dbmeta's Neo4j model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most

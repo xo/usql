@@ -75,6 +75,11 @@ Open points that are known:
   use a new file name, or have rline read the old format.
 - dbmeta v0.1.0 holds DuckDB's dollar quotes, and the `Query.Each`, `Args`,
   `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's D169).
+- dbmeta v0.1.0 has models for arangodb, influxql, libsql, neo4j, surrealdb
+  and ydb. The Version hooks of arangodb, neo4j, surrealdb and ydb were kept
+  only for databases that dbmeta did not model (D4). Check dbmeta's version
+  for each against a server, and remove the hook that it makes redundant.
+  InfluxDB and InfluxQL keep theirs, by Ken's decision (dbmeta's D166).
 - Do not run `go mod tidy`, which adds rline before it has a tag.
 
 ## How to build

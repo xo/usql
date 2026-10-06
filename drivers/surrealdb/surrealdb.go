@@ -13,9 +13,7 @@
 //   - Tested: the vendor's docker.io/surrealdb/surrealdb image, which
 //     dbmeta's dbrun starts as surrealdb-2.7.0, -3.1.6, -3.2.4 and -3.3.0.
 //
-// Metadata: none. All metadata is moving into dbmeta, so usql writes no
-// reader for SurrealDB (D3), and its describe commands report that they are
-// not supported.
+// Metadata: dbmeta's SurrealDB model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most

@@ -9,8 +9,7 @@
 //   - Tested: the vendor's image, which dbmeta's dbrun starts as
 //     arangodb-3.12.12.
 //
-// Metadata: none. All metadata is moving into dbmeta, so usql writes no
-// reader for ArangoDB (D3).
+// Metadata: dbmeta's ArangoDB model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most

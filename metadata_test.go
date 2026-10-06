@@ -15,7 +15,6 @@ import (
 // model yet" and "cannot have one" are different states, and a gap that is
 // written down is one that can be counted. See step 4 of docs/DBMETA.md.
 var noModel = map[string]string{
-	"arangodb":   "no model yet",
 	"avatica":    "no model yet",
 	"awsathena":  "no model yet",
 	"bigquery":   "no model yet",
@@ -25,17 +24,12 @@ var noModel = map[string]string{
 	"databricks": "no model yet",
 	"flightsql":  "no model yet",
 	"godynamo":   "no model yet",
-	"influxql":   "no model yet",
-	"libsql":     "no model yet",
 	"maxcompute": "no model yet",
-	"neo4j":      "no model yet",
 	"odbc":       "cannot have one: ODBC is a bridge to any database, and has no dialect of its own",
 	"ots":        "no model yet",
 	"pinot":      "no model yet",
 	"spanner":    "no model yet",
-	"surrealdb":  "no model yet",
 	"voltdb":     "no model yet",
-	"ydb":        "no model yet",
 }
 
 // TestEveryDriverReadsThroughDbmeta checks that each registered driver either
