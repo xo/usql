@@ -1770,8 +1770,18 @@ usql until dburl sends the tag.
 
 Source: dburl, on 2026-10-07. Ken decided that no scheme chooses TLS by its
 scheme or transport any more, because the dbimp drivers read `tls=true`
-(dburl's D51). It is staged in dburl, not committed or released. Wait for the
-tag, which Ken has not decided.
+(dburl's D51). dburl released it in v0.43.0, together with D49 and D50 of
+W40.
+
+usql cannot take v0.43.0 yet. Checked on 2026-10-07, with usql's own
+drivers: `trino://u:p@host:8443/cat/sch` generated the DSN
+`http://u:p@host:8443?catalog=cat&schema=sch` in v0.42.0, which
+`trino-go-client` reads, and generates `trino://u:p@host:8443/cat/sch` in
+v0.43.0, which it does not. `presto://` changes its driver from `presto` to
+`trino` the same way. So a bump breaks both drivers until dbimp's Trino
+driver exists, and usql moves them in the same change (W40). usql stays on
+dburl v0.42.0 until then, unless Ken asks dburl for a release that holds D51
+alone.
 
 - ydb: the aliases `yds` and `ydbs` go, and return an unknown scheme error.
   `ydb://host?tls=true` writes grpcs on port 2135, and `ydb://` stays grpc on
