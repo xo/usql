@@ -48,7 +48,7 @@ require (
 	github.com/xo/cql v0.1.0
 	github.com/xo/dbimp v0.10.1
 	github.com/xo/dbmeta v0.2.0
-	github.com/xo/dburl v0.41.0
+	github.com/xo/dburl v0.42.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1
