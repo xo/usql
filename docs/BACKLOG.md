@@ -1766,6 +1766,16 @@ usql until dburl sends the tag.
   are gone from both generators. Check what usql's Trino and Presto drivers
   assumed from them.
 
+Checked on 2026-10-07: dbimp v0.12.0 has `github.com/xo/dbimp/trino`, for
+Trino and Presto, with the key `flavor` (empty asks the server through
+GET /v1/info). With dburl v0.43.0, a DSN with a user parses: `trino://u@host`,
+`trino://u:p@host:8443/cat/sch` and `presto://u@host/cat`. A URL with no
+user does not: `trino://host` and `presto://host` give `trino://host`, and
+the driver refuses it with "no user, and both servers need one". dburl
+v0.42.0 forced the user `user`. dburl and dbimp have to agree on a default
+user, which is Ken's decision. usql moves after that, with `Version` from
+`SELECT version()` on Trino, and /v1/info or none on Presto.
+
 ## W41. Follow dburl's removal of TLS by scheme
 
 Source: dburl, on 2026-10-07. Ken decided that no scheme chooses TLS by its
