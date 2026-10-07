@@ -1369,6 +1369,10 @@ Ken decides which of these move to dbmeta, and in which item.
 
 ## W30. Research an ODBC driver written on purego
 
+Update, 2026-10-07: `github.com/xo/odbc` v0.1.0 exists. It is that driver,
+pure Go on purego, with no cgo. See W40 for the move, and for what Ken still
+has to decide. This research is not closed until he says so.
+
 Source: Ken, on 2026-09-30.
 
 Research a new ODBC driver for `database/sql`, written from the start on
@@ -1751,10 +1755,27 @@ day (its D49 and D50). They are staged there and not released. Do nothing in
 usql until dburl sends the tag.
 
 - ODBC moves to `github.com/xo/odbc`, which needs no cgo. The registered name
-  stays `odbc`, and the connection string is passed on as it is. The package
-  has no commit or tag yet. This bears on W30, which researched an ODBC
-  driver on purego, and on W28, which asked whether to keep ODBC at all.
-  Take both to Ken when the tag comes.
+  stays `odbc`, and the connection string is passed on as it is. This bears
+  on W30, which researched an ODBC driver on purego, and on W28, which asked
+  whether to keep ODBC at all. Take both to Ken.
+
+  xo/odbc v0.1.0 was released on 2026-10-07, so dburl's release no longer
+  waits for it. It is a purego driver for Linux, macOS and Windows, with no
+  cgo. Its data source name is a URL, `odbc+<driver>://user:pass@host:port/db`,
+  or an ODBC connection string. A setting of the ODBC driver goes in the
+  query, such as `INITSTMT` for ANSI SQL mode on MariaDB and MySQL. Its
+  README has an FAQ for that. usql's old driver read the key `usql_trim`,
+  which W28 removed.
+
+  Its `sql.Conn.Raw` gives a connection with `GetInfoString`,
+  `GetInfoUint16`, `GetInfoUint32`, `Tables`, `Columns` and `PrimaryKeys`,
+  which read the metadata of any database that has an ODBC driver.
+  `odbc.Drivers` and `odbc.DataSources` list what the driver manager knows.
+  dbmeta decided on 2026-10-07 to build no model on them, and the sender says
+  that the fallback for a database that dbmeta does not know belongs to the
+  client. That would be a metadata reader in usql, which D3 forbids. It is
+  Ken's decision whether ODBC is the exception, or whether its describe
+  commands stay unsupported.
 - Trino and Presto both move to `github.com/xo/dbimp/trino`, which registers
   `trino`. For `presto`, `URL.SchemeName` is `presto` and `URL.Driver` is
   `trino`, with the dialect `presto`. usql needs a registry entry keyed
