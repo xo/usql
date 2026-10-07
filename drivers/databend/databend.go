@@ -9,10 +9,6 @@
 package databend
 
 import (
-	"database/sql"
-	"errors"
-
-	"github.com/xo/dbimp"
 	_ "github.com/xo/dbimp/databend" // DRIVER
 	"github.com/xo/usql/drivers"
 )
@@ -22,12 +18,6 @@ func init() {
 		UseColumnTypes: true,
 		// a statement such as CREATE TABLE sends no count of rows affected,
 		// which the driver reports as ErrNotSupported (dbimp D125)
-		RowsAffected: func(res sql.Result) (int64, error) {
-			n, err := res.RowsAffected()
-			if errors.Is(err, dbimp.ErrNotSupported) {
-				return 0, nil
-			}
-			return n, err
-		},
+		RowsAffected: drivers.RowsAffectedOrZero,
 	})
 }

@@ -1,4 +1,4 @@
-//go:build (all || most || trino) && !no_trino
+//go:build (!no_base || trino) && !no_trino
 
 package internal
 

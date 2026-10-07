@@ -14,7 +14,7 @@ func KnownBuildTags() map[string]string {
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
 		"cassandra":     "cql",           // github.com/xo/cql
 		"chai":          "chai",          // github.com/chaisql/chai
-		"clickhouse":    "clickhouse",    // github.com/ClickHouse/clickhouse-go/v2
+		"clickhouse":    "clickhouse",    // github.com/xo/dbimp/clickhouse
 		"cockroachdb":   "cockroachdb",   // github.com/jackc/pgx/v5/stdlib
 		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
 		"couchbase":     "couchbase",     // github.com/xo/dbimp/couchbase
@@ -41,13 +41,13 @@ func KnownBuildTags() map[string]string {
 		"moderncsqlite": "moderncsqlite", // modernc.org/sqlite
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
-		"odbc":          "odbc",          // github.com/alexbrainman/odbc
+		"odbc":          "odbc",          // github.com/xo/odbc
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
 		"pinot":         "pinot",         // github.com/xo/dbimp/pinot
 		"postgres":      "postgres",      // github.com/jackc/pgx/v5/stdlib
-		"presto":        "presto",        // github.com/prestodb/presto-go-client/v2
+		"presto":        "presto",        // github.com/xo/dbimp/trino
 		"questdb":       "questdb",       // github.com/jackc/pgx/v5/stdlib
 		"redshift":      "redshift",      // github.com/jackc/pgx/v5/stdlib
 		"rqlite":        "rqlite",        // github.com/xo/dbimp/rqlite
@@ -58,7 +58,7 @@ func KnownBuildTags() map[string]string {
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
 		"surrealdb":     "surrealdb",     // github.com/xo/dbimp/surrealdb
 		"tidb":          "tidb",          // github.com/go-sql-driver/mysql
-		"trino":         "trino",         // github.com/trinodb/trino-go-client/trino
+		"trino":         "trino",         // github.com/xo/dbimp/trino
 		"vertica":       "vertica",       // github.com/vertica/vertica-sql-go
 		"vitess":        "vitess",        // github.com/go-sql-driver/mysql
 		"voltdb":        "voltdb",        // github.com/VoltDB/voltdb-client-go/voltdbclient

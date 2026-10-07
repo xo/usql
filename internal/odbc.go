@@ -1,4 +1,4 @@
-//go:build (all || odbc) && !no_odbc
+//go:build (all || most || odbc) && !no_odbc
 
 package internal
 

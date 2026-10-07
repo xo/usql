@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/xo/dbimp"
 	"github.com/xo/dbmeta"
 	_ "github.com/xo/dbmeta/all" // every model
 	"github.com/xo/dburl"
@@ -390,6 +392,18 @@ func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
 	return typ, "", false
 }
 
+// RowsAffectedOrZero is a RowsAffected hook for a driver whose server gives no
+// count of the rows that a statement changed, such as for CREATE TABLE. That is
+// not a failure, so it is a count of zero. The driver reports it as
+// dbimp.ErrNotSupported.
+func RowsAffectedOrZero(res sql.Result) (int64, error) {
+	n, err := res.RowsAffected()
+	if errors.Is(err, dbimp.ErrNotSupported) {
+		return 0, nil
+	}
+	return n, err
+}
+
 // RowsAffected returns the rows affected for the SQL result for a driver.
 func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 	var count int64
@@ -544,7 +558,11 @@ func FlexibleCopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, tab
 			return n, fmt.Errorf("failed to exec insert: %w", err)
 		}
 		rn, err := res.RowsAffected()
-		if err != nil {
+		switch {
+		case errors.Is(err, dbimp.ErrNotSupported):
+			// the server gives no count, and one insert is one row
+			rn = 1
+		case err != nil:
 			return n, fmt.Errorf("failed to check rows affected: %w", err)
 		}
 		n += rn

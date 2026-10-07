@@ -246,13 +246,15 @@ associated database, scheme / build tag, and scheme aliases:
 | Database             | Scheme / Tag    | Scheme Aliases                                | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                   | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
+| Presto               | `presto`        | `pr`, `prestodb`                              | [github.com/xo/dbimp/trino][d-presto]                                                       |
+| Trino                | `trino`         | `tr`                                          | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | PostgreSQL PGX       | `pgx`           | `px`                                          | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona` | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                     | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
 | Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`  | [github.com/sijms/go-ora/v3][d-oracle]                                                      |
 | SQLite3              | `sqlite3`       | `sq`, `sqlite`, `file`                        | [github.com/mattn/go-sqlite3][d-sqlite3] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup>   |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                   | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup> |
-| ClickHouse           | `clickhouse`    | `ch`                                          | [github.com/ClickHouse/clickhouse-go/v2][d-clickhouse]                                      |
+| ClickHouse           | `clickhouse`    | `ch`                                          | [github.com/xo/dbimp/clickhouse][d-clickhouse]                                              |
 | CockroachDB          | `cockroachdb`   | `cr`, `cdb`, `crdb`, `cockroach`              | [github.com/jackc/pgx/v5/stdlib][d-cockroachdb]                                             |
 | CrateDB              | `cratedb`       | `ct`, `crate`                                 | [github.com/jackc/pgx/v5/stdlib][d-cratedb]                                                 |
 | Amazon Redshift      | `redshift`      | `rs`                                          | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
@@ -286,20 +288,18 @@ associated database, scheme / build tag, and scheme aliases:
 | libSQL               | `libsql`        | `ls`, `turso`                                 | [github.com/xo/dbimp/libsql][d-libsql]                                                      |
 | ModernC SQLite3      | `moderncsqlite` | `mq`, `modernsqlite`                          | [modernc.org/sqlite][d-moderncsqlite] <sup>[§][f-embedded]</sup>                            |
 | Neo4j                | `neo4j`         | `nj`, `neo`, `n4j`                            | [github.com/xo/dbimp/neo4j][d-neo4j]                                                        |
+| ODBC                 | `odbc`          | `od`                                          | [github.com/xo/odbc][d-odbc]                                                                |
 | PostgreSQL lib/pq    | `libpq`         | `pq`                                          | [github.com/lib/pq][d-libpq]                                                                |
-| Presto               | `presto`        | `pr`, `prestodb`                              | [github.com/prestodb/presto-go-client/v2][d-presto]                                         |
 | QuestDB              | `questdb`       | `qs`                                          | [github.com/jackc/pgx/v5/stdlib][d-questdb]                                                 |
 | rqlite               | `rqlite`        | `rq`                                          | [github.com/xo/dbimp/rqlite][d-rqlite]                                                      |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                    | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
 | Snowflake            | `snowflake`     | `sf`                                          | [github.com/snowflakedb/gosnowflake/v2][d-snowflake] <sup>[¶][f-hosted]</sup>               |
 | SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                        | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
-| Trino                | `trino`         | `tr`, `trs`, `trinos`                         | [github.com/trinodb/trino-go-client/trino][d-trino]                                         |
 | Vertica              | `vertica`       | `ve`                                          | [github.com/vertica/vertica-sql-go][d-vertica]                                              |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                           | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                                 |
-| YDB                  | `ydb`           | `yd`, `yds`, `ydbs`                           | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                                              |
+| YDB                  | `ydb`           | `yd`                                          | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                                              |
 |                      |                 |                                               |                                                                                             |
 | GO DRiver for ORacle | `godror`        | `gr`                                          | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>                                  |
-| ODBC                 | `odbc`          | `od`                                          | [github.com/alexbrainman/odbc][d-odbc] <sup>[†][f-cgo]</sup>                                |
 |                      |                 |                                               |                                                                                             |
 | Apache H2            | `h2`            |                                               | [github.com/jmrobles/h2go][d-h2]                                                            |
 | GizmoSQL             | `gizmosql`      | `gz`, `gizmo`                                 | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-gizmosql]                  |
@@ -316,7 +316,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-bigquery]: https://github.com/go-gorm/bigquery
 [d-cassandra]: https://github.com/xo/cql
 [d-chai]: https://github.com/chaisql/chai
-[d-clickhouse]: https://github.com/ClickHouse/clickhouse-go
+[d-clickhouse]: https://github.com/xo/dbimp
 [d-cockroachdb]: https://github.com/jackc/pgx
 [d-cosmos]: https://github.com/btnguyen2k/gocosmos
 [d-couchbase]: https://github.com/xo/dbimp
@@ -343,13 +343,13 @@ associated database, scheme / build tag, and scheme aliases:
 [d-moderncsqlite]: https://gitlab.com/cznic/sqlite
 [d-mysql]: https://github.com/go-sql-driver/mysql
 [d-neo4j]: https://github.com/xo/dbimp
-[d-odbc]: https://github.com/alexbrainman/odbc
+[d-odbc]: https://github.com/xo/odbc
 [d-oracle]: https://github.com/sijms/go-ora
 [d-ots]: https://github.com/aliyun/aliyun-tablestore-go-sql-driver
 [d-pgx]: https://github.com/jackc/pgx
 [d-pinot]: https://github.com/xo/dbimp
 [d-postgres]: https://github.com/jackc/pgx
-[d-presto]: https://github.com/prestodb/presto-go-client
+[d-presto]: https://github.com/xo/dbimp
 [d-questdb]: https://github.com/jackc/pgx
 [d-redshift]: https://github.com/jackc/pgx
 [d-rqlite]: https://github.com/xo/dbimp
@@ -360,7 +360,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-surrealdb]: https://github.com/xo/dbimp
 [d-tidb]: https://github.com/go-sql-driver/mysql
-[d-trino]: https://github.com/trinodb/trino-go-client
+[d-trino]: https://github.com/xo/dbimp
 [d-vertica]: https://github.com/vertica/vertica-sql-go
 [d-vitess]: https://github.com/go-sql-driver/mysql
 [d-voltdb]: https://github.com/VoltDB/voltdb-client-go
@@ -588,9 +588,9 @@ $ usql cassandra://host/keyspace
 $ usql cql://host/
 $ usql ca://
 
-# connect to an alibaba maxcompute project over https, or over http with mc+http:
+# connect to an alibaba maxcompute project over https, or over http with tls=false:
 $ usql "mc://accessid:accesskey@service.cn-hangzhou.maxcompute.aliyun.com/api?project=myproject"
-$ usql "mc+http://accessid:accesskey@host/api?project=myproject"
+$ usql "mc://accessid:accesskey@host/api?project=myproject&tls=false"
 
 # Note: the project option is required. The curr_project and scheme options of
 # the previous maxcompute driver no longer work, and any option the driver does
@@ -615,7 +615,7 @@ connections:
   my_named_connection: sqlserver://user:pass@localhost/
 $ usql my_named_connection
 
-# connect with ODBC driver (requires building with odbc tag)
+# connect with ODBC driver (needs the ODBC driver manager of the system)
 $ cat /etc/odbcinst.ini
 [PostgreSQL ANSI]
 Description=PostgreSQL ODBC driver (ANSI version)
