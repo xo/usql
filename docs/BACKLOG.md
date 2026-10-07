@@ -1843,6 +1843,40 @@ What usql has to change when it bumps:
 - No test, sample or other document of usql uses a scheme that goes. A
   search on 2026-10-07 found only the two places above.
 
+## W42. Decide whether ClickHouse moves to dbimp's driver
+
+Source: dbimp, on 2026-10-07. dbimp v0.13.0 has `github.com/xo/dbimp/clickhouse`,
+for ClickHouse over HTTP. It could replace `ClickHouse/clickhouse-go/v2` in
+`drivers/clickhouse`. dbimp asks usql to wait for dburl and for Ken, because
+the choice is his. Nothing is done.
+
+What the move changes:
+
+- The driver speaks HTTP only, on port 8123. `clickhouse-go` also speaks the
+  native protocol. A user who connects to the native port loses that.
+  dburl's `clickhouse` scheme still names `clickhouse-go`, and still has the
+  transports `+http` and `+https`, which dburl keeps until dbimp's driver is
+  in (its D51).
+- Both register the name `clickhouse`, so a program can link one of the two.
+  The driver is in the `base` group, so it is in the default build.
+- `RowsAffected` goes. usql's hook returns 0 because `clickhouse-go` has no
+  count. dbimp's driver returns `dbimp.ErrNotSupported`, and usql would keep
+  the hook that turns that into 0, as it does for Databend.
+- `Err` reads the `Exception` of `clickhouse-go`. dbimp's driver gives a
+  `clickhouse.Error`, and a wrong password has the code 194 or 516. usql's
+  `IsPasswordErr` takes only 516 today.
+- `SELECT version()` gives the version, which dbmeta already reads.
+- The tests that started ClickHouse in a container are gone with W37. They
+  come back on `dbrun`.
+
+Size, from W32: `clickhouse-go` adds 4.8 MB to a release build, with ch-go.
+dbimp's driver would drop most of that, and the answer depends on what it
+imports.
+
+Open for Ken: whether to move at all, and whether to keep the native
+protocol. If it moves, dburl moves its scheme first, and usql follows in one
+commit, as with Avatica (W39).
+
 ## Tier 2: GitHub issues and pull requests
 
 W2 to W15 are the programme, and W4 holds the issue triage. This section
