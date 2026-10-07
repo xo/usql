@@ -37,8 +37,10 @@ Read these first. Some of them can stop the release.
   one fails against it. W37 records them again.
 - **ODBC crashes in the default build.** With go-sqlite3 and DuckDB both
   linked, which every `most` build does, the first ODBC query crashes the
-  process. It works with either one left out. W40 holds the measurements. This
-  stops the release until it is fixed.
+  process, because DuckDB's bindings export the `sqlite3_*` symbols of
+  go-sqlite3 into the executable. Building with `-tags libsqlite3` fixes it,
+  and that changes the SQLite of the release builds. Ken decides how (W40).
+  This stops the release until he does.
 - `\copy` still writes its own SQL: the INSERT, the placeholder of each
   database, and the query for the columns of the target. W29 moves them to
   dbmeta, and is due before the release.

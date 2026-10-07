@@ -1831,17 +1831,50 @@ for groups it moved from `all` to `most`. `IsPasswordErr` reads class 28 of
 SQLSTATE, the failed authorization of every database. The metadata question
 above is still open.
 
-**Blocker.** In a build that links both go-sqlite3 and DuckDB, which is the
-default build and every `most` build, the first ODBC query crashes the
-process with a SIGSEGV from purego's call into the ODBC library. Measured
-with the SQLite ODBC driver (unixODBC 2.3.14), six runs of each build: both
-linked, 6 of 6 crash. Without DuckDB, without SQLite, or with `CGO_ENABLED=0`,
-6 of 6 work. Connecting works. A plain `database/sql` program with the same
-DSN does not crash, even with go-sqlite3 linked. The odbc project has been
-told, and nothing here fixes it. Do not release until it is fixed or ODBC is
-taken out of the builds that link both. The Homebrew formula in `xo/homebrew-xo`
-and the paragraph of the README about `--with-odbc` need a look at the same
-time, because ODBC is no longer an extra.
+**Blocker, with its cause.** In a build that links both go-sqlite3 and DuckDB,
+which is the default build and every `most` build, the first ODBC query
+crashes the process with a SIGSEGV. The odbc project found the cause on
+2026-10-07, and it is in how usql links, not in `xo/odbc`:
+
+- DuckDB's bindings link with `-rdynamic`, which exports every global symbol of
+  the usql executable. That includes the 268 `sqlite3_*` functions of the
+  SQLite that go-sqlite3 carries. The SQLite ODBC driver is a shared library
+  that needs `sqlite3_*` functions too, and the dynamic linker gives it the
+  copies in the usql executable for most of them, and the system's
+  `libsqlite3` for the few that go-sqlite3 leaves out. Two builds of SQLite
+  then answer one connection. This holds for any ODBC driver that carries or
+  loads SQLite, and only when both go-sqlite3 and DuckDB are linked.
+- Checked on 2026-10-07: the default build exports 268 `sqlite3_*` symbols and
+  crashes 6 of 6 times. The tag `libsqlite3`, which builds go-sqlite3 against
+  the system SQLite, exports 0 and worked 6 of 6 times with DuckDB still
+  linked. On that build ODBC gave data with NULLs, errors with their SQLSTATE,
+  and a rollback that undid its insert.
+
+The ways out are Ken's decision, because each changes a release:
+
+1. Build with `-tags libsqlite3`. go-sqlite3 then uses the SQLite of the
+   system, so the tags of `build.sh` (`sqlite_fts5`, `sqlite_json1` and the
+   others) stop applying, the features of SQLite depend on the distribution,
+   and the static builds need `libsqlite3.a`. Every installer who builds with
+   `go install` needs the tag as well.
+2. Leave ODBC out of the builds that link both, which makes it an extra
+   again, with a README note.
+3. Make `moderncsqlite`, which needs no cgo, the `sqlite3` driver of the
+   release builds, and keep go-sqlite3 behind a tag.
+4. Ask the DuckDB bindings to stop exporting symbols.
+
+Not decided. Do not release until one is.
+
+Two limits of the drivers, not usql's: the SQLite ODBC driver fails on
+`values (1)` with HY010, because it returns no data from the execute, and
+`select * from (values (1))` works. And `xo/odbc` v0.1.0 fails on a statement
+that returns no result set when it goes through `QueryContext`, such as
+`create table`, with "fetching: return code -1". usql runs `create table`
+through `ExecContext`, so it does not meet that today. The odbc project has the
+fix in its working tree, and Ken decides about a v0.1.1.
+
+The Homebrew formula in `xo/homebrew-xo` and the README paragraph about
+`--with-odbc` need a look at the same time, because ODBC is no longer an extra.
 
 ## W41. Follow dburl's removal of TLS by scheme: Done
 
