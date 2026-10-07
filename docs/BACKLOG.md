@@ -1772,9 +1772,14 @@ GET /v1/info). With dburl v0.43.0, a DSN with a user parses: `trino://u@host`,
 `trino://u:p@host:8443/cat/sch` and `presto://u@host/cat`. A URL with no
 user does not: `trino://host` and `presto://host` give `trino://host`, and
 the driver refuses it with "no user, and both servers need one". dburl
-v0.42.0 forced the user `user`. dburl and dbimp have to agree on a default
-user, which is Ken's decision. usql moves after that, with `Version` from
-`SELECT version()` on Trino, and /v1/info or none on Presto.
+v0.42.0 forced the user `user`.
+
+Ken decided on 2026-10-07 that dburl writes the default user for a trino or
+presto URL that has none, and that the driver keeps its error. So usql waits
+for the release of dburl that has that fix, which comes after v0.43.0. Then
+it takes that release, moves the drivers, and tests, in one commit. `Version`
+reads `SELECT version()` on Trino, and /v1/info or nothing on Presto, which
+has no `version()`.
 
 ## W41. Follow dburl's removal of TLS by scheme
 
