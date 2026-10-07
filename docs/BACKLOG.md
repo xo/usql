@@ -1774,9 +1774,13 @@ user does not: `trino://host` and `presto://host` give `trino://host`, and
 the driver refuses it with "no user, and both servers need one". dburl
 v0.42.0 forced the user `user`.
 
-Ken decided on 2026-10-07 that dburl writes the default user for a trino or
-presto URL that has none, and that the driver keeps its error. So usql waits
-for the release of dburl that has that fix, which comes after v0.43.0. Then
+Ken decided on 2026-10-07 that dburl writes the default user `user` for a
+trino or presto URL that has none, and that the driver keeps its error.
+dburl staged it in its D50, and also made the scheme set `flavor=trino` or
+`flavor=presto` unless the URL names it, so `presto://u@host/cat` becomes
+`trino://u@host/cat?flavor=presto` and the driver does not ask the server.
+It is not released, because `xo/odbc` has no tag and D49 is in the same
+release. So usql waits for that release, which comes after v0.43.0. Then
 it takes that release, moves the drivers, and tests, in one commit. `Version`
 reads `SELECT version()` on Trino, and /v1/info or nothing on Presto, which
 has no `version()`.
