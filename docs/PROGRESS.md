@@ -86,7 +86,7 @@ Open points that are known:
 
 ## How to build
 
-usql requires dbmeta v0.2.0, transit v0.2.0 and transit's usql grammar
+usql requires dbmeta v0.3.0, transit v0.2.0 and transit's usql grammar
 v0.2.0 in `go.mod`. It builds against a local checkout of rline, which has
 no tag. `go.work` is not committed. It reads:
 
