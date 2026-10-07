@@ -35,6 +35,10 @@ Read these first. Some of them can stop the release.
   W38 runs CI on every database. Both are due before the release.
 - The sessions of TestCLI in `testdata/cli` hold the old output, and every
   one fails against it. W37 records them again.
+- **ODBC crashes in the default build.** With go-sqlite3 and DuckDB both
+  linked, which every `most` build does, the first ODBC query crashes the
+  process. It works with either one left out. W40 holds the measurements. This
+  stops the release until it is fixed.
 - `\copy` still writes its own SQL: the INSERT, the placeholder of each
   database, and the query for the columns of the target. W29 moves them to
   dbmeta, and is due before the release.
@@ -119,6 +123,21 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 - Avatica moves to `github.com/xo/dbimp` (W39). Its URL is
   `avatica://user:password@host:port` and not `http://`. Check it against
   the standalone server and Phoenix.
+- ClickHouse moves to `github.com/xo/dbimp` (W42). It speaks HTTP only, on
+  port 8123 or, with `tls=true`, 8443. The native protocol and port 9000 are
+  gone, and so are the `+http` and `+https` transports and the options of
+  `clickhouse-go`, such as `secure=true`.
+- Trino and Presto move to `github.com/xo/dbimp/trino` (W40). A URL with no
+  user connects as `user`. `trs://` and `trinos://` are gone. Presto has
+  `\copy` now.
+- ODBC moves to `github.com/xo/odbc` (W40), which needs no cgo, and so it is
+  in `most` and no longer in `all`. Its URL is
+  `odbc+<driver>://user:pass@host:port/db` with the settings of the ODBC
+  driver in the query. dburl no longer adds a port, a host or a ServiceName,
+  and a URL with no driver is an error.
+- MaxCompute, Tablestore and YDB choose TLS with `tls=true` (W41), and
+  `yds://` and `ydbs://` are gone. MaxCompute and Tablestore use TLS by
+  default.
 - The registry is keyed by the scheme of dburl.
 - A driver goes in the group `most` when its scheme names a dialect and it
   needs no cgo. Pinot, rqlite and libSQL are in `most`.
@@ -146,6 +165,9 @@ one error, and a wrong password:
 - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
 - SurrealDB and ArangoDB
 - Pinot, rqlite and libSQL
+- ClickHouse on its HTTP port, and Trino and Presto, with and without a user
+- ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
+  after the crash is fixed
 - Couchbase and Databend on dbimp
 
 ### Changing passwords

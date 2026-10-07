@@ -1367,11 +1367,11 @@ reads metadata, runs DDL or changes a password. These remain:
 
 Ken decides which of these move to dbmeta, and in which item.
 
-## W30. Research an ODBC driver written on purego
+## W30. Research an ODBC driver written on purego: Done
 
-Update, 2026-10-07: `github.com/xo/odbc` v0.1.0 exists. It is that driver,
-pure Go on purego, with no cgo. See W40 for the move, and for what Ken still
-has to decide. This research is not closed until he says so.
+Done on 2026-10-07. `github.com/xo/odbc` v0.1.0 is that driver, pure Go on
+purego, with no cgo, and usql uses it. The crash that it has in usql's default
+build, and the question of its metadata, are in W40.
 
 Source: Ken, on 2026-09-30.
 
@@ -1750,6 +1750,25 @@ avatica-1.28.0 was not run.
 
 ## W40. Move ODBC, Trino and Presto to the drivers that dburl now names
 
+Progress on 2026-10-07, on dburl v0.44.0, dbimp v0.13.0 and xo/odbc v0.1.0.
+Trino and Presto are moved and checked. ODBC is moved, and it crashes in the
+default build. See the end of this item.
+
+- Trino and Presto: both import `github.com/xo/dbimp/trino`, and each has its
+  own hooks, so that `no_trino` leaves Presto alone. dburl writes the user
+  `user` and `flavor=presto`, so `trino://host` and `presto://host` connect.
+  `RowsAffected` is `drivers.RowsAffectedOrZero`, and `\copy` inserts without
+  a transaction, because Trino's connectors take a write only with
+  autocommit. Presto had no `\copy` before, and has one now. Checked on
+  trino-483 and presto-0.299 with dbrun: the banners name the product and
+  its release, types with NULLs, row counts, errors, `\copy` of three rows,
+  and `\dt` and `\d`. The wrong password was not checked, because those
+  servers take any user.
+- `drivers.RowsAffectedOrZero` is new, for a server that gives no count. It
+  replaces the copies in Databend and ClickHouse. The shared `\copy` code
+  counts one row for an insert that gives no count, and still stops on any
+  other error.
+
 Source: dburl, on 2026-10-07. Ken decided three scheme moves in dburl that
 day (its D49 and D50). They are staged there and not released. Do nothing in
 usql until dburl sends the tag.
@@ -1806,7 +1825,29 @@ it takes that release, moves the drivers, and tests, in one commit. `Version`
 reads `SELECT version()` on Trino, and /v1/info or nothing on Presto, which
 has no `version()`.
 
-## W41. Follow dburl's removal of TLS by scheme
+ODBC, on 2026-10-07: `drivers/odbc` imports `github.com/xo/odbc` v0.1.0,
+and `alexbrainman/odbc` is out of `go.mod`. It needs no cgo, so by the rule
+for groups it moved from `all` to `most`. `IsPasswordErr` reads class 28 of
+SQLSTATE, the failed authorization of every database. The metadata question
+above is still open.
+
+**Blocker.** In a build that links both go-sqlite3 and DuckDB, which is the
+default build and every `most` build, the first ODBC query crashes the
+process with a SIGSEGV from purego's call into the ODBC library. Measured
+with the SQLite ODBC driver (unixODBC 2.3.14), six runs of each build: both
+linked, 6 of 6 crash. Without DuckDB, without SQLite, or with `CGO_ENABLED=0`,
+6 of 6 work. Connecting works. A plain `database/sql` program with the same
+DSN does not crash, even with go-sqlite3 linked. The odbc project has been
+told, and nothing here fixes it. Do not release until it is fixed or ODBC is
+taken out of the builds that link both. The Homebrew formula in `xo/homebrew-xo`
+and the paragraph of the README about `--with-odbc` need a look at the same
+time, because ODBC is no longer an extra.
+
+## W41. Follow dburl's removal of TLS by scheme: Done
+
+Done on 2026-10-07 on dburl v0.44.0. The MaxCompute example of the README now
+uses `tls=false`, and the generated table lost `yds`, `ydbs`, `trs` and
+`trinos`.
 
 Source: dburl, on 2026-10-07. Ken decided that no scheme chooses TLS by its
 scheme or transport any more, because the dbimp drivers read `tls=true`
@@ -1843,7 +1884,16 @@ What usql has to change when it bumps:
 - No test, sample or other document of usql uses a scheme that goes. A
   search on 2026-10-07 found only the two places above.
 
-## W42. Decide whether ClickHouse moves to dbimp's driver
+## W42. Decide whether ClickHouse moves to dbimp's driver: Done
+
+Done on 2026-10-07. Ken decided to move (dburl's D53), and usql took it on
+dburl v0.44.0 and dbimp v0.13.0. The ClickHouse driver is dbimp's, over HTTP
+only, and `clickhouse-go` is out of `go.mod`. Its `RowsAffected` is the shared
+`drivers.RowsAffectedOrZero`, its `Err` and `IsPasswordErr` read the codes 194
+and 516 of `*clickhouse.Error`, and `\copy` inserts without a transaction,
+because the server has none. Checked on clickhouse-26.9 with dbrun: the
+banner, types with NULLs, a count, errors, a wrong password, `\copy` of three
+rows, and `\dt` and `\d`.
 
 Source: dbimp, on 2026-10-07. dbimp v0.13.0 has `github.com/xo/dbimp/clickhouse`,
 for ClickHouse over HTTP. It could replace `ClickHouse/clickhouse-go/v2` in
