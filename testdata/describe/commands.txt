@@ -1,0 +1,179 @@
+\d
+\d+
+\dS
+\dS+
+\d app.*
+\d+ app.*
+\dt
+\dt+
+\dt app.*
+\dt+ app.*
+\dtS
+\dtS+
+\di
+\di+
+\di app.*
+\di+ app.*
+\diS
+\dv
+\dv+
+\dv app.*
+\dv+ app.*
+\dvS
+\dm
+\dm+
+\dm app.*
+\dm+ app.*
+\ds
+\ds+
+\ds app.*
+\ds+ app.*
+\dE
+\dE+
+\dE app.*
+\dE+ app.*
+\dP
+\dP+
+\dP app.*
+\dPt+ app.*
+\dPi+ app.*
+\da
+\da+
+\da app.*
+\daS
+\dA
+\dA+
+\dAc
+\dAc+
+\dAf
+\dAf+
+\dAo
+\dAo+
+\dAp
+\dAp+
+\db
+\db+
+\dc
+\dc+
+\dcS
+\dconfig
+\dconfig+
+\dconfig work*
+\dC
+\dC+
+\dC app.*
+\dd
+\dd app.*
+\ddS
+\dD
+\dD+
+\dD app.*
+\dDS
+\ddp
+\des
+\des+
+\det
+\det+
+\deu
+\deu+
+\dew
+\dew+
+\df
+\df+
+\df app.*
+\df+ app.*
+\dfS
+\dfS+
+\dfa app.*
+\dfn app.*
+\dfp app.*
+\dft app.*
+\dfw app.*
+\dF
+\dF+
+\dF app.*
+\dFd
+\dFd+
+\dFp
+\dFp+
+\dFt
+\dFt+
+\dg
+\dg+
+\dgS
+\dl
+\dl+
+\dL
+\dL+
+\dLS
+\dn
+\dn+
+\dn app*
+\dnS
+\do
+\do+
+\do app.*
+\dO
+\dO+
+\dO app.*
+\dOS
+\dp
+\dp app.*
+\dpS
+\drds
+\drg
+\drgS
+\dRp
+\dRp+
+\dRs
+\dRs+
+\dT
+\dT+
+\dT app.*
+\dT+ app.*
+\dTS
+\du
+\du+
+\duS
+\dx
+\dx+
+\dX
+\dX app.*
+\dy
+\dy+
+\l
+\l+
+\z
+\z app.*
+\d+ app.account
+\d app.account
+\d+ app.orders
+\d+ app.order_line
+\d+ app.part
+\d+ app.part_eu
+\d+ app.rng
+\d+ app.base
+\d+ app.child2
+\d+ app.unl
+\d+ app.rls
+\d+ app.v_acct
+\d+ app.v_secure
+\d+ app.v_check
+\d+ app.mv
+\d+ app.sq
+\d+ app.sq_owned
+\d+ app.ft
+\d+ app.account_partial
+\d+ app.account_lower
+\d+ app.mood
+\d+ app.pair
+\d+ app.posint
+\d+ app.email
+\d+ app.add
+\sf app.add
+\sv app.v_acct
+\sv+ app.v_acct
+\df+ app.add
+\dT+ app.mood
+\dp app.account
+\z app.account

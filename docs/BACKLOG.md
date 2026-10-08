@@ -2290,3 +2290,53 @@ release. The `cql` rows of the password and statement-form lists in
 `docs/RELEASE.md` are dbmeta's dialect names, and change with it. Not yet
 checked on a server: the banner, a query, `BEGIN BATCH`, a wrong password,
 `\dt`, `\copy` (the `BeginTx` problem above) and the new value types.
+
+## W46. Bring the describe output back to psql and to v0.21.6, PostgreSQL first
+
+Ken asked on 2026-10-08 for the describe commands to give at least the
+information of the last release (v0.21.6), with the columns and names of psql,
+and the same column names where it is the same column. Extra columns and extra
+commands are fine. psql's style and names win over the old usql's. The
+databases follow PostgreSQL one at a time, with v0.21.6 as the baseline where
+there is no psql.
+
+The harness is `testdata/describe`. `fixture.sql` builds a database with every
+kind of PostgreSQL object, `commands.txt` lists 179 commands in their forms, and
+`run.sh` runs them on psql, the old usql and the new one, as csv.
+`compare.py` lists the columns that psql has and usql lacks, `values.py` lists
+the cells that differ for columns both have, and `sections.py` compares the
+sections of `\d+ NAME`. It starts no database, so it is not a test (rule 6), and
+W37 will turn its results into goldens.
+
+First run, 2026-10-08, on postgres-18 with dbmeta v0.4.0:
+
+- Three commands fail with a NULL scan error in dbmeta: `\d` of a table with
+  an INCLUDE or expression index (`descending`), `\ddp` (`schema`) and `\drds`
+  (`database`).
+- The relation lists lack Owner, Persistence, Access method and Size (and
+  v0.21.6's Rows). `\di` lacks Owner, Persistence and Size, and v0.21.6's
+  Primary? and Unique?. `\d+` lacks Collation, Storage, Compression and Stats
+  target for columns, and almost every footer section of psql: partitions,
+  inheritance, policies, publications, not-null constraints, rules, statistics
+  objects, view definitions, options, access method, and the server of a
+  foreign table.
+- Other lists differ by one or two columns, such as `\dn+`, `\dx`, `\l`, `\dRp`,
+  `\dRs+`, `\dFp+`, `\do+`, `\dC+`, `\df+`, and `\dD`.
+- Commands that new usql does not know: `\da+`, `\dPt`, `\dPi`, `\dPn`.
+- v0.21.6 had far fewer sections than psql. Only Indexes, Check constraints,
+  Foreign-key constraints, Referenced by and Triggers match.
+
+The report went to dbmeta on 2026-10-08, which owns the fields. usql's
+formatter owns the layout, the names and the order.
+
+Done on 2026-10-08. dbmeta v0.7.0 names the dialect `cassandra`, and usql took it,
+so `TestEveryDriverReadsThroughDbmeta` passes again. Checked through usql on
+cassandra-5.0 from dbrun: the banner (`Cassandra 5.0.9, CQL 3.4.7, Protocol
+v5`), a query with NULLs, and the types decimal, varint, date, time, inet,
+list, map and duration, `BEGIN BATCH` with a `$$x;y$$` string, a wrong
+password, and `\dt` and `\d`. `\copy` says that the driver does not support it,
+as it never did, because the driver has no Copy hook. Open: dbmeta's Cassandra
+model ignores the schema and name filters, and the formatter does not narrow
+the result, so `\dt ks.*` also lists the system keyspaces. dbmeta has been
+asked for one shared helper. Not checked: scylla.
+
