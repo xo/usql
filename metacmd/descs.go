@@ -91,7 +91,7 @@ func init() {
 		{
 			{Describe, `d[S+]`, `[NAME]`, `list tables, views, and sequences or describe table, view, sequence, or index`, false, false},
 			{Describe, `d[tvmsE][S+]`, ``, `alias for \d[S+]`, true, false},
-			{Describe, `da[S]`, `[PATTERN]`, `list aggregates`, false, false},
+			{Describe, `da[S+]`, `[PATTERN]`, `list aggregates`, false, false},
 			{Describe, `dA[+]`, `[PATTERN]`, `list access methods`, false, false},
 			{Describe, `dAc[+]`, `[AMPTRN [PATTERN]]`, `list operator classes`, false, false},
 			{Describe, `dAf[+]`, `[AMPTRN [PATTERN]]`, `list operator families`, false, false},
@@ -123,7 +123,7 @@ func init() {
 			{Describe, `do[S+]`, `[PATTERN]`, `list operators`, false, false},
 			{Describe, `dO[S+]`, `[PATTERN]`, `list collations`, false, false},
 			{Describe, `dp[S]`, `[PATTERN]`, `list table, view, and sequence access privileges`, false, false},
-			{Describe, `dP[+]`, `[PATTERN]`, `list partitioned relations`, false, false},
+			{Describe, `dP[itn+]`, `[PATTERN]`, `list partitioned relations`, false, false},
 			{Describe, `drds`, `[ROLEPTRN [DBPTRN]]`, `list per-database role settings`, false, false},
 			{Describe, `drg[S]`, `[PATTERN]`, `list role grants`, false, false},
 			{Describe, `dRp[+]`, `[PATTERN]`, `list replication publications`, false, false},

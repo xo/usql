@@ -2340,3 +2340,36 @@ model ignores the schema and name filters, and the formatter does not narrow
 the result, so `\dt ks.*` also lists the system keyspaces. dbmeta has been
 asked for one shared helper. Not checked: scylla.
 
+
+Progress, 2026-10-08, on dbmeta v0.8.0 (D197 and D198). The three scan
+failures are gone. The formatter now prints the Owner, Persistence, Access
+method, Size and Rows of relations, the Owner, Persistence and Size of
+indexes, the Collation, Storage, Compression and Stats target of columns, the
+identity and generated defaults, the partial-index WHERE and the index flags
+(INVALID, CLUSTER, DEFERRABLE, INITIALLY DEFERRED, REPLICA IDENTITY), the
+Leakproof? and Source code of functions, psql's titles for each class, the
+`Unlogged` prefix of a title, `\da+` and `\dP[itn]`. A column that no row has a
+value for is left out, so databases that give none keep their output. Left, and
+asked of dbmeta: the sections of `\d+ NAME` (D199), the fields and text forms
+listed in the report of the same day (`\dP` sizes, FDW options, `\dT+`
+elements, privileges and policies, `\dn+`, `\dx`, `\l`, `\dRp`, `\dRs+`,
+`\dFp+`, `\dAo+`, sequence cache), and the values of `\dD`, `\dFd+` and the
+`\dA` family. After that, the other databases follow, with v0.21.6 as the
+baseline.
+
+Progress, 2026-10-09, on dbmeta v0.9.0 (D199, D200 and D201). The formatter now
+also prints the sections of `\d+ NAME`: the partition key, the partitions and
+their bounds, `Partition of`, the inheritance of a table, policies, rules,
+statistics objects, publications, not-null constraints, view definitions,
+options, access method, and the server and options of a foreign table. The
+lines of an index come from the definition of the database, with `UNIQUE
+CONSTRAINT` and `EXCLUDE`. Names of related tables are written without a schema
+where the database says they resolve without one. `\dn+`, `\dx`, `\l`, `\dRp`,
+`\dRs+`, `\do+`, `\dAo+`, `\dP`, the FDW options, `\dT+` elements, and the
+column privileges and policies of `\dp` follow psql. The harness shows these
+differences left: `\d` of an index lacks the Storage and Stats target of its
+columns and the type of an expression, `\dFp+` prints no per-parser table,
+`\dC+` gives no Leakproof? (the cast has none), the column options of a
+foreign table are empty, and `\dRs+` cannot be compared on a database with no
+subscriptions.
+

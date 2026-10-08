@@ -33,10 +33,15 @@
 \dE app.*
 \dE+ app.*
 \dP
+\da+ app.*
+\dPtn+ app.*
+\dPn
+\dPi+
+\dPt
 \dP+
 \dP app.*
-\dPt+ app.*
-\dPi+ app.*
+\dPt+
+\dPi+
 \da
 \da+
 \da app.*

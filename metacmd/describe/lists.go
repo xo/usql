@@ -24,6 +24,8 @@ type Call struct {
 	Verbose bool
 	// System is set by S, and lists the objects of the system too.
 	System bool
+	// Flags are the letters that follow the name, such as the t of \dPt.
+	Flags string
 }
 
 // pattern returns the i'th pattern, or an empty string.
@@ -104,6 +106,9 @@ type field[T any] struct {
 	// verbose is a column that only the + form of the command prints.
 	verbose bool
 	value   func(T) any
+	// when, if set, says from the rows whether the column is printed. A
+	// column that no row has a value for is one the database cannot give.
+	when func([]T) bool
 }
 
 // spec is a describe command that prints one list: the rows of one query,
@@ -140,17 +145,17 @@ func (s spec[T]) read(ctx context.Context, f *Formatter, c Call, a dbmeta.Args) 
 // print prints res.
 func (s spec[T]) print(out io.Writer, res []T, verbose bool) error {
 	r := &rows{}
+	var shown []field[T]
 	for _, f := range s.fields {
-		if verbose || !f.verbose {
+		if (verbose || !f.verbose) && (f.when == nil || f.when(res)) {
+			shown = append(shown, f)
 			r.columns = append(r.columns, f.name)
 		}
 	}
 	for _, v := range res {
 		var row []any
-		for _, f := range s.fields {
-			if verbose || !f.verbose {
-				row = append(row, f.value(v))
-			}
+		for _, f := range shown {
+			row = append(row, f.value(v))
 		}
 		r.add(row...)
 	}
@@ -257,7 +262,7 @@ func accessPrivileges[T any](f func(T) sql.Null[string]) field[T] {
 	return field[T]{name: "Access privileges", verbose: true, value: func(v T) any { return null(f(v)) }}
 }
 
-var types = list(spec[dbmeta.Type]{
+var types = withElements(spec[dbmeta.Type]{
 	cmd: `\dT`, title: text.ListOfTypes, q: dbmeta.Types,
 	fields: []field[dbmeta.Type]{
 		{name: "Schema", value: func(t dbmeta.Type) any { return t.Schema }},
@@ -303,6 +308,10 @@ var operators = list(spec[dbmeta.Operator]{
 		{name: "Right arg type", value: func(o dbmeta.Operator) any { return o.RightType }},
 		{name: "Result type", value: func(o dbmeta.Operator) any { return o.ResultType }},
 		{name: "Function", verbose: true, value: func(o dbmeta.Operator) any { return null(o.Function) }},
+		{name: "Leakproof?", verbose: true, value: func(o dbmeta.Operator) any { return yesNo(o.Leakproof) },
+			when: func(os []dbmeta.Operator) bool {
+				return some(os, func(o dbmeta.Operator) bool { return o.Function.Valid })
+			}},
 		description(func(o dbmeta.Operator) sql.Null[string] { return o.Comment }),
 	},
 })
@@ -536,7 +545,7 @@ func defined(b bool) string {
 	return ""
 }
 
-var foreignDataWrappers = list(spec[dbmeta.ForeignDataWrapper]{
+var foreignDataWrappers = withOptions("foreign data wrapper", func(f dbmeta.ForeignDataWrapper) string { return f.Name }, spec[dbmeta.ForeignDataWrapper]{
 	cmd: `\dew`, title: text.ListOfForeignDataWrappers, q: dbmeta.ForeignDataWrappers,
 	fields: []field[dbmeta.ForeignDataWrapper]{
 		{name: "Name", value: func(f dbmeta.ForeignDataWrapper) any { return f.Name }},
@@ -549,7 +558,7 @@ var foreignDataWrappers = list(spec[dbmeta.ForeignDataWrapper]{
 	},
 })
 
-var foreignServers = list(spec[dbmeta.ForeignServer]{
+var foreignServers = withOptions("foreign server", func(f dbmeta.ForeignServer) string { return f.Name }, spec[dbmeta.ForeignServer]{
 	cmd: `\des`, title: text.ListOfForeignServers, q: dbmeta.ForeignServers,
 	fields: []field[dbmeta.ForeignServer]{
 		{name: "Name", value: func(f dbmeta.ForeignServer) any { return f.Name }},
@@ -563,7 +572,7 @@ var foreignServers = list(spec[dbmeta.ForeignServer]{
 	},
 })
 
-var userMappings = list(spec[dbmeta.UserMapping]{
+var userMappings = withOptions("user mapping", func(u dbmeta.UserMapping) string { return u.Server + "\x00" + null(u.Name) }, spec[dbmeta.UserMapping]{
 	cmd: `\deu`, title: text.ListOfUserMappings, q: dbmeta.UserMappings,
 	fields: []field[dbmeta.UserMapping]{
 		{name: "Server", value: func(u dbmeta.UserMapping) any { return u.Server }},
@@ -572,7 +581,7 @@ var userMappings = list(spec[dbmeta.UserMapping]{
 	},
 })
 
-var foreignTables = list(spec[dbmeta.ForeignTable]{
+var foreignTables = withOptions("foreign table", func(f dbmeta.ForeignTable) string { return f.Schema + "\x00" + f.Name }, spec[dbmeta.ForeignTable]{
 	cmd: `\det`, title: text.ListOfForeignTables, q: dbmeta.ForeignTables,
 	fields: []field[dbmeta.ForeignTable]{
 		{name: "Schema", value: func(f dbmeta.ForeignTable) any { return f.Schema }},
@@ -583,17 +592,71 @@ var foreignTables = list(spec[dbmeta.ForeignTable]{
 	},
 })
 
-var partitionedTables = list(spec[dbmeta.PartitionedTable]{
+var partitionedSpec = spec[dbmeta.PartitionedTable]{
 	cmd: `\dP`, title: text.ListOfPartitionedRels, q: dbmeta.PartitionedTables,
 	fields: []field[dbmeta.PartitionedTable]{
 		{name: "Schema", value: func(p dbmeta.PartitionedTable) any { return p.Schema }},
 		{name: "Name", value: func(p dbmeta.PartitionedTable) any { return p.Name }},
 		{name: "Owner", value: func(p dbmeta.PartitionedTable) any { return p.Owner }},
-		{name: "Type", value: func(p dbmeta.PartitionedTable) any { return p.Type }},
+		{name: "Type", value: func(p dbmeta.PartitionedTable) any { return partitionedType(p.Type) }},
 		{name: "Parent name", value: func(p dbmeta.PartitionedTable) any { return p.Parent }},
+		{name: "Table", value: func(p dbmeta.PartitionedTable) any { return null(p.Table) },
+			when: func(ps []dbmeta.PartitionedTable) bool {
+				return some(ps, func(p dbmeta.PartitionedTable) bool { return p.TotalSize.Valid })
+			}},
+		{name: "Access method", verbose: true, value: func(p dbmeta.PartitionedTable) any { return null(p.AccessMethod) },
+			when: func(ps []dbmeta.PartitionedTable) bool {
+				return some(ps, func(p dbmeta.PartitionedTable) bool { return p.TotalSize.Valid })
+			}},
+		{name: "Leaf partition size", verbose: true, value: func(p dbmeta.PartitionedTable) any { return size(p.DirectSize) },
+			when: func(ps []dbmeta.PartitionedTable) bool {
+				return some(ps, func(p dbmeta.PartitionedTable) bool { return p.DirectSize.Valid })
+			}},
+		{name: "Total size", verbose: true, value: func(p dbmeta.PartitionedTable) any { return size(p.TotalSize) },
+			when: func(ps []dbmeta.PartitionedTable) bool {
+				return some(ps, func(p dbmeta.PartitionedTable) bool { return p.TotalSize.Valid })
+			}},
 		verboseDescription(func(p dbmeta.PartitionedTable) sql.Null[string] { return p.Comment }),
 	},
-})
+}
+
+// partitionedTables prints \dP. The letters after it choose indexes (i),
+// tables (t) and, with n, the partitions that are partitioned themselves,
+// which psql shows with the name of their parent. A pattern shows them too.
+func partitionedTables(ctx context.Context, f *Formatter, c Call) error {
+	res, err := partitionedSpec.read(ctx, f, c, partitionedSpec.named(f, c.pattern(0)))
+	if err != nil {
+		return err
+	}
+	nested := strings.Contains(c.Flags, "n") || c.pattern(0) != ""
+	indexes, tables := strings.Contains(c.Flags, "i"), strings.Contains(c.Flags, "t")
+	res = slices.DeleteFunc(res, func(p dbmeta.PartitionedTable) bool {
+		isIndex := strings.Contains(strings.ToLower(p.Type), "index")
+		switch {
+		case !nested && p.Parent != "":
+			return true
+		case indexes && !tables:
+			return !isIndex
+		case tables && !indexes:
+			return isIndex
+		}
+		return false
+	})
+	spec := partitionedSpec
+	spec.fields = slices.DeleteFunc(slices.Clone(spec.fields), func(f field[dbmeta.PartitionedTable]) bool {
+		switch f.name {
+		case "Parent name":
+			return !nested
+		case "Table":
+			// only a list that holds indexes has a table to name
+			return !indexes && tables
+		case "Leaf partition size":
+			return !nested
+		}
+		return false
+	})
+	return spec.print(f.out, res, c.Verbose)
+}
 
 // publicationList is the list that \dRp prints. \dRp+ prints each
 // publication with its tables instead.
@@ -607,6 +670,10 @@ var publicationList = spec[dbmeta.Publication]{
 		{name: "Updates", value: func(p dbmeta.Publication) any { return tf(p.Update) }},
 		{name: "Deletes", value: func(p dbmeta.Publication) any { return tf(p.Delete) }},
 		{name: "Truncates", value: func(p dbmeta.Publication) any { return tf(p.Truncate) }},
+		{name: "Generated columns", value: func(p dbmeta.Publication) any { return null(p.GeneratedColumns) },
+			when: func(ps []dbmeta.Publication) bool {
+				return some(ps, func(p dbmeta.Publication) bool { return p.GeneratedColumns.Valid })
+			}},
 		{name: "Via root", value: func(p dbmeta.Publication) any { return tf(p.ViaRoot) }},
 	},
 }
@@ -671,7 +738,43 @@ var subscriptions = list(spec[dbmeta.Subscription]{
 		{name: "Owner", value: func(s dbmeta.Subscription) any { return s.Owner }},
 		{name: "Enabled", value: func(s dbmeta.Subscription) any { return tf(s.Enabled) }},
 		{name: "Publication", value: func(s dbmeta.Subscription) any { return s.Publications }},
+		{name: "Binary", verbose: true, value: func(s dbmeta.Subscription) any { return nullTF(s.Binary) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.Binary.Valid })
+			}},
+		{name: "Streaming", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.Streaming) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.Streaming.Valid })
+			}},
+		{name: "Two-phase commit", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.TwoPhase) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.TwoPhase.Valid })
+			}},
+		{name: "Disable on error", verbose: true, value: func(s dbmeta.Subscription) any { return nullTF(s.DisableOnError) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.DisableOnError.Valid })
+			}},
+		{name: "Origin", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.Origin) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.Origin.Valid })
+			}},
+		{name: "Password required", verbose: true, value: func(s dbmeta.Subscription) any { return nullTF(s.PasswordRequired) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.PasswordRequired.Valid })
+			}},
+		{name: "Run as owner?", verbose: true, value: func(s dbmeta.Subscription) any { return nullTF(s.RunAsOwner) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.RunAsOwner.Valid })
+			}},
+		{name: "Failover", verbose: true, value: func(s dbmeta.Subscription) any { return nullTF(s.Failover) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.Failover.Valid })
+			}},
 		{name: "Synchronous commit", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.Synchronous) }},
+		{name: "Skip LSN", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.SkipLSN) },
+			when: func(ss []dbmeta.Subscription) bool {
+				return some(ss, func(s dbmeta.Subscription) bool { return s.SkipLSN.Valid })
+			}},
 		{name: "Slot name", verbose: true, value: func(s dbmeta.Subscription) any { return null(s.Slot) }},
 		verboseDescription(func(s dbmeta.Subscription) sql.Null[string] { return s.Comment }),
 	},
@@ -741,7 +844,12 @@ var textSearchDictionaries = list(spec[dbmeta.TextSearchDictionary]{
 	fields: []field[dbmeta.TextSearchDictionary]{
 		{name: "Schema", value: func(t dbmeta.TextSearchDictionary) any { return t.Schema }},
 		{name: "Name", value: func(t dbmeta.TextSearchDictionary) any { return t.Name }},
-		{name: "Template", verbose: true, value: func(t dbmeta.TextSearchDictionary) any { return t.Template }},
+		{name: "Template", verbose: true, value: func(t dbmeta.TextSearchDictionary) any {
+			if t.TemplateSchema.Valid {
+				return t.TemplateSchema.V + "." + t.Template
+			}
+			return t.Template
+		}},
 		{name: "Init options", verbose: true, value: func(t dbmeta.TextSearchDictionary) any { return null(t.Options) }},
 		description(func(t dbmeta.TextSearchDictionary) sql.Null[string] { return t.Comment }),
 	},
@@ -789,6 +897,10 @@ var familyOperators = spec[dbmeta.OperatorFamilyOperator]{
 		{name: "Operator", value: func(o dbmeta.OperatorFamilyOperator) any { return o.Operator }},
 		{name: "Strategy", value: func(o dbmeta.OperatorFamilyOperator) any { return o.Strategy }},
 		{name: "Purpose", value: func(o dbmeta.OperatorFamilyOperator) any { return o.Purpose }},
+		{name: "Sort opfamily", verbose: true, value: func(o dbmeta.OperatorFamilyOperator) any { return null(o.SortFamily) },
+			when: func(os []dbmeta.OperatorFamilyOperator) bool { return len(os) != 0 }},
+		{name: "Leakproof?", verbose: true, value: func(o dbmeta.OperatorFamilyOperator) any { return yesNo(o.Leakproof) },
+			when: func(os []dbmeta.OperatorFamilyOperator) bool { return len(os) != 0 }},
 	},
 }
 
@@ -811,6 +923,10 @@ var extensionList = spec[dbmeta.Extension]{
 	fields: []field[dbmeta.Extension]{
 		{name: "Name", value: func(e dbmeta.Extension) any { return e.Name }},
 		{name: "Version", value: func(e dbmeta.Extension) any { return e.Version }},
+		{name: "Default version", value: func(e dbmeta.Extension) any { return null(e.DefaultVersion) },
+			when: func(es []dbmeta.Extension) bool {
+				return some(es, func(e dbmeta.Extension) bool { return e.DefaultVersion.Valid })
+			}},
 		{name: "Schema", value: func(e dbmeta.Extension) any { return e.Schema }},
 		description(func(e dbmeta.Extension) sql.Null[string] { return e.Comment }),
 	},
@@ -983,4 +1099,112 @@ func (f *Formatter) ShowView(ctx context.Context, pattern string, verbose bool) 
 		}
 	}
 	return nil
+}
+
+// partitionedType returns the type of a partitioned relation as psql names it,
+// such as "partitioned table", where the database says "table".
+func partitionedType(typ string) string {
+	t := strings.ToLower(typ)
+	if strings.HasPrefix(t, "partitioned") {
+		return t
+	}
+	return "partitioned " + t
+}
+
+// nullTF returns a boolean that may be absent the way psql prints one.
+func nullTF(b sql.Null[bool]) string {
+	if !b.Valid {
+		return ""
+	}
+	return tf(b.V)
+}
+
+// optionKey is the key of the options of one foreign object. A foreign table
+// is keyed by its schema and name, a user mapping by its server and role, and
+// the others by their name.
+func optionKey(o dbmeta.ForeignOption) string {
+	switch o.Kind {
+	case "foreign table":
+		return null(o.Schema) + "\x00" + null(o.Name)
+	case "user mapping":
+		return null(o.Server) + "\x00" + null(o.Name)
+	}
+	return null(o.Name)
+}
+
+// foreignOptions reads the options of each foreign object of a kind, keyed as
+// optionKey, and written as psql writes them: (host 'x', "user" 'u').
+func (f *Formatter) foreignOptions(ctx context.Context, kind string) (map[string]string, error) {
+	if !f.supports(dbmeta.ForeignOptions) {
+		return nil, nil
+	}
+	opts, err := optional(all(ctx, f, dbmeta.ForeignOptions, dbmeta.Args{WithSystem: true}))
+	if err != nil {
+		return nil, err
+	}
+	slices.SortStableFunc(opts, func(a, b dbmeta.ForeignOption) int { return int(a.Ordinal - b.Ordinal) })
+	parts := make(map[string][]string)
+	for _, o := range opts {
+		if o.Kind == kind {
+			parts[optionKey(o)] = append(parts[optionKey(o)], o.Quoted)
+		}
+	}
+	m := make(map[string]string, len(parts))
+	for k, v := range parts {
+		m[k] = "(" + strings.Join(v, ", ") + ")"
+	}
+	return m, nil
+}
+
+// withOptions returns the command that prints s with its FDW options column
+// read from the ForeignOptions kind, which keeps each option apart, in place
+// of the flat text of the object.
+func withOptions[T any](kind string, key func(T) string, s spec[T]) command {
+	return func(ctx context.Context, f *Formatter, c Call) error {
+		opts, err := f.foreignOptions(ctx, kind)
+		if err != nil {
+			return err
+		}
+		s := s
+		s.fields = slices.Clone(s.fields)
+		for i, fld := range s.fields {
+			if fld.name == "FDW options" && opts != nil {
+				s.fields[i].value = func(v T) any { return opts[key(v)] }
+			}
+		}
+		return list(s)(ctx, f, c)
+	}
+}
+
+// withElements returns the command that prints s with the elements of an
+// enumerated type one on each line, as psql prints them, where the type holds
+// them as one text.
+func withElements(s spec[dbmeta.Type]) command {
+	return func(ctx context.Context, f *Formatter, c Call) error {
+		var labels map[string][]string
+		if f.supports(dbmeta.EnumValues) {
+			vals, err := optional(all(ctx, f, dbmeta.EnumValues, dbmeta.Args{WithSystem: true}))
+			if err != nil {
+				return err
+			}
+			slices.SortStableFunc(vals, func(a, b dbmeta.EnumValue) int { return int(a.Ordinal - b.Ordinal) })
+			labels = make(map[string][]string)
+			for _, v := range vals {
+				labels[v.Schema+"\x00"+v.Enum] = append(labels[v.Schema+"\x00"+v.Enum], v.Label)
+			}
+		}
+		s := s
+		s.fields = slices.Clone(s.fields)
+		for i, fld := range s.fields {
+			if fld.name == "Elements" && labels != nil {
+				s.fields[i].value = func(t dbmeta.Type) any {
+					if l, ok := labels[t.Schema+"\x00"+t.Name]; ok {
+						return strings.Join(l, "\n")
+					}
+					return t.Elements
+				}
+			}
+		}
+		return list(s)(ctx, f, c)
+	}
 }

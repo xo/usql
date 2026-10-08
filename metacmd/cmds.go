@@ -896,7 +896,7 @@ func Prompt(p *Params) error {
 //
 //	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
 //	d[tvmsE][S+]
-//	da[S]	[PATTERN]	list aggregates
+//	da[S+]	[PATTERN]	list aggregates
 //	dA[+]	[PATTERN]	list access methods
 //	dAc[+]	[AMPTRN [PATTERN]]	list operator classes
 //	dAf[+]	[AMPTRN [PATTERN]]	list operator families
@@ -928,7 +928,7 @@ func Prompt(p *Params) error {
 //	do[S+]	[PATTERN]	list operators
 //	dO[S+]	[PATTERN]	list collations
 //	dp[S]	[PATTERN]	list table, view, and sequence access privileges
-//	dP[+]	[PATTERN]	list partitioned relations
+//	dP[itn+]	[PATTERN]	list [only index/table] partitioned relations [n=nested]
 //	drds	[ROLEPTRN [DBPTRN]]	list per-database role settings
 //	drg[S]	[PATTERN]	list role grants
 //	dRp[+]	[PATTERN]	list replication publications
@@ -987,7 +987,12 @@ func Describe(p *Params) error {
 	case name == "lo_list":
 		name = "dl"
 	}
-	_, err = m.Run(ctx, describe.Call{Name: name, Patterns: patterns, Verbose: verbose, System: showSystem})
+	// the letters after dP choose indexes, tables and nested relations
+	var flags string
+	if strings.HasPrefix(name, "dP") {
+		name, flags = "dP", name[2:]
+	}
+	_, err = m.Run(ctx, describe.Call{Name: name, Flags: flags, Patterns: patterns, Verbose: verbose, System: showSystem})
 	return err
 }
 
