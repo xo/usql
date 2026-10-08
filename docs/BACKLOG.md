@@ -2383,3 +2383,9 @@ dburl v0.48.0 dropped the scheme `godror` and its alias `gr`, and usql took it,
 as AGENTS.md asks.
 Also stale in `_samples/usqlpass`: the lines for `cql`, `ignite` and `mymysql`,
 schemes that went in earlier changes.
+
+## W48. Fold orshared into the oracle driver: Done
+
+Done on 2026-10-09 at Ken's request. `drivers/oracle/orshared` held the
+registration that the oracle and godror drivers shared. godror is gone, so the
+registration is in `drivers/oracle/oracle.go` and the package is removed.

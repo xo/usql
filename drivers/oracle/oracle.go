@@ -11,14 +11,27 @@ import (
 	"strings"
 
 	_ "github.com/sijms/go-ora/v3" // DRIVER
-	"github.com/xo/usql/drivers/oracle/orshared"
+	"github.com/xo/dburl"
+	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/env"
 )
 
 func init() {
-	orshared.Register(
-		"oracle",
+	drivers.Register("oracle", drivers.Driver{
+		ForceParams: func(u *dburl.URL) {
+			// if the service name is not specified, use the environment
+			// variable if present
+			if strings.TrimPrefix(u.Path, "/") == "" {
+				if n, ok := env.Getenv("ORACLE_SID", "ORASID"); ok && n != "" {
+					u.Path = "/" + n
+					if u.Host == "" {
+						u.Host = "localhost"
+					}
+				}
+			}
+		},
 		// unwrap error
-		func(err error) (string, string) {
+		Err: func(err error) (string, string) {
 			if e := errors.Unwrap(err); e != nil {
 				err = e
 			}
@@ -45,11 +58,14 @@ func init() {
 			return code, strings.TrimSpace(msg)
 		},
 		// is password error
-		func(err error) bool {
+		IsPasswordErr: func(err error) bool {
 			if e := errors.Unwrap(err); e != nil {
 				err = e
 			}
 			return strings.Contains(err.Error(), "empty password")
 		},
-	)
+		Copy: drivers.CopyWithInsert(func(n int) string {
+			return fmt.Sprintf(":%d", n)
+		}),
+	})
 }

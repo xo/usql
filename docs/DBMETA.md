@@ -300,12 +300,11 @@ Two qualifications.
 usql keeps its own fallback for every name dbmeta does not cover. That fallback
 is `SELECT version();`, which several products do not have.
 
-Oracle is not one of the products that falls through to it. An earlier version
-of this document said Oracle registered no version function. That was wrong.
-`drivers/oracle/orshared/orshared.go:38` registers one, and the oracle driver
-uses it, because it registers through `orshared.Register` rather than
-directly. The godror driver used it too, until it was removed. That shared path is the same one that made an earlier count of
-registered schemes too low.
+Oracle is not one of the products that falls through to it, because dbmeta has
+a model for it. The oracle driver registers itself in `drivers/oracle/oracle.go`.
+It used to register through a shared package, `orshared`, that godror also used,
+and that path made an earlier count of registered schemes too low. The package
+is gone, since nothing else used it.
 
 Oracle has a different defect, and two open pull requests report it. Its
 version query is `SELECT version FROM v$instance`, and `v$instance` needs
