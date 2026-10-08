@@ -21,7 +21,6 @@
 package libsql
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -33,15 +32,6 @@ import (
 
 func init() {
 	drivers.Register("libsql", drivers.Driver{
-		// the server gives its own version only at GET /version, which
-		// database/sql cannot reach, so this is the version of SQLite
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			if err := db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&ver); err != nil {
-				return "", err
-			}
-			return "libSQL, SQLite " + ver, nil
-		},
 		Err: func(err error) (string, string) {
 			var e *libsql.Error
 			if errors.As(err, &e) {

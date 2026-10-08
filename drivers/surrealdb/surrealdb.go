@@ -20,10 +20,7 @@
 package surrealdb
 
 import (
-	"context"
-	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,30 +36,6 @@ func init() {
 		// DEFINE, and the server sends no count of rows affected, so each
 		// statement is run as a query
 		AlwaysQuery: true,
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			// no statement of SurrealQL returns the version, so it is read
-			// through the driver's connection
-			rc, ok := db.(interface {
-				Conn(context.Context) (*sql.Conn, error)
-			})
-			if !ok {
-				return "", fmt.Errorf("reading the version through %T", db)
-			}
-			conn, err := rc.Conn(ctx)
-			if err != nil {
-				return "", err
-			}
-			defer conn.Close()
-			var ver string
-			err = conn.Raw(func(dc any) error {
-				ver, err = surrealdb.Version(ctx, dc)
-				return err
-			})
-			if err != nil {
-				return "", err
-			}
-			return "SurrealDB " + strings.TrimPrefix(ver, "surrealdb-"), nil
-		},
 		Err: func(err error) (string, string) {
 			// a response can hold several errors, and only a single one is
 			// reported by its code

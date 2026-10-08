@@ -16,8 +16,6 @@
 package neo4j
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"strings"
 
@@ -31,18 +29,6 @@ func init() {
 		// such as MATCH is not one that usql knows returns rows, so each
 		// statement is run as a query
 		AlwaysQuery: true,
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver, edition string
-			err := db.QueryRowContext(ctx, `CALL dbms.components() YIELD name, versions, edition `+
-				`WHERE name = 'Neo4j Kernel' RETURN versions[0], edition`).Scan(&ver, &edition)
-			switch {
-			case errors.Is(err, sql.ErrNoRows):
-				return "Neo4j <unknown>", nil
-			case err != nil:
-				return "", err
-			}
-			return "Neo4j " + ver + " " + edition, nil
-		},
 		Err: func(err error) (string, string) {
 			// a response can hold several errors, and only a single one is
 			// reported by its code

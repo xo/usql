@@ -11,15 +11,13 @@
 //
 // OpenSearch has its own driver, apart from Elasticsearch (dbimp's D162).
 //
-// Metadata: none. dbmeta has no model for OpenSearch yet, so the describe commands
-// report that they are not supported (D3).
+// Metadata: dbmeta's OpenSearch model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most
 package opensearch
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -31,10 +29,6 @@ import (
 
 func init() {
 	drivers.Register("opensearch", drivers.Driver{
-		// SELECT VERSION() fails on every release, and GET / is refused to the ordinary user
-		Version: func(context.Context, drivers.DB) (string, error) {
-			return "OpenSearch", nil
-		},
 		Err: func(err error) (string, string) {
 			var e *opensearch.Error
 			if errors.As(err, &e) {

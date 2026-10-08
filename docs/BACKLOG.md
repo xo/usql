@@ -2218,7 +2218,7 @@ Checked through usql on druid-38.0.0 from dbrun: the banner (`Apache Druid
 checked: druid-37.0.0, and `\d` of a table with data, because the server held
 none.
 
-## W45. Move Cassandra from xo/cql to xo/cassandra: done, but it waits on dbmeta
+## W45. Move Cassandra from xo/cql to xo/cassandra: Done
 
 Waits on dburl and xo/cassandra. Ken said on 2026-10-08 that the Cassandra
 driver moves from `github.com/xo/cql` to `github.com/xo/cassandra`, and drops

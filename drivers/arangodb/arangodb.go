@@ -16,7 +16,6 @@
 package arangodb
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -32,13 +31,6 @@ func init() {
 		// an AQL statement such as FOR ... RETURN is not one that usql
 		// knows returns rows, so each statement is run as a query
 		AlwaysQuery: true,
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			if err := db.QueryRowContext(ctx, `RETURN VERSION()`).Scan(&ver); err != nil {
-				return "", err
-			}
-			return "ArangoDB " + ver, nil
-		},
 		Err: func(err error) (string, string) {
 			var e *arangodb.Error
 			if errors.As(err, &e) && e.Num != 0 {

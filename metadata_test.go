@@ -15,7 +15,6 @@ import (
 // model yet" and "cannot have one" are different states, and a gap that is
 // written down is one that can be counted. See step 4 of docs/DBMETA.md.
 var noModel = map[string]string{
-	"avatica":    "no model yet",
 	"awsathena":  "no model yet",
 	"bigquery":   "no model yet",
 	"chai":       "no model yet",
@@ -26,7 +25,6 @@ var noModel = map[string]string{
 	"flightsql":  "no model yet",
 	"maxcompute": "no model yet",
 	"odbc":       "cannot have one: ODBC is a bridge to any database, and has no dialect of its own",
-	"opensearch": "no model yet",
 	"ots":        "no model yet",
 	"pinot":      "no model yet",
 	"spanner":    "no model yet",

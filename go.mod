@@ -41,7 +41,7 @@ require (
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/dbimp v0.15.0
-	github.com/xo/dbmeta v0.4.0
+	github.com/xo/dbmeta v0.7.0
 	github.com/xo/dburl v0.47.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.0

@@ -27,7 +27,7 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.4.0 and transit v0.2.0. rline has no tag, so usql
+- usql requires dbmeta v0.7.0 and transit v0.2.0. rline has no tag, so usql
   builds against a local checkout of it through a `go.work` that is not
   committed. The release needs a tag of rline, required in `go.mod`.
 - The tests against databases and their recordings were removed, because
@@ -183,7 +183,7 @@ one error, and a wrong password:
 ### Changing passwords
 
 Run `\password` as an ordinary user and as an administrator on each database
-that dbmeta can change a password on: clickhouse, cockroachdb, cql, cratedb,
+that dbmeta can change a password on: cassandra, clickhouse, cockroachdb, cratedb,
 databend, exasol, memsql, mysql, oracle, postgres, redshift, snowflake,
 sqlserver, tidb and vertica.
 
@@ -199,7 +199,7 @@ of its databases:
 | Forms like | Databases |
 | --- | --- |
 | postgres | cockroachdb, cratedb, duckdb, postgres, questdb, redshift, snowflake, vertica |
-| cql | cql |
+| cassandra | cassandra |
 | mysql | memsql, mysql, surrealdb, tidb, vitess |
 | sqlite | arangodb, impala, libsql, neo4j, rqlite, sqlite3, ydb |
 | standard | clickhouse, couchbase, exasol, firebirdsql, hdb, influxql, oracle, presto, sqlserver, trino |

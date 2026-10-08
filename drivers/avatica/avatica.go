@@ -14,15 +14,13 @@
 // The URL is avatica://user:password@host:port, with the keys tls and auth.
 // It has no path. The old driver took an http:// URL, which this one refuses.
 //
-// Metadata: none. dbmeta has no model for Avatica yet, so the describe
-// commands report that they are not supported (D3).
+// Metadata: dbmeta's Avatica model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most
 package avatica
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -35,18 +33,6 @@ import (
 
 func init() {
 	drivers.Register("avatica", drivers.Driver{
-		// DATABASE_VERSION is a function of HSQLDB, which backs the standalone
-		// server, so what it returns is the release of HSQLDB and not of
-		// Avatica. The Phoenix Query Server has no statement for its version,
-		// which only a call of the protocol that the driver does not send
-		// reports, so there the release is unknown.
-		Version: func(ctx context.Context, db drivers.DB) (string, error) {
-			var ver string
-			if err := db.QueryRowContext(ctx, `VALUES (DATABASE_VERSION())`).Scan(&ver); err != nil {
-				return "Avatica <unknown>", nil
-			}
-			return "Avatica, HSQLDB " + ver, nil
-		},
 		Err: func(err error) (string, string) {
 			var e *avatica.Error
 			if errors.As(err, &e) {

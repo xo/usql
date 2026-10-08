@@ -77,16 +77,17 @@ Open points that are known:
   `Args`, `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's
   D169).
 - dbmeta has had models since v0.1.0 for arangodb, influxql, libsql, neo4j,
-  surrealdb and ydb. The Version hooks of arangodb, neo4j, surrealdb and ydb
-  were kept only for databases that dbmeta did not model (D4). Check dbmeta's
-  version for each against a server, and remove the hook that it makes
-  redundant. InfluxDB and InfluxQL keep theirs, by Ken's decision (dbmeta's
-  D166).
+  surrealdb and ydb, and since v0.7.0 for avatica and opensearch. Checked on
+  2026-10-08 against servers, the Version hooks of arangodb, avatica, libsql,
+  neo4j, opensearch, surrealdb and ydb gave the same banner as dbmeta, or a
+  worse one, so they are removed (D4). InfluxDB and InfluxQL keep theirs, by
+  Ken's decision (dbmeta's D166). Athena, CSVQ, DynamoDB and Pinot keep
+  theirs, because dbmeta has no model for them.
 - Do not run `go mod tidy`, which adds rline before it has a tag.
 
 ## How to build
 
-usql requires dbmeta v0.4.0, transit v0.2.0 and transit's usql grammar
+usql requires dbmeta v0.7.0, transit v0.2.0 and transit's usql grammar
 v0.2.0 in `go.mod`. It builds against a local checkout of rline, which has
 no tag. `go.work` is not committed. It reads:
 
