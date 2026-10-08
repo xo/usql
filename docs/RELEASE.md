@@ -123,6 +123,8 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 - Removed drivers:
   - mymysql, adodb, sapase and ignite
   - ql, Netezza, RamSQL and Dameng
+  - godror, which needed cgo and Oracle's client library. Use the oracle
+    driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, maxcompute to the ODPS SDK, and hive to
   gohive v2.

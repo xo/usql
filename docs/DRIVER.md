@@ -231,8 +231,9 @@ A driver that omits it lands in `most` without anyone having decided that.
 
 Ken's rule decides between `most` and `all`. A driver goes in `most` when its
 dburl scheme names a dialect and it does not need cgo. A driver that needs cgo
-goes in `all`, as godror and odbc do. A driver that is known to be broken goes
-in `bad`.
+goes in `all`. No driver is in `all` today, because godror was the last one
+and was removed on 2026-10-09. A driver that is known to be broken goes in
+`bad`.
 
 Promoting a driver to `base` is a decision for the maintainer, not part of
 adding it.

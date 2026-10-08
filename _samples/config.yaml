@@ -5,8 +5,8 @@ connections:
   my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
   css: cassandra://cassandra:cassandra@localhost
   fsl: flightsql://flight_username:P4ssw0rd@localhost
-  gdr:
-    protocol: godror
+  ora:
+    protocol: oracle
     username: system
     password: P4ssw0rd
     hostname: localhost

@@ -2373,3 +2373,13 @@ columns and the type of an expression, `\dFp+` prints no per-parser table,
 foreign table are empty, and `\dRs+` cannot be compared on a database with no
 subscriptions.
 
+
+## W47. Remove the godror driver: Done
+
+Done on 2026-10-09 at Ken's request: godror is not needed, because the oracle
+driver is pure Go. The driver, its generated file and its modules are gone, and
+the README and the samples use `oracle`. No driver is in the group `all` now.
+dburl v0.48.0 dropped the scheme `godror` and its alias `gr`, and usql took it,
+as AGENTS.md asks.
+Also stale in `_samples/usqlpass`: the lines for `cql`, `ignite` and `mymysql`,
+schemes that went in earlier changes.

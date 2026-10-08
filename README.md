@@ -244,9 +244,9 @@ associated database, scheme / build tag, and scheme aliases:
 
 | Database             | Scheme / Tag    | Scheme Aliases                                   | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
+| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | PostgreSQL PGX       | `pgx`           | `px`                                             | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
@@ -303,7 +303,7 @@ associated database, scheme / build tag, and scheme aliases:
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                              | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                                 |
 | YDB                  | `ydb`           | `yd`                                             | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                                              |
 |                      |                 |                                                  |                                                                                             |
-| GO DRiver for ORacle | `godror`        | `gr`                                             | [github.com/godror/godror][d-godror] <sup>[†][f-cgo]</sup>                                  |
+|                      |                 |                                                  |                                                                                             |
 |                      |                 |                                                  |                                                                                             |
 | Apache H2            | `h2`            |                                                  | [github.com/jmrobles/h2go][d-h2]                                                            |
 | GizmoSQL             | `gizmosql`      | `gz`, `gizmo`                                    | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-gizmosql]                  |
@@ -337,7 +337,6 @@ associated database, scheme / build tag, and scheme aliases:
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-flightsql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
 [d-gizmosql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
-[d-godror]: https://github.com/godror/godror
 [d-h2]: https://github.com/jmrobles/h2go
 [d-hive]: https://github.com/beltran/gohive
 [d-impala]: https://github.com/sclgo/impala-go
@@ -864,8 +863,8 @@ or as a map:
 connections:
   my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
   my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
-  my_godror_conn:
-    protocol: godror
+  my_oracle_conn:
+    protocol: oracle
     username: system
     password: P4ssw0rd
     hostname: localhost
@@ -877,11 +876,11 @@ Defined `connections:` can be used on the command-line with `\connect`, `\c`,
 `\copy`, and [other commands][commands]:
 
 ```sh
-$ usql my_godror_conn
-Connected with driver godror (Oracle Database 23.0.0.0.0)
+$ usql my_oracle_conn
+Connected with driver oracle (Oracle Database 23.0.0.0.0)
 Type "help" for help.
 
-gr:system@localhost/free=>
+or:system@localhost/free=>
 ```
 
 ##### `init:`
@@ -1233,12 +1232,12 @@ For example:
 ```sh
 $ cat $HOME/.usqlpass
 postgres:*:*:*:postgres:P4ssw0rd
-godror:*:*:*:system:P4ssw0rd
+oracle:*:*:*:system:P4ssw0rd
 $ usql
 Type "help" for help.
 
 (not connected)=> \set pglocal postgres://postgres@localhost:49153?sslmode=disable
-(not connected)=> \set orlocal godror://system@localhost:1521/orasid
+(not connected)=> \set orlocal oracle://system@localhost:1521/orasid
 (not connected)=> \copy :pglocal :orlocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
 COPY 18
 ```

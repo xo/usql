@@ -123,7 +123,7 @@ func init() {
 			{Describe, `do[S+]`, `[PATTERN]`, `list operators`, false, false},
 			{Describe, `dO[S+]`, `[PATTERN]`, `list collations`, false, false},
 			{Describe, `dp[S]`, `[PATTERN]`, `list table, view, and sequence access privileges`, false, false},
-			{Describe, `dP[itn+]`, `[PATTERN]`, `list partitioned relations`, false, false},
+			{Describe, `dP[itn+]`, `[PATTERN]`, `list [only index/table] partitioned relations [n=nested]`, false, false},
 			{Describe, `drds`, `[ROLEPTRN [DBPTRN]]`, `list per-database role settings`, false, false},
 			{Describe, `drg[S]`, `[PATTERN]`, `list role grants`, false, false},
 			{Describe, `dRp[+]`, `[PATTERN]`, `list replication publications`, false, false},

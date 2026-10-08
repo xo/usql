@@ -31,7 +31,6 @@ func KnownBuildTags() map[string]string {
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
 		"gizmosql":      "gizmosql",      // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
-		"godror":        "godror",        // github.com/godror/godror
 		"h2":            "h2",            // github.com/jmrobles/h2go
 		"hive":          "hive",          // github.com/beltran/gohive/v2
 		"impala":        "impala",        // github.com/sclgo/impala-go

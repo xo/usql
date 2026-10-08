@@ -1,5 +1,5 @@
 // Package orshared contains shared a shared driver implementation for the
-// Oracle Database. Used by Oracle and Godror drivers.
+// Oracle Database. Used by the Oracle driver.
 package orshared
 
 import (

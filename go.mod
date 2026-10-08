@@ -17,7 +17,6 @@ require (
 	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-sql-driver/mysql v1.10.1
-	github.com/godror/godror v0.51.5
 	github.com/googleapis/go-sql-spanner v1.26.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
@@ -42,7 +41,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/dbimp v0.15.0
 	github.com/xo/dbmeta v0.9.0
-	github.com/xo/dburl v0.47.0
+	github.com/xo/dburl v0.48.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.0
 	github.com/xo/resvg v0.11.0
@@ -82,7 +81,6 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.38.0 // indirect
 	github.com/RaduBerinde/axisds v0.1.0 // indirect
 	github.com/RaduBerinde/btreemap v0.0.0-20260105202824-d3184786f603 // indirect
-	github.com/VictoriaMetrics/easyproto v1.2.0 // indirect
 	github.com/alibabacloud-go/debug v1.0.1 // indirect
 	github.com/alibabacloud-go/tea v1.2.2 // indirect
 	github.com/aliyun/aliyun-tablestore-go-sdk v1.9.3 // indirect
@@ -168,14 +166,12 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/getsentry/sentry-go v0.49.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.5 // indirect
-	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
-	github.com/godror/knownpb v0.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
