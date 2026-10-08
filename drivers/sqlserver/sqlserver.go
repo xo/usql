@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	mssql "github.com/microsoft/go-mssqldb"
 	sqlserver "github.com/microsoft/go-mssqldb" // DRIVER
 	"github.com/xo/usql/drivers"
 
@@ -44,9 +43,9 @@ func init() {
 			switch col.DatabaseTypeName() {
 			case "UNIQUEIDENTIFIER":
 				if nullable, ok := col.Nullable(); ok && nullable {
-					return new(NullUniqueIdentifier), nil
+					return new(sql.Null[sqlserver.UniqueIdentifier]), nil
 				}
-				return new(mssql.UniqueIdentifier), nil
+				return new(sqlserver.UniqueIdentifier), nil
 			}
 			return new(interface{}), nil
 		},
@@ -69,28 +68,4 @@ func init() {
 
 func placeholder(n int) string {
 	return fmt.Sprintf("@p%d", n)
-}
-
-type NullUniqueIdentifier struct {
-	ID    mssql.UniqueIdentifier
-	Valid bool
-}
-
-func (nui *NullUniqueIdentifier) Scan(v interface{}) error {
-	nui.Valid = false
-	if v == nil {
-		return nil
-	}
-	if err := nui.ID.Scan(v); err != nil {
-		return err
-	}
-	nui.Valid = true
-	return nil
-}
-
-func (nui NullUniqueIdentifier) String() string {
-	if nui.Valid {
-		return nui.ID.String()
-	}
-	return ""
 }
