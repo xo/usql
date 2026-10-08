@@ -27,7 +27,7 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.3.0 and transit v0.2.0. rline has no tag, so usql
+- usql requires dbmeta v0.4.0 and transit v0.2.0. rline has no tag, so usql
   builds against a local checkout of it through a `go.work` that is not
   committed. The release needs a tag of rline, required in `go.mod`.
 - The tests against databases and their recordings were removed, because
@@ -110,12 +110,16 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 ### Drivers
 
 - postgres:// opens through pgx. lib/pq is the libpq driver.
-- Cassandra moves to `github.com/xo/cql`.
+- Cassandra moves to `github.com/xo/cassandra`, and its scheme is
+  `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
 - New drivers:
   - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
   - SurrealDB and ArangoDB
   - Pinot, rqlite and libSQL
+  - Drill, Solr, Elasticsearch, OpenSearch and Druid, all read only
+  - DynamoDB, which is dbimp's driver in place of godynamo, so the scheme
+    `godynamo` goes and the URL needs a key and a secret (W43)
 - Removed drivers:
   - mymysql, adodb, sapase and ignite
   - ql, Netezza, RamSQL and Dameng
@@ -142,7 +146,8 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
   default.
 - The registry is keyed by the scheme of dburl.
 - A driver goes in the group `most` when its scheme names a dialect and it
-  needs no cgo. Pinot, rqlite and libSQL are in `most`.
+  needs no cgo. Pinot, rqlite, libSQL, Drill, Solr, Elasticsearch, OpenSearch,
+  Druid and DynamoDB are in `most`.
 
 ### Other
 
@@ -167,6 +172,9 @@ one error, and a wrong password:
 - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
 - SurrealDB and ArangoDB
 - Pinot, rqlite and libSQL
+- Druid, with `\dtS`, `\d` and a wrong password
+- Drill, Solr, Elasticsearch, OpenSearch and DynamoDB, with a statement that
+  ends in `;`, and `\dt` on Drill, Solr and Elasticsearch
 - ClickHouse on its HTTP port, and Trino and Presto, with and without a user
 - ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
   after the crash is fixed

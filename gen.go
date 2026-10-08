@@ -400,8 +400,7 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 }
 
 // schemes indexes dburl's schemes by driver name and by alias, so that a usql
-// build tag resolves even when it differs from the scheme, as dynamodb does
-// against godynamo.
+// build tag resolves even when it differs from the scheme.
 var schemes = sync.OnceValue(func() map[string]dburl.Scheme {
 	m := make(map[string]dburl.Scheme)
 	for _, scheme := range dburl.BaseSchemes() {

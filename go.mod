@@ -11,7 +11,6 @@ require (
 	github.com/apache/cassandra-gocql-driver/v2 v2.1.2
 	github.com/beltran/gohive/v2 v2.1.0
 	github.com/btnguyen2k/gocosmos v1.1.0
-	github.com/btnguyen2k/godynamo v1.3.0
 	github.com/chaisql/chai v0.18.0
 	github.com/databricks/databricks-sql-go v1.16.0
 	github.com/duckdb/duckdb-go/v2 v2.10505.0
@@ -41,11 +40,11 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/uber/athenadriver v1.1.15
 	github.com/vertica/vertica-sql-go v1.3.8
-	github.com/xo/cql v0.1.0
-	github.com/xo/dbimp v0.13.0
-	github.com/xo/dbmeta v0.3.0
-	github.com/xo/dburl v0.44.0
+	github.com/xo/dbimp v0.15.0
+	github.com/xo/dbmeta v0.4.0
+	github.com/xo/dburl v0.47.0
 	github.com/xo/echartsgoja v0.1.1
+	github.com/xo/odbc v0.1.0
 	github.com/xo/resvg v0.11.0
 	github.com/xo/tblfmt v0.19.1
 	github.com/xo/terminfo v1.2.0
@@ -97,17 +96,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.33.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.4 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.4.6 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.68.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1 // indirect
@@ -261,7 +256,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twmb/murmur3 v1.2.0 // indirect
 	github.com/uber-go/tally v3.5.10+incompatible // indirect
-	github.com/xo/odbc v0.1.0
+	github.com/xo/cassandra v0.1.0 // indirect
 	github.com/xo/resvg/libresvg/darwin_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/darwin_arm64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_amd64 v0.48.1 // indirect

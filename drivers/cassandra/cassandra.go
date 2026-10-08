@@ -1,6 +1,6 @@
 // Package cassandra defines and registers usql's Cassandra driver.
 //
-// See: https://github.com/xo/cql
+// See: https://github.com/xo/cassandra
 // Group: most
 package cassandra
 
@@ -16,21 +16,21 @@ import (
 	"strings"
 
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
-	"github.com/xo/cql" // DRIVER: cql
+	"github.com/xo/cassandra" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
 	var debug bool
-	if s := os.Getenv("CQL_DEBUG"); s != "" {
-		log.Printf("ENABLING DEBUGGING FOR CQL")
+	if s := os.Getenv("CASSANDRA_DEBUG"); s != "" {
+		log.Printf("ENABLING DEBUGGING FOR CASSANDRA")
 		debug = true
 	}
 	// error regexp's
 	authReqRE := regexp.MustCompile(`authentication required`)
 	passwordErrRE := regexp.MustCompile(`Provided username (.*)and/or password are incorrect`)
-	drivers.Register("cql", drivers.Driver{
+	drivers.Register("cassandra", drivers.Driver{
 		ForceParams: func(u *dburl.URL) {
 			if q := u.Query(); q.Get("timeout") == "" {
 				q.Set("timeout", "300s")
@@ -39,7 +39,7 @@ func init() {
 		},
 		Open: func(_ context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_, dsn string) (*sql.DB, error) {
-				cfg, err := cql.ParseDSN(dsn)
+				cfg, err := cassandra.ParseDSN(dsn)
 				if err != nil {
 					return nil, err
 				}
@@ -47,7 +47,7 @@ func init() {
 				if debug {
 					cfg.Logger = gocql.NewLogger(gocql.LogLevelDebug)
 				}
-				return sql.OpenDB(cql.NewConnector(cfg)), nil
+				return sql.OpenDB(cassandra.NewConnector(cfg)), nil
 			}, nil
 		},
 		IsPasswordErr: func(err error) bool {

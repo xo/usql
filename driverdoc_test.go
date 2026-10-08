@@ -60,8 +60,7 @@ func TestDriverSeeMatchesDburl(t *testing.T) {
 }
 
 // schemeIndex indexes dburl's schemes by driver name and by alias, so that a
-// build tag resolves even when it differs from the scheme, as dynamodb does
-// against godynamo.
+// build tag resolves even when it differs from the scheme.
 func schemeIndex() map[string]dburl.Scheme {
 	m := make(map[string]dburl.Scheme)
 	for _, scheme := range dburl.BaseSchemes() {

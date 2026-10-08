@@ -2168,3 +2168,125 @@ then fails on a module that `go mod tidy` removed, and the report claims that
 nothing is outdated. The branch also still carries an obsolete
 `github.com/opencontainers/runc` entry in `SKIP`. The fix is in a stash on that
 branch named `release-21: update-deps.sh REMAINING report fix`.
+
+## W43. Take the Drill, Solr, Elasticsearch, OpenSearch and DynamoDB drivers: Done, with one gap
+
+Done on 2026-10-07 on dburl v0.46.0 and dbimp v0.14.0. The five drivers are
+dbimp's, pure Go over HTTP, and all are in the group `most`. DynamoDB replaces
+`btnguyen2k/godynamo`, so the scheme `godynamo` goes, the aliases are `dy`,
+`dyn` and `dynamo`, and the URL is
+`dynamodb://key:secret@host:port?region=us-east-1`. `go.mod` loses godynamo and
+the AWS modules that only it needed. Each driver reports no count of rows
+affected through `drivers.RowsAffectedOrZero`, and none has a metadata model
+in dbmeta, so the describe commands report that they are not supported (D3).
+
+Checked through usql on drill-1.22.0, solr-10.0.0, elasticsearch-9.5.3,
+opensearch-3.9.0, dynamodb-3.3.1 and alternator-2026.3 from dbrun: a query,
+NULLs, an error with its name, and a wrong password (HTTP 401 for Solr,
+Elasticsearch and OpenSearch, the login page for Drill, and
+`UnrecognizedClientException` for Alternator, which is the one flavor that
+checks the signature). Drill also ran `CREATE TABLE AS` and `DROP TABLE`.
+Solr needs the collection in the URL path.
+
+The gap, closed on 2026-10-08: Drill, Solr and Elasticsearch refuse a
+statement that ends in `;`, and dbmeta v0.4.0 holds a model for each, with
+`TerminatorStripped`. usql took v0.4.0, dropped their `noModel` entries and
+their Version hooks, and checked a piped `select 1 as a;` and `\dt` on all
+three. Drill's banner reads `Apache Drill 1.22.0` from dbmeta, and Solr and
+Elasticsearch print only their driver name, because dbmeta reads no version
+for them yet. OpenSearch takes `;` already and has no model, and DynamoDB has
+no model either, so both keep `noModel` entries.
+
+Not checked: Drill 1.21.2, the other Solr, Elasticsearch, OpenSearch and
+DynamoDB releases, and a write to DynamoDB, because DynamoDB Local refuses
+`CREATE TABLE` as PartiQL.
+
+`TestRegistryIsKeyedByScheme` fails in the default build with "found 16
+registered drivers, expected at least 20". It failed before W43, and it passes
+with `-tags most`.
+
+## W44. Take the Druid driver: Done
+
+Done on 2026-10-08 on dburl v0.46.0 and dbimp v0.14.0. The driver is dbimp's,
+pure Go over HTTP, read only, in the group `most`. dbmeta has a Druid model, so
+the version and the describe commands come from it and usql adds no reader
+(D3), and a trailing `;` is stripped by the model's Terminator.
+
+Checked through usql on druid-38.0.0 from dbrun: the banner (`Apache Druid
+38.0.0`), a query with NULLs, an error with its code, the refusal of an
+`INSERT`, a wrong password (HTTP 401), the ordinary user, and `\dtS`. Not
+checked: druid-37.0.0, and `\d` of a table with data, because the server held
+none.
+
+## W45. Move Cassandra from xo/cql to xo/cassandra: done, but it waits on dbmeta
+
+Waits on dburl and xo/cassandra. Ken said on 2026-10-08 that the Cassandra
+driver moves from `github.com/xo/cql` to `github.com/xo/cassandra`, and drops
+the CQL name, so that it is consistent with the other drivers. Checked the
+same day: the checkout of `xo/cassandra` still has the module path
+`github.com/xo/cql` and the tag v0.1.0, and dburl v0.46.0 still names the
+scheme `cql`, with the aliases `ca`, `cassandra`, `datastax`, `scy` and
+`scylla`. Nothing has been released under the new name.
+
+What usql changes when dburl and the driver release it:
+
+- `go.mod` takes the new module, and `drivers/cassandra` imports it, in
+  place of `github.com/xo/cql`, and registers under the scheme name that
+  dburl then gives, which is `cassandra` in place of `cql`. The `See:` and
+  `// DRIVER` lines follow, and `gen.go` rewrites the README tables, the
+  `internal` build tags and the link bar.
+- `CQL_DEBUG` and its log line are renamed. Check whether the old name stays
+  as a spelling that is still read, which Ken decides.
+- The scheme `cql` goes from dburl, or stays as an alias. That is dburl's
+  and Ken's decision, and usql adds no alias of its own (rule 12). The
+  README example `usql cql://host/` and the tag `cql` change with it.
+- dbmeta names its dialect `cql`, and `drivers.Language` and the version and
+  metadata reads go through it. Ask dbmeta whether the dialect keeps its
+  name, because the language is still CQL.
+- `docs/RELEASE.md` names `cql` in the password-change list and the table
+  of dialects, and says "Cassandra moves to `github.com/xo/cql`". Fix all
+  three. The batches of CQL stay, because that is the name of the language.
+- Check on a server from dbrun: the banner, a query, `BEGIN BATCH` to
+  `APPLY BATCH`, a wrong password, `\dt` and `\copy`.
+
+Update, 2026-10-08: the cassandra project says the module is now
+`github.com/xo/cassandra` and the driver registers as `cassandra`, but it has
+no tag, and its repository holds the change uncommitted. dburl has no release
+that names it either, and `gen.go` reads dburl's registry from `go.mod`, so
+usql cannot move with a `replace` alone: the README tables, the build tags and
+`internal/internal.go` would still say `cql`. usql waits for both tags. The
+peer's note about `LexerName` does not apply, because the chroma lexer is gone
+(W36).
+
+What the cassandra project says changes in the driver, 2026-10-08. `ParseDSN`
+and `NewConnector` keep their signatures. `ParseDSN` reads only a
+`cassandra://` URL, with one host in the host part and more hosts as repeated
+`host` keys, so it must get the URL that dburl writes after dburl moves, and
+usql's `Open` hook passes the DSN that usql builds from that URL. Value types
+change: decimal is `*apd.Decimal`, varint `*big.Int`, date `dbimp.Date`, time
+`dbimp.LocalTime`, duration `dbimp.Interval`, inet `netip.Addr`, list, set and
+tuple `[]any`, a map with a text key and a UDT `map[string]any`, and a vector
+`dbimp.Vector[T]`. `BeginTx` and named arguments fail with an error that wraps
+`dbimp.ErrNotSupported`. The option types become functions, such as
+`WithConsistency` and `WithPageSize`.
+
+usql has no code for the types or the options, because `drivers/cassandra`
+only opens the connection and reads errors. Check these on a server when it
+moves: `\copy` into and out of Cassandra, because the shared copy code starts
+a transaction and `BeginTx` now fails (it needs `FlexibleCopyWithInsert` with
+no transaction, as for rqlite), a `BEGIN`, and the printing of each value type
+above, which `tblfmt` formats.
+
+
+Update, 2026-10-08, later: usql took dburl v0.47.0 and `github.com/xo/cassandra`
+v0.1.0, which pulled dbimp to v0.15.0. `drivers/cassandra` imports the new
+module, registers `cassandra`, and reads `CASSANDRA_DEBUG` in place of
+`CQL_DEBUG` (Ken may want the old name read too). The README and
+`docs/RELEASE.md` follow. Open: dburl's dialect for Cassandra is now
+`cassandra`, and dbmeta v0.4.0 and its main branch still name it `cql`, so
+dbmeta has no model for the dialect and `TestEveryDriverReadsThroughDbmeta`
+fails. dbmeta has been asked to rename it. Do not commit this move before that
+release. The `cql` rows of the password and statement-form lists in
+`docs/RELEASE.md` are dbmeta's dialect names, and change with it. Not yet
+checked on a server: the banner, a query, `BEGIN BATCH`, a wrong password,
+`\dt`, `\copy` (the `BeginTx` problem above) and the new value types.

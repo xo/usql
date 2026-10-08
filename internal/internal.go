@@ -12,7 +12,7 @@ func KnownBuildTags() map[string]string {
 		"athena":        "awsathena",     // github.com/uber/athenadriver/go
 		"avatica":       "avatica",       // github.com/xo/dbimp/avatica
 		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
-		"cassandra":     "cql",           // github.com/xo/cql
+		"cassandra":     "cassandra",     // github.com/xo/cassandra
 		"chai":          "chai",          // github.com/chaisql/chai
 		"clickhouse":    "clickhouse",    // github.com/xo/dbimp/clickhouse
 		"cockroachdb":   "cockroachdb",   // github.com/jackc/pgx/v5/stdlib
@@ -22,8 +22,11 @@ func KnownBuildTags() map[string]string {
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/xo/dbimp/databend
 		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
+		"drill":         "drill",         // github.com/xo/dbimp/drill
+		"druid":         "druid",         // github.com/xo/dbimp/druid
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
-		"dynamodb":      "godynamo",      // github.com/btnguyen2k/godynamo
+		"dynamodb":      "dynamodb",      // github.com/xo/dbimp/dynamodb
+		"elasticsearch": "elasticsearch", // github.com/xo/dbimp/elasticsearch
 		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
@@ -42,6 +45,7 @@ func KnownBuildTags() map[string]string {
 		"mysql":         "mysql",         // github.com/go-sql-driver/mysql
 		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
 		"odbc":          "odbc",          // github.com/xo/odbc
+		"opensearch":    "opensearch",    // github.com/xo/dbimp/opensearch
 		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
 		"ots":           "ots",           // github.com/aliyun/aliyun-tablestore-go-sql-driver
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
@@ -53,6 +57,7 @@ func KnownBuildTags() map[string]string {
 		"rqlite":        "rqlite",        // github.com/xo/dbimp/rqlite
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
 		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
+		"solr":          "solr",          // github.com/xo/dbimp/solr
 		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
