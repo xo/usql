@@ -31,13 +31,12 @@ func NewReader() func(drivers.DB, ...metadata.ReaderOption) metadata.Reader {
 
 func (r metaReader) Catalogs(metadata.Filter) (*metadata.CatalogSet, error) {
 	qstr := `SELECT
-  UPPER(Value) AS catalog
-FROM v$parameter o
-WHERE name = 'db_name'
+  UPPER(SYS_CONTEXT('USERENV', 'DB_NAME')) AS catalog
+FROM dual
 UNION ALL
 SELECT
   db_link AS catalog
-FROM dba_db_links
+FROM all_db_links
 ORDER BY catalog
 `
 
