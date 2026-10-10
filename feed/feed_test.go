@@ -15,7 +15,7 @@ var postgres = dbmeta.Syntax{DollarQuotes: true, BlockComments: true}
 // parse parses src in the postgres family.
 func parse(t *testing.T, src string) []Item {
 	t.Helper()
-	p, err := NewParser(Language(postgres))
+	p, err := NewParser(Language(postgres, false))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,7 +206,7 @@ func feedAll(t *testing.T, s *Source) string {
 func TestSourceLines(t *testing.T) {
 	t.Parallel()
 	src := "select\n  1\n;\n\\set n 42\nselect 'a\nb';\nselect 2 \\g\n-- end\nselect 3"
-	s, err := NewSource(NewLines(strings.NewReader(src)), Language(postgres), nil)
+	s, err := NewSource(NewLines(strings.NewReader(src)), Language(postgres, false), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +220,7 @@ func TestSourceLines(t *testing.T) {
 func TestSourceEntries(t *testing.T) {
 	t.Parallel()
 	e := &entries{"select 1; select 2;", "\\dt", "select 3 \\gx", "\\set x 1\n\\echo :x"}
-	s, err := NewSource(e, Language(postgres), nil)
+	s, err := NewSource(e, Language(postgres, false), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +234,7 @@ func TestSourceEntries(t *testing.T) {
 func TestSourcePush(t *testing.T) {
 	t.Parallel()
 	e := &entries{"select 2;"}
-	s, err := NewSource(e, Language(postgres), nil)
+	s, err := NewSource(e, Language(postgres, false), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,15 +247,15 @@ func TestSourcePush(t *testing.T) {
 func TestLanguage(t *testing.T) {
 	t.Parallel()
 	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true}
-	if Language(postgres) != Language(postgres) {
+	if Language(postgres, false) != Language(postgres, false) {
 		t.Error("expected the same language for the same forms")
 	}
-	if Language(postgres) == Language(mysql) {
+	if Language(postgres, false) == Language(mysql, false) {
 		t.Error("expected a different language for different forms")
 	}
 	// the forms decide what is a comment: # is one for MySQL and not for
 	// PostgreSQL
-	p, err := NewParser(Language(mysql))
+	p, err := NewParser(Language(mysql, false))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -274,7 +274,7 @@ func TestLanguage(t *testing.T) {
 func TestSourceReadLine(t *testing.T) {
 	t.Parallel()
 	e := &entries{"\\prompt 'Name: ' who\nBob\nselect :who;", "select 2;"}
-	s, err := NewSource(e, Language(postgres), nil)
+	s, err := NewSource(e, Language(postgres, false), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,5 +289,47 @@ func TestSourceReadLine(t *testing.T) {
 	}
 	if got, exp := feedAll(t, s), "S:select :who; | S:select 2;"; got != exp {
 		t.Errorf("\n got: %q\nwant: %q", got, exp)
+	}
+}
+
+// TestBatches checks that a batch of CQL stays one statement, which is open
+// until APPLY BATCH ends it, and that it is only a statement of its own where
+// the dialect has batches.
+func TestBatches(t *testing.T) {
+	t.Parallel()
+	const src = "begin batch\ninsert into t (a) values ('x;y');\ninsert into t (a) values (2);\napply batch;\nselect 1;\n"
+	for _, tt := range []struct {
+		name    string
+		batches bool
+		want    string
+	}{
+		{"with", true, "S:begin batch\ninsert into t (a) values ('x;y');\ninsert into t (a) values (2);\napply batch; | S:select 1;"},
+		{"without", false, "S:begin batch\ninsert into t (a) values ('x;y'); | S:insert into t (a) values (2); | S:apply batch; | S:select 1;"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := NewParser(Language(postgres, tt.batches))
+			if err != nil {
+				t.Fatal(err)
+			}
+			items, err := p.Parse(src)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := summary(items); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+	// an entry typed in the editor is not finished while the batch is open
+	p, err := NewParser(Language(postgres, true))
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, err := p.Parse("begin batch\ninsert into t (a) values (1);\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if Finished(items) {
+		t.Errorf("an open batch is finished: %q", summary(items))
 	}
 }

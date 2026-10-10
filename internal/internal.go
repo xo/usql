@@ -9,19 +9,19 @@ package internal
 func KnownBuildTags() map[string]string {
 	return map[string]string{
 		"arangodb":      "arangodb",      // github.com/xo/dbimp/arangodb
-		"athena":        "awsathena",     // github.com/uber/athenadriver/go
+		"athena":        "athena",        // github.com/xo/dbimp/athena
 		"avatica":       "avatica",       // github.com/xo/dbimp/avatica
-		"bigquery":      "bigquery",      // gorm.io/driver/bigquery/driver
+		"bigquery":      "bigquery",      // github.com/xo/dbimp/bigquery
 		"cassandra":     "cassandra",     // github.com/xo/cassandra
 		"chai":          "chai",          // github.com/chaisql/chai
 		"clickhouse":    "clickhouse",    // github.com/xo/dbimp/clickhouse
 		"cockroachdb":   "cockroachdb",   // github.com/jackc/pgx/v5/stdlib
-		"cosmos":        "cosmos",        // github.com/btnguyen2k/gocosmos
+		"cosmos":        "cosmos",        // github.com/xo/dbimp/cosmos
 		"couchbase":     "couchbase",     // github.com/xo/dbimp/couchbase
 		"cratedb":       "cratedb",       // github.com/jackc/pgx/v5/stdlib
 		"csvq":          "csvq",          // github.com/mithrandie/csvq-driver
 		"databend":      "databend",      // github.com/xo/dbimp/databend
-		"databricks":    "databricks",    // github.com/databricks/databricks-sql-go
+		"databricks":    "databricks",    // github.com/xo/dbimp/databricks
 		"drill":         "drill",         // github.com/xo/dbimp/drill
 		"druid":         "druid",         // github.com/xo/dbimp/druid
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
@@ -55,9 +55,9 @@ func KnownBuildTags() map[string]string {
 		"redshift":      "redshift",      // github.com/jackc/pgx/v5/stdlib
 		"rqlite":        "rqlite",        // github.com/xo/dbimp/rqlite
 		"saphana":       "hdb",           // github.com/SAP/go-hdb/driver
-		"snowflake":     "snowflake",     // github.com/snowflakedb/gosnowflake/v2
+		"snowflake":     "snowflake",     // github.com/xo/dbimp/snowflake
 		"solr":          "solr",          // github.com/xo/dbimp/solr
-		"spanner":       "spanner",       // github.com/googleapis/go-sql-spanner
+		"spanner":       "spanner",       // github.com/xo/dbimp/spanner
 		"sqlite3":       "sqlite3",       // github.com/mattn/go-sqlite3
 		"sqlserver":     "sqlserver",     // github.com/microsoft/go-mssqldb
 		"surrealdb":     "surrealdb",     // github.com/xo/dbimp/surrealdb

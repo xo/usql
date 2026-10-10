@@ -19,14 +19,16 @@ import (
 
 // Language returns the usql grammar for a dialect with the lexical forms s.
 // The grammar is one language, and its scanner reads the forms of the dialect
-// as its options (transit's D108).
-func Language(s dbmeta.Syntax) *transit.Language {
+// as its options (transit's D108). With batches, a batch from BEGIN BATCH to
+// APPLY BATCH stays one statement, as CQL has it.
+func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 	return usql.LanguageFor(usql.Options{
 		DollarQuotes:  s.DollarQuotes,
 		BlockComments: s.BlockComments,
 		SlashComments: s.SlashComments,
 		HashComments:  s.HashComments,
 		Backticks:     s.Backticks,
+		Batches:       batches,
 	})
 }
 

@@ -244,9 +244,9 @@ associated database, scheme / build tag, and scheme aliases:
 
 | Database             | Scheme / Tag    | Scheme Aliases                                   | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
 | Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
+| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
 | PostgreSQL PGX       | `pgx`           | `px`                                             | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
@@ -263,6 +263,7 @@ associated database, scheme / build tag, and scheme aliases:
 |                      |                 |                                                  |                                                                                             |
 | Alibaba MaxCompute   | `maxcompute`    | `mc`                                             | [github.com/aliyun/aliyun-odps-go-sdk/sqldriver][d-maxcompute] <sup>[¶][f-hosted]</sup>     |
 | Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                               | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots] <sup>[¶][f-hosted]</sup>         |
+| Amazon Athena        | `athena`        | `s3`, `aws`, `awsathena`                         | [github.com/xo/dbimp/athena][d-athena] <sup>[¶][f-hosted]</sup>                             |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                  | [github.com/xo/dbimp/avatica][d-avatica]                                                    |
 | Apache Drill         | `drill`         | `dl`                                             | [github.com/xo/dbimp/drill][d-drill]                                                        |
 | Apache Druid         | `druid`         | `dr`                                             | [github.com/xo/dbimp/druid][d-druid]                                                        |
@@ -271,21 +272,20 @@ associated database, scheme / build tag, and scheme aliases:
 | Apache Pinot         | `pinot`         | `pi`                                             | [github.com/xo/dbimp/pinot][d-pinot]                                                        |
 | Apache Solr          | `solr`          | `so`                                             | [github.com/xo/dbimp/solr][d-solr]                                                          |
 | ArangoDB             | `arangodb`      | `ar`, `arango`                                   | [github.com/xo/dbimp/arangodb][d-arangodb]                                                  |
-| AWS Athena           | `athena`        | `s3`, `aws`, `awsathena`                         | [github.com/uber/athenadriver/go][d-athena] <sup>[¶][f-hosted]</sup>                        |
-| Azure CosmosDB       | `cosmos`        | `cm`, `gocosmos`                                 | [github.com/btnguyen2k/gocosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                         |
+| Azure Cosmos DB      | `cosmos`        | `cm`                                             | [github.com/xo/dbimp/cosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                             |
 | Cassandra            | `cassandra`     | `ca`, `cql`, `scy`, `cass`, `scylla`, `datastax` | [github.com/xo/cassandra][d-cassandra]                                                      |
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                         | [github.com/chaisql/chai][d-chai] <sup>[§][f-embedded]</sup>                                |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                     | [github.com/xo/dbimp/couchbase][d-couchbase]                                                |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                       | [github.com/mithrandie/csvq-driver][d-csvq] <sup>[§][f-embedded]</sup>                      |
 | Databend             | `databend`      | `dd`, `bend`                                     | [github.com/xo/dbimp/databend][d-databend]                                                  |
-| Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`             | [github.com/databricks/databricks-sql-go][d-databricks] <sup>[¶][f-hosted]</sup>            |
+| Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`             | [github.com/xo/dbimp/databricks][d-databricks] <sup>[¶][f-hosted]</sup>                     |
 | DynamoDB             | `dynamodb`      | `dy`, `dyn`, `dynamo`                            | [github.com/xo/dbimp/dynamodb][d-dynamodb]                                                  |
 | Elasticsearch        | `elasticsearch` | `es`, `elastic`                                  | [github.com/xo/dbimp/elasticsearch][d-elasticsearch]                                        |
 | Exasol               | `exasol`        | `ex`, `exa`                                      | [github.com/exasol/exasol-driver-go][d-exasol]                                              |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                              | [github.com/nakagami/firebirdsql][d-firebird]                                               |
 | FlightSQL            | `flightsql`     | `fl`, `flight`                                   | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-flightsql]                 |
-| Google BigQuery      | `bigquery`      | `bq`                                             | [gorm.io/driver/bigquery/driver][d-bigquery] <sup>[¶][f-hosted]</sup>                       |
-| Google Spanner       | `spanner`       | `sp`                                             | [github.com/googleapis/go-sql-spanner][d-spanner] <sup>[¶][f-hosted]</sup>                  |
+| Google BigQuery      | `bigquery`      | `bq`                                             | [github.com/xo/dbimp/bigquery][d-bigquery] <sup>[¶][f-hosted]</sup>                         |
+| Google Spanner       | `spanner`       | `sp`                                             | [github.com/xo/dbimp/spanner][d-spanner] <sup>[¶][f-hosted]</sup>                           |
 | InfluxDB             | `influxdb`      | `in`, `influx`                                   | [github.com/xo/dbimp/influxdb][d-influxdb]                                                  |
 | InfluxDB InfluxQL    | `influxql`      | `iq`                                             | [github.com/xo/dbimp/influxdb][d-influxql]                                                  |
 | libSQL               | `libsql`        | `ls`, `turso`                                    | [github.com/xo/dbimp/libsql][d-libsql]                                                      |
@@ -297,7 +297,7 @@ associated database, scheme / build tag, and scheme aliases:
 | QuestDB              | `questdb`       | `qs`                                             | [github.com/jackc/pgx/v5/stdlib][d-questdb]                                                 |
 | rqlite               | `rqlite`        | `rq`                                             | [github.com/xo/dbimp/rqlite][d-rqlite]                                                      |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                       | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
-| Snowflake            | `snowflake`     | `sf`                                             | [github.com/snowflakedb/gosnowflake/v2][d-snowflake] <sup>[¶][f-hosted]</sup>               |
+| Snowflake            | `snowflake`     | `sf`                                             | [github.com/xo/dbimp/snowflake][d-snowflake] <sup>[¶][f-hosted]</sup>                       |
 | SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                           | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
 | Vertica              | `vertica`       | `ve`                                             | [github.com/vertica/vertica-sql-go][d-vertica]                                              |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                              | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                                 |
@@ -315,19 +315,19 @@ associated database, scheme / build tag, and scheme aliases:
 | **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                  | _exclude driver with `<tag>`_                                                               |
 
 [d-arangodb]: https://github.com/xo/dbimp
-[d-athena]: https://github.com/uber/athenadriver
+[d-athena]: https://github.com/xo/dbimp
 [d-avatica]: https://github.com/xo/dbimp
-[d-bigquery]: https://github.com/go-gorm/bigquery
+[d-bigquery]: https://github.com/xo/dbimp
 [d-cassandra]: https://github.com/xo/cassandra
 [d-chai]: https://github.com/chaisql/chai
 [d-clickhouse]: https://github.com/xo/dbimp
 [d-cockroachdb]: https://github.com/jackc/pgx
-[d-cosmos]: https://github.com/btnguyen2k/gocosmos
+[d-cosmos]: https://github.com/xo/dbimp
 [d-couchbase]: https://github.com/xo/dbimp
 [d-cratedb]: https://github.com/jackc/pgx
 [d-csvq]: https://github.com/mithrandie/csvq-driver
 [d-databend]: https://github.com/xo/dbimp
-[d-databricks]: https://github.com/databricks/databricks-sql-go
+[d-databricks]: https://github.com/xo/dbimp
 [d-drill]: https://github.com/xo/dbimp
 [d-druid]: https://github.com/xo/dbimp
 [d-duckdb]: https://github.com/duckdb/duckdb-go
@@ -361,9 +361,9 @@ associated database, scheme / build tag, and scheme aliases:
 [d-redshift]: https://github.com/jackc/pgx
 [d-rqlite]: https://github.com/xo/dbimp
 [d-saphana]: https://github.com/SAP/go-hdb
-[d-snowflake]: https://github.com/snowflakedb/gosnowflake
+[d-snowflake]: https://github.com/xo/dbimp
 [d-solr]: https://github.com/xo/dbimp
-[d-spanner]: https://github.com/googleapis/go-sql-spanner
+[d-spanner]: https://github.com/xo/dbimp
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-surrealdb]: https://github.com/xo/dbimp

@@ -1715,6 +1715,13 @@ workflow names no database, so the list lives only in dbmeta.
 - Keep the jobs that build every driver, the static builds and the release
   archives.
 
+Note from dburl, 2026-10-11, for the overhaul: a lint job that floats the Go
+version and pins the linter, or the reverse, fails whenever one side releases
+before the other. dburl suggests pinning both in the lint job, such as Go 1.27.1
+and golangci-lint v2.14.0, bumping them together on purpose, and keeping the
+test job on `stable` so that a new Go release still shows test breakage. usql
+runs no linter today. Ken has not decided.
+
 ## W39. Move Avatica to dbimp's driver: Done
 
 Source: dbimp, on 2026-10-07. dbimp released an Avatica driver in v0.10.0
@@ -2280,8 +2287,8 @@ above, which `tblfmt` formats.
 
 Update, 2026-10-08, later: usql took dburl v0.47.0 and `github.com/xo/cassandra`
 v0.1.0, which pulled dbimp to v0.15.0. `drivers/cassandra` imports the new
-module, registers `cassandra`, and reads `CASSANDRA_DEBUG` in place of
-`CQL_DEBUG` (Ken may want the old name read too). The README and
+module and registers `cassandra`. The debug variable `CQL_DEBUG` is gone with the
+logger it switched on (W51). The README and
 `docs/RELEASE.md` follow. Open: dburl's dialect for Cassandra is now
 `cassandra`, and dbmeta v0.4.0 and its main branch still name it `cql`, so
 dbmeta has no model for the dialect and `TestEveryDriverReadsThroughDbmeta`
@@ -2389,3 +2396,114 @@ schemes that went in earlier changes.
 Done on 2026-10-09 at Ken's request. `drivers/oracle/orshared` held the
 registration that the oracle and godror drivers shared. godror is gone, so the
 registration is in `drivers/oracle/oracle.go` and the package is removed.
+
+## W49. Move Snowflake to dbimp's driver: done, not run
+
+Waits on dburl and on Ken. dbimp v0.16.0 (2026-10-10) has
+`github.com/xo/dbimp/snowflake`, a driver over the SQL REST API with no Arrow,
+which could replace `gosnowflake` in `drivers/snowflake`. dbimp asks usql to
+wait until dburl writes the key as the password of the URL, and until Ken
+decides. What it says the move changes: `RowsAffected` wraps
+`dbimp.ErrNotSupported` when the server gives no count, which
+`drivers.RowsAffectedOrZero` already handles. The version statement is
+`SELECT CURRENT_VERSION()`, and dbmeta's Snowflake model gives it already.
+`BeginTx` fails with `dbimp.ErrNotSupported`, so `\copy` must copy without a
+transaction, as ClickHouse does. dbimp verified it on a trial account, and its CI
+replays recordings only. usql cannot test it, because the Snowflake credentials
+are dbmeta's. Nothing is done.
+
+Done on 2026-10-10, on dburl v0.49.0 and dbimp v0.16.0, which dburl needed
+before usql could move: both drivers register `snowflake`, so usql links one,
+and dburl now writes the URL for the dbimp driver. `drivers/snowflake` imports
+`github.com/xo/dbimp/snowflake`, reads its error code and HTTP 401 for a wrong
+key, counts no row for a statement with no count, and copies without a
+transaction. `gosnowflake` and the modules that only it needed are out of
+`go.mod`. It builds and the tests pass, but nothing has run it against
+Snowflake, because the credentials are dbmeta's. Ken decides whether dbmeta
+tests it, or runs it himself.
+
+
+## W50. Move BigQuery, Cosmos DB, Athena, Databricks and Spanner to dbimp's drivers: Done, not run
+
+Waits on dbimp and dburl. Ken decided on 2026-10-10 (told by dbmeta) that dbimp
+writes drivers for BigQuery, Cosmos DB and Athena, and dburl renames the
+schemes to name them. usql will then import them in place of
+`gorm.io/driver/bigquery`, `gocosmos` and `athenadriver`. dbmeta has no model
+for the three (its D194), so usql keeps their `noModel` entries.
+
+What usql holds for them, and told dbimp on 2026-10-10: BigQuery has no hook.
+Cosmos DB has none, and stripped a trailing semicolon until the `Process` hooks
+went (W28). Athena has a Version hook, `SELECT node_version FROM
+system.runtime.nodes LIMIT 1`, and stripped the semicolon too. When they
+move, the Athena hook goes if dbmeta or the driver gives the version, and the
+rest follows the move of ClickHouse (W42): the error type, the wrong password,
+`drivers.RowsAffectedOrZero`, and `\copy` without a transaction if `BeginTx`
+fails. usql has no account for any of the three, so the checks are by hand or
+through dbmeta. Nothing is done.
+
+Update, 2026-10-11. Ken said that all five are dbimp implementations now, and
+dburl moved the five schemes (athena, bigquery, cosmos, databricks and spanner).
+usql wrote the five drivers against the local checkouts of dburl, dbimp and
+dbmeta through `go.work`, which is not committed: each reads the error type of
+its package, takes a wrong credential from HTTP 401 (BigQuery, Cosmos DB and
+Spanner), from the signature error (Athena) and from the message "Invalid
+access token" (Databricks, which answers 403), and counts no row for a
+statement with no count. Athena, BigQuery and Databricks copy without a
+transaction, because `BeginTx` fails. Cosmos DB reads only, and Spanner has
+transactions. The Athena Version hook is gone, because dbmeta has a model.
+`go.mod` still names released versions, so the commit waits for the tags of
+dburl and dbimp, and for dbmeta to rename its Athena dialect from `awsathena`
+to `athena`, which `TestEveryDriverReadsThroughDbmeta` needs. Not checked on any
+server: usql has no account for any of the five.
+
+
+Update, 2026-10-11, from dbimp v0.17.0 (it holds the five packages, and dburl
+has not tagged the schemes yet):
+
+- Version: BigQuery, Databricks, Athena and Spanner answer no `SELECT
+  version()`, so the usql drivers carry no hook, and the version is what
+  dbmeta's model gives.
+- Cosmos DB: the new driver reads only, and every `Exec` fails with
+  `dbimp.ErrNotSupported`. A user who writes documents loses that, because
+  `gocosmos` could write. Ken decides whether that stays, since usql has no
+  other way to write to Cosmos DB.
+- Credentials: BigQuery and Spanner take the PATH of a service account key file
+  in the query (`credential_file`), never the key text. Databricks takes the
+  token as the password, Athena takes the key and the secret as the user and the
+  password, and Cosmos DB takes the master key as the password. The README and
+  the samples name none of the five today.
+- Statements: Spanner and Athena refuse several statements in one request, and
+  BigQuery returns the last result. Cosmos DB strips one trailing semicolon,
+  and Athena and Databricks accept one.
+- Types to check by hand when a server is there: what usql prints for a
+  DECIMAL (`*apd.Decimal`), a UUID, an interval (`dbimp.Interval`) and JSON.
+  Cosmos DB columns are the keys of the first row, and Databricks returns an
+  error for a cut or chunked result.
+
+Done on 2026-10-11 on dburl v0.50.0, dbimp v0.17.0 and dbmeta v0.13.0. The five
+drivers are in, `go.mod` names the released versions, and `gocosmos`,
+`databricks-sql-go`, `go-sql-spanner`, `athenadriver`, `gorm.io/driver/bigquery`
+and the modules that only they needed are out. `go.mod` is fully
+tidy, since rline v0.1.0 is tagged. Built and tested, and checked
+by no server.
+
+## W51. Keep a batch of CQL as one statement, through the grammar: Done
+
+Done on 2026-10-11 on transit v0.4.0. The grammar has the option `Batches`,
+which keeps a batch from `BEGIN BATCH`, `BEGIN UNLOGGED BATCH` or `BEGIN COUNTER
+BATCH` to `APPLY BATCH` as one statement. `drivers.Language` turns it on for a
+dialect that dbmeta gives batches, so no code names Cassandra. The handler no
+longer collects the statements of a batch itself: its fields, the check
+`drivers.IsBatchQueryPrefix` and the `\g` rule for a batch are gone, and the
+interactive prompt no longer changes inside a batch. The Cassandra driver is
+rewritten to the two things usql still adds: a timeout of five minutes for a
+request when the URL has no `timeout` key, which Ken kept on 2026-10-11 after
+trying without it, and the check for a wrong password, because the driver has
+no type for it. Its errors, row counts and value types come from
+`github.com/xo/cassandra`, and the debug logger, the error regexps, the row
+count and the JSON conversion are gone. Checked on cassandra-5.0: a batch with a
+`$$x;y$$` string, an unlogged batch on one line, a `decimal`, a list, a map, a
+`varint`, an `inet` and a `duration`, and the errors of a bad statement and a
+bad password. The tag printed for a batch is `BEGIN BATCH` where it was `APPLY
+BATCH`, and an unfinished batch sent with `\g` fails at the server.
+

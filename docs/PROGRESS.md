@@ -83,31 +83,17 @@ Open points that are known:
   worse one, so they are removed (D4). InfluxDB and InfluxQL keep theirs, by
   Ken's decision (dbmeta's D166). Athena, CSVQ, DynamoDB and Pinot keep
   theirs, because dbmeta has no model for them.
-- Do not run `go mod tidy`, which adds rline before it has a tag.
 
 ## How to build
 
-usql requires dbmeta v0.7.0, transit v0.2.0 and transit's usql grammar
-v0.2.0 in `go.mod`. It builds against a local checkout of rline, which has
-no tag. `go.work` is not committed. It reads:
-
-    go 1.27.1
-
-    use (
-        .
-        ../rline
-    )
-
-    replace github.com/google/flatbuffers/go => /path/to/flatbuffers-go-empty
-
-The replace points at an empty module, a directory with only a `go.mod` that
-reads `module github.com/google/flatbuffers/go` and `go 1.21`. Workspace mode
-loads two modules that both provide that package, and the empty one ends the
-conflict. A crash can delete it if it is under a temporary directory.
-
-The rline checkout was at bef86da on 2026-10-02. transit's D108 made the usql
-grammar one language that takes the lexical forms of the dialect as options,
-in place of six packages.
+usql requires dbmeta v0.13.0, transit v0.4.0 with its usql grammar v0.4.0, and
+rline v0.1.0 in `go.mod`. It builds with plain modules and no `go.work`, and
+`go mod tidy` leaves `go.mod` as it is. A workspace is still how to build
+against a local checkout of a sibling that has not tagged a change yet: write a
+`go.work` that uses `.` and the checkouts, and do not commit it. If the workspace
+loads two modules that provide `github.com/google/flatbuffers/go`, a `replace`
+to an empty module, a directory with only a `go.mod` that reads `module
+github.com/google/flatbuffers/go` and `go 1.21`, ends the conflict.
 
 The recordings in `testdata/cli` are changed and not committed, by Ken's
 decision. Keep them out of every commit. The recordings in `drivers/testdata`

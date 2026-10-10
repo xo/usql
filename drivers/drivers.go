@@ -161,13 +161,18 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 // safe: a hash comment would swallow SQL Server's #temp table names over ODBC.
 func Language(u *dburl.URL) *transit.Language {
 	s := dbmeta.Syntax{DollarQuotes: true, BlockComments: true}
+	var batches bool
 	if u != nil {
 		var ok bool
 		if s, ok = dbmeta.Dialect(u.Dialect).Syntax(); !ok {
 			s = dbmeta.Syntax{BlockComments: true}
 		}
+		// a database that has batches, such as CQL, has them as one statement
+		if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
+			batches = len(info.Batches) != 0
+		}
 	}
-	return feed.Language(s)
+	return feed.Language(s, batches)
 }
 
 // Version returns information about the database connection for a driver.
@@ -371,25 +376,6 @@ func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
 	return func(v interface{}) (string, error) {
 		return fmt.Sprintf("%v", v), nil
 	}
-}
-
-// IsBatchQueryPrefix returns whether or not the supplied query prefix is a
-// batch query prefix, and the closing prefix. Used to direct the handler to
-// continue accumulating statements.
-func IsBatchQueryPrefix(u *dburl.URL, prefix string) (string, string, bool) {
-	// normalize
-	typ, q := QueryExecType(prefix, "")
-	if q {
-		return typ, "", false
-	}
-	if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
-		for _, b := range info.Batches {
-			if b.Begin == typ {
-				return typ, b.End, true
-			}
-		}
-	}
-	return typ, "", false
 }
 
 // RowsAffectedOrZero is a RowsAffected hook for a driver whose server gives no

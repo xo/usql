@@ -27,9 +27,8 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.7.0 and transit v0.2.0. rline has no tag, so usql
-  builds against a local checkout of it through a `go.work` that is not
-  committed. The release needs a tag of rline, required in `go.mod`.
+- usql requires dbmeta v0.13.0, transit v0.4.0 and rline v0.1.0, all in
+  `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
@@ -100,7 +99,9 @@ What describes a database moved from `drivers.Driver` to dbmeta (D5):
 
 - the lexical forms
 - the old password that SQL Server needs
-- CQL's batches
+- CQL's batches, which the grammar of usql now keeps as one statement
+  (`BEGIN BATCH`, `BEGIN UNLOGGED BATCH` and `BEGIN COUNTER BATCH`). A batch that
+  is not finished when `\g` is typed goes to the server as it is, and fails there.
 - what happens to a trailing semicolon
 - the case of column names
 
@@ -113,6 +114,17 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 - Cassandra moves to `github.com/xo/cassandra`, and its scheme is
   `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
+- BigQuery, Cosmos DB, Athena, Databricks and Spanner move to
+  `github.com/xo/dbimp` (W50), in place of gorm's BigQuery driver, `gocosmos`,
+  `athenadriver`, `databricks-sql-go` and `go-sql-spanner`. Athena's scheme is
+  `athena`, with `awsathena`, `s3` and `aws` as aliases. usql has no account for
+  any of them: check a query, a wrong key, `\dt`, `\d` and `\copy` by hand,
+  through the emulators of dbmeta for BigQuery, Cosmos DB and Spanner.
+- Snowflake moves to `github.com/xo/dbimp` (W49). Its URL is
+  `snowflake://user:key@host/database/schema?role=r`, and the password is the
+  private key as base64url PKCS8 DER. Every earlier Snowflake URL must change.
+  usql has no Snowflake account, so nothing has run it: check a query, a wrong
+  key, `\dt`, `\d` and `\copy` by hand.
 - New drivers:
   - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
   - SurrealDB and ArangoDB

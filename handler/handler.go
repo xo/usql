@@ -78,10 +78,6 @@ type Handler struct {
 	lastExecPrefix string
 	// lastRaw is the last executed raw query statement.
 	lastRaw string
-	// batch indicates a batch has been started.
-	batch bool
-	// batchEnd is the batch end string.
-	batchEnd string
 	// bind are bound values for that will be used for statement execution.
 	bind []interface{}
 	// u is the active connection information.
@@ -248,44 +244,11 @@ func (h *Handler) Run() error {
 // asks outside a terminal.
 func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, error) {
 	prefix, exp, raw := h.buf.Prefix(), h.buf.Expand(h.Lookup), h.buf.Raw()
-	collected := false
-	// collect the statements of a batch, such as CQL's BEGIN BATCH
-	if h.u != nil {
-		typ, end, batch := drivers.IsBatchQueryPrefix(h.u, prefix)
-		switch {
-		case h.batch && batch:
-			err := fmt.Errorf("cannot perform %s in existing batch", typ)
-			fmt.Fprintln(stderr, "error:", err)
-			return false, WrapErr(exp, err)
-		// cannot use \g* while accumulating statements for batch queries
-		case h.batch && typ != h.batchEnd && opt.Exec != metacmd.ExecNone:
-			err := errors.New("cannot force batch execution")
-			fmt.Fprintln(stderr, "error:", err)
-			return false, WrapErr(exp, err)
-		case batch:
-			h.batch, h.batchEnd = true, end
-		case h.batch:
-			var lend string
-			if len(h.lastExec) != 0 {
-				lend = "\n"
-			}
-			h.lastExec += lend + exp
-			h.lastExecPrefix = prefix
-			h.lastRaw += lend + raw
-			h.buf.Reset()
-			if h.batchEnd != typ {
-				return false, nil
-			}
-			h.lastExecPrefix = h.batchEnd
-			h.batch, h.batchEnd = false, ""
-			collected = true
-		}
-	}
-	if !collected && !h.buf.Empty() {
+	if !h.buf.Empty() {
 		h.lastExec, h.lastExecPrefix, h.lastRaw = exp, prefix, raw
 		h.buf.Reset()
 	}
-	if h.batch || h.lastExec == "" || h.lastExec == ";" {
+	if h.lastExec == "" || h.lastExec == ";" {
 		return false, nil
 	}
 	out := stdout
@@ -373,7 +336,7 @@ func (h *Handler) prefix(sqlstr string) string {
 // Reset empties the query buffer and forgets the last query.
 func (h *Handler) Reset() {
 	h.buf.Reset()
-	h.lastExec, h.lastExecPrefix, h.lastRaw, h.batch, h.batchEnd = "", "", "", false, ""
+	h.lastExec, h.lastExecPrefix, h.lastRaw = "", "", ""
 }
 
 // Push puts text in front of the input, as \e does with the edited query.
@@ -601,7 +564,7 @@ func (h *Handler) Prompt(prompt string) string {
 			i--
 		case '~': // like %/ but ~ when default database
 		case '#': // when superuser, a #, otherwise >
-			if h.tx != nil || h.batch {
+			if h.tx != nil {
 				buf = append(buf, '~')
 			} else {
 				buf = append(buf, '>')
