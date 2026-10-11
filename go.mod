@@ -35,7 +35,7 @@ require (
 	github.com/xo/cassandra v0.1.1
 	github.com/xo/dbimp v0.20.0
 	github.com/xo/dbmeta v0.15.0
-	github.com/xo/dburl v0.52.0
+	github.com/xo/dburl v0.53.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.2
 	github.com/xo/resvg v0.11.0

@@ -2,14 +2,14 @@
 
 \set
 
-\set SYNTAX_HL_FORMAT terminal16m
-\set SYNTAX_HL true
+\uset syntax_hl_format terminal16m
+\uset syntax_hl true
 
 \?
 
 \copyright
 
-\set SYNTAX_HL_STYLE dracula
+\uset syntax_hl_style dracula
 
 select 'test''
 ' \g
@@ -36,7 +36,7 @@ CREATE TYPE book_type AS ENUM (
 
 CREATE INDEX authors_name_idx ON authors(name);
 
-\set SYNTAX_HL_STYLE paraiso-dark
+\uset syntax_hl_style paraiso-dark
 
 CREATE TABLE books (
   /*

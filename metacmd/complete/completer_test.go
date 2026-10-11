@@ -3,10 +3,14 @@ package complete
 import (
 	"testing"
 
+	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
 
 func TestCompleter(t *testing.T) {
+	// a script variable that no case completes, so that completing one finds
+	// names and none of them match
+	_ = env.Vars().Set("zvar", "1")
 	cases := []struct {
 		name           string
 		line           string

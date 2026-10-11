@@ -120,8 +120,8 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 // prompt returns the prompt for the next entry, and sets the marker that the
 // line editor draws on the rows after the first.
 func (h *Handler) prompt() string {
-	h.l.SetPrompt("", h.Prompt(env.Get("PROMPT2")))
-	return h.Prompt(env.Get("PROMPT1"))
+	h.l.SetPrompt("", h.Prompt(env.Setting("prompt2")))
+	return h.Prompt(env.Setting("prompt1"))
 }
 
 // Continue reports whether an entry typed at the terminal needs more input. It
@@ -165,7 +165,7 @@ func (h *Handler) SetTiming(timing bool) {
 func (h *Handler) Run() error {
 	stdout, stderr := h.l, h.l.Stderr()
 	// display welcome info
-	if h.iactive && env.Get("QUIET") == "off" {
+	if h.iactive && env.Setting("quiet") == "off" {
 		// logo
 		if typ := env.TermGraphics(); typ.Available() {
 			if err := typ.Encode(stdout, text.Logo); err != nil {
@@ -240,7 +240,7 @@ func (h *Handler) Run() error {
 
 // send sends the query buffer, or the last query when the buffer is empty, as
 // \g does. It returns the error of the statement, which it has already
-// written out, and reports whether the handler must stop, as ON_ERROR_STOP
+// written out, and reports whether the handler must stop, as on_error_stop
 // asks outside a terminal.
 func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, error) {
 	prefix, exp, raw := h.buf.Prefix(), h.buf.Expand(h.Lookup), h.buf.Raw()
@@ -263,7 +263,7 @@ func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, erro
 	}
 	fmt.Fprintln(stderr, "error:", err)
 	err = WrapErr(h.lastExec, err)
-	if env.Get("ON_ERROR_STOP") == "on" {
+	if env.Setting("on_error_stop") == "on" {
 		if h.iactive {
 			// empty the input, so that no other statement runs
 			h.buf.Reset()
@@ -445,13 +445,13 @@ func (h *Handler) unbind() []interface{} {
 //	characters must be designated as invisible by surrounding them with %[ and
 //	%]. Multiple pairs of these can occur within the prompt. For example:
 //
-//	testdb=> \set PROMPT1 '%[%033[1;33;40m%]%n@%/%R%[%033[0m%]%# '
+//	testdb=> \uset prompt1 '%[%033[1;33;40m%]%n@%/%R%[%033[0m%]%# '
 //
 //	results in a boldfaced (1;) yellow-on-black (33;40) prompt on
 //	VT100-compatible, color-capable terminals.
 //
-//	%w - Whitespace of the same width as the most recent output of PROMPT1.
-//	This can be used as a PROMPT2 setting, so that multi-line statements are
+//	%w - Whitespace of the same width as the most recent output of prompt1.
+//	This can be used as a prompt2 setting, so that multi-line statements are
 //	aligned with the first line, but there is no visible secondary prompt.
 //
 // To insert a percent sign into your prompt, write %%. The default prompts are
@@ -906,7 +906,7 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 
 // Version prints the database version information after a successful connection.
 func (h *Handler) Version(ctx context.Context) error {
-	if env.Get("SHOW_HOST_INFORMATION") != "true" || !h.l.Interactive() {
+	if env.Setting("show_host_information") != "true" || !h.l.Interactive() {
 		return nil
 	}
 	if h.db == nil {
@@ -934,7 +934,7 @@ func (h *Handler) Version(ctx context.Context) error {
 
 // Print formats according to a format specifier and writes to handler's standard output.
 func (h *Handler) Print(s string, v ...interface{}) {
-	if env.Get("QUIET") == "on" {
+	if env.Setting("quiet") == "on" {
 		return
 	}
 	fmt.Fprintln(h.l, fmt.Sprintf(s, v...))
@@ -1162,7 +1162,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 			w = pipe
 		}
 	} else if opt.Exec != metacmd.ExecWatch {
-		params["pager_cmd"] = env.Get("PAGER")
+		params["pager_cmd"] = env.Setting("pager")
 	}
 	// set up column type config
 	var extra []tblfmt.Option
@@ -1316,7 +1316,7 @@ func (h *Handler) doExec(ctx context.Context, w io.Writer, _ metacmd.Option, typ
 		return err
 	}
 	// print name
-	if env.Get("QUIET") == "off" {
+	if env.Setting("quiet") == "off" {
 		fmt.Fprint(w, typ)
 		// print count
 		if count > 0 {
@@ -1436,7 +1436,7 @@ func (h *Handler) Include(path string, relative bool) error {
 }
 
 // Formatter returns the formatter of the describe commands, such as \d, with
-// the options of the session, such as ECHO_HIDDEN, applied. It writes to the
+// the options of the session, such as echo_hidden, applied. It writes to the
 // output of the session, so \o redirects it, as it does in psql.
 func (h *Handler) Formatter(ctx context.Context) (*describe.Formatter, error) {
 	m, err := h.metadata(ctx)
@@ -1510,11 +1510,11 @@ func (e *Error) Unwrap() error {
 }
 
 // formatterOpts returns the options of the describe commands that
-// ECHO_HIDDEN sets.
+// echo_hidden sets.
 func formatterOpts() []describe.Option {
 	var opts []describe.Option
-	if env.Get("ECHO_HIDDEN") == "on" || env.Get("ECHO_HIDDEN") == "noexec" {
-		if env.Get("ECHO_HIDDEN") == "noexec" {
+	if env.Setting("echo_hidden") == "on" || env.Setting("echo_hidden") == "noexec" {
+		if env.Setting("echo_hidden") == "noexec" {
 			opts = append(opts, describe.WithDryRun(true))
 		}
 		opts = append(

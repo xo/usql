@@ -34,9 +34,9 @@ func Vars() *Variables {
 	return vars
 }
 
-// Get returns a standard variable.
-func Get(name string) string {
-	value, _ := vars.Get(name)
+// Setting returns a setting of the application, such as PAGER.
+func Setting(name string) string {
+	value, _ := vars.Setting(name)
 	return value
 }
 
@@ -96,7 +96,7 @@ func OpenFile(u *user.User, path string) (string, *os.File, error) {
 // EditFile edits a file. If path is empty, then a temporary file will be
 // created.
 func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
-	ed, _ := vars.Get("EDITOR")
+	ed, _ := vars.Setting("editor")
 	switch {
 	case ed == "":
 		if ed, _ = exec.LookPath("vi"); ed == "" {
@@ -299,7 +299,7 @@ func Quote(s string) string {
 // environment variable.
 func TermGraphics() rasterm.TermType {
 	var typ rasterm.TermType
-	s, _ := vars.Get("TERM_GRAPHICS")
+	s, _ := vars.Setting("term_graphics")
 	_ = typ.UnmarshalText([]byte(s))
 	return typ
 }

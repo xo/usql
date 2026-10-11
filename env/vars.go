@@ -17,8 +17,10 @@ import (
 
 // Variables handles the standard, print, and connection variables.
 type Variables struct {
-	// vars holds standard variables.
+	// vars holds standard variables, which scripts use.
 	vars map[string]string
+	// uset holds the settings of the application, which \uset sets.
+	uset map[string]string
 	// prnt holds print variables ("print" is a reserved word).
 	prnt map[string]string
 	// conn holds connection variables.
@@ -29,6 +31,7 @@ type Variables struct {
 func NewVars() *Variables {
 	return &Variables{
 		vars: make(map[string]string),
+		uset: make(map[string]string),
 		prnt: make(map[string]string),
 		conn: make(map[string][]string),
 	}
@@ -81,22 +84,25 @@ func NewDefaultVars() *Variables {
 		locale = s
 	}
 	return &Variables{
-		vars: map[string]string{
+		vars: make(map[string]string),
+		uset: map[string]string{
 			// usql related logic
-			"SHOW_HOST_INFORMATION": showHostInformation,
-			"PAGER":                 pagerCmd,
-			"EDITOR":                editorCmd,
-			"QUIET":                 "off",
-			"ON_ERROR_STOP":         "off",
+			"show_host_information": showHostInformation,
+			"pager":                 pagerCmd,
+			"editor":                editorCmd,
+			"quiet":                 "off",
+			"on_error_stop":         "off",
+			"echo_hidden":           "off",
 			// prompts
-			"PROMPT1": "%S%N%m%/%R%# ",
+			"prompt1": "%S%N%m%/%R%# ",
+			"prompt2": "",
 			// syntax highlighting variables
-			"SYNTAX_HL":             enableSyntaxHL,
-			"SYNTAX_HL_FORMAT":      colorLevel.ChromaFormatterName(),
-			"SYNTAX_HL_STYLE":       "monokai",
-			"SYNTAX_HL_OVERRIDE_BG": "true",
-			"SSLMODE":               sslmode,
-			"TERM_GRAPHICS":         "none",
+			"syntax_hl":             enableSyntaxHL,
+			"syntax_hl_format":      colorLevel.ChromaFormatterName(),
+			"syntax_hl_style":       "monokai",
+			"syntax_hl_override_bg": "true",
+			"sslmode":               sslmode,
+			"term_graphics":         "none",
 		},
 		prnt: map[string]string{
 			"border":                   "1",
@@ -149,21 +155,14 @@ func (v *Variables) Get(name string) (string, bool) {
 	return value, ok
 }
 
-// Set sets a standard variable.
+// Set sets a standard variable. A setting of the application is not a
+// variable, and is set with SetSetting.
 func (v *Variables) Set(name, value string) error {
 	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
-	switch name {
-	case "ON_ERROR_STOP", "QUIET":
-		if value == "" {
-			value = "on"
-		} else {
-			var err error
-			if value, err = ParseBool(value, name); err != nil {
-				return err
-			}
-		}
+	if _, ok := v.uset[name]; ok {
+		return fmt.Errorf(text.IsASetting, name, text.CommandName, name)
 	}
 	v.vars[name] = value
 	return nil
@@ -174,7 +173,61 @@ func (v *Variables) Unset(name string) error {
 	if err := ValidIdentifier(name); err != nil {
 		return err
 	}
+	if _, ok := v.uset[name]; ok {
+		return fmt.Errorf(text.IsASetting, name, text.CommandName, name)
+	}
 	delete(v.vars, name)
+	return nil
+}
+
+// Setting returns a setting of the application.
+func (v *Variables) Setting(name string) (string, bool) {
+	value, ok := v.uset[name]
+	return value, ok
+}
+
+// Settings returns a copy of the settings of the application.
+func (v *Variables) Settings() map[string]string {
+	return maps.Clone(v.uset)
+}
+
+// SetSetting sets a setting of the application, which must exist, and reads
+// the value as the setting takes it: on or off for a switch, and any text for
+// the others.
+func (v *Variables) SetSetting(name, value string) error {
+	if _, ok := v.uset[name]; !ok {
+		return fmt.Errorf(text.UnknownSetting, name)
+	}
+	switch name {
+	case "on_error_stop", "quiet":
+		if value == "" {
+			value = "on"
+		} else {
+			var err error
+			if value, err = ParseBool(value, name); err != nil {
+				return err
+			}
+		}
+	case "echo_hidden":
+		if value == "" {
+			value = "on"
+		} else {
+			var err error
+			if value, err = ParseKeywordBool(value, name, "noexec"); err != nil {
+				return err
+			}
+		}
+	case "show_host_information", "syntax_hl", "syntax_hl_override_bg":
+		b, err := ParseBool(value, name)
+		if err != nil {
+			return err
+		}
+		value = "false"
+		if b == "on" {
+			value = "true"
+		}
+	}
+	v.uset[name] = value
 	return nil
 }
 
@@ -184,6 +237,34 @@ func (v *Variables) Dump(w io.Writer) error {
 		_, _ = fmt.Fprintln(w, k, "=", Quote(v.vars[k]))
 	}
 	return nil
+}
+
+// DumpSettings dumps the settings of the application to w, as a table of names
+// and values, as DumpPrint does.
+func (v *Variables) DumpSettings(w io.Writer) error {
+	width, keys := 0, maps.Keys(v.uset)
+	for k := range keys {
+		width = max(len(k), width)
+	}
+	for _, k := range slices.Sorted(keys) {
+		fmt.Fprintf(w, "%-*s %s\n", width, k, v.settingText(k))
+	}
+	return nil
+}
+
+// SettingText returns the value of a setting as it is shown: text that can
+// hold spaces is quoted.
+func (v *Variables) SettingText(name string) string {
+	return v.settingText(name)
+}
+
+func (v *Variables) settingText(name string) string {
+	val := v.uset[name]
+	switch name {
+	case "editor", "pager", "prompt1", "prompt2":
+		return strconv.QuoteToASCII(val)
+	}
+	return val
 }
 
 // SetPrint sets a print variable.

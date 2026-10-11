@@ -56,7 +56,7 @@ func Drivers(p *Params) error {
 	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
 	var cmd *exec.Cmd
 	var wc io.WriteCloser
-	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
+	if pager := env.Setting("pager"); p.Handler.IO().Interactive() && pager != "" {
 		var err error
 		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
 			return err
@@ -107,7 +107,7 @@ func Help(p *Params) error {
 	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
 	var cmd *exec.Cmd
 	var wc io.WriteCloser
-	if pager := env.Get("PAGER"); p.Handler.IO().Interactive() && pager != "" {
+	if pager := env.Setting("pager"); p.Handler.IO().Interactive() && pager != "" {
 		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
 			return err
 		}
@@ -714,11 +714,12 @@ func Transact(p *Params) error {
 	return p.Handler.Begin(txOpts)
 }
 
-// Set is a Variables meta command (\set). Sets (or shows) the application variables.
+// Set is a Variables meta command (\set). Sets (or shows) the script
+// variables. The settings of the application are set with \uset.
 //
 // Descs:
 //
-//	set	[NAME [VALUE]]	set {{CommandName}} application variable, or show all {{CommandName}} application variables if no parameters
+//	set	[NAME [VALUE]]	set script variable, or show all script variables if no parameters
 func Set(p *Params) error {
 	switch n, ok, err := p.NextOK(true); {
 	case err != nil:
@@ -733,11 +734,42 @@ func Set(p *Params) error {
 	return env.Vars().Dump(p.Handler.IO())
 }
 
-// Unset is a Variables meta command (\unset). Unsets a application variable.
+// Uset is a Variables meta command (\uset). Sets, or shows, the settings of
+// the application, such as pager and on_error_stop, as \pset does for the
+// print settings.
 //
 // Descs:
 //
-//	unset	NAME	unset (delete) {{CommandName}} application variable
+//	uset	[NAME [VALUE]]	set a setting of {{CommandName}}, show it if there is no value, or show all settings if no parameters
+func Uset(p *Params) error {
+	name, ok, err := p.NextOK(true)
+	switch {
+	case err != nil:
+		return err
+	case !ok:
+		return env.Vars().DumpSettings(p.Handler.IO())
+	}
+	vals, err := p.All(true)
+	if err != nil {
+		return err
+	}
+	if len(vals) != 0 {
+		if err := env.Vars().SetSetting(name, strings.Join(vals, " ")); err != nil {
+			return err
+		}
+	}
+	if _, ok := env.Vars().Setting(name); !ok {
+		return fmt.Errorf(text.UnknownSetting, name)
+	}
+	p.Handler.Print(text.SettingIs, name, env.Vars().SettingText(name))
+	return nil
+}
+
+// Unset is a Variables meta command (\unset). Unsets a script variable.
+//
+// Descs:
+//
+//	unset	NAME	unset (delete) script variable
 func Unset(p *Params) error {
 	n, err := p.Next(true)
 	if err != nil {

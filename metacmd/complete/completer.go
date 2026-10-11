@@ -3,8 +3,10 @@
 package complete
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"unicode"
@@ -221,6 +223,7 @@ func New(opts ...Option) Completer {
 			`\t`,
 			`\timing`,
 			`\unset`,
+			`\uset`,
 			`\w`,
 			`\watch`,
 			`\x`,
@@ -490,6 +493,19 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `unicode_border_linestyle|unicode_column_linestyle|unicode_header_linestyle`) {
 		return CompleteFromList(text, "single", "double")
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\uset`) {
+		return CompleteFromList(text, slices.Sorted(maps.Keys(env.Vars().Settings()))...)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\uset`, `on_error_stop|quiet|show_host_information|syntax_hl|syntax_hl_override_bg`) {
+		return CompleteFromList(text, "on", "off")
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\uset`, `echo_hidden`) {
+		return CompleteFromList(text, "on", "off", "noexec")
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\uset`, `*`) ||
+		TailMatches(MATCH_CASE, previousWords, `\uset`, `*`, `*`) {
+		return nil
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `*`) ||
 		TailMatches(MATCH_CASE, previousWords, `\pset`, `*`, `*`) {

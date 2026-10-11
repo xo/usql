@@ -59,6 +59,9 @@ var (
 	}
 	QuitDesc                = `Use \q to quit.`
 	UnknownFormatFieldName  = `unknown option: %s`
+	UnknownSetting          = `unknown setting: %s`
+	SettingIs               = `%s is %s`
+	IsASetting              = `%s is a setting of %s, so it is not a variable: use \uset %s`
 	FormatFieldInvalid      = `unrecognized value %q for "%s"`
 	FormatFieldInvalidValue = `unrecognized value %q for "%s": %s expected`
 	FormatFieldNameSetMap   = map[string]string{

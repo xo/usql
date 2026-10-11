@@ -444,7 +444,8 @@ Flags:
   -o, --out FILE                            output file
   -W, --password                            force password prompt (should happen automatically)
   -1, --single-transaction                  execute as a single transaction (if non-interactive)
-  -v, --set NAME=VALUE                      set variable NAME to VALUE (see \set command, aliases: --var --variable)
+  -v, --set NAME=VALUE                      set script variable NAME to VALUE (see \set command, aliases: --var --variable)
+      --uset NAME=VALUE                     set setting NAME of usql to VALUE (see \uset command)
   -N, --cset NAME=DSN                       set named connection NAME to DSN (see \cset command)
   -P, --pset VAR=ARG                        set printing option VAR to ARG (see \pset command)
   -F, --field-separator FIELD-SEPARATOR     field separator for unaligned and CSV output (default "|" and ",")
@@ -776,9 +777,11 @@ Informational
   \ss[+] [TABLE|QUERY] [k]          show stats for a table or a query
 
 Variables
-  \set [NAME [VALUE]]               set usql application variable, or show all usql application
-                                    variables if no parameters
-  \unset NAME                       unset (delete) usql application variable
+  \set [NAME [VALUE]]               set script variable, or show all script variables if no
+                                    parameters
+  \uset [NAME [VALUE]]              set a setting of usql, show it if there is no value, or show
+                                    all settings if no parameters
+  \unset NAME                       unset (delete) script variable
   \pset [NAME [VALUE]]              set table print formatting option, or show all print
                                     formatting options if no parameters
   \a                                toggle between unaligned and aligned output mode
@@ -891,8 +894,8 @@ An initialization script can be defined as `init:` as a string:
 ```yaml
 init: |
   \echo welcome to the jungle `date`
-  \set SYNTAX_HL_STYLE paraiso-dark
-  \set PROMPT1 '\033[32m%S%M%/%R%#\033[0m '
+  \uset syntax_hl_style paraiso-dark
+  \uset prompt1 '\033[32m%S%M%/%R%#\033[0m '
 ```
 
 The `init:` script is commonly used to set [environment variables][variables]
@@ -908,20 +911,22 @@ available configuration options.
 
 #### Variables
 
-`usql` supports [runtime][runtime-vars], [connection][connection-vars], and
-[display formatting][print-vars] variables that can be `\set`, `\cset`, or
-`\pset` respectively.
+`usql` has [script][runtime-vars] variables, [connection][connection-vars]
+variables, [display formatting][print-vars] variables, and [settings][settings]
+of its own. They are set with `\set`, `\cset`, `\pset` and `\uset`
+respectively, and `\set` is only for scripts: a setting such as `pager` is not
+a variable, and `\set pager less` is an error that says to use `\uset`.
 
 ##### Runtime Variables
 
-Runtime variables are managed with the `\set` and `\unset` [commands][commands]:
+Script variables are managed with the `\set` and `\unset` [commands][commands]:
 
 ```sh
 (not connected)=> \unset FOO
 (not connected)=> \set FOO bar
 ```
 
-Runtime variables can be displayed with `\set`:
+Script variables can be displayed with `\set`:
 
 ```sh
 (not connected)=> \set
@@ -930,7 +935,7 @@ FOO = 'bar'
 
 ###### Variable Interpolation
 
-When a runtime variable `NAME` has been `\set`, then `:NAME`, `:'NAME'`, and
+When a script variable `NAME` has been `\set`, then `:NAME`, `:'NAME'`, and
 `:"NAME"` will be interpolated into the query buffer:
 
 ```sh
@@ -1023,13 +1028,36 @@ Display formatting variables can be displayed with `\pset`:
 time                     Kitchen
 ```
 
-##### Other Variables
+##### Settings
 
-Runtime behavior, such as the pager, can be modified through special variables
-like `PAGER`.
+The settings of `usql`, such as the pager, the editor, the prompts and
+`on_error_stop`, are managed with the `\uset` [command][commands], which works as
+`\pset` does. Without arguments it shows every setting, with a name it shows
+that setting, and with a name and a value it sets it. The value is read as the
+other meta commands read an argument: it can be quoted, `:name` is interpolated
+and a backtick runs a command.
 
-Use the `\? variables` [command][commands] to display variable help information
-and to list special variables recognized by `usql`:
+```sh
+(not connected)=> \uset pager "less -R"
+pager is "less -R"
+(not connected)=> \uset on_error_stop on
+on_error_stop is on
+(not connected)=> \uset
+echo_hidden           off
+editor                ""
+on_error_stop         on
+pager                 "less -R"
+prompt1               "%S%N%m%/%R%# "
+...
+```
+
+A setting can also be given on the command line with `--uset NAME=VALUE`, and
+`-q` is `--uset quiet=on`. The environment variables `USQL_PAGER`, `PAGER`,
+`USQL_EDITOR`, `EDITOR`, `VISUAL`, `USQL_SSLMODE`, `USQL_SHOW_HOST_INFORMATION`
+and `USQL_TERM_GRAPHICS` give the first value of their settings.
+
+Use the `\? variables` [command][commands] to display help information and to
+list the variables and the settings recognized by `usql`:
 
 ```sh
 (not connected)=> \? variables
@@ -1246,7 +1274,7 @@ COPY 18
 
 Syntax highlighting is not part of this release. `usql` reads its input with the
 grammar of [transit][transit], which does not highlight yet, so the variables
-`SYNTAX_HL`, `SYNTAX_HL_FORMAT`, `SYNTAX_HL_STYLE` and `SYNTAX_HL_OVERRIDE_BG` are
+`syntax_hl`, `syntax_hl_format`, `syntax_hl_style` and `syntax_hl_override_bg` are
 accepted and change nothing. Highlighting returns when the SQL grammars of transit
 can drive it.
 
@@ -1361,15 +1389,14 @@ Type "help" for help.
 pg:booktest@=>
 ```
 
-`SHOW_HOST_INFORMATION` is a standard [`usql` variable][variables],
-and can be `\set` or `\unset`. Additionally, it can be passed via the
-command-line using `-v` or `--set`:
+`show_host_information` is a [setting][settings] of `usql`, and is set with
+`\uset`. Additionally, it can be passed via the command-line using `--uset`:
 
 ```sh
-$ usql --set SHOW_HOST_INFORMATION=false pg://
+$ usql --uset show_host_information=false pg://
 Type "help" for help.
 
-pg:booktest@=> \set SHOW_HOST_INFORMATION true
+pg:booktest@=> \uset show_host_information true
 pg:booktest@=> \connect pg://
 Connected with driver postgres (PostgreSQL 9.6.9)
 pg:booktest@=>
@@ -1499,16 +1526,16 @@ in the user's `HOME` directory:
 ```sh
 $ cat $HOME/.usqlrc
 \echo WELCOME TO THE JUNGLE `date`
-\set SYNTAX_HL_STYLE paraiso-dark
+\uset syntax_hl_style paraiso-dark
 
 -- set color prompt (default is prompt is "%S%m%/%R%#" )
-\set PROMPT1 "\033[32m%S%m%/%R%#\033[0m"
+\uset prompt1 "\033[32m%S%m%/%R%#\033[0m"
 $ usql
 WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
 Type "help" for help.
 
-(not connected)=> \set
-SYNTAX_HL_STYLE = 'paraiso-dark'
+(not connected)=> \uset syntax_hl_style
+syntax_hl_style is "paraiso-dark"
 (not connected)=>
 ```
 
@@ -1637,6 +1664,7 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [usqlpass]: #passwords "Passwords"
 [usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"
 [variables]: #variables "Variables"
+[settings]: #settings "Settings"
 [runtime-vars]: #runtime-variables "Runtime Variables"
 [connection-vars]: #connection-variables "Connection Variables"
 [print-vars]: #display-formatting-(print)-variables "Display Formatting (print) Variables"

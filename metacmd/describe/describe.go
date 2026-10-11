@@ -25,7 +25,7 @@ var ErrNotSupported = text.ErrNotSupported
 // errDryRun stops a query from running when a dry run is asked for.
 var errDryRun = errors.New("dry run")
 
-// Logger prints a query before it runs, for ECHO_HIDDEN.
+// Logger prints a query before it runs, for echo_hidden.
 type Logger interface {
 	Println(...any)
 }

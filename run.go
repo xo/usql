@@ -169,9 +169,11 @@ func New(cliargs []string) ContextExecutor {
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
 
 	// set
-	sf(flags, &args.Vars, "set", "v", `set variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
+	sf(flags, &args.Vars, "set", "v", `set script variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
 	sf(flags, &args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
 	sf(flags, &args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
+	// uset
+	sf(flags, &args.Usets, "uset", "", `set setting NAME of `+text.CommandName+` to VALUE (see \uset command)`, "NAME=VALUE")
 	// cset
 	sf(flags, &args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
 	// pset
@@ -191,7 +193,7 @@ func New(cliargs []string) ContextExecutor {
 	sf(flags, &args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
 	sf(flags, &args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
 	// set bools
-	sf(flags, &args.Vars, "quiet", "q", "run quietly (no messages, only query output)", "", "QUIET=on")
+	sf(flags, &args.Usets, "quiet", "q", "run quietly (no messages, only query output)", "", "quiet=on")
 
 	// app config
 	_ = flags.StringP("config", "", "", "config file")
@@ -243,7 +245,7 @@ func Run(ctx context.Context, args *Args) error {
 		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
 			typ = s
 		}
-		if err := env.Vars().Set("TERM_GRAPHICS", typ); err != nil {
+		if err := env.Vars().SetSetting("term_graphics", typ); err != nil {
 			return err
 		}
 	}
@@ -257,12 +259,22 @@ func Run(ctx context.Context, args *Args) error {
 
 	// fmt.Fprintf(os.Stdout, "VARS: %v\nCVARS: %v\nPVARS: %v\n", args.Vars, args.Cvars, args.Pvars)
 
-	// set vars
+	// set vars, which are for scripts, and the settings of the application
 	for _, v := range args.Vars {
+		var err error
 		if i := strings.Index(v, "="); i != -1 {
-			_ = env.Vars().Set(v[:i], v[i+1:])
+			err = env.Vars().Set(v[:i], v[i+1:])
 		} else {
-			_ = env.Vars().Unset(v)
+			err = env.Vars().Unset(v)
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+		}
+	}
+	for _, v := range args.Usets {
+		name, value, _ := strings.Cut(v, "=")
+		if err := env.Vars().SetSetting(name, value); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
 		}
 	}
 	// set cvars
@@ -398,6 +410,7 @@ type Args struct {
 	NoInit            bool
 	SingleTransaction bool
 	Vars              []string
+	Usets             []string
 	Cvars             []string
 	Pvars             []string
 	Charts            billy.Filesystem

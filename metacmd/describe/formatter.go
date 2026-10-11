@@ -26,7 +26,7 @@ type Formatter struct {
 	// supported.
 	name string
 
-	// The options of the session, such as ECHO_HIDDEN.
+	// The options of the session, such as echo_hidden.
 	logger  Logger
 	dryRun  bool
 	timeout time.Duration

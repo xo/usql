@@ -135,6 +135,20 @@ func sessions() []capture.Session {
 			},
 		},
 		{
+			Name:  "settings",
+			About: "\\uset shows the settings of usql as \\pset does, sets one, and \\set refuses a setting",
+			Args:  args(memory),
+			Steps: []capture.Step{
+				{Send: `\uset` + capture.KeyEnter},
+				{Send: `\uset pager "less -R"` + capture.KeyEnter},
+				{Send: `\uset on_error_stop on` + capture.KeyEnter},
+				{Send: `\uset on_error_stop` + capture.KeyEnter},
+				{Send: `\set pager x` + capture.KeyEnter},
+				{Send: `\uset NOPE` + capture.KeyEnter},
+				{Send: `\q` + capture.KeyEnter},
+			},
+		},
+		{
 			Name:  "quoted-interpolation",
 			About: `:'name' quotes as a literal and :"name" quotes as an identifier`,
 			Args:  args(memory),

@@ -2,14 +2,14 @@
 
 \set
 
-\set SYNTAX_HL_FORMAT terminal16m
-\set SYNTAX_HL true
+\uset syntax_hl_format terminal16m
+\uset syntax_hl true
 
 \?
 
 \copyright
 
-\set SYNTAX_HL_STYLE dracula
+\uset syntax_hl_style dracula
 
 select 'test''
 ' \g
@@ -38,7 +38,7 @@ CREATE TABLE books (
 
 CREATE INDEX books_title_idx ON books(title, year);
 
-\set SYNTAX_HL_STYLE paraiso-dark
+\uset syntax_hl_style paraiso-dark
 
 insert into authors (name) values
   ('jk rowling'),

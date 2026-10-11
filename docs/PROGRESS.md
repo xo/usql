@@ -59,7 +59,7 @@ Open points that are known:
 
 - `%R` shows only `=` or `-`, because rline draws one prompt for an entry.
   A prompt for each row waits on rline's backlog item 33.
-- The SYNTAX_HL variables do nothing until transit's SQL grammars come.
+- The syntax_hl variables do nothing until transit's SQL grammars come.
 - rline writes `\x1b[m` before the first text when color is on and the
   output is not a terminal. run.go turns color off unless both input and
   output are a terminal. Tell rline: its session was not running on

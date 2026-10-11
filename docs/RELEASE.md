@@ -13,7 +13,7 @@ file, not here. When a check finds a fault, record it in
 Read these first. Some of them can stop the release.
 
 - No color. The chroma lexer is gone, and transit's SQL grammars are not Go
-  packages yet. The SYNTAX_HL variables do nothing until they are (W36).
+  packages yet. The syntax_hl variables do nothing until they are (W36).
 - The history is not saved for a user who has a `~/.usql_history` from
   gohxs/readline. rline cannot read its backslashes, and then refuses to
   save. It reports nothing. Ken decides the fix (see
@@ -90,6 +90,22 @@ It has no metadata query of its own (D3, D4).
 - The version in the banner, the current user, and the statement that
   changes a password come from dbmeta. InfluxDB shows its release from
   GET /ping.
+
+### Settings: `\uset` and `\set`
+
+usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
+(W61). `\set` is only for script variables, and its `:name` interpolation.
+
+- The settings are echo_hidden, editor, on_error_stop, pager, prompt1, prompt2,
+  quiet, show_host_information, sslmode, syntax_hl, syntax_hl_format,
+  syntax_hl_override_bg, syntax_hl_style and term_graphics.
+- `\uset` shows every setting as a table, `\uset NAME` shows one, and `\uset NAME
+  VALUE` sets it and says so. A value is read as an argument of any meta command.
+- `\set pager less` and `\unset quiet` are errors that say to use `\uset`, so a
+  script or a `.usqlrc` that set a setting with `\set` must change. `:pager` is no
+  longer a variable.
+- The command line has `--uset NAME=VALUE`, and `-q` is `--uset quiet=on`. `--set`
+  and `-v` give script variables only.
 
 ### The fields of a driver
 
@@ -250,7 +266,7 @@ For each, check:
 When transit's SQL grammars come, check the color of keywords, strings,
 comments, variables and meta commands for each set above, in two styles,
 at a light and a dark background. Until then, check that no color appears
-and nothing breaks with SYNTAX_HL on.
+and nothing breaks with syntax_hl on.
 
 ### The describe commands
 
@@ -258,7 +274,7 @@ For each database that dbmeta has a model for, run `\d`, `\dt`, `\dv`,
 `\di`, `\ds`, `\df`, `\dn`, `\l`, `\dp`, `\du`, `\d NAME` on a table with an
 index, a check, a foreign key and a trigger, `\sv`, `\sf`, and `\ss`. Check
 upper case and quoted names on Oracle, and on a database that folds to
-lower case. Check `\set ECHO_HIDDEN on` and `noexec`. On a database with no
+lower case. Check `\uset echo_hidden on` and `noexec`. On a database with no
 model, check that each command says it is not supported.
 
 ### The line editor
@@ -272,7 +288,7 @@ At a terminal:
   variable
 - `\prompt`, `\prompt -password`, `\password` and a password prompt at
   connect
-- `\e` and `\e FILE`, with EDITOR set
+- `\e` and `\e FILE`, with editor set
 - help, quit and exit as the first word of an entry
 - a terminal that is resized while an entry is open
 
@@ -282,7 +298,7 @@ At a terminal:
 - `-f FILE`, `\i`, `\ir`, a file that ends without a `;`, and Windows line
   endings
 - input from a pipe, output to a pipe, and `-o FILE`
-- `-1` with a file, and ON_ERROR_STOP on and off
+- `-1` with a file, and on_error_stop on and off
 - `--set`, `--variable`, the RC file and `config.yaml` with named
   connections
 - `\copy` between two databases, and into a database with no transactions,

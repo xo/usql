@@ -64,30 +64,6 @@ recv:
 \e[32msq::memory:=> \e[39m\\set\e[K\r
 \e[18C\r
 \n
-EDITOR = ''\r
-\n
-ON_ERROR_STOP = 'off'\r
-\n
-PAGER = 'less'\r
-\n
-PROMPT1 = '%S%N%m%/%R%# '\r
-\n
-QUIET = 'off'\r
-\n
-SHOW_HOST_INFORMATION = 'true'\r
-\n
-SSLMODE = 'retry'\r
-\n
-SYNTAX_HL = 'true'\r
-\n
-SYNTAX_HL_FORMAT = 'terminal256'\r
-\n
-SYNTAX_HL_OVERRIDE_BG = 'true'\r
-\n
-SYNTAX_HL_STYLE = 'monokai'\r
-\n
-TERM_GRAPHICS = ''\r
-\n
 n = '42'\r
 \n
 \e[32msq::memory:=> \e[39m
@@ -199,30 +175,6 @@ recv:
 \e[18C\r
 \e[32msq::memory:=> \e[39m\\set\e[K\r
 \e[18C\r
-\n
-EDITOR = ''\r
-\n
-ON_ERROR_STOP = 'off'\r
-\n
-PAGER = 'less'\r
-\n
-PROMPT1 = '%S%N%m%/%R%# '\r
-\n
-QUIET = 'off'\r
-\n
-SHOW_HOST_INFORMATION = 'true'\r
-\n
-SSLMODE = 'retry'\r
-\n
-SYNTAX_HL = 'true'\r
-\n
-SYNTAX_HL_FORMAT = 'terminal256'\r
-\n
-SYNTAX_HL_OVERRIDE_BG = 'true'\r
-\n
-SYNTAX_HL_STYLE = 'monokai'\r
-\n
-TERM_GRAPHICS = ''\r
 \n
 \e[32msq::memory:=> \e[39m
 

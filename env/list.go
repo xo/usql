@@ -21,6 +21,10 @@ func Listing(w io.Writer) error {
 	for i, v := range varNames {
 		varsWithDesc[i] = v.String()
 	}
+	settingsWithDesc := make([]string, len(settingNames))
+	for i, v := range settingNames {
+		settingsWithDesc[i] = v.String()
+	}
 	pvarsWithDesc := make([]string, len(pvarNames))
 	for i, v := range pvarNames {
 		pvarsWithDesc[i] = v.String()
@@ -57,6 +61,7 @@ func Listing(w io.Writer) error {
 		strings.TrimRightFunc(strings.Join(envVarsWithDesc, ""), unicode.IsSpace),
 		configDir,
 		configExtra,
+		strings.TrimRightFunc(strings.Join(settingsWithDesc, ""), unicode.IsSpace),
 	)
 	return nil
 }
@@ -90,24 +95,68 @@ func (v varName) String() string {
 
 var varNames = []varName{
 	{
-		`ECHO_HIDDEN`,
+		`ROW_COUNT`,
+		`number of rows returned or affected by last query, or 0`,
+	},
+}
+
+// settingNames are the settings of the application, which \uset sets.
+var settingNames = []varName{
+	{
+		`echo_hidden`,
 		`if set, display internal queries executed by backslash commands; if set to "noexec", shows queries without execution`,
 	},
 	{
-		`ON_ERROR_STOP`,
+		`editor`,
+		`editor used by the \e, \ef, and \ev commands`,
+	},
+	{
+		`on_error_stop`,
 		`stop batch execution after error`,
 	},
 	{
-		`PROMPT1`,
+		`pager`,
+		`name of external pager program`,
+	},
+	{
+		`prompt1`,
 		`specifies the standard ` + text.CommandName + ` prompt`,
 	},
 	{
-		`QUIET`,
+		`prompt2`,
+		`specifies the prompt used when a statement continues on another row`,
+	},
+	{
+		`quiet`,
 		`run quietly (same as -q option)`,
 	},
 	{
-		`ROW_COUNT`,
-		`number of rows returned or affected by last query, or 0`,
+		`show_host_information`,
+		`display host information when connecting to a database`,
+	},
+	{
+		`sslmode`,
+		`when set to 'retry', allows connections to attempt to reconnect when no ?sslmode= was specified on the url`,
+	},
+	{
+		`syntax_hl`,
+		`enable syntax highlighting (not used yet)`,
+	},
+	{
+		`syntax_hl_format`,
+		`syntax highlighting formatter name (not used yet)`,
+	},
+	{
+		`syntax_hl_override_bg`,
+		`overrides the background color of the highlighting style (not used yet)`,
+	},
+	{
+		`syntax_hl_style`,
+		`syntax highlighting style name (not used yet)`,
+	},
+	{
+		`term_graphics`,
+		`use the specified terminal graphics`,
 	},
 }
 
@@ -242,22 +291,6 @@ var envVarNames = []varName{
 		`when set to 'retry', allows connections to attempt to reconnect when no ?sslmode= was specified on the url`,
 	},
 	{
-		`SYNTAX_HL`,
-		`enable syntax highlighting (not used yet)`,
-	},
-	{
-		`SYNTAX_HL_FORMAT`,
-		`syntax highlighting formatter name (not used yet)`,
-	},
-	{
-		`SYNTAX_HL_STYLE`,
-		`syntax highlighting style name (not used yet)`,
-	},
-	{
-		`SYNTAX_HL_OVERRIDE_BG`,
-		`overrides the background color of the highlighting style (not used yet)`,
-	},
-	{
 		`TERM_GRAPHICS`,
 		`use the specified terminal graphics`,
 	},
@@ -269,12 +302,19 @@ var envVarNames = []varName{
 
 const variableTpl = `List of specially treated variables
 
-%s variables:
+%s script variables, for scripts and queries:
 Usage:
   %[1]s --set=NAME=VALUE
   or \set NAME VALUE inside %[1]s
 
 %[2]s
+
+Settings of %[1]s:
+Usage:
+  %[1]s --uset=NAME=VALUE
+  or \uset NAME VALUE inside %[1]s
+
+%[7]s
 
 Display settings:
 Usage:

@@ -54,7 +54,7 @@ func init() {
 					return nil, err
 				}
 				// special retry handling case, since there's no lib/pq retry mode
-				if env.Get("SSLMODE") == "retry" && !u.Query().Has("sslmode") {
+				if env.Setting("sslmode") == "retry" && !u.Query().Has("sslmode") {
 					switch err = conn.PingContext(ctx); {
 					case errors.Is(err, pq.ErrSSLNotSupported):
 						s := "sslmode=disable " + dsn

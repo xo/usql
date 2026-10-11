@@ -1,0 +1,321 @@
+# usql capture transcript v1
+session: settings
+about: \uset shows the settings of usql as \pset does, sets one, and \set refuses a setting
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+\e[mConnected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 1
+send:
+\\uset\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\n
+echo_hidden           off\r
+\n
+editor                ""\r
+\n
+on_error_stop         off\r
+\n
+pager                 "less"\r
+\n
+prompt1               "%S%N%m%/%R%# "\r
+\n
+prompt2               ""\r
+\n
+quiet                 off\r
+\n
+show_host_information true\r
+\n
+sslmode               retry\r
+\n
+syntax_hl             true\r
+\n
+syntax_hl_format      terminal256\r
+\n
+syntax_hl_override_bg true\r
+\n
+syntax_hl_style       monokai\r
+\n
+term_graphics         \r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 2
+send:
+\\uset pager "less -R"\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\\uset p\e[K\r
+\e[21C\r
+\e[32msq::memory:=> \e[39m\\uset pa\e[K\r
+\e[22C\r
+\e[32msq::memory:=> \e[39m\\uset pag\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\\uset page\e[K\r
+\e[24C\r
+\e[32msq::memory:=> \e[39m\\uset pager\e[K\r
+\e[25C\r
+\e[32msq::memory:=> \e[39m\\uset pager \e[K\r
+\e[26C\r
+\e[32msq::memory:=> \e[39m\\uset pager "\e[K\r
+\e[27C\r
+\e[32msq::memory:=> \e[39m\\uset pager "l\e[K\r
+\e[28C\r
+\e[32msq::memory:=> \e[39m\\uset pager "le\e[K\r
+\e[29C\r
+\e[32msq::memory:=> \e[39m\\uset pager "les\e[K\r
+\e[30C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less\e[K\r
+\e[31C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less \e[K\r
+\e[32C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less -\e[K\r
+\e[33C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less -R\e[K\r
+\e[34C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less -R"\e[K\r
+\e[35C\r
+\e[32msq::memory:=> \e[39m\\uset pager "less -R"\e[K\r
+\e[35C\r
+\n
+pager is "less -R"\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 3
+send:
+\\uset on_error_stop on\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\\uset o\e[K\r
+\e[21C\r
+\e[32msq::memory:=> \e[39m\\uset on\e[K\r
+\e[22C\r
+\e[32msq::memory:=> \e[39m\\uset on_\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\\uset on_e\e[K\r
+\e[24C\r
+\e[32msq::memory:=> \e[39m\\uset on_er\e[K\r
+\e[25C\r
+\e[32msq::memory:=> \e[39m\\uset on_err\e[K\r
+\e[26C\r
+\e[32msq::memory:=> \e[39m\\uset on_erro\e[K\r
+\e[27C\r
+\e[32msq::memory:=> \e[39m\\uset on_error\e[K\r
+\e[28C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_\e[K\r
+\e[29C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_s\e[K\r
+\e[30C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_st\e[K\r
+\e[31C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_sto\e[K\r
+\e[32C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[33C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop \e[K\r
+\e[34C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop o\e[K\r
+\e[35C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop on\e[K\r
+\e[36C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop on\e[K\r
+\e[36C\r
+\n
+on_error_stop is on\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 4
+send:
+\\uset on_error_stop\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\\uset o\e[K\r
+\e[21C\r
+\e[32msq::memory:=> \e[39m\\uset on\e[K\r
+\e[22C\r
+\e[32msq::memory:=> \e[39m\\uset on_\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\\uset on_e\e[K\r
+\e[24C\r
+\e[32msq::memory:=> \e[39m\\uset on_er\e[K\r
+\e[25C\r
+\e[32msq::memory:=> \e[39m\\uset on_err\e[K\r
+\e[26C\r
+\e[32msq::memory:=> \e[39m\\uset on_erro\e[K\r
+\e[27C\r
+\e[32msq::memory:=> \e[39m\\uset on_error\e[K\r
+\e[28C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_\e[K\r
+\e[29C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_s\e[K\r
+\e[30C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_st\e[K\r
+\e[31C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_sto\e[K\r
+\e[32C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[33C\r
+\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[33C\r
+\n
+on_error_stop is on\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 5
+send:
+\\set pager x\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\s\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\se\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\set\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\set \e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\set p\e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\\set pa\e[K\r
+\e[21C\r
+\e[32msq::memory:=> \e[39m\\set pag\e[K\r
+\e[22C\r
+\e[32msq::memory:=> \e[39m\\set page\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\\set pager\e[K\r
+\e[24C\r
+\e[32msq::memory:=> \e[39m\\set pager \e[K\r
+\e[25C\r
+\e[32msq::memory:=> \e[39m\\set pager x\e[K\r
+\e[26C\r
+\e[32msq::memory:=> \e[39m\\set pager x\e[K\r
+\e[26C\r
+\n
+error: pager is a setting of usql, so it is not a variable: use \\uset pager\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 6
+send:
+\\uset NOPE\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\\uset N\e[K\r
+\e[21C\r
+\e[32msq::memory:=> \e[39m\\uset NO\e[K\r
+\e[22C\r
+\e[32msq::memory:=> \e[39m\\uset NOP\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\\uset NOPE\e[K\r
+\e[24C\r
+\e[32msq::memory:=> \e[39m\\uset NOPE\e[K\r
+\e[24C\r
+\n
+error: unknown setting: NOPE\r
+\n
+\e[32msq::memory:=> \e[39m
+
+
+## step 7
+send:
+\\q\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
+\n
+

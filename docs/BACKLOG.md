@@ -2752,22 +2752,22 @@ there. The earlier text is in `README.md` at commit `7e173df`:
   back between "copying between databases" and "context-based completion".
 - README.md, the section "Syntax Highlighting": the sentence that says that
   interactive queries are highlighted by default, the table of the variables
-  (`SYNTAX_HL`, default `true`; `SYNTAX_HL_FORMAT`, dependent on the terminal;
-  `SYNTAX_HL_OVERRIDE_BG`, default `true`; `SYNTAX_HL_STYLE`, default `monokai`),
+  (`syntax_hl`, default `true`; `syntax_hl_format`, dependent on the terminal;
+  `syntax_hl_override_bg`, default `true`; `syntax_hl_style`, default `monokai`),
   the example that `\set`s and `\unset`s them, and the links of the style and
   formatter names. Check each default and each value against what transit
   offers, because the variables named Chroma, and the formatters and styles may
   differ.
-- README.md, "Other Variables": the sentence that names `SYNTAX_HL` as an example of
+- README.md, "Other Variables": the sentence that names `syntax_hl` as an example of
   a variable that changes runtime behavior, which now says the pager.
-- `env/list.go`: the descriptions of the four `SYNTAX_HL*` variables lost their
+- `env/list.go`: the descriptions of the four `syntax_hl*` variables lost their
   "not used yet", and said "chroma library" before W57.
 - `env/vars.go`: the defaults of the four variables, which `colorLevel` still sets.
 - `docs/RELEASE.md`: the known gap "No color", and the check by hand "Syntax
   highlighting", which says that no color should appear until then.
 - `docs/PROGRESS.md`: the open point that the variables do nothing.
 
-The check by hand has to cover turning highlighting off (`SYNTAX_HL` false and
+The check by hand has to cover turning highlighting off (`syntax_hl` false and
 `\unset`), because a person who has a terminal that shows the colors badly needs
 that switch.
 
@@ -2805,12 +2805,11 @@ the declared types, the arithmetic, and the aggregates. What differed:
 - A DATE of `2026-02-29` prints as `0001-01-01T00:00:00Z` with go-sqlite3, which
   turns a value that does not parse into the zero time without a word, and as the
   text with modernc. Not changed.
-- Time zones: both SQLite drivers print UTC (`...Z`), and MySQL prints the local
-  zone (`2026-10-10T10:00:00-07:00`), because the MySQL family has the default
-  `loc=Local`. dburl's default for SQLite, `loc=auto`, does nothing, because
-  go-sqlite3 reads `_loc`. dburl was asked to write `_loc=auto` for `sqlite3` and
-  `_timezone=Local` for `moderncsqlite`, and to name the driver `sqlite`, so that
-  the Open hook of usql goes. usql takes the release.
+- Time zones: both SQLite drivers printed UTC (`...Z`) and MySQL printed the
+  local zone, because the MySQL family has the default `loc=Local`. dburl v0.53.0
+  writes `_loc=auto` for `sqlite3` and `_timezone=Local` for `moderncsqlite`, and
+  usql takes it. Both drivers now print the local zone, and the Open hook of
+  moderncsqlite is gone.
 
 MySQL and SQLite also differ, and this is the database and not the driver: a
 DECIMAL keeps its scale (`-5.00`, and left aligned as text) where SQLite stores
@@ -2819,3 +2818,38 @@ column is written with spaces, and `1/2` is `0.5000` in MySQL and `0` in SQLite.
 A DATE prints as a timestamp at midnight (`2026-10-10T00:00:00Z`) in all three,
 where psql prints `2026-10-10`: tblfmt or the driver formats it, and a date
 column should print as a date.
+
+
+## W61. Move the settings of usql from \set to \uset: Done
+
+Done on 2026-10-11 at Ken's request. psql keeps its own settings and its script
+variables in one place, and usql diverges from it: the settings that usql adds
+(echo_hidden, editor, on_error_stop, pager, prompt1, prompt2, quiet,
+show_host_information, sslmode, syntax_hl, syntax_hl_format, syntax_hl_override_bg,
+syntax_hl_style and term_graphics) belong to `\uset`, and `\set` is for scripts.
+
+The names are lower case, as the names of `\pset` are and as Ken asked, and they
+are not the names of environment variables, which are upper case.
+
+The name: Ken asked whether it should be `\uset` or `\eset`, then also named `\env`
+and `\config`. Gemini 3.1 Pro and DeepSeek V4 Pro both chose `\uset`: it follows
+`\pset` (print) and `\cset` (connection), it matches the flag `--uset`, and
+`\eset` and `\env` read like `\setenv`, which sets operating system environment
+variables. `\config` breaks the pattern and fills `\c<Tab>` with a second command.
+The models split on one point: Gemini advised against toggling a boolean when only
+the name is given, as `\pset` does. usql shows the setting, and does not toggle it,
+which Ken may change.
+
+How it works: `\uset` with no arguments prints the settings as a table of names
+and values, as `\pset` does. `\uset NAME` shows one, and `\uset NAME VALUE` sets it
+and says `NAME is VALUE`. The arguments follow the rules of every meta command: quotes,
+`:name` interpolation and backticks. `\set` and `\unset` refuse the name of a
+setting and say to use `\uset`. `env.Variables` keeps the settings apart from the
+script variables, and `env.Setting` reads them. The command line has `--uset`, and
+`-q` is `--uset quiet=on`. The completer completes the names and the values, `\?
+variables` lists the settings apart, and the README, the samples and the contrib
+scripts follow. A session of `testdata/cli` records `\uset`.
+
+What a setting is not: it is not a variable, so `:pager` no longer interpolates.
+`ROW_COUNT` stays a script variable, because usql sets it for scripts.
+

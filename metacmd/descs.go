@@ -145,8 +145,9 @@ func init() {
 		},
 		// Variables
 		{
-			{Set, `set`, `[NAME [VALUE]]`, `set ` + text.CommandName + ` application variable, or show all ` + text.CommandName + ` application variables if no parameters`, false, false},
-			{Unset, `unset`, `NAME`, `unset (delete) ` + text.CommandName + ` application variable`, false, false},
+			{Set, `set`, `[NAME [VALUE]]`, `set script variable, or show all script variables if no parameters`, false, false},
+			{Uset, `uset`, `[NAME [VALUE]]`, `set a setting of ` + text.CommandName + `, show it if there is no value, or show all settings if no parameters`, false, false},
+			{Unset, `unset`, `NAME`, `unset (delete) script variable`, false, false},
 			{SetPrint, `pset`, `[NAME [VALUE]]`, `set table print formatting option, or show all print formatting options if no parameters`, false, false},
 			{SetPrint, `a`, ``, `toggle between unaligned and aligned output mode`, false, true},
 			{SetPrint, `C`, `[TITLE]`, `set table title, or unset if none`, false, true},
