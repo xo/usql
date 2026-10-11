@@ -517,7 +517,8 @@ func FlexibleCopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, tab
 	valueRefs := make([]reflect.Value, clen)
 	actuals := make([]interface{}, clen)
 	for i := 0; i < len(columnTypes); i++ {
-		valueRefs[i] = reflect.New(columnTypes[i].ScanType())
+		// a destination that takes a NULL, so that a row with one is copied
+		valueRefs[i] = reflect.ValueOf(destForScanType(columnTypes[i].ScanType()))
 		values[i] = valueRefs[i].Interface()
 	}
 	var n int64

@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -66,12 +67,11 @@ func Driver() drivers.Driver {
 			}
 			return "", err.Error()
 		},
+		// class 28 is a refused authorization: PostgreSQL says 28P01, and Redshift
+		// says 28000
 		IsPasswordErr: func(err error) bool {
 			var e *pgconn.PgError
-			if errors.As(err, &e) {
-				return e.Code == "28P01"
-			}
-			return false
+			return errors.As(err, &e) && strings.HasPrefix(e.Code, "28")
 		},
 		// pgx copies through CopyFrom, on the connection that it holds
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {

@@ -2636,3 +2636,33 @@ no `Copy` hook now tries the INSERT, where it said that copy is not supported.
 dbmeta tagged the facts in v0.14.0 on 2026-10-11, and `go.mod` names it, so the
 build needs no `go.work`.
 
+
+## W55. Run usql against the hosted services: Done
+
+Done on 2026-10-11 at Ken's request, with the accounts that dbsetup made for usql
+(a user or a scratch schema of its own on each service, files in
+`~/.config/dbmeta/usql`, read into the process only). Each service got the banner, a
+query with NULLs and the common types, an error, a wrong credential where it can
+be built, `\dt` and `\d`, a table of `usql_*` with rows with NULLs, `\copy` of
+them into a second table, and a trailing semicolon. The tables are dropped.
+
+- Snowflake, BigQuery, Spanner, Athena (an Iceberg table), Databricks and
+  Redshift Serverless worked, with the exceptions below. Cosmos DB reads only: a
+  query on the partition key and `\dt` worked, `\d` says that it is not supported
+  (the model has no columns), a write is refused as designed (D190), and a wrong
+  key is `401 Unauthorized`.
+- Fixed in usql: the generic `\copy` failed on any row with a NULL for a driver
+  that reports a string, number or time as the scan type (it scanned into the type
+  and not into a type that takes a NULL), so it now uses the same null-safe
+  destination as the result table. Redshift has no COPY FROM STDIN, so it copies
+  by INSERT, where it used the native copy of pgx and failed. Redshift answers a
+  wrong password with `28000` and not `28P01`, so the pgx driver takes the class
+  28 as a wrong password, which it did not, and Redshift never asked for it again.
+- Open, and told to the owner: dbmeta's Redshift model reads `SVV_TABLE_INFO`,
+  which an ordinary user may not, so `\dt`, `\d` and `\dv` fail for a user who is
+  not a superuser. dbimp types a NULL parameter as STRING, so a copied NULL into a
+  BigQuery column that is not a string is refused. The wrong credential could not
+  be tried on Snowflake, because a key that is not valid PKCS8 fails before it
+  reaches the server.
+- Not checked: CrateDB, QuestDB and CockroachDB share the native copy of pgx,
+  which may fail as Redshift's did.
