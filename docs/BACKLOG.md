@@ -2785,3 +2785,37 @@ typed into the entry and the session ran to its limit of 30 seconds. It now type
 a finished statement, corrects it with Backspace, goes to the start of the line
 with Ctrl-A, adds a statement there, and Enter runs both, in 2.8 seconds.
 
+
+## W60. Make the two SQLite drivers and MySQL print the same
+
+Source: Ken, on 2026-10-11. usql compared go-sqlite3 (`sqlite3`), modernc.org/sqlite
+(`moderncsqlite`) and MySQL 26.7 on one set of values: integers up to the largest
+int64, reals, decimals, text with accents and a tab, blobs, NULLs, timestamps with
+and without an offset, dates and booleans, under UTC and under
+America/Los_Angeles.
+
+Same in both SQLite drivers: every integer, real, text, blob, NULL and timestamp,
+the declared types, the arithmetic, and the aggregates. What differed:
+
+- The text of an error: `integer overflow` from go-sqlite3 and `SQL logic error:
+  integer overflow (1)` from modernc. Fixed in usql: the modernc driver takes off the
+  name of the code and the number, so a syntax error and an overflow read the same.
+- A column declared BOOLEAN prints `true` and `false` with go-sqlite3 and `1` and
+  `0` with modernc, and MySQL prints `1` and `0`. Not changed: the drivers decide it.
+- A DATE of `2026-02-29` prints as `0001-01-01T00:00:00Z` with go-sqlite3, which
+  turns a value that does not parse into the zero time without a word, and as the
+  text with modernc. Not changed.
+- Time zones: both SQLite drivers print UTC (`...Z`), and MySQL prints the local
+  zone (`2026-10-10T10:00:00-07:00`), because the MySQL family has the default
+  `loc=Local`. dburl's default for SQLite, `loc=auto`, does nothing, because
+  go-sqlite3 reads `_loc`. dburl was asked to write `_loc=auto` for `sqlite3` and
+  `_timezone=Local` for `moderncsqlite`, and to name the driver `sqlite`, so that
+  the Open hook of usql goes. usql takes the release.
+
+MySQL and SQLite also differ, and this is the database and not the driver: a
+DECIMAL keeps its scale (`-5.00`, and left aligned as text) where SQLite stores
+`-5` as a number, `1.0` is a decimal in MySQL and an integer in SQLite, a JSON
+column is written with spaces, and `1/2` is `0.5000` in MySQL and `0` in SQLite.
+A DATE prints as a timestamp at midnight (`2026-10-10T00:00:00Z`) in all three,
+where psql prints `2026-10-10`: tblfmt or the driver formats it, and a date
+column should print as a date.
