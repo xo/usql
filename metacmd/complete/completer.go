@@ -3,8 +3,6 @@
 package complete
 
 import (
-	"errors"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,7 +13,6 @@ import (
 	"github.com/xo/rline"
 
 	"github.com/xo/usql/env"
-	"github.com/xo/usql/text"
 )
 
 const (
@@ -142,7 +139,6 @@ func (c completer) Complete(comp *rline.Completion, prefix string) {
 
 func New(opts ...Option) Completer {
 	c := completer{
-		logger:           log.New(os.Stdout, "ERROR: ", log.LstdFlags),
 		sqlStartCommands: CommonSqlStartCommands,
 		// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
 		sqlCommands: CommonSqlCommands,
@@ -246,27 +242,6 @@ func WithSource(s Source) Option {
 	}
 }
 
-// WithLogger option
-func WithLogger(l logger) Option {
-	return func(c *completer) {
-		c.logger = l
-	}
-}
-
-// WithSQLStartCommands that can begin a query
-func WithSQLStartCommands(commands []string) Option {
-	return func(c *completer) {
-		c.sqlStartCommands = commands
-	}
-}
-
-// WithSQLCommands that can be any part of a query
-func WithSQLCommands(commands []string) Option {
-	return func(c *completer) {
-		c.sqlCommands = commands
-	}
-}
-
 // WithConnStrings option
 func WithConnStrings(connStrings []string) Option {
 	return func(c *completer) {
@@ -274,29 +249,13 @@ func WithConnStrings(connStrings []string) Option {
 	}
 }
 
-// WithBeforeComplete option
-func WithBeforeComplete(f CompleteFunc) Option {
-	return func(c *completer) {
-		c.beforeComplete = f
-	}
-}
-
 // completer based on https://github.com/postgres/postgres/blob/9f3665fbfc34b963933e51778c7feaa8134ac885/src/bin/psql/tab-complete.c
 type completer struct {
 	source            Source
-	logger            logger
 	sqlStartCommands  []string
 	sqlCommands       []string
 	backslashCommands []string
 	connStrings       []string
-	beforeComplete    CompleteFunc
-}
-
-// CompleteFunc returns patterns completing current text, using previous words as context
-type CompleteFunc func(previousWords []string, text []rune) [][]rune
-
-type logger interface {
-	Println(...interface{})
 }
 
 func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
@@ -313,12 +272,6 @@ func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
 	previousWords := getPreviousWords(start, line)
 	text := line[i:start]
 
-	if c.beforeComplete != nil {
-		result := c.beforeComplete(previousWords, text)
-		if result != nil {
-			return result, len(text)
-		}
-	}
 	result := c.complete(previousWords, text)
 	if result != nil {
 		return result, len(text)
@@ -918,17 +871,14 @@ func qualifiedIdentifier(filter Filter, catalog, schema, name string) string {
 	return name
 }
 
-// objects returns the objects of kind that f selects. It logs an error other
-// than one for a kind that the database cannot list.
+// objects returns the objects of kind that f selects, and none when the
+// database cannot list them.
 func (c completer) objects(kind Kind, f Filter) []Object {
 	if c.source == nil {
 		return nil
 	}
 	objs, err := c.source.Objects(kind, f)
 	if err != nil {
-		if !errors.Is(err, text.ErrNotSupported) {
-			c.logger.Println("Error getting selectables", err)
-		}
 		return nil
 	}
 	return objs

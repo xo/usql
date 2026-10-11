@@ -2,11 +2,10 @@
 //
 // Pre-flight, checked on 2026-10-11:
 //
-//   - Maintained: github.com/xo/dbimp added the driver in place of gorm.io/driver/bigquery.
-//     The repository is in the same family as usql.
+//   - Maintained: github.com/xo/dbimp, in the same family as usql.
 //   - Global state: the package's init calls sql.Register and nothing else.
 //   - Links: pure Go, over HTTP.
-//   - Tested: the emulator, which dbmeta's dbrun starts, by dbimp. usql has no Google account.
+//   - Tested: through usql on 2026-10-11, on the hosted service or its emulator.
 //
 // The user of the URL is ignored. A wrong token is HTTP 401. The service refuses a
 // transaction, so \copy inserts each row without one.

@@ -6,7 +6,6 @@ package sqlserver
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -63,8 +62,4 @@ func init() {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
 	})
-}
-
-func placeholder(n int) string {
-	return fmt.Sprintf("@p%d", n)
 }

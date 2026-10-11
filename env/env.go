@@ -289,40 +289,6 @@ func Unquote(s string) (string, error) {
 	return string(buf), nil
 }
 
-// Untick returns a func that unquotes and unticks strings for the user.
-//
-// When exec is true, backtick'd strings will be executed using the provided
-// user's shell (see Exec).
-func Untick(u *user.User, v *Variables, exec bool) func(string, bool) (string, bool, error) {
-	return func(s string, isvar bool) (string, bool, error) {
-		// fmt.Fprintf(os.Stderr, "untick: %q\n", s)
-		switch {
-		case isvar:
-			value, ok := v.Get(s)
-			return value, ok, nil
-		case len(s) < 2:
-			return "", false, text.ErrInvalidQuotedString
-		}
-		c := s[0]
-		z, err := Unquote(s)
-		switch {
-		case err != nil:
-			return "", false, err
-		case c == '\'', c == '"':
-			return z, true, nil
-		case c != '`':
-			return "", false, text.ErrInvalidQuotedString
-		case !exec:
-			return z, true, nil
-		}
-		res, err := Exec(z)
-		if err != nil {
-			return "", false, err
-		}
-		return res, true, nil
-	}
-}
-
 // Quote quotes a string.
 func Quote(s string) string {
 	s = strconv.QuoteToGraphic(s)

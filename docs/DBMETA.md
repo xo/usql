@@ -1,5 +1,13 @@
 # Migrating metadata to dbmeta
 
+> Status, 2026-10-11: the migration is done (W21). usql reads the metadata, the
+> version, the lexical forms, the batches, the terminators, the password
+> statements and the facts of each driver (the placeholder of `\copy`, whether
+> every statement is a query, the product string and the scan by type) from
+> dbmeta, and `go.mod` names its release. The steps below are the plan as it was
+> written, kept for what they decided and why. W46 holds what the describe
+> commands still lack against psql.
+
 This is the plan for moving usql off its own metadata `Reader` and `Writer` and
 onto [dbmeta](https://github.com/xo/dbmeta). It was implemented on 2026-09-30,
 all at once rather than driver by driver (D4). W21 in
@@ -395,9 +403,9 @@ per-product reader, not in the command parser.
 
 Decided on 2026-09-26.
 
-Development uses a Go workspace. `go.work` and `go.work.sum` point usql at a
-local dbmeta checkout, so neither project waits on the other and no version is
-pinned while the API is still moving.
+To build against a dbmeta checkout that has not tagged a change yet, write a
+`go.work` that uses `.` and the checkout, and do not commit it. `go.mod` names
+the released version.
 
 dbmeta is tagged when usql is ready to switch to it completely, and not before.
 The tag follows the work rather than leading it, because a tag published while

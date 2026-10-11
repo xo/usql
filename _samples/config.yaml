@@ -12,10 +12,8 @@ connections:
     hostname: localhost
     port: 1521
     database: free
-  ign: ignite://ignite:ignite@localhost
   mss: sqlserver://sa:Adm1nP@ssw0rd@localhost
   mym: mysql://root:P4ssw0rd@localhost
-  myz: mymysql://root:P4ssw0rd@localhost
   ora: oracle://system:P4ssw0rd@localhost/free
   ore: oracle://system:P4ssw0rd@localhost:1522/db1
   pgs: postgres://postgres:P4ssw0rd@localhost

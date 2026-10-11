@@ -23,7 +23,7 @@ modelled on PostgreSQL's `psql`. `usql` supports most of the
 core `psql` features, such as [variables][variables], [backticks][backticks],
 [backslash commands][commands] and has additional features that `psql` does
 not, such as [multiple database support][databases], [copying between databases][copying],
-[syntax highlighting][highlighting], [context-based completion][completion],
+[context-based completion][completion],
 and [terminal graphics][termgraphics].
 
 Database administrators and developers that would prefer to work with a tool
@@ -210,7 +210,8 @@ $ go install -tags all github.com/xo/usql@main
 [`github.com/xo/dburl`][dburl].
 
 The list of drivers that `usql` was built with can be displayed with the
-[`\drivers` command][commands]:
+[`\drivers` command][transit]: https://github.com/xo/transit
+[commands]:
 
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
@@ -245,8 +246,8 @@ associated database, scheme / build tag, and scheme aliases:
 | Database             | Scheme / Tag    | Scheme Aliases                                   | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
-| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
+| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | PostgreSQL PGX       | `pgx`           | `px`                                             | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
@@ -1024,9 +1025,8 @@ time                     Kitchen
 
 ##### Other Variables
 
-Runtime behavior, such as [enabling or disabling syntax
-highlighting][highlighting] can be modified through special variables like
-[`SYNTAX_HL`][highlighting].
+Runtime behavior, such as the pager, can be modified through special variables
+like `PAGER`.
 
 Use the `\? variables` [command][commands] to display variable help information
 and to list special variables recognized by `usql`:
@@ -1244,25 +1244,11 @@ COPY 18
 
 #### Syntax Highlighting
 
-Interactive queries will be syntax highlighted by default, using
-[Chroma][chroma]. There are a number of [variables][] that control syntax
-highlighting:
-
-| Variable                | Default                         | Values            | Description                                                  |
-| ----------------------- | ------------------------------- | ----------------- | ------------------------------------------------------------ |
-| `SYNTAX_HL`             | `true`                          | `true` or `false` | enables syntax highlighting                                  |
-| `SYNTAX_HL_FORMAT`      | _dependent on terminal support_ | formatter name    | [Chroma formatter name][chroma-formatter]                    |
-| `SYNTAX_HL_OVERRIDE_BG` | `true`                          | `true` or `false` | enables overriding the background color of the chroma styles |
-| `SYNTAX_HL_STYLE`       | `monokai`                       | style name        | [Chroma style name][chroma-style]                            |
-
-The `SYNTAX_*` variables are regular `usql` variables, and can be `\set` and
-`\unset`:
-
-```sh
-$ usql
-(not connected)=> \set SYNTAX_HL_STYLE dracula
-(not connected)=> \unset SYNTAX_HL_OVERRIDE_BG
-```
+Syntax highlighting is not part of this release. `usql` reads its input with the
+grammar of [transit][transit], which does not highlight yet, so the variables
+`SYNTAX_HL`, `SYNTAX_HL_FORMAT`, `SYNTAX_HL_STYLE` and `SYNTAX_HL_OVERRIDE_BG` are
+accepted and change nothing. Highlighting returns when the SQL grammars of transit
+can drive it.
 
 #### Context Completion
 
@@ -1633,9 +1619,6 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [go-sql]: https://pkg.go.dev/database/sql
 [homebrew]: https://brew.sh/
 [xo-tap]: https://github.com/xo/homebrew-xo
-[chroma]: https://github.com/alecthomas/chroma
-[chroma-formatter]: https://github.com/alecthomas/chroma#formatters
-[chroma-style]: https://xyproto.github.io/splash/docs/all.html
 [help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
 [aur]: https://aur.archlinux.org/packages/usql
 [aur-bin]: https://aur.archlinux.org/packages/usql-bin

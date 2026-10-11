@@ -75,7 +75,7 @@ Record whether the driver is pure Go. A driver that needs cgo, ships a
 prebuilt native library, or requires a client install cannot go in the default
 build. It also costs far more binary size than a pure Go driver.
 
-The all-driver binary is already about 215 MB. Two known causes are worth
+A build of the `most` group is 145.8 MB, and DuckDB is 54 MB of it (W32). Two known causes are worth
 recognizing, because both survive `-s -w` stripping: `-rdynamic` in cgo
 LDFLAGS, and any use of Go's `plugin` package. Both force dynamic symbol
 export.
@@ -113,9 +113,9 @@ side.
 usql's README table has a column headed `Scheme / Tag`. It holds the build
 tag, which is the directory name under `drivers/`, and not the scheme.
 
-They are allowed to differ and sometimes do. DynamoDB is `godynamo` in dburl's
-registry and `dynamodb` in usql's table. It works, because the tag is also a
-dburl alias of the scheme.
+They are allowed to differ and sometimes do. The lib/pq driver is the directory
+`libpq` and the scheme `pq`. It works, because the tag is also a dburl alias of
+the scheme.
 
 You are choosing two names. Do not assume they must match.
 
@@ -205,6 +205,14 @@ open and close a batch, whether a password change needs the old password, and
 how the database folds the case of a name. D5 records this. A database with
 no dbmeta model gets only block comments. W28 holds the four drivers whose
 statement handling waits for dbmeta.
+
+A driver of [dbimp](https://github.com/xo/dbimp) is exactly this, and nothing
+more. dbimp's errors print as they are, an error that matches
+`dbimp.ErrAuthentication` is a wrong password, a statement with no count of rows
+changed is a count of zero, and `\copy` takes each insert alone when `BeginTx`
+fails with `dbimp.ErrNotSupported`. Set a hook only for a fact that none of these
+cover, and put a fact about the database in dbmeta and a default of the DSN in
+dburl.
 
 Keep the `// DRIVER` comment on the driver import. Other tools in the family
 find the driver package by searching for it.

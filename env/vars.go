@@ -186,14 +186,6 @@ func (v *Variables) Dump(w io.Writer) error {
 	return nil
 }
 
-// GetPrint returns a print variable.
-func (v *Variables) GetPrint(name string) (string, error) {
-	if val, ok := v.prnt[name]; ok {
-		return val, nil
-	}
-	return "", fmt.Errorf(text.UnknownFormatFieldName, name)
-}
-
 // SetPrint sets a print variable.
 func (v *Variables) SetPrint(name, value string) (string, error) {
 	if _, ok := v.prnt[name]; !ok {

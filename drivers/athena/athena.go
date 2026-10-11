@@ -2,11 +2,10 @@
 //
 // Pre-flight, checked on 2026-10-11:
 //
-//   - Maintained: github.com/xo/dbimp added the driver in place of github.com/uber/athenadriver.
-//     The repository is in the same family as usql.
+//   - Maintained: github.com/xo/dbimp, in the same family as usql.
 //   - Global state: the package's init calls sql.Register and nothing else.
 //   - Links: pure Go, over HTTP.
-//   - Tested: not by usql, which has no AWS account. dbimp measured it on a hosted account.
+//   - Tested: through usql on 2026-10-11, on the hosted service or its emulator.
 //
 // The URL is athena://key:secret@host/database?workgroup=wg&output=s3://bucket/results/.
 // The server refuses a transaction, so \copy inserts each row without one.

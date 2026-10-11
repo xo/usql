@@ -243,19 +243,19 @@ var envVarNames = []varName{
 	},
 	{
 		`SYNTAX_HL`,
-		`enable syntax highlighting`,
+		`enable syntax highlighting (not used yet)`,
 	},
 	{
 		`SYNTAX_HL_FORMAT`,
-		`chroma library formatter name`,
+		`syntax highlighting formatter name (not used yet)`,
 	},
 	{
 		`SYNTAX_HL_STYLE`,
-		`chroma library style name (default "monokai")`,
+		`syntax highlighting style name (not used yet)`,
 	},
 	{
 		`SYNTAX_HL_OVERRIDE_BG`,
-		`enables overriding the background color of the chroma styles`,
+		`overrides the background color of the highlighting style (not used yet)`,
 	},
 	{
 		`TERM_GRAPHICS`,

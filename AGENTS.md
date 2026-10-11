@@ -120,7 +120,11 @@ between them.
 | `xo/dburl` | Connection string parsing, schemes, aliases, file types |
 | `xo/dbmeta` | Database metadata, which usql's describe commands read |
 | `xo/tblfmt` | Result set formatting |
-| `xo/rline` | Line editing, intended to replace `gohxs/readline` |
+| `xo/rline` | Line editing |
+| `xo/dbimp` | Pure Go database/sql drivers, over HTTP and WebSocket, for most of the drivers usql ships |
+| `xo/transit` | The grammar that splits usql's input into statements and meta commands |
+| `xo/cassandra` | The Cassandra driver |
+| `xo/odbc` | The ODBC driver |
 | `xo/dbtpl` | Code generation from database schemas |
 
 usql records its own decisions as `D1`, `D2` and so on, one file each in

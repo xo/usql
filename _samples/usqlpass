@@ -4,12 +4,9 @@
 # protocol:host:port:dbname:user:pass
 postgres:*:*:*:postgres:P4ssw0rd
 
-cql:*:*:*:cassandra:cassandra
 clickhouse:*:*:*:clickhouse:P4ssw0rd
 couchbase:*:*:*:Administrator:P4ssw0rd
 oracle:*:*:*:system:P4ssw0rd
-ignite:*:*:*:ignite:ignite
-mymysql:*:*:*:root:P4ssw0rd
 mysql:*:*:*:root:P4ssw0rd
 oracle:*:*:*:system:P4ssw0rd
 pgx:*:*:*:postgres:P4ssw0rd

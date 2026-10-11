@@ -536,11 +536,6 @@ type indexCols struct {
 	keys, include []string
 }
 
-// all returns the keys and then the included columns.
-func (c indexCols) all() []string {
-	return append(slices.Clone(c.keys), c.include...)
-}
-
 // method returns the access method of an index in lower case, such as btree.
 // SQLite reports how the index came to be instead, such as "primary key",
 // which repeats what the line already says, so that is left out.

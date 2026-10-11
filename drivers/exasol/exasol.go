@@ -1,7 +1,6 @@
-// Package exasol defines and registers usql's Exasol driver, which is dbimp's, in
-// place of github.com/exasol/exasol-driver-go. It is pure Go, over the WebSocket
-// API of Exasol, and it reports its own errors, row counts and refused
-// credentials, so usql adds nothing to it.
+// Package exasol defines and registers usql's Exasol driver, which is dbimp's. It
+// is pure Go, over the WebSocket API of Exasol, and it reports its own errors,
+// row counts and refused credentials, so usql adds nothing to it.
 //
 // Metadata: dbmeta's Exasol model. usql writes no reader of its own (D3).
 //

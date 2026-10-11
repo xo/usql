@@ -1,12 +1,11 @@
 // Package clickhouse defines and registers usql's ClickHouse driver.
 //
-// The driver is dbimp's, which speaks HTTP only, on port 8123 or, with
-// tls=true, 8443. It replaced github.com/ClickHouse/clickhouse-go in W42, at
-// Ken's decision, and takes the native protocol and its port 9000 with it.
-// It refuses every key but tls, such as the secure=true of clickhouse-go.
+// The driver is dbimp's, which speaks HTTP only, on port 8123 or, with tls=true,
+// 8443. It has no native protocol or port 9000, and it refuses every key of the
+// URL but tls.
 //
-// ClickHouse has no transactions over HTTP, so \copy inserts each row
-// without one.
+// ClickHouse has no transactions over HTTP, so \copy inserts each row without
+// one.
 //
 // See: https://github.com/xo/dbimp
 // Group: base

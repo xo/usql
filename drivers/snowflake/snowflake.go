@@ -1,15 +1,8 @@
 // Package snowflake defines and registers usql's Snowflake driver.
 //
-// Pre-flight, checked on 2026-10-10:
-//
-//   - Maintained: github.com/xo/dbimp v0.16.0 added the driver in place of
-//     github.com/snowflakedb/gosnowflake. The repository is in the same family
-//     as usql.
-//   - Global state: the package's init calls sql.Register and nothing else. The
-//     gosnowflake logger, which usql had to silence, is gone with it.
-//   - Links: pure Go, over the SQL REST API of Snowflake, with no Arrow.
-//   - Tested: not by usql, which has no Snowflake account. dbimp verified it on
-//     a trial account, and dbmeta holds the credentials of its own.
+// The driver is dbimp's: pure Go, over the SQL REST API of Snowflake, with no
+// Arrow. It sets no global state, and its init calls sql.Register and nothing
+// else.
 //
 // The URL is snowflake://user:key@host/database/schema?role=r. The password is
 // the private key, as base64url PKCS8 DER, and the query takes role, warehouse,

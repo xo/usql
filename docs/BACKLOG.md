@@ -2710,3 +2710,63 @@ rows. No code names Redshift. Checked on PostgreSQL (`\dt+` still has Size and
 Rows). Not rerun on Redshift, because the account that dbsetup made for usql is
 gone.
 
+
+## W57. Sweep the documents and the code for what the refactoring left: Done
+
+Done on 2026-10-11 at Ken's request. The sweep found and fixed:
+
+- The README said that interactive queries are syntax highlighted with Chroma, and
+  listed the Chroma variables. Highlighting is not part of this release, so the
+  README, the feature list and the descriptions of the `SYNTAX_*` variables now say
+  that they do nothing yet.
+- The completer logged an error to standard output on every failure to list
+  objects, through a logger that nothing could change. It stays silent now, and the
+  four options that nothing used are gone.
+- Dead code: the `adodb` fallback of `internal/z.go`, `env.Untick`,
+  `env.GetPrint`, `indexCols.all` and the placeholder of the SQL Server driver.
+- Package comments of the drivers named the drivers that they replaced, and said that
+  usql has not tested the hosted services, which it has (W55). Spanner said that
+  dbmeta has no model for it. The Spanner, Cosmos DB and Exasol comments are
+  current. Five package comments had lost the `See:` and `Group:` lines to a blank
+  line before `package`, which `TestDriverSeeMatchesDburl` caught.
+- `docs/DRIVER.md` quoted the size of an all-driver binary (215 MB) and a scheme
+  that differed from its tag (DynamoDB) that no longer exist, and now says what a
+  dbimp driver needs. `docs/PLAN.md` lists the questions that are open for Ken,
+  where it said none. `docs/DBMETA.md` says that the migration is done and no longer
+  describes a `go.work`. `docs/PROGRESS.md` and `docs/RELEASE.md` follow the hosted
+  runs, the facts that moved to dbmeta and dburl, and the removed hooks. AGENTS.md
+  lists dbimp, transit, cassandra and odbc as siblings.
+- The samples no longer name `cql`, `mymysql` or `ignite`.
+
+What the sweep left alone, as history: BACKLOG.md and the decisions, and the
+accounts of removed drivers in CONTRIBUTING.md.
+
+## W58. Put the highlighting documentation back when highlighting returns
+
+Waits on W36 (highlighting from transit's SQL grammars). W57 took out what said how
+to use and turn off syntax highlighting, because the feature is not in this release.
+When highlighting returns, restore it, and change the text that says it is not
+there. The earlier text is in `README.md` at commit `7e173df`:
+
+- README.md, the feature list at the top: put "[syntax highlighting][highlighting]"
+  back between "copying between databases" and "context-based completion".
+- README.md, the section "Syntax Highlighting": the sentence that says that
+  interactive queries are highlighted by default, the table of the variables
+  (`SYNTAX_HL`, default `true`; `SYNTAX_HL_FORMAT`, dependent on the terminal;
+  `SYNTAX_HL_OVERRIDE_BG`, default `true`; `SYNTAX_HL_STYLE`, default `monokai`),
+  the example that `\set`s and `\unset`s them, and the links of the style and
+  formatter names. Check each default and each value against what transit
+  offers, because the variables named Chroma, and the formatters and styles may
+  differ.
+- README.md, "Other Variables": the sentence that names `SYNTAX_HL` as an example of
+  a variable that changes runtime behavior, which now says the pager.
+- `env/list.go`: the descriptions of the four `SYNTAX_HL*` variables lost their
+  "not used yet", and said "chroma library" before W57.
+- `env/vars.go`: the defaults of the four variables, which `colorLevel` still sets.
+- `docs/RELEASE.md`: the known gap "No color", and the check by hand "Syntax
+  highlighting", which says that no color should appear until then.
+- `docs/PROGRESS.md`: the open point that the variables do nothing.
+
+The check by hand has to cover turning highlighting off (`SYNTAX_HL` false and
+`\unset`), because a person who has a terminal that shows the colors badly needs
+that switch.

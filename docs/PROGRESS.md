@@ -51,7 +51,7 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
    edited text and goes on, and `\c` from SQLite to DuckDB parses what
    follows with DuckDB's forms. The history is not saved: see below.
 4. TestCLI fails in all nine sessions, because the recordings hold the
-   colors of the old highlighting. Ken fixes the recordings himself. The
+   colors of the old highlighting, which is gone. Ken fixes the recordings himself. The
    session line-editing also runs into its limit of 30 seconds, which may be
    the fault below.
 
@@ -73,16 +73,10 @@ Open points that are known:
   as `\q` stops the read, and rline then refuses to save, to keep the rest of
   the file. It ignores the error at start. This is for Ken: migrate the file,
   use a new file name, or have rline read the old format.
-- dbmeta holds, since v0.1.0, DuckDB's dollar quotes, and the `Query.Each`,
-  `Args`, `Dialect.Pattern` and `Open` that `metacmd/describe` uses (dbmeta's
-  D169).
-- dbmeta has had models since v0.1.0 for arangodb, influxql, libsql, neo4j,
-  surrealdb and ydb, and since v0.7.0 for avatica and opensearch. Checked on
-  2026-10-08 against servers, the Version hooks of arangodb, avatica, libsql,
-  neo4j, opensearch, surrealdb and ydb gave the same banner as dbmeta, or a
-  worse one, so they are removed (D4). InfluxDB and InfluxQL keep theirs, by
-  Ken's decision (dbmeta's D166). Athena, CSVQ, DynamoDB and Pinot keep
-  theirs, because dbmeta has no model for them.
+- dbmeta gives the version of every database that it has a model for, and the
+  Version hooks that remain are InfluxDB's (by Ken's decision, dbmeta's D166)
+  and csvq's, for which dbmeta has no model. The describe commands read dbmeta
+  through `metacmd/describe` (W46 holds what still differs from psql).
 
 ## How to build
 

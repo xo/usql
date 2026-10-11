@@ -40,9 +40,9 @@ Read these first. Some of them can stop the release.
   go-sqlite3 into the executable. Building with `-tags libsqlite3` fixes it,
   and that changes the SQLite of the release builds. Ken decides how (W40).
   This stops the release until he does.
-- `\copy` still writes its own SQL: the INSERT, the placeholder of each
-  database, and the query for the columns of the target. W29 moves them to
-  dbmeta, and is due before the release.
+- `\copy` still writes its own SQL: the INSERT, and the query for the columns of
+  the target. The placeholder of each database comes from dbmeta. W29 moves the
+  rest, and is due before the release.
 
 ## What changed
 
@@ -104,9 +104,20 @@ What describes a database moved from `drivers.Driver` to dbmeta (D5):
   is not finished when `\g` is typed goes to the server as it is, and fails there.
 - what happens to a trailing semicolon
 - the case of column names
+- the placeholder of the INSERT of `\copy`, whether a write needs autocommit,
+  whether every statement is a query, and the name of a product with no
+  statement for its version
+- scanning a column into the type that the driver reports (the MySQL family and
+  Databend)
+
+What describes the DSN moved to dburl: the defaults of the MySQL family
+(`parseTime`, `loc` and `sql_mode`), SQLite (`loc`), Cassandra (`timeout`) and
+Couchbase (`txtimeout`), which a URL can now override. A MySQL or SQLite URL that
+writes `loc=UTC` keeps it.
 
 `Process` is gone. The drivers that used it only to run every statement as a
-query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
+query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
+`LexerName` are gone.
 
 ### Drivers
 
@@ -114,22 +125,16 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
 - Cassandra moves to `github.com/xo/cassandra`, and its scheme is
   `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
-- BigQuery, Cosmos DB, Athena, Databricks and Spanner move to
-  `github.com/xo/dbimp` (W50), in place of gorm's BigQuery driver, `gocosmos`,
-  `athenadriver`, `databricks-sql-go` and `go-sql-spanner`. Athena's scheme is
-  `athena`, with `awsathena`, `s3` and `aws` as aliases. usql has no account for
-  any of them: check a query, a wrong key, `\dt`, `\d` and `\copy` by hand,
-  through the emulators of dbmeta for BigQuery, Cosmos DB and Spanner.
-- Exasol moves to `github.com/xo/dbimp` (W56), in place of
-  `exasol-driver-go`. It is pure Go over the WebSocket API. Its URL is
-  `exasol://user:password@host:8563/schema`, with the keys `tls` and
-  `validateservercertificate`. Check a query, a wrong password, `\dt`, `\d` and
-  `\copy` by hand against `exasol-2026.2.0` from dbrun.
-- Snowflake moves to `github.com/xo/dbimp` (W49). Its URL is
-  `snowflake://user:key@host/database/schema?role=r`, and the password is the
-  private key as base64url PKCS8 DER. Every earlier Snowflake URL must change.
-  usql has no Snowflake account, so nothing has run it: check a query, a wrong
-  key, `\dt`, `\d` and `\copy` by hand.
+- BigQuery, Cosmos DB, Athena, Databricks, Spanner, Snowflake and Exasol move to
+  `github.com/xo/dbimp` (W49, W50, W56). Athena's scheme is `athena`, with
+  `awsathena`, `s3` and `aws` as aliases. The URLs of Athena, Cosmos DB,
+  Databricks, Snowflake and Exasol changed: `athena://key:secret@host/db`,
+  `cosmos://user:key@account/db/container`, `databricks://token:pat@workspace/warehouse`,
+  `snowflake://user:key@host/database/schema?role=r` (the password is the private
+  key as base64url PKCS8 DER) and `exasol://user:password@host:8563/schema`.
+  Every earlier URL must change. Cosmos DB reads only. They ran through usql on
+  the hosted services, or their emulators, on 2026-10-11 (W55); check each again
+  by hand before the release: a query, a wrong credential, `\dt`, `\d` and `\copy`.
 - New drivers:
   - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
   - SurrealDB and ArangoDB
@@ -194,6 +199,8 @@ one error, and a wrong password:
 - Druid, with `\dtS`, `\d` and a wrong password
 - Drill, Solr, Elasticsearch, OpenSearch and DynamoDB, with a statement that
   ends in `;`, and `\dt` on Drill, Solr and Elasticsearch
+- Redshift, as a user who is not a superuser: `\dt`, `\d` and `\dv` work, and
+  `\dt+` shows no size and rows
 - ClickHouse on its HTTP port, and Trino and Presto, with and without a user
 - ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
   after the crash is fixed

@@ -1,17 +1,16 @@
 // Package odbc defines and registers usql's ODBC driver, which uses the ODBC
 // driver manager of the system.
 //
-// The driver is github.com/xo/odbc, pure Go on purego, which replaced
-// github.com/alexbrainman/odbc. It needs no cgo. It loads the driver manager
-// when a connection opens, and reports an error when there is none.
+// The driver is github.com/xo/odbc, pure Go on purego, so it needs no cgo. It
+// loads the driver manager when a connection opens, and reports an error when
+// there is none.
 //
-// The URL is odbc+<driver>://user:pass@host:port/db, and a setting of the
-// ODBC driver goes in the query. dburl no longer adds a port, a host or a
-// ServiceName.
+// The URL is odbc+<driver>://user:pass@host:port/db, and a setting of the ODBC
+// driver goes in the query.
 //
-// Metadata: dbmeta has no model for ODBC, which is a bridge to any database
-// and has no dialect of its own, so the describe commands report that they
-// are not supported (D3).
+// Metadata: dbmeta has no model for ODBC, which is a bridge to any database and
+// has no dialect of its own, so the describe commands report that they are not
+// supported (D3).
 //
 // See: https://github.com/xo/odbc
 // Group: most
