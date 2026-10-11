@@ -32,8 +32,6 @@ Read these first. Some of them can stop the release.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
-- The sessions of TestCLI in `testdata/cli` hold the old output, and every
-  one fails against it. W37 records them again.
 - **ODBC crashes in the default build.** With go-sqlite3 and DuckDB both
   linked, which every `most` build does, the first ODBC query crashes the
   process, because DuckDB's bindings export the `sqlite3_*` symbols of

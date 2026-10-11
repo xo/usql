@@ -8,14 +8,13 @@ size: 80x24
 send:
 
 recv:
-Connected with driver sqlite3 (VERSION)\r
+\e[mConnected with driver sqlite3 (VERSION)\r
 \n
 \e[0cType "help" for help.\r
 \n
 \r
 \n
-\e[J\e[2K\r
-sq::memory:=>  \x08
+\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -23,18 +22,23 @@ send:
 select\r
 
 recv:
-\e[J\e[2K\r
-sq::memory:=> \e[38;5;231ms\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;231mse\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;231msel\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;231msele\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;231mselec\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;81mselect\e[0m\e[J\e[2K\r
-sq::memory:=> \e[38;5;81mselect\e[0m\r
+\r
+\e[32msq::memory:=> \e[39ms\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39mse\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39msel\e[K\r
+\e[17C\r
+\e[32msq::memory:=> \e[39msele\e[K\r
+\e[18C\r
+\e[32msq::memory:=> \e[39mselec\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39mselect\e[K\r
 \n
-\e[J\e[2K\r
-sq::memory:->  \x08
+\e[32m              \e[39m\e[K\r
+\e[14C
 
 
 ## step 2
@@ -42,20 +46,45 @@ send:
   1 as n\r
 
 recv:
-\e[J\e[2K\r
-sq::memory:->  \e[J\e[2K\r
-sq::memory:->   \e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;231ma\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m  \e[0m\e[38;5;141m1\e[0m\e[38;5;231m \e[0m\e[38;5;81mas\e[0m\e[38;5;231m \e[0m\e[38;5;231mn\e[0m\r
+\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
 \n
-\e[J\e[2K\r
-sq::memory:->  \x08
+\e[32m              \e[39m \e[K\r
+\e[15C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  \e[K\r
+\e[16C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1\e[K\r
+\e[17C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 \e[K\r
+\e[18C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 a\e[K\r
+\e[19C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as\e[K\r
+\e[20C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as \e[K\r
+\e[21C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as n\e[K\r
+\e[22C\r
+\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as n\e[K\r
+\n
+\e[32m              \e[39m\e[K\r
+\e[14C
 
 
 ## step 3
@@ -63,10 +92,19 @@ send:
 ;\r
 
 recv:
-\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m;\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m;\e[0m\e[J\e[2K\r
-sq::memory:-> \e[38;5;231m;\e[0m\r
+\r
+\e[2A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as n\e[K\r
+\n
+\e[32m              \e[39m;\e[K\r
+\e[15C\r
+\e[2A\e[32msq::memory:=> \e[39mselect\e[K\r
+\n
+\e[32m              \e[39m  1 as n\e[K\r
+\n
+\e[32m              \e[39m;\e[K\r
+\e[15C\r
 \n
  n \r
 \n
@@ -78,8 +116,7 @@ sq::memory:-> \e[38;5;231m;\e[0m\r
 \n
 \r
 \n
-\e[J\e[2K\r
-sq::memory:=>  \x08
+\e[32msq::memory:=> \e[39m
 
 
 ## step 4
@@ -87,11 +124,12 @@ send:
 \\q\r
 
 recv:
-\e[J\e[2K\r
-sq::memory:=> \\\e[J\e[2K\r
-sq::memory:=> \\q\e[J\e[2K\r
-sq::memory:=> \\q\e[J\e[2K\r
-sq::memory:=> \\q\r
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
 \n
-\e[J\e[2K\r
 

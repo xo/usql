@@ -2770,3 +2770,18 @@ there. The earlier text is in `README.md` at commit `7e173df`:
 The check by hand has to cover turning highlighting off (`SYNTAX_HL` false and
 `\unset`), because a person who has a terminal that shows the colors badly needs
 that switch.
+
+## W59. Record the terminal sessions again: Done
+
+Done on 2026-10-11 at Ken's request, after the CI job "Terminal sessions" failed on
+`4a11b57` on Ubuntu and macOS. All nine sessions of `testdata/cli` held the output of
+the old line editor and its highlighting, so each failed on the first line (rline
+writes `\e[m` before the banner, and draws the prompt in green). They are recorded
+again, and the diff was read: no color of highlighting, the prompt row by row as
+rline redraws it, and `describe` with the output of `metacmd/describe`. The
+session `line-editing` could never end, because the old script pressed Enter on an
+open entry and Ctrl-U to throw it away, which rline keeps as rows, so `\q` was
+typed into the entry and the session ran to its limit of 30 seconds. It now types
+a finished statement, corrects it with Backspace, goes to the start of the line
+with Ctrl-A, adds a statement there, and Enter runs both, in 2.8 seconds.
+

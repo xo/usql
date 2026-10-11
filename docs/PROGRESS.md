@@ -50,10 +50,10 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
 3. Checked on 2026-10-02: Ctrl-C gives up an open entry, `\e` runs the
    edited text and goes on, and `\c` from SQLite to DuckDB parses what
    follows with DuckDB's forms. The history is not saved: see below.
-4. TestCLI fails in all nine sessions, because the recordings hold the
-   colors of the old highlighting, which is gone. Ken fixes the recordings himself. The
-   session line-editing also runs into its limit of 30 seconds, which may be
-   the fault below.
+4. TestCLI passes: the nine sessions of `testdata/cli` were re-recorded on 2026-10-11,
+   with no color of highlighting, and `line-editing` was rewritten, because Enter
+   on a finished entry runs it wherever the cursor is, and rline keeps an open
+   entry as rows, where readline ran its line.
 
 Open points that are known:
 
@@ -89,6 +89,5 @@ loads two modules that provide `github.com/google/flatbuffers/go`, a `replace`
 to an empty module, a directory with only a `go.mod` that reads `module
 github.com/google/flatbuffers/go` and `go 1.21`, ends the conflict.
 
-The recordings in `testdata/cli` are changed and not committed, by Ken's
-decision. Keep them out of every commit. The recordings in `drivers/testdata`
-were removed with the tests against databases. W37 brings them back.
+The recordings in `drivers/testdata` were removed with the tests against
+databases. W37 brings them back.

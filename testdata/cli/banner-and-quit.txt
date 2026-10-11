@@ -8,14 +8,13 @@ size: 80x24
 send:
 
 recv:
-Connected with driver sqlite3 (VERSION)\r
+\e[mConnected with driver sqlite3 (VERSION)\r
 \n
 \e[0cType "help" for help.\r
 \n
 \r
 \n
-\e[J\e[2K\r
-sq::memory:=>  \x08
+\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -23,11 +22,12 @@ send:
 \\q\r
 
 recv:
-\e[J\e[2K\r
-sq::memory:=> \\\e[J\e[2K\r
-sq::memory:=> \\q\e[J\e[2K\r
-sq::memory:=> \\q\e[J\e[2K\r
-sq::memory:=> \\q\r
+\r
+\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[15C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[16C\r
 \n
-\e[J\e[2K\r
 
