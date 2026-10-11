@@ -27,7 +27,7 @@ func KnownBuildTags() map[string]string {
 		"duckdb":        "duckdb",        // github.com/duckdb/duckdb-go/v2
 		"dynamodb":      "dynamodb",      // github.com/xo/dbimp/dynamodb
 		"elasticsearch": "elasticsearch", // github.com/xo/dbimp/elasticsearch
-		"exasol":        "exasol",        // github.com/exasol/exasol-driver-go
+		"exasol":        "exasol",        // github.com/xo/dbimp/exasol
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
 		"gizmosql":      "gizmosql",      // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver

@@ -27,7 +27,7 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.14.0, transit v0.4.0 and rline v0.1.0, all in
+- usql requires dbmeta v0.15.0, transit v0.4.0 and rline v0.1.0, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -120,6 +120,11 @@ query set `AlwaysQuery`. `BatchAsTransaction` and `LexerName` are gone.
   `athena`, with `awsathena`, `s3` and `aws` as aliases. usql has no account for
   any of them: check a query, a wrong key, `\dt`, `\d` and `\copy` by hand,
   through the emulators of dbmeta for BigQuery, Cosmos DB and Spanner.
+- Exasol moves to `github.com/xo/dbimp` (W56), in place of
+  `exasol-driver-go`. It is pure Go over the WebSocket API. Its URL is
+  `exasol://user:password@host:8563/schema`, with the keys `tls` and
+  `validateservercertificate`. Check a query, a wrong password, `\dt`, `\d` and
+  `\copy` by hand against `exasol-2026.2.0` from dbrun.
 - Snowflake moves to `github.com/xo/dbimp` (W49). Its URL is
   `snowflake://user:key@host/database/schema?role=r`, and the password is the
   private key as base64url PKCS8 DER. Every earlier Snowflake URL must change.

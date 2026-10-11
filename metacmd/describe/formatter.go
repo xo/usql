@@ -125,9 +125,19 @@ func classes(types string) map[rune]bool {
 // relations returns the relations that match pattern, sorted by schema and
 // name. When sequences are asked for and the database lists them apart from
 // its tables, they are added.
-func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bool, want map[rune]bool, composite bool) ([]dbmeta.Table, error) {
+func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bool, want map[rune]bool, composite, info bool) ([]dbmeta.Table, error) {
 	schema, name := f.meta.Dialect().Pattern(pattern)
-	tables, err := all(ctx, f, dbmeta.Tables, dbmeta.Args{Schema: schema, Name: name, WithSystem: withSystem})
+	args := dbmeta.Args{Schema: schema, Name: name, WithSystem: withSystem}
+	// a database that reads the size and the rows of a table from a view that an
+	// ordinary user may not read gives them only when asked. The verbose list asks,
+	// and runs again without them when the user may not.
+	asked := info && f.takes(dbmeta.Tables, "with_table_info")
+	args.WithTableInfo = asked
+	tables, err := all(ctx, f, dbmeta.Tables, args)
+	if err != nil && asked {
+		args.WithTableInfo = false
+		tables, err = all(ctx, f, dbmeta.Tables, args)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +186,7 @@ func (f *Formatter) notFound(pattern string) error {
 // ListTables prints the relations of the classes named by types that match
 // pattern, for \dt, \dv, \dm, \ds and \d with no pattern.
 func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbose, showSystem bool) error {
-	tables, err := f.relations(ctx, pattern, showSystem, classes(types), false)
+	tables, err := f.relations(ctx, pattern, showSystem, classes(types), false, verbose)
 	if err != nil {
 		return f.check(`\dt`, err)
 	}
@@ -260,7 +270,7 @@ func relationsTitle(want map[rune]bool) string {
 // DescribeTableDetails prints each relation and each index that matches
 // pattern, for \d NAME.
 func (f *Formatter) DescribeTableDetails(ctx context.Context, pattern string, verbose, showSystem bool) error {
-	tables, err := f.relations(ctx, pattern, showSystem, classes(""), true)
+	tables, err := f.relations(ctx, pattern, showSystem, classes(""), true, false)
 	if err != nil {
 		return f.check(`\d`, err)
 	}

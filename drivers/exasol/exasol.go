@@ -1,24 +1,19 @@
-// Package exasol defines and registers usql's Exasol driver.
+// Package exasol defines and registers usql's Exasol driver, which is dbimp's, in
+// place of github.com/exasol/exasol-driver-go. It is pure Go, over the WebSocket
+// API of Exasol, and it reports its own errors, row counts and refused
+// credentials, so usql adds nothing to it.
 //
-// See: https://github.com/exasol/exasol-driver-go
+// Metadata: dbmeta's Exasol model. usql writes no reader of its own (D3).
+//
+// See: https://github.com/xo/dbimp
+// Group: most
 package exasol
 
 import (
-	"regexp"
-
-	_ "github.com/exasol/exasol-driver-go" // DRIVER
+	_ "github.com/xo/dbimp/exasol" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	errCodeRE := regexp.MustCompile(`^\[([0-9]+)]\s+`)
-	drivers.Register("exasol", drivers.Driver{
-		Err: func(err error) (string, string) {
-			code, msg := "", err.Error()
-			if m := errCodeRE.FindStringSubmatch(msg); m != nil {
-				code, msg = m[1], errCodeRE.ReplaceAllString(msg, "")
-			}
-			return code, msg
-		},
-	})
+	drivers.Register("exasol", drivers.Driver{})
 }

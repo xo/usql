@@ -2666,3 +2666,47 @@ them into a second table, and a trailing semicolon. The tables are dropped.
   reaches the server.
 - Not checked: CrateDB, QuestDB and CockroachDB share the native copy of pgx,
   which may fail as Redshift's did.
+
+## W56. Move Exasol to dbimp's driver: Done
+
+Waits on dburl and the tags of dbimp. Ken said on 2026-10-11 that Exasol is moving
+to a dbimp implementation. dbimp has `github.com/xo/dbimp/exasol` (its W44) in its
+repository, over the WebSocket API with no cgo, and has not tagged it. dburl
+still names `github.com/exasol/exasol-driver-go` and writes the DSN of that driver
+(`host:port?user=...`), so the move needs dburl to name the new package and to
+write the form that dbimp reads (`exasol://user:password@host:8563/schema?tls=...`).
+
+usql wrote its side against the local checkout of dbimp (not committed, through a
+`go.work`): `drivers/exasol` is a bare registration, because dbimp's errors, row
+counts and refused credentials are generic here (W52), and the Exasol model of dbmeta
+gives the metadata, the placeholder of `\copy` and the version. The old error
+regexp is gone. `go.mod` still names `exasol-driver-go`, and
+`TestDriverSeeMatchesDburl` fails until dburl moves, because it compares the `See:`
+line with dburl's. Not run against a server: the new driver cannot read the DSN
+that dburl writes today. Checks for after the tags: a query, a wrong password, `\dt`,
+`\d` and `\copy` on `exasol-2026.2.0`, which dbrun starts.
+
+Update, 2026-10-11. dburl has the change staged and not released (its D66): the scheme
+names `github.com/xo/dbimp/exasol` and writes `exasol://user:password@host:port/schema?key=value`.
+With the local checkouts of dbimp and dburl in `go.work`, the registry checks pass and
+the README row follows dburl. Checked on `exasol-2026.2.0` from dbrun: the banner
+(`Exasol 2026.2.0-nano.6`), types with NULLs, an error (`42000`), a wrong password
+(`08004`), `\dt` and `\d`, `\copy` of rows with NULLs and with a list of columns, and a
+trailing semicolon. A decimal prints without its trailing zero (`1.5` for
+`decimal(10,2)`), where the other drivers keep the scale. `go.mod` waits for the tags
+of dbimp and dburl.
+
+Done on 2026-10-11 on dbimp v0.20.0 and dburl v0.52.0, both tagged. `go.mod` names
+them, `exasol-driver-go` and the modules that only it needed are out, and the build
+needs no `go.work`. dbimp v0.20.0 also writes a NULL argument of BigQuery as the literal
+NULL, which fixes the copied NULL into a column that is not a string (W55).
+
+Update, 2026-10-11, on dbmeta v0.15.0: Redshift's tables statement no longer reads
+`SVV_TABLE_INFO`, so `\dt`, `\d` and `\dv` work for an ordinary user, and `Args.WithTableInfo`
+asks for the size, the rows and the options. The verbose list (`\dt+` and its
+forms) sets it only for a model that takes `with_table_info`, and runs again without
+it when the read fails, so an ordinary user sees the other columns with no size and
+rows. No code names Redshift. Checked on PostgreSQL (`\dt+` still has Size and
+Rows). Not rerun on Redshift, because the account that dbsetup made for usql is
+gone.
+

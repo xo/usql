@@ -11,7 +11,6 @@ require (
 	github.com/beltran/gohive/v2 v2.1.0
 	github.com/chaisql/chai v0.18.0
 	github.com/duckdb/duckdb-go/v2 v2.10505.0
-	github.com/exasol/exasol-driver-go v1.1.1
 	github.com/go-git/go-billy/v5 v5.9.1
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.11.0
@@ -34,9 +33,9 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cassandra v0.1.0
-	github.com/xo/dbimp v0.19.0
-	github.com/xo/dbmeta v0.14.0
-	github.com/xo/dburl v0.51.0
+	github.com/xo/dbimp v0.20.0
+	github.com/xo/dbmeta v0.15.0
+	github.com/xo/dburl v0.52.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.0
 	github.com/xo/resvg v0.11.0
@@ -95,7 +94,6 @@ require (
 	github.com/ebitengine/purego v0.11.1 // indirect
 	github.com/elastic/go-sysinfo v1.15.5 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
-	github.com/exasol/error-reporting-go v0.2.1 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/getsentry/sentry-go v0.49.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
@@ -111,7 +109,6 @@ require (
 	github.com/google/flatbuffers/go v0.0.0-20230110200425-62e4d2e5b215 // indirect
 	github.com/google/pprof v0.0.0-20260906184651-6331bc6350fe // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -159,8 +156,6 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/stretchr/objx v0.5.3 // indirect
-	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/resvg/libresvg/darwin_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/darwin_arm64 v0.48.1 // indirect

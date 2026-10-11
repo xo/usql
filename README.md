@@ -244,9 +244,9 @@ associated database, scheme / build tag, and scheme aliases:
 
 | Database             | Scheme / Tag    | Scheme Aliases                                   | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
-| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
+| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
+| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
 | PostgreSQL PGX       | `pgx`           | `px`                                             | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
@@ -281,7 +281,7 @@ associated database, scheme / build tag, and scheme aliases:
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`             | [github.com/xo/dbimp/databricks][d-databricks] <sup>[¶][f-hosted]</sup>                     |
 | DynamoDB             | `dynamodb`      | `dy`, `dyn`, `dynamo`                            | [github.com/xo/dbimp/dynamodb][d-dynamodb]                                                  |
 | Elasticsearch        | `elasticsearch` | `es`, `elastic`                                  | [github.com/xo/dbimp/elasticsearch][d-elasticsearch]                                        |
-| Exasol               | `exasol`        | `ex`, `exa`                                      | [github.com/exasol/exasol-driver-go][d-exasol]                                              |
+| Exasol               | `exasol`        | `ex`, `exa`                                      | [github.com/xo/dbimp/exasol][d-exasol]                                                      |
 | Firebird             | `firebird`      | `fb`, `firebirdsql`                              | [github.com/nakagami/firebirdsql][d-firebird]                                               |
 | FlightSQL            | `flightsql`     | `fl`, `flight`                                   | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-flightsql]                 |
 | Google BigQuery      | `bigquery`      | `bq`                                             | [github.com/xo/dbimp/bigquery][d-bigquery] <sup>[¶][f-hosted]</sup>                         |
@@ -333,7 +333,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-duckdb]: https://github.com/duckdb/duckdb-go
 [d-dynamodb]: https://github.com/xo/dbimp
 [d-elasticsearch]: https://github.com/xo/dbimp
-[d-exasol]: https://github.com/exasol/exasol-driver-go
+[d-exasol]: https://github.com/xo/dbimp
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-flightsql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
 [d-gizmosql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
