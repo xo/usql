@@ -20,34 +20,11 @@
 package pinot
 
 import (
-	"context"
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/pinot" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/pinot" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("pinot", drivers.Driver{
-		// no statement on the Broker returns the version, and SELECT
-		// version() fails with code 700, so none is run
-		Version: func(context.Context, drivers.DB) (string, error) {
-			return "Apache Pinot", nil
-		},
-		Err: func(err error) (string, string) {
-			var e *pinot.Error
-			if errors.As(err, &e) {
-				return strconv.Itoa(e.Code), e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "pinot: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-	})
+	drivers.Register("pinot", drivers.Driver{})
 }

@@ -16,31 +16,11 @@
 package neo4j
 
 import (
-	"errors"
-	"strings"
+	_ "github.com/xo/dbimp/neo4j" // DRIVER
 
-	"github.com/xo/dbimp/neo4j" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("neo4j", drivers.Driver{
-		// Neo4j sends no count of rows affected, and a Cypher statement
-		// such as MATCH is not one that usql knows returns rows, so each
-		// statement is run as a query
-		AlwaysQuery: true,
-		Err: func(err error) (string, string) {
-			// a response can hold several errors, and only a single one is
-			// reported by its code
-			var re *neo4j.ResponseError
-			if errors.As(err, &re) && len(re.Errs) == 1 {
-				return re.Errs[0].Code, re.Errs[0].Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "neo4j: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var e neo4j.Error
-			return errors.As(err, &e) && e.Code == "Neo.ClientError.Security.Unauthorized"
-		},
-	})
+	drivers.Register("neo4j", drivers.Driver{})
 }

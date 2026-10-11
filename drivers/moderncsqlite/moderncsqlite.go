@@ -30,6 +30,5 @@ func init() {
 			return "", err.Error()
 		},
 		ConvertBytes: sqshared.ConvertBytes,
-		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

@@ -18,29 +18,11 @@
 package spanner
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/spanner" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/spanner" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("spanner", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *spanner.Error
-			if errors.As(err, &e) {
-				return e.Status + " " + strconv.Itoa(e.Code), e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "spanner: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("spanner", drivers.Driver{})
 }

@@ -18,37 +18,11 @@
 package athena
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"strings"
+	_ "github.com/xo/dbimp/athena" // DRIVER
 
-	"github.com/xo/dbimp/athena" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("athena", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *athena.Error
-			if errors.As(err, &e) {
-				code := e.Code
-				if code == "" {
-					code = e.Type
-				}
-				return code, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "athena: ")
-		},
-		// a wrong secret is HTTP 400, and not 401 or 403, with this type
-		IsPasswordErr: func(err error) bool {
-			var e *athena.Error
-			return errors.As(err, &e) && (strings.Contains(e.Type, "InvalidSignature") || strings.Contains(e.Type, "UnrecognizedClient"))
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-		// BeginTx fails with dbimp.ErrNotSupported, so each row goes in alone
-		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			return drivers.FlexibleCopyWithInsert(ctx, db, rows, table, func(int) string { return "?" }, false)
-		},
-	})
+	drivers.Register("athena", drivers.Driver{})
 }

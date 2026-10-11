@@ -21,27 +21,11 @@
 package druid
 
 import (
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/druid" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/druid" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("druid", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *druid.Error
-			if errors.As(err, &e) {
-				return e.Code, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "druid: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-	})
+	drivers.Register("druid", drivers.Driver{})
 }

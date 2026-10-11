@@ -18,34 +18,11 @@
 package bigquery
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/bigquery" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/bigquery" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("bigquery", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *bigquery.Error
-			if errors.As(err, &e) {
-				return e.Reason, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "bigquery: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-		// BeginTx fails with dbimp.ErrNotSupported, so each row goes in alone
-		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			return drivers.FlexibleCopyWithInsert(ctx, db, rows, table, func(int) string { return "?" }, false)
-		},
-	})
+	drivers.Register("bigquery", drivers.Driver{})
 }

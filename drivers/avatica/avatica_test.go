@@ -8,15 +8,19 @@ import (
 
 	"github.com/xo/dbimp"
 	"github.com/xo/dbimp/avatica"
+	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
 	_ "github.com/xo/usql/drivers/avatica"
 )
 
 func TestIsPasswordErr(t *testing.T) {
 	t.Parallel()
-	d, ok := drivers.Available()["avatica"]
-	if !ok {
+	if _, ok := drivers.Available()["avatica"]; !ok {
 		t.Fatal("avatica is not registered")
+	}
+	u, err := dburl.Parse("avatica://SA:x@localhost:8765")
+	if err != nil {
+		t.Fatal(err)
 	}
 	tests := []struct {
 		name string
@@ -39,7 +43,7 @@ func TestIsPasswordErr(t *testing.T) {
 		{"other", errors.New("boom"), false},
 	}
 	for _, test := range tests {
-		if got := d.IsPasswordErr(test.err); got != test.exp {
+		if got := drivers.IsPasswordErr(u, test.err); got != test.exp {
 			t.Errorf("%s: expected %t, got %t", test.name, test.exp, got)
 		}
 	}

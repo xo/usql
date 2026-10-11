@@ -64,8 +64,5 @@ func init() {
 			}
 			return strings.Contains(err.Error(), "empty password")
 		},
-		Copy: drivers.CopyWithInsert(func(n int) string {
-			return fmt.Sprintf(":%d", n)
-		}),
 	})
 }

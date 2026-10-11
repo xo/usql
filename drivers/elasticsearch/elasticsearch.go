@@ -19,28 +19,11 @@
 package elasticsearch
 
 import (
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/elasticsearch" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/elasticsearch" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("elasticsearch", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *elasticsearch.Error
-			if errors.As(err, &e) {
-				return e.Type, e.Reason
-			}
-			return "", strings.TrimPrefix(err.Error(), "elasticsearch: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("elasticsearch", drivers.Driver{})
 }

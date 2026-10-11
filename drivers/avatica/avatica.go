@@ -21,35 +21,11 @@
 package avatica
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/avatica" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/avatica" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("avatica", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *avatica.Error
-			if errors.As(err, &e) {
-				return strconv.Itoa(e.Code), e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "avatica: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			if errors.As(err, &se) && se.Code == http.StatusUnauthorized {
-				return true
-			}
-			// the server answers a wrong password as an ordinary error, with
-			// the standard exception of java.sql, whatever database is behind
-			// it
-			var e *avatica.Error
-			return errors.As(err, &e) && strings.Contains(e.Exception, "SQLInvalidAuthorizationSpecException")
-		},
-	})
+	drivers.Register("avatica", drivers.Driver{})
 }

@@ -1452,42 +1452,61 @@ and replace the table below. CONTRIBUTING.md says how the script works. A
 driver whose share grows a lot is a question for Ken: keep it in `most`,
 move it to `all`, or find a smaller module.
 
-### The measurement of 2026-10-01
+### The measurement of 2026-10-11
 
-A release build with every driver of `most` was 203.1 MB, stripped, with
-go1.27.1 on linux/amd64. The ten largest drivers make up 133.9 MB of it, and
-29 of the 51 drivers add less than 1 MB each.
+A release build with every driver of `most` was 145.8 MB, stripped, with
+go1.27.2 on linux/amd64, against 203.1 MB on 2026-10-01: 57.3 MB less. The cause
+is the move of Snowflake, BigQuery, Cosmos DB, Athena, Databricks, Spanner,
+ClickHouse, Trino, Presto and DynamoDB to the pure Go drivers of dbimp. They
+saved 17.4 MB (Spanner), 10.9 (Snowflake), 7.6 (Athena), 4.8 (ClickHouse), 4.6
+(Databricks), 4.2 (BigQuery) and 2.7 (DynamoDB) before, and each saves 0.5 MB or
+less now. The binary has 155 modules. DuckDB is 37% of it, and the five largest
+drivers make up 90.4 MB.
 
 | MB saved | Driver left out | What it brings |
 | ---: | --- | --- |
-| 54.2 | duckdb | the C++ library of DuckDB, with 4 MB of ICU data |
-| 17.4 | spanner | the Google Cloud SDK, gRPC, and the protos of Envoy |
+| 54.1 | duckdb | the C++ library of DuckDB, with 4 MB of ICU data |
 | 13.5 | oracle | the character set tables of go-ora |
-| 10.9 | snowflake | the clients of S3 and Azure Blob storage, and Arrow |
-| 9.6 | chai | Pebble, the storage engine of CockroachDB |
-| 7.6 | athena | version 1 of the AWS SDK |
-| 7.1 | ydb | the YDB SDK and its gRPC protos |
-| 4.8 | clickhouse | ch-go and clickhouse-go |
-| 4.6 | databricks | its SDK, with Arrow v12 |
-| 4.2 | bigquery | the Google Cloud SDK, with Arrow v15 |
+| 9.7 | chai | Pebble, the storage engine of CockroachDB |
+| 7.4 | ydb | the YDB SDK and its gRPC protos |
+| 5.6 | flightsql | Apache Arrow v18 |
 | 3.6 | moderncsqlite | SQLite translated to Go |
+| 3.3 | sqlserver | go-mssqldb |
 | 3.2 | csvq | the csvq engine |
-| 2.7 | dynamodb | the DynamoDB client of AWS SDK v2 |
-| 2.5 | sqlserver | go-mssqldb |
 | 2.2 | ots | the Tablestore SDK |
 | 1.9 | maxcompute | the ODPS SDK |
 | 1.7 | sqlite3 | the C library of SQLite |
+| 1.4 | cassandra | gocql |
+| 1.3 | hive | gohive and its Thrift code |
+| 1.3 | firebird | the Firebird driver |
+| 1.0 | impala and vertica | each |
 
-Three things to read the table by:
+The other 36 drivers add 0.9 MB or less, and 29 of them 0.2 MB or less. The
+drivers of dbimp are the smallest group: 20 of them add 0.3 MB or less each, and
+they share the code of dbimp (1.5 MB in all). `pgx`, `mysql` and the aliases that
+import them show 0.0, because the other drivers use them too.
+
+The size by module, from the symbols of an unstripped build (101.5 MB of
+symbols that take room in the file): DuckDB 43.5 MB, go-ora 13.4, the table of
+functions of Go 4.0, dbmeta 3.6, the YDB SDK 2.1 (and its protos 0.5), Pebble
+2.1, modernc's SQLite 2.1, dbimp 1.5, Arrow 1.4, csvq 1.3, pgx 1.3,
+golang.org/x/text 1.1, go-mssqldb 1.1, and the Go standard library about 4. The
+32 MiB buffer of Go's FIPS random number generator (`crypto/internal/fips140/
+drbg.memory`) is in the BSS, so it takes no room in the file, but it does count
+in the memory of a running usql.
+
+Things to read the table by:
 
 - A number is what leaving out that one driver saves. Two drivers that share
-  a module each save only what the other does not use. So pgx and mysql show
-  almost nothing, because postgres, cockroachdb, memsql and the other aliases
-  import them.
-- The build holds three versions of Apache Arrow: arrow-go v18 for flightsql,
-  v15 for bigquery and v12 for databricks. A driver that moved to v18 would
-  share it.
+  a module each save only what the other does not use.
+- Arrow v18 is the only version left in the build, for flightsql. The older
+  versions went with Databricks and BigQuery.
+- dbmeta is 3.6 MB because it holds the statements of 40 models. It is the one
+  common module that grows with each database added.
 - `bad` drivers are not measured, because no release builds them.
+- The next saving would be DuckDB (a decision for Ken: its own group, as
+  `most` without it is 91.7 MB), then Oracle's character sets (13.5 MB for one
+  driver), then Pebble for chai (9.7 MB).
 
 ## W33. Make the README a landing page
 
@@ -2506,4 +2525,114 @@ count and the JSON conversion are gone. Checked on cassandra-5.0: a batch with a
 `varint`, an `inet` and a `duration`, and the errors of a bad statement and a
 bad password. The tag printed for a batch is `BEGIN BATCH` where it was `APPLY
 BATCH`, and an unfinished batch sent with `\g` fails at the server.
+
+
+## W52. Scrub the drivers of dbimp down to what only usql knows: Done
+
+Done on 2026-10-11 at Ken's request, after the Cassandra rewrite (W51). A dbimp
+driver reports its own errors and counts, so usql's generic code does what
+the hooks did:
+
+- `drivers.IsPasswordErr` takes an HTTP 401 as a wrong credential for every
+  driver, so a hook for 401 alone is gone.
+- `drivers.RowsAffected` counts zero for an error that wraps
+  `dbimp.ErrNotSupported`, so `drivers.RowsAffectedOrZero` and the field
+  `Driver.RowsAffected` are gone.
+- `\copy` takes each insert alone when `BeginTx` fails with
+  `dbimp.ErrNotSupported`, so ClickHouse, rqlite, Snowflake and the others need no
+  special `Copy`: it is `drivers.CopyWithInsert(drivers.QuestionMark)`. Trino and
+  Presto begin a transaction and then refuse the write, so they keep
+  `drivers.CopyWithInsertNoTransaction`.
+- The `Err` hooks of every dbimp driver are gone. Each error prints as its own
+  `Error()` says, such as `clickhouse: UNKNOWN_TABLE (60): ...` and `druid:
+  INVALID_INPUT: ...`, which names the code of the server and sometimes the HTTP
+  status.
+
+What is left in the 26 drivers is what usql cannot take from the driver: the
+registration, the check for a wrong password where it is not a 401 (Athena,
+Avatica, ClickHouse, Databricks, Drill, DynamoDB and Neo4j), `AlwaysQuery` for
+ArangoDB, InfluxDB, Neo4j and SurrealDB, the Version of DynamoDB, InfluxDB and
+Pinot, the `Copy` placeholder, and `ForceParams` for Couchbase. Six drivers
+(Cosmos DB, Druid, Elasticsearch, OpenSearch, Solr and Spanner) are a bare
+registration. Those hooks are database facts, which belong in dbmeta (D3), or
+in dbimp for the wrong password: dbimp has been asked for one way to say that an
+error is an authentication failure. Checked on clickhouse-26.9 (an unknown table,
+`\copy` of two rows, a count) and druid-38.0.0 (an error, a 401). Not checked on
+the other servers.
+
+Update, 2026-10-11, on dbimp's `ErrAuthentication` (its D197, after v0.17.1):
+every dbimp error matches `errors.Is(err, dbimp.ErrAuthentication)` when the server
+refused the credential and not when it refused a permission, so
+`drivers.IsPasswordErr` asks that one question and the wrong-password hooks of
+Athena, Avatica, ClickHouse, Databricks, Drill, DynamoDB and Neo4j are gone.
+`drivers/avatica/avatica_test.go` now checks the classification through
+`drivers.IsPasswordErr`. usql builds against the local dbimp checkout through a
+`go.work` that is not committed. dbimp tagged it in v0.18.0 on 2026-10-11, and
+`go.mod` names that release.
+
+Next reduction, for Ken to decide: eight drivers (Avatica, Cosmos DB, Drill,
+Druid, Elasticsearch, OpenSearch, Solr and Spanner) are now a registration and
+nothing else. `drivers.Available` could list every dburl scheme whose driver
+database/sql has registered, and `gen.go` could write the blank import of the
+dbimp package into `internal/` for a scheme with no hooks, so that no
+`drivers/<name>` package exists for it.
+
+
+## W53. Move the configuration facts of the drivers into dbmeta: Done
+
+Waits on dbmeta. Ken asked on 2026-10-11 that the common facts that drivers set
+by hand come from dbmeta's `Info`, so that usql applies them for every driver and
+no code names a database (D3). usql told dbmeta the inventory the same day:
+
+- The placeholder of `\copy`'s `INSERT` (`?`, `:1`, `@p1` or `$1`) from
+  `Info.Placeholder`, and a flag for Trino and Presto, which refuse a write inside
+  a transaction. libpq and pgx keep their native COPY.
+- `AlwaysQuery` for ArangoDB, InfluxDB, InfluxQL, Neo4j and SurrealDB.
+- A static version for a product with no statement for it: DynamoDB and Pinot.
+- Defaults of the DSN when the key is absent (Cassandra `timeout=300s`,
+  Couchbase `txtimeout=30m`, Hive `auth=NONE`) and forced values (the MySQL family
+  `parseTime`, `loc` and `sql_mode`, and SQLite `loc=auto`). Oracle's `ORACLE_SID`
+  stays, because it reads usql's environment.
+- `UseColumnTypes` for the MySQL family and Databend.
+
+When dbmeta releases them, the hooks go and `drivers.Driver` keeps only what is Go
+code: `Open`, `ColumnTypes`, the converters, native copies and the check for a
+wrong password that is not a dbimp error. Then the drivers with no code left have no
+package (see W52).
+
+## W54. Share the native COPY of lib/pq and pgx: Done
+
+Done on 2026-10-11 at Ken's request. lib/pq has deprecated `pq.CopyIn` and
+`pq.CopyInSchema`, which the `libpq` driver used, and the `pgx` driver
+repeated the code that finds the columns of the target table. Both now use
+`drivers.CopyTarget`, which reads the schema, the name and the columns of the
+target, and `drivers.CopyRows`, which scans the source rows for a copy. The
+`libpq` driver writes `COPY "schema"."table" (columns) FROM STDIN` itself, with
+`pq.QuoteIdentifier`, and reads the bytes that lib/pq returns for a numeric as
+text, which it did not before (a numeric failed with `invalid input syntax`).
+`pgx` closes its connection and its statements, which it did not. A name may be
+quoted (`"Mixed Case"` and `public."Odd.Table"`), and a name with no quotes keeps
+the case of its letters. Both drivers dropped the path for a copy whose target is
+an `INSERT` statement, which failed in lib/pq and was never in pgx. Checked on
+postgres-18 through `postgres://` (pgx) and `pq://`: 2,501 rows with NULLs,
+numeric, timestamptz, bytea and jsonb, a schema-qualified table, a list of
+columns and a quoted name. CockroachDB, Redshift, CrateDB and QuestDB share the
+pgx copy and are not checked.
+
+Update, 2026-10-11. Ken decided that the copy placeholder (with the flag for
+Trino and Presto), the rule that every statement is a query, the static product
+string and the scan by the driver's type live in dbmeta, and that the DSN
+defaults live in dburl, which released them in v0.51.0. usql read them:
+`drivers.Copy` writes the INSERT of a database that has a placeholder, and takes
+each row alone for one that needs autocommit; `drivers.Process` runs each
+statement of such a database as a query; `drivers.Version` prints the product
+string; `drivers.UseColumnTypes` asks the dialect. The `Copy`, `AlwaysQuery`,
+`UseColumnTypes` and `ForceParams` hooks, the static `Version` hooks of DynamoDB
+and Pinot, and the helpers they used are gone, except Oracle's `ORACLE_SID`, the
+native copies of libpq and pgx, and InfluxDB's and csvq's version. A MySQL or
+SQLite URL that writes `loc=UTC` now keeps it, because dburl sets `loc` only when
+the URL has none, where usql forced it. A driver with a placeholder in dbmeta and
+no `Copy` hook now tries the INSERT, where it said that copy is not supported.
+dbmeta tagged the facts in v0.14.0 on 2026-10-11, and `go.mod` names it, so the
+build needs no `go.work`.
 

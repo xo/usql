@@ -20,41 +20,11 @@
 package surrealdb
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/surrealdb" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/surrealdb" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("surrealdb", drivers.Driver{
-		// every statement of SurrealQL returns a result, even CREATE and
-		// DEFINE, and the server sends no count of rows affected, so each
-		// statement is run as a query
-		AlwaysQuery: true,
-		Err: func(err error) (string, string) {
-			// a response can hold several errors, and only a single one is
-			// reported by its code
-			var re *surrealdb.ResponseError
-			if errors.As(err, &re) && len(re.Errs) == 1 {
-				e := re.Errs[0]
-				switch {
-				case e.Kind != "":
-					return e.Kind, e.Msg
-				case e.Code != 0:
-					return strconv.Itoa(e.Code), e.Msg
-				}
-				return "", e.Msg
-			}
-			return "", strings.TrimPrefix(err.Error(), "surrealdb: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-	})
+	drivers.Register("surrealdb", drivers.Driver{})
 }

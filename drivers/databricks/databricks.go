@@ -18,41 +18,11 @@
 package databricks
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/databricks" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/databricks" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("databricks", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *databricks.Error
-			if errors.As(err, &e) {
-				if e.SQLState != "" {
-					return e.SQLState, e.Message
-				}
-				return e.Code, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "databricks: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			if errors.As(err, &se) && se.Code == http.StatusUnauthorized {
-				return true
-			}
-			var e *databricks.Error
-			return errors.As(err, &e) && strings.Contains(e.Message, "Invalid access token")
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-		// BeginTx fails with dbimp.ErrNotSupported, so each row goes in alone
-		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			return drivers.FlexibleCopyWithInsert(ctx, db, rows, table, func(int) string { return "?" }, false)
-		},
-	})
+	drivers.Register("databricks", drivers.Driver{})
 }

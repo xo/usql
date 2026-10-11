@@ -14,9 +14,6 @@ import (
 
 func init() {
 	drivers.Register("sqlite3", drivers.Driver{
-		ForceParams: drivers.ForceQueryParameters([]string{
-			"loc", "auto",
-		}),
 		Err: func(err error) (string, string) {
 			if e, ok := err.(sqlite3.Error); ok {
 				return strconv.Itoa(int(e.Code)), e.Error()
@@ -28,6 +25,5 @@ func init() {
 			return code, msg
 		},
 		ConvertBytes: sqshared.ConvertBytes,
-		Copy:         drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

@@ -11,35 +11,18 @@
 // The driver reads only: Exec fails with dbimp.ErrNotSupported, and so does BeginTx.
 // A wrong key is HTTP 401 on a hosted account, and the emulator does not check it.
 //
-// Metadata: none. dbmeta has no model for Cosmos DB, so the describe commands report
-// that they are not supported (D3).
+// Metadata: dbmeta's Cosmos DB model. usql writes no reader of its own (D3).
 //
 // See: https://github.com/xo/dbimp
 // Group: most
 package cosmos
 
 import (
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/cosmos" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/cosmos" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("cosmos", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *cosmos.Error
-			if errors.As(err, &e) {
-				return e.Code, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "cosmos: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-	})
+	drivers.Register("cosmos", drivers.Driver{})
 }

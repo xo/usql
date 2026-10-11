@@ -15,9 +15,7 @@ import (
 
 func init() {
 	drivers.Register("databend", drivers.Driver{
-		UseColumnTypes: true,
 		// a statement such as CREATE TABLE sends no count of rows affected,
 		// which the driver reports as ErrNotSupported (dbimp D125)
-		RowsAffected: drivers.RowsAffectedOrZero,
 	})
 }

@@ -23,12 +23,6 @@ func init() {
 // this driver under that database's own name.
 func Driver() drivers.Driver {
 	return drivers.Driver{
-		UseColumnTypes: true,
-		ForceParams: drivers.ForceQueryParameters([]string{
-			"parseTime", "true",
-			"loc", "Local",
-			"sql_mode", "ansi",
-		}),
 		Err: func(err error) (string, string) {
 			if e, ok := err.(*mysql.MySQLError); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
@@ -41,6 +35,5 @@ func Driver() drivers.Driver {
 			}
 			return false
 		},
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	}
 }

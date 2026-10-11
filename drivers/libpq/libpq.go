@@ -82,82 +82,66 @@ func init() {
 			}
 			return false
 		},
+		// lib/pq copies through a prepared COPY statement, which takes a row for
+		// each Exec, and an Exec with no arguments ends the stream
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			columns, err := rows.Columns()
+			schema, name, columns, err := drivers.CopyTarget(ctx, db, table)
 			if err != nil {
-				return 0, fmt.Errorf("failed to fetch source rows columns: %w", err)
+				return 0, err
 			}
-			clen := len(columns)
-
-			query := table
-			if !strings.HasPrefix(strings.ToLower(query), "insert into") {
-				leftParen := strings.IndexRune(table, '(')
-				colQuery := "SELECT * FROM " + table + " WHERE 1=0"
-				if leftParen != -1 {
-					colQuery = "SELECT " + table[leftParen+1:len(table)-1] + " FROM " + table[:leftParen] + " WHERE 1=0"
-					table = table[:leftParen]
-				}
-				colStmt, err := db.PrepareContext(ctx, colQuery)
-				if err != nil {
-					return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
-				}
-				defer colStmt.Close()
-				colRows, err := colStmt.QueryContext(ctx)
-				if err != nil {
-					return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
-				}
-				columns, err := colRows.Columns()
-				if err != nil {
-					return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
-				}
-				if schemaSep := strings.Index(table, "."); schemaSep >= 0 {
-					query = pq.CopyInSchema(table[:schemaSep], table[schemaSep+1:], columns...)
-				} else {
-					query = pq.CopyIn(table, columns...)
-				}
+			target := pq.QuoteIdentifier(name)
+			if schema != "" {
+				target = pq.QuoteIdentifier(schema) + "." + target
+			}
+			quoted := make([]string, len(columns))
+			for i, c := range columns {
+				quoted[i] = pq.QuoteIdentifier(c)
 			}
 			tx, err := db.BeginTx(ctx, nil)
 			if err != nil {
 				return 0, fmt.Errorf("failed to begin transaction: %w", err)
 			}
-			stmt, err := tx.PrepareContext(ctx, query)
+			defer tx.Rollback()
+			stmt, err := tx.PrepareContext(ctx, "COPY "+target+" ("+strings.Join(quoted, ", ")+") FROM STDIN")
 			if err != nil {
-				return 0, fmt.Errorf("failed to prepare insert query: %w", err)
+				return 0, fmt.Errorf("failed to prepare copy: %w", err)
 			}
 			defer stmt.Close()
-
-			values := make([]interface{}, clen)
-			for i := 0; i < clen; i++ {
-				values[i] = new(interface{})
+			types, err := rows.ColumnTypes()
+			if err != nil {
+				return 0, fmt.Errorf("failed to fetch source column types: %w", err)
 			}
-
-			var n int64
-			for rows.Next() {
-				err = rows.Scan(values...)
+			src := drivers.NewCopyRows(rows, len(columns))
+			for src.Next() {
+				values, err := src.Values()
 				if err != nil {
-					return n, fmt.Errorf("failed to scan row: %w", err)
+					return 0, err
 				}
-				_, err := stmt.ExecContext(ctx, values...)
-				if err != nil {
-					return n, fmt.Errorf("failed to exec copy: %w", err)
+				// lib/pq reads most types as bytes, which a copy writes as bytea
+				for i, v := range values {
+					if b, ok := v.([]byte); ok && types[i].DatabaseTypeName() != "BYTEA" {
+						values[i] = string(b)
+					}
 				}
+				if _, err := stmt.ExecContext(ctx, values...); err != nil {
+					return 0, fmt.Errorf("failed to exec copy: %w", err)
+				}
+			}
+			if err := src.Err(); err != nil {
+				return 0, err
 			}
 			res, err := stmt.ExecContext(ctx)
 			if err != nil {
-				return n, fmt.Errorf("failed to final exec copy: %w", err)
+				return 0, fmt.Errorf("failed to end copy: %w", err)
 			}
-			rn, err := res.RowsAffected()
+			n, err := res.RowsAffected()
 			if err != nil {
-				return n, fmt.Errorf("failed to check rows affected: %w", err)
+				return 0, fmt.Errorf("failed to check rows affected: %w", err)
 			}
-			n += rn
-
-			err = tx.Commit()
-			if err != nil {
+			if err := tx.Commit(); err != nil {
 				return n, fmt.Errorf("failed to commit transaction: %w", err)
 			}
-
-			return n, rows.Err()
+			return n, nil
 		},
 	})
 }

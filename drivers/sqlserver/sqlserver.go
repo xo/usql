@@ -62,7 +62,6 @@ func init() {
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
-		Copy: drivers.CopyWithInsert(placeholder),
 	})
 }
 

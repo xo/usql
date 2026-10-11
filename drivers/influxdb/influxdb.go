@@ -28,12 +28,8 @@ package influxdb
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"net/http"
-	"strings"
 
-	"github.com/xo/dbimp"
 	"github.com/xo/dbimp/influxdb" // DRIVER
 	"github.com/xo/usql/drivers"
 )
@@ -47,10 +43,6 @@ func init() {
 // influxql.
 func Driver() drivers.Driver {
 	return drivers.Driver{
-		// InfluxDB sends no count of rows affected, and InfluxQL has
-		// statements such as SHOW MEASUREMENTS that return rows, so each
-		// statement is run as a query
-		AlwaysQuery: true,
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// the release comes from GET /ping, through the driver's
 			// connection, and no statement returns it
@@ -74,17 +66,6 @@ func Driver() drivers.Driver {
 				return "", err
 			}
 			return "InfluxDB " + ver, nil
-		},
-		Err: func(err error) (string, string) {
-			var e *influxdb.Error
-			if errors.As(err, &e) {
-				return "", e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "influxdb: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
 		},
 	}
 }

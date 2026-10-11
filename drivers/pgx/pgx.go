@@ -14,7 +14,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -74,71 +73,28 @@ func Driver() drivers.Driver {
 			}
 			return false
 		},
+		// pgx copies through CopyFrom, on the connection that it holds
 		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			conn, err := db.Conn(context.Background())
+			schema, name, columns, err := drivers.CopyTarget(ctx, db, table)
+			if err != nil {
+				return 0, err
+			}
+			ident := pgx.Identifier{name}
+			if schema != "" {
+				ident = pgx.Identifier{schema, name}
+			}
+			conn, err := db.Conn(ctx)
 			if err != nil {
 				return 0, fmt.Errorf("failed to get a connection from pool: %w", err)
 			}
-
-			leftParen := strings.IndexRune(table, '(')
-			colQuery := "SELECT * FROM " + table + " WHERE 1=0"
-			if leftParen != -1 {
-				// pgx's CopyFrom needs a slice of column names and splitting them by a comma is unreliable
-				// so evaluate the possible expressions against the target table
-				colQuery = "SELECT " + table[leftParen+1:len(table)-1] + " FROM " + table[:leftParen] + " WHERE 1=0"
-				table = table[:leftParen]
-			}
-			colStmt, err := db.PrepareContext(ctx, colQuery)
-			if err != nil {
-				return 0, fmt.Errorf("failed to prepare query to determine target table columns: %w", err)
-			}
-			colRows, err := colStmt.QueryContext(ctx)
-			if err != nil {
-				return 0, fmt.Errorf("failed to execute query to determine target table columns: %w", err)
-			}
-			columns, err := colRows.Columns()
-			if err != nil {
-				return 0, fmt.Errorf("failed to fetch target table columns: %w", err)
-			}
-			clen := len(columns)
-
-			crows := &copyRows{
-				rows:   rows,
-				values: make([]interface{}, clen),
-			}
-			for i := 0; i < clen; i++ {
-				crows.values[i] = new(interface{})
-			}
-
+			defer conn.Close()
 			var n int64
-			err = conn.Raw(func(driverConn interface{}) error {
-				conn := driverConn.(*stdlib.Conn).Conn()
-				n, err = conn.CopyFrom(ctx, pgx.Identifier(strings.SplitN(table, ".", 2)), columns, crows)
+			err = conn.Raw(func(driverConn any) error {
+				var err error
+				n, err = driverConn.(*stdlib.Conn).Conn().CopyFrom(ctx, ident, columns, drivers.NewCopyRows(rows, len(columns)))
 				return err
 			})
 			return n, err
 		},
 	}
-}
-
-type copyRows struct {
-	rows   *sql.Rows
-	values []interface{}
-}
-
-func (r *copyRows) Next() bool {
-	return r.rows.Next()
-}
-
-func (r *copyRows) Values() ([]interface{}, error) {
-	err := r.rows.Scan(r.values...)
-	actuals := make([]interface{}, len(r.values))
-	for i, v := range r.values {
-		actuals[i] = *(v.(*interface{}))
-	}
-	return actuals, err
-}
-
-func (r *copyRows) Err() error {
-	return r.rows.Err()
 }

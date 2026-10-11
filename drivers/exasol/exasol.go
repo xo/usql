@@ -13,7 +13,6 @@ import (
 func init() {
 	errCodeRE := regexp.MustCompile(`^\[([0-9]+)]\s+`)
 	drivers.Register("exasol", drivers.Driver{
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 		Err: func(err error) (string, string) {
 			code, msg := "", err.Error()
 			if m := errCodeRE.FindStringSubmatch(msg); m != nil {

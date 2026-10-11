@@ -22,33 +22,10 @@
 package dynamodb
 
 import (
-	"context"
-	"errors"
-	"strings"
-
-	"github.com/xo/dbimp/dynamodb" // DRIVER
+	_ "github.com/xo/dbimp/dynamodb" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("dynamodb", drivers.Driver{
-		// neither DynamoDB Local nor Alternator gives a version, and a
-		// SELECT version() is a syntax error
-		Version: func(context.Context, drivers.DB) (string, error) {
-			return "Amazon DynamoDB", nil
-		},
-		Err: func(err error) (string, string) {
-			var e *dynamodb.Error
-			if errors.As(err, &e) {
-				return e.Type, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "dynamodb: ")
-		},
-		// a wrong secret fails only on Alternator, which checks the signature
-		IsPasswordErr: func(err error) bool {
-			var e *dynamodb.Error
-			return errors.As(err, &e) && strings.HasSuffix(e.Type, "UnrecognizedClientException")
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("dynamodb", drivers.Driver{})
 }

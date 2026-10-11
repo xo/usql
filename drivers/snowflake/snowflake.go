@@ -26,35 +26,11 @@
 package snowflake
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/snowflake" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/snowflake" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("snowflake", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *snowflake.Error
-			if errors.As(err, &e) {
-				return e.Code, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "snowflake: ")
-		},
-		// a wrong or expired key is HTTP 401, with the code 390144
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		// a statement such as TRUNCATE of an empty table sends no count
-		RowsAffected: drivers.RowsAffectedOrZero,
-		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			return drivers.FlexibleCopyWithInsert(ctx, db, rows, table, func(int) string { return "?" }, false)
-		},
-	})
+	drivers.Register("snowflake", drivers.Driver{})
 }

@@ -18,33 +18,11 @@
 package solr
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/solr" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/solr" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("solr", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *solr.Error
-			if errors.As(err, &e) {
-				// the SQL handler answers a failed statement with HTTP 200
-				if e.HTTPStatus == http.StatusOK {
-					return "", e.Message
-				}
-				return strconv.Itoa(e.HTTPStatus), e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "solr: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("solr", drivers.Driver{})
 }

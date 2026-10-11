@@ -16,28 +16,11 @@
 package drill
 
 import (
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/drill" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/drill" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("drill", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *drill.Error
-			if errors.As(err, &e) {
-				return e.Exception, e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "drill: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.Is(err, drill.ErrLogin) || errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("drill", drivers.Driver{})
 }

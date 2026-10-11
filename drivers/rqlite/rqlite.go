@@ -21,35 +21,11 @@
 package rqlite
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/rqlite" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/rqlite" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("rqlite", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *rqlite.Error
-			if errors.As(err, &e) {
-				return "", e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "rqlite: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		Copy: func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
-			placeholder := func(int) string {
-				return "?"
-			}
-			return drivers.FlexibleCopyWithInsert(ctx, db, rows, table, placeholder, false)
-		},
-	})
+	drivers.Register("rqlite", drivers.Driver{})
 }

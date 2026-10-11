@@ -34,9 +34,9 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cassandra v0.1.0
-	github.com/xo/dbimp v0.17.0
-	github.com/xo/dbmeta v0.13.0
-	github.com/xo/dburl v0.50.0
+	github.com/xo/dbimp v0.19.0
+	github.com/xo/dbmeta v0.14.0
+	github.com/xo/dburl v0.51.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.0
 	github.com/xo/resvg v0.11.0

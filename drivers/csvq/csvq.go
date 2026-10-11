@@ -22,6 +22,5 @@ func init() {
 			}
 			return "CSVQ " + ver, nil
 		},
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
 	})
 }

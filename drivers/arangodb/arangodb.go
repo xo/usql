@@ -16,31 +16,11 @@
 package arangodb
 
 import (
-	"errors"
-	"net/http"
-	"strconv"
-	"strings"
+	_ "github.com/xo/dbimp/arangodb" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/arangodb" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("arangodb", drivers.Driver{
-		// an AQL statement such as FOR ... RETURN is not one that usql
-		// knows returns rows, so each statement is run as a query
-		AlwaysQuery: true,
-		Err: func(err error) (string, string) {
-			var e *arangodb.Error
-			if errors.As(err, &e) && e.Num != 0 {
-				return strconv.Itoa(e.Num), e.Message
-			}
-			return "", strings.TrimPrefix(err.Error(), "arangodb: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-	})
+	drivers.Register("arangodb", drivers.Driver{})
 }

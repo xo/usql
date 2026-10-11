@@ -18,28 +18,11 @@
 package opensearch
 
 import (
-	"errors"
-	"net/http"
-	"strings"
+	_ "github.com/xo/dbimp/opensearch" // DRIVER
 
-	"github.com/xo/dbimp"
-	"github.com/xo/dbimp/opensearch" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("opensearch", drivers.Driver{
-		Err: func(err error) (string, string) {
-			var e *opensearch.Error
-			if errors.As(err, &e) {
-				return e.Type, e.Reason
-			}
-			return "", strings.TrimPrefix(err.Error(), "opensearch: ")
-		},
-		IsPasswordErr: func(err error) bool {
-			var se *dbimp.StatusError
-			return errors.As(err, &se) && se.Code == http.StatusUnauthorized
-		},
-		RowsAffected: drivers.RowsAffectedOrZero,
-	})
+	drivers.Register("opensearch", drivers.Driver{})
 }

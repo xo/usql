@@ -40,9 +40,6 @@ type DB interface {
 type Driver struct {
 	// Name is a name to override the driver name with.
 	Name string
-	// UseColumnTypes will cause database's ColumnTypes func to be used for
-	// types.
-	UseColumnTypes bool
 	// ForceParams will be used to force parameters if defined.
 	ForceParams func(*dburl.URL)
 	// Open will be used by Open if defined.
@@ -52,14 +49,8 @@ type Driver struct {
 	Version func(context.Context, DB) (string, error)
 	// IsPasswordErr will be used by IsPasswordErr if defined.
 	IsPasswordErr func(error) bool
-	// AlwaysQuery runs every statement as a query, for a database whose
-	// statements return rows that usql would otherwise run as exec, or that
-	// sends no count of rows affected.
-	AlwaysQuery bool
 	// ColumnTypes is a callback that will be used if
 	ColumnTypes func(*sql.ColumnType) (interface{}, error)
-	// RowsAffected will be used by RowsAffected if defined.
-	RowsAffected func(sql.Result) (int64, error)
 	// Err will be used by Error.Error if defined.
 	Err func(error) (string, string)
 	// ConvertBytes will be used by ConvertBytes to convert a raw []byte
@@ -117,10 +108,7 @@ func LowerColumnNames(u *dburl.URL) bool {
 // UseColumnTypes reports whether the driver takes its column types from the
 // database rather than from the raw bytes.
 func UseColumnTypes(u *dburl.URL) bool {
-	if d, ok := drivers[u.SchemeName]; ok {
-		return d.UseColumnTypes
-	}
-	return false
+	return dbmeta.Dialect(u.Dialect).ScanTypes()
 }
 
 // ForceParams forces parameters on the DSN for a driver.
@@ -184,6 +172,10 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 		ver, err := d.Version(ctx, db)
 		return ver, WrapErr(u.SchemeName, err)
 	}
+	// a product with no statement for its version is named, as DynamoDB is
+	if product, ok := dbmeta.Dialect(u.Dialect).Product(); ok {
+		return product, nil
+	}
 	if _, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
 		m, err := Meta(ctx, u, db)
 		if err != nil {
@@ -237,7 +229,7 @@ func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool) {
 		}
 	}
 	typ, q := QueryExecType(prefix, sqlstr)
-	return typ, sqlstr, q || drivers[u.SchemeName].AlwaysQuery
+	return typ, sqlstr, q || dbmeta.Dialect(u.Dialect).EveryStatementIsAQuery()
 }
 
 // ColumnTypes returns the column types callback for a driver.
@@ -250,6 +242,10 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 	drv := u.SchemeName
 	if e, ok := err.(*Error); ok {
 		drv, err = e.Driver, e.Err
+	}
+	// a dbimp driver says that the server refused the credential
+	if errors.Is(err, dbimp.ErrAuthentication) {
+		return true
 	}
 	if d, ok := drivers[drv]; ok && d.IsPasswordErr != nil {
 		return d.IsPasswordErr(err)
@@ -378,28 +374,20 @@ func ConvertDefault(u *dburl.URL) func(interface{}) (string, error) {
 	}
 }
 
-// RowsAffectedOrZero is a RowsAffected hook for a driver whose server gives no
-// count of the rows that a statement changed, such as for CREATE TABLE. That is
-// not a failure, so it is a count of zero. The driver reports it as
-// dbimp.ErrNotSupported.
-func RowsAffectedOrZero(res sql.Result) (int64, error) {
-	n, err := res.RowsAffected()
-	if errors.Is(err, dbimp.ErrNotSupported) {
-		return 0, nil
+// CopyWithInsertNoTransaction is CopyWithInsert for a database that takes a
+// write only outside a transaction, such as Trino.
+func CopyWithInsertNoTransaction(placeholder func(int) string) func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
+	return func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error) {
+		return FlexibleCopyWithInsert(ctx, db, rows, table, placeholder, false)
 	}
-	return n, err
 }
 
 // RowsAffected returns the rows affected for the SQL result for a driver.
 func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
-	var count int64
-	var err error
-	if d, ok := drivers[u.SchemeName]; ok && d.RowsAffected != nil {
-		count, err = d.RowsAffected(res)
-	} else {
-		count, err = res.RowsAffected()
-	}
-	if err != nil && err.Error() == "no RowsAffected available after DDL statement" {
+	count, err := res.RowsAffected()
+	// a server that gives no count of the rows changed, such as for CREATE TABLE,
+	// has changed none that usql can count, and that is not a failure
+	if err != nil && (err.Error() == "no RowsAffected available after DDL statement" || errors.Is(err, dbimp.ErrNotSupported)) {
 		return 0, nil
 	}
 	if err != nil {
@@ -411,23 +399,6 @@ func RowsAffected(u *dburl.URL, res sql.Result) (int64, error) {
 // Ping pings the database for a driver.
 func Ping(ctx context.Context, u *dburl.URL, db *sql.DB) error {
 	return WrapErr(u.SchemeName, db.PingContext(ctx))
-}
-
-// ForceQueryParameters is a utility func that wraps forcing params of name,
-// value pairs.
-func ForceQueryParameters(params []string) func(*dburl.URL) {
-	if len(params)%2 != 0 {
-		panic("invalid query params")
-	}
-	return func(u *dburl.URL) {
-		if len(params) != 0 {
-			v := u.Query()
-			for i := 0; i < len(params); i += 2 {
-				v.Set(params[i], params[i+1])
-			}
-			u.RawQuery = v.Encode()
-		}
-	}
 }
 
 // Meta returns dbmeta's model of the database of a connection. It reads the
@@ -453,15 +424,29 @@ func Copy(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer, ro
 	if !ok {
 		return 0, WrapErr(u.SchemeName, text.ErrDriverNotAvailable)
 	}
-	if d.Copy == nil {
-		return 0, fmt.Errorf(text.NotSupportedByDriver, "copy", u.SchemeName)
+	copyFn := d.Copy
+	if copyFn == nil {
+		// a database that writes its placeholder one way takes each row as an
+		// INSERT, and one that refuses a write inside a transaction takes it alone
+		dialect := dbmeta.Dialect(u.Dialect)
+		if _, ok := dialect.Placeholder(1); !ok {
+			return 0, fmt.Errorf(text.NotSupportedByDriver, "copy", u.SchemeName)
+		}
+		placeholder := func(n int) string {
+			s, _ := dialect.Placeholder(n)
+			return s
+		}
+		copyFn = CopyWithInsert(placeholder)
+		if dialect.WritesNeedAutocommit() {
+			copyFn = CopyWithInsertNoTransaction(placeholder)
+		}
 	}
 	db, err := Open(ctx, u, stdout, stderr)
 	if err != nil {
 		return 0, err
 	}
 	defer db.Close()
-	return d.Copy(ctx, db, rows, table)
+	return copyFn(ctx, db, rows, table)
 }
 
 // CopyWithInsert builds a typical copy handler based on insert.
@@ -506,9 +491,16 @@ func FlexibleCopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, tab
 	var tx *sql.Tx
 	if withTransaction {
 		tx, err = db.BeginTx(ctx, nil)
+		// a server with no transaction, such as ClickHouse, takes each insert
+		// alone
+		if errors.Is(err, dbimp.ErrNotSupported) {
+			tx, err = nil, nil
+		}
 		if err != nil {
 			return 0, fmt.Errorf("failed to begin transaction: %w", err)
 		}
+	}
+	if tx != nil {
 		stmt, err = tx.PrepareContext(ctx, query)
 	} else {
 		stmt, err = db.PrepareContext(ctx, query)

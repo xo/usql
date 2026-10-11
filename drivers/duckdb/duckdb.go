@@ -11,7 +11,5 @@ import (
 )
 
 func init() {
-	drivers.Register("duckdb", drivers.Driver{
-		Copy: drivers.CopyWithInsert(func(int) string { return "?" }),
-	})
+	drivers.Register("duckdb", drivers.Driver{})
 }
