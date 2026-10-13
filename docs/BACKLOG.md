@@ -2741,35 +2741,43 @@ Done on 2026-10-11 at Ken's request. The sweep found and fixed:
 What the sweep left alone, as history: BACKLOG.md and the decisions, and the
 accounts of removed drivers in CONTRIBUTING.md.
 
-## W58. Put the highlighting documentation back when highlighting returns
+## W58. Put the highlighting documentation back when highlighting returns: Done
 
-Waits on W36 (highlighting from transit's SQL grammars). W57 took out what said how
-to use and turn off syntax highlighting, because the feature is not in this release.
-When highlighting returns, restore it, and change the text that says it is not
-there. The earlier text is in `README.md` at commit `7e173df`:
+Done on 2026-10-14 at Ken's request. The new `highlight` package draws the input
+as it is typed. It parses the text with the usql grammar of transit, parses each
+statement with the SQL grammar of the dialect, and runs the highlight queries of
+both. The colors come from transit's `styles` module, which has the styles of
+Chroma, and the line editor draws them at the depth that the terminal allows.
+The README, `env/list.go`, `docs/RELEASE.md` and `docs/PROGRESS.md` say so again.
 
-- README.md, the feature list at the top: put "[syntax highlighting][highlighting]"
-  back between "copying between databases" and "context-based completion".
-- README.md, the section "Syntax Highlighting": the sentence that says that
-  interactive queries are highlighted by default, the table of the variables
-  (`syntax_hl`, default `true`; `syntax_hl_format`, dependent on the terminal;
-  `syntax_hl_override_bg`, default `true`; `syntax_hl_style`, default `monokai`),
-  the example that `\set`s and `\unset`s them, and the links of the style and
-  formatter names. Check each default and each value against what transit
-  offers, because the variables named Chroma, and the formatters and styles may
-  differ.
-- README.md, "Other Variables": the sentence that names `syntax_hl` as an example of
-  a variable that changes runtime behavior, which now says the pager.
-- `env/list.go`: the descriptions of the four `syntax_hl*` variables lost their
-  "not used yet", and said "chroma library" before W57.
-- `env/vars.go`: the defaults of the four variables, which `colorLevel` still sets.
-- `docs/RELEASE.md`: the known gap "No color", and the check by hand "Syntax
-  highlighting", which says that no color should appear until then.
-- `docs/PROGRESS.md`: the open point that the variables do nothing.
+The settings keep their names and their defaults:
 
-The check by hand has to cover turning highlighting off (`syntax_hl` false and
-`\unset`), because a person who has a terminal that shows the colors badly needs
-that switch.
+- `syntax_hl` turns highlighting on. It starts off for a terminal with no color
+  and when `NO_COLOR` is set.
+- `syntax_hl_format` is a Chroma formatter name that now sets the number of colors:
+  `noop` draws none, and `terminal`, `terminal256` and `terminal16m` draw 16, 256
+  and 24 bits. A name outside these is an error.
+- `syntax_hl_style` is the name of a style of transit. A name that is not one is
+  an error.
+- `syntax_hl_override_bg` keeps the background of the terminal when it is true.
+  When it is false, the background of the style is drawn.
+
+The match of a dialect to a SQL grammar is in `highlight/dialect.go`. PostgreSQL,
+CockroachDB, CrateDB and Redshift use the PostgreSQL grammar, MySQL, TiDB, MemSQL
+and Vitess use the MySQL grammar, and SQL Server, Oracle and Cassandra use their
+own. Every other dialect uses the generic SQL grammar. Before a connection,
+PostgreSQL applies, as in psql.
+
+The cost is in the binary. The grammars add about 23 MB to the default build, and
+15 MB of that is the PostgreSQL grammar. Ken may choose to give PostgreSQL the
+generic grammar, which is 2.7 MB, and to keep the PostgreSQL grammar for the
+completer.
+
+What is left: the highlighter parses the text a second time, because the input
+and the highlighter keep a tree each (W36 wants one shared tree). The statements
+of MySQL, SQL Server and Oracle stored programs split at each `;`, because the
+input does not turn on `BeginEndBlocks` yet, and so each part is highlighted
+alone. `\p` prints the buffer with no color.
 
 ## W59. Record the terminal sessions again: Done
 

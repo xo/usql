@@ -149,6 +149,17 @@ func sessions() []capture.Session {
 			},
 		},
 		{
+			Name:  "highlighting",
+			About: "the line editor draws the input in the colors of the style, and syntax_hl turns the colors off",
+			Args:  args(memory, "--uset=syntax_hl_format=terminal256"),
+			Steps: []capture.Step{
+				{Send: `select 1 as n, 'two' as s; ` + capture.KeyEnter},
+				{Send: `\uset syntax_hl off` + capture.KeyEnter},
+				{Send: `select 1 as n; ` + capture.KeyEnter},
+				{Send: `\q` + capture.KeyEnter},
+			},
+		},
+		{
 			Name:  "quoted-interpolation",
 			About: `:'name' quotes as a literal and :"name" quotes as an identifier`,
 			Args:  args(memory),

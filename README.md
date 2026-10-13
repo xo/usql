@@ -210,8 +210,7 @@ $ go install -tags all github.com/xo/usql@main
 [`github.com/xo/dburl`][dburl].
 
 The list of drivers that `usql` was built with can be displayed with the
-[`\drivers` command][transit]: https://github.com/xo/transit
-[commands]:
+[`\drivers` command][commands]:
 
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
@@ -1272,11 +1271,29 @@ COPY 18
 
 #### Syntax Highlighting
 
-Syntax highlighting is not part of this release. `usql` reads its input with the
-grammar of [transit][transit], which does not highlight yet, so the variables
-`syntax_hl`, `syntax_hl_format`, `syntax_hl_style` and `syntax_hl_override_bg` are
-accepted and change nothing. Highlighting returns when the SQL grammars of transit
-can drive it.
+Interactive input is highlighted as you type it. `usql` parses the input with
+the grammar of [transit][transit], and the SQL of each statement with the grammar
+of the dialect of the connection. The colors come from a [style][styles] of
+transit, which has the styles of Chroma. The [settings][settings] that control
+highlighting are:
+
+| Setting                 | Default                         | Values                                           | Description                                              |
+| ----------------------- | ------------------------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| `syntax_hl`             | `true`                          | `true` or `false`                                | turns highlighting on and off                            |
+| `syntax_hl_format`      | _dependent on terminal support_ | `noop`, `terminal`, `terminal256`, `terminal16m` | the number of colors: none, 16, 256 or 24 bits           |
+| `syntax_hl_override_bg` | `true`                          | `true` or `false`                                | keeps the background of the terminal, and not the style's |
+| `syntax_hl_style`       | `monokai`                       | style name                                       | the [name of a style][styles]                            |
+
+They are set with `\uset`. A terminal with no color, or a `NO_COLOR` variable,
+turns highlighting off by default:
+
+```sh
+$ usql
+(not connected)=> \uset syntax_hl_style dracula
+syntax_hl_style is dracula
+(not connected)=> \uset syntax_hl off
+syntax_hl is false
+```
 
 #### Context Completion
 
@@ -1659,6 +1676,8 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [contributing]: #contributing "Contributing"
 [copying]: #copying-between-databases "Copying Between Databases"
 [highlighting]: #syntax-highlighting "Syntax Highlighting"
+[transit]: https://github.com/xo/transit "transit"
+[styles]: https://github.com/xo/transit/tree/master/styles/chroma "Styles of transit"
 [termgraphics]: #terminal-graphics "Terminal Graphics"
 [timefmt]: #time-formatting "Time Formatting"
 [usqlpass]: #passwords "Passwords"

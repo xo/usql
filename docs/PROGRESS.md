@@ -29,8 +29,8 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
   `\g` reads its option list from the grammar. `\e`, `\p`, `\w` and `\r`
   work on the feed buffer. It builds.
 - `handler` reads through `feed` and talks to the user through
-  `*rline.Prompt`. Its loop is new. The chroma highlighting is gone. It
-  builds.
+  `*rline.Prompt`. Its loop is new. Highlighting comes from the
+  `highlight` package. It builds.
 - `drivers` has `Language(u)` in place of the stmt options, and no chroma
   lexer. A driver's own Version wins over dbmeta's, for InfluxDB's release
   from GET /ping (dbmeta's D166).
@@ -59,7 +59,6 @@ Open points that are known:
 
 - `%R` shows only `=` or `-`, because rline draws one prompt for an entry.
   A prompt for each row waits on rline's backlog item 33.
-- The syntax_hl variables do nothing until transit's SQL grammars come.
 - rline writes `\x1b[m` before the first text when color is on and the
   output is not a terminal. run.go turns color off unless both input and
   output are a terminal. Tell rline: its session was not running on

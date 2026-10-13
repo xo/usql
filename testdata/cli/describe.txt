@@ -33,101 +33,101 @@ recv:
 \e[18C\r
 \e[32msq::memory:=> \e[39mcreat\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39mcreate\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m\e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39mcreate \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39mcreate t\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m t\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39mcreate ta\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m ta\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39mcreate tab\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m tab\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39mcreate tabl\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m tabl\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39mcreate table\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m\e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39mcreate table \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39mcreate table f\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m f\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39mcreate table fi\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m fi\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39mcreate table fil\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m fil\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39mcreate table film\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m film\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39mcreate table films\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m films\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39mcreate table films \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m films \e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39mcreate table films ()\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m()\e[39m\e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39mcreate table films (i)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mi\e[38;5;231m)\e[39m\e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39mcreate table films (id)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid\e[38;5;231m)\e[39m\e[K\r
 \e[36C\r
-\e[32msq::memory:=> \e[39mcreate table films (id )\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;231m)\e[39m\e[K\r
 \e[37C\r
-\e[32msq::memory:=> \e[39mcreate table films (id i)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mi\e[38;5;231m)\e[39m\e[K\r
 \e[38C\r
-\e[32msq::memory:=> \e[39mcreate table films (id in)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81min\e[38;5;231m)\e[39m\e[K\r
 \e[39C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[38;5;231m)\e[39m\e[K\r
 \e[40C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int )\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;231m)\e[39m\e[K\r
 \e[41C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int p)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m p\e[38;5;231m)\e[39m\e[K\r
 \e[42C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int pr)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m pr\e[38;5;231m)\e[39m\e[K\r
 \e[43C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int pri)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m pri\e[38;5;231m)\e[39m\e[K\r
 \e[44C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int prim)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m prim\e[38;5;231m)\e[39m\e[K\r
 \e[45C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int prima)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m prima\e[38;5;231m)\e[39m\e[K\r
 \e[46C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primar)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m primar\e[38;5;231m)\e[39m\e[K\r
 \e[47C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[38;5;231m)\e[39m\e[K\r
 \e[48C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary )\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;231m)\e[39m\e[K\r
 \e[49C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary k)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m k\e[38;5;231m)\e[39m\e[K\r
 \e[50C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary ke)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m ke\e[38;5;231m)\e[39m\e[K\r
 \e[51C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m)\e[39m\e[K\r
 \e[52C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key,)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,)\e[39m\e[K\r
 \e[53C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, )\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m \e[38;5;231m)\e[39m\e[K\r
 \e[54C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, t)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m t\e[38;5;231m)\e[39m\e[K\r
 \e[55C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, ti)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m ti\e[38;5;231m)\e[39m\e[K\r
 \e[56C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, tit)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m tit\e[38;5;231m)\e[39m\e[K\r
 \e[57C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, titl)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m titl\e[38;5;231m)\e[39m\e[K\r
 \e[58C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title\e[38;5;231m)\e[39m\e[K\r
 \e[59C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title )\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;231m)\e[39m\e[K\r
 \e[60C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title t)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mt\e[38;5;231m)\e[39m\e[K\r
 \e[61C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title te)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mte\e[38;5;231m)\e[39m\e[K\r
 \e[62C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title tex)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mtex\e[38;5;231m)\e[39m\e[K\r
 \e[63C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title text)\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mtext\e[38;5;231m)\e[39m\e[K\r
 \e[64C\r
-\e[32msq::memory:=> \e[39mcreate table films \e[97m(\e[39mid int primary key, title text\e[97m)\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[97m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mtext\e[97m)\e[39m\e[K\r
 \e[65C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title text);\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mtext\e[38;5;231m);\e[39m\e[K\r
 \e[66C\r
-\e[32msq::memory:=> \e[39mcreate table films (id int primary key, title text);\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(\e[39mid \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m title \e[38;5;81mtext\e[38;5;231m);\e[39m\e[K\r
 \e[66C\r
 \n
 CREATE TABLE\r
@@ -141,13 +141,13 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\d\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\dt\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\dt\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\dt\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\dt\e[39m\e[K\r
 \e[17C\r
 \n
      List of tables\r
@@ -169,23 +169,23 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\d\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\d \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\d f\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mf\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\d fi\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfi\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\d fil\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfil\e[39m\e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\d film\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfilm\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\d films\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfilms\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\d films\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfilms\e[39m\e[K\r
 \e[22C\r
 \n
          Table "main.films"\r
@@ -213,11 +213,11 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \n
 

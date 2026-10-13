@@ -164,6 +164,13 @@ require (
 	github.com/xo/resvg/libresvg/linux_arm v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_arm64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 // indirect
+	github.com/xo/transit/grammars/cql v0.4.0 // indirect
+	github.com/xo/transit/grammars/mysql v0.4.0 // indirect
+	github.com/xo/transit/grammars/oracle v0.4.0 // indirect
+	github.com/xo/transit/grammars/postgres v0.4.0 // indirect
+	github.com/xo/transit/grammars/sql v0.4.0 // indirect
+	github.com/xo/transit/grammars/sqlserver v0.4.0 // indirect
+	github.com/xo/transit/styles v0.4.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect

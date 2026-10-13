@@ -23,11 +23,11 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \n
 

@@ -32,6 +32,7 @@ import (
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
+	"github.com/xo/usql/highlight"
 	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/metacmd/charts"
 	"github.com/xo/usql/metacmd/complete"
@@ -54,6 +55,8 @@ type Handler struct {
 	// src is the input of the handler: the line editor at a terminal, a
 	// script, a pipe, or an included file.
 	src *feed.Source
+	// hl draws the input in color, and is nil unless the handler is interactive
+	hl *highlight.Highlighter
 	// iactive is set when src is the line editor at a terminal.
 	iactive bool
 	// reading is set while \prompt reads an answer from the line editor.
@@ -109,12 +112,34 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 	if h.iactive {
 		prompt = h.prompt
 		l.SetCompleter(complete.New(complete.WithConnStrings(h.connStrings())))
+		var err error
+		if h.hl, err = highlight.New(l); err != nil {
+			return nil, err
+		}
+		l.SetHighlighter(h.hl)
 	}
 	var err error
 	if h.src, err = feed.NewSource(r, drivers.Language(nil), prompt); err != nil {
 		return nil, err
 	}
 	return h, nil
+}
+
+// setLanguage sets the grammar of the dialect of the connection on the source of
+// the input, and on the highlighter, which reads the same statements.
+func (h *Handler) setLanguage() error {
+	lang := drivers.Language(h.u)
+	if err := h.src.SetLanguage(lang); err != nil {
+		return err
+	}
+	if h.hl == nil {
+		return nil
+	}
+	var dialect string
+	if h.u != nil {
+		dialect = h.u.Dialect
+	}
+	return h.hl.SetDialect(dialect, lang)
 }
 
 // prompt returns the prompt for the next entry, and sets the marker that the
@@ -675,7 +700,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 		return err
 	}
 	// read what follows in the grammar of the dialect
-	if err := h.src.SetLanguage(drivers.Language(h.u)); err != nil {
+	if err := h.setLanguage(); err != nil {
 		return err
 	}
 	// force error/check connection
@@ -1414,7 +1439,7 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 	}
 	err = p.Run()
 	h.db, h.u = p.db, p.u
-	if lerr := h.src.SetLanguage(drivers.Language(h.u)); err == nil {
+	if lerr := h.setLanguage(); err == nil {
 		err = lerr
 	}
 	return err

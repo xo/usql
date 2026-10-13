@@ -140,19 +140,19 @@ var settingNames = []varName{
 	},
 	{
 		`syntax_hl`,
-		`enable syntax highlighting (not used yet)`,
+		`enable syntax highlighting of the input`,
 	},
 	{
 		`syntax_hl_format`,
-		`syntax highlighting formatter name (not used yet)`,
+		`color depth of the highlighting [noop, terminal, terminal256, terminal16m]`,
 	},
 	{
 		`syntax_hl_override_bg`,
-		`overrides the background color of the highlighting style (not used yet)`,
+		`keep the background of the terminal, and not the background of the highlighting style`,
 	},
 	{
 		`syntax_hl_style`,
-		`syntax highlighting style name (not used yet)`,
+		`syntax highlighting style name`,
 	},
 	{
 		`term_graphics`,

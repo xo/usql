@@ -61,6 +61,8 @@ var (
 	UnknownFormatFieldName  = `unknown option: %s`
 	UnknownSetting          = `unknown setting: %s`
 	SettingIs               = `%s is %s`
+	UnknownStyle            = `unknown style: %s`
+	UnknownFormatter        = `unknown format: %s (use one of %s)`
 	IsASetting              = `%s is a setting of %s, so it is not a variable: use \uset %s`
 	FormatFieldInvalid      = `unrecognized value %q for "%s"`
 	FormatFieldInvalidValue = `unrecognized value %q for "%s": %s expected`

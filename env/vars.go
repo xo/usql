@@ -12,6 +12,7 @@ import (
 
 	syslocale "github.com/jeandeaual/go-locale"
 	"github.com/xo/terminfo"
+	"github.com/xo/transit/styles"
 	"github.com/xo/usql/text"
 )
 
@@ -217,6 +218,14 @@ func (v *Variables) SetSetting(name, value string) error {
 				return err
 			}
 		}
+	case "syntax_hl_style":
+		if _, ok := styles.Get(value); !ok {
+			return fmt.Errorf(text.UnknownStyle, value)
+		}
+	case "syntax_hl_format":
+		if !slices.Contains(syntaxFormats, value) {
+			return fmt.Errorf(text.UnknownFormatter, value, strings.Join(syntaxFormats, ", "))
+		}
 	case "show_host_information", "syntax_hl", "syntax_hl_override_bg":
 		b, err := ParseBool(value, name)
 		if err != nil {
@@ -230,6 +239,10 @@ func (v *Variables) SetSetting(name, value string) error {
 	v.uset[name] = value
 	return nil
 }
+
+// syntaxFormats are the values of syntax_hl_format. They are the names of the
+// formatters of Chroma, which usql used before, and each one names a color depth.
+var syntaxFormats = []string{"noop", "terminal", "terminal256", "terminal16m"}
 
 // Dump dumps the standard variables to w.
 func (v *Variables) Dump(w io.Writer) error {

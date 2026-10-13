@@ -33,49 +33,49 @@ recv:
 \e[18C\r
 \e[32msq::memory:=> \e[39mselec\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39mselect \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39mselect 1\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39mselect 1 \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39mselect 1 a\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;231ma\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39mselect 1 as\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39mselect 1 as \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39mselect 1 as n\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39mselect 1 as n,\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, '\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 't\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m't\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'tw\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'tw\e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two'\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m\e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' a\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;231ma\e[39m\e[K\r
 \e[36C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' as\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m\e[K\r
 \e[37C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' as \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[K\r
 \e[38C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' as s\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms\e[39m\e[K\r
 \e[39C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' as s;\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms;\e[39m\e[K\r
 \e[40C\r
-\e[32msq::memory:=> \e[39mselect 1 as n, 'two' as s;\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms;\e[39m\e[K\r
 \e[40C\r
 \n
  n |  s  \r
@@ -97,11 +97,11 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \n
 

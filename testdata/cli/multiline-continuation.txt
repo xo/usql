@@ -33,9 +33,9 @@ recv:
 \e[18C\r
 \e[32msq::memory:=> \e[39mselec\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
 \e[32m              \e[39m\e[K\r
 \e[14C
@@ -47,41 +47,41 @@ send:
 
 recv:
 \r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
 \e[32m              \e[39m \e[K\r
 \e[15C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
 \e[32m              \e[39m  \e[K\r
 \e[16C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m\e[K\r
 \e[17C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 \e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[K\r
 \e[18C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 a\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;231ma\e[39m\e[K\r
 \e[19C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m\e[K\r
 \e[20C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as \e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[K\r
 \e[21C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as n\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m\e[K\r
 \e[22C\r
-\e[1A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[1A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as n\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m\e[K\r
 \n
 \e[32m              \e[39m\e[K\r
 \e[14C
@@ -93,17 +93,17 @@ send:
 
 recv:
 \r
-\e[2A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[2A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as n\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m\e[K\r
 \n
-\e[32m              \e[39m;\e[K\r
+\e[32m              \e[39m\e[38;5;231m;\e[39m\e[K\r
 \e[15C\r
-\e[2A\e[32msq::memory:=> \e[39mselect\e[K\r
+\e[2A\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \n
-\e[32m              \e[39m  1 as n\e[K\r
+\e[32m              \e[39m  \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m\e[K\r
 \n
-\e[32m              \e[39m;\e[K\r
+\e[32m              \e[39m\e[38;5;231m;\e[39m\e[K\r
 \e[15C\r
 \n
  n \r
@@ -125,11 +125,11 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \n
 

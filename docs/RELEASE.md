@@ -12,8 +12,6 @@ file, not here. When a check finds a fault, record it in
 
 Read these first. Some of them can stop the release.
 
-- No color. The chroma lexer is gone, and transit's SQL grammars are not Go
-  packages yet. The syntax_hl variables do nothing until they are (W36).
 - The history is not saved for a user who has a `~/.usql_history` from
   gohxs/readline. rline cannot read its backslashes, and then refuses to
   save. It reports nothing. Ken decides the fix (see
@@ -263,10 +261,13 @@ For each, check:
 
 ### Syntax highlighting
 
-When transit's SQL grammars come, check the color of keywords, strings,
-comments, variables and meta commands for each set above, in two styles,
-at a light and a dark background. Until then, check that no color appears
-and nothing breaks with syntax_hl on.
+Check the color of keywords, strings, comments, variables and meta commands
+for each set above, in two styles, at a light and a dark background. Check
+that `\uset syntax_hl off` removes every color, that `\uset syntax_hl_format
+terminal` draws 16 colors, and that `\uset syntax_hl_style nope` is an error.
+Check a long statement of many rows, where each key parses the text again, for
+a delay that you can feel. Check that `NO_COLOR=1` starts with highlighting off
+(W58).
 
 ### The describe commands
 

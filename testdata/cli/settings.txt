@@ -23,17 +23,17 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\u\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\us\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\use\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
 \n
 echo_hidden           off\r
@@ -73,49 +73,49 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\u\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\us\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\use\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\uset p\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mp\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\uset pa\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpa\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\uset pag\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpag\e[39m\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\\uset page\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpage\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\\uset pager\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\\uset pager \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\\uset pager "\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39m\\uset pager "l\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"l\e[39m\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39m\\uset pager "le\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"le\e[39m\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39m\\uset pager "les\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"les\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less \e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less -\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less -\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less -R\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less -R\e[39m\e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less -R"\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less -R"\e[39m\e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39m\\uset pager "less -R"\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mpager\e[39m \e[38;5;186m"less -R"\e[39m\e[K\r
 \e[35C\r
 \n
 pager is "less -R"\r
@@ -129,51 +129,51 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\u\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\us\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\use\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\uset o\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mo\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\uset on\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\uset on_\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_\e[39m\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\\uset on_e\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_e\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\\uset on_er\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_er\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\\uset on_err\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_err\e[39m\e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\\uset on_erro\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_erro\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39m\\uset on_error\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error\e[39m\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_\e[39m\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_s\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_s\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_st\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_st\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_sto\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_sto\e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m \e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop o\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m \e[38;5;231mo\e[39m\e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop on\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m \e[38;5;231mon\e[39m\e[K\r
 \e[36C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop on\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m \e[38;5;231mon\e[39m\e[K\r
 \e[36C\r
 \n
 on_error_stop is on\r
@@ -187,45 +187,45 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\u\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\us\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\use\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\uset o\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mo\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\uset on\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\uset on_\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_\e[39m\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\\uset on_e\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_e\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\\uset on_er\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_er\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\\uset on_err\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_err\e[39m\e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\\uset on_erro\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_erro\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39m\\uset on_error\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error\e[39m\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_\e[39m\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_s\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_s\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_st\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_st\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_sto\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_sto\e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39m\\uset on_error_stop\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mon_error_stop\e[39m\e[K\r
 \e[33C\r
 \n
 on_error_stop is on\r
@@ -239,31 +239,31 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\s\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\s\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\se\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\se\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\set\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\set \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\set p\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mp\e[39m\e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\set pa\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpa\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\set pag\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpag\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\set page\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpage\e[39m\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\\set pager\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpager\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\\set pager \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpager\e[39m \e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\\set pager x\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpager\e[39m \e[38;5;231mx\e[39m\e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\\set pager x\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mpager\e[39m \e[38;5;231mx\e[39m\e[K\r
 \e[26C\r
 \n
 error: pager is a setting of usql, so it is not a variable: use \\uset pager\r
@@ -277,27 +277,27 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\u\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\u\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\us\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\us\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39m\\use\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\use\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39m\\uset\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m\e[K\r
 \e[19C\r
-\e[32msq::memory:=> \e[39m\\uset \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[K\r
 \e[20C\r
-\e[32msq::memory:=> \e[39m\\uset N\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mN\e[39m\e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\\uset NO\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mNO\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\\uset NOP\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mNOP\e[39m\e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\\uset NOPE\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mNOPE\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\\uset NOPE\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\uset\e[39m \e[38;5;231mNOPE\e[39m\e[K\r
 \e[24C\r
 \n
 error: unknown setting: NOPE\r
@@ -311,11 +311,11 @@ send:
 
 recv:
 \r
-\e[32msq::memory:=> \e[39m\\\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39m\\q\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \n
 
