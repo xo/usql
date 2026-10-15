@@ -6,6 +6,7 @@ package informationschema
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -16,10 +17,10 @@ import (
 
 // Scan targets that absorb a SQL NULL instead of failing the whole listing.
 //
-// Most of the queries in this file guard nullable columns with COALESCE(x, '')
+// Most of the queries in this file guard nullable columns with COALESCE(x, ”)
 // because database/sql cannot convert NULL into a string or int. That guard is
 // useless on openGauss running in Oracle-compatible mode (sql_compatibility=A),
-// where the empty string literal '' is itself NULL -- so COALESCE(x, '')
+// where the empty string literal ” is itself NULL -- so COALESCE(x, ”)
 // evaluates to COALESCE(x, NULL) and the NULL still reaches the scanner.
 // Scanning through these types makes the queries tolerate NULL regardless of
 // which server semantics apply.
@@ -39,27 +40,55 @@ func (n nullStr) Scan(v any) error {
 	return nil
 }
 
+// scanAsString mirrors database/sql's unexported asString, which is how the
+// standard library renders a driver value before parsing it into a numeric
+// destination. Replicating it keeps nullInt exactly as permissive as the
+// plain *int targets it replaces, so no value type that used to convert
+// (numeric-as-text, bool, uint, ...) now fails on the other databases that
+// share this information_schema reader.
+func scanAsString(v any) (string, bool) {
+	switch t := v.(type) {
+	case string:
+		return t, true
+	case []byte:
+		return string(t), true
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(rv.Int(), 10), true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(rv.Uint(), 10), true
+	case reflect.Float32:
+		return strconv.FormatFloat(rv.Float(), 'g', -1, 32), true
+	case reflect.Float64:
+		return strconv.FormatFloat(rv.Float(), 'g', -1, 64), true
+	case reflect.Bool:
+		return strconv.FormatBool(rv.Bool()), true
+	}
+	return "", false
+}
+
 type nullInt struct{ p *int }
 
 func (n nullInt) Scan(v any) error {
-	switch t := v.(type) {
-	case nil:
+	if v == nil {
 		*n.p = 0
-	case int64:
-		*n.p = int(t)
-	case int32:
-		*n.p = int(t)
-	case float64:
-		*n.p = int(t)
-	case []byte:
-		i, err := strconv.Atoi(string(t))
-		if err != nil {
-			return err
-		}
-		*n.p = i
-	default:
+		return nil
+	}
+	s, ok := scanAsString(v)
+	if !ok {
 		return fmt.Errorf("informationschema: cannot scan %T into int", v)
 	}
+	if s == "" {
+		*n.p = 0
+		return nil
+	}
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return fmt.Errorf("informationschema: cannot scan %T (%q) into int: %w", v, s, err)
+	}
+	*n.p = int(i)
 	return nil
 }
 
