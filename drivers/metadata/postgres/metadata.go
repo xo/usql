@@ -117,10 +117,19 @@ FROM pg_catalog.pg_database d`
 		rec := Catalog{
 			Catalog: metadata.Catalog{},
 		}
-		err = rows.Scan(&rec.Catalog.Catalog, &rec.Owner, &rec.Encoding, &rec.Collate, &rec.Ctype, &rec.AccessPrivileges)
+		// datacl is NULL for databases without explicit ACLs, and in
+		// openGauss Oracle-compatible mode (sql_compatibility=A) the COALESCE
+		// default of '' is itself NULL, so scan via sql.Null*.
+		var owner, encoding, collate, ctype, access sql.NullString
+		err = rows.Scan(&rec.Catalog.Catalog, &owner, &encoding, &collate, &ctype, &access)
 		if err != nil {
 			return nil, err
 		}
+		rec.Owner = owner.String
+		rec.Encoding = encoding.String
+		rec.Collate = collate.String
+		rec.Ctype = ctype.String
+		rec.AccessPrivileges = access.String
 		results = append(results, &rec)
 	}
 	if rows.Err() != nil {
@@ -134,8 +143,8 @@ func (r metaReader) Tables(f metadata.Filter) (*metadata.TableSet, error) {
   c.relname as "Name",
   CASE c.relkind WHEN 'r' THEN 'table' WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized view' WHEN 'i' THEN 'index' WHEN 'S' THEN 'sequence' WHEN 's' THEN 'special' WHEN 'f' THEN 'foreign table' WHEN 'p' THEN 'partitioned table' WHEN 'I' THEN 'partitioned index' ELSE 'unknown' END as "Type",
   COALESCE((c.reltuples / NULLIF(c.relpages, 0)) * (pg_catalog.pg_relation_size(c.oid) / current_setting('block_size')::int), 0)::bigint as "Rows",
-  pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) as "Size",
-  COALESCE(pg_catalog.obj_description(c.oid, 'pg_class'), '') as "Description"
+  CAST(pg_catalog.pg_size_pretty(pg_catalog.pg_table_size(c.oid)) AS text) as "Size",
+  CAST(COALESCE(pg_catalog.obj_description(c.oid, 'pg_class'), '') AS text) as "Description"
 FROM pg_catalog.pg_class c
      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
 `
@@ -183,10 +192,20 @@ FROM pg_catalog.pg_class c
 	results := []metadata.Table{}
 	for rows.Next() {
 		rec := metadata.Table{}
-		err = rows.Scan(&rec.Schema, &rec.Name, &rec.Type, &rec.Rows, &rec.Size, &rec.Comment)
+		// scan via sql.Null* : PostgreSQL-compatible servers (notably
+		// openGauss/GaussDB) may return NULL for these columns despite the
+		// COALESCE above, and scanning NULL into a string errors out.
+		var schema, typ, size, comment sql.NullString
+		var rowCount sql.NullInt64
+		err = rows.Scan(&schema, &rec.Name, &typ, &rowCount, &size, &comment)
 		if err != nil {
 			return nil, err
 		}
+		rec.Schema = schema.String
+		rec.Type = typ.String
+		rec.Rows = rowCount.Int64
+		rec.Size = size.String
+		rec.Comment = comment.String
 		results = append(results, rec)
 	}
 	if rows.Err() != nil {
@@ -320,10 +339,20 @@ FROM pg_catalog.pg_class c
 	results := []metadata.Index{}
 	for rows.Next() {
 		rec := metadata.Index{}
-		err = rows.Scan(&rec.Catalog, &rec.Schema, &rec.Table, &rec.Name, &rec.IsUnique, &rec.IsPrimary, &rec.Type)
+		// LEFT JOINs on pg_class/pg_am can yield NULL rows; scan via
+		// sql.Null* so that a NULL does not abort the whole listing.
+		var catalog, schema, table, name, isUnique, isPrimary, typ sql.NullString
+		err = rows.Scan(&catalog, &schema, &table, &name, &isUnique, &isPrimary, &typ)
 		if err != nil {
 			return nil, err
 		}
+		rec.Catalog = catalog.String
+		rec.Schema = schema.String
+		rec.Table = table.String
+		rec.Name = name.String
+		rec.IsUnique = metadata.Bool(isUnique.String)
+		rec.IsPrimary = metadata.Bool(isPrimary.String)
+		rec.Type = typ.String
 		results = append(results, rec)
 	}
 	if rows.Err() != nil {

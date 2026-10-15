@@ -6,12 +6,112 @@ package informationschema
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/drivers/metadata"
 	"github.com/xo/usql/text"
 )
+
+// Scan targets that absorb a SQL NULL instead of failing the whole listing.
+//
+// Most of the queries in this file guard nullable columns with COALESCE(x, '')
+// because database/sql cannot convert NULL into a string or int. That guard is
+// useless on openGauss running in Oracle-compatible mode (sql_compatibility=A),
+// where the empty string literal '' is itself NULL -- so COALESCE(x, '')
+// evaluates to COALESCE(x, NULL) and the NULL still reaches the scanner.
+// Scanning through these types makes the queries tolerate NULL regardless of
+// which server semantics apply.
+type nullStr struct{ p *string }
+
+func (n nullStr) Scan(v any) error {
+	switch t := v.(type) {
+	case nil:
+		*n.p = ""
+	case string:
+		*n.p = t
+	case []byte:
+		*n.p = string(t)
+	default:
+		return fmt.Errorf("informationschema: cannot scan %T into string", v)
+	}
+	return nil
+}
+
+type nullInt struct{ p *int }
+
+func (n nullInt) Scan(v any) error {
+	switch t := v.(type) {
+	case nil:
+		*n.p = 0
+	case int64:
+		*n.p = int(t)
+	case int32:
+		*n.p = int(t)
+	case float64:
+		*n.p = int(t)
+	case []byte:
+		i, err := strconv.Atoi(string(t))
+		if err != nil {
+			return err
+		}
+		*n.p = i
+	default:
+		return fmt.Errorf("informationschema: cannot scan %T into int", v)
+	}
+	return nil
+}
+
+type nullBool struct{ p *metadata.Bool }
+
+func (n nullBool) Scan(v any) error {
+	switch t := v.(type) {
+	case nil:
+		*n.p = ""
+	case string:
+		*n.p = metadata.Bool(t)
+	case []byte:
+		*n.p = metadata.Bool(t)
+	default:
+		return fmt.Errorf("informationschema: cannot scan %T into Bool", v)
+	}
+	return nil
+}
+
+// nullBoolVal is nullBool for plain bool destinations, e.g. is_grantable.
+type nullBoolVal struct{ p *bool }
+
+func (n nullBoolVal) Scan(v any) error {
+	switch t := v.(type) {
+	case nil:
+		*n.p = false
+	case bool:
+		*n.p = t
+	case int64:
+		// information_schema.yes_or_no is a domain over boolean in
+		// PostgreSQL, but openGauss reports it as a numeric YES/NO, so the
+		// driver hands it back as int64.
+		*n.p = t != 0
+	case []byte:
+		switch s := string(t); s {
+		case "", "NO", "no", "f", "false", "0":
+			*n.p = false
+		default:
+			*n.p = true
+		}
+	case string:
+		switch t {
+		case "", "NO", "no", "f", "false", "0":
+			*n.p = false
+		default:
+			*n.p = true
+		}
+	default:
+		return fmt.Errorf("informationschema: cannot scan %T into bool", v)
+	}
+	return nil
+}
 
 // InformationSchema metadata reader
 type InformationSchema struct {
@@ -240,6 +340,12 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 	results := []metadata.Column{}
 	for rows.Next() {
 		rec := metadata.Column{}
+		// column_default/is_nullable are NULL for columns without a default,
+		// and under openGauss's Oracle-compatible mode (sql_compatibility=A)
+		// the '' default passed to COALESCE is itself NULL, so a COALESCE
+		// alone is not enough: scan via sql.Null* to absorb NULLs.
+		var def, isNullable sql.NullString
+		var size, digits, radix, octetLength sql.NullInt64
 		err = rows.Scan(
 			&rec.Catalog,
 			&rec.Schema,
@@ -247,16 +353,22 @@ func (s InformationSchema) Columns(f metadata.Filter) (*metadata.ColumnSet, erro
 			&rec.Name,
 			&rec.OrdinalPosition,
 			&rec.DataType,
-			&rec.Default,
-			&rec.IsNullable,
-			&rec.ColumnSize,
-			&rec.DecimalDigits,
-			&rec.NumPrecRadix,
-			&rec.CharOctetLength,
+			&def,
+			&isNullable,
+			&size,
+			&digits,
+			&radix,
+			&octetLength,
 		)
 		if err != nil {
 			return nil, err
 		}
+		rec.Default = def.String
+		rec.IsNullable = metadata.Bool(isNullable.String)
+		rec.ColumnSize = int(size.Int64)
+		rec.DecimalDigits = int(digits.Int64)
+		rec.NumPrecRadix = int(radix.Int64)
+		rec.CharOctetLength = int(octetLength.Int64)
 		rec.DataType = s.dataTypeFormatter(rec)
 		results = append(results, rec)
 	}
@@ -412,16 +524,16 @@ func (s InformationSchema) Functions(f metadata.Filter) (*metadata.FunctionSet, 
 	for rows.Next() {
 		rec := metadata.Function{}
 		err = rows.Scan(
-			&rec.SpecificName,
-			&rec.Catalog,
-			&rec.Schema,
-			&rec.Name,
-			&rec.Type,
-			&rec.ResultType,
-			&rec.Source,
-			&rec.Language,
-			&rec.Volatility,
-			&rec.Security,
+			nullStr{&rec.SpecificName},
+			nullStr{&rec.Catalog},
+			nullStr{&rec.Schema},
+			nullStr{&rec.Name},
+			nullStr{&rec.Type},
+			nullStr{&rec.ResultType},
+			nullStr{&rec.Source},
+			nullStr{&rec.Language},
+			nullStr{&rec.Volatility},
+			nullStr{&rec.Security},
 		)
 		if err != nil {
 			return nil, err
@@ -475,17 +587,17 @@ func (s InformationSchema) FunctionColumns(f metadata.Filter) (*metadata.Functio
 	for rows.Next() {
 		rec := metadata.FunctionColumn{}
 		err = rows.Scan(
-			&rec.Catalog,
-			&rec.Schema,
-			&rec.FunctionName,
-			&rec.Name,
-			&rec.OrdinalPosition,
-			&rec.Type,
-			&rec.DataType,
-			&rec.ColumnSize,
-			&rec.DecimalDigits,
-			&rec.NumPrecRadix,
-			&rec.CharOctetLength,
+			nullStr{&rec.Catalog},
+			nullStr{&rec.Schema},
+			nullStr{&rec.FunctionName},
+			nullStr{&rec.Name},
+			nullInt{&rec.OrdinalPosition},
+			nullStr{&rec.Type},
+			nullStr{&rec.DataType},
+			nullInt{&rec.ColumnSize},
+			nullInt{&rec.DecimalDigits},
+			nullInt{&rec.NumPrecRadix},
+			nullInt{&rec.CharOctetLength},
 		)
 		if err != nil {
 			return nil, err
@@ -594,7 +706,7 @@ JOIN information_schema.columns c ON
 	results := []metadata.IndexColumn{}
 	for rows.Next() {
 		rec := metadata.IndexColumn{}
-		err = rows.Scan(&rec.Catalog, &rec.Schema, &rec.Table, &rec.IndexName, &rec.Name, &rec.DataType, &rec.OrdinalPosition)
+		err = rows.Scan(nullStr{&rec.Catalog}, nullStr{&rec.Schema}, nullStr{&rec.Table}, nullStr{&rec.IndexName}, nullStr{&rec.Name}, nullStr{&rec.DataType}, nullInt{&rec.OrdinalPosition})
 		if err != nil {
 			return nil, err
 		}
@@ -668,21 +780,21 @@ LEFT JOIN information_schema.check_constraints c ON t.constraint_catalog = c.con
 	for rows.Next() {
 		rec := metadata.Constraint{}
 		err = rows.Scan(
-			&rec.Catalog,
-			&rec.Schema,
-			&rec.Table,
-			&rec.Name,
-			&rec.Type,
-			&rec.IsDeferrable,
-			&rec.IsInitiallyDeferred,
-			&rec.ForeignCatalog,
-			&rec.ForeignSchema,
-			&rec.ForeignTable,
-			&rec.ForeignName,
-			&rec.MatchType,
-			&rec.UpdateRule,
-			&rec.DeleteRule,
-			&rec.CheckClause,
+			nullStr{&rec.Catalog},
+			nullStr{&rec.Schema},
+			nullStr{&rec.Table},
+			nullStr{&rec.Name},
+			nullStr{&rec.Type},
+			nullBool{&rec.IsDeferrable},
+			nullBool{&rec.IsInitiallyDeferred},
+			nullStr{&rec.ForeignCatalog},
+			nullStr{&rec.ForeignSchema},
+			nullStr{&rec.ForeignTable},
+			nullStr{&rec.ForeignName},
+			nullStr{&rec.MatchType},
+			nullStr{&rec.UpdateRule},
+			nullStr{&rec.DeleteRule},
+			nullStr{&rec.CheckClause},
 		)
 		if err != nil {
 			return nil, err
@@ -780,16 +892,16 @@ LEFT JOIN information_schema.key_column_usage f ON r.unique_constraint_catalog =
 		rec := metadata.ConstraintColumn{OrdinalPosition: i}
 		i++
 		err = rows.Scan(
-			&rec.Catalog,
-			&rec.Schema,
-			&rec.Table,
-			&rec.Constraint,
-			&rec.Name,
-			&rec.OrdinalPosition,
-			&rec.ForeignCatalog,
-			&rec.ForeignSchema,
-			&rec.ForeignTable,
-			&rec.ForeignName,
+			nullStr{&rec.Catalog},
+			nullStr{&rec.Schema},
+			nullStr{&rec.Table},
+			nullStr{&rec.Constraint},
+			nullStr{&rec.Name},
+			nullInt{&rec.OrdinalPosition},
+			nullStr{&rec.ForeignCatalog},
+			nullStr{&rec.ForeignSchema},
+			nullStr{&rec.ForeignTable},
+			nullStr{&rec.ForeignName},
 		)
 		if err != nil {
 			return nil, err
@@ -839,7 +951,7 @@ func (s InformationSchema) Sequences(f metadata.Filter) (*metadata.SequenceSet, 
 	results := []metadata.Sequence{}
 	for rows.Next() {
 		rec := metadata.Sequence{}
-		err = rows.Scan(&rec.Catalog, &rec.Schema, &rec.Name, &rec.DataType, &rec.Start, &rec.Min, &rec.Max, &rec.Increment, &rec.Cycles)
+		err = rows.Scan(nullStr{&rec.Catalog}, nullStr{&rec.Schema}, nullStr{&rec.Name}, nullStr{&rec.DataType}, nullStr{&rec.Start}, nullStr{&rec.Min}, nullStr{&rec.Max}, nullStr{&rec.Increment}, nullBool{&rec.Cycles})
 		if err != nil {
 			return nil, err
 		}
@@ -962,7 +1074,7 @@ func (s InformationSchema) PrivilegeSummaries(f metadata.Filter) (*metadata.Priv
 	curSummary := &metadata.PrivilegeSummary{}
 	for rows.Next() {
 		r := row{}
-		err = rows.Scan(&r.Catalog, &r.Schema, &r.Name, &r.ObjectType, &r.Column, &r.Grantee, &r.Grantor, &r.PrivilegeType, &r.IsGrantable)
+		err = rows.Scan(nullStr{&r.Catalog}, nullStr{&r.Schema}, nullStr{&r.Name}, nullStr{&r.ObjectType}, nullStr{&r.Column}, nullStr{&r.Grantee}, nullStr{&r.Grantor}, nullStr{&r.PrivilegeType}, nullBoolVal{&r.IsGrantable})
 		if err != nil {
 			return nil, err
 		}
