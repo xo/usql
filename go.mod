@@ -17,7 +17,7 @@ require (
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/jmrobles/h2go v0.5.0
 	github.com/kenshaw/colors v0.2.4
-	github.com/kenshaw/rasterm v0.1.17
+	github.com/kenshaw/rasterm v0.1.21
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-runewidth v0.0.31
@@ -33,17 +33,24 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/cassandra v0.1.1
-	github.com/xo/dbimp v0.20.0
-	github.com/xo/dbmeta v0.15.0
+	github.com/xo/dbimp v0.20.2
+	github.com/xo/dbmeta v0.15.1
 	github.com/xo/dburl v0.53.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.2
-	github.com/xo/resvg v0.11.0
+	github.com/xo/resvg v0.12.1
 	github.com/xo/rline v0.1.0
 	github.com/xo/tblfmt v0.19.1
 	github.com/xo/terminfo v1.2.0
 	github.com/xo/transit v0.4.0
+	github.com/xo/transit/grammars/cql v0.4.0
+	github.com/xo/transit/grammars/mysql v0.4.0
+	github.com/xo/transit/grammars/oracle v0.4.0
+	github.com/xo/transit/grammars/postgres v0.4.0
+	github.com/xo/transit/grammars/sql v0.4.0
+	github.com/xo/transit/grammars/sqlserver v0.4.0
 	github.com/xo/transit/grammars/usql v0.4.0
+	github.com/xo/transit/styles v0.4.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
 	github.com/yookoala/realpath v1.0.0
 	modernc.org/sqlite v1.60.1
@@ -52,7 +59,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.3 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.15.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.13.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.10.1 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
@@ -80,10 +87,10 @@ require (
 	github.com/cockroachdb/swiss v0.0.0-20260820225851-333444432258 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
-	github.com/dlclark/regexp2/v2 v2.8.4 // indirect
-	github.com/dop251/goja v0.0.0-20261010130053-73dc7edc278f // indirect
+	github.com/dlclark/regexp2/v2 v2.9.1 // indirect
+	github.com/dop251/goja v0.0.0-20261019185110-cf7b1419c9c0 // indirect
 	github.com/dop251/goja_nodejs v0.0.0-20260918173711-b481721df8a2 // indirect
-	github.com/dromara/carbon/v2 v2.6.18 // indirect
+	github.com/dromara/carbon/v2 v2.7.0 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.10506.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10506.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10506.0 // indirect
@@ -91,7 +98,7 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10506.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10506.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/ebitengine/purego v0.11.1 // indirect
+	github.com/ebitengine/purego v0.11.2 // indirect
 	github.com/elastic/go-sysinfo v1.15.5 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
@@ -107,7 +114,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230110200425-62e4d2e5b215 // indirect
-	github.com/google/pprof v0.0.0-20261008003335-7bae8d8c4c9e // indirect
+	github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -117,8 +124,8 @@ require (
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/klauspost/compress v1.20.1 // indirect
-	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
+	github.com/klauspost/compress v1.20.3 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
@@ -143,14 +150,14 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.25.0 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.72.0 // indirect
+	github.com/prometheus/common v0.72.1 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
-	github.com/shopspring/decimal v1.5.0 // indirect
+	github.com/shopspring/decimal v1.6.0 // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/soniakeys/quant v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -159,18 +166,14 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/resvg/libresvg/darwin_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/darwin_arm64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/freebsd_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_amd64 v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_amd64_musl v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_arm v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/linux_arm64 v0.48.1 // indirect
+	github.com/xo/resvg/libresvg/linux_arm64_musl v0.48.1 // indirect
 	github.com/xo/resvg/libresvg/windows_amd64 v0.48.1 // indirect
-	github.com/xo/transit/grammars/cql v0.4.0 // indirect
-	github.com/xo/transit/grammars/mysql v0.4.0 // indirect
-	github.com/xo/transit/grammars/oracle v0.4.0 // indirect
-	github.com/xo/transit/grammars/postgres v0.4.0 // indirect
-	github.com/xo/transit/grammars/sql v0.4.0 // indirect
-	github.com/xo/transit/grammars/sqlserver v0.4.0 // indirect
-	github.com/xo/transit/styles v0.4.0 // indirect
+	github.com/xo/resvg/libresvg/windows_arm64 v0.48.1 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
@@ -178,20 +181,20 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/exp v0.0.0-20261009195045-ca0d7ba23607 // indirect
+	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/libc v1.77.1 // indirect
+	modernc.org/libc v1.79.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
