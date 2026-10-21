@@ -9,8 +9,11 @@
 package pgx
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"database/sql/driver"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -60,6 +63,14 @@ func Driver() drivers.Driver {
 				return stdlib.OpenDB(*config), nil
 			}, nil
 		},
+		// bytea values print in the hex format of psql. Printed as text, bytes that
+		// are not UTF-8 are lost or changed.
+		ColumnTypes: func(col *sql.ColumnType) (any, error) {
+			if col.DatabaseTypeName() == "BYTEA" {
+				return new(Bytea), nil
+			}
+			return new(any), nil
+		},
 		Err: func(err error) (string, string) {
 			var e *pgconn.PgError
 			if errors.As(err, &e) {
@@ -97,4 +108,32 @@ func Driver() drivers.Driver {
 			return n, err
 		},
 	}
+}
+
+// Bytea is a bytea value that a query returns. Its Value is the value in the
+// hex format of psql, such as \xdeadbeef, or nil for NULL.
+type Bytea struct {
+	Bytes []byte
+	Valid bool
+}
+
+// Scan satisfies the [database/sql.Scanner] interface.
+func (b *Bytea) Scan(src any) error {
+	switch v := src.(type) {
+	case nil:
+		b.Bytes, b.Valid = nil, false
+	case []byte:
+		b.Bytes, b.Valid = bytes.Clone(v), true
+	default:
+		return fmt.Errorf("scanning bytea: unexpected type %T", src)
+	}
+	return nil
+}
+
+// Value satisfies the [database/sql/driver.Valuer] interface.
+func (b Bytea) Value() (driver.Value, error) {
+	if !b.Valid {
+		return nil, nil
+	}
+	return `\x` + hex.EncodeToString(b.Bytes), nil
 }
