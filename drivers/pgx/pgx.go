@@ -9,10 +9,8 @@
 package pgx
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"database/sql/driver"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -67,7 +65,7 @@ func Driver() drivers.Driver {
 		// are not UTF-8 are lost or changed.
 		ColumnTypes: func(col *sql.ColumnType) (any, error) {
 			if col.DatabaseTypeName() == "BYTEA" {
-				return new(Bytea), nil
+				return new(sql.Null[bytea]), nil
 			}
 			return new(any), nil
 		},
@@ -110,30 +108,11 @@ func Driver() drivers.Driver {
 	}
 }
 
-// Bytea is a bytea value that a query returns. Its Value is the value in the
-// hex format of psql, such as \xdeadbeef, or nil for NULL.
-type Bytea struct {
-	Bytes []byte
-	Valid bool
-}
+// bytea is a bytea value. It prints in the hex format of psql, such as
+// \xdeadbeef.
+type bytea []byte
 
-// Scan satisfies the [database/sql.Scanner] interface.
-func (b *Bytea) Scan(src any) error {
-	switch v := src.(type) {
-	case nil:
-		b.Bytes, b.Valid = nil, false
-	case []byte:
-		b.Bytes, b.Valid = bytes.Clone(v), true
-	default:
-		return fmt.Errorf("scanning bytea: unexpected type %T", src)
-	}
-	return nil
-}
-
-// Value satisfies the [database/sql/driver.Valuer] interface.
-func (b Bytea) Value() (driver.Value, error) {
-	if !b.Valid {
-		return nil, nil
-	}
-	return `\x` + hex.EncodeToString(b.Bytes), nil
+// String satisfies the [fmt.Stringer] interface.
+func (b bytea) String() string {
+	return `\x` + hex.EncodeToString(b)
 }
