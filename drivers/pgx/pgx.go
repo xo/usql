@@ -11,6 +11,7 @@ package pgx
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -60,6 +61,14 @@ func Driver() drivers.Driver {
 				return stdlib.OpenDB(*config), nil
 			}, nil
 		},
+		// bytea values print in the hex format of psql. Printed as text, bytes that
+		// are not UTF-8 are lost or changed.
+		ColumnTypes: func(col *sql.ColumnType) (any, error) {
+			if col.DatabaseTypeName() == "BYTEA" {
+				return new(sql.Null[bytea]), nil
+			}
+			return new(any), nil
+		},
 		Err: func(err error) (string, string) {
 			var e *pgconn.PgError
 			if errors.As(err, &e) {
@@ -97,4 +106,13 @@ func Driver() drivers.Driver {
 			return n, err
 		},
 	}
+}
+
+// bytea is a bytea value. It prints in the hex format of psql, such as
+// \xdeadbeef.
+type bytea []byte
+
+// String satisfies the [fmt.Stringer] interface.
+func (b bytea) String() string {
+	return `\x` + hex.EncodeToString(b)
 }
