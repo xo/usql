@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"os/signal"
 	"sort"
 	"strconv"
@@ -38,11 +37,12 @@ func Quit(p *Params) error {
 //
 //	copyright	show usage and distribution terms for {{CommandName}}
 func Copyright(p *Params) error {
-	stdout := p.Handler.IO()
+	// the logo goes straight to the terminal, because a pager shows its
+	// escape codes as text
 	if typ := env.TermGraphics(); typ.Available() {
-		typ.Encode(stdout, text.Logo)
+		typ.Encode(p.Handler.IO(), text.Logo)
 	}
-	fmt.Fprintln(stdout, text.Copyright)
+	fmt.Fprintln(p.Handler.Stdout(), text.Copyright)
 	return nil
 }
 
@@ -53,16 +53,7 @@ func Copyright(p *Params) error {
 //
 //	drivers	show database drivers available to {{CommandName}}
 func Drivers(p *Params) error {
-	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
-	var cmd *exec.Cmd
-	var wc io.WriteCloser
-	if pager := env.Setting("pager"); p.Handler.IO().Interactive() && pager != "" {
-		var err error
-		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
-			return err
-		}
-		stdout = wc
-	}
+	stdout := p.Handler.Stdout()
 	available := drivers.Available()
 	names := make([]string, len(available))
 	var z int
@@ -83,12 +74,6 @@ func Drivers(p *Params) error {
 		}
 		fmt.Fprintln(stdout, s)
 	}
-	if cmd != nil {
-		if err := wc.Close(); err != nil {
-			return err
-		}
-		return cmd.Wait()
-	}
 	return nil
 }
 
@@ -104,15 +89,7 @@ func Help(p *Params) error {
 	if err != nil {
 		return err
 	}
-	var stdout, stderr io.Writer = p.Handler.IO(), p.Handler.IO().Stderr()
-	var cmd *exec.Cmd
-	var wc io.WriteCloser
-	if pager := env.Setting("pager"); p.Handler.IO().Interactive() && pager != "" {
-		if wc, cmd, err = env.Pipe(stdout, stderr, pager); err != nil {
-			return err
-		}
-		stdout = wc
-	}
+	stdout := p.Handler.Stdout()
 	switch name = strings.TrimSpace(strings.ToLower(name)); {
 	case name == "options":
 		text.Usage(stdout, true)
@@ -120,12 +97,6 @@ func Help(p *Params) error {
 		_ = env.Listing(stdout)
 	default:
 		_ = Dump(stdout, name == "commands")
-	}
-	if cmd != nil {
-		if err := wc.Close(); err != nil {
-			return err
-		}
-		return cmd.Wait()
 	}
 	return nil
 }
@@ -390,7 +361,7 @@ func ConnectionInfo(p *Params) error {
 	if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
 		s = fmt.Sprintf(text.ConnInfo, u.SchemeName, u.DSN)
 	}
-	fmt.Fprintln(p.Handler.IO(), s)
+	fmt.Fprintln(p.Handler.Stdout(), s)
 	return nil
 }
 
@@ -467,7 +438,7 @@ func Print(p *Params) error {
 	if s == "" {
 		s = text.QueryBufferEmpty
 	}
-	fmt.Fprintln(p.Handler.IO(), s)
+	fmt.Fprintln(p.Handler.Stdout(), s)
 	return nil
 }
 
@@ -531,7 +502,7 @@ func Echo(p *Params) error {
 	if err != nil {
 		return err
 	}
-	var out io.Writer = p.Handler.IO()
+	out := p.Handler.Stdout()
 	switch o := p.Handler.GetOutput(); {
 	case p.Name == "qecho" && o != nil:
 		out = o
@@ -604,7 +575,7 @@ func Copy(p *Params) error {
 		return err
 	}
 	ctx := context.Background()
-	stdout := func() io.Writer { return p.Handler.IO() }
+	stdout := p.Handler.Stdout
 	stderr := p.Handler.IO().Stderr
 	srcDb, err := drivers.Open(ctx, src, stdout, stderr)
 	if err != nil {
@@ -731,7 +702,7 @@ func Set(p *Params) error {
 		}
 		return env.Vars().Set(n, strings.Join(vals, " "))
 	}
-	return env.Vars().Dump(p.Handler.IO())
+	return env.Vars().Dump(p.Handler.Stdout())
 }
 
 // Uset is a Variables meta command (\uset). Sets, or shows, the settings of
@@ -747,7 +718,7 @@ func Uset(p *Params) error {
 	case err != nil:
 		return err
 	case !ok:
-		return env.Vars().DumpSettings(p.Handler.IO())
+		return env.Vars().DumpSettings(p.Handler.Stdout())
 	}
 	vals, err := p.All(true)
 	if err != nil {
@@ -804,7 +775,7 @@ func SetPrint(p *Params) error {
 	}
 	// display variables
 	if p.Name == "pset" && !ok {
-		return env.Vars().DumpPrint(p.Handler.IO())
+		return env.Vars().DumpPrint(p.Handler.Stdout())
 	}
 	var field, extra string
 	switch p.Name {
@@ -881,7 +852,7 @@ func SetConn(p *Params) error {
 		}
 		return env.Vars().SetConn(n, vals...)
 	}
-	return env.Vars().DumpConn(p.Handler.IO())
+	return env.Vars().DumpConn(p.Handler.Stdout())
 }
 
 // Prompt is a Variables meta command (\prompt). Prompts the user for input,

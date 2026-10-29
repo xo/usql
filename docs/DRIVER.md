@@ -253,18 +253,34 @@ out. The pgx driver answers to the `postgres` tag this way, because dburl sends
 
     // Tags: postgres
 
+A tag that is also the name of a dburl scheme folds that scheme into the
+driver. The driver registers under the scheme as well, and `gen.go` lists the
+scheme and its aliases in the README row of the driver. When the scheme is the
+dialect of the driver, the row takes the name of the database from it. That is
+why pgx has one row, named PostgreSQL.
+
 Most drivers have no `Tags:` line. A `Build:` line cannot do this job, because
 `gen.go` combines it with the group constraint using `&&`, so it can only
 narrow where a driver builds.
 
-### Promoting to base needs one more edit
+### A driver built on another driver
 
-If a driver is ever promoted to the base group, add it to `baseOrder` in
-`gen.go`. That map fixes the order of the base rows in the README.
+A driver for a database that speaks the protocol of another, as TiDB speaks
+the MySQL protocol, imports the driver package of that database and registers
+its driver under its own scheme. `gen.go` reads the import, and the generated
+constraint leaves the driver out when the other one is left out. `no_mysql`
+leaves out memsql, tidb and vitess this way.
 
-A driver missing from the map sorts as 0 and ties with postgres. `sort.Slice`
-is not stable, so the two rows swap on every run and `go generate` churns the
-README.
+A database that speaks the PostgreSQL protocol imports `drivers/pgwire`
+instead. pgwire gives pgx when the build has pgx, and libpq when it does not,
+so `no_pgx` leaves pgx out and these drivers keep working.
+
+### The order of the base rows
+
+`baseOrder` in `gen.go` names the base drivers that come first in the README,
+in order. The other base drivers follow in the order of their tags. A driver
+that is promoted to the base group needs no edit there, unless it must come
+first.
 
 ## Step 4. Generate, do not edit
 

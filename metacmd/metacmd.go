@@ -23,9 +23,11 @@ import (
 
 // Handler is the shared interface for a command handler.
 type Handler interface {
-	// IO returns the session of the line editor, which is also where the
-	// handler writes.
+	// IO returns the session of the line editor.
 	IO() *rline.Prompt
+	// Stdout returns where a command writes its output. The output goes to
+	// the pager when it does not fit on the terminal.
+	Stdout() io.Writer
 	// User returns the current user.
 	User() *user.User
 	// URL returns the current database URL.

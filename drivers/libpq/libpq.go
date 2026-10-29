@@ -2,7 +2,8 @@
 //
 // It registers as pq, the scheme that dburl gives pq:// and libpq:// URLs.
 // lib/pq itself registers as postgres in database/sql, which is the driver
-// dburl opens. postgres:// URLs go to the pgx driver.
+// dburl opens. postgres:// URLs go to the pgx driver, and to this driver when
+// the build has no pgx.
 //
 // See: https://github.com/lib/pq
 // Group: most
@@ -19,11 +20,19 @@ import (
 	"github.com/lib/pq" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/pgwire/pgshared"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/text"
 )
 
 func init() {
+	drivers.Register("pq", Driver())
+}
+
+// Driver returns the lib/pq driver. A database that speaks the PostgreSQL
+// protocol, such as Redshift, uses it through pgwire when the build has no
+// pgx.
+func Driver() drivers.Driver {
 	openConn := func(stdout, stderr func() io.Writer, dsn string) (*sql.DB, error) {
 		conn, err := pq.NewConnector(dsn)
 		if err != nil {
@@ -45,8 +54,8 @@ func init() {
 		})
 		return sql.OpenDB(notificationConn), nil
 	}
-	drivers.Register("pq", drivers.Driver{
-		Name: "pq",
+	return drivers.Driver{
+		ColumnTypes: pgshared.Dest,
 		Open: func(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (func(string, string) (*sql.DB, error), error) {
 			return func(_, dsn string) (*sql.DB, error) {
 				conn, err := openConn(stdout, stderr, dsn)
@@ -143,5 +152,5 @@ func init() {
 			}
 			return n, nil
 		},
-	})
+	}
 }

@@ -213,7 +213,7 @@ var pvarNames = []varName{
 	},
 	{
 		`pager_min_lines`,
-		`minimum number of lines required in the output to use a pager, 0 to disable (default 0)`,
+		`number of lines the output must have before the pager starts, 0 for no minimum (default 0)`,
 	},
 	{
 		`pager`,

@@ -156,3 +156,25 @@ func TestRegistryIsKeyedByScheme(t *testing.T) {
 		t.Errorf("found %d registered drivers, expected at least 20", len(registered))
 	}
 }
+
+// TestPgwireConstraints checks that pgwire picks pgx exactly when the build has
+// the pgx driver. pgx.go must carry the constraint that gen.go writes for pgx,
+// and libpq.go its negation.
+func TestPgwireConstraints(t *testing.T) {
+	t.Parallel()
+	first := func(name string) string {
+		buf, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		line, _, _ := strings.Cut(string(buf), "\n")
+		return strings.TrimPrefix(line, "//go:build ")
+	}
+	want := first(filepath.Join("internal", "pgx.go"))
+	if got := first(filepath.Join("drivers", "pgwire", "pgx.go")); got != want {
+		t.Errorf("drivers/pgwire/pgx.go: expected %q, got: %q", want, got)
+	}
+	if got, want := first(filepath.Join("drivers", "pgwire", "libpq.go")), "!("+want+")"; got != want {
+		t.Errorf("drivers/pgwire/libpq.go: expected %q, got: %q", want, got)
+	}
+}

@@ -301,6 +301,25 @@ limit and the rules for a server that another session started.
 
 [dbrun]: https://github.com/xo/dbmeta/blob/main/docs/DBRUN.md
 
+## Comparing PostgreSQL output with psql
+
+`internal/cmd/pgcompare` compares how psql and usql print every built-in type of
+PostgreSQL. It makes values of each type, some fixed and some random, and runs
+the same query through psql, through usql with pgx, and through usql with libpq.
+It compares the aligned, unaligned and CSV output, and it writes a report of each
+difference. It needs `psql` on your PATH and a PostgreSQL server that dbrun
+started, as above:
+
+    go build -tags all -o /tmp/usql .
+    go run ./internal/cmd/pgcompare -usql /tmp/usql -dsn "$(cd ../dbmeta/test && go run ./cmd/dbrun dsn --json postgres-18 | jq -r '.[0].url')"
+
+The command prints where its report is. `REPORT.md` holds the differences, and
+`results.tsv` holds one line for each type, format and driver. `-seed` sets the
+random values, so that a run can be made again, and `-types int4,bytea` limits a
+run to some types. W63 in `docs/BACKLOG.md` lists the differences that are known.
+Run it after a change to a PostgreSQL driver or to `drivers/pgwire/pgshared`, and
+after an update of tblfmt.
+
 `contrib/` keeps only the scripts that usql runs against a database and the
 client setup for a few drivers. Sample `config.yaml`, `usqlrc` and `usqlpass`
 files are in `_samples/`.

@@ -25,7 +25,7 @@ Read these first. Some of them can stop the release.
   off unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.15.0, transit v0.4.0 and rline v0.1.0, all in
+- usql requires dbmeta v0.15.2, transit v0.5.0 and rline v0.1.0, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -36,6 +36,10 @@ Read these first. Some of them can stop the release.
   go-sqlite3 into the executable. Building with `-tags libsqlite3` fixes it,
   and that changes the SQLite of the release builds. Ken decides how (W40).
   This stops the release until he does.
+- Ctrl-C ends usql. It cancels the query, and then rline raises the signal again
+  and the process ends. The same happens with Ctrl-C in the pager. rline v0.1.0
+  watches SIGINT for the life of the session, and the rline session was told on
+  2026-10-29. This stops the release until rline fixes it.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
@@ -105,6 +109,29 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 - The command line has `--uset NAME=VALUE`, and `-q` is `--uset quiet=on`. `--set`
   and `-v` give script variables only.
 
+### The pager
+
+The pager moved out of tblfmt into the new package `pager` of usql (W64).
+usql requires tblfmt v0.20.0, which has no pager. All
+the output of an entry goes through it: the results of a query, the describe
+commands, `\?`, `\drivers`, `\echo`, and the listings of `\set`, `\uset`,
+`\pset` and `\cset`.
+
+- usql holds the output of an entry until it is as tall as the terminal or
+  wider than it. Then it starts the pager, and gives it the held output and the
+  rest. Output that fits goes to the terminal when the entry ends. Every format
+  pages, CSV and JSON as well.
+- The pager writes to the terminal, so less pages, takes its keys and draws its
+  colors. Before, it wrote through the line editor and acted like cat.
+- The shell runs the pager, so `PAGER="less -S"` works.
+- `\pset pager off`, `on` and `always` and `\pset pager_min_lines` apply to all
+  output. pager_min_lines is the number of lines the output must have before the
+  pager starts, as in psql.
+- The pager runs only when standard output is a terminal. `\o`, `\g FILE`,
+  `\g |command` and `\watch` do not page.
+- `\timing` prints the time after the pager exits, as psql does.
+- An error goes after the output of its entry, not into the middle of it.
+
 ### The fields of a driver
 
 What describes a database moved from `drivers.Driver` to dbmeta (D5):
@@ -133,7 +160,24 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Drivers
 
-- postgres:// opens through pgx. lib/pq is the libpq driver.
+- postgres:// opens through pgx. lib/pq is the libpq driver. A build with
+  libpq and no pgx gives postgres:// and its aliases to libpq, as a build
+  with moderncsqlite and no sqlite3 does for sqlite3. The README lists pgx and
+  postgres in one row, named PostgreSQL, and the package `drivers/postgres`
+  is gone. The build tags `postgres` and `no_postgres` select pgx.
+- `no_pgx` and `no_postgres` leave pgx out of the binary. Redshift,
+  CockroachDB, CrateDB and QuestDB then use libpq, through the new package
+  `drivers/pgwire`.
+- A driver that is built on another driver goes when that driver goes:
+  `no_mysql` leaves out memsql, tidb and vitess, `no_influxdb` leaves out
+  influxql, and `no_flightsql` leaves out gizmosql. `gen.go` reads this from
+  the imports of the driver package.
+- PostgreSQL prints more as psql does, with both drivers (W63). float4 has
+  the digits of a float4, oid, xid, cid and xid8 are aligned to the right,
+  and libpq prints time and timetz as psql does and not as a timestamp.
+- An aligned table measures a cell by grapheme cluster (tblfmt v0.19.2), so
+  an emoji with a skin tone, a flag, a keycap or U+FE0F keeps its column
+  aligned (W63).
 - Cassandra moves to `github.com/xo/cassandra`, and its scheme is
   `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
@@ -160,8 +204,19 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   - godror, which needed cgo and Oracle's client library. Use the oracle
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
-- flightsql moves to arrow-go v18, maxcompute to the ODPS SDK, and hive to
-  gohive v2.
+- flightsql moves to arrow-go v18, and hive to gohive v2.
+- MaxCompute and Tablestore move to `github.com/xo/dbimp` (dbimp v0.21.1,
+  dburl v0.54.0). The URLs are `maxcompute://id:key@host/project` and
+  `tablestore://id:secret@host/instance`, and every earlier URL must change.
+  A host that is not `service.<region>.maxcompute.aliyun.com` needs the
+  option `region`. A Tablestore host of the form `instance.region` gets the
+  suffix `.ots.aliyuncs.com`. The scheme and the build tag of Tablestore are
+  `tablestore`, with `ots` and `ot` as aliases, and the tag `ots` is gone.
+  Neither driver has parameters or transactions. MaxCompute writes each
+  argument into the statement, and the server cuts a result at 10,000 rows
+  with no error. Tablestore sends one statement in each request and holds the
+  whole result in memory. Neither ran against the hosted service through usql.
+  Check each by hand before the release: a query and a wrong credential.
 - Avatica moves to `github.com/xo/dbimp` (W39). Its URL is
   `avatica://user:password@host:port` and not `http://`. Check it against
   the standalone server and Phoenix.
@@ -191,6 +246,12 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 - The Releases badge drops `sort=semver`, on which shields.io times out.
 - The README ends with the bar of links to the sister projects.
 - The backlog gains W28 to W38.
+- `internal/cmd/pgcompare` compares the output of every PostgreSQL type with
+  psql (W63).
+- `gen.go` lists Trino and Presto in a fixed place in the README table of the
+  base drivers. Before, the two rows changed places on each run.
+- When the command of `\g |command` quits before it reads all the output, usql
+  closes the pipe and waits for the command. Before, it left both.
 
 ## What to check by hand
 
@@ -292,6 +353,21 @@ At a terminal:
 - `\e` and `\e FILE`, with editor set
 - help, quit and exit as the first word of an entry
 - a terminal that is resized while an entry is open
+
+### The pager
+
+At a terminal, with PAGER unset, with `PAGER=less`, and with
+`PAGER="less -S"`:
+
+- a query that fits, one that is taller than the terminal, and one with a row
+  that is wider than it
+- `\?`, `\drivers`, `\d` on a large schema, and `\pset` with no arguments
+- `\pset pager off`, `\pset pager always`, and `\pset pager_min_lines 100`
+- q in the pager before the output ends, on a query of a million rows
+- `\uset pager nosuchpager`, which prints the error of the shell
+- CSV and JSON output that is taller than the terminal
+- `\timing on` with a query that pages
+- on Windows, with PAGER unset, which uses more
 
 ### Scripts, pipes and the command line
 

@@ -1,4 +1,4 @@
-//go:build (all || most || influxql) && !no_influxql
+//go:build (all || most || influxql) && !no_influxql && !no_influxdb
 
 package internal
 

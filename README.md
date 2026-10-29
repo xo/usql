@@ -244,10 +244,7 @@ associated database, scheme / build tag, and scheme aliases:
 
 | Database             | Scheme / Tag    | Scheme Aliases                                   | Driver Package / Notes                                                                      |
 | -------------------- | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
-| PostgreSQL           | `postgres`      | `pg`, `pgsql`, `postgresql`                      | [github.com/jackc/pgx/v5/stdlib][d-postgres]                                                |
-| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
-| PostgreSQL PGX       | `pgx`           | `px`                                             | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
+| PostgreSQL           | `pgx`           | `postgres`, `pg`, `pgsql`, `postgresql`, `px`    | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
 | Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`     | [github.com/sijms/go-ora/v3][d-oracle]                                                      |
@@ -256,13 +253,15 @@ associated database, scheme / build tag, and scheme aliases:
 | ClickHouse           | `clickhouse`    | `ch`                                             | [github.com/xo/dbimp/clickhouse][d-clickhouse]                                              |
 | CockroachDB          | `cockroachdb`   | `cr`, `cdb`, `crdb`, `cockroach`                 | [github.com/jackc/pgx/v5/stdlib][d-cockroachdb]                                             |
 | CrateDB              | `cratedb`       | `ct`, `crate`                                    | [github.com/jackc/pgx/v5/stdlib][d-cratedb]                                                 |
-| Amazon Redshift      | `redshift`      | `rs`                                             | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
 | SingleStore MemSQL   | `memsql`        | `me`                                             | [github.com/go-sql-driver/mysql][d-memsql]                                                  |
+| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
+| Amazon Redshift      | `redshift`      | `rs`                                             | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
 | TiDB                 | `tidb`          | `ti`                                             | [github.com/go-sql-driver/mysql][d-tidb]                                                    |
+| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | Vitess Database      | `vitess`        | `vt`                                             | [github.com/go-sql-driver/mysql][d-vitess]                                                  |
 |                      |                 |                                                  |                                                                                             |
-| Alibaba MaxCompute   | `maxcompute`    | `mc`                                             | [github.com/aliyun/aliyun-odps-go-sdk/sqldriver][d-maxcompute] <sup>[¶][f-hosted]</sup>     |
-| Alibaba Tablestore   | `ots`           | `ot`, `tablestore`                               | [github.com/aliyun/aliyun-tablestore-go-sql-driver][d-ots] <sup>[¶][f-hosted]</sup>         |
+| Alibaba MaxCompute   | `maxcompute`    | `mc`                                             | [github.com/xo/dbimp/maxcompute][d-maxcompute] <sup>[¶][f-hosted]</sup>                     |
+| Alibaba Tablestore   | `tablestore`    | `ot`, `ots`                                      | [github.com/xo/dbimp/tablestore][d-tablestore] <sup>[¶][f-hosted]</sup>                     |
 | Amazon Athena        | `athena`        | `s3`, `aws`, `awsathena`                         | [github.com/xo/dbimp/athena][d-athena] <sup>[¶][f-hosted]</sup>                             |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                  | [github.com/xo/dbimp/avatica][d-avatica]                                                    |
 | Apache Drill         | `drill`         | `dl`                                             | [github.com/xo/dbimp/drill][d-drill]                                                        |
@@ -344,7 +343,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-influxql]: https://github.com/xo/dbimp
 [d-libpq]: https://github.com/lib/pq
 [d-libsql]: https://github.com/xo/dbimp
-[d-maxcompute]: https://github.com/aliyun/aliyun-odps-go-sdk
+[d-maxcompute]: https://github.com/xo/dbimp
 [d-memsql]: https://github.com/go-sql-driver/mysql
 [d-moderncsqlite]: https://gitlab.com/cznic/sqlite
 [d-mysql]: https://github.com/go-sql-driver/mysql
@@ -352,10 +351,8 @@ associated database, scheme / build tag, and scheme aliases:
 [d-odbc]: https://github.com/xo/odbc
 [d-opensearch]: https://github.com/xo/dbimp
 [d-oracle]: https://github.com/sijms/go-ora
-[d-ots]: https://github.com/aliyun/aliyun-tablestore-go-sql-driver
 [d-pgx]: https://github.com/jackc/pgx
 [d-pinot]: https://github.com/xo/dbimp
-[d-postgres]: https://github.com/jackc/pgx
 [d-presto]: https://github.com/xo/dbimp
 [d-questdb]: https://github.com/jackc/pgx
 [d-redshift]: https://github.com/jackc/pgx
@@ -367,6 +364,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-sqlite3]: https://github.com/mattn/go-sqlite3
 [d-sqlserver]: https://github.com/microsoft/go-mssqldb
 [d-surrealdb]: https://github.com/xo/dbimp
+[d-tablestore]: https://github.com/xo/dbimp
 [d-tidb]: https://github.com/go-sql-driver/mysql
 [d-trino]: https://github.com/xo/dbimp
 [d-vertica]: https://github.com/vertica/vertica-sql-go
@@ -598,12 +596,12 @@ $ usql cassandra://host/
 $ usql ca://
 
 # connect to an alibaba maxcompute project over https, or over http with tls=false:
-$ usql "mc://accessid:accesskey@service.cn-hangzhou.maxcompute.aliyun.com/api?project=myproject"
-$ usql "mc://accessid:accesskey@host/api?project=myproject&tls=false"
+$ usql "mc://accessid:accesskey@service.cn-hangzhou.maxcompute.aliyun.com/myproject"
+$ usql "mc://accessid:accesskey@host/myproject?region=cn-hangzhou&tls=false"
 
-# Note: the project option is required. The curr_project and scheme options of
-# the previous maxcompute driver no longer work, and any option the driver does
-# not recognize is sent to the server as an SQL hint.
+# connect to an alibaba tablestore instance, where the host
+# myinstance.cn-hangzhou becomes myinstance.cn-hangzhou.ots.aliyuncs.com:
+$ usql "tablestore://accessid:accesssecret@myinstance.cn-hangzhou/myinstance"
 
 # connect to a sqlite database that exists on disk
 $ usql dbname.sqlite3

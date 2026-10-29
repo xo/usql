@@ -1,4 +1,4 @@
-//go:build (!no_base || memsql) && !no_memsql
+//go:build (!no_base || memsql) && !no_memsql && !no_mysql
 
 package internal
 

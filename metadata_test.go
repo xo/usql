@@ -21,8 +21,8 @@ var noModel = map[string]string{
 	"flightsql":  "no model yet",
 	"maxcompute": "no model yet",
 	"odbc":       "cannot have one: ODBC is a bridge to any database, and has no dialect of its own",
-	"ots":        "no model yet",
 	"pinot":      "no model yet",
+	"tablestore": "no model yet",
 	"voltdb":     "no model yet",
 }
 

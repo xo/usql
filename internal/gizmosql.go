@@ -1,4 +1,4 @@
-//go:build (bad || gizmosql) && !no_gizmosql
+//go:build (bad || gizmosql) && !no_gizmosql && !no_flightsql
 
 package internal
 

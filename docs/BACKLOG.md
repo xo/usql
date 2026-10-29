@@ -2861,3 +2861,124 @@ scripts follow. A session of `testdata/cli` records `\uset`.
 What a setting is not: it is not a variable, so `:pager` no longer interpolates.
 `ROW_COUNT` stays a script variable, because usql sets it for scripts.
 
+## W62. A compatibility mode for the output of psql and of the old usql
+
+Source: Ken, on 2026-10-22, from the comparison of W63. When the overhaul of
+the input (rline, transit) is done, a setting of `\uset` turns on a strict
+compatibility mode, so that usql prints as psql does, or as the usql before
+this release did. The default stays as it is.
+
+What the mode changes, from the comparison with psql 18.6:
+
+- A bool prints as `t` and `f`, as psql prints it. usql prints `true` and
+  `false`, and keeps that by default.
+- A date prints as `2012-10-28`. usql prints `2012-10-28T00:00:00Z`.
+- A timestamp prints as `2012-10-28 10:00:00`, and a year before 1 AD as
+  `4713-01-01 BC`. usql prints RFC 3339 and a negative year, such as
+  `-4712-01-01T00:00:00Z`.
+- A timestamptz prints in the `TimeZone` of the session, as psql does. With pgx,
+  usql converts it to the zone of the machine, such as `+07:00`. With libpq it
+  stays in the zone of the session, so the two drivers differ today. For an old
+  date, the zone has an offset with seconds, such as `+07:07:12`, and RFC 3339
+  drops the seconds of the offset.
+- The aligned table: the encodings that wait on Ken in W63, such as the case of
+  the hexadecimal digits of an escape, if he takes them for the mode and not for
+  the default. The mode changes how a value is encoded and never the alignment.
+  psql counts each code point alone, so its columns break on an emoji, and usql
+  keeps its own alignment in the mode.
+
+CSV does not change in the mode. usql quotes every field that holds a space,
+and psql quotes a field only when it must. Both are valid CSV, and CSV is read by
+a program and not by a person, so Ken keeps the quoting of Go.
+
+## W63. Print every PostgreSQL type as psql prints it
+
+Source: Ken, on 2026-10-22. `internal/cmd/pgcompare` runs values of every
+built-in type of PostgreSQL through psql and through usql with pgx and libpq,
+and compares the aligned, unaligned and CSV output. CONTRIBUTING.md says how to
+run it.
+
+Fixed on 2026-10-22, in `drivers/pgwire/pgshared`, which both drivers use:
+
+- float4 scans into a float32. pgx read it as a float64, which printed with the
+  digits of a float64, such as `4.25285925287433e+37` for `4.2528593e+37`.
+- oid, xid and cid scan into a uint32, and xid8 into a uint64, so that libpq
+  aligns them to the right.
+- time and timetz print as psql prints them with libpq too. lib/pq reads them as
+  a time.Time, which printed as `0000-01-01T06:35:11Z`.
+
+Open:
+
+- numeric and money align to the left, and psql aligns them to the right. Their
+  text holds more digits than a Go number, so usql cannot scan them into one.
+  The tblfmt session was asked on 2026-10-22 for a type of tblfmt that is text,
+  aligned to the right, and a string in JSON. When tblfmt releases it,
+  `pgshared.Dest` scans NUMERIC, MONEY and 790 (the OID that pgx gives for
+  money) into it.
+- usql drops the control characters U+0000 to U+0006 and U+000E to U+001A from
+  every value that it prints, in every format, also to a pipe. `-o FILE` keeps
+  them. rline drops them in `term.appendBuf`, because usql writes its output
+  through the line editor. With color off, as on a pipe, rline's
+  `term.appendEsc` also drops an SGR escape sequence whole, so `a\x1b[31mb`
+  prints as `ab`. It is a loss of data. The rule comes from isocline, and rline
+  keeps it on purpose (rline's D4). rline records it as its item 42, and Ken
+  decides the fix. usql does not work around it in the meantime.
+- bytea prints as raw bytes with both drivers. Pull request 596 fixes it with a
+  `sql.Null` of a named type that prints in the hex format of psql.
+- lib/pq names an xid8 column with the empty string, so libpq cannot find it,
+  and it stays aligned to the left.
+- The aligned table. Ken decides each of these:
+  - usql pads the last column with a space where psql does not (tblfmt's D28).
+  - usql escapes a character of zero width, such as U+200D, U+200B, U+FEFF and
+    U+202E, as `\u200d`. psql prints it as it is. An emoji that joins people
+    with U+200D then shows its escapes.
+  - usql writes BEL as `\a` and DEL as `\u007f`, where psql writes `\x07` and
+    `\x7F`. psql writes the hexadecimal digits of an escape in upper case, such
+    as `\x1B` and `\u009B`, and usql in lower case.
+  - psql expands a tab in a cell to the next multiple of eight columns. usql
+    writes the tab, and tblfmt counts the columns to the next tab stop, so the
+    table is aligned in a terminal. It is not aligned where a tab has another
+    width, such as in Markdown.
+- Fixed on 2026-10-28 by tblfmt v0.19.2, which usql takes: tblfmt measured a
+  cell by code point, so an emoji broke the column. `👍🏽` (U+1F44D U+1F3FD)
+  counted as 4 and a terminal draws it as 2. tblfmt now measures by grapheme
+  cluster, and counts a narrow base with U+FE0F, such as `❤️` and `1️⃣`, as 2
+  (tblfmt's D39 and D41). psql has the same fault, and Ken wants the alignment
+  right and not as psql has it. The width that a terminal draws differs between
+  terminals: Ghostty, kitty, WezTerm and iTerm2 draw a cluster as one, and xterm
+  and some tmux setups count each code point.
+- pg_ndistinct, pg_dependencies, pg_mcv_list, the pg_brin types and gtsvector are
+  not compared, because PostgreSQL takes no literal of them.
+- JSON is not compared, because psql has no JSON output.
+
+## W64. Page all output through usql's own pager
+
+Source: Ken, on 2026-10-28 and 2026-10-29. The pager did not work. tblfmt
+started it with `exec.Command(pagerCmd)`, so `PAGER="less -S"` failed. Its
+output went through the line editor and not to the terminal, so less acted like
+cat. Only the aligned and unaligned formats paged, and the decision used one
+batch of rows. `\?` and `\drivers` paged with a helper of their own that
+ignored `\pset pager off` and the size of the terminal. Gemini Pro and DeepSeek
+Pro both said that paging does not belong in tblfmt, and Ken chose a package of
+usql.
+
+Done in usql on 2026-10-29: the package `pager`, and every entry writes through
+`Handler.Stdout`. RELEASE.md lists what changed. tblfmt v0.20.0 removed its
+pager on 2026-10-29 (tblfmt's D42), and usql takes it.
+
+Open:
+
+- rline gives the terminal to a child and takes it back, and reports the size
+  of the terminal. The rline session was asked on 2026-10-29, and staged
+  `Session.Release` and `Session.Size` for Ken (rline's D48, proposed). When
+  rline releases them, usql runs the pager inside `Release`, measures the
+  terminal with `Size`, and drops x/term. Until then usql passes `os.Stdout`
+  to the pager and measures it with x/term, as `\e` does.
+- Ctrl-C ends usql, in a query and in the pager. rline v0.1.0 watches SIGINT for
+  the life of the session, and raises it again after it restores the terminal.
+  The rline session was told on 2026-10-29. Its fix, staged with D48, watches
+  the signals only while the terminal is in raw mode. usql does not work around
+  it.
+- When the shell cannot find the pager, the output of that entry is lost, and
+  usql prints the error of the shell and the exit status. When the shell itself
+  does not start, the output goes to the terminal.

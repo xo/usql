@@ -1,4 +1,4 @@
-//go:build (!no_base || vitess) && !no_vitess
+//go:build (!no_base || vitess) && !no_vitess && !no_mysql
 
 package internal
 

@@ -1,11 +1,13 @@
 // Package pgx defines and registers usql's PostgreSQL PGX driver.
 //
-// dburl opens pgx:// URLs with it. The postgres, redshift, cockroachdb,
-// cratedb and questdb drivers register the same driver under their own names,
-// through Driver.
+// dburl opens pgx:// and postgres:// URLs with it, so it registers under both
+// schemes. When the build has no pgx, internal gives the postgres scheme to
+// the libpq driver. The redshift, cockroachdb, cratedb and questdb drivers
+// register the same driver under their own names, through pgwire.
 //
 // See: https://github.com/jackc/pgx
 // Group: base
+// Tags: postgres
 package pgx
 
 import (
@@ -21,11 +23,13 @@ import (
 	"github.com/jackc/pgx/v5/stdlib" // DRIVER
 	"github.com/xo/dburl"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/drivers/pgwire/pgshared"
 	"github.com/xo/usql/text"
 )
 
 func init() {
 	drivers.Register("pgx", Driver())
+	drivers.Register("postgres", Driver())
 }
 
 // Driver returns the pgx driver. dburl opens a database that speaks the
@@ -60,6 +64,7 @@ func Driver() drivers.Driver {
 				return stdlib.OpenDB(*config), nil
 			}, nil
 		},
+		ColumnTypes: pgshared.Dest,
 		Err: func(err error) (string, string) {
 			var e *pgconn.PgError
 			if errors.As(err, &e) {

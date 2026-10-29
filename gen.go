@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -139,11 +140,16 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	for _, v := range known {
 		knownStr += fmt.Sprintf("\n%q: %q, // %s", v.Tag, v.Name, v.Pkg)
 	}
-	// a driver's extra tags report the same driver
+	// a driver's extra tags report the same driver, under the folded scheme's
+	// name when the tag is one
 	var extra []string
 	for _, v := range known {
 		for _, tag := range v.Tags {
-			extra = append(extra, fmt.Sprintf("\n%q: %q, // %s", tag, v.Name, v.Pkg))
+			name := v.Name
+			if slices.ContainsFunc(v.Folded, func(s dburl.Scheme) bool { return s.Name == tag }) {
+				name = tag
+			}
+			extra = append(extra, fmt.Sprintf("\n%q: %q, // %s", tag, name, v.Pkg))
 		}
 	}
 	sort.Strings(extra)
@@ -157,8 +163,20 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 		return err
 	}
 	// write <tag>.go
+	byTag := make(map[string]DriverInfo)
 	for _, v := range known {
-		tags, err := buildConstraint(v.Group, v.Tag, v.Tags, v.Build)
+		byTag[v.Tag] = v
+	}
+	for _, v := range known {
+		// a driver that is built on another driver, as tidb is on mysql, goes
+		// when that driver goes
+		var also []string
+		for _, imp := range v.Imports {
+			if d, ok := byTag[imp]; ok {
+				also = append(append(also, d.Tag), d.Tags...)
+			}
+		}
+		tags, err := buildConstraint(v.Group, v.Tag, v.Tags, also, v.Build)
 		if err != nil {
 			return err
 		}
@@ -174,7 +192,7 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 	// not drivers: they register no URL scheme and they are absent from
 	// KnownBuildTags and from the driver table in the README.
 	for _, v := range features {
-		tags, err := buildConstraint(v.Group, v.Tag, nil, v.Build)
+		tags, err := buildConstraint(v.Group, v.Tag, nil, nil, v.Build)
 		if err != nil {
 			return err
 		}
@@ -195,10 +213,13 @@ func writeInternal(wd string, drivers ...map[string]DriverInfo) error {
 // also are further tags that select the driver, taken from a Tags: entry. Each
 // selects it as its own tag does, and each no_ form excludes it.
 //
+// deps are the tags of the drivers that the driver is built on. Each no_ form
+// excludes it.
+//
 // extra is a constraint of its own, taken from a Build: entry. A driver or a
 // feature that cannot compile everywhere states so there, and it is combined
 // here rather than in build.sh, so that `go build -tags ...` excludes it too.
-func buildConstraint(group, tag string, also []string, extra string) (string, error) {
+func buildConstraint(group, tag string, also, deps []string, extra string) (string, error) {
 	names := strings.Join(append([]string{tag}, also...), " || ")
 	var tags string
 	switch group {
@@ -213,7 +234,7 @@ func buildConstraint(group, tag string, also []string, extra string) (string, er
 	default:
 		return "", fmt.Errorf("%s has invalid group %q", tag, group)
 	}
-	for _, t := range append([]string{tag}, also...) {
+	for _, t := range append(append([]string{tag}, also...), deps...) {
 		tags += " && !no_" + t
 	}
 	if extra != "" {
@@ -301,6 +322,13 @@ type DriverInfo struct {
 	// Tags are further build tags that select the driver, parsed from the doc
 	// comment's "Tags:" entry.
 	Tags []string
+	// Folded are the dburl schemes among Tags. The driver registers under
+	// each of them as well, and its README row lists them and their aliases.
+	Folded []dburl.Scheme
+	// Imports are the packages under drivers that the driver imports, by
+	// directory name. An import of another driver excludes this driver when
+	// that one is excluded.
+	Imports []string
 	// Pkg is the imported driver package, taken from the import tagged with
 	// DRIVER.
 	Pkg string
@@ -384,13 +412,37 @@ func parseDriverInfo(tag, filename string) (DriverInfo, error) {
 	if tagsm := tagsRE.FindAllStringSubmatch(comment, -1); tagsm != nil {
 		tags = strings.Fields(strings.ReplaceAll(tagsm[0][1], ",", " "))
 	}
+	// a tag that is a scheme folds that scheme into the row, and the row takes
+	// the name of the database from the scheme that names the dialect
+	desc := scheme.Desc
+	var folded []dburl.Scheme
+	for _, t := range tags {
+		if s, ok := schemeFor(t); ok && s.Name == t {
+			folded = append(folded, s)
+			if s.Name == scheme.Dialect {
+				desc = s.Desc
+			}
+		}
+	}
+	var imports []string
+	for _, imp := range f.Imports {
+		path, err := strconv.Unquote(imp.Path.Value)
+		if err != nil {
+			return DriverInfo{}, err
+		}
+		if dir, ok := strings.CutPrefix(path, "github.com/xo/usql/drivers/"); ok && !strings.Contains(dir, "/") {
+			imports = append(imports, dir)
+		}
+	}
 	return DriverInfo{
 		Tag:        tag,
 		Driver:     scheme.Name,
 		Name:       scheme.Name,
 		Tags:       tags,
+		Folded:     folded,
+		Imports:    imports,
 		Pkg:        scheme.GoPackage,
-		Desc:       scheme.Desc,
+		Desc:       desc,
 		URL:        scheme.DriverURL,
 		CGO:        scheme.RequiresCGO,
 		Deployment: scheme.Deployment,
@@ -506,9 +558,12 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 		drivers = append(drivers, v)
 	}
 	sort.Slice(drivers, func(i, j int) bool {
-		switch {
-		case drivers[i].Group == "base":
-			return baseOrder[drivers[i].Driver] < baseOrder[drivers[j].Driver]
+		if drivers[i].Group == "base" {
+			a, b := baseRank(drivers[i].Tag), baseRank(drivers[j].Tag)
+			if a != b {
+				return a < b
+			}
+			return drivers[i].Tag < drivers[j].Tag
 		}
 		return strings.ToLower(drivers[i].Desc) < strings.ToLower(drivers[j].Desc)
 	})
@@ -545,12 +600,19 @@ func buildRows(m map[string]DriverInfo, widths []int) ([][]string, []int) {
 
 func buildAliases(v DriverInfo) string {
 	name := v.Tag
-	_, aliases := dburl.SchemeNameAndAliases(name)
-	for i := 0; i < len(aliases); i++ {
-		if aliases[i] == v.Tag {
-			aliases[i] = v.Driver
+	_, own := dburl.SchemeNameAndAliases(name)
+	for i := 0; i < len(own); i++ {
+		if own[i] == v.Tag {
+			own[i] = v.Driver
 		}
 	}
+	// the folded schemes come first, because the row is named for them
+	var aliases []string
+	for _, s := range v.Folded {
+		_, a := dburl.SchemeNameAndAliases(s.Name)
+		aliases = append(append(aliases, s.Name), a...)
+	}
+	aliases = append(aliases, own...)
 	// replacing the tag with the driver name can repeat a name, as it does for
 	// libpq, whose scheme pq is also among the aliases
 	seen := make(map[string]bool)
@@ -688,25 +750,24 @@ func decodeCommandDescs(funcName string, doc string) ([]desc, error) {
 	return descs, nil
 }
 
-// baseOrder is the order the base drivers are listed in, in the README. Add an
-// entry when a driver joins the base group. One that is missing sorts as 0 and
-// ties with postgres, and sort.Slice is not stable, so the two rows swap on
-// every run and `go generate` churns the README.
-var baseOrder = map[string]int{
-	"postgres":    0,
-	"pgx":         1,
-	"mysql":       2,
-	"sqlserver":   3,
-	"oracle":      4,
-	"sqlite3":     5,
-	"duckdb":      6,
-	"clickhouse":  7,
-	"cockroachdb": 8,
-	"cratedb":     9,
-	"redshift":    10,
-	"memsql":      11,
-	"tidb":        12,
-	"vitess":      13,
+// baseOrder is the order of the first base drivers in the README, by tag. The
+// other base drivers follow them in the order of their tags.
+var baseOrder = []string{
+	"pgx",
+	"mysql",
+	"sqlserver",
+	"oracle",
+	"sqlite3",
+	"duckdb",
+}
+
+// baseRank returns the place of tag in baseOrder, or len(baseOrder) when it is
+// not there.
+func baseRank(tag string) int {
+	if i := slices.Index(baseOrder, tag); i != -1 {
+		return i
+	}
+	return len(baseOrder)
 }
 
 // sections are the section names for meta commands.

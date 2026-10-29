@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/xo/usql/drivers"
-	"github.com/xo/usql/drivers/sqlite3/sqshared"
+	"github.com/xo/usql/drivers/sqwire/sqshared"
 	"modernc.org/sqlite" // DRIVER
 )
 

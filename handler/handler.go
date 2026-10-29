@@ -37,7 +37,9 @@ import (
 	"github.com/xo/usql/metacmd/charts"
 	"github.com/xo/usql/metacmd/complete"
 	"github.com/xo/usql/metacmd/describe"
+	"github.com/xo/usql/pager"
 	"github.com/xo/usql/text"
+	"golang.org/x/term"
 )
 
 // Handler is a input process handler.
@@ -94,6 +96,10 @@ type Handler struct {
 	tx *sql.Tx
 	// out file or pipe
 	out io.WriteCloser
+	// page is where the entry that runs now writes its output. Stdout makes it
+	// the first time an entry writes, and endPage closes it when the entry
+	// ends.
+	page *pager.Writer
 }
 
 // New returns a handler that reads its input from r, and talks to the user
@@ -188,21 +194,26 @@ func (h *Handler) SetTiming(timing bool) {
 // Run reads the input, and runs each statement and meta command in turn, until
 // the input ends.
 func (h *Handler) Run() error {
-	stdout, stderr := h.l, h.l.Stderr()
+	stderr := h.l.Stderr()
 	// display welcome info
 	if h.iactive && env.Setting("quiet") == "off" {
 		// logo
 		if typ := env.TermGraphics(); typ.Available() {
-			if err := typ.Encode(stdout, text.Logo); err != nil {
+			if err := typ.Encode(h.l, text.Logo); err != nil {
 				return err
 			}
 		}
 		// welcome text
-		fmt.Fprintln(stdout, text.WelcomeDesc)
-		fmt.Fprintln(stdout)
+		fmt.Fprintln(h.l, text.WelcomeDesc)
+		fmt.Fprintln(h.l)
 	}
+	// the output of the last entry goes to the pager or the terminal before
+	// the handler stops
+	defer h.endPage()
 	var lastErr error
 	for {
+		// the pager of the last entry must exit before the next line is read
+		h.endPage()
 		it, err := h.src.Next()
 		switch {
 		case errors.Is(err, rline.ErrInterrupted):
@@ -212,7 +223,7 @@ func (h *Handler) Run() error {
 		case errors.Is(err, io.EOF):
 			// -c sends what is left in the buffer at the end of its text
 			if h.singleLineMode && !h.buf.Empty() {
-				stop, err := h.send(stdout, stderr, metacmd.Option{})
+				stop, err := h.send(h.Stdout(), stderr, metacmd.Option{})
 				if err != nil {
 					lastErr = err
 				}
@@ -229,7 +240,7 @@ func (h *Handler) Run() error {
 		case feed.Statement:
 			if h.iactive && h.buf.Empty() && !it.Terminated && isHelpQuitExit(it.Text) {
 				if strings.EqualFold(strings.TrimSpace(it.Text), text.HelpPrefix) {
-					fmt.Fprintln(stdout, text.HelpDesc)
+					fmt.Fprintln(h.Stdout(), text.HelpDesc)
 					continue
 				}
 				return nil
@@ -240,7 +251,7 @@ func (h *Handler) Run() error {
 			}
 		case feed.Command:
 			var cont bool
-			opt, cont, lastErr = h.apply(stdout, stderr, it)
+			opt, cont, lastErr = h.apply(h.Stdout(), stderr, it)
 			switch {
 			case cont:
 				continue
@@ -253,7 +264,7 @@ func (h *Handler) Run() error {
 				continue
 			}
 		}
-		stop, err := h.send(stdout, stderr, opt)
+		stop, err := h.send(h.Stdout(), stderr, opt)
 		if err != nil {
 			lastErr = err
 		}
@@ -277,8 +288,13 @@ func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, erro
 		return false, nil
 	}
 	out := stdout
-	if h.out != nil {
+	switch {
+	case h.out != nil:
 		out = h.out
+	case opt.Exec == metacmd.ExecWatch:
+		// \watch writes until it is interrupted, so a pager would never see
+		// the end of its output
+		out = h.l
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -286,6 +302,8 @@ func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, erro
 	if err == nil {
 		return false, nil
 	}
+	// the error goes after the output, not into the middle of it
+	h.endPage()
 	fmt.Fprintln(stderr, "error:", err)
 	err = WrapErr(h.lastExec, err)
 	if env.Setting("on_error_stop") == "on" {
@@ -318,6 +336,8 @@ func (h *Handler) apply(stdout, stderr io.Writer, it feed.Item) (metacmd.Option,
 	}
 	opt, unread, err := f(h)
 	if err != nil && !errors.Is(err, rline.ErrInterrupted) {
+		// the error goes after the output, not into the middle of it
+		h.endPage()
 		fmt.Fprintln(stderr, "error:", err)
 		return metacmd.Option{}, true, WrapErr(cmd, err)
 	}
@@ -812,6 +832,8 @@ func (h *Handler) Password(dsn string) (string, error) {
 	if u.User != nil {
 		user = u.User.Username()
 	}
+	// the output so far goes out before the question
+	h.endPage()
 	pass, err := h.l.Password(text.EnterPassword)
 	if err != nil {
 		return "", err
@@ -846,6 +868,8 @@ func (h *Handler) ReadVar(typ, prompt string) (string, error) {
 	default:
 		return "", text.ErrInvalidType
 	}
+	// the output so far goes out before the question
+	h.endPage()
 	var v string
 	var err error
 	if masked {
@@ -897,6 +921,8 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 	if !h.l.Interactive() {
 		return "", text.ErrNotInteractive
 	}
+	// the output so far goes out before the question
+	h.endPage()
 	var err error
 	if err = drivers.CanChangePassword(h.u); err != nil {
 		return "", err
@@ -962,7 +988,7 @@ func (h *Handler) Print(s string, v ...interface{}) {
 	if env.Setting("quiet") == "on" {
 		return
 	}
-	fmt.Fprintln(h.l, fmt.Sprintf(s, v...))
+	fmt.Fprintln(h.Stdout(), fmt.Sprintf(s, v...))
 }
 
 // doExecWatch repeatedly executes a query against the database.
@@ -1063,6 +1089,8 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 			s += " (%v)"
 			v = append(v, d.Round(1*time.Millisecond))
 		}
+		// as psql does, the time goes to the terminal after the pager exits
+		h.endPage()
 		fmt.Fprintln(h.l, fmt.Sprintf(s, v...))
 	}
 	return nil
@@ -1088,6 +1116,8 @@ func (h *Handler) doExecSingle(ctx context.Context, w io.Writer, opt metacmd.Opt
 			s += " (%v)"
 			v = append(v, d.Round(1*time.Millisecond))
 		}
+		// as psql does, the time goes to the terminal after the pager exits
+		h.endPage()
 		fmt.Fprintln(h.l, fmt.Sprintf(s, v...))
 	}
 	return nil
@@ -1186,8 +1216,6 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 			}
 			w = pipe
 		}
-	} else if opt.Exec != metacmd.ExecWatch {
-		params["pager_cmd"] = env.Setting("pager")
 	}
 	// set up column type config
 	var extra []tblfmt.Option
@@ -1225,13 +1253,12 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		}
 	}
 	// encode and handle error conditions
-	switch err := tblfmt.EncodeAll(w, resultSet, params, extra...); {
+	switch err = tblfmt.EncodeAll(w, resultSet, params, extra...); {
 	case err != nil && cmd != nil && errors.Is(err, syscall.EPIPE):
-		// broken pipe means pager quit before consuming all data, which might be expected
-		return nil
-	case err != nil:
-		return err
-	case params["format"] == "aligned":
+		// the command of \g |command quit before it read all the output, as
+		// head does
+		err = nil
+	case err == nil && params["format"] == "aligned":
 		fmt.Fprintln(w)
 	}
 	if pipe != nil {
@@ -1490,9 +1517,62 @@ func (h *Handler) metadata(ctx context.Context) (*dbmeta.Meta, error) {
 // GetOutput gets the output writer.
 func (h *Handler) GetOutput() io.Writer {
 	if h.out == nil {
-		return h.l
+		return h.Stdout()
 	}
 	return h.out
+}
+
+// Stdout returns where the entry that runs now writes its output. When the
+// output is taller or wider than the terminal, it goes to the pager, as \pset
+// pager and \pset pager_min_lines say.
+func (h *Handler) Stdout() io.Writer {
+	if h.page == nil {
+		h.page = pager.New(h.l, pagerConfig())
+	}
+	return h.page
+}
+
+// endPage writes the output of the entry that ran to the terminal, or waits for
+// its pager to exit.
+func (h *Handler) endPage() {
+	if h.page == nil {
+		return
+	}
+	page := h.page
+	h.page = nil
+	if err := page.Close(); err != nil {
+		fmt.Fprintln(h.l.Stderr(), "error:", err)
+	}
+}
+
+// pagerConfig returns the configuration of the pager from the settings. The
+// pager runs only when standard output is a terminal.
+func pagerConfig() pager.Config {
+	params := env.Vars().Print()
+	mode, command := params["pager"], env.Setting("pager")
+	fd := int(os.Stdout.Fd())
+	if mode == "off" || command == "" || !term.IsTerminal(fd) {
+		return pager.Config{}
+	}
+	width, height, _ := term.GetSize(fd)
+	if c, _ := strconv.Atoi(params["columns"]); c > 0 {
+		width = c
+	}
+	minLines, _ := strconv.Atoi(params["pager_min_lines"])
+	shell, param := env.Getshell()
+	if shell == "" {
+		return pager.Config{}
+	}
+	return pager.Config{
+		Command:  command,
+		Shell:    []string{shell, param},
+		Always:   mode == "always",
+		Width:    width,
+		Height:   height,
+		MinLines: minLines,
+		Stdout:   os.Stdout,
+		Stderr:   os.Stderr,
+	}
 }
 
 // SetOutput sets the output writer.
