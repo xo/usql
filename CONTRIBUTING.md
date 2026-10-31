@@ -200,6 +200,33 @@ So the savings do not add up to the size of the binary.
 The run takes one build for each driver. W32 in `docs/BACKLOG.md` holds the
 last measurement, and when to measure again.
 
+## Regenerating the examples of the README
+
+`gen.go` fills each code block of `README.md` that has an `<!-- EXAMPLE name -->`
+marker on the line above it with what usql prints. The examples are in
+`internal/readme/examples.go`. Edit them there, and never in the README.
+
+The examples that need a database run against SQL Server, with the fixture
+`examples` of dbmeta's `dbrun`: the tables `authors` and `books`. `gen.go`
+loads the fixture and reads the URL itself, but it does not start a server.
+Check out dbmeta next to usql, start the server, and then regenerate:
+
+    (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun start sqlserver-2025)
+    go run gen.go -examples
+
+The run builds usql with the `most` group and types each example into it
+under a pseudo-terminal, so it takes some minutes. The README shows `pass` for
+the password and `localhost` for the host and port.
+
+To compare the examples on another base database, name its `dbrun` selector,
+and write the blocks to a directory. The README is left as it is:
+
+    go run gen.go -examples -examples-db oracle-26ai -examples-out /tmp/oracle
+
+The selectors are `postgres-18`, `mysql-26.7`, `mariadb-13.0`,
+`sqlserver-2025`, `oracle-26ai`, `sqlite3` and `duckdb`. Stop each server that
+you started when you finish.
+
 ## Putting a feature behind a build tag
 
 A package that is not a driver can still be a large part of the size of the

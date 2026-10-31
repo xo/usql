@@ -173,7 +173,7 @@ func New(cliargs []string) ContextExecutor {
 	sf(flags, &args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
 	sf(flags, &args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
 	// uset
-	sf(flags, &args.Usets, "uset", "", `set setting NAME of `+text.CommandName+` to VALUE (see \uset command)`, "NAME=VALUE")
+	sf(flags, &args.Usets, "uset", "U", `set setting NAME of `+text.CommandName+` to VALUE (see \uset command)`, "NAME=VALUE")
 	// cset
 	sf(flags, &args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
 	// pset
@@ -590,7 +590,8 @@ func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func
 func sf(flags *pflag.FlagSet, v *[]string, name, short, usage, placeholder string, vals ...string) {
 	f := flags.VarPF(vs{v, vals, placeholder}, name, short, usage)
 	if placeholder == "" {
-		f.DefValue, f.NoOptDefVal = "true", "true"
+		// a flag with no value is a switch, and is off until it is given
+		f.NoOptDefVal = "true"
 	}
 }
 

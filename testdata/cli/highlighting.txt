@@ -84,7 +84,7 @@ recv:
 \n
 ---+-----\r
 \n
- 1 | two \r
+ 1 | two\r
 \n
 (1 row)\r
 \n
@@ -188,7 +188,7 @@ recv:
 \n
 ---\r
 \n
- 1 \r
+ 1\r
 \n
 (1 row)\r
 \n

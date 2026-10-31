@@ -212,28 +212,25 @@ $ go install -tags all github.com/xo/usql@main
 The list of drivers that `usql` was built with can be displayed with the
 [`\drivers` command][commands]:
 
+<!-- EXAMPLE drivers -->
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
 
-# build excluding the base drivers, and including cassandra and moderncsqlite
-$ go build -tags 'no_postgres no_oracle no_sqlserver no_sqlite3 cassandra moderncsqlite'
+# build excluding the base drivers, and including cassandra, moderncsqlite and mysql
+$ go build -tags 'no_base cassandra moderncsqlite mysql'
 
 # show built driver support
 $ ./usql -c '\drivers'
 Available Drivers:
-  cassandra [ca, cass, cql, datastax, scy, scylla]
-  memsql (mysql) [me]
-  moderncsqlite [mq, sq, file, sqlite, sqlite3, modernsqlite]
+  cassandra [ca, cql, scy, cass, scylla, datastax]
+  moderncsqlite [sq, mq, sqlite, sqlite3, modernsqlite]
   mysql [my, maria, aurora, mariadb, percona]
-  tidb (mysql) [ti]
-  vitess (mysql) [vt]
 ```
 
-The above shows that `usql` was built with only the `mysql`, `cassandra`, and `moderncsqlite` drivers. The output above reflects information
-about the drivers available to `usql`, specifically the internal driver name,
-its primary URL scheme, the driver's available scheme aliases (shown in
-`[...]`), and the real/underlying driver (shown in `(...)`) for wire compatible
-drivers.
+The above shows that `usql` was built with only the `cassandra`,
+`moderncsqlite` and `mysql` drivers. Each line names the scheme of a driver,
+and its aliases in `[...]`. Without `sqlite3`, `moderncsqlite` also answers to
+the `sqlite3` scheme and its aliases.
 
 ### Supported Database Schemes and Aliases
 
@@ -423,6 +420,7 @@ $ usql pg://localhost/ -f script.sql
 
 Supported command-line options:
 
+<!-- EXAMPLE help -->
 ```sh
 $ usql --help
 usql, the universal command-line interface for SQL databases
@@ -442,7 +440,7 @@ Flags:
   -W, --password                            force password prompt (should happen automatically)
   -1, --single-transaction                  execute as a single transaction (if non-interactive)
   -v, --set NAME=VALUE                      set script variable NAME to VALUE (see \set command, aliases: --var --variable)
-      --uset NAME=VALUE                     set setting NAME of usql to VALUE (see \uset command)
+  -U, --uset NAME=VALUE                     set setting NAME of usql to VALUE (see \uset command)
   -N, --cset NAME=DSN                       set named connection NAME to DSN (see \cset command)
   -P, --pset VAR=ARG                        set printing option VAR to ARG (see \pset command)
   -F, --field-separator FIELD-SEPARATOR     field separator for unaligned and CSV output (default "|" and ",")
@@ -644,43 +642,32 @@ defining connection names.
 The interactive interpreter reads queries and [backslash meta (`\`) commands][commands],
 sending the query to the connected database:
 
+<!-- EXAMPLE queries -->
 ```sh
-$ usql sqlite://example.sqlite3
-Connected with driver sqlite3 (SQLite3 3.17.0)
+$ usql sqlserver://sa:pass@localhost
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-sq:example.sqlite3=> create table test (test_id int, name string);
-CREATE TABLE
-sq:example.sqlite3=> insert into test (test_id, name) values (1, 'hello');
-INSERT 1
-sq:example.sqlite3=> select * from test;
-  test_id | name
-+---------+-------+
-        1 | hello
-(1 rows)
+ms:sa@localhost=> select * from authors;
+ author_id |     name
+-----------+--------------
+         1 | Isaac Asimov
+         2 | Stephen King
+(2 rows)
 
-sq:example.sqlite3=> select * from test
-sq:example.sqlite3-> \p
-select * from test
-sq:example.sqlite3-> \g
-  test_id | name
-+---------+-------+
-        1 | hello
-(1 rows)
+ms:sa@localhost=> select title from books
+ms:sa@localhost-> where author_id = 2
+ms:sa@localhost-> \p
+select title from books
+where author_id = 2
+ms:sa@localhost-> \g
+ title
+--------
+ Carrie
+ Cujo
+(2 rows)
 
-sq:example.sqlite3=> \c postgres://booktest@localhost
-error: pq: 28P01: password authentication failed for user "booktest"
-Enter password:
-Connected with driver postgres (PostgreSQL 9.6.6)
-pg:booktest@localhost=> select * from authors;
-  author_id |      name
-+-----------+----------------+
-          1 | Unknown Master
-          2 | blah
-          3 | foobar
-(3 rows)
-
-pg:booktest@localhost=>
+ms:sa@localhost=>
 ```
 
 A command takes one or more parameters. A parameter can be quoted with either
@@ -699,6 +686,7 @@ pg:user@localhost=> select * from my_table \G
 
 Available backslash meta commands can be displayed with `\?`:
 
+<!-- EXAMPLE commands -->
 ```sh
 $ usql
 Type "help" for help.
@@ -706,7 +694,6 @@ Type "help" for help.
 (not connected)=> \?
 General
   \q                                quit usql
-  \quit                             alias for \q
   \copyright                        show usage and distribution terms for usql
   \drivers                          show database drivers available to usql
 
@@ -718,19 +705,14 @@ Help
 Connection
   \c DSN or \c NAME                 connect to dsn or named database connection
   \c DRIVER PARAMS...               connect to database with driver and parameters
-  \connect                          alias for \c
   \Z                                close (disconnect) database connection
-  \disconnect                       alias for \Z
   \password [USER]                  change password for user
-  \passwd                           alias for \password
   \conninfo [-password]             display information about the current database connection,
                                     with the password when -password is given
 
 Query Execute
   \g [(OPTIONS)] [FILE] or ;        execute query (and send results to file or |pipe)
-  \go                               alias for \g
   \G [(OPTIONS)] [FILE]             as \g, but forces vertical output mode
-  \ego                              alias for \G
   \gx [(OPTIONS)] [FILE]            as \g, but forces expanded output mode
   \gexec                            execute query and execute each value of the result
   \gset [PREFIX]                    execute query and store results in usql variables
@@ -739,56 +721,80 @@ Query Execute
 
 Query View
   \crosstab [(OPTIONS)] [COLUMNS]   execute query and display results in crosstab
-  \crosstabview                     alias for \crosstab
-  \xtab                             alias for \crosstab
   \chart CHART [(OPTIONS)]          execute query and display results as a chart
   \watch [(OPTIONS)] [INTERVAL]     execute query every specified interval
 
 Query Buffer
   \e [-raw|-exec] [FILE] [LINE]     edit the query buffer, raw (non-interpolated) buffer, the
                                     exec buffer, or a file with external editor
-  \edit                             alias for \e
   \p [-raw|-exec]                   show the contents of the query buffer, the raw
                                     (non-interpolated) buffer or the exec buffer
-  \print                            alias for \p
-  \raw                              alias for \p
-  \exec                             alias for \p
   \w [-raw|-exec] FILE              write the contents of the query buffer, raw
                                     (non-interpolated) buffer, or exec buffer to file
-  \write                            alias for \w
   \r                                reset (clear) the query buffer
-  \reset                            alias for \r
 
 Informational
   \d[S+] [NAME]                     list tables, views, and sequences or describe table, view,
                                     sequence, or index
   \da[S+] [PATTERN]                 list aggregates
-  \df[S+] [PATTERN]                 list functions
+  \dA[+] [PATTERN]                  list access methods
+  \dAc[+] [AMPTRN [PATTERN]]        list operator classes
+  \dAf[+] [AMPTRN [PATTERN]]        list operator families
+  \dAo[+] [AMPTRN [PATTERN]]        list operators of operator families
+  \dAp[+] [AMPTRN [PATTERN]]        list support functions of operator families
+  \db[+] [PATTERN]                  list tablespaces
+  \dc[S+] [PATTERN]                 list conversions
+  \dconfig[+] [PATTERN]             list configuration parameters
+  \dC[+] [PATTERN]                  list casts
+  \dd[S] [PATTERN]                  show object descriptions not displayed elsewhere
+  \dD[S+] [PATTERN]                 list domains
+  \ddp [PATTERN]                    list default privileges
+  \dE[S+] [PATTERN]                 list foreign tables
+  \des[+] [PATTERN]                 list foreign servers
+  \det[+] [PATTERN]                 list foreign tables and their servers
+  \deu[+] [PATTERN]                 list user mappings
+  \dew[+] [PATTERN]                 list foreign-data wrappers
+  \df[anptw][S+] [PATTERN]          list [only agg/normal/procedure/trigger/window] functions
+  \dF[+] [PATTERN]                  list text search configurations
+  \dFd[+] [PATTERN]                 list text search dictionaries
+  \dFp[+] [PATTERN]                 list text search parsers
+  \dFt[+] [PATTERN]                 list text search templates
+  \dg[S+] [PATTERN]                 list roles
   \di[S+] [PATTERN]                 list indexes
+  \dl[+]                            list large objects, same as \lo_list
+  \dL[S+] [PATTERN]                 list procedural languages
   \dm[S+] [PATTERN]                 list materialized views
   \dn[S+] [PATTERN]                 list schemas
+  \do[S+] [PATTERN]                 list operators
+  \dO[S+] [PATTERN]                 list collations
   \dp[S] [PATTERN]                  list table, view, and sequence access privileges
+  \dP[itn+] [PATTERN]               list [only index/table] partitioned relations [n=nested]
+  \drds [ROLEPTRN [DBPTRN]]         list per-database role settings
+  \drg[S] [PATTERN]                 list role grants
+  \dRp[+] [PATTERN]                 list replication publications
+  \dRs[+] [PATTERN]                 list replication subscriptions
   \ds[S+] [PATTERN]                 list sequences
   \dt[S+] [PATTERN]                 list tables
+  \dT[S+] [PATTERN]                 list data types
+  \du[S+] [PATTERN]                 list roles
   \dv[S+] [PATTERN]                 list views
-  \l[+]                             list databases
+  \dx[+] [PATTERN]                  list extensions
+  \dX [PATTERN]                     list extended statistics
+  \dy[+] [PATTERN]                  list event triggers
+  \l[+] [PATTERN]                   list databases
+  \z[S] [PATTERN]                   same as \dp
+  \sf[+] FUNCNAME                   show a function's definition
+  \sv[+] VIEWNAME                   show a view's definition
   \ss[+] [TABLE|QUERY] [k]          show stats for a table or a query
 
 Variables
   \set [NAME [VALUE]]               set script variable, or show all script variables if no
                                     parameters
-  \uset [NAME [VALUE]]              set a setting of usql, show it if there is no value, or show
-                                    all settings if no parameters
+  \uset [NAME [VALUE]]              set a setting of usql, show it if there is no value, or
+                                    show all settings if no parameters
   \unset NAME                       unset (delete) script variable
   \pset [NAME [VALUE]]              set table print formatting option, or show all print
                                     formatting options if no parameters
-  \a                                toggle between unaligned and aligned output mode
-  \C [TITLE]                        set table title, or unset if none
-  \f [SEPARATOR]                    show or set field separator for unaligned query output
-  \H                                toggle HTML output mode
-  \T [ATTRIBUTES]                   set HTML <table> tag attributes, or unset if none
-  \t [on|off]                       show only rows
-  \x [on|off|auto]                  toggle expanded output
   \cset [NAME [URL]]                set named connection, or show all named connections if no
                                     parameters
   \cset NAME DRIVER PARAMS...       set named connection for driver and parameters
@@ -799,7 +805,6 @@ Input/Output
   \qecho [-n] [MESSAGE]...          write message to \o output stream (-n for no newline)
   \warn [-n] [MESSAGE]...           write message to standard error (-n for no newline)
   \o [FILE]                         send all query results to file or |pipe
-  \out                              alias for \o
   \copy SRC DST QUERY TABLE         copy results of query from source database into table on
                                     destination database
   \copy SRC DST QUERY TABLE(A,...)  copy results of query from source database into table's
@@ -807,9 +812,7 @@ Input/Output
 
 Control/Conditional
   \i FILE                           execute commands from file
-  \include                          alias for \i
   \ir FILE                          as \i, but relative to location of current script
-  \include_relative                 alias for \ir
   \if EXPR                          begin conditional block
   \elif EXPR                        alternative within current conditional block
   \else                             final alternative within current conditional block
@@ -819,13 +822,13 @@ Transaction
   \begin [-read-only [ISOLATION]]   begin transaction, with optional isolation level
   \commit                           commit current transaction
   \rollback                         rollback (abort) current transaction
-  \abort                            alias for \rollback
 
 Operating System/Environment
   \! [COMMAND]                      execute command in shell or start interactive shell
   \cd [DIR]                         change the current working directory
   \getenv VARNAME ENVVAR            fetch environment variable
   \setenv NAME [VALUE]              set or unset environment variable
+(not connected)=>
 ```
 
 Parameters passed to commands [can be backticked][backticks].
@@ -919,16 +922,20 @@ a variable, and `\set pager less` is an error that says to use `\uset`.
 
 Script variables are managed with the `\set` and `\unset` [commands][commands]:
 
+<!-- EXAMPLE set-unset -->
 ```sh
 (not connected)=> \unset FOO
 (not connected)=> \set FOO bar
+(not connected)=>
 ```
 
 Script variables can be displayed with `\set`:
 
+<!-- EXAMPLE set-show -->
 ```sh
 (not connected)=> \set
 FOO = 'bar'
+(not connected)=>
 ```
 
 ###### Variable Interpolation
@@ -936,33 +943,41 @@ FOO = 'bar'
 When a script variable `NAME` has been `\set`, then `:NAME`, `:'NAME'`, and
 `:"NAME"` will be interpolated into the query buffer:
 
+<!-- EXAMPLE interpolate -->
 ```sh
-pg:booktest@localhost=> \set FOO bar
-pg:booktest@localhost=> select * from authors where name = :'FOO';
-  author_id | name
-+-----------+------+
-          7 | bar
-(1 rows)
+ms:sa@localhost=> \set FOO 'Stephen King'
+ms:sa@localhost=> select * from authors where name = :'FOO';
+ author_id |     name
+-----------+--------------
+         2 | Stephen King
+(1 row)
+
+ms:sa@localhost=>
 ```
 
 Where a runtime variable is used as `:'NAME'` or `:"NAME"` the interpolated
 value will be quoted using `'` or `"` respectively:
 
+<!-- EXAMPLE interpolate-quoted -->
 ```sh
-pg:booktest@localhost=> \set TBLNAME authors
-pg:booktest@localhost=> \set COLNAME name
-pg:booktest@localhost=> \set FOO bar
-pg:booktest@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost=> \set TBLNAME authors
+ms:sa@localhost=> \set COLNAME name
+ms:sa@localhost=> \set FOO 'Isaac Asimov'
+ms:sa@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost->
 ```
 
 The query buffer and interpolated values can be displayed with `\p` and
 `\print`, or the raw query buffer can be displayed with `\raw`:
 
+<!-- EXAMPLE interpolate-print -->
 ```sh
-pg:booktest@localhost-> \p
-select * from authors where "name" = 'bar'
-pg:booktest@localhost-> \raw
+ms:sa@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost-> \p
+select * from authors where "name" = 'Isaac Asimov'
+ms:sa@localhost-> \raw
 select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost->
 ```
 
 <hr/>
@@ -971,15 +986,17 @@ select * from :TBLNAME where :"COLNAME" = :'FOO'
 >
 > Variables contained within other strings <b><u>will not</b></u> be interpolated:
 
+<!-- EXAMPLE not-interpolated -->
 ```sh
-pg:booktest@localhost=> select ':FOO';
-  ?column?
-+----------+
-  :FOO
-(1 rows)
+ms:sa@localhost=> select ':FOO' as foo;
+ foo
+------
+ :FOO
+(1 row)
 
-pg:booktest@localhost=> \p
-select ':FOO';
+ms:sa@localhost=> \p
+select ':FOO' as foo;
+ms:sa@localhost=>
 ```
 
 <hr/>
@@ -990,11 +1007,12 @@ Connection variables work similarly to runtime variables, and are managed with
 `\cset`. Connection variables can be used with the `\c`, `\connect`, `\copy`,
 or [other commands][commands]:
 
+<!-- EXAMPLE cset-connect -->
 ```sh
-(not connected)=> \cset my_conn postgres://user:pass@localhost
+(not connected)=> \cset my_conn sqlserver://sa:pass@localhost
 (not connected)=> \c my_conn
-Connected with driver postgres (PostgreSQL 16.2 (Debian 16.2-1.pgdg120+2))
-pg:postgres@localhost=>
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
+ms:sa@localhost=>
 ```
 
 Connection variables are not interpolated into queries. See the [configuration
@@ -1002,9 +1020,11 @@ section for information on defining persistent connection variables][config].
 
 Connection variables can be displayed with `\cset`:
 
+<!-- EXAMPLE cset-show -->
 ```sh
 (not connected)=> \cset
 my_conn = 'postgres://user:pass@localhost'
+(not connected)=>
 ```
 
 ##### Display Formatting (Print) Variables
@@ -1012,18 +1032,46 @@ my_conn = 'postgres://user:pass@localhost'
 Display formatting variables can be set using `\pset` and [other
 commands][commands]:
 
+<!-- EXAMPLE pset-set -->
 ```sh
 (not connected)=> \pset time Kitchen
 Time display is "Kitchen" ("3:04PM").
 (not connected)=> \a
 Output format is unaligned.
+(not connected)=>
 ```
 
 Display formatting variables can be displayed with `\pset`:
 
+<!-- EXAMPLE pset-show -->
 ```sh
 (not connected)=> \pset
+border                   1
+columns                  0
+csv_fieldsep             ","
+expanded                 off
+fieldsep                 "|"
+fieldsep_zero            off
+footer                   on
+format                   aligned
+json_indent              0
+linestyle                ascii
+locale                   C
+null                     ""
+numericlocale            off
+pager                    off
+pager_min_lines          0
+recordsep                "\n"
+recordsep_zero           off
+tableattr
 time                     Kitchen
+timezone
+title
+tuples_only              off
+unicode_border_linestyle single
+unicode_column_linestyle single
+unicode_header_linestyle single
+(not connected)=>
 ```
 
 ##### Settings
@@ -1035,6 +1083,7 @@ that setting, and with a name and a value it sets it. The value is read as the
 other meta commands read an argument: it can be quoted, `:name` is interpolated
 and a backtick runs a command.
 
+<!-- EXAMPLE uset -->
 ```sh
 (not connected)=> \uset pager "less -R"
 pager is "less -R"
@@ -1046,13 +1095,23 @@ editor                ""
 on_error_stop         on
 pager                 "less -R"
 prompt1               "%S%N%m%/%R%# "
-...
+prompt2               "%S%N%m%/%R%# "
+quiet                 off
+show_host_information true
+sslmode               retry
+syntax_hl             true
+syntax_hl_format      terminal256
+syntax_hl_override_bg true
+syntax_hl_style       monokai
+term_graphics
+(not connected)=>
 ```
 
-A setting can also be given on the command line with `--uset NAME=VALUE`, and
-`-q` is `--uset quiet=on`. The environment variables `USQL_PAGER`, `PAGER`,
-`USQL_EDITOR`, `EDITOR`, `VISUAL`, `USQL_SSLMODE`, `USQL_SHOW_HOST_INFORMATION`
-and `USQL_TERM_GRAPHICS` give the first value of their settings.
+A setting can also be given on the command line with `--uset NAME=VALUE`, or
+`-U NAME=VALUE`, and `-q` is `--uset quiet=on`. The environment variables
+`USQL_PAGER`, `PAGER`, `USQL_EDITOR`, `EDITOR`, `VISUAL`, `USQL_SSLMODE`,
+`USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS` give the first value of
+their settings.
 
 Use the `\? variables` [command][commands] to display help information and to
 list the variables and the settings recognized by `usql`:
@@ -1065,22 +1124,24 @@ list the variables and the settings recognized by `usql`:
 
 [Backslash (`\`) meta commands][commands] support backticks on parameters:
 
+<!-- EXAMPLE backticks-echo -->
 ```sh
-(not connected)=> \echo Welcome `echo $USER` -- 'currently:' "(" `date` ")"
-Welcome ken -- currently: ( Wed Jun 13 12:10:27 WIB 2018 )
+(not connected)=> \echo Welcome `echo $USER` -- 'running on:' "(" `uname -s` ")"
+Welcome user -- running on: ( Linux )
 (not connected)=>
 ```
 
 Backticked parameters will be passed to the user's `SHELL`, exactly as written,
 and can be combined with `\set`:
 
+<!-- EXAMPLE backticks-set -->
 ```sh
-pg:booktest@localhost=> \set MYVAR `date`
-pg:booktest@localhost=> \set
-MYVAR = 'Wed Jun 13 12:17:11 WIB 2018'
-pg:booktest@localhost=> \echo :MYVAR
-Wed Jun 13 12:17:11 WIB 2018
-pg:booktest@localhost=>
+(not connected)=> \set MYVAR `uname -s`
+(not connected)=> \set
+MYVAR = 'Linux'
+(not connected)=> \echo :MYVAR
+Linux
+(not connected)=>
 ```
 
 #### Copying Between Databases
@@ -1184,6 +1245,7 @@ COPY 1
 The `\copy` command is capable of importing data from CSV's (or any other
 database!) using the `csvq` driver:
 
+<!-- EXAMPLE copy-csv -->
 ```sh
 $ cat authors.csv
 author_id,name
@@ -1195,29 +1257,31 @@ book_id,author_id,title
 2,2,Carrie
 3,2,Cujo
 $ usql
+Type "help" for help.
+
 (not connected)=> -- setting variables to make connections easier
 (not connected)=> \set SOURCE_DSN csvq://.
 (not connected)=> \set DESTINATION_DSN sqlite3:booktest.db
 (not connected)=> -- connecting to the destination and creating the schema
 (not connected)=> \c :DESTINATION_DSN
-Connected with driver sqlite3 (SQLite3 3.38.5)
-(sq:booktest.db)=> create table authors (author_id integer, name text);
+Connected with driver sqlite3 (SQLite 3.53.4)
+sq:booktest.db=> create table authors (author_id integer, name text);
 CREATE TABLE
-(sq:booktest.db)=> create table books (book_id integer not null primary key autoincrement, author_id integer, title text);
+sq:booktest.db=> create table books (book_id integer not null primary key autoincrement, author_id integer, title text);
 CREATE TABLE
-(sq:booktest.db)=> -- adding an extra row to books prior to copying
-(sq:booktest.db)=> insert into books (author_id, title) values (1, 'Foundation');
+sq:booktest.db=> -- adding an extra row to books prior to copying
+sq:booktest.db=> insert into books (author_id, title) values (1, 'Foundation');
 INSERT 1
-(sq:booktest.db)=> -- disconnecting to demonstrate that \copy opens new database connections
-(sq:booktest.db)=> \disconnect
+sq:booktest.db=> -- disconnecting to demonstrate that \copy opens new database connections
+sq:booktest.db=> \disconnect
 (not connected)=> -- copying data from SOURCE -> DESTINATION
 (not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select * from authors' authors
 COPY 2
 (not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select author_id, title from books' 'books(author_id, title)'
 COPY 3
 (not connected)=> \c :DESTINATION_DSN
-Connected with driver sqlite3 (SQLite3 3.38.5)
-(sq:booktest.db)=> select * from authors;
+Connected with driver sqlite3 (SQLite 3.53.4)
+sq:booktest.db=> select * from authors;
  author_id |     name
 -----------+--------------
          1 | Isaac Asimov
@@ -1232,6 +1296,8 @@ sq:booktest.db=> select * from books;
        3 |         2 | Carrie
        4 |         2 | Cujo
 (4 rows)
+
+sq:booktest.db=>
 ```
 
 <hr/>
@@ -1286,39 +1352,49 @@ highlighting are:
 They are set with `\uset`. A terminal with no color, or a `NO_COLOR` variable,
 turns highlighting off by default:
 
+<!-- EXAMPLE syntax-highlighting -->
 ```sh
 $ usql
+Type "help" for help.
+
 (not connected)=> \uset syntax_hl_style dracula
 syntax_hl_style is dracula
 (not connected)=> \uset syntax_hl off
 syntax_hl is false
+(not connected)=>
 ```
 
 #### Context Completion
 
 When using the interactive shell, context completion is available in `usql` by
 hitting the `<Tab>` key. For example, hitting `<Tab>` can complete some parts
-of `SELECT` queries on a PostgreSQL databases:
+of `SELECT` queries on a SQL Server database:
 
+<!-- EXAMPLE completion-select -->
 ```sh
-$ usql
-Connected with driver postgres (PostgreSQL 14.4 (Debian 14.4-1.pgdg110+1))
+$ usql sqlserver://sa:pass@localhost
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-pg:postgres@=> select * f<Tab>
-fetch            from             full outer join
+ms:sa@localhost=> select * f
+ 1 from
+ 2 fetch
+ 3 full outer join
 ```
 
 Or, for example completing [backslash commands][commands] while connected to a
 database:
 
+<!-- EXAMPLE completion-meta -->
 ```sh
-$ usql my://
-Connected with driver mysql (10.8.3-MariaDB-1:10.8.3+maria~jammy)
+$ usql sqlserver://sa:pass@localhost
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-my:root@=> \g<Tab>
-\g     \gexec \gset  \gx
+ms:sa@localhost=> \g
+ 1 \g        4 \gexec
+ 2 \gx       5 \getenv
+ 3 \gset
 ```
 
 Not all commands, contexts, or databases support completion. To help improve
@@ -1332,28 +1408,29 @@ Some databases support time/date columns that [support formatting][go-time]. By
 default, `usql` formats time/date columns as [RFC3339Nano][go-time], and can be
 set using `\pset time FORMAT`:
 
+<!-- EXAMPLE time -->
 ```sh
-$ usql pg://
-Connected with driver postgres (PostgreSQL 13.2 (Debian 13.2-1.pgdg100+1))
+$ usql sqlserver://sa:pass@localhost
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-pg:postgres@=> \pset
-time                     RFC3339Nano
-pg:postgres@=> select now();
-             now
+ms:sa@localhost=> \pset time
+Time display is "RFC3339Nano" ("2006-01-02T15:04:05.999999999Z07:00").
+ms:sa@localhost=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
+            stamp
 -----------------------------
- 2021-05-01T22:21:44.710385Z
+ 2026-10-31T09:41:27.123456Z
 (1 row)
 
-pg:postgres@=> \pset time Kitchen
+ms:sa@localhost=> \pset time Kitchen
 Time display is "Kitchen" ("3:04PM").
-pg:postgres@=> select now();
-   now
----------
- 10:22PM
+ms:sa@localhost=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
+ stamp
+--------
+ 9:41AM
 (1 row)
 
-pg:postgres@=>
+ms:sa@localhost=>
 ```
 
 `usql`'s time format supports any [Go supported time format][go-time], or can
@@ -1397,25 +1474,28 @@ By default, `usql` displays connection information when it connects to a
 database. Some databases and connections do not work with this. Set the
 environment variable `USQL_SHOW_HOST_INFORMATION` to `false` to turn it off:
 
+<!-- EXAMPLE host-information-env -->
 ```sh
 $ export USQL_SHOW_HOST_INFORMATION=false
-$ usql pg://booktest@localhost
+$ usql sqlserver://sa:pass@localhost
 Type "help" for help.
 
-pg:booktest@=>
+ms:sa@localhost=>
 ```
 
 `show_host_information` is a [setting][settings] of `usql`, and is set with
 `\uset`. Additionally, it can be passed via the command-line using `--uset`:
 
+<!-- EXAMPLE host-information-uset -->
 ```sh
-$ usql --uset show_host_information=false pg://
+$ usql --uset show_host_information=false sqlserver://sa:pass@localhost
 Type "help" for help.
 
-pg:booktest@=> \uset show_host_information true
-pg:booktest@=> \connect pg://
-Connected with driver postgres (PostgreSQL 9.6.9)
-pg:booktest@=>
+ms:sa@localhost=> \uset show_host_information true
+show_host_information is true
+ms:sa@localhost=> \connect sqlserver://sa:pass@localhost
+Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
+ms:sa@localhost=>
 ```
 
 #### Terminal Graphics

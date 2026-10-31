@@ -216,7 +216,7 @@ recv:
 \n
 ---------\r
 \n
- hello \r
+ hello\r
 \n
 (1 row)\r
 \n
@@ -304,7 +304,7 @@ recv:
 \n
 ---\r
 \n
- 0 \r
+ 0\r
 \n
 (1 row)\r
 \n

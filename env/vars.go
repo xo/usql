@@ -114,6 +114,7 @@ func NewDefaultVars() *Variables {
 			"fieldsep_zero":            "off",
 			"footer":                   "on",
 			"format":                   "aligned",
+			"json_indent":              "0",
 			"linestyle":                "ascii",
 			"locale":                   locale,
 			"null":                     "",
@@ -289,6 +290,18 @@ func (v *Variables) SetPrint(name, value string) (string, error) {
 	case "border", "columns", "pager_min_lines":
 		i, _ := strconv.Atoi(value)
 		v.prnt[name] = fmt.Sprintf("%d", i)
+	case "json_indent":
+		// on is two spaces, off is compact, and a number is that many spaces
+		switch i, err := strconv.Atoi(value); {
+		case value == "on":
+			v.prnt[name] = "2"
+		case value == "off":
+			v.prnt[name] = "0"
+		case err != nil || i < 0:
+			return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "a number of spaces, on or off")
+		default:
+			v.prnt[name] = strconv.Itoa(i)
+		}
 	case "pager":
 		s, err := ParseKeywordBool(value, name, "always")
 		if err != nil {
@@ -342,6 +355,12 @@ func (v *Variables) TogglePrint(name, extra string) (string, error) {
 	}
 	switch name {
 	case "border", "columns", "pager_min_lines":
+	case "json_indent":
+		if v.prnt[name] == "0" {
+			v.prnt[name] = "2"
+		} else {
+			v.prnt[name] = "0"
+		}
 	case "pager":
 		switch v.prnt[name] {
 		case "on", "always":
@@ -409,6 +428,13 @@ func (v *Variables) DumpPrint(w io.Writer) error {
 		// k+strings.Repeat(" ", width-len(k)), val)
 	}
 	return nil
+}
+
+// JSONIndent returns the indent of JSON output that the print variables in
+// params set: json_indent spaces, or nothing for compact output.
+func JSONIndent(params map[string]string) string {
+	n, _ := strconv.Atoi(params["json_indent"])
+	return strings.Repeat(" ", max(n, 0))
 }
 
 // PrintTimeFormat returns the user's time format converted to Go's time.Format

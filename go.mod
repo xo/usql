@@ -38,17 +38,17 @@ require (
 	github.com/xo/odbc v0.1.2
 	github.com/xo/resvg v0.13.0
 	github.com/xo/rline v0.4.2
-	github.com/xo/tblfmt v0.20.0
+	github.com/xo/tblfmt v0.21.0
 	github.com/xo/terminfo v1.3.0
-	github.com/xo/transit v0.5.0
-	github.com/xo/transit/grammars/cql v0.5.0
-	github.com/xo/transit/grammars/mysql v0.5.0
-	github.com/xo/transit/grammars/oracle v0.5.0
-	github.com/xo/transit/grammars/postgres v0.5.0
-	github.com/xo/transit/grammars/sql v0.5.0
-	github.com/xo/transit/grammars/sqlserver v0.5.0
-	github.com/xo/transit/grammars/usql v0.5.0
-	github.com/xo/transit/styles v0.5.0
+	github.com/xo/transit v0.5.1
+	github.com/xo/transit/grammars/cql v0.5.1
+	github.com/xo/transit/grammars/mysql v0.5.1
+	github.com/xo/transit/grammars/oracle v0.5.1
+	github.com/xo/transit/grammars/postgres v0.5.1
+	github.com/xo/transit/grammars/sql v0.5.1
+	github.com/xo/transit/grammars/sqlserver v0.5.1
+	github.com/xo/transit/grammars/usql v0.5.1
+	github.com/xo/transit/styles v0.5.1
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
 	github.com/yookoala/realpath v1.0.0
 	modernc.org/sqlite v1.61.0

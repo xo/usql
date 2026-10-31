@@ -29,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.16.0, transit v0.5.0 and rline v0.4.2, all in
+- usql requires dbmeta v0.16.0, transit v0.5.1 and rline v0.4.2, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -122,13 +122,14 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 - `\set pager less` and `\unset quiet` are errors that say to use `\uset`, so a
   script or a `.usqlrc` that set a setting with `\set` must change. `:pager` is no
   longer a variable.
-- The command line has `--uset NAME=VALUE`, and `-q` is `--uset quiet=on`. `--set`
-  and `-v` give script variables only.
+- The command line has `--uset NAME=VALUE`, or `-U NAME=VALUE`, and `-q` is
+  `--uset quiet=on`. `--set` and `-v` give script variables only. psql's `-U`
+  is the user name, and usql's is not: usql reads the user from the URL.
 
 ### The pager
 
 The pager moved out of tblfmt into the new package `pager` of usql (W64).
-usql requires tblfmt v0.20.0, which has no pager. All
+usql requires tblfmt v0.21.0, which has no pager. All
 the output of an entry goes through it: the results of a query, the describe
 commands, `\?`, `\drivers`, `\echo`, and the listings of `\set`, `\uset`,
 `\pset` and `\cset`.
@@ -198,6 +199,15 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 - An aligned table measures a cell by grapheme cluster (tblfmt v0.19.2), so
   an emoji with a skin tone, a flag, a keycap or U+FE0F keeps its column
   aligned (W63).
+- Every format writes what psql 18 writes (tblfmt v0.21.0). An aligned table
+  has no space after its last column, a tab becomes spaces, a result with
+  columns and no rows has its header, and expanded, html and asciidoc output
+  match psql. `\pset format` takes wrapped, latex, latex-longtable and
+  troff-ms.
+- JSON output is compact, one result set on each line, where it was indented
+  before. `\pset json_indent N` indents it by N spaces, `on` is two spaces,
+  `off` and 0 are compact, and `\pset json_indent` alone switches between
+  compact and two spaces. `-P json_indent=2` sets it on the command line.
 - Cassandra moves to `github.com/xo/cassandra`, and its scheme is
   `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
@@ -268,6 +278,13 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   SSL, superuser and hot standby rows of psql. The password shows as xxxxx.
   `\conninfo -password` shows it, and adds the DSN.
 - `size.sh` measures what each driver adds to the binary (W32).
+- `go run gen.go -examples` writes the examples of the README from what usql
+  prints, against SQL Server with dbmeta's fixture `examples`. CONTRIBUTING.md
+  says how.
+- `usql --help` no longer shows `(default true)` after each switch, such as
+  `--no-align`, which pflag v1.0.10 printed.
+- The message that usql connected goes to the terminal and not to the pager,
+  so a long version of the server does not open the pager.
 - The Releases badge drops `sort=semver`, on which shields.io times out.
 - The README ends with the bar of links to the sister projects.
 - The backlog gains W28 to W38.

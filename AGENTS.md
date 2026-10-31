@@ -27,6 +27,7 @@ every other agent read the same rules. Edit this file, not that one.
 | A driver that is broken or unmaintained | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Putting a feature behind a build tag | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Running the tests | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Regenerating the examples of the README | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Measuring what each driver adds to the binary | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Moving metadata to dbmeta | [docs/DBMETA.md](docs/DBMETA.md) |
 | Planned work, and how to cite it | [docs/BACKLOG.md](docs/BACKLOG.md) |
@@ -43,8 +44,10 @@ add a row for it or delete it.
 ## Hard rules
 
 1. Do not edit generated files. `internal/*.go`, the driver tables in
-   `README.md`, and the bundled license files are all produced by `gen.go`.
-   Change `gen.go` or the source it reads, then regenerate.
+   `README.md`, the blocks of `README.md` that have an `<!-- EXAMPLE name -->`
+   marker, and the bundled license files are all produced by `gen.go`.
+   Change `gen.go` or the source it reads, such as
+   `internal/readme/examples.go`, then regenerate.
 
 2. Do not write connection string parsing in this repository. All of it lives
    in `github.com/xo/dburl`. A scheme must exist there before usql can use it.

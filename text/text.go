@@ -75,6 +75,7 @@ var (
 		`fieldsep_zero`:            `Field separator is zero byte.`,
 		`footer`:                   `Default footer is %s.`,
 		`format`:                   `Output format is %s.`,
+		`json_indent`:              `JSON indent is %d.`,
 		`linestyle`:                `Line style is %s.`,
 		`locale`:                   `Locale is %q.`,
 		`null`:                     `Null display is %q.`,

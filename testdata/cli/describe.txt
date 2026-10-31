@@ -156,7 +156,7 @@ recv:
 \n
 --------+-------+-------\r
 \n
- main   | films | table \r
+ main   | films | table\r
 \n
 (1 row)\r
 \n
@@ -194,9 +194,9 @@ recv:
 \n
 --------+------+----------+---------\r
 \n
- id     | INT  |          |  \r
+ id     | INT  |          | \r
 \n
- title  | TEXT |          |  \r
+ title  | TEXT |          | \r
 \n
 Indexes:\r
 \n

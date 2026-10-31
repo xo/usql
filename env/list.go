@@ -204,6 +204,10 @@ var pvarNames = []varName{
 		`set the border line drawing style [ascii, old-ascii, unicode]`,
 	},
 	{
+		`json_indent`,
+		`number of spaces to indent JSON output, 0 for compact output [N, on, off] (default 0)`,
+	},
+	{
 		`null`,
 		`set the string to be printed in place of a null value`,
 	},

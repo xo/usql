@@ -81,6 +81,9 @@ func encode(w io.Writer, r *rows, title string, footer func(io.Writer) error, pa
 	}
 	p["title"] = title
 	newEnc, opts := tblfmt.FromMap(p)
+	if indent := env.JSONIndent(p); indent != "" {
+		opts = append(opts, tblfmt.WithIndent(indent))
+	}
 	if footer != nil {
 		opts = append(opts, tblfmt.WithSummary(map[int]func(io.Writer, int) (int, error){
 			-1: func(w io.Writer, _ int) (int, error) {

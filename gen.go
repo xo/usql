@@ -5,6 +5,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -26,15 +27,35 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/xo/dburl"
+	"github.com/xo/usql/internal/readme"
 )
 
 func main() {
 	licenseStart := flag.Int("license-start", 2015, "license start year")
 	licenseAuthor := flag.String("license-author", "Kenneth Shaw", "license author")
+	examples := flag.Bool("examples", false, "also run the examples of the README, which needs a server of dbrun")
+	examplesDB := flag.String("examples-db", "sqlserver-2025", "the dbrun selector of the database for the examples")
+	examplesDbmeta := flag.String("examples-dbmeta", "../dbmeta", "a checkout of dbmeta, whose test directory runs dbrun")
+	examplesOut := flag.String("examples-out", "", "write each example to NAME.txt in this directory, and leave the README as it is")
 	flag.Parse()
 	if err := run(*licenseStart, *licenseAuthor); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
+	}
+	if *examples {
+		wd, err := os.Getwd()
+		if err == nil {
+			err = readme.Generate(context.Background(), readme.Options{
+				Dir:    wd,
+				DB:     *examplesDB,
+				Dbmeta: *examplesDbmeta,
+				Out:    *examplesOut,
+			})
+		}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 }
 

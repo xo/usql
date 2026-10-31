@@ -985,7 +985,11 @@ func (h *Handler) Version(ctx context.Context) error {
 	case ver == "":
 		ver = "<unknown>"
 	}
-	h.Print(text.ConnInfo, h.u.SchemeName, ver)
+	// the message goes to the terminal and not to the pager, as in psql, so
+	// that a long version does not open the pager
+	if env.Setting("quiet") != "on" {
+		fmt.Fprintln(h.l, fmt.Sprintf(text.ConnInfo, h.u.SchemeName, ver))
+	}
 	return nil
 }
 
@@ -1259,6 +1263,9 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		}
 	}
 	// encode and handle error conditions
+	if indent := env.JSONIndent(params); indent != "" {
+		extra = append(extra, tblfmt.WithIndent(indent))
+	}
 	switch err = tblfmt.EncodeAll(w, resultSet, params, extra...); {
 	case err != nil && cmd != nil && errors.Is(err, syscall.EPIPE):
 		// the command of \g |command quit before it read all the output, as
