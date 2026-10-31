@@ -67,6 +67,10 @@ type Driver struct {
 	ConvertDefault func(interface{}) (string, error)
 	// Copy rows into the database table
 	Copy func(ctx context.Context, db *sql.DB, rows *sql.Rows, table string) (int64, error)
+	// ConnInfo returns facts about the connection that only the driver
+	// knows, such as the process of the server, as pairs of a name and a
+	// value. \conninfo shows them.
+	ConnInfo func(context.Context, DB) ([][2]string, error)
 }
 
 // drivers are registered drivers.
@@ -189,6 +193,18 @@ func Version(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 		ver = "<unknown>"
 	}
 	return ver, nil
+}
+
+// ConnInfo returns the facts about the connection that the driver of u knows,
+// as pairs of a name and a value. It returns nothing for a driver that has no
+// ConnInfo.
+func ConnInfo(ctx context.Context, u *dburl.URL, db DB) ([][2]string, error) {
+	d, ok := drivers[u.SchemeName]
+	if !ok || d.ConnInfo == nil {
+		return nil, nil
+	}
+	info, err := d.ConnInfo(ctx, db)
+	return info, WrapErr(u.SchemeName, err)
 }
 
 // OwnVersion reports whether the driver of u reads the release of its

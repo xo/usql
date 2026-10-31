@@ -59,6 +59,12 @@ func (r *rows) NextResultSet() bool {
 	return false
 }
 
+// Table writes values under columns and title to w, in the output format of
+// the session, as the lists of the describe commands are written.
+func Table(w io.Writer, title string, columns []string, values [][]any) error {
+	return encode(w, &rows{columns: columns, values: values}, title, nil, nil)
+}
+
 // noFooter prints nothing below a table, where psql prints no count of rows,
 // as for each section of \d NAME.
 func noFooter(io.Writer) error {

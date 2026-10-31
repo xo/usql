@@ -328,6 +328,13 @@ func Run(ctx context.Context, args *Args) error {
 		rline.WithPrompt("", ""),
 		// no escape codes reach a pipe or a file
 		rline.WithColor(interactive),
+		// Tab opens a numbered menu of the completions
+		rline.WithCompletionMenu(true),
+		// the user's inputrc applies, and its $if tests the name of usql
+		rline.WithUserInputrc(true),
+		rline.WithAppName(text.CommandName),
+		// Ctrl-C leaves the entry on the screen with ^C after it, as psql does
+		rline.WithKeepInterrupted(true),
 	)
 	if err != nil {
 		return err

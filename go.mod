@@ -11,7 +11,7 @@ require (
 	github.com/duckdb/duckdb-go/v2 v2.20000.0
 	github.com/go-git/go-billy/v5 v5.9.2
 	github.com/go-sql-driver/mysql v1.10.1
-	github.com/jackc/pgx/v5 v5.11.0
+	github.com/jackc/pgx/v5 v5.12.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/jmrobles/h2go v0.5.0
 	github.com/kenshaw/colors v0.2.4
@@ -31,15 +31,15 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.1.1
-	github.com/xo/dbimp v0.21.1
-	github.com/xo/dbmeta v0.15.2
+	github.com/xo/dbimp v0.23.0
+	github.com/xo/dbmeta v0.16.0
 	github.com/xo/dburl v0.54.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.1.2
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.1.0
+	github.com/xo/rline v0.4.2
 	github.com/xo/tblfmt v0.20.0
-	github.com/xo/terminfo v1.2.0
+	github.com/xo/terminfo v1.3.0
 	github.com/xo/transit v0.5.0
 	github.com/xo/transit/grammars/cql v0.5.0
 	github.com/xo/transit/grammars/mysql v0.5.0
@@ -51,7 +51,6 @@ require (
 	github.com/xo/transit/styles v0.5.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
 	github.com/yookoala/realpath v1.0.0
-	golang.org/x/term v0.47.0
 	modernc.org/sqlite v1.61.0
 )
 
@@ -83,7 +82,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.12.0 // indirect
-	github.com/dop251/goja v0.0.0-20261029153331-f81816846776 // indirect
+	github.com/dop251/goja v0.0.0-20261030192516-032d024709ca // indirect
 	github.com/dop251/goja_nodejs v0.0.0-20260918173711-b481721df8a2 // indirect
 	github.com/dromara/carbon/v2 v2.7.0 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.20000.0 // indirect
@@ -129,14 +128,14 @@ require (
 	github.com/nakagami/chacha20 v0.1.0 // indirect
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20260406063853-3bac975de715 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
-	github.com/pandatix/go-abnf v0.5.3 // indirect
+	github.com/pandatix/go-abnf v0.5.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.25.0 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.73.0 // indirect
+	github.com/prometheus/common v0.73.1 // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
@@ -150,6 +149,7 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/xo/inputrc v0.8.0 // indirect
 	github.com/xo/resvg/libresvg/darwin_amd64 v0.49.0 // indirect
 	github.com/xo/resvg/libresvg/darwin_arm64 v0.49.0 // indirect
 	github.com/xo/resvg/libresvg/freebsd_amd64 v0.49.0 // indirect
@@ -176,6 +176,7 @@ require (
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e // indirect
 	google.golang.org/grpc v1.85.0 // indirect

@@ -2,6 +2,7 @@ package pager
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -118,6 +119,24 @@ func TestWriterNoShell(t *testing.T) {
 	}
 }
 
+func TestWriterNoTerminal(t *testing.T) {
+	cfg, _ := sh(t, Config{Always: true})
+	cfg.Terminal = func(func(*os.File) error) error {
+		return errors.New("not a file")
+	}
+	var out bytes.Buffer
+	w := New(&out, cfg)
+	if _, err := w.Write([]byte("a\n")); err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if err := w.Close(); err == nil || !strings.Contains(err.Error(), "not a file") {
+		t.Errorf("expected the error of Terminal, got: %v", err)
+	}
+	if want := "a\n"; out.String() != want {
+		t.Errorf("expected %q, got: %q", want, out.String())
+	}
+}
+
 func TestWriterFailingPager(t *testing.T) {
 	cfg, _ := sh(t, Config{Always: true})
 	cfg.Command = "exit 3"
@@ -146,7 +165,10 @@ func sh(t *testing.T, cfg Config) (Config, func() string) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 	t.Cleanup(func() { f.Close() })
-	cfg.Command, cfg.Shell, cfg.Stdout, cfg.Stderr = "cat", []string{"sh", "-c"}, f, f
+	cfg.Command, cfg.Shell = "cat", []string{"sh", "-c"}
+	cfg.Terminal = func(fn func(*os.File) error) error {
+		return fn(f)
+	}
 	return cfg, func() string {
 		buf, err := os.ReadFile(name)
 		if err != nil {

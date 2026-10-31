@@ -39,7 +39,6 @@ import (
 	"github.com/xo/usql/metacmd/describe"
 	"github.com/xo/usql/pager"
 	"github.com/xo/usql/text"
-	"golang.org/x/term"
 )
 
 // Handler is a input process handler.
@@ -151,8 +150,8 @@ func (h *Handler) setLanguage() error {
 // prompt returns the prompt for the next entry, and sets the marker that the
 // line editor draws on the rows after the first.
 func (h *Handler) prompt() string {
-	h.l.SetPrompt("", h.Prompt(env.Setting("prompt2")))
-	return h.Prompt(env.Setting("prompt1"))
+	h.l.SetPrompt("", h.render(env.Setting("prompt2"), true))
+	return h.render(env.Setting("prompt1"), false)
 }
 
 // Continue reports whether an entry typed at the terminal needs more input. It
@@ -502,6 +501,12 @@ func (h *Handler) unbind() []interface{} {
 // To insert a percent sign into your prompt, write %%. The default prompts are
 // '%/%R%x%# ' for prompts 1 and 2, and '>> ' for prompt 3.
 func (h *Handler) Prompt(prompt string) string {
+	return h.render(prompt, false)
+}
+
+// render expands the escapes of prompt. cont is set for the prompt of the rows
+// after the first, where %R is always -.
+func (h *Handler) render(prompt string, cont bool) string {
 	r, connected := []rune(prompt), h.db != nil
 	end := len(r)
 	var buf []byte
@@ -616,10 +621,11 @@ func (h *Handler) Prompt(prompt string) string {
 			}
 		// case 'p': // the process id of the connected backend -- never going to be supported
 		case 'R': // statement state
-			// = for a new statement and - while the buffer holds one. The
-			// line editor draws one prompt for an entry, so the state inside
-			// a string or a comment is not shown.
-			if h.buf.Empty() {
+			// = for a new statement and - while the buffer holds one or the
+			// entry continues on another row. The line editor draws one
+			// prompt for the rows after the first, so the state inside a
+			// string or a comment is not shown.
+			if h.buf.Empty() && !cont {
 				buf = append(buf, '=')
 			} else {
 				buf = append(buf, '-')
@@ -1527,7 +1533,7 @@ func (h *Handler) GetOutput() io.Writer {
 // pager and \pset pager_min_lines say.
 func (h *Handler) Stdout() io.Writer {
 	if h.page == nil {
-		h.page = pager.New(h.l, pagerConfig())
+		h.page = pager.New(h.l, h.pagerConfig())
 	}
 	return h.page
 }
@@ -1546,15 +1552,14 @@ func (h *Handler) endPage() {
 }
 
 // pagerConfig returns the configuration of the pager from the settings. The
-// pager runs only when standard output is a terminal.
-func pagerConfig() pager.Config {
+// pager runs only when the line editor writes to a terminal, which has a size.
+func (h *Handler) pagerConfig() pager.Config {
 	params := env.Vars().Print()
 	mode, command := params["pager"], env.Setting("pager")
-	fd := int(os.Stdout.Fd())
-	if mode == "off" || command == "" || !term.IsTerminal(fd) {
+	width, height := h.l.Size()
+	if mode == "off" || command == "" || width <= 0 || height <= 0 {
 		return pager.Config{}
 	}
-	width, height, _ := term.GetSize(fd)
 	if c, _ := strconv.Atoi(params["columns"]); c > 0 {
 		width = c
 	}
@@ -1570,8 +1575,7 @@ func pagerConfig() pager.Config {
 		Width:    width,
 		Height:   height,
 		MinLines: minLines,
-		Stdout:   os.Stdout,
-		Stderr:   os.Stderr,
+		Terminal: h.l.Release,
 	}
 }
 

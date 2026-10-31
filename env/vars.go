@@ -96,7 +96,7 @@ func NewDefaultVars() *Variables {
 			"echo_hidden":           "off",
 			// prompts
 			"prompt1": "%S%N%m%/%R%# ",
-			"prompt2": "",
+			"prompt2": "%S%N%m%/%R%# ",
 			// syntax highlighting variables
 			"syntax_hl":             enableSyntaxHL,
 			"syntax_hl_format":      colorLevel.ChromaFormatterName(),

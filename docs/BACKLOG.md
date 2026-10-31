@@ -540,6 +540,10 @@ cgo LDFLAGS, which makes the linker export every symbol into the dynamic symbol
 table. That table survives `-s -w`. duckdb costs 54.1 MB of a `most` build, and
 almost all of it is that table.
 
+Still true on 2026-10-31 with DuckDB v2.0.0. The flag moved to
+`go.duckdb.org/libduckdb/linux-amd64` v0.20000.0, and duckdb now costs 72.8 MB
+of a `most` build (W32).
+
 ### gorm-dameng imported the plugin package
 
 Resolved by removing the driver on 2026-09-23, not by a report. It was the only
@@ -1210,6 +1214,12 @@ carry wide characters.
 Do not document a prompt variable before it works. That is how the current
 state arose.
 
+prompt2 done on 2026-10-30. It is the setting `prompt2` of `\uset` (W61), and
+rline draws it on the rows after the first in an entry. Its default is the
+same as prompt1's, and `%R` shows `-` in it. A row inside a string or a
+comment still shows `-`, because rline draws one prompt for all the rows after
+the first. prompt3 and `%w` are open.
+
 ## W27. Retire, replace and regroup drivers
 
 Source: a review of every driver on 2026-09-27, with Gemini. DeepSeek was asked
@@ -1452,61 +1462,67 @@ and replace the table below. CONTRIBUTING.md says how the script works. A
 driver whose share grows a lot is a question for Ken: keep it in `most`,
 move it to `all`, or find a smaller module.
 
-### The measurement of 2026-10-11
+### The measurement of 2026-10-31
 
-A release build with every driver of `most` was 145.8 MB, stripped, with
-go1.27.2 on linux/amd64, against 203.1 MB on 2026-10-01: 57.3 MB less. The cause
-is the move of Snowflake, BigQuery, Cosmos DB, Athena, Databricks, Spanner,
-ClickHouse, Trino, Presto and DynamoDB to the pure Go drivers of dbimp. They
-saved 17.4 MB (Spanner), 10.9 (Snowflake), 7.6 (Athena), 4.8 (ClickHouse), 4.6
-(Databricks), 4.2 (BigQuery) and 2.7 (DynamoDB) before, and each saves 0.5 MB or
-less now. The binary has 155 modules. DuckDB is 37% of it, and the five largest
-drivers make up 90.4 MB.
+A release build with every driver of `most` was 185.2 MB, stripped, with
+go1.27.2 on linux/amd64, against 145.8 MB on 2026-10-11: 39.4 MB more. Two
+things grew it:
+
+- DuckDB went from v1.5.6 to v2.0.0 (duckdb-go v2.10506.0 to v2.20000.0), and
+  leaving it out now saves 72.8 MB, against 54.1 MB before.
+- The grammars of transit came with syntax highlighting (W58). They are 21.6 MB
+  of symbols, and 14.4 MB of that is the PostgreSQL grammar. They are not a
+  driver, so the table does not show them, and no build tag leaves them out.
+
+The binary has 146 modules. DuckDB is 39% of it, and the five largest drivers
+make up 110.6 MB. `most` without DuckDB is 112.4 MB.
 
 | MB saved | Driver left out | What it brings |
 | ---: | --- | --- |
-| 54.1 | duckdb | the C++ library of DuckDB, with 4 MB of ICU data |
+| 72.8 | duckdb | the C++ library of DuckDB v2.0.0 |
 | 13.5 | oracle | the character set tables of go-ora |
-| 9.7 | chai | Pebble, the storage engine of CockroachDB |
+| 10.0 | chai | Pebble, the storage engine of CockroachDB |
 | 7.4 | ydb | the YDB SDK and its gRPC protos |
-| 5.6 | flightsql | Apache Arrow v18 |
-| 3.6 | moderncsqlite | SQLite translated to Go |
-| 3.3 | sqlserver | go-mssqldb |
-| 3.2 | csvq | the csvq engine |
-| 2.2 | ots | the Tablestore SDK |
-| 1.9 | maxcompute | the ODPS SDK |
+| 6.9 | flightsql | Apache Arrow v18 |
+| 3.8 | moderncsqlite | SQLite translated to Go |
+| 3.5 | pgx | pgx v5. libpq takes its place for Redshift and the others |
+| 3.4 | sqlserver | go-mssqldb |
+| 3.1 | csvq | the csvq engine |
 | 1.7 | sqlite3 | the C library of SQLite |
+| 1.4 | firebird | the Firebird driver |
 | 1.4 | cassandra | gocql |
 | 1.3 | hive | gohive and its Thrift code |
-| 1.3 | firebird | the Firebird driver |
 | 1.0 | impala and vertica | each |
 
-The other 36 drivers add 0.9 MB or less, and 29 of them 0.2 MB or less. The
-drivers of dbimp are the smallest group: 20 of them add 0.3 MB or less each, and
-they share the code of dbimp (1.5 MB in all). `pgx`, `mysql` and the aliases that
-import them show 0.0, because the other drivers use them too.
+The table has 56 drivers. The other 41 add 0.9 MB or less, and 32 of them 0.2
+MB or less. The 30 drivers of dbimp add 0.3 MB or less each, and share the code
+of dbimp (1.7 MB in all). MaxCompute and Tablestore moved to dbimp, and save 0.2
+MB each, against 1.9 and 2.2 MB with the SDKs of Alibaba. The aliases that
+import mysql, and the drivers that use pgwire, show 0.0 or 0.1, because their
+driver stays for the others.
 
-The size by module, from the symbols of an unstripped build (101.5 MB of
-symbols that take room in the file): DuckDB 43.5 MB, go-ora 13.4, the table of
-functions of Go 4.0, dbmeta 3.6, the YDB SDK 2.1 (and its protos 0.5), Pebble
-2.1, modernc's SQLite 2.1, dbimp 1.5, Arrow 1.4, csvq 1.3, pgx 1.3,
-golang.org/x/text 1.1, go-mssqldb 1.1, and the Go standard library about 4. The
-32 MiB buffer of Go's FIPS random number generator (`crypto/internal/fips140/
-drbg.memory`) is in the BSS, so it takes no room in the file, but it does count
-in the memory of a running usql.
+The size by module, from the symbols of an unstripped build (131.2 MB of
+symbols that take room in the file): DuckDB's C++ code 51.0 MB, the grammars of
+transit 21.6, go-ora 12.7, the Go standard library 7.7, the table of functions
+of Go 3.9, dbmeta 3.6, modernc's SQLite 2.1, the YDB SDK 2.0, Pebble 2.0, dbimp
+1.7, Arrow 1.3, csvq 1.3, pgx 1.3, goccy/go-json 1.1, golang.org/x/text 1.1 and
+go-mssqldb 1.0. The BSS holds 36.8 MB, which takes no room in the file. 32 MiB
+of it is the buffer of Go's FIPS random number generator
+(`crypto/internal/fips140/drbg.memory`), which counts in the memory of a running
+usql.
 
 Things to read the table by:
 
 - A number is what leaving out that one driver saves. Two drivers that share
   a module each save only what the other does not use.
-- Arrow v18 is the only version left in the build, for flightsql. The older
-  versions went with Databricks and BigQuery.
-- dbmeta is 3.6 MB because it holds the statements of 40 models. It is the one
-  common module that grows with each database added.
+- pgx now shows what it costs. Before, the drivers for Redshift, CockroachDB,
+  CrateDB and QuestDB imported pgx, so leaving it out saved nothing. They now
+  use libpq when pgx is left out.
 - `bad` drivers are not measured, because no release builds them.
-- The next saving would be DuckDB (a decision for Ken: its own group, as
-  `most` without it is 91.7 MB), then Oracle's character sets (13.5 MB for one
-  driver), then Pebble for chai (9.7 MB).
+- The largest savings are now DuckDB (a decision for Ken: its own group), then
+  the grammars of transit (a build tag for highlighting, or a smaller
+  PostgreSQL grammar, which W58 decided against), then Oracle's character sets
+  (13.5 MB for one driver), then Pebble for chai (10.0 MB).
 
 ## W33. Make the README a landing page
 
@@ -2966,19 +2982,14 @@ Done in usql on 2026-10-29: the package `pager`, and every entry writes through
 `Handler.Stdout`. RELEASE.md lists what changed. tblfmt v0.20.0 removed its
 pager on 2026-10-29 (tblfmt's D42), and usql takes it.
 
+Done on 2026-10-30 in usql, on rline v0.2.0: the pager runs inside
+`Session.Release`, usql measures the terminal with `Session.Size`, and usql no
+longer imports x/term. Ctrl-C in the pager and during a query no longer ends
+usql, because rline watches the signals only while the terminal is in raw
+mode (rline's D48).
+
 Open:
 
-- rline gives the terminal to a child and takes it back, and reports the size
-  of the terminal. The rline session was asked on 2026-10-29, and staged
-  `Session.Release` and `Session.Size` for Ken (rline's D48, proposed). When
-  rline releases them, usql runs the pager inside `Release`, measures the
-  terminal with `Size`, and drops x/term. Until then usql passes `os.Stdout`
-  to the pager and measures it with x/term, as `\e` does.
-- Ctrl-C ends usql, in a query and in the pager. rline v0.1.0 watches SIGINT for
-  the life of the session, and raises it again after it restores the terminal.
-  The rline session was told on 2026-10-29. Its fix, staged with D48, watches
-  the signals only while the terminal is in raw mode. usql does not work around
-  it.
 - When the shell cannot find the pager, the output of that entry is lost, and
   usql prints the error of the shell and the exit status. When the shell itself
   does not start, the output goes to the terminal.

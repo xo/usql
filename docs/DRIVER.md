@@ -75,7 +75,7 @@ Record whether the driver is pure Go. A driver that needs cgo, ships a
 prebuilt native library, or requires a client install cannot go in the default
 build. It also costs far more binary size than a pure Go driver.
 
-A build of the `most` group is 145.8 MB, and DuckDB is 54 MB of it (W32). Two known causes are worth
+A build of the `most` group is 185.2 MB, and DuckDB is 72.8 MB of it (W32). Two known causes are worth
 recognizing, because both survive `-s -w` stripping: `-rdynamic` in cgo
 LDFLAGS, and any use of Go's `plugin` package. Both force dynamic symbol
 export.

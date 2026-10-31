@@ -20,12 +20,16 @@ Read these first. Some of them can stop the release.
   runs. W36 gives them psql's meaning, and that work is not done.
 - `%R` in a prompt shows only `=` or `-`, because rline draws one prompt for
   an entry. rline's backlog item 33 holds a prompt for each row.
-- At a pseudo-terminal, the first keys typed after start can be lost, and
-  rline writes an escape code to a pipe when color is on. usql turns color
-  off unless both input and output are a terminal.
+- The keys typed in the first moments after start are lost. At start, usql
+  asks the terminal whether it draws images, through rasterm. rasterm sends
+  ESC[0c and reads up to 1 KB from standard input in one read, so keys typed
+  before or with the answer are read and dropped. On a pty, a query typed up
+  to 3 s after start was lost, and one typed after 4 s ran.
+- rline writes an escape code to a pipe when color is on. usql turns color off
+  unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.15.2, transit v0.5.0 and rline v0.1.0, all in
+- usql requires dbmeta v0.16.0, transit v0.5.0 and rline v0.4.2, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -36,10 +40,6 @@ Read these first. Some of them can stop the release.
   go-sqlite3 into the executable. Building with `-tags libsqlite3` fixes it,
   and that changes the SQLite of the release builds. Ken decides how (W40).
   This stops the release until he does.
-- Ctrl-C ends usql. It cancels the query, and then rline raises the signal again
-  and the process ends. The same happens with Ctrl-C in the pager. rline v0.1.0
-  watches SIGINT for the life of the session, and the rline session was told on
-  2026-10-29. This stops the release until rline fixes it.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
@@ -69,6 +69,19 @@ package and the `stmt` package (W36).
 - `-o FILE` sends the results to the file, as `\o` does. `\echo` still goes
   to the terminal, as in psql.
 - The completer is an rline completer.
+- rline binds the keys of GNU readline 8.3, and has all of its
+  commands, so any binding in an inputrc works. Ctrl-G aborts as in
+  readline, Esc no longer clears the line, Up and Down walk the history and
+  not the rows of an entry, and Ctrl-J accepts the line as Enter does. F1
+  shows nothing.
+- Ctrl-C leaves the entry on the screen with `^C` after it, and starts the
+  next prompt below, as psql does. The entry is not run and not kept in the
+  history.
+- Tab fills in what the completions share, and then opens a numbered menu of
+  them, as before.
+- usql reads the user's inputrc, as psql does through readline: `$INPUTRC`,
+  or else `~/.inputrc`, or else `/etc/inputrc`. `$if usql` in the file tests
+  the name of usql. The file can bind Tab to something else.
 
 ### Metadata: dbmeta and psql's describe commands
 
@@ -101,6 +114,9 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 - The settings are echo_hidden, editor, on_error_stop, pager, prompt1, prompt2,
   quiet, show_host_information, sslmode, syntax_hl, syntax_hl_format,
   syntax_hl_override_bg, syntax_hl_style and term_graphics.
+- prompt2 is the prompt of the rows after the first in an entry. Its default
+  is the same as prompt1's, and its `%R` shows `-`, so a continued statement
+  shows `pg:user@host/db-> ` as psql does.
 - `\uset` shows every setting as a table, `\uset NAME` shows one, and `\uset NAME
   VALUE` sets it and says so. A value is read as an argument of any meta command.
 - `\set pager less` and `\unset quiet` are errors that say to use `\uset`, so a
@@ -130,6 +146,10 @@ commands, `\?`, `\drivers`, `\echo`, and the listings of `\set`, `\uset`,
 - The pager runs only when standard output is a terminal. `\o`, `\g FILE`,
   `\g |command` and `\watch` do not page.
 - `\timing` prints the time after the pager exits, as psql does.
+- The pager runs inside rline's `Session.Release`, and usql measures the
+  terminal with `Session.Size`. Ctrl-C in the pager goes to the pager, and
+  usql keeps running. Ctrl-Z stops both. The editor of `\e` and the shell of
+  `\!` run the same way, so Ctrl-C in them no longer ends usql.
 - An error goes after the output of its entry, not into the middle of it.
 
 ### The fields of a driver
@@ -205,8 +225,8 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, and hive to gohive v2.
-- MaxCompute and Tablestore move to `github.com/xo/dbimp` (dbimp v0.21.1,
-  dburl v0.54.0). The URLs are `maxcompute://id:key@host/project` and
+- MaxCompute and Tablestore move to `github.com/xo/dbimp` (dbimp v0.23.0,
+  dburl v0.54.0), and dbmeta v0.16.0 reads their metadata. The URLs are `maxcompute://id:key@host/project` and
   `tablestore://id:secret@host/instance`, and every earlier URL must change.
   A host that is not `service.<region>.maxcompute.aliyun.com` needs the
   option `region`. A Tablestore host of the form `instance.region` gets the
@@ -242,6 +262,11 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Other
 
+- `\conninfo` prints a table titled Connection Information, as psql 18 does:
+  the driver, the database, the user, the host, the port, whether a password
+  was used, the version of the server, and the URL. pgx adds the backend PID,
+  SSL, superuser and hot standby rows of psql. The password shows as xxxxx.
+  `\conninfo -password` shows it, and adds the DSN.
 - `size.sh` measures what each driver adds to the binary (W32).
 - The Releases badge drops `sort=semver`, on which shields.io times out.
 - The README ends with the bar of links to the sister projects.
@@ -343,14 +368,18 @@ model, check that each command says it is not supported.
 
 At a terminal:
 
-- an entry over several rows, and moving between its rows
-- Ctrl-C on an open entry, Ctrl-D, and Ctrl-D on an empty entry
+- an entry over several rows, and moving between its rows with the keys of
+  readline
+- Ctrl-C on an open entry of one row and of several rows, which stays on the
+  screen with `^C` after it, Ctrl-D, and Ctrl-D on an empty entry
 - the history across a restart, with and without an old history file
 - tab completion of a meta command, a table, a column, a file, and a
-  variable
+  variable, and the numbered menu of completions
+- a `~/.inputrc` with a binding under `$if usql`, and one with `set
+  editing-mode vi`
 - `\prompt`, `\prompt -password`, `\password` and a password prompt at
   connect
-- `\e` and `\e FILE`, with editor set
+- `\e` and `\e FILE`, with editor set, and Ctrl-C in `\! sleep 10`
 - help, quit and exit as the first word of an entry
 - a terminal that is resized while an entry is open
 
@@ -364,6 +393,7 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
 - `\?`, `\drivers`, `\d` on a large schema, and `\pset` with no arguments
 - `\pset pager off`, `\pset pager always`, and `\pset pager_min_lines 100`
 - q in the pager before the output ends, on a query of a million rows
+- Ctrl-C in the pager, and Ctrl-C during a long query, which cancels it
 - `\uset pager nosuchpager`, which prints the error of the shell
 - CSV and JSON output that is taller than the terminal
 - `\timing on` with a query that pages
@@ -385,7 +415,8 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
 
 Run each meta command in `\?` once, with its options. Check the commands
 that read their arguments in a new way most: `\set`, `\echo`, `\o`, `\g`,
-`\copy`, `\c`, `\cset`, `\prompt`, `\!` and `\setenv`.
+`\copy`, `\c`, `\cset`, `\prompt`, `\!` and `\setenv`. Run `\conninfo` and
+`\conninfo -password` on pgx, on libpq and on SQLite, and inside a transaction.
 
 ### Builds and packages
 

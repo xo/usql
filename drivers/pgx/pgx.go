@@ -12,10 +12,12 @@ package pgx
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -65,6 +67,7 @@ func Driver() drivers.Driver {
 			}, nil
 		},
 		ColumnTypes: pgshared.Dest,
+		ConnInfo:    connInfo,
 		Err: func(err error) (string, string) {
 			var e *pgconn.PgError
 			if errors.As(err, &e) {
@@ -102,4 +105,37 @@ func Driver() drivers.Driver {
 			return n, err
 		},
 	}
+}
+
+// connInfo returns what psql's \conninfo shows about a connection of pgx. It
+// reads one connection of the pool, and nothing inside a transaction.
+func connInfo(ctx context.Context, db drivers.DB) ([][2]string, error) {
+	pool, ok := db.(interface {
+		Conn(context.Context) (*sql.Conn, error)
+	})
+	if !ok {
+		return nil, nil
+	}
+	conn, err := pool.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	var info [][2]string
+	err = conn.Raw(func(dc any) error {
+		c, ok := dc.(*stdlib.Conn)
+		if !ok {
+			return nil
+		}
+		pc := c.Conn().PgConn()
+		_, ssl := pc.Conn().(*tls.Conn)
+		info = [][2]string{
+			{"Backend PID", strconv.FormatUint(uint64(pc.PID()), 10)},
+			{"SSL Connection", strconv.FormatBool(ssl)},
+			{"Superuser", pc.ParameterStatus("is_superuser")},
+			{"Hot Standby", pc.ParameterStatus("in_hot_standby")},
+		}
+		return nil
+	})
+	return info, err
 }

@@ -8,7 +8,7 @@
 //
 // The pager writes to the terminal itself, not through the line editor,
 // because a pager such as less acts like cat when its output is not a
-// terminal.
+// terminal. [Config.Terminal] lends it the terminal for as long as it runs.
 package pager
 
 import (
@@ -41,8 +41,10 @@ type Config struct {
 	// MinLines is the number of lines the output must have before the pager
 	// starts, as \pset pager_min_lines sets. It applies to both tests.
 	MinLines int
-	// Stdout and Stderr are where the pager writes. They are the terminal.
-	Stdout, Stderr *os.File
+	// Terminal calls fn with the terminal, and returns what fn returns. fn
+	// runs for as long as the pager runs. The Release method of the line
+	// editor is one.
+	Terminal func(fn func(tty *os.File) error) error
 }
 
 // Writer is an io.WriteCloser that sends what is written to it to the pager,
@@ -73,6 +75,8 @@ type Writer struct {
 
 	cmd   *exec.Cmd
 	stdin io.WriteCloser
+	// done receives what Terminal returns, when the pager exits.
+	done chan error
 	// gone is set when the pager stopped reading, because the user quit it.
 	gone bool
 }
@@ -83,7 +87,7 @@ type Writer struct {
 // not known and cfg.Always is not set, the Writer writes straight to out.
 func New(out io.Writer, cfg Config) *Writer {
 	w := &Writer{out: out, cfg: cfg}
-	w.direct = cfg.Command == "" || len(cfg.Shell) == 0 || cfg.Stdout == nil ||
+	w.direct = cfg.Command == "" || len(cfg.Shell) == 0 || cfg.Terminal == nil ||
 		(!cfg.Always && cfg.Width <= 0 && cfg.Height <= 0)
 	return w
 }
@@ -131,7 +135,7 @@ func (w *Writer) Close() error {
 		}
 	}
 	_ = w.stdin.Close()
-	err := w.cmd.Wait()
+	err := <-w.done
 	w.cmd, w.direct = nil, true
 	if err != nil {
 		return fmt.Errorf("running the pager %q: %w", w.cfg.Command, err)
@@ -150,16 +154,46 @@ func (w *Writer) fits() bool {
 	return !w.wide && (w.cfg.Height <= 0 || w.lines < w.cfg.Height)
 }
 
+// errNoTerminal is the error of a Terminal that returned without calling its
+// func, and without an error of its own.
+var errNoTerminal = errors.New("no terminal")
+
 // start starts the pager and gives it the output held so far. When the pager
 // does not start, the Writer writes the output straight to out from then on,
 // and Close reports the error.
+//
+// The pager runs inside Terminal, which goes on in a goroutine until the pager
+// exits, because the Writer gives the pager its input over many writes.
 func (w *Writer) start() error {
 	args := append(w.cfg.Shell[1:len(w.cfg.Shell):len(w.cfg.Shell)], w.cfg.Command)
 	cmd := exec.Command(w.cfg.Shell[0], args...)
-	cmd.Stdout, cmd.Stderr = w.cfg.Stdout, w.cfg.Stderr
 	stdin, err := cmd.StdinPipe()
 	if err == nil {
-		err = cmd.Start()
+		started, done := make(chan error, 1), make(chan error, 1)
+		go func() {
+			called := false
+			err := w.cfg.Terminal(func(tty *os.File) error {
+				called = true
+				cmd.Stdout, cmd.Stderr = tty, tty
+				if err := cmd.Start(); err != nil {
+					started <- err
+					return err
+				}
+				started <- nil
+				return cmd.Wait()
+			})
+			if !called {
+				if err == nil {
+					err = errNoTerminal
+				}
+				started <- err
+			}
+			done <- err
+		}()
+		if err = <-started; err != nil {
+			_ = stdin.Close()
+		}
+		w.done = done
 	}
 	if err != nil {
 		w.direct = true

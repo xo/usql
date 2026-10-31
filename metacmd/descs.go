@@ -52,7 +52,7 @@ func init() {
 			{Disconnect, `disconnect`, ``, `alias for \Z`, true, false},
 			{Password, `password`, `[USER]`, `change password for user`, false, false},
 			{Password, `passwd`, ``, `alias for \password`, true, false},
-			{ConnectionInfo, `conninfo`, ``, `display information about the current database connection`, false, false},
+			{ConnectionInfo, `conninfo`, `[-password]`, `display information about the current database connection, with the password when -password is given`, false, false},
 		},
 		// Query Execute
 		{

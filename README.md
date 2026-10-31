@@ -723,7 +723,8 @@ Connection
   \disconnect                       alias for \Z
   \password [USER]                  change password for user
   \passwd                           alias for \password
-  \conninfo                         display information about the current database connection
+  \conninfo [-password]             display information about the current database connection,
+                                    with the password when -password is given
 
 Query Execute
   \g [(OPTIONS)] [FILE] or ;        execute query (and send results to file or |pipe)

@@ -3,8 +3,10 @@ package metacmd
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/signal"
 	"sort"
@@ -13,6 +15,7 @@ import (
 	"time"
 
 	"github.com/xo/dburl"
+	"github.com/xo/rline"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/metacmd/describe"
@@ -351,18 +354,83 @@ func Password(p *Params) error {
 }
 
 // ConnectionInfo is a Connection meta command (\conninfo). Writes information
-// about the connection to the output.
+// about the connection to the output, as a table.
 //
 // Descs:
 //
-//	conninfo	display information about the current database connection
+//	conninfo	[-password]	display information about the current database connection, with the password when -password is given
 func ConnectionInfo(p *Params) error {
-	s := text.NotConnected
-	if db, u := p.Handler.DB(), p.Handler.URL(); db != nil && u != nil {
-		s = fmt.Sprintf(text.ConnInfo, u.SchemeName, u.DSN)
+	opt, ok, err := p.NextOpt(true)
+	switch {
+	case err != nil:
+		return err
+	case ok && opt != "password", !ok && opt != "":
+		return fmt.Errorf(text.InvalidOption, opt)
 	}
-	fmt.Fprintln(p.Handler.Stdout(), s)
-	return nil
+	db, u := p.Handler.DB(), p.Handler.URL()
+	if db == nil || u == nil {
+		fmt.Fprintln(p.Handler.Stdout(), text.NotConnected)
+		return nil
+	}
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	var values [][]any
+	add := func(name, value string) {
+		if value != "" {
+			values = append(values, []any{name, value})
+		}
+	}
+	add("Driver", u.SchemeName)
+	name := strings.TrimPrefix(u.Path, "/")
+	if name == "" {
+		name = u.Opaque
+	}
+	add("Database", name)
+	var user string
+	var password bool
+	if u.User != nil {
+		user = u.User.Username()
+		_, password = u.User.Password()
+	}
+	if user == "" {
+		user, _ = drivers.User(ctx, u, db)
+	}
+	add("Client User", user)
+	add("Host", u.Hostname())
+	add("Server Port", u.Port())
+	add("Password Used", strconv.FormatBool(password))
+	if info, err := drivers.ConnInfo(ctx, u, db); err == nil {
+		for _, v := range info {
+			add(v[0], v[1])
+		}
+	}
+	ver, err := drivers.Version(ctx, u, db)
+	if err != nil {
+		ver = fmt.Sprintf("<unknown, error: %v>", err)
+	}
+	add("Server Version", ver)
+	// the password shows only when it is asked for
+	if ok {
+		add("URL", u.String())
+		add("DSN", u.DSN)
+	} else {
+		add("URL", redacted(u))
+	}
+	return describe.Table(p.Handler.Stdout(), "Connection Information", []string{"Parameter", "Value"}, values)
+}
+
+// redacted returns u with its password written as xxxxx, as the Redacted
+// method of net/url writes it.
+func redacted(u *dburl.URL) string {
+	if u.User == nil {
+		return u.String()
+	}
+	if _, ok := u.User.Password(); !ok {
+		return u.String()
+	}
+	v := *u
+	v.User = url.UserPassword(u.User.Username(), "xxxxx")
+	return v.String()
 }
 
 // Edit is a Query Buffer meta command (\e \edit). Opens the query buffer for
@@ -401,7 +469,12 @@ func Edit(p *Params) error {
 		return err
 	}
 	// reset if no error
-	out, err := env.EditFile(p.Handler.User(), path, line, []byte(s))
+	var out []byte
+	err = onTerminal(p, func() error {
+		var err error
+		out, err = env.EditFile(p.Handler.User(), path, line, []byte(s))
+		return err
+	})
 	if err != nil {
 		return err
 	}
@@ -1091,7 +1164,26 @@ func Conditional(p *Params) error {
 //
 //	!	[COMMAND]	execute command in shell or start interactive shell
 func Shell(p *Params) error {
-	return env.Shell(p.Raw())
+	return onTerminal(p, func() error {
+		return env.Shell(p.Raw())
+	})
+}
+
+// onTerminal runs fn while the line editor lends the terminal to the program
+// that fn starts, so that Ctrl-C goes to that program and does not end usql.
+// fn runs on its own when the line editor does not write to a file.
+func onTerminal(p *Params, fn func() error) error {
+	l := p.Handler.IO()
+	if l == nil {
+		return fn()
+	}
+	err := l.Release(func(*os.File) error {
+		return fn()
+	})
+	if errors.Is(err, rline.ErrNotAFile) {
+		return fn()
+	}
+	return err
 }
 
 // Chdir is a Operating System/Environment meta command (\cd). Changes the

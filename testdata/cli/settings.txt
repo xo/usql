@@ -46,7 +46,7 @@ pager                 "less"\r
 \n
 prompt1               "%S%N%m%/%R%# "\r
 \n
-prompt2               ""\r
+prompt2               "%S%N%m%/%R%# "\r
 \n
 quiet                 off\r
 \n
