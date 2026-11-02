@@ -70,8 +70,8 @@ for tag in $(drivers); do
 done
 
 {
-  printf '%s build: %.1f MB, stripped, %s\n\n' "$GROUP" "$(echo "$FULL/1048576" | bc -l)" "$(cd "$SRC" && go version)"
-  printf '%10s  %s\n' 'MB saved' 'driver left out'
+  printf '%s build: %.1f MiB, stripped, %s\n\n' "$GROUP" "$(echo "$FULL/1048576" | bc -l)" "$(cd "$SRC" && go version)"
+  printf '%10s  %s\n' 'MiB saved' 'driver left out'
   printf '%s\n' "${ROWS[@]}" | sort -rn | while read bytes tag; do
     printf '%10.1f  %s\n' "$(echo "$bytes/1048576" | bc -l)" "$tag"
   done

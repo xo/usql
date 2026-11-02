@@ -75,15 +75,15 @@ select :n as answer;\r
 
 recv:
 \r
-\e[32msq::memory:=> \e[39ms\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231ms\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39mse\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mse\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39msel\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msel\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39msele\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msele\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39mselec\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mselec\e[39m\e[K\r
 \e[19C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \e[20C\r

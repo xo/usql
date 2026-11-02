@@ -1262,6 +1262,8 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 			return nil
 		}
 	}
+	// align each column by its type, as the model of the dialect records it
+	extra = append(extra, tblfmt.WithColumnAlign(columnAlign(dbmeta.Dialect(h.u.Dialect))))
 	// encode and handle error conditions
 	if indent := env.JSONIndent(params); indent != "" {
 		extra = append(extra, tblfmt.WithIndent(indent))
@@ -1508,7 +1510,22 @@ func (h *Handler) Formatter(ctx context.Context) (*describe.Formatter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return describe.NewFormatter(m, h.db, h.GetOutput(), h.u.SchemeName, formatterOpts()...), nil
+	opts := append(formatterOpts(), describe.WithHighlight(h.Highlight))
+	return describe.NewFormatter(m, h.db, h.GetOutput(), h.u.SchemeName, opts...), nil
+}
+
+// Highlight returns s in the colors of syntax highlighting, as the escape
+// sequences of a terminal, when the input is highlighted and the output goes
+// to the terminal. Otherwise, such as with \o or when the output is not a
+// terminal, it returns s as it is.
+func (h *Handler) Highlight(s string) string {
+	if h.hl == nil || h.out != nil {
+		return s
+	}
+	if width, _ := h.l.Size(); width <= 0 {
+		return s
+	}
+	return h.hl.Text(s)
 }
 
 // metadata returns dbmeta's model of the database. It is read once for each
@@ -1648,4 +1665,19 @@ func grab(r []rune, i, end int) rune {
 		return r[i]
 	}
 	return 0
+}
+
+// columnAlign returns the alignment of a column of d, from its type. It
+// returns false when the model of d records no alignment for the type, and the
+// encoder then aligns the column by its values.
+func columnAlign(d dbmeta.Dialect) func(*sql.ColumnType) (tblfmt.Align, bool) {
+	return func(col *sql.ColumnType) (tblfmt.Align, bool) {
+		switch align, ok := d.ColumnAlign(col); {
+		case !ok:
+			return 0, false
+		case align == dbmeta.AlignRight:
+			return tblfmt.AlignRight, true
+		}
+		return tblfmt.AlignLeft, true
+	}
 }

@@ -1,4 +1,4 @@
-//go:build (!no_base || oracle) && !no_oracle && !(linux && arm)
+//go:build (!no_base || oracle) && !no_oracle
 
 package internal
 

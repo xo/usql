@@ -14,7 +14,7 @@ connections:
     database: free
   mss: sqlserver://sa:Adm1nP@ssw0rd@localhost
   mym: mysql://root:P4ssw0rd@localhost
-  ora: oracle://system:P4ssw0rd@localhost/free
+  #ora: oracle://system:P4ssw0rd@localhost/free
   ore: oracle://system:P4ssw0rd@localhost:1522/db1
   pgs: postgres://postgres:P4ssw0rd@localhost
   pgx: pgx://postgres:P4ssw0rd@localhost
@@ -27,7 +27,6 @@ connections:
     file: /path/to/mydb.sqlite3
   mdc: modernsqlite:test.db
   dkd: test.duckdb
-  zzz: ["databricks", "token:dapi*****@adb-*************.azuredatabricks.net:443/sql/protocolv1/o/*********/*******"]
   zz2:
     proto: mysql
     user: "my username"
@@ -38,10 +37,7 @@ connections:
 # init script
 init: |
   \echo welcome to the jungle `date`
-  \uset syntax_hl_style paraiso-dark
-  \uset prompt1 '\033[32m%S%M%/%R%#\033[0m '
-  \set bar test
-  \set foo test
+  \uset syntax_hl_style onedark
   -- \uset show_host_information false
   -- \uset syntax_hl false
   \set 型示師 '本門台初埼本門台初埼'

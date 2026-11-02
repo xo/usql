@@ -4,12 +4,19 @@ import (
 	"io/fs"
 
 	"github.com/xo/transit"
+	"github.com/xo/transit/grammars/clickhouse"
 	"github.com/xo/transit/grammars/cql"
+	"github.com/xo/transit/grammars/duckdb"
 	"github.com/xo/transit/grammars/mysql"
+	"github.com/xo/transit/grammars/neo4j"
 	"github.com/xo/transit/grammars/oracle"
 	"github.com/xo/transit/grammars/postgres/postgres"
 	"github.com/xo/transit/grammars/sql"
+	"github.com/xo/transit/grammars/sqlite3"
 	"github.com/xo/transit/grammars/sqlserver"
+	"github.com/xo/transit/grammars/surrealdb"
+	"github.com/xo/transit/grammars/trino"
+	"github.com/xo/transit/grammars/ydb"
 )
 
 // grammar is a SQL grammar of transit that parses the statements of a dialect.
@@ -22,12 +29,19 @@ type grammar struct {
 // dbmeta, so usql keeps the match of a dialect to a grammar (transit's
 // docs/USQL.md).
 var (
-	genericGrammar   = grammar{sql.Language, sql.Queries}
-	postgresGrammar  = grammar{postgres.Language, postgres.Queries}
-	mysqlGrammar     = grammar{mysql.Language, mysql.Queries}
-	sqlserverGrammar = grammar{sqlserver.Language, sqlserver.Queries}
-	oracleGrammar    = grammar{oracle.Language, oracle.Queries}
-	cqlGrammar       = grammar{cql.Language, cql.Queries}
+	genericGrammar    = grammar{sql.Language, sql.Queries}
+	postgresGrammar   = grammar{postgres.Language, postgres.Queries}
+	mysqlGrammar      = grammar{mysql.Language, mysql.Queries}
+	sqlserverGrammar  = grammar{sqlserver.Language, sqlserver.Queries}
+	oracleGrammar     = grammar{oracle.Language, oracle.Queries}
+	cqlGrammar        = grammar{cql.Language, cql.Queries}
+	sqlite3Grammar    = grammar{sqlite3.Language, sqlite3.Queries}
+	duckdbGrammar     = grammar{duckdb.Language, duckdb.Queries}
+	clickhouseGrammar = grammar{clickhouse.Language, clickhouse.Queries}
+	trinoGrammar      = grammar{trino.Language, trino.Queries}
+	neo4jGrammar      = grammar{neo4j.Language, neo4j.Queries}
+	surrealdbGrammar  = grammar{surrealdb.Language, surrealdb.Queries}
+	ydbGrammar        = grammar{ydb.Language, ydb.Queries}
 )
 
 // grammarFor returns the SQL grammar for a dialect of dbmeta. A dialect with
@@ -45,6 +59,20 @@ func grammarFor(dialect string) grammar {
 		return oracleGrammar
 	case "cassandra":
 		return cqlGrammar
+	case "sqlite3", "libsql", "rqlite":
+		return sqlite3Grammar
+	case "duckdb", "gizmosql":
+		return duckdbGrammar
+	case "clickhouse":
+		return clickhouseGrammar
+	case "trino", "presto", "athena":
+		return trinoGrammar
+	case "neo4j":
+		return neo4jGrammar
+	case "surrealdb":
+		return surrealdbGrammar
+	case "ydb":
+		return ydbGrammar
 	}
 	return genericGrammar
 }

@@ -27,9 +27,10 @@ type Formatter struct {
 	name string
 
 	// The options of the session, such as echo_hidden.
-	logger  Logger
-	dryRun  bool
-	timeout time.Duration
+	logger    Logger
+	dryRun    bool
+	timeout   time.Duration
+	highlight func(string) string
 
 	// path is the schemas that a name resolves in, read when a name is first
 	// printed
@@ -46,6 +47,15 @@ func NewFormatter(m *dbmeta.Meta, db dbmeta.Queryer, out io.Writer, name string,
 		o(f)
 	}
 	return f
+}
+
+// colored returns the SQL of src in color when the formatter highlights, and
+// src as it is otherwise. A color never runs past the end of a line.
+func (f *Formatter) colored(src string) string {
+	if f.highlight == nil {
+		return src
+	}
+	return f.highlight(src)
 }
 
 // notSupported returns the error for a command that the database cannot

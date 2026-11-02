@@ -3,6 +3,7 @@ package highlight
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/xo/transit"
@@ -34,18 +35,10 @@ func depthOf(format string) (depth, bool) {
 }
 
 // spec returns the style spec of the line editor for the capture name, or the
-// empty string when the name needs no style. A name that the style does not
-// give has the entry of its longest prefix, and a text that no capture names
-// has no color, except that a background that the style asks for is drawn.
+// empty string when the name needs no style.
 func spec(s *styles.Style, name string, d depth, keepBG bool) string {
-	var e styles.Entry
-	if name != "" {
-		e = s.Lookup(name)
-	}
-	if !keepBG && !e.Bg.IsSet() {
-		e.Bg = s.Background()
-	}
-	if keepBG && name == "" {
+	e, ok := entry(s, name, keepBG)
+	if !ok {
 		return ""
 	}
 	var words []string
@@ -61,6 +54,78 @@ func spec(s *styles.Style, name string, d depth, keepBG bool) string {
 	words = appendColor(words, "color", e.Fg, d)
 	words = appendColor(words, "bgcolor", e.Bg, d)
 	return strings.Join(words, " ")
+}
+
+// sgr returns the escape sequence of a terminal that turns on the style of the
+// capture name, or the empty string when the name needs no style.
+func sgr(s *styles.Style, name string, d depth, keepBG bool) string {
+	e, ok := entry(s, name, keepBG)
+	if !ok {
+		return ""
+	}
+	var params []string
+	if e.Bold {
+		params = append(params, "1")
+	}
+	if e.Italic {
+		params = append(params, "3")
+	}
+	if e.Underline {
+		params = append(params, "4")
+	}
+	params = appendSGR(params, 38, e.Fg, d)
+	params = appendSGR(params, 48, e.Bg, d)
+	if len(params) == 0 {
+		return ""
+	}
+	return "\x1b[" + strings.Join(params, ";") + "m"
+}
+
+// entry returns the entry of the style for the capture name. A name that the
+// style does not give has the entry of its longest prefix, and a text that no
+// capture names has no color, except that a background that the style asks
+// for is drawn. It returns false when the name needs no style.
+func entry(s *styles.Style, name string, keepBG bool) (styles.Entry, bool) {
+	var e styles.Entry
+	if name != "" {
+		e = s.Lookup(name)
+	}
+	if !keepBG && !e.Bg.IsSet() {
+		e.Bg = s.Background()
+	}
+	if keepBG && name == "" {
+		return e, false
+	}
+	return e, true
+}
+
+// appendSGR appends the parameters of an escape sequence that set a color,
+// reduced to the depth. base is 38 for the foreground and 48 for the
+// background.
+func appendSGR(params []string, base int, c styles.Color, d depth) []string {
+	if !c.IsSet() {
+		return params
+	}
+	switch d {
+	case depth16:
+		c = c.To16()
+	case depth256:
+		c = c.To256()
+	}
+	switch c.Kind {
+	case styles.ColorANSI:
+		// 30 to 37 and 90 to 97 for the foreground, 40 to 47 and 100 to 107
+		// for the background
+		n := base - 8 + int(c.Value)
+		if c.Value >= 8 {
+			n += 60 - 8
+		}
+		return append(params, strconv.Itoa(n))
+	case styles.Color256:
+		return append(params, fmt.Sprintf("%d;5;%d", base, c.Value))
+	}
+	r, g, b := c.RGB()
+	return append(params, fmt.Sprintf("%d;2;%d;%d;%d", base, r, g, b))
 }
 
 // appendColor appends the property of a color, reduced to the depth.

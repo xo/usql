@@ -510,6 +510,8 @@ func Print(p *Params) error {
 	}
 	if s == "" {
 		s = text.QueryBufferEmpty
+	} else {
+		s = p.Handler.Highlight(s)
 	}
 	fmt.Fprintln(p.Handler.Stdout(), s)
 	return nil

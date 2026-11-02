@@ -23,59 +23,59 @@ select * from nonexistent;\r
 
 recv:
 \r
-\e[32msq::memory:=> \e[39ms\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231ms\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39mse\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mse\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39msel\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msel\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39msele\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msele\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39mselec\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mselec\e[39m\e[K\r
 \e[19C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \e[20C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;231mf\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;231mf\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;231mfr\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;231mfr\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;231mfro\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;231mfro\e[39m\e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mn\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mn\e[39m\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mno\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mno\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnon\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnon\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnone\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnone\e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonex\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonex\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexi\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexi\e[39m\e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexis\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexis\e[39m\e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexist\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexist\e[39m\e[K\r
 \e[36C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexiste\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexiste\e[39m\e[K\r
 \e[37C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexisten\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexisten\e[39m\e[K\r
 \e[38C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[39m\e[K\r
 \e[39C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
 \e[40C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;197m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
 \e[40C\r
 \n
 error: sqlite3: 1: no such table: nonexistent\r
@@ -89,55 +89,55 @@ select 1 as still_works;\r
 
 recv:
 \r
-\e[32msq::memory:=> \e[39ms\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231ms\e[39m\e[K\r
 \e[15C\r
-\e[32msq::memory:=> \e[39mse\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mse\e[39m\e[K\r
 \e[16C\r
-\e[32msq::memory:=> \e[39msel\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msel\e[39m\e[K\r
 \e[17C\r
-\e[32msq::memory:=> \e[39msele\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231msele\e[39m\e[K\r
 \e[18C\r
-\e[32msq::memory:=> \e[39mselec\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;231mselec\e[39m\e[K\r
 \e[19C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m\e[K\r
 \e[20C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[K\r
 \e[21C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m\e[K\r
 \e[22C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[K\r
 \e[23C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;231ma\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;231ma\e[39m\e[K\r
 \e[24C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m\e[K\r
 \e[25C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[K\r
 \e[26C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms\e[39m\e[K\r
 \e[27C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mst\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mst\e[39m\e[K\r
 \e[28C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231msti\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231msti\e[39m\e[K\r
 \e[29C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstil\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstil\e[39m\e[K\r
 \e[30C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill\e[39m\e[K\r
 \e[31C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_\e[39m\e[K\r
 \e[32C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_w\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_w\e[39m\e[K\r
 \e[33C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_wo\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_wo\e[39m\e[K\r
 \e[34C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_wor\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_wor\e[39m\e[K\r
 \e[35C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_work\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_work\e[39m\e[K\r
 \e[36C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works\e[39m\e[K\r
 \e[37C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
 \e[38C\r
-\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
+\e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
 \e[38C\r
 \n
  still_works \r

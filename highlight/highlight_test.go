@@ -2,11 +2,13 @@ package highlight
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/xo/transit/grammars/usql"
 	"github.com/xo/transit/styles"
+	"github.com/xo/usql/env"
 )
 
 // newTest returns a highlighter with no line editor, which is all that capture
@@ -46,10 +48,31 @@ func names(t *testing.T, h *Highlighter, src string) map[string]string {
 }
 
 func TestCapture(t *testing.T) {
-	for _, dialect := range []string{"", "postgres", "mysql", "sqlserver", "oracle", "cassandra", "sqlite3"} {
-		t.Run("dialect "+dialect, func(t *testing.T) {
-			h := newTest(t, dialect)
-			got := names(t, h, "select 1 as n, 'two' as s from t where a = :v; \\echo hi\n")
+	const sql = "select 1 as n, 'two' as s from t where a = :v; \\echo hi\n"
+	tests := []struct {
+		dialect string
+		src     string
+		keyword string
+	}{
+		{"", sql, "select"},
+		{"postgres", sql, "select"},
+		{"mysql", sql, "select"},
+		{"sqlserver", sql, "select"},
+		{"oracle", sql, "select"},
+		{"cassandra", sql, "select"},
+		{"sqlite3", sql, "select"},
+		{"duckdb", sql, "select"},
+		{"clickhouse", sql, "select"},
+		{"trino", sql, "select"},
+		{"surrealdb", sql, "select"},
+		{"ydb", sql, "select"},
+		// Neo4j speaks Cypher
+		{"neo4j", "match (n) where n.a = :v return n; \\echo hi\n", "match"},
+	}
+	for _, test := range tests {
+		t.Run("dialect "+test.dialect, func(t *testing.T) {
+			h := newTest(t, test.dialect)
+			got := names(t, h, test.src)
 			var all strings.Builder
 			for name, text := range got {
 				all.WriteString(name + "=" + text + " ")
@@ -60,12 +83,12 @@ func TestCapture(t *testing.T) {
 			t.Log(all.String())
 			var found bool
 			for name, text := range got {
-				if strings.HasPrefix(name, "keyword") && strings.Contains(strings.ToLower(text), "select") {
+				if strings.HasPrefix(name, "keyword") && strings.Contains(strings.ToLower(text), test.keyword) {
 					found = true
 				}
 			}
 			if !found {
-				t.Errorf("select is not a keyword in %v", got)
+				t.Errorf("%s is not a keyword in %v", test.keyword, got)
 			}
 		})
 	}
@@ -141,3 +164,96 @@ func TestDepthOf(t *testing.T) {
 		t.Errorf("noop draws color")
 	}
 }
+
+func TestSGR(t *testing.T) {
+	s, ok := styles.Get("monokai")
+	if !ok {
+		t.Fatal("no style monokai")
+	}
+	tests := []struct {
+		name    string
+		capture string
+		d       depth
+		keepBG  bool
+		want    string
+	}{
+		{"keyword rgb", "keyword", depthRGB, true, "\x1b[38;2;102;217;239m"},
+		{"keyword 256", "keyword", depth256, true, "\x1b[38;5;81m"},
+		{"plain text keeps the terminal", "", depthRGB, true, ""},
+		{"plain text takes the background", "", depthRGB, false, "\x1b[48;2;39;40;34m"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sgr(s, tt.capture, tt.d, tt.keepBG); got != tt.want {
+				t.Errorf("sgr(%q) = %q, want %q", tt.capture, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAppendSGR(t *testing.T) {
+	ansi := func(n uint32) styles.Color { return styles.Color{Kind: styles.ColorANSI, Value: n} }
+	tests := []struct {
+		name string
+		base int
+		c    styles.Color
+		want string
+	}{
+		{"red", 38, ansi(1), "31"},
+		{"bright red", 38, ansi(9), "91"},
+		{"red background", 48, ansi(1), "41"},
+		{"bright red background", 48, ansi(9), "101"},
+		{"one of 256", 38, styles.Color{Kind: styles.Color256, Value: 208}, "38;5;208"},
+		{"not set", 38, styles.Color{}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := strings.Join(appendSGR(nil, tt.base, tt.c, depthRGB), ";"); got != tt.want {
+				t.Errorf("appendSGR = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestText checks that Text colors a statement for the terminal, that no color
+// runs past the end of a line, and that the text stays the same.
+func TestText(t *testing.T) {
+	const src = "select 1 as n, 'two' as s\nfrom t where a = :v;\n\\echo hi"
+	for name, value := range map[string]string{
+		"syntax_hl":        "true",
+		"syntax_hl_format": "terminal16m",
+		"syntax_hl_style":  "monokai",
+	} {
+		old := env.Setting(name)
+		if err := env.Vars().SetSetting(name, value); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = env.Vars().SetSetting(name, old) })
+	}
+	h := newTest(t, "postgres")
+	got := h.Text(src)
+	if !strings.Contains(got, "\x1b[38;2;102;217;239mselect\x1b[0m") {
+		t.Errorf("select is not drawn as a keyword: %q", got)
+	}
+	if plain := sgrRE.ReplaceAllString(got, ""); plain != src {
+		t.Errorf("the text changed:\n got: %q\nwant: %q", plain, src)
+	}
+	for i, line := range strings.Split(got, "\n") {
+		if on, off := len(sgrRE.FindAllString(line, -1)), strings.Count(line, "\x1b[0m"); on != 2*off {
+			t.Errorf("line %d leaves a color on: %q", i+1, line)
+		}
+	}
+	// the tree of the line editor stays as it was
+	if h.tree != nil {
+		t.Errorf("Text kept its tree")
+	}
+	if err := env.Vars().SetSetting("syntax_hl", "false"); err != nil {
+		t.Fatal(err)
+	}
+	if got := h.Text(src); got != src {
+		t.Errorf("highlighting is off, and the text changed: %q", got)
+	}
+}
+
+// sgrRE matches an escape sequence that sets the style of the text.
+var sgrRE = regexp.MustCompile("\x1b\\[[0-9;]*m")

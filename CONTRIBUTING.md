@@ -32,9 +32,7 @@ The short version:
 A driver that cannot compile everywhere says so in its package comment with a
 `Build:` line, and `gen.go` adds that constraint to the file it generates in
 `internal`. The duckdb driver uses `Build: !(linux && arm) && !windows`, because
-its prebuilt library has no 32 bit arm build and no windows build. The oracle
-driver uses `Build: !(linux && arm)`, because go-ora writes a constant that
-overflows a 32 bit int.
+its prebuilt library has no 32 bit arm build and no windows build.
 
 ## Building duckdb on Windows
 

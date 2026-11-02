@@ -1462,30 +1462,37 @@ and replace the table below. CONTRIBUTING.md says how the script works. A
 driver whose share grows a lot is a question for Ken: keep it in `most`,
 move it to `all`, or find a smaller module.
 
-### The measurement of 2026-10-31
+### The measurement of 2026-11-02
 
-A release build with every driver of `most` was 185.2 MB, stripped, with
-go1.27.2 on linux/amd64, against 145.8 MB on 2026-10-11: 39.4 MB more. Two
-things grew it:
+`size.sh` divides by 1,048,576 but printed "MB" until 2026-11-02, so every
+figure of this item, then and now, is in MiB. It now prints MiB.
 
-- DuckDB went from v1.5.6 to v2.0.0 (duckdb-go v2.10506.0 to v2.20000.0), and
-  leaving it out now saves 72.8 MB, against 54.1 MB before.
-- The grammars of transit came with syntax highlighting (W58). They are 21.6 MB
-  of symbols, and 14.4 MB of that is the PostgreSQL grammar. They are not a
-  driver, so the table does not show them, and no build tag leaves them out.
+A release build with every driver of `most` was 178.6 MiB, stripped, with
+go1.27.2 on linux/amd64, against 185.2 MiB on 2026-10-31: 6.6 MiB less. Three
+things moved it:
 
-The binary has 146 modules. DuckDB is 39% of it, and the five largest drivers
-make up 110.6 MB. `most` without DuckDB is 112.4 MB.
+- Oracle moved from sijms/go-ora to xo/oracle (W66). Leaving it out now saves
+  3.4 MiB, against 13.5 MiB with the character set tables of go-ora.
+- transit v0.7.0 wrote the PostgreSQL, Oracle and SQL Server grammars again,
+  and they are smaller. It also added grammars for SQLite, DuckDB, ClickHouse,
+  Trino, Neo4j, SurrealDB and YDB, which usql maps (W58). The grammars are
+  16.1 MiB of symbols, against 21.6 before. They are not a driver, so the
+  table does not show them, and no build tag leaves them out.
+- The dependencies moved with `update-deps.sh`. DuckDB stays at v2.0.0 and
+  still saves 72.8 MiB.
 
-| MB saved | Driver left out | What it brings |
+The binary has 153 modules. DuckDB is 41% of it. `most` without DuckDB is
+105.8 MiB.
+
+| MiB saved | Driver left out | What it brings |
 | ---: | --- | --- |
 | 72.8 | duckdb | the C++ library of DuckDB v2.0.0 |
-| 13.5 | oracle | the character set tables of go-ora |
 | 10.0 | chai | Pebble, the storage engine of CockroachDB |
 | 7.4 | ydb | the YDB SDK and its gRPC protos |
 | 6.9 | flightsql | Apache Arrow v18 |
 | 3.8 | moderncsqlite | SQLite translated to Go |
 | 3.5 | pgx | pgx v5. libpq takes its place for Redshift and the others |
+| 3.4 | oracle | xo/oracle |
 | 3.4 | sqlserver | go-mssqldb |
 | 3.1 | csvq | the csvq engine |
 | 1.7 | sqlite3 | the C library of SQLite |
@@ -1494,35 +1501,53 @@ make up 110.6 MB. `most` without DuckDB is 112.4 MB.
 | 1.3 | hive | gohive and its Thrift code |
 | 1.0 | impala and vertica | each |
 
-The table has 56 drivers. The other 41 add 0.9 MB or less, and 32 of them 0.2
-MB or less. The 30 drivers of dbimp add 0.3 MB or less each, and share the code
-of dbimp (1.7 MB in all). MaxCompute and Tablestore moved to dbimp, and save 0.2
-MB each, against 1.9 and 2.2 MB with the SDKs of Alibaba. The aliases that
-import mysql, and the drivers that use pgwire, show 0.0 or 0.1, because their
-driver stays for the others.
+The table has 56 drivers. The other 41 add 0.9 MiB or less, and 32 of them 0.2
+MiB or less. The drivers of dbimp add 0.3 MiB or less each, and share the code
+of dbimp (1.7 MiB in all). The aliases that import mysql, and the drivers that
+use pgwire, show 0.0 or 0.1, because their driver stays for the others. The
+grammar of a dialect stays when its driver is left out, so the table does not
+show it.
 
-The size by module, from the symbols of an unstripped build (131.2 MB of
-symbols that take room in the file): DuckDB's C++ code 51.0 MB, the grammars of
-transit 21.6, go-ora 12.7, the Go standard library 7.7, the table of functions
-of Go 3.9, dbmeta 3.6, modernc's SQLite 2.1, the YDB SDK 2.0, Pebble 2.0, dbimp
-1.7, Arrow 1.3, csvq 1.3, pgx 1.3, goccy/go-json 1.1, golang.org/x/text 1.1 and
-go-mssqldb 1.0. The BSS holds 36.8 MB, which takes no room in the file. 32 MiB
-of it is the buffer of Go's FIPS random number generator
-(`crypto/internal/fips140/drbg.memory`), which counts in the memory of a running
-usql.
+The size by module, from the symbols of an unstripped build (115.7 MiB of
+symbols that take room in the file): DuckDB's C++ code 51.0 MiB, the Go
+standard library 6.9, DuckDB's data and other C code with no package name 5.2,
+the Neo4j grammar 4.2, the table of functions of Go 3.9, dbmeta 3.6, xo/oracle
+2.6, modernc's SQLite 2.1, the generic SQL grammar 2.0, the YDB SDK 2.0, Pebble
+2.0, the Oracle grammar 1.9 and dbimp 1.7. The BSS holds 36.8 MiB, which takes
+no room in the file. 32 MiB of it is the buffer of Go's FIPS random number
+generator (`crypto/internal/fips140/drbg.memory`), which counts in the memory
+of a running usql.
 
-Things to read the table by:
+The grammars of transit, in MiB of symbols:
 
-- A number is what leaving out that one driver saves. Two drivers that share
-  a module each save only what the other does not use.
-- pgx now shows what it costs. Before, the drivers for Redshift, CockroachDB,
-  CrateDB and QuestDB imported pgx, so leaving it out saved nothing. They now
-  use libpq when pgx is left out.
+| MiB | Grammar | Dialects |
+| ---: | --- | --- |
+| 4.2 | neo4j | neo4j |
+| 2.0 | sql | every dialect with no grammar of its own |
+| 1.9 | oracle | oracle |
+| 1.3 | postgres | postgres, cockroachdb, cratedb, redshift |
+| 1.1 | sqlserver | sqlserver |
+| 1.1 | ydb | ydb |
+| 1.0 | clickhouse | clickhouse |
+| 0.9 | duckdb | duckdb, gizmosql |
+| 0.7 | trino | trino, presto, athena |
+| 0.5 | mysql | mysql, tidb, memsql, vitess |
+| 0.5 | surrealdb | surrealdb |
+| 0.3 | sqlite3 | sqlite3, libsql, rqlite |
+| 0.3 | transit | the runtime |
+| 0.1 | cql | cassandra |
+| 0.0 | usql | the input of usql |
+
+Things to read the tables by:
+
+- A number of the driver table is what leaving out that one driver saves. Two
+  drivers that share a module each save only what the other does not use.
 - `bad` drivers are not measured, because no release builds them.
-- The largest savings are now DuckDB (a decision for Ken: its own group), then
-  the grammars of transit (a build tag for highlighting, or a smaller
-  PostgreSQL grammar, which W58 decided against), then Oracle's character sets
-  (13.5 MB for one driver), then Pebble for chai (10.0 MB).
+- The largest savings are DuckDB (a decision for Ken: its own group), then
+  Pebble for chai (10.0 MiB), then the YDB SDK (7.4 MiB) and Arrow (6.9 MiB).
+- The Neo4j grammar is the largest grammar, at 4.2 MiB, for a dialect that few
+  use. A build tag for each grammar, or a grammar that follows the driver, is
+  a question for Ken.
 
 ## W33. Make the README a landing page
 
@@ -2247,6 +2272,12 @@ DynamoDB releases, and a write to DynamoDB, because DynamoDB Local refuses
 registered drivers, expected at least 20". It failed before W43, and it passes
 with `-tags most`.
 
+Fixed on 2026-11-01. The test no longer expects a fixed number of drivers. It
+reads the build tags of the test binary, finds each file in `internal` whose
+build constraint the tags satisfy, and expects the driver of each such file to
+be registered. It passes in the default build and with `most`, `no_base mysql`,
+`no_pgx` and `no_base redshift`.
+
 ## W44. Take the Druid driver: Done
 
 Done on 2026-10-08 on dburl v0.46.0 and dbimp v0.14.0. The driver is dbimp's,
@@ -2784,16 +2815,33 @@ and Vitess use the MySQL grammar, and SQL Server, Oracle and Cassandra use their
 own. Every other dialect uses the generic SQL grammar. Before a connection,
 PostgreSQL applies, as in psql.
 
+On 2026-11-02, on transit v0.7.0, more dialects got a grammar of their own:
+SQLite for sqlite3, libsql and rqlite, DuckDB for duckdb and gizmosql,
+ClickHouse, Trino for trino, presto and athena, Neo4j (Cypher), SurrealDB and
+YDB. `TestCapture` checks each, with a Cypher statement for Neo4j. W32 has the
+size of each grammar.
+
 The cost is in the binary. The grammars add about 23 MB to the default build, and
 15 MB of that is the PostgreSQL grammar. Ken may choose to give PostgreSQL the
 generic grammar, which is 2.7 MB, and to keep the PostgreSQL grammar for the
 completer.
 
+Update, 2026-11-02, on transit v0.7.0: xo wrote the PostgreSQL grammar again,
+and it is 1.3 MiB. All the grammars are 16.1 MiB, and the Neo4j grammar is the
+largest, at 4.2 MiB. W32 has the size of each.
+
 What is left: the highlighter parses the text a second time, because the input
 and the highlighter keep a tree each (W36 wants one shared tree). The statements
 of MySQL, SQL Server and Oracle stored programs split at each `;`, because the
 input does not turn on `BeginEndBlocks` yet, and so each part is highlighted
-alone. `\p` prints the buffer with no color.
+alone.
+
+Done on 2026-11-02 at Ken's request: `\p` prints the query buffer in color, and
+`\sv` and `\sf` print the definition in color, as before the move to transit.
+`Highlighter.Text` writes the colors as escape sequences of the terminal. It
+parses the text with a tree of its own, so the tree of the line editor stays.
+The text is in color only when the input is highlighted, the output is the
+terminal, and `\o` is not set.
 
 ## W59. Record the terminal sessions again: Done
 
@@ -2993,3 +3041,172 @@ Open:
 - When the shell cannot find the pager, the output of that entry is lost, and
   usql prints the error of the shell and the exit status. When the shell itself
   does not start, the output goes to the terminal.
+
+## W65. Keep a stored program in one statement: Done
+
+Source: the transit session, on 2026-11-01, while it wrote the SQLite grammar.
+usql splits the input at each `;`, and it does not know that the `BEGIN ...
+END` body of a stored program contains them. It sends each piece to the server
+as a statement of its own, so a stored program cannot be created through usql.
+Checked with `feed.Parser` on transit v0.6.0. Each of these splits into three
+statements:
+
+- `CREATE TRIGGER ... BEGIN ... END` on SQLite
+- `CREATE PROCEDURE p() BEGIN ... END` on MySQL
+- `CREATE PROCEDURE p AS BEGIN ... END` on SQL Server
+- `CREATE OR REPLACE PROCEDURE p AS BEGIN ... END` on Oracle
+
+The usql grammar of transit has the option `BeginEndBlocks` (transit's D112),
+which keeps each of these in one statement. It leaves `BEGIN; ...; END;`, a
+transaction, split. usql never turns it on. W58 records the same split for
+highlighting.
+
+Ken decided on 2026-11-01 that dbmeta records which dialects have such bodies,
+as `Info.Batches` records the batches of CQL. usql then sets `BeginEndBlocks`
+from it, as it sets `Batches`. usql keeps no list of
+dialects. The request went to dbmeta on 2026-11-01.
+
+Progress on 2026-11-01. dbmeta built the field `Syntax.BeginEndBlocks` (its
+D249), and held each model to a live server. It is not released. The field is
+true for sqlite3, libsql, rqlite, mysql, mariadb, memsql, vitess, sqlserver,
+oracle, postgres (`BEGIN ATOMIC`, from release 14), cockroachdb, firebird,
+exasol, hdb and trino. It is also true for bigquery, snowflake and databricks,
+from their documentation only. tidb is false, because it refuses `CREATE
+PROCEDURE`.
+
+On transit v0.6.0 with `BeginEndBlocks` on, these each split as they must:
+
+- PostgreSQL: a trigger with no `BEGIN`, `BEGIN ATOMIC` with `CASE ... END`
+  inside, a dollar-quoted body, `RETURN` with no body, and a transaction
+- MySQL: a trigger of one statement, `END IF`, `END WHILE` and `END CASE`,
+  a nested `BEGIN ... END`, `RETURN` with no body, and `end;` in a string
+- SQL Server: a trigger, a procedure with no `BEGIN`, and `BEGIN TRY` with
+  `BEGIN CATCH`
+- SQLite: a trigger with `CASE ... END`, and a transaction after a view
+
+Done on 2026-11-01 on dbmeta v0.22.0. `feed.Language` sets `BeginEndBlocks`
+from `Syntax.BeginEndBlocks`. `TestLanguageBeginEndBlocks` in `drivers` parses
+a stored program with `drivers.Language` for each dialect above, and checks
+that a transaction and the dialects without such bodies still split. A
+`CREATE TRIGGER` with two inserts in its body was created through usql on
+SQLite and fired both. Before, SQLite refused it with "incomplete input".
+
+Open:
+
+- An Oracle anonymous block, `BEGIN ... END` or `DECLARE ... BEGIN ... END`
+  with no `CREATE`, still splits with `BeginEndBlocks`. It is question 103 in
+  transit's docs/PLAN.md, and needs a separate option. Ken decided it on
+  2026-11-01 (transit's D128). The usql grammar gets the option
+  `AnonymousBlocks`, for Oracle only. With it, a statement that starts with
+  `BEGIN` or `DECLARE` ends at the `;` after its last `END`, or at a line that
+  holds only `/`. usql takes it from a flag of dbmeta, as it takes
+  `BeginEndBlocks`. The flag was asked of dbmeta on 2026-11-01. Both wait on
+  their releases.
+- Firebird's `EXECUTE BLOCK ... AS ... BEGIN ... END` and SAP HANA's `DO
+  BEGIN ... END` still split, although `CREATE PROCEDURE` stays whole on both.
+  dbmeta measured both forms on live servers. The request went to transit on
+  2026-11-01: `BeginEndBlocks` treats both openers as it treats `CREATE ...
+  PROCEDURE`. dbmeta already sets `BeginEndBlocks` for both dialects.
+- Progress on 2026-11-02. transit built both fixes, and will release them after
+  its ClickHouse and Trino grammars. `AnonymousBlocks` is transit's D128 and
+  D131, and the openers `EXECUTE BLOCK` and `DO BEGIN` are its D130. dbmeta
+  adds `Syntax.AnonymousBlocks`, true for Oracle only. Then `feed.Language`
+  passes it, and `TestLanguageBeginEndBlocks` gains the three forms. dbmeta v0.24.0
+  has the field, measured on Oracle 19c, and usql takes it. Done on 2026-11-02
+  on transit v0.7.0: `feed.Language` passes `AnonymousBlocks`, and
+  `TestLanguageBeginEndBlocks` checks an Oracle block with `BEGIN` and with
+  `DECLARE`, Firebird's `EXECUTE BLOCK`, SAP HANA's `DO BEGIN` and Trino's
+  `WITH FUNCTION`, and that SQL Server's `DECLARE @x int;` stays a statement
+  of its own. On Oracle 26ai a block and the select after it ran.
+- On Oracle, a line with only `/` after a block or a statement starts the next
+  statement, so usql sends `/` and the statement after it, and Oracle answers
+  ORA-00900. `CREATE PROCEDURE ... END;` and `/` does the same. Ken decided it
+  on 2026-11-02 (transit's D135): with `AnonymousBlocks`, a `/` line after a
+  statement that ended with `;` is a node of its own that feed drops, and a
+  `/` line after a statement with no `;` ends it, outside its text. It waits
+  for the release of transit. Then feed drops the node, and the test gains the
+  `/` cases.
+- On ClickHouse, a `$tag$ ... $tag$` or `$$ ... $$` string can hold a `;`.
+  Done on 2026-11-02 on dbmeta v0.24.0, which sets `DollarQuotes` (its D251).
+  `TestLanguageClickHouse` covers both forms.
+
+## W66. Drivers say themselves that the server refused the credential
+
+Source: Ken, on 2026-11-02. usql prompts for a password when the server
+refuses the credential, and `drivers.IsPasswordErr` decides it. A dbimp driver
+matches `dbimp.ErrAuthentication`. Three drivers that xo keeps outside dbimp
+need a hook in usql each:
+
+- Oracle: usql uses sijms/go-ora and looks for the text "empty password", so
+  a wrong password gives no prompt.
+- Cassandra: usql looks for the text "password are incorrect".
+- ODBC: usql reads the SQLSTATE of each record for class 28.
+
+Gemini Pro and DeepSeek were asked. Gemini Pro proposed a method on the error,
+and DeepSeek a sentinel error shared by every driver. Ken chose the method on
+2026-11-02. An error of a driver has the method `AuthenticationRefused() bool`,
+which is true when the server refused the credential and false for a refusal
+for lack of a permission. usql declares the interface, and a driver does not
+import usql or dbimp.
+
+usql asks each error of the tree of the error, and not only the first one that
+has the method, as `errors.As` would. An error that returns false can come
+before one that returns true, such as the first record of an ODBC diagnostic.
+
+Done in usql on 2026-11-02: `drivers.IsPasswordErr` asks the method, and
+`TestIsPasswordErrMethod` covers it. The requests went to the sessions of dbimp,
+oracle and odbc on 2026-11-02. No cassandra session was running, so Ken holds
+that request.
+
+Open:
+
+- xo/oracle: the method on its errors. Staged in xo/oracle on 2026-11-02 and
+  not released: `*ServerError` is true for ORA-01017 and ORA-01005, and false
+  for ORA-01031, ORA-01045, ORA-28000, ORA-28001 and ORA-28041. The server
+  answers an empty password with ORA-01005, tested live on 26ai, 18c and 11g,
+  so the driver has no check of its own. The driver raises ORA-28041 itself
+  when it cannot read the logon data of the server, where a new password does
+  not help.
+  On 2026-11-02, at Ken's request, usql moved from sijms/go-ora to xo/oracle,
+  at a version with no release, and dropped the hooks `Err` and `ForceParams`
+  of the oracle driver. The output of every error checked on Oracle 26ai was
+  the same without `Err`. On 2026-11-02 Ken also dropped the hook
+  `IsPasswordErr`, so the driver registers with no hooks. Done on 2026-11-02 on
+  xo/oracle v0.1.0, and moved to v0.1.1 for its fix of a call after a
+  cancelled one. Both have the method and an `Error()` with no position
+  line. `drivers/oracle/oracle_test.go` checks the prompt, and on Oracle 26ai
+  usql prompted for the password of a URL that had none, and connected. dburl still names sijms/go-ora as the
+  package and the URL of the driver, which the README table and the `See:`
+  line follow. dburl staged the change on 2026-11-02 (its D69): the package and
+  the URL name xo/oracle, and a new `GenOracle` passes the URL as written,
+  with port 1521 when it has none. It waits for Ken's release of dburl, which
+  waits for a tag of xo/oracle. dburl v0.55.0 has it, and usql took it on
+  2026-11-02: the README table and the `See:` line name xo/oracle. xo/oracle also staged an `Error()` that returns the message of the
+  server alone, with no line " error occur at position: N" and no line feed at
+  the end, on 2026-11-02. `ErrPos()` keeps the position. The first tag of
+  xo/oracle must be v0 or v1, or its path becomes `/v3`, because v3.0.0 and
+  v3.0.1 are tags of sijms. Ken decides it. usql then moves from sijms/go-ora to
+  xo/oracle, which has no release of its own yet. Its v3.0.0 and v3.0.1 tags
+  are those of sijms, whose go.mod declares `github.com/sijms/go-ora`.
+- xo/cassandra: done on 2026-11-02 on xo/cassandra v0.2.0, whose module path
+  is `github.com/xo/cassandra`. Its errors have the method, from gocql's
+  `*RequestErrCredentials` or, when gocql loses the type while it creates the
+  session, from the text "password are incorrect". usql registers the driver
+  with no hooks, and `drivers/cassandra/cassandra_test.go` checks the prompt.
+  On Cassandra 5.0.9, a URL with a user and no password failed with "Password
+  must not be null" and gave no prompt, which the old hook missed too.
+  xo/cassandra v0.2.1 counts it, and "authentication required (using" too. On
+  Cassandra 5.0.9 on 2026-11-02, usql prompted for a missing and for a wrong
+  password, and connected with the right one. usql fills a missing password from
+  `~/.usqlpass`, so a test of it sets `USQLPASS` to an empty file.
+- xo/odbc: done on 2026-11-02. xo/odbc v0.2.0 has the method on `*Error`
+  (its D025). It is true for class 28 in any record, and for state 08001 with
+  libpq's text of a failed password, because psqlODBC sends a wrong password
+  as 08001 and never as 28P01. It is false for a locked or expired login that
+  the native code tells apart. usql registers the driver with no hooks, and
+  `drivers/odbc/odbc_test.go` checks the prompt.
+- dbimp: done on 2026-11-02. dbimp v0.24.0 has the method on `dbimp.Error`,
+  `*dbimp.StatusError` and the error of each driver (its D227), and usql no
+  longer checks `dbimp.ErrAuthentication`.
+- When each release is out, remove the hook of that driver in usql, and its
+  check of text.

@@ -1,3 +1,5 @@
+# NOTE: usqlpass is DEPRECATED! switch to using ~/.config/usql/config.yaml
+#
 # sample ~/.usqlpass file
 # 
 # format is:

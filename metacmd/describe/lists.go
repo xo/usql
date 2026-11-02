@@ -1005,10 +1005,12 @@ func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool)
 	case !match[0].Definition.Valid:
 		return fmt.Errorf(text.FunctionHasNoDefinition, name)
 	}
-	lines := strings.Split(strings.TrimRight(match[0].Definition.V, "\n"), "\n")
+	def := strings.TrimRight(match[0].Definition.V, "\n")
+	plain := strings.Split(def, "\n")
+	lines := strings.Split(f.colored(def), "\n")
 	// psql numbers the body, which starts at the line that begins with AS,
 	// and indents the header above it
-	body := slices.IndexFunc(lines, func(s string) bool {
+	body := slices.IndexFunc(plain, func(s string) bool {
 		_, ok := cutPrefixFold(s, "AS ")
 		return ok
 	})
@@ -1088,7 +1090,7 @@ func (f *Formatter) ShowView(ctx context.Context, pattern string, verbose bool) 
 		if _, ok := cutPrefixFold(strings.TrimSpace(def), "CREATE"); !ok {
 			def = "CREATE OR REPLACE VIEW " + n + " AS\n" + def
 		}
-		lines := strings.Split(strings.TrimRight(def, "\n"), "\n")
+		lines := strings.Split(f.colored(strings.TrimRight(def, "\n")), "\n")
 		for i, line := range lines {
 			if verbose {
 				line = fmt.Sprintf("%-7d %s", i+1, line)

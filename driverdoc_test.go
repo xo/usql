@@ -1,12 +1,14 @@
 package main
 
 import (
+	"go/build"
 	"go/parser"
 	"go/token"
 	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"testing"
@@ -152,9 +154,69 @@ func TestRegistryIsKeyedByScheme(t *testing.T) {
 				" the scheme %s", name, name)
 		}
 	}
-	if len(registered) < 20 {
-		t.Errorf("found %d registered drivers, expected at least 20", len(registered))
+	// each driver that this build links must be registered, which also keeps
+	// the checks above from passing on an empty registry
+	linked := linkedDrivers(t)
+	for _, name := range linked {
+		if _, ok := registered[name]; !ok {
+			t.Errorf("driver %s is linked into this build and is not registered", name)
+		}
 	}
+	for _, name := range slices.Sorted(maps.Keys(registered)) {
+		if !slices.Contains(linked, name) {
+			t.Logf("driver %s is registered with no file of its own in internal", name)
+		}
+	}
+}
+
+// linkedDrivers returns the scheme name of each driver that this build links.
+// gen.go writes a file to internal for each driver, whose build constraint
+// decides whether the build imports the driver. The build tags of the test
+// binary are read from its build information, so the result is right for any
+// set of tags.
+func linkedDrivers(t *testing.T) []string {
+	t.Helper()
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		t.Fatal("the test binary has no build information")
+	}
+	ctx := build.Default
+	ctx.BuildTags = nil
+	for _, s := range info.Settings {
+		switch s.Key {
+		case "-tags":
+			ctx.BuildTags = strings.Split(s.Value, ",")
+		case "CGO_ENABLED":
+			ctx.CgoEnabled = s.Value == "1"
+		case "GOOS":
+			ctx.GOOS = s.Value
+		case "GOARCH":
+			ctx.GOARCH = s.Value
+		}
+	}
+	tags := internal.KnownBuildTags()
+	files, err := filepath.Glob(filepath.Join("internal", "*.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, file := range files {
+		file = filepath.Base(file)
+		name, ok := tags[strings.TrimSuffix(file, ".go")]
+		if !ok {
+			// not a driver, such as internal.go or a feature like charts
+			continue
+		}
+		match, err := ctx.MatchFile("internal", file)
+		if err != nil {
+			t.Fatalf("matching internal/%s: %v", file, err)
+		}
+		if match {
+			names = append(names, name)
+		}
+	}
+	slices.Sort(names)
+	return names
 }
 
 // TestPgwireConstraints checks that pgwire picks pgx exactly when the build has

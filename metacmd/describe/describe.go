@@ -54,6 +54,14 @@ func WithTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithHighlight colors the SQL that \sv and \sf print with highlight, which
+// returns its text with the escape sequences of a terminal.
+func WithHighlight(highlight func(string) string) Option {
+	return func(f *Formatter) {
+		f.highlight = highlight
+	}
+}
+
 // supports reports whether the database answers the query q.
 func (f *Formatter) supports(q dbmeta.AnyQuery) bool {
 	return q.Support(f.meta) == dbmeta.Supported

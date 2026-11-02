@@ -259,12 +259,47 @@ func IsPasswordErr(u *dburl.URL, err error) bool {
 	if e, ok := err.(*Error); ok {
 		drv, err = e.Driver, e.Err
 	}
-	// a dbimp driver says that the server refused the credential
-	if errors.Is(err, dbimp.ErrAuthentication) {
+	// an error of the driver says that the server refused the credential, as
+	// every dbimp driver's error does
+	if authenticationRefused(err) {
 		return true
 	}
 	if d, ok := drivers[drv]; ok && d.IsPasswordErr != nil {
 		return d.IsPasswordErr(err)
+	}
+	return false
+}
+
+// authenticationRefuser is an error of a driver that says whether the server
+// refused the credential: a wrong password, key or token. A refusal for lack
+// of a permission is not one. usql declares the interface, and a driver
+// implements the method without importing usql.
+type authenticationRefuser interface {
+	AuthenticationRefused() bool
+}
+
+// authenticationRefused reports whether an error in the tree of err is an
+// authenticationRefuser that returns true. It asks each error of the tree,
+// where errors.As stops at the first error that has the method, even when that
+// one returns false and a later one would return true.
+func authenticationRefused(err error) bool {
+	for err != nil {
+		if e, ok := err.(authenticationRefuser); ok && e.AuthenticationRefused() {
+			return true
+		}
+		switch u := err.(type) {
+		case interface{ Unwrap() []error }:
+			for _, e := range u.Unwrap() {
+				if authenticationRefused(e) {
+					return true
+				}
+			}
+			return false
+		case interface{ Unwrap() error }:
+			err = u.Unwrap()
+		default:
+			return false
+		}
 	}
 	return false
 }

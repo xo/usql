@@ -102,17 +102,10 @@ func (h *Highlighter) SetDialect(dialect string, lang *transit.Language) error {
 // [rline.Highlighter]. A setting that turns highlighting off, or a text that
 // does not parse, leaves the text plain.
 func (h *Highlighter) Highlight(l *rline.LineStyle) {
-	if env.Setting("syntax_hl") != "true" {
-		return
-	}
-	depth, ok := depthOf(env.Setting("syntax_hl_format"))
-	if !ok {
-		return
-	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	style := h.styleFor(env.Setting("syntax_hl_style"))
-	if style == nil {
+	style, depth, keepBG, ok := h.settings()
+	if !ok {
 		return
 	}
 	src := []byte(l.Text())
@@ -120,17 +113,83 @@ func (h *Highlighter) Highlight(l *rline.LineStyle) {
 	if err != nil {
 		return
 	}
-	keepBG := env.Setting("syntax_hl_override_bg") != "false"
 	for i := 0; i < len(src); {
-		j := i + 1
-		for j < len(names) && names[j] == names[i] {
-			j++
-		}
+		j := next(names, i)
 		if spec := spec(style, names[i], depth, keepBG); spec != "" {
 			l.Style(i, j-i, h.define(spec))
 		}
 		i = j
 	}
+}
+
+// Text returns src in the colors of the style, as the escape sequences of a
+// terminal, for text that usql prints, such as the query buffer of \p and the
+// definition of \sv. No color runs past the end of a line, so a caller can
+// split the result into lines. A setting that turns highlighting off, or a
+// text that does not parse, returns src as it is.
+func (h *Highlighter) Text(src string) string {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	style, depth, keepBG, ok := h.settings()
+	if !ok || src == "" {
+		return src
+	}
+	ctx, b := context.Background(), []byte(src)
+	// a tree of its own, so that the tree of the line editor stays
+	tree, err := h.parse(ctx, b, nil)
+	if err != nil {
+		return src
+	}
+	defer tree.Close()
+	names, err := h.names(ctx, tree, b)
+	if err != nil {
+		return src
+	}
+	var sb strings.Builder
+	for i := 0; i < len(src); {
+		j := next(names, i)
+		on := sgr(style, names[i], depth, keepBG)
+		for k, line := range strings.Split(src[i:j], "\n") {
+			if k != 0 {
+				sb.WriteByte('\n')
+			}
+			if on != "" && line != "" {
+				sb.WriteString(on + line + "\x1b[0m")
+			} else {
+				sb.WriteString(line)
+			}
+		}
+		i = j
+	}
+	return sb.String()
+}
+
+// settings returns the style, the color depth and whether the terminal keeps
+// its background, from the settings of usql. It returns false when the
+// settings turn highlighting off. h.mu must be held.
+func (h *Highlighter) settings() (*styles.Style, depth, bool, bool) {
+	if env.Setting("syntax_hl") != "true" {
+		return nil, 0, false, false
+	}
+	d, ok := depthOf(env.Setting("syntax_hl_format"))
+	if !ok {
+		return nil, 0, false, false
+	}
+	style := h.styleFor(env.Setting("syntax_hl_style"))
+	if style == nil {
+		return nil, 0, false, false
+	}
+	return style, d, env.Setting("syntax_hl_override_bg") != "false", true
+}
+
+// next returns the end of the run of bytes from i that have the capture name
+// of byte i.
+func next(names []string, i int) int {
+	j := i + 1
+	for j < len(names) && names[j] == names[i] {
+		j++
+	}
+	return j
 }
 
 // styleFor returns the style of a name, and keeps it, because a style is read
@@ -159,20 +218,36 @@ func (h *Highlighter) define(spec string) string {
 	return name
 }
 
-// capture parses src and returns the capture name of each byte of src. A byte
-// that no capture names has the empty name.
+// capture parses src with the tree of the last text, and returns the capture
+// name of each byte of src. A byte that no capture names has the empty name.
+// It keeps the tree for the next text.
 func (h *Highlighter) capture(ctx context.Context, src []byte) ([]string, error) {
 	if h.tree != nil {
 		h.tree.Edit(editOf(h.src, src))
 	}
+	tree, err := h.parse(ctx, src, h.tree)
+	if err != nil {
+		return nil, err
+	}
+	h.src, h.tree = append(h.src[:0], src...), tree
+	return h.names(ctx, tree, src)
+}
+
+// parse parses src with the usql grammar, from the old tree when it is not
+// nil.
+func (h *Highlighter) parse(ctx context.Context, src []byte, old *transit.Tree) (*transit.Tree, error) {
 	if err := h.parser.SetLanguage(h.usql.Language()); err != nil {
 		return nil, fmt.Errorf("setting the language of usql: %w", err)
 	}
-	tree, err := h.parser.Parse(ctx, src, h.tree)
+	tree, err := h.parser.Parse(ctx, src, old)
 	if err != nil {
 		return nil, fmt.Errorf("parsing: %w", err)
 	}
-	h.src, h.tree = append(h.src[:0], src...), tree
+	return tree, nil
+}
+
+// names returns the capture name of each byte of src, whose parse is tree.
+func (h *Highlighter) names(ctx context.Context, tree *transit.Tree, src []byte) ([]string, error) {
 	layers, err := h.usql.Layers(ctx, h.parser, src, func(name string) (*inject.Config, bool) {
 		return h.sql, name == "sql"
 	}, inject.WithReplacer(placeholder))
@@ -180,7 +255,7 @@ func (h *Highlighter) capture(ctx context.Context, src []byte) ([]string, error)
 		return nil, fmt.Errorf("finding the layers: %w", err)
 	}
 	names := make([]string, len(src))
-	h.mark(ctx, h.usqlQ, h.tree.RootNode(), src, names)
+	h.mark(ctx, h.usqlQ, tree.RootNode(), src, names)
 	// the root layer comes first, so the layers of the statements paint over it
 	if h.sqlQ != nil {
 		for _, l := range layers[1:] {

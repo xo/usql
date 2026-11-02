@@ -8,6 +8,10 @@
 // The URL is odbc+<driver>://user:pass@host:port/db, and a setting of the ODBC
 // driver goes in the query.
 //
+// The driver reports a refused credential itself, through the method
+// AuthenticationRefused of its errors (W66), so usql registers it with no
+// hooks.
+//
 // Metadata: dbmeta has no model for ODBC, which is a bridge to any database and
 // has no dialect of its own, so the describe commands report that they are not
 // supported (D3).
@@ -17,31 +21,10 @@
 package odbc
 
 import (
-	"errors"
-	"strings"
-
-	"github.com/xo/odbc" // DRIVER
+	_ "github.com/xo/odbc" // DRIVER
 	"github.com/xo/usql/drivers"
 )
 
 func init() {
-	drivers.Register("odbc", drivers.Driver{
-		// the standard class 28 of SQLSTATE is a failed authorization, in
-		// every database
-		IsPasswordErr: func(err error) bool {
-			var e *odbc.Error
-			if !errors.As(err, &e) {
-				return false
-			}
-			if strings.HasPrefix(e.State, "28") {
-				return true
-			}
-			for _, n := range e.Next {
-				if strings.HasPrefix(n.State, "28") {
-					return true
-				}
-			}
-			return false
-		},
-	})
+	drivers.Register("odbc", drivers.Driver{})
 }

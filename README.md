@@ -244,7 +244,7 @@ associated database, scheme / build tag, and scheme aliases:
 | PostgreSQL           | `pgx`           | `postgres`, `pg`, `pgsql`, `postgresql`, `px`    | [github.com/jackc/pgx/v5/stdlib][d-pgx]                                                     |
 | MySQL                | `mysql`         | `my`, `maria`, `aurora`, `mariadb`, `percona`    | [github.com/go-sql-driver/mysql][d-mysql]                                                   |
 | Microsoft SQL Server | `sqlserver`     | `ms`, `mssql`, `azuresql`                        | [github.com/microsoft/go-mssqldb][d-sqlserver]                                              |
-| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`     | [github.com/sijms/go-ora/v3][d-oracle]                                                      |
+| Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`     | [github.com/xo/oracle][d-oracle]                                                            |
 | SQLite3              | `sqlite3`       | `sq`, `sqlite`, `file`                           | [github.com/mattn/go-sqlite3][d-sqlite3] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup>   |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                      | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup> |
 | ClickHouse           | `clickhouse`    | `ch`                                             | [github.com/xo/dbimp/clickhouse][d-clickhouse]                                              |
@@ -347,7 +347,7 @@ associated database, scheme / build tag, and scheme aliases:
 [d-neo4j]: https://github.com/xo/dbimp
 [d-odbc]: https://github.com/xo/odbc
 [d-opensearch]: https://github.com/xo/dbimp
-[d-oracle]: https://github.com/sijms/go-ora
+[d-oracle]: https://github.com/xo/oracle
 [d-pgx]: https://github.com/jackc/pgx
 [d-pinot]: https://github.com/xo/dbimp
 [d-presto]: https://github.com/xo/dbimp

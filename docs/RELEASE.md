@@ -16,6 +16,11 @@ Read these first. Some of them can stop the release.
   gohxs/readline. rline cannot read its backslashes, and then refuses to
   save. It reports nothing. Ken decides the fix (see
   [PROGRESS.md](PROGRESS.md)).
+- On Oracle, a line that holds only `/` after a PL/SQL block or a statement
+  is sent as the start of the next statement, and Oracle refuses it with
+  ORA-00900. SQL*Plus scripts put such a line after each PL/SQL unit. Ken
+  decided the fix in transit's D135, which waits for a release of transit
+  (W65).
 - `\if`, `\elif`, `\else` and `\endif` still do nothing, and every branch
   runs. W36 gives them psql's meaning, and that work is not done.
 - `%R` in a prompt shows only `=` or `-`, because rline draws one prompt for
@@ -29,7 +34,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.16.0, transit v0.5.1 and rline v0.4.2, all in
+- usql requires dbmeta v0.24.0, transit v0.7.0 and rline v0.4.3, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -64,6 +69,15 @@ package and the `stmt` package (W36).
   the dialect as options (transit's D108): dollar quotes, block comments,
   `//` and `#` comments, and backticks. They come from dbmeta, and follow the
   dialect of the connection, so they change on `\c`.
+- The `BEGIN ... END` body of a stored program stays in one statement, where
+  usql sent each piece between semicolons as a statement of its own (W65).
+  dbmeta v0.22.0 says which dialects have such bodies (its D249), among them
+  SQLite triggers, MySQL, SQL Server and Oracle procedures, and PostgreSQL
+  `BEGIN ATOMIC` functions. `BEGIN; ...; END;` is a transaction and still
+  splits.
+- On ClickHouse, a `;` inside a name in backticks, a `//`, `# ` or `#!`
+  comment, or a `$$` or `$tag$` string no longer ends the statement (dbmeta
+  v0.23.0 and v0.24.0, its D250 and D251).
 - The arguments of a meta command come from the grammar. `\g` reads its
   option list, such as `(format=csv)`, from the grammar.
 - `-o FILE` sends the results to the file, as `\o` does. `\echo` still goes
@@ -82,6 +96,21 @@ package and the `stmt` package (W36).
 - usql reads the user's inputrc, as psql does through readline: `$INPUTRC`,
   or else `~/.inputrc`, or else `/etc/inputrc`. `$if usql` in the file tests
   the name of usql. The file can bind Tab to something else.
+- `\p` prints the query buffer in color, and `\sv` and `\sf` print the
+  definition in color, when the input is highlighted and the output is the
+  terminal. A pager shows the colors only if it passes them through, as
+  `less -R` does.
+- Syntax highlighting parses the input with the grammars of transit, and
+  colors it with the styles of transit, in place of Chroma. These have a
+  grammar of their own, from transit v0.7.0: PostgreSQL, MySQL, SQL Server,
+  Oracle, CQL, SQLite (with libSQL and rqlite), DuckDB (with GizmoSQL),
+  ClickHouse, Trino (with Presto and Athena), Neo4j, SurrealDB and YDB. The
+  other dialects use the generic SQL grammar. transit wrote the PostgreSQL,
+  Oracle and SQL Server grammars again, and they are smaller (W32 has the
+  sizes).
+- An anonymous block of PL/SQL on Oracle, `BEGIN ... END` or `DECLARE ...
+  BEGIN ... END`, stays in one statement, and so do Firebird's `EXECUTE BLOCK`,
+  SAP HANA's `DO BEGIN` and a `WITH FUNCTION` of Trino (W65).
 
 ### Metadata: dbmeta and psql's describe commands
 
@@ -208,6 +237,13 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   before. `\pset json_indent N` indents it by N spaces, `on` is two spaces,
   `off` and 0 are compact, and `\pset json_indent` alone switches between
   compact and two spaces. `-P json_indent=2` sets it on the command line.
+- A column is aligned by its database type, as psql aligns it (dbmeta
+  v0.18.0, its D245). Numbers, money and numeric identifiers such as oid go
+  to the right, and every other type goes to the left. A money column now
+  goes to the right in PostgreSQL. dbmeta records the types of 34 dialects.
+  For a type that dbmeta does not record, usql aligns the column by its
+  values, as before. Athena, Cosmos, Databricks, MaxCompute, Redshift,
+  Snowflake, Spanner, Tablestore, Impala and InfluxQL record no types yet.
 - Cassandra moves to `github.com/xo/cassandra`, and its scheme is
   `cassandra`, with `cql` as an alias (W45).
 - Couchbase and Databend move to `github.com/xo/dbimp`.
@@ -235,6 +271,22 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, and hive to gohive v2.
+- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.1.1, pure Go.
+  A wrong user or password now prints ORA-01017, where go-ora printed
+  "message code error", and usql prompts for the password. An error no longer
+  ends with the line " error occur at position: N". The driver
+  builds on 32 bit arm, so the oracle driver is no longer left out there.
+  `ORACLE_SID` and `ORASID` no longer give the service name of a URL that has
+  none. Write the service name in the path of the URL. usql registers the driver with no hooks,
+  and the prompt for a refused password comes from the method
+  `AuthenticationRefused` of the driver's errors (W66).
+- Cassandra moves to xo/cassandra v0.2.1, which reports a refused credential
+  itself (W66), so usql registers it with no hooks. usql now also prompts for
+  a missing password on Cassandra, which it did not before.
+- ODBC moves to xo/odbc v0.2.0, which reports a refused credential itself
+  (W66). usql now also prompts for the password when PostgreSQL refuses it
+  through psqlODBC, which reports it as state 08001 and not in class 28. A
+  locked or expired login no longer prompts on SQL Server and MySQL.
 - MaxCompute and Tablestore move to `github.com/xo/dbimp` (dbimp v0.23.0,
   dburl v0.54.0), and dbmeta v0.16.0 reads their metadata. The URLs are `maxcompute://id:key@host/project` and
   `tablestore://id:secret@host/instance`, and every earlier URL must change.
@@ -370,7 +422,8 @@ that `\uset syntax_hl off` removes every color, that `\uset syntax_hl_format
 terminal` draws 16 colors, and that `\uset syntax_hl_style nope` is an error.
 Check a long statement of many rows, where each key parses the text again, for
 a delay that you can feel. Check that `NO_COLOR=1` starts with highlighting off
-(W58).
+(W58). Check that `\p`, `\sv` and `\sf` print in color, through the pager too,
+and that they print plain with `\o FILE` and when the output is piped.
 
 ### The describe commands
 
@@ -434,6 +487,15 @@ Run each meta command in `\?` once, with its options. Check the commands
 that read their arguments in a new way most: `\set`, `\echo`, `\o`, `\g`,
 `\copy`, `\c`, `\cset`, `\prompt`, `\!` and `\setenv`. Run `\conninfo` and
 `\conninfo -password` on pgx, on libpq and on SQLite, and inside a transaction.
+
+### Column alignment
+
+On each base database, select a column of each numeric type and a column of
+text, and make sure that the numbers go to the right and the text to the left.
+Use a column whose values are all null too. On PostgreSQL, with pgx and with
+libpq, a money column goes to the right, and boolean and interval go to the
+left, as in psql. This was checked on PostgreSQL 18, Oracle and SQLite on
+2026-10-31.
 
 ### Builds and packages
 

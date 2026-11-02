@@ -45,7 +45,7 @@ func KnownBuildTags() map[string]string {
 		"neo4j":         "neo4j",         // github.com/xo/dbimp/neo4j
 		"odbc":          "odbc",          // github.com/xo/odbc
 		"opensearch":    "opensearch",    // github.com/xo/dbimp/opensearch
-		"oracle":        "oracle",        // github.com/sijms/go-ora/v3
+		"oracle":        "oracle",        // github.com/xo/oracle
 		"pgx":           "pgx",           // github.com/jackc/pgx/v5/stdlib
 		"pinot":         "pinot",         // github.com/xo/dbimp/pinot
 		"presto":        "presto",        // github.com/xo/dbimp/trino

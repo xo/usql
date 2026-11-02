@@ -227,8 +227,7 @@ and `gen.go` copies it into the generated file under `internal`:
     // Build: !(linux && arm) && !windows
 
 The duckdb driver uses that constraint, because its prebuilt library has no 32
-bit arm build and no Windows build. The oracle driver uses `!(linux && arm)`,
-because go-ora writes a constant that overflows a 32 bit integer.
+bit arm build and no Windows build.
 
 A `Group:` line puts the driver in a build group. The groups are `base`, which
 is the default build, `most`, `all`, and `bad` for drivers that are known to be

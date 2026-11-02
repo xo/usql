@@ -76,6 +76,10 @@ type Handler interface {
 	Formatter(context.Context) (*describe.Formatter, error)
 	// Print formats according to a format specifier and writes to handler's standard output.
 	Print(string, ...interface{})
+	// Highlight returns SQL in color for the terminal, when the input is
+	// highlighted and the output goes to the terminal, and as it is
+	// otherwise.
+	Highlight(string) string
 }
 
 // Dump writes the command descriptions to w, separated by section.

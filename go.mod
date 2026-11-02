@@ -24,34 +24,41 @@ require (
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
 	github.com/nakagami/firebirdsql v0.9.23
-	github.com/sclgo/impala-go v1.8.0
-	github.com/sijms/go-ora/v3 v3.0.2-0.20260914154503-360b4b7ac9e9
+	github.com/sclgo/impala-go v1.9.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
-	github.com/xo/cassandra v0.1.1
-	github.com/xo/dbimp v0.23.0
-	github.com/xo/dbmeta v0.16.0
-	github.com/xo/dburl v0.54.0
+	github.com/xo/cassandra v0.2.1
+	github.com/xo/dbimp v0.24.0
+	github.com/xo/dbmeta v0.24.0
+	github.com/xo/dburl v0.55.0
 	github.com/xo/echartsgoja v0.1.1
-	github.com/xo/odbc v0.1.2
+	github.com/xo/odbc v0.2.0
+	github.com/xo/oracle v0.1.1
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.4.2
+	github.com/xo/rline v0.4.3
 	github.com/xo/tblfmt v0.21.0
 	github.com/xo/terminfo v1.3.0
-	github.com/xo/transit v0.5.1
-	github.com/xo/transit/grammars/cql v0.5.1
-	github.com/xo/transit/grammars/mysql v0.5.1
-	github.com/xo/transit/grammars/oracle v0.5.1
-	github.com/xo/transit/grammars/postgres v0.5.1
-	github.com/xo/transit/grammars/sql v0.5.1
-	github.com/xo/transit/grammars/sqlserver v0.5.1
-	github.com/xo/transit/grammars/usql v0.5.1
-	github.com/xo/transit/styles v0.5.1
+	github.com/xo/transit v0.7.0
+	github.com/xo/transit/grammars/clickhouse v0.7.0
+	github.com/xo/transit/grammars/cql v0.7.0
+	github.com/xo/transit/grammars/duckdb v0.7.0
+	github.com/xo/transit/grammars/mysql v0.7.0
+	github.com/xo/transit/grammars/neo4j v0.7.0
+	github.com/xo/transit/grammars/oracle v0.7.0
+	github.com/xo/transit/grammars/postgres v0.7.0
+	github.com/xo/transit/grammars/sql v0.7.0
+	github.com/xo/transit/grammars/sqlite3 v0.7.0
+	github.com/xo/transit/grammars/sqlserver v0.7.0
+	github.com/xo/transit/grammars/surrealdb v0.7.0
+	github.com/xo/transit/grammars/trino v0.7.0
+	github.com/xo/transit/grammars/usql v0.7.0
+	github.com/xo/transit/grammars/ydb v0.7.0
+	github.com/xo/transit/styles v0.7.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
 	github.com/yookoala/realpath v1.0.0
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.61.1
 )
 
 require (
@@ -82,7 +89,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.12.0 // indirect
-	github.com/dop251/goja v0.0.0-20261030192516-032d024709ca // indirect
+	github.com/dop251/goja v0.0.0-20261031103838-cf2ff0ec0b31 // indirect
 	github.com/dop251/goja_nodejs v0.0.0-20260918173711-b481721df8a2 // indirect
 	github.com/dromara/carbon/v2 v2.7.0 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.20000.0 // indirect
@@ -128,7 +135,7 @@ require (
 	github.com/nakagami/chacha20 v0.1.0 // indirect
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20260406063853-3bac975de715 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
-	github.com/pandatix/go-abnf v0.5.4 // indirect
+	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
@@ -170,7 +177,7 @@ require (
 	go.duckdb.org/libduckdb/windows-amd64 v0.20000.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/net v0.62.0 // indirect
@@ -183,7 +190,7 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/libc v1.79.1 // indirect
+	modernc.org/libc v1.80.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
