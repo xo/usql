@@ -144,90 +144,6 @@ func New(opts ...Option) Completer {
 		sqlStartCommands: CommonSqlStartCommands,
 		// TODO do we need to add built-in functions like, COALESCE, CAST, NULLIF, CONCAT etc?
 		sqlCommands: CommonSqlCommands,
-		backslashCommands: []string{
-			`\!`,
-			`\?`,
-			`\C`,
-			`\H`,
-			`\T`,
-			`\Z`,
-			`\a`,
-			`\begin`,
-			`\bind`,
-			`\c`,
-			`\cd`,
-			`\commit`,
-			`\connect`,
-			`\conninfo`,
-			`\copy`,
-			`\copyright`,
-			`\cset`,
-			`\d+`,
-			`\dS+`,
-			`\dS`,
-			`\da+`,
-			`\daS+`,
-			`\daS`,
-			`\da`,
-			`\df+`,
-			`\dfS+`,
-			`\dfS`,
-			`\df`,
-			`\di+`,
-			`\diS+`,
-			`\diS`,
-			`\di`,
-			`\dm+`,
-			`\dmS+`,
-			`\dmS`,
-			`\dm`,
-			`\dn+`,
-			`\dnS+`,
-			`\dnS`,
-			`\dn`,
-			`\drivers`,
-			`\ds+`,
-			`\dsS+`,
-			`\dsS`,
-			`\ds`,
-			`\dt+`,
-			`\dtS+`,
-			`\dtS`,
-			`\dt`,
-			`\dv+`,
-			`\dvS+`,
-			`\dvS`,
-			`\dv`,
-			`\e`,
-			`\echo`,
-			`\f`,
-			`\g`,
-			`\getenv`,
-			`\gexec`,
-			`\gset`,
-			`\gx`,
-			`\i`,
-			`\ir`,
-			`\l+`,
-			`\l`,
-			`\p`,
-			`\password`,
-			`\prompt`,
-			`\pset`,
-			`\q`,
-			`\r`,
-			`\raw`,
-			`\rollback`,
-			`\set`,
-			`\setenv`,
-			`\t`,
-			`\timing`,
-			`\unset`,
-			`\uset`,
-			`\w`,
-			`\watch`,
-			`\x`,
-		},
 	}
 	for _, o := range opts {
 		o(&c)
@@ -242,6 +158,14 @@ type Option func(*completer)
 func WithSource(s Source) Option {
 	return func(c *completer) {
 		c.source = s
+	}
+}
+
+// WithCommands sets the names of the meta commands, with their backslash,
+// which metacmd.Completions gives.
+func WithCommands(names []string) Option {
+	return func(c *completer) {
+		c.backslashCommands = names
 	}
 }
 
@@ -272,6 +196,11 @@ func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
 	if i == -1 {
 		i = 0
 	}
+	// a meta command can follow a word with no space, as in select 1\g, and
+	// its name starts at the backslash
+	if j := lastIndex(line[i:start], '\\'); j > 0 {
+		i += j
+	}
 	previousWords := getPreviousWords(start, line)
 	text := line[i:start]
 
@@ -284,8 +213,9 @@ func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
 
 func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if len(text) > 0 {
-		if len(previousWords) == 0 && text[0] == '\\' {
-			/* If current word is a backslash command, offer completions for that */
+		if text[0] == '\\' {
+			/* If current word is a backslash command, offer completions for that,
+			 * also after a statement, as psql does */
 			return CompleteFromListCase(MATCH_CASE, text, c.backslashCommands...)
 		}
 		if text[0] == ':' {
@@ -516,6 +446,16 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	// is suggesting basic sql commands better than nothing?
 	return CompleteFromList(text, c.sqlCommands...)
+}
+
+// lastIndex returns the index of the last r in s, or -1.
+func lastIndex(s []rune, r rune) int {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == r {
+			return i
+		}
+	}
+	return -1
 }
 
 func getPreviousWords(point int, buf []rune) []string {

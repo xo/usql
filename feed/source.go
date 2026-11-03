@@ -33,6 +33,13 @@ type Source struct {
 
 	// text is what was read and not fed yet.
 	text string
+	// more holds the lines read since text was last parsed. Next adds them
+	// to text once before it parses, because adding each line to text
+	// copies all of text.
+	more strings.Builder
+	// grown says that text only grew since it was last parsed, so that the
+	// parser reads only what was added.
+	grown bool
 	// eof is set once the reader has no more input.
 	eof bool
 }
@@ -64,22 +71,24 @@ func (s *Source) Push(text string) {
 	if text != "" && !strings.HasSuffix(text, "\n") {
 		text += "\n"
 	}
-	s.text = text + s.text
+	s.text, s.grown = text+s.text, false
 }
 
 // Reset drops the text that is not fed yet, as after an interrupt.
 func (s *Source) Reset() {
-	s.text = ""
+	s.text, s.grown = "", false
 }
 
 // ReadLine reads one line of raw input, as \prompt does. The line comes from
 // the text that is read and not fed yet, if any is left after the end of the
 // line that held the meta command, and otherwise from the reader.
 func (s *Source) ReadLine(prompt string) (string, error) {
-	s.text = strings.TrimPrefix(s.text, "\n")
+	if t := strings.TrimPrefix(s.text, "\n"); t != s.text {
+		s.text, s.grown = t, false
+	}
 	if s.text != "" {
 		line, rest, _ := strings.Cut(s.text, "\n")
-		s.text = rest
+		s.text, s.grown = rest, false
 		return line, nil
 	}
 	if s.eof {
@@ -94,34 +103,53 @@ func (s *Source) ReadLine(prompt string) (string, error) {
 // Each call parses the text that is not fed yet, feeds its first item, and
 // cuts the text after it. So a change of language, a pushed text or a line
 // taken by ReadLine applies to the next item, with nothing parsed ahead.
+//
+// A line can end an item only when canEnd says so, so the text is parsed
+// again only after such a line, or at the end of the input. A
+// statement of many lines is then not parsed once for each of its lines.
 func (s *Source) Next() (Item, error) {
 	for {
-		items, err := s.p.Parse(s.text)
+		first, ok, err := s.p.first(s.text, s.grown, func(n int, last Item) bool {
+			return s.ready(n, last) != 0
+		})
 		if err != nil {
 			return Item{}, err
 		}
-		if s.ready(items) != 0 {
-			it := items[0]
-			s.text = s.text[it.End:]
-			return it, nil
+		if ok {
+			s.text, s.grown = s.text[first.End:], false
+			return first, nil
 		}
-		if s.eof {
-			s.text = ""
-			return Item{}, io.EOF
+		for {
+			if s.eof {
+				s.text = ""
+				return Item{}, io.EOF
+			}
+			line, err := s.read()
+			if err != nil {
+				return Item{}, err
+			}
+			if s.eof || canEnd(line) {
+				break
+			}
 		}
-		if err := s.read(); err != nil {
-			return Item{}, err
-		}
+		s.text += s.more.String()
+		s.more.Reset()
+		s.grown = true
 	}
 }
 
-// ready returns how many of items can be fed now.
-func (s *Source) ready(items []Item) int {
-	n := len(items)
+// canEnd reports whether a line can end an item: it holds a ';' or a '\', or
+// it is a line with only '/', which ends a statement of Oracle.
+func canEnd(line string) bool {
+	return strings.ContainsAny(line, ";\\") || strings.TrimSpace(line) == "/"
+}
+
+// ready returns how many of n items can be fed now, where last is the last of
+// them.
+func (s *Source) ready(n int, last Item) int {
 	if n == 0 {
 		return 0
 	}
-	last := items[n-1]
 	switch {
 	case s.eof, last.Kind == Statement && last.Terminated:
 		return n
@@ -132,8 +160,8 @@ func (s *Source) ready(items []Item) int {
 	return n - 1
 }
 
-// read reads one more line or entry.
-func (s *Source) read() error {
+// read reads one more line or entry, and returns it.
+func (s *Source) read() (string, error) {
 	var prompt string
 	if s.prompt != nil {
 		prompt = s.prompt()
@@ -142,12 +170,13 @@ func (s *Source) read() error {
 	switch {
 	case errors.Is(err, io.EOF):
 		s.eof = true
-		return nil
+		return "", nil
 	case err != nil:
-		return err
+		return "", err
 	}
-	s.text += line + "\n"
-	return nil
+	s.more.WriteString(line)
+	s.more.WriteByte('\n')
+	return line, nil
 }
 
 // Lines is a LineReader of the lines of r, as for a script or an included

@@ -60,3 +60,33 @@ func TestEveryListIsACommand(t *testing.T) {
 		}
 	}
 }
+
+// TestCompletions checks the names that the completer offers for \ and Tab.
+func TestCompletions(t *testing.T) {
+	t.Parallel()
+	got := Completions()
+	names := make(map[string]bool)
+	for _, name := range got {
+		if names[name] {
+			t.Errorf("%s is listed twice", name)
+		}
+		names[name] = true
+	}
+	for _, name := range []string{
+		`\sf`, `\sf+`, `\sv`, `\ss`, `\dt`, `\dtS+`, `\dfa`, `\dfS+`, `\dPi`, `\dP+`,
+		`\gexec`, `\crosstabview`, `\conninfo`, `\uset`, `\quit`, `\lo_list`,
+	} {
+		if !names[name] {
+			t.Errorf("%s is missing", name)
+		}
+	}
+	// a kind of object is offered alone, not in every combination
+	for _, name := range []string{`\dfan`, `\dfanptw`, `\dtvS`} {
+		if names[name] {
+			t.Errorf("%s is offered", name)
+		}
+	}
+	if !slices.IsSorted(got) {
+		t.Error("the names are not sorted")
+	}
+}

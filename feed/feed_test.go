@@ -2,7 +2,9 @@ package feed
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -331,5 +333,70 @@ func TestBatches(t *testing.T) {
 	}
 	if Finished(items) {
 		t.Errorf("an open batch is finished: %q", summary(items))
+	}
+}
+
+// TestSourceMatchesParse checks that a Source, which reads a line at a time,
+// parses only some of them, and parses again only what a line added, feeds
+// the items that one parse of the whole text gives.
+func TestSourceMatchesParse(t *testing.T) {
+	t.Parallel()
+	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true, BeginEndBlocks: true}
+	tests := []struct {
+		name string
+		s    dbmeta.Syntax
+		src  string
+	}{
+		{"statements", postgres, "select\n  1\n;\nselect 'a\nb;';\nselect 2 \\g\nselect 3 -- c;\nfrom t;\n"},
+		{"commands", postgres, "\\set n 42\nselect :n\n  ;\n\\echo a;b\nselect 4"},
+		{"dollar quotes", postgres, "create function f() returns int as $$\nbegin\n  return 1;\nend\n$$ language plpgsql;\nselect f();\n"},
+		{"a body", mysql, "create procedure p() begin\n  select 1;\n  select 2;\nend;\nselect 3;\n# a; comment\nselect 4;\n"},
+		{"dates", postgres, "insert into t values\n('7/4/1996',\n '1/2/3');\nselect 1;\n"},
+		{"no end", postgres, "select 1;\nselect 2\n  from t"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			p, err := NewParser(Language(test.s, false))
+			if err != nil {
+				t.Fatal(err)
+			}
+			items, err := p.Parse(test.src)
+			if err != nil {
+				t.Fatal(err)
+			}
+			s, err := NewSource(NewLines(strings.NewReader(test.src)), Language(test.s, false), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got, exp := feedAll(t, s), summary(items); got != exp {
+				t.Errorf("\n got: %s\nwant: %s", got, exp)
+			}
+		})
+	}
+}
+
+// TestSourceLargeStatement checks that a statement of many lines costs about
+// what its size does. A Source once parsed the whole text again for each line
+// it read, so that an INSERT of 830 rows read from a file took gigabytes.
+func TestSourceLargeStatement(t *testing.T) {
+	var sb strings.Builder
+	sb.WriteString("insert into t values\n")
+	for i := range 5000 {
+		fmt.Fprintf(&sb, "  (%d, 'a row on 7/4/1996', null),\n", i)
+	}
+	sb.WriteString("  (0, 'the last row', null);\nselect 1;\n")
+	s, err := NewSource(NewLines(strings.NewReader(sb.String())), Language(postgres, false), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	if got := feedAll(t, s); !strings.HasSuffix(got, "S:select 1;") {
+		t.Fatalf("expected the insert and the select, got: %.80s", got)
+	}
+	runtime.ReadMemStats(&after)
+	// one parse of the 200 KB text takes a few MiB
+	if mib := (after.TotalAlloc - before.TotalAlloc) >> 20; mib > 64 {
+		t.Errorf("reading a statement of %d bytes allocated %d MiB", sb.Len(), mib)
 	}
 }

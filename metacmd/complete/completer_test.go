@@ -51,6 +51,33 @@ func TestCompleter(t *testing.T) {
 			3,
 		},
 		{
+			"usql command after a statement",
+			`select 1 \conni`,
+			15,
+			[]string{
+				`nfo`,
+			},
+			6,
+		},
+		{
+			"usql command right after a word",
+			`select 1\conni`,
+			14,
+			[]string{
+				`nfo`,
+			},
+			6,
+		},
+		{
+			"usql command on a row of its own",
+			"select 1\n\\conni",
+			15,
+			[]string{
+				`nfo`,
+			},
+			6,
+		},
+		{
 			"files",
 			`\i comp`,
 			7,
@@ -328,7 +355,10 @@ func TestCompleter(t *testing.T) {
 		},
 	}
 
-	completer := New(WithSource(mockSource{}), WithConnStrings([]string{"pg://"}))
+	// metacmd.Completions gives the names to usql, and metacmd imports this
+	// package, so the test names some of them itself
+	commands := []string{`\c`, `\conninfo`, `\connect`, `\dt`, `\dt+`, `\dtS`, `\dtS+`, `\i`}
+	completer := New(WithCommands(commands), WithSource(mockSource{}), WithConnStrings([]string{"pg://"}))
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			suggestions, length := completer.Do([]rune(test.line), test.start)

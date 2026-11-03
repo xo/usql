@@ -107,22 +107,12 @@ func Driver() drivers.Driver {
 	}
 }
 
-// connInfo returns what psql's \conninfo shows about a connection of pgx. It
-// reads one connection of the pool, and nothing inside a transaction.
+// connInfo returns what psql's \conninfo shows about a connection of pgx: the
+// connection of the session, or one connection of a pool. It reads nothing
+// inside a transaction.
 func connInfo(ctx context.Context, db drivers.DB) ([][2]string, error) {
-	pool, ok := db.(interface {
-		Conn(context.Context) (*sql.Conn, error)
-	})
-	if !ok {
-		return nil, nil
-	}
-	conn, err := pool.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
 	var info [][2]string
-	err = conn.Raw(func(dc any) error {
+	_, err := drivers.Raw(ctx, db, func(dc any) error {
 		c, ok := dc.(*stdlib.Conn)
 		if !ok {
 			return nil

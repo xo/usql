@@ -34,7 +34,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.24.0, transit v0.7.0 and rline v0.4.3, all in
+- usql requires dbmeta v0.25.0, transit v0.7.0 and rline v0.4.3, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -93,6 +93,13 @@ package and the `stmt` package (W36).
   history.
 - Tab fills in what the completions share, and then opens a numbered menu of
   them, as before.
+- Tab completes a meta command after a statement too, as in `select 1 \g` or
+  `select 1\gx`, as psql does. It completed one only at the start of an
+  entry.
+- Tab offers every meta command, from the table of commands that `\?` prints,
+  where a list written by hand left out many, such as `\sf`, `\sv`, `\ss`,
+  `\gexec` and `\crosstabview`. A kind of object, as the `a` of `\dfa`, is
+  offered alone, with each combination of `S` and `+`.
 - usql reads the user's inputrc, as psql does through readline: `$INPUTRC`,
   or else `~/.inputrc`, or else `/etc/inputrc`. `$if usql` in the file tests
   the name of usql. The file can bind Tab to something else.
@@ -324,6 +331,15 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Other
 
+- A session runs on one connection, as psql runs one (W67). A `SET`, a
+  temporary table or a variable of the session holds until the connection
+  ends. Before, each statement ran on whichever connection of the pool was
+  free, and on SQL Server a `SET` never held, because go-mssqldb resets a
+  connection that the pool takes back. When the connection is lost, usql says
+  so, opens a new one, and runs the statement again.
+- A large statement read from a file, such as an `INSERT` of many rows, no
+  longer costs memory with the square of its size (W68). An `INSERT` of 830
+  rows ran out of memory at more than 4 GB, and now takes 87 MiB.
 - `\conninfo` prints a table titled Connection Information, as psql 18 does:
   the driver, the database, the user, the host, the port, whether a password
   was used, the version of the server, and the URL. pgx adds the backend PID,

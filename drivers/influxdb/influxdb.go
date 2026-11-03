@@ -27,7 +27,6 @@ package influxdb
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/xo/dbimp/influxdb" // DRIVER
@@ -46,24 +45,17 @@ func Driver() drivers.Driver {
 		Version: func(ctx context.Context, db drivers.DB) (string, error) {
 			// the release comes from GET /ping, through the driver's
 			// connection, and no statement returns it
-			rc, ok := db.(interface {
-				Conn(context.Context) (*sql.Conn, error)
-			})
-			if !ok {
-				return "", fmt.Errorf("reading the version through %T", db)
-			}
-			conn, err := rc.Conn(ctx)
-			if err != nil {
-				return "", err
-			}
-			defer conn.Close()
 			var ver string
-			err = conn.Raw(func(dc any) error {
+			ok, err := drivers.Raw(ctx, db, func(dc any) error {
+				var err error
 				ver, err = influxdb.Version(ctx, dc)
 				return err
 			})
-			if err != nil {
+			switch {
+			case err != nil:
 				return "", err
+			case !ok:
+				return "", fmt.Errorf("reading the version through %T", db)
 			}
 			return "InfluxDB " + ver, nil
 		},

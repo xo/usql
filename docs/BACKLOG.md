@@ -3210,3 +3210,58 @@ Open:
   longer checks `dbimp.ErrAuthentication`.
 - When each release is out, remove the hook of that driver in usql, and its
   check of text.
+
+## W67. Run a session on one connection: Done
+
+Source: Ken, on 2026-11-02, while Northwind was loaded into SQL Server for the
+describe commands. `SET IDENTITY_INSERT ... ON` did not hold until the next
+statement, so every insert with an identity value failed. The session ID
+stayed the same, but go-mssqldb resets the state of a connection each time
+database/sql takes it back into its pool. usql ran each statement on the
+pool, `*sql.DB`, since its first version in 2017, so a `SET`, a temporary
+table or a variable of the session held only by chance, and never on SQL
+Server.
+
+Done on 2026-11-03. The handler takes one connection of the pool for the
+session, `drivers.Session`, as psql runs a session on one connection. Each
+statement, transaction and describe command runs on it, and `\i` shares it
+with its transaction. Completion keeps the pool. pgx's `\conninfo` and
+InfluxDB's version read the connection of the session through `drivers.Raw`.
+When a driver says that the connection is bad, which it says only before a
+statement runs, usql prints that the connection was lost and that the settings
+of the session are gone, takes a new connection, and runs the statement once
+more. `TestSession` checks one connection with no reset, against a fake driver
+that resets, as go-mssqldb does.
+
+Checked on 2026-11-03: Northwind's own script, with `SET identity_insert`
+statements of their own, loaded all 3308 rows into SQL Server 2025. A
+`#temp` table held across statements. On PostgreSQL 18, `SET search_path`
+held, `\conninfo` showed the backend PID of the session, and after
+`pg_terminate_backend` of the session's own backend, the next statement ran
+on a new connection, with the notice.
+
+## W68. Read a large statement in about the time of its size: Done
+
+Source: Ken, on 2026-11-02. A file with an `INSERT` of 830 rows in one
+statement, 158 KiB, made usql run out of memory at more than 4 GB in
+`feed.statement`. `feed.Source` parsed the whole text again after each line it
+read until the statement ended, and built every item each time. Adding each
+line to the text also copied all of it. The cost of a statement grew with the
+square of its size: 13 GB for a statement of 180 KB.
+
+Done on 2026-11-03. `Source` parses again only after a line that can end an
+item: a line with a `;` or a `\`, a line with only `/`, or the end of the
+input. It adds the lines to the text once before each parse. While the text
+only grows, `Parser` parses only what was added, from its last tree, and it
+builds only the first item, and only when it can be fed.
+`TestSourceMatchesParse` checks that reading a line at a time feeds what one
+parse of the whole text gives. `TestSourceLargeStatement` checks a statement
+of 180 KB, which allocated 13143 MiB before and stays under 64 MiB. The
+statement of 830 rows loaded into SQL Server at a peak of 87 MiB.
+
+Open:
+
+- A statement whose lines each end with `;` inside a body, such as a procedure
+  of MySQL of 5000 lines, is still parsed after each line. It took 2 min 25 s
+  before and takes 12 s. A body in dollar quotes is one token, and each parse
+  reads it all: 2.3 s for 5000 lines.

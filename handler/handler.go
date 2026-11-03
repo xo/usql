@@ -86,8 +86,11 @@ type Handler struct {
 	bind []interface{}
 	// u is the active connection information.
 	u *dburl.URL
-	// db is the active database connection.
+	// db is the pool of the active database connection.
 	db *sql.DB
+	// conn is the one connection of db that the statements of the session
+	// run on, taken when the session starts and again after it is lost.
+	conn *drivers.Session
 	// meta reads the structure of the database, and is built the first time
 	// it is needed.
 	meta *dbmeta.Meta
@@ -116,7 +119,7 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 	var prompt func() string
 	if h.iactive {
 		prompt = h.prompt
-		l.SetCompleter(complete.New(complete.WithConnStrings(h.connStrings())))
+		l.SetCompleter(complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings())))
 		var err error
 		if h.hl, err = highlight.New(l); err != nil {
 			return nil, err
@@ -364,7 +367,16 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	case metacmd.ExecChart:
 		f = h.doExecChart
 	}
-	return drivers.WrapErr(h.u.SchemeName, f(ctx, w, opt, prefix, sqlstr, qtyp, bind))
+	err := f(ctx, w, opt, prefix, sqlstr, qtyp, bind)
+	// a driver says that the connection is bad only before the statement
+	// ran, so it runs once more on a new connection, as database/sql runs a
+	// statement of its pool
+	if h.lost(err) {
+		fmt.Fprintln(h.l.Stderr(), text.ConnectionReset)
+		err = f(ctx, w, opt, prefix, sqlstr, qtyp, bind)
+		h.lost(err)
+	}
+	return drivers.WrapErr(h.u.SchemeName, err)
 }
 
 // prefix returns the prefix of the first statement of sqlstr, as \gexec needs
@@ -663,12 +675,35 @@ func (h *Handler) URL() *dburl.URL {
 	return h.u
 }
 
-// DB returns the sql.DB for the handler.
+// DB returns where the statements of the session run: the transaction when
+// one is open, and otherwise the connection of the session. When the session
+// has no connection, and one cannot be taken, it returns the pool.
 func (h *Handler) DB() drivers.DB {
-	if h.tx != nil {
+	switch {
+	case h.tx != nil:
 		return h.tx
+	case h.db == nil:
+		return nil
+	case h.conn == nil:
+		conn, err := drivers.NewSession(context.Background(), h.db)
+		if err != nil {
+			return h.db
+		}
+		h.conn = conn
 	}
-	return h.db
+	return h.conn
+}
+
+// lost drops the connection of the session when err says that it is gone, so
+// that the next statement takes a new one, and reports whether it did. The
+// state of the old session, such as a SET, is gone with it.
+func (h *Handler) lost(err error) bool {
+	if h.conn == nil || h.tx != nil || !drivers.IsConnLost(err) {
+		return false
+	}
+	_ = h.conn.Close()
+	h.conn = nil
+	return true
 }
 
 // LastExec returns the last executed statement.
@@ -733,9 +768,10 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
 			if h.l.Interactive() {
-				c := complete.New(complete.WithConnStrings(h.connStrings()))
+				c := complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings()))
 				if m, err := h.metadata(ctx); err == nil {
 					c = complete.New(
+						complete.WithCommands(metacmd.Completions()),
 						complete.WithSource(describe.Source(m, h.db)),
 						complete.WithConnStrings(h.connStrings()),
 					)
@@ -854,9 +890,12 @@ func (h *Handler) Close() error {
 		return text.ErrPreviousTransactionExists
 	}
 	if h.db != nil {
+		if h.conn != nil {
+			_ = h.conn.Close()
+		}
 		err := h.db.Close()
 		drv := h.u.SchemeName
-		h.db, h.u, h.meta = nil, nil, nil
+		h.db, h.conn, h.u, h.meta = nil, nil, nil, nil
 		return drivers.WrapErr(drv, err)
 	}
 	return nil
@@ -1407,9 +1446,17 @@ func (h *Handler) BeginTx(ctx context.Context, txOpts *sql.TxOptions) error {
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
+	// the transaction runs on the connection of the session
+	db, ok := h.DB().(interface {
+		BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
+	})
+	if !ok {
+		return text.ErrNotConnected
+	}
 	var err error
-	h.tx, err = h.db.BeginTx(ctx, txOpts)
+	h.tx, err = db.BeginTx(ctx, txOpts)
 	if err != nil {
+		h.lost(err)
 		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	return nil
@@ -1475,12 +1522,12 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 	if err != nil {
 		return err
 	}
-	p.db, p.u = h.db, h.u
+	p.db, p.conn, p.tx, p.u, p.meta = h.db, h.conn, h.tx, h.u, h.meta
 	if err := p.src.SetLanguage(drivers.Language(p.u)); err != nil {
 		return err
 	}
 	err = p.Run()
-	h.db, h.u = p.db, p.u
+	h.db, h.conn, h.tx, h.u, h.meta = p.db, p.conn, p.tx, p.u, p.meta
 	if lerr := h.setLanguage(); err == nil {
 		err = lerr
 	}
@@ -1511,7 +1558,7 @@ func (h *Handler) Formatter(ctx context.Context) (*describe.Formatter, error) {
 		return nil, err
 	}
 	opts := append(formatterOpts(), describe.WithHighlight(h.Highlight))
-	return describe.NewFormatter(m, h.db, h.GetOutput(), h.u.SchemeName, opts...), nil
+	return describe.NewFormatter(m, h.DB(), h.GetOutput(), h.u.SchemeName, opts...), nil
 }
 
 // Highlight returns s in the colors of syntax highlighting, as the escape
@@ -1535,7 +1582,7 @@ func (h *Handler) metadata(ctx context.Context) (*dbmeta.Meta, error) {
 		return nil, text.ErrNotConnected
 	}
 	if h.meta == nil {
-		m, err := drivers.Meta(ctx, h.u, h.db)
+		m, err := drivers.Meta(ctx, h.u, h.DB())
 		if err != nil {
 			return nil, err
 		}

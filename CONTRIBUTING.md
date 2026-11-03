@@ -212,6 +212,12 @@ Check out dbmeta next to usql, start the server, and then regenerate:
     (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun start sqlserver-2025)
     go run gen.go -examples
 
+For the describe commands, dbmeta's fixture `northwind` builds Microsoft's
+Northwind on PostgreSQL and SQL Server, with a schema `hr` of views,
+functions, triggers, types and partitions:
+
+    (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun fixture northwind postgres-18)
+
 The run builds usql with the `most` group and types each example into it
 under a pseudo-terminal, so it takes some minutes. The README shows `pass` for
 the password and `localhost` for the host and port.

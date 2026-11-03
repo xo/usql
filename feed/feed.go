@@ -126,6 +126,13 @@ type Item struct {
 type Parser struct {
 	p    *transit.Parser
 	lang *transit.Language
+
+	// tree is the last parse of src by first, which the next parse reuses
+	// when the text has only grown, so that it reads only what was added.
+	// point is the row and the column of the end of src.
+	tree  *transit.Tree
+	src   []byte
+	point transit.Point
 }
 
 // NewParser returns a Parser for the language.
@@ -146,7 +153,24 @@ func (p *Parser) SetLanguage(lang *transit.Language) error {
 		return err
 	}
 	p.lang = lang
+	p.reset()
 	return nil
+}
+
+// reset drops the tree that first keeps.
+func (p *Parser) reset() {
+	p.tree.Close()
+	p.tree, p.src, p.point = nil, p.src[:0], transit.Point{}
+}
+
+// advance returns the point after text, which starts at pt.
+func advance(pt transit.Point, text string) transit.Point {
+	n := strings.Count(text, "\n")
+	if n == 0 {
+		pt.Column += len(text)
+		return pt
+	}
+	return transit.Point{Row: pt.Row + n, Column: len(text) - strings.LastIndexByte(text, '\n') - 1}
 }
 
 // Parse returns the statements and meta commands of src, in order. Comments
@@ -170,6 +194,73 @@ func (p *Parser) Parse(src string) ([]Item, error) {
 		}
 	}
 	return items, nil
+}
+
+// first parses src, and returns its first item when ready says that it can
+// be fed. ready gets how many items src holds, and the last of them, with only
+// its kind, its end and whether it is terminated. Source asks this for each
+// line that can end an item, so first builds no other item, and when src only
+// grew since the last call, it parses only what was added.
+func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool) (Item, bool, error) {
+	var old *transit.Tree
+	if grown && p.tree != nil && len(src) >= len(p.src) {
+		add := src[len(p.src):]
+		start, at := len(p.src), p.point
+		p.src = append(p.src, add...)
+		p.point = advance(at, add)
+		p.tree.Edit(transit.InputEdit{
+			StartByte: start, OldEndByte: start, NewEndByte: len(p.src),
+			StartPoint: at, OldEndPoint: at, NewEndPoint: p.point,
+		})
+		old = p.tree
+	} else {
+		p.reset()
+		p.src = append(p.src, src...)
+		p.point = advance(transit.Point{}, src)
+	}
+	tree, err := p.p.Parse(context.Background(), p.src, old)
+	if err != nil {
+		p.reset()
+		return Item{}, false, err
+	}
+	old.Close()
+	p.tree = tree
+	root := tree.RootNode()
+	var firstNode transit.Node
+	var last Item
+	var n int
+	for i := range root.ChildCount() {
+		c, _ := root.Child(i)
+		switch c.Kind() {
+		case "statement":
+			last = Item{Kind: Statement, Start: c.StartByte(), End: c.EndByte(), Terminated: terminated(c)}
+		case "meta_command":
+			last = Item{Kind: Command, Start: c.StartByte(), End: c.EndByte()}
+		default:
+			continue
+		}
+		if n == 0 {
+			firstNode = c
+		}
+		n++
+	}
+	if !ready(n, last) {
+		return Item{}, false, nil
+	}
+	if firstNode.Kind() == "statement" {
+		return statement(firstNode, p.src), true, nil
+	}
+	return command(firstNode, p.src), true, nil
+}
+
+// terminated reports whether a statement node ends with a ';'.
+func terminated(n transit.Node) bool {
+	count := n.ChildCount()
+	if count == 0 {
+		return false
+	}
+	c, _ := n.Child(count - 1)
+	return c.Kind() == ";" && !c.IsNamed()
 }
 
 // statement returns the item of a statement node.

@@ -7,7 +7,9 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"maps"
 	"os/user"
+	"slices"
 	"strings"
 	"time"
 
@@ -412,6 +414,65 @@ func (d desc) Names() []string {
 			panic(fmt.Sprintf("invalid command %q", d.Name))
 		}
 		for _, c := range s[1:j] {
+			for _, n := range names {
+				names = append(names, n+string(c))
+			}
+		}
+		s = s[j+1:]
+	}
+	return names
+}
+
+// Completions returns the names of the commands, with their backslash, for
+// the completer. A group of letters between brackets that names a kind of
+// object, as the a and n of df[an], adds each letter alone, and the modifiers
+// S and + add each combination of them, as Names does. So \d<Tab> offers
+// \dfa and \dfS+, and not \dfan. A deprecated command is left out.
+func Completions() []string {
+	seen := make(map[string]bool)
+	for _, section := range descs {
+		for _, d := range section {
+			if d.Deprecated {
+				continue
+			}
+			for _, name := range d.completions() {
+				seen[`\`+name] = true
+			}
+		}
+	}
+	return slices.Sorted(maps.Keys(seen))
+}
+
+// completions returns the names of the command for the completer.
+func (d desc) completions() []string {
+	i := strings.Index(d.Name, "[")
+	if i == -1 {
+		return []string{d.Name}
+	}
+	names := []string{d.Name[:i]}
+	for s := d.Name[i:]; s != ""; {
+		j := strings.Index(s, "]")
+		if s[0] != '[' || j == -1 {
+			panic(fmt.Sprintf("invalid command %q", d.Name))
+		}
+		var kinds, mods []rune
+		for _, c := range s[1:j] {
+			if c == 'S' || c == '+' {
+				mods = append(mods, c)
+			} else {
+				kinds = append(kinds, c)
+			}
+		}
+		// a kind of object, alone
+		next := slices.Clone(names)
+		for _, c := range kinds {
+			for _, n := range names {
+				next = append(next, n+string(c))
+			}
+		}
+		names = next
+		// the modifiers, in every combination
+		for _, c := range mods {
 			for _, n := range names {
 				names = append(names, n+string(c))
 			}

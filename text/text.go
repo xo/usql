@@ -28,6 +28,7 @@ var (
 	WelcomeDesc              = `Type "` + HelpPrefix + `" for help.`
 	QueryBufferEmpty         = `Query buffer is empty.`
 	QueryBufferReset         = `Query buffer reset (cleared).`
+	ConnectionReset          = `The connection to the server was lost. A new connection is open, and the settings of the session are gone.`
 	InvalidCommand           = `Invalid command \%s. Try \? for help.`
 	ExtraArgumentIgnored     = `\%s: extra argument %q ignored`
 	MissingRequiredArg       = `\%s: missing required argument`
