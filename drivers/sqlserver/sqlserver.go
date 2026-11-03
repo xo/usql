@@ -42,9 +42,9 @@ func init() {
 			switch col.DatabaseTypeName() {
 			case "UNIQUEIDENTIFIER":
 				if nullable, ok := col.Nullable(); ok && nullable {
-					return new(sql.Null[sqlserver.UniqueIdentifier]), nil
+					return new(sql.Null[uniqueIdentifier]), nil
 				}
-				return new(sqlserver.UniqueIdentifier), nil
+				return new(uniqueIdentifier), nil
 			case "REAL":
 				// go-mssqldb widens a real to a float64, which then prints
 				// 4.9 as 4.900000095367432, and a float32 prints as sqlcmd does
@@ -69,4 +69,17 @@ func init() {
 			return strings.Contains(err.Error(), "Login failed for")
 		},
 	})
+}
+
+// uniqueIdentifier is a uniqueidentifier of SQL Server that prints as a uuid of
+// PostgreSQL does, in lower case, so that a column of UUIDs prints the same on
+// both. go-mssqldb's UniqueIdentifier reads the bytes in the order that SQL
+// Server stores them, and prints in upper case, as SQL Server's tools do.
+type uniqueIdentifier struct {
+	sqlserver.UniqueIdentifier
+}
+
+// String satisfies the fmt.Stringer interface, which tblfmt prints.
+func (u uniqueIdentifier) String() string {
+	return strings.ToLower(u.UniqueIdentifier.String())
 }

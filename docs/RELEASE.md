@@ -335,6 +335,9 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Other
 
+- A SQL Server `uniqueidentifier` prints in lower case, as a PostgreSQL `uuid`
+  does, so that a column of UUIDs prints the same on both. SQL Server's tools
+  print it in upper case.
 - A SQL Server `real` prints as sqlcmd prints it, `4.9`, where it printed
   `4.900000095367432`. go-mssqldb widens a `real` to a float64, and usql now
   reads it back as a float32.
