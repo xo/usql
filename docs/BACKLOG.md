@@ -3125,7 +3125,12 @@ Open:
   statement that ended with `;` is a node of its own that feed drops, and a
   `/` line after a statement with no `;` ends it, outside its text. It waits
   for the release of transit. Then feed drops the node, and the test gains the
-  `/` cases.
+  `/` cases. Done on 2026-11-04 on transit v0.7.1: a statement whose last child
+  is the node `slash` is terminated, and its text stops before the `/`. A
+  `slash` between statements is skipped. Inside parentheses, a `/` line stays
+  in the statement (transit's D136). `TestLanguageOracleSlash` and
+  `TestSourceMatchesParse` check it, and on Oracle 26ai a `DECLARE` block, a
+  `BEGIN` block and a select with no `;`, each ended by `/`, ran.
 - On ClickHouse, a `$tag$ ... $tag$` or `$$ ... $$` string can hold a `;`.
   Done on 2026-11-02 on dbmeta v0.24.0, which sets `DollarQuotes` (its D251).
   `TestLanguageClickHouse` covers both forms.

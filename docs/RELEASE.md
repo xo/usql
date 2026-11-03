@@ -16,11 +16,6 @@ Read these first. Some of them can stop the release.
   gohxs/readline. rline cannot read its backslashes, and then refuses to
   save. It reports nothing. Ken decides the fix (see
   [PROGRESS.md](PROGRESS.md)).
-- On Oracle, a line that holds only `/` after a PL/SQL block or a statement
-  is sent as the start of the next statement, and Oracle refuses it with
-  ORA-00900. SQL*Plus scripts put such a line after each PL/SQL unit. Ken
-  decided the fix in transit's D135, which waits for a release of transit
-  (W65).
 - `\if`, `\elif`, `\else` and `\endif` still do nothing, and every branch
   runs. W36 gives them psql's meaning, and that work is not done.
 - `%R` in a prompt shows only `=` or `-`, because rline draws one prompt for
@@ -34,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.26.0, transit v0.7.0 and rline v0.5.0, all in
+- usql requires dbmeta v0.26.0, transit v0.7.1 and rline v0.5.0, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -120,6 +115,10 @@ package and the `stmt` package (W36).
   other dialects use the generic SQL grammar. transit wrote the PostgreSQL,
   Oracle and SQL Server grammars again, and they are smaller (W32 has the
   sizes).
+- On Oracle, a line with only `/` ends a statement, as in SQL*Plus, and is not
+  sent with it: after a PL/SQL block, after a `CREATE PROCEDURE ... END;`, and
+  after a statement with no `;`. Inside parentheses it stays a division
+  (transit v0.7.1, W65).
 - An anonymous block of PL/SQL on Oracle, `BEGIN ... END` or `DECLARE ...
   BEGIN ... END`, stays in one statement, and so do Firebird's `EXECUTE BLOCK`,
   SAP HANA's `DO BEGIN` and a `WITH FUNCTION` of Trino (W65).
@@ -336,6 +335,9 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Other
 
+- A SQL Server `real` prints as sqlcmd prints it, `4.9`, where it printed
+  `4.900000095367432`. go-mssqldb widens a `real` to a float64, and usql now
+  reads it back as a float32.
 - A session runs on one connection, as psql runs one (W67). A `SET`, a
   temporary table or a variable of the session holds until the connection
   ends. Before, each statement ran on whichever connection of the pool was

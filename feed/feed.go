@@ -11,6 +11,7 @@ package feed
 import (
 	"context"
 	"strings"
+	"unicode"
 
 	"github.com/xo/dbmeta"
 	"github.com/xo/transit"
@@ -253,14 +254,15 @@ func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool
 	return command(firstNode, p.src), true, nil
 }
 
-// terminated reports whether a statement node ends with a ';'.
+// terminated reports whether a statement node ends with a ';', or with a line
+// with only '/', which ends a statement of Oracle (transit's D135).
 func terminated(n transit.Node) bool {
 	count := n.ChildCount()
 	if count == 0 {
 		return false
 	}
 	c, _ := n.Child(count - 1)
-	return c.Kind() == ";" && !c.IsNamed()
+	return c.Kind() == ";" && !c.IsNamed() || c.Kind() == "slash"
 }
 
 // statement returns the item of a statement node.
@@ -274,8 +276,14 @@ func statement(n transit.Node, src []byte) Item {
 	}
 	for i := range n.ChildCount() {
 		c, _ := n.Child(i)
-		if c.Kind() == ";" && !c.IsNamed() {
+		switch {
+		case c.Kind() == ";" && !c.IsNamed():
 			it.Terminated = true
+			continue
+		case c.Kind() == "slash":
+			// a line with only '/' ends the statement, and is not sent
+			it.Terminated = true
+			it.Text = strings.TrimRightFunc(string(src[start:c.StartByte()]), unicode.IsSpace)
 			continue
 		}
 		if p, ok := part(c, src, start); ok {

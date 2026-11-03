@@ -40,22 +40,22 @@ require (
 	github.com/xo/rline v0.5.0
 	github.com/xo/tblfmt v0.21.0
 	github.com/xo/terminfo v1.3.0
-	github.com/xo/transit v0.7.0
-	github.com/xo/transit/grammars/clickhouse v0.7.0
-	github.com/xo/transit/grammars/cql v0.7.0
-	github.com/xo/transit/grammars/duckdb v0.7.0
-	github.com/xo/transit/grammars/mysql v0.7.0
-	github.com/xo/transit/grammars/neo4j v0.7.0
-	github.com/xo/transit/grammars/oracle v0.7.0
-	github.com/xo/transit/grammars/postgres v0.7.0
-	github.com/xo/transit/grammars/sql v0.7.0
-	github.com/xo/transit/grammars/sqlite3 v0.7.0
-	github.com/xo/transit/grammars/sqlserver v0.7.0
-	github.com/xo/transit/grammars/surrealdb v0.7.0
-	github.com/xo/transit/grammars/trino v0.7.0
-	github.com/xo/transit/grammars/usql v0.7.0
-	github.com/xo/transit/grammars/ydb v0.7.0
-	github.com/xo/transit/styles v0.7.0
+	github.com/xo/transit v0.7.1
+	github.com/xo/transit/grammars/clickhouse v0.7.1
+	github.com/xo/transit/grammars/cql v0.7.1
+	github.com/xo/transit/grammars/duckdb v0.7.1
+	github.com/xo/transit/grammars/mysql v0.7.1
+	github.com/xo/transit/grammars/neo4j v0.7.1
+	github.com/xo/transit/grammars/oracle v0.7.1
+	github.com/xo/transit/grammars/postgres v0.7.1
+	github.com/xo/transit/grammars/sql v0.7.1
+	github.com/xo/transit/grammars/sqlite3 v0.7.1
+	github.com/xo/transit/grammars/sqlserver v0.7.1
+	github.com/xo/transit/grammars/surrealdb v0.7.1
+	github.com/xo/transit/grammars/trino v0.7.1
+	github.com/xo/transit/grammars/usql v0.7.1
+	github.com/xo/transit/grammars/ydb v0.7.1
+	github.com/xo/transit/styles v0.7.1
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
 	github.com/yookoala/realpath v1.0.0
 	modernc.org/sqlite v1.61.1

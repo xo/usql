@@ -116,3 +116,50 @@ func TestLanguageClickHouse(t *testing.T) {
 		}
 	}
 }
+
+// TestLanguageOracleSlash checks that a line with only '/' ends a statement of
+// Oracle and is not sent with it, after a block, after a CREATE that ended
+// with ';', and after a statement with no ';' (transit's D135 and D136).
+func TestLanguageOracleSlash(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		src  string
+		want []string
+	}{
+		{"after a block", "declare\n  x number;\nbegin\n  x := 1;\nend;\n/\nselect 'last' as s from dual;\n", []string{
+			"declare\n  x number;\nbegin\n  x := 1;\nend;", "select 'last' as s from dual;",
+		}},
+		{"after a procedure", "create or replace procedure p as begin null; end;\n/\nselect 1 from dual;\n", []string{
+			"create or replace procedure p as begin null; end;", "select 1 from dual;",
+		}},
+		{"with no ;", "select 1 from dual\n/\nselect 2 from dual;\n", []string{
+			"select 1 from dual", "select 2 from dual;",
+		}},
+		{"inside parentheses", "select (1\n/\n2) from dual;\nselect 3 from dual;\n", []string{
+			"select (1\n/\n2) from dual;", "select 3 from dual;",
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			p, err := feed.NewParser(Language(&dburl.URL{Dialect: "oracle"}))
+			if err != nil {
+				t.Fatal(err)
+			}
+			items, err := p.Parse(test.src)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var texts []string
+			for _, it := range items {
+				texts = append(texts, it.Text)
+				if !it.Terminated {
+					t.Errorf("%q is not terminated", it.Text)
+				}
+			}
+			if strings.Join(texts, "|") != strings.Join(test.want, "|") {
+				t.Errorf("\n got: %q\nwant: %q", texts, test.want)
+			}
+		})
+	}
+}

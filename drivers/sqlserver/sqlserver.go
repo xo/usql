@@ -45,6 +45,13 @@ func init() {
 					return new(sql.Null[sqlserver.UniqueIdentifier]), nil
 				}
 				return new(sqlserver.UniqueIdentifier), nil
+			case "REAL":
+				// go-mssqldb widens a real to a float64, which then prints
+				// 4.9 as 4.900000095367432, and a float32 prints as sqlcmd does
+				if nullable, ok := col.Nullable(); ok && nullable {
+					return new(sql.Null[float32]), nil
+				}
+				return new(float32), nil
 			}
 			return new(interface{}), nil
 		},

@@ -342,6 +342,7 @@ func TestBatches(t *testing.T) {
 func TestSourceMatchesParse(t *testing.T) {
 	t.Parallel()
 	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true, BeginEndBlocks: true}
+	oracle := dbmeta.Syntax{BlockComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
 	tests := []struct {
 		name string
 		s    dbmeta.Syntax
@@ -353,6 +354,7 @@ func TestSourceMatchesParse(t *testing.T) {
 		{"a body", mysql, "create procedure p() begin\n  select 1;\n  select 2;\nend;\nselect 3;\n# a; comment\nselect 4;\n"},
 		{"dates", postgres, "insert into t values\n('7/4/1996',\n '1/2/3');\nselect 1;\n"},
 		{"no end", postgres, "select 1;\nselect 2\n  from t"},
+		{"oracle slash", oracle, "declare\n  x number;\nbegin\n  x := 1;\nend;\n/\nselect 1 from dual\n/\nselect (1\n/\n2) from dual;\n"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
