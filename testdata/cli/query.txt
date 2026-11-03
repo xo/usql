@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -76,7 +76,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms;\e[39m\e[K\r
 \e[40C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn,\e[39m \e[38;5;186m'two'\e[39m \e[38;5;81mas\e[39m \e[38;5;231ms;\e[39m\e[K\r
-\e[40C\r
+\e[40C\e[?2004l\r
 \n
  n |  s  \r
 \n
@@ -88,7 +88,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 2
@@ -102,6 +102,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

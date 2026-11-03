@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -28,6 +28,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

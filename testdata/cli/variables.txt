@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -42,9 +42,9 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mn\e[39m \e[38;5;231m42\e[39m\e[K\r
 \e[23C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mn\e[39m \e[38;5;231m42\e[39m\e[K\r
-\e[23C\r
+\e[23C\e[?2004l\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 2
@@ -62,11 +62,11 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
 \e[18C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
-\e[18C\r
+\e[18C\e[?2004l\r
 \n
 n = '42'\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 3
@@ -116,7 +116,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;231m:n\e[39m \e[38;5;81mas\e[39m \e[38;5;231manswer;\e[39m\e[K\r
 \e[34C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;231m:n\e[39m \e[38;5;81mas\e[39m \e[38;5;231manswer;\e[39m\e[K\r
-\e[34C\r
+\e[34C\e[?2004l\r
 \n
  answer \r
 \n
@@ -128,7 +128,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 4
@@ -154,9 +154,9 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\unset\e[39m \e[38;5;231mn\e[39m\e[K\r
 \e[22C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\unset\e[39m \e[38;5;231mn\e[39m\e[K\r
-\e[22C\r
+\e[22C\e[?2004l\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 5
@@ -174,9 +174,9 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
 \e[18C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
-\e[18C\r
+\e[18C\e[?2004l\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 6
@@ -190,6 +190,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

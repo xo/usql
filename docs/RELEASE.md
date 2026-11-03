@@ -34,7 +34,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.25.0, transit v0.7.0 and rline v0.4.3, all in
+- usql requires dbmeta v0.26.0, transit v0.7.0 and rline v0.5.0, all in
   `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -93,6 +93,11 @@ package and the `stmt` package (W36).
   history.
 - Tab fills in what the completions share, and then opens a numbered menu of
   them, as before.
+- A pasted script runs whole. rline v0.5.0 keeps the input that is not read
+  yet when it sets the terminal, where it threw away all that came after the
+  first line of a paste. It turns on bracketed paste, as readline 8.1 does, so
+  a paste goes into the entry as rows, and one Enter runs it. `set
+  enable-bracketed-paste off` in an inputrc file turns it off.
 - Tab completes a meta command after a statement too, as in `select 1 \g` or
   `select 1\gx`, as psql does. It completed one only at the start of an
   entry.

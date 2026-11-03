@@ -213,8 +213,9 @@ Check out dbmeta next to usql, start the server, and then regenerate:
     go run gen.go -examples
 
 For the describe commands, dbmeta's fixture `northwind` builds Microsoft's
-Northwind on PostgreSQL and SQL Server, with a schema `hr` of views,
-functions, triggers, types and partitions:
+Northwind on PostgreSQL, SQL Server and Oracle 12.2 or later, with a schema
+`hr` of views, functions, triggers, types and partitions. On Oracle, the
+schemas are the users `northwind` and `hr`:
 
     (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun fixture northwind postgres-18)
 

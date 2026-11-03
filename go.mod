@@ -31,13 +31,13 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.1
 	github.com/xo/dbimp v0.24.0
-	github.com/xo/dbmeta v0.25.0
+	github.com/xo/dbmeta v0.26.0
 	github.com/xo/dburl v0.55.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.2.0
 	github.com/xo/oracle v0.1.1
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.4.3
+	github.com/xo/rline v0.5.0
 	github.com/xo/tblfmt v0.21.0
 	github.com/xo/terminfo v1.3.0
 	github.com/xo/transit v0.7.0

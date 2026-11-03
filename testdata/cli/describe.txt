@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -128,11 +128,11 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(id\e[39m \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m \e[38;5;231mtitle\e[39m \e[38;5;81mtext\e[38;5;231m);\e[39m\e[K\r
 \e[66C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mfilms\e[39m \e[38;5;231m(id\e[39m \e[38;5;81mint\e[39m \e[38;5;81mprimary\e[39m \e[38;5;81mkey\e[38;5;231m,\e[39m \e[38;5;231mtitle\e[39m \e[38;5;81mtext\e[38;5;231m);\e[39m\e[K\r
-\e[66C\r
+\e[66C\e[?2004l\r
 \n
 CREATE TABLE\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 2
@@ -148,7 +148,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\dt\e[39m\e[K\r
 \e[17C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\dt\e[39m\e[K\r
-\e[17C\r
+\e[17C\e[?2004l\r
 \n
      List of tables\r
 \n
@@ -160,7 +160,7 @@ recv:
 \n
 (1 row)\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 3
@@ -186,7 +186,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfilms\e[39m\e[K\r
 \e[22C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\d\e[39m \e[38;5;231mfilms\e[39m\e[K\r
-\e[22C\r
+\e[22C\e[?2004l\r
 \n
          Table "main.films"\r
 \n
@@ -204,7 +204,7 @@ Indexes:\r
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 4
@@ -218,6 +218,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

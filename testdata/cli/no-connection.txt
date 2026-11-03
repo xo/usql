@@ -12,7 +12,7 @@ recv:
 \n
 \r
 \n
-\e[32m(not connected)=> \e[39m
+\e[?2004h\e[32m(not connected)=> \e[39m
 
 
 ## step 1
@@ -40,11 +40,11 @@ recv:
 \e[32m(not connected)=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[38;5;231m;\e[39m\e[K\r
 \e[27C\r
 \e[32m(not connected)=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[38;5;231m;\e[39m\e[K\r
-\e[27C\r
+\e[27C\e[?2004l\r
 \n
 error: not connected\r
 \n
-\e[32m(not connected)=> \e[39m
+\e[?2004h\e[32m(not connected)=> \e[39m
 
 
 ## step 2
@@ -58,6 +58,6 @@ recv:
 \e[32m(not connected)=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[20C\r
 \e[32m(not connected)=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[20C\r
+\e[20C\e[?2004l\r
 \n
 

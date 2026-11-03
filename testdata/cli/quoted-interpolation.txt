@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -70,11 +70,11 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mt\e[39m \e[38;5;231m(a\e[39m \e[38;5;81mint\e[38;5;231m);\e[39m\e[K\r
 \e[37C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mcreate\e[39m \e[38;5;81mtable\e[39m \e[38;5;81mt\e[39m \e[38;5;231m(a\e[39m \e[38;5;81mint\e[38;5;231m);\e[39m\e[K\r
-\e[37C\r
+\e[37C\e[?2004l\r
 \n
 CREATE TABLE\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 2
@@ -104,9 +104,9 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mtbl\e[39m \e[38;5;231mt\e[39m\e[K\r
 \e[24C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mtbl\e[39m \e[38;5;231mt\e[39m\e[K\r
-\e[24C\r
+\e[24C\e[?2004l\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 3
@@ -146,9 +146,9 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mword\e[39m \e[38;5;231mhello\e[39m\e[K\r
 \e[29C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mword\e[39m \e[38;5;231mhello\e[39m\e[K\r
-\e[29C\r
+\e[29C\e[?2004l\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 4
@@ -210,7 +210,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m:'word'\e[39m \e[38;5;81mas\e[39m \e[38;5;231mliteral;\e[39m\e[K\r
 \e[40C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m:'word'\e[39m \e[38;5;81mas\e[39m \e[38;5;231mliteral;\e[39m\e[K\r
-\e[40C\r
+\e[40C\e[?2004l\r
 \n
  literal \r
 \n
@@ -222,7 +222,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 5
@@ -298,7 +298,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;148mcount\e[38;5;231m(\e[39m*\e[38;5;231m)\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81m:"tbl"\e[38;5;231m;\e[39m\e[K\r
 \e[47C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;148mcount\e[38;5;231m(\e[39m*\e[38;5;231m)\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81m:"tbl"\e[38;5;231m;\e[39m\e[K\r
-\e[47C\r
+\e[47C\e[?2004l\r
 \n
  n \r
 \n
@@ -310,7 +310,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 6
@@ -324,6 +324,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

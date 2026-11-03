@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -76,11 +76,11 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
 \e[40C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;186m*\e[39m \e[38;5;81mfrom\e[39m \e[38;5;81mnonexistent\e[38;5;231m;\e[39m\e[K\r
-\e[40C\r
+\e[40C\e[?2004l\r
 \n
 error: sqlite3: 1: no such table: nonexistent\r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 2
@@ -138,7 +138,7 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
 \e[38C\r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[39m \e[38;5;81mas\e[39m \e[38;5;231mstill_works;\e[39m\e[K\r
-\e[38C\r
+\e[38C\e[?2004l\r
 \n
  still_works \r
 \n
@@ -150,7 +150,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 3
@@ -164,6 +164,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 

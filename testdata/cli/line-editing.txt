@@ -14,7 +14,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 1
@@ -136,7 +136,7 @@ send:
 recv:
 \r
 \e[32msq::memory:=> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m2\e[39m \e[38;5;81mas\e[39m \e[38;5;231mn;\e[39m \e[38;5;81mselect\e[39m \e[38;5;141m11\e[39m \e[38;5;81mas\e[39m \e[38;5;231mnx;\e[39m\e[K\r
-\e[45C\r
+\e[45C\e[?2004l\r
 \n
  n \r
 \n
@@ -158,7 +158,7 @@ recv:
 \n
 \r
 \n
-\e[32msq::memory:=> \e[39m
+\e[?2004h\e[32msq::memory:=> \e[39m
 
 
 ## step 7
@@ -172,6 +172,6 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
 \e[16C\r
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
-\e[16C\r
+\e[16C\e[?2004l\r
 \n
 
