@@ -29,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.27.0, tblfmt v0.21.1, transit v0.7.1 and rline
+- usql requires dbmeta v0.29.2, tblfmt v0.22.0, transit v0.7.2 and rline
   v0.5.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -115,13 +115,22 @@ package and the `stmt` package (W36).
   other dialects use the generic SQL grammar. transit wrote the PostgreSQL,
   Oracle and SQL Server grammars again, and they are smaller (W32 has the
   sizes).
-- On Oracle, a line with only `/` ends a statement, as in SQL*Plus, and is not
-  sent with it: after a PL/SQL block, after a `CREATE PROCEDURE ... END;`, and
-  after a statement with no `;`. Inside parentheses it stays a division
-  (transit v0.7.1, W65).
+- A line with only `/` is statement text on every database, as in psql. It
+  does not end a statement as SQL*Plus ends one (transit's D138). A script
+  for Oracle ends each statement with `;`, and writes each `;` inside a
+  package, or in the declarations of a unit before its `BEGIN`, as `\;`.
+- Inside a `BEGIN ... END` body, a variable such as the `:new` of an Oracle
+  trigger no longer ends the body at the next `;` (transit v0.7.2).
+- Two dashes start a comment on every database except Neo4j and ArangoDB,
+  where `(p)--()` and `RETURN 5--3` are statement text (dbmeta's D261,
+  transit's D139).
 - An anonymous block of PL/SQL on Oracle, `BEGIN ... END` or `DECLARE ...
   BEGIN ... END`, stays in one statement, and so do Firebird's `EXECUTE BLOCK`,
   SAP HANA's `DO BEGIN` and a `WITH FUNCTION` of Trino (W65).
+- On Oracle, usql removes the `;` at the end of a statement, except after the
+  `END` of a PL/SQL unit. It now also keeps the `;` after `END name;`, which
+  ends a package and a package body. Write each `;` inside a package, and
+  inside the declarations of a unit before its `BEGIN`, as `\;`, as in psql.
 
 ### Metadata: dbmeta and psql's describe commands
 
@@ -153,7 +162,39 @@ It has no metadata query of its own (D3, D4).
 - A table in the aligned and wrapped formats is followed by a blank line, as
   in psql. This holds for the describe commands and for a query in the
   wrapped format, which had none.
-- `\d NAME` lists the not-null constraints only with `+`, as psql 18 does.
+- `\d NAME` lists the not-null constraints, the definition of a view and
+  the constraint of a partition only with `+`, as psql 18 does.
+- More of the describe output matches psql 18 on PostgreSQL:
+  - A list that finds nothing names its kind, as in `Did not find any
+    tables named "x".`, and `\drds` and `\dRp+` print psql's line.
+  - `\di` is one more class of `\d`, so `\dti` and the other combinations
+    list indexes with their table, as in psql.
+  - `\dPt` and `\dPi` have their own titles and no Type column, and the
+    columns of `\dP` follow psql's letters.
+  - `\du` and `\dg` print no count of rows, and `\dx+` prints one.
+  - The numbers of a sequence align to the right.
+  - "Referenced by" lists the foreign keys of every schema, ordered by name,
+    and names a table outside the search path with its schema.
+  - `\dAp` prints the name of a function alone, `\dC+` prints `no` for a
+    cast with no function, and `\dRs+` has psql's columns with Conninfo.
+  - A list with no rows keeps psql's columns.
+  - `\dA` writes the type of an access method with a capital, as `Index`,
+    and `\da` writes `*` for an aggregate with no arguments, as `count(*)`.
+  - A list with no schema in its pattern shows only the objects on the
+    search path, as psql does (dbmeta v0.29.2, its D262).
+  - The lists keep the order of dbmeta's queries, which is psql's order in
+    the collation of the database. usql sorted them again in byte order.
+  - `\d INDEX` names the column of the index and its type, as `lower` and
+    `text` for `lower(name)`. `\d+ INDEX` adds Storage and Stats target, a
+    partitioned index is titled `Partitioned index` and lists its
+    partitions, and a partition of an index names its parent.
+  - The sequence of an identity column says `Sequence for identity column:`.
+  - `\dd` lists the comments on constraints, operator classes and families,
+    rules and triggers, as psql does, and not those on relations.
+  - `\dconfig` with no pattern lists the settings that are not at their
+    default or boot value, and `\dLS`, `\drg` and `\dFp+` follow psql.
+  - The relation lists have no Rows column, and `\df+` has no Source code
+    column, as in psql 18. `\sf` prints the source of a function.
 - The editor gets the line before the file, as `+LINE FILE`, as psql passes
   it.
 - The version in the banner, the current user, and the statement that
@@ -266,6 +307,22 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   `RAW(16)` from `SYS_GUID()` now prints as `\x` and 32 hex digits. A SQL
   Server uniqueidentifier is not binary, and prints in lower case as a
   PostgreSQL uuid does.
+- A decimal that a driver returns with database/sql's Decompose method
+  prints as psql prints a numeric (tblfmt v0.21.2): aligned to the right,
+  with no exponent, and as a number in JSON. SAP HANA's DECIMAL failed to
+  print before. The decimals of the dbimp drivers, such as ClickHouse,
+  Trino and BigQuery, printed as left aligned text with an exponent, as in
+  `1.5E+10`.
+- `\pset format markdown`, or `-M` and `--markdown` on the command line as
+  `-J` is for JSON, writes a table in markdown, with each column
+  padded and its alignment in the delimiter row (tblfmt v0.22.0). It writes
+  no title and no count of rows, and a blank line after each table, so that
+  two tables stay apart.
+- `\pset header_align` sets where the names of the columns go in the
+  aligned, wrapped and markdown formats: `center` as psql (the default),
+  `left`, `right`, or `column`, where each name goes to the side of the
+  values of its column, as clickhouse-client does. psql has no such
+  variable.
 - JSON output is compact, one result set on each line, where it was indented
   before. `\pset json_indent N` indents it by N spaces, `on` is two spaces,
   `off` and 0 are compact, and `\pset json_indent` alone switches between

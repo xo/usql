@@ -12,7 +12,7 @@ import (
 )
 
 // postgres is the lexical forms of PostgreSQL.
-var postgres = dbmeta.Syntax{DollarQuotes: true, BlockComments: true}
+var postgres = dbmeta.Syntax{DollarQuotes: true, BlockComments: true, DashComments: true}
 
 // parse parses src in the postgres family.
 func parse(t *testing.T, src string) []Item {
@@ -248,7 +248,7 @@ func TestSourcePush(t *testing.T) {
 
 func TestLanguage(t *testing.T) {
 	t.Parallel()
-	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true}
+	mysql := dbmeta.Syntax{BlockComments: true, DashComments: true, HashComments: true, Backticks: true}
 	if Language(postgres, false) != Language(postgres, false) {
 		t.Error("expected the same language for the same forms")
 	}
@@ -341,8 +341,8 @@ func TestBatches(t *testing.T) {
 // the items that one parse of the whole text gives.
 func TestSourceMatchesParse(t *testing.T) {
 	t.Parallel()
-	mysql := dbmeta.Syntax{BlockComments: true, HashComments: true, Backticks: true, BeginEndBlocks: true}
-	oracle := dbmeta.Syntax{BlockComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
+	mysql := dbmeta.Syntax{BlockComments: true, DashComments: true, HashComments: true, Backticks: true, BeginEndBlocks: true}
+	oracle := dbmeta.Syntax{BlockComments: true, DashComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
 	tests := []struct {
 		name string
 		s    dbmeta.Syntax
@@ -381,10 +381,11 @@ func TestSourceMatchesParse(t *testing.T) {
 // written as \; is one statement, and that the server gets each as ;. The
 // usql grammar keeps a block that starts at BEGIN or DECLARE whole, but not
 // the declarations of a unit before its BEGIN, nor a package, which has none.
-// The writer escapes those, as in psql.
+// The writer escapes those, as in psql. A variable in a body, such as the :new
+// of a trigger, does not end it (transit v0.7.2).
 func TestOracleEscapedUnits(t *testing.T) {
 	t.Parallel()
-	oracle := dbmeta.Syntax{BlockComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
+	oracle := dbmeta.Syntax{BlockComments: true, DashComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
 	tests := []struct {
 		name, src, exp string
 	}{
@@ -402,6 +403,11 @@ func TestOracleEscapedUnits(t *testing.T) {
 			"trigger",
 			"create trigger t before insert on x for each row\ndeclare\n  k number\\;\nbegin\n  k := 1\\;\nend;\n",
 			"create trigger t before insert on x for each row\ndeclare\n  k number;\nbegin\n  k := 1;\nend;",
+		},
+		{
+			"trigger with :new",
+			"create or replace trigger t before update on d\n  for each row\nbegin\n  :new.updated_at := systimestamp;\nend;\n",
+			"create or replace trigger t before update on d\n  for each row\nbegin\n  :new.updated_at := systimestamp;\nend;",
 		},
 		{
 			"package",
@@ -427,7 +433,9 @@ func TestOracleEscapedUnits(t *testing.T) {
 			if len(items) != 2 {
 				t.Fatalf("expected the unit and the select, got: %s", summary(items))
 			}
-			if got := items[0].Expand(nil); got != test.exp {
+			// no variable is set, so :new stays as it is
+			none := func(string) (string, bool) { return "", false }
+			if got := items[0].Expand(none); got != test.exp {
 				t.Errorf("\n got: %q\nwant: %q", got, test.exp)
 			}
 		})

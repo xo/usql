@@ -455,6 +455,7 @@ Flags:
   -J, --json                                JSON output mode
   -C, --csv                                 CSV output mode
   -G, --vertical                            vertical output mode
+  -M, --markdown                            markdown output mode
   -q, --quiet                               run quietly (no messages, only query output)
       --config string                       config file
   -V, --version                             output version information, then exit
@@ -732,6 +733,8 @@ Query Buffer
   \w [-raw|-exec] FILE              write the contents of the query buffer, raw
                                     (non-interpolated) buffer, or exec buffer to file
   \r                                reset (clear) the query buffer
+  \ef [FUNCNAME [LINE]]             edit function definition with external editor
+  \ev [VIEWNAME [LINE]]             edit view definition with external editor
 
 Informational
   \d[S+] [NAME]                     list tables, views, and sequences or describe table, view,
@@ -1054,6 +1057,7 @@ fieldsep                 "|"
 fieldsep_zero            off
 footer                   on
 format                   aligned
+header_align             center
 json_indent              0
 linestyle                ascii
 locale                   C
@@ -1392,9 +1396,9 @@ Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9,
 Type "help" for help.
 
 ms:sa@localhost=> \g
- 1 \g        4 \gexec
- 2 \gx       5 \getenv
- 3 \gset
+ 1 \g        4 \gset
+ 2 \go       5 \gexec
+ 3 \gx       6 \getenv
 ```
 
 Not all commands, contexts, or databases support completion. To help improve

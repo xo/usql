@@ -138,10 +138,9 @@ func (s *Source) Next() (Item, error) {
 	}
 }
 
-// canEnd reports whether a line can end an item: it holds a ';' or a '\', or
-// it is a line with only '/', which ends a statement of Oracle.
+// canEnd reports whether a line can end an item: it holds a ';' or a '\'.
 func canEnd(line string) bool {
-	return strings.ContainsAny(line, ";\\") || strings.TrimSpace(line) == "/"
+	return strings.ContainsAny(line, ";\\")
 }
 
 // ready returns how many of n items can be fed now, where last is the last of

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,6 +82,7 @@ const (
 	classMaterialized = 'm'
 	classSequence     = 's'
 	classForeign      = 'E'
+	classIndex        = 'i'
 )
 
 // classOf returns the class of a relation from its type, which each database
@@ -95,6 +97,8 @@ func classOf(typ string) rune {
 		return classForeign
 	case strings.Contains(t, "view"):
 		return classView
+	case strings.Contains(t, "index"):
+		return classIndex
 	}
 	return classTable
 }
@@ -110,6 +114,8 @@ func className(class rune) string {
 		return "sequence"
 	case classForeign:
 		return "foreign table"
+	case classIndex:
+		return "index"
 	}
 	return "table"
 }
@@ -120,7 +126,7 @@ func classes(types string) map[rune]bool {
 	m := make(map[rune]bool)
 	for _, c := range types {
 		switch c {
-		case classTable, classView, classMaterialized, classSequence, classForeign:
+		case classTable, classView, classMaterialized, classSequence, classForeign, classIndex:
 			m[c] = true
 		}
 	}
@@ -160,8 +166,11 @@ func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bo
 	}
 	var res []dbmeta.Table
 	seen := make(map[string]bool)
+	// psql lists only the relations on the search path when the pattern
+	// names no schema
+	pathOnly := f.pathOnly(pattern)
 	for _, t := range tables {
-		if want[classOf(t.Type)] {
+		if want[classOf(t.Type)] && !(pathOnly && hidden(t.Visible)) {
 			res = append(res, t)
 			seen[t.Schema+"."+t.Name] = true
 		}
@@ -173,7 +182,10 @@ func (f *Formatter) relations(ctx context.Context, pattern string, withSystem bo
 		}
 		for _, s := range sequences {
 			if !seen[s.Schema+"."+s.Name] {
-				res = append(res, dbmeta.Table{Schema: s.Schema, Name: s.Name, Type: "sequence", Comment: s.Comment})
+				if pathOnly && hidden(s.Visible) {
+					continue
+				}
+				res = append(res, dbmeta.Table{Schema: s.Schema, Name: s.Name, Type: "sequence", Comment: s.Comment, Visible: s.Visible})
 			}
 		}
 	}
@@ -193,25 +205,117 @@ func (f *Formatter) notFound(pattern string) error {
 	return err
 }
 
-// ListTables prints the relations of the classes named by types that match
-// pattern, for \dt, \dv, \dm, \ds and \d with no pattern.
-func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbose, showSystem bool) error {
-	tables, err := f.relations(ctx, pattern, showSystem, classes(types), false, verbose)
-	if err != nil {
-		return f.check(`\dt`, err)
+// indexType returns the type of an index as psql lists it.
+func indexType(i dbmeta.Index) string {
+	if i.Partitioned.Valid && i.Partitioned.V {
+		return "partitioned index"
 	}
-	if len(tables) == 0 {
-		return f.notFound(pattern)
+	return "index"
+}
+
+// listNotFound prints the line that psql prints when a list of relations
+// finds nothing: it names the kind when the list has one kind, such as
+// "tables", and says "relations" when it has more.
+func (f *Formatter) listNotFound(want map[rune]bool, pattern string) error {
+	kind := "relations"
+	if len(want) == 1 {
+		for class := range want {
+			switch class {
+			case classTable:
+				kind = "tables"
+			case classView:
+				kind = "views"
+			case classMaterialized:
+				kind = "materialized views"
+			case classSequence:
+				kind = "sequences"
+			case classForeign:
+				kind = "foreign tables"
+			case classIndex:
+				kind = "indexes"
+			}
+		}
+	}
+	return f.kindNotFound(kind, pattern)
+}
+
+// kindNotFound prints psql's line for a list of kind that finds nothing, as
+// in "Did not find any tables named "x"." or "Did not find any tables.".
+func (f *Formatter) kindNotFound(kind, pattern string) error {
+	if pattern == "" {
+		_, err := fmt.Fprintf(f.out, text.NoneFound+"\n", kind)
+		return err
+	}
+	_, err := fmt.Fprintf(f.out, text.NoneFoundNamed+"\n", kind, pattern)
+	return err
+}
+
+// relationRow is one row of a list of relations: a relation, or an index
+// with the table it belongs to.
+type relationRow struct {
+	dbmeta.Table
+	parent string
+}
+
+// ListTables prints the relations of the classes named by types that match
+// pattern, for \dt, \dv, \dm, \ds, \di, \dE, any combination of them, and \d
+// with no pattern. An index has the table it belongs to in the Table column,
+// which psql adds when the list holds indexes.
+func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbose, showSystem bool) error {
+	want := classes(types)
+	var list []relationRow
+	if len(want) > 1 || !want[classIndex] {
+		tables, err := f.relations(ctx, pattern, showSystem, want, false, verbose)
+		if err != nil {
+			return f.check(`\dt`, err)
+		}
+		for _, t := range tables {
+			list = append(list, relationRow{Table: t})
+		}
+	}
+	if want[classIndex] {
+		schema, name := f.meta.Dialect().Pattern(pattern)
+		indexes, err := all(ctx, f, dbmeta.Indexes, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
+		if err != nil {
+			return f.check(`\di`, err)
+		}
+		for _, i := range indexes {
+			if f.pathOnly(pattern) && hidden(i.Visible) {
+				continue
+			}
+			list = append(list, relationRow{
+				Table: dbmeta.Table{
+					Catalog:      i.Catalog,
+					Schema:       i.Schema,
+					Name:         i.Name,
+					Type:         indexType(i),
+					Owner:        i.Owner,
+					Persistence:  i.Persistence,
+					AccessMethod: sql.Null[string]{V: method(i), Valid: true},
+					Size:         i.Size,
+					Comment:      i.Comment,
+				},
+				parent: i.Table,
+			})
+		}
+		slices.SortStableFunc(list, func(a, b relationRow) int {
+			return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
+		})
+	}
+	if len(list) == 0 {
+		return f.listNotFound(want, pattern)
 	}
 	// a column that no row has a value for is one the database cannot give
-	owner := some(tables, func(t dbmeta.Table) bool { return t.Owner.Valid })
-	persistence := verbose && some(tables, func(t dbmeta.Table) bool { return t.Persistence.Valid })
-	method := verbose && some(tables, func(t dbmeta.Table) bool { return t.AccessMethod.Valid })
-	sizes := verbose && some(tables, func(t dbmeta.Table) bool { return t.Size.Valid })
-	counts := verbose && some(tables, func(t dbmeta.Table) bool { return t.Rows.Valid && t.Rows.V >= 0 })
+	owner := some(list, func(t relationRow) bool { return t.Owner.Valid })
+	persistence := verbose && some(list, func(t relationRow) bool { return t.Persistence.Valid })
+	method := verbose && some(list, func(t relationRow) bool { return t.AccessMethod.Valid })
+	sizes := verbose && some(list, func(t relationRow) bool { return t.Size.Valid })
 	r := &rows{columns: []string{"Schema", "Name", "Type"}}
 	if owner {
 		r.columns = append(r.columns, "Owner")
+	}
+	if want[classIndex] {
+		r.columns = append(r.columns, "Table")
 	}
 	if persistence {
 		r.columns = append(r.columns, "Persistence")
@@ -222,16 +326,16 @@ func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbo
 	if sizes {
 		r.columns = append(r.columns, "Size")
 	}
-	if counts {
-		r.columns = append(r.columns, "Rows")
-	}
 	if verbose {
 		r.columns = append(r.columns, "Description")
 	}
-	for _, t := range tables {
-		v := []any{t.Schema, t.Name, relationTypeName(t)}
+	for _, t := range list {
+		v := []any{t.Schema, t.Name, relationTypeName(t.Table)}
 		if owner {
 			v = append(v, null(t.Owner))
+		}
+		if want[classIndex] {
+			v = append(v, t.parent)
 		}
 		if persistence {
 			v = append(v, null(t.Persistence))
@@ -242,15 +346,12 @@ func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbo
 		if sizes {
 			v = append(v, size(t.Size))
 		}
-		if counts {
-			v = append(v, rowCount(t.Rows))
-		}
 		if verbose {
 			v = append(v, null(t.Comment))
 		}
 		r.add(v...)
 	}
-	return encode(f.out, r, relationsTitle(classes(types)), nil, nil)
+	return encode(f.out, r, relationsTitle(want), nil, nil)
 }
 
 // relationsTitle returns the title that psql gives a list of the classes in
@@ -272,6 +373,8 @@ func relationsTitle(want map[rune]bool) string {
 			return "List of sequences"
 		case classForeign:
 			return text.ListOfForeignTables
+		case classIndex:
+			return "List of indexes"
 		}
 	}
 	return text.ListOfRelations
@@ -296,7 +399,7 @@ func (f *Formatter) DescribeTableDetails(ctx context.Context, pattern string, ve
 			return err
 		}
 	}
-	n, err := f.describeIndexes(ctx, pattern, showSystem)
+	n, err := f.describeIndexes(ctx, pattern, verbose, showSystem)
 	if err != nil {
 		return err
 	}
@@ -431,11 +534,14 @@ func (f *Formatter) relationFooter(ctx context.Context, t dbmeta.Table, verbose 
 		return nil, err
 	}
 	block("Referenced by", referenced)
-	definition, err := f.viewDefinition(ctx, t)
-	if err != nil {
-		return nil, err
+	// psql prints the definition of a view only for \d+
+	if verbose {
+		definition, err := f.viewDefinition(ctx, t)
+		if err != nil {
+			return nil, err
+		}
+		lines = append(lines, definition...)
 	}
-	lines = append(lines, definition...)
 	policies, err := f.policySection(ctx, t)
 	if err != nil {
 		return nil, err
@@ -671,10 +777,10 @@ func (f *Formatter) constraintColumns(ctx context.Context, a dbmeta.Args) (map[s
 	})
 	m := make(map[string]*reference)
 	for _, c := range cols {
-		key := c.Table + "." + c.Constraint
+		key := c.Schema + "." + c.Table + "." + c.Constraint
 		r, ok := m[key]
 		if !ok {
-			r = &reference{table: c.Table, name: c.Constraint, foreignSchema: null(c.ForeignSchema), foreignTable: null(c.ForeignTable)}
+			r = &reference{schema: c.Schema, table: c.Table, name: c.Constraint, foreignSchema: null(c.ForeignSchema), foreignTable: null(c.ForeignTable)}
 			m[key] = r
 		}
 		r.columns = append(r.columns, c.Name)
@@ -687,6 +793,7 @@ func (f *Formatter) constraintColumns(ctx context.Context, a dbmeta.Args) (map[s
 
 // reference is a foreign key, read from its columns.
 type reference struct {
+	schema        string
 	table         string
 	name          string
 	columns       []string
@@ -741,7 +848,7 @@ func (f *Formatter) tableConstraints(ctx context.Context, t dbmeta.Table) ([]str
 						return nil, nil, err
 					}
 				}
-				if r, ok := refs[t.Name+"."+c.Name]; ok {
+				if r, ok := refs[t.Schema+"."+t.Name+"."+c.Name]; ok {
 					def = r.definition()
 				}
 			}
@@ -757,7 +864,8 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 	if !f.supports(dbmeta.ConstraintColumns) {
 		return nil, nil
 	}
-	refs, err := f.constraintColumns(ctx, dbmeta.Args{Schema: t.Schema, WithSystem: true})
+	// a foreign key of a table in any schema can refer to t
+	refs, err := f.constraintColumns(ctx, dbmeta.Args{WithSystem: true})
 	if err != nil {
 		return nil, err
 	}
@@ -772,25 +880,28 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 	}
 	// the definitions come from the constraints of the tables that refer
 	defs := make(map[string]string)
-	constraints, err := optional(all(ctx, f, dbmeta.Constraints, dbmeta.Args{Schema: t.Schema, WithSystem: true}))
+	constraints, err := optional(all(ctx, f, dbmeta.Constraints, dbmeta.Args{WithSystem: true}))
 	if err != nil {
 		return nil, err
 	}
 	for _, c := range constraints {
 		if kind(c.Type) == "foreign key" {
-			defs[c.Table+"."+c.Name] = null(c.Definition)
+			defs[c.Schema+"."+c.Table+"."+c.Name] = null(c.Definition)
 		}
 	}
 	slices.SortStableFunc(matched, func(a, b *reference) int {
-		return cmp.Or(cmp.Compare(a.table, b.table), cmp.Compare(a.name, b.name))
+		// psql orders the foreign keys by their names
+		return cmp.Or(cmp.Compare(a.name, b.name), cmp.Compare(a.schema, b.schema), cmp.Compare(a.table, b.table))
 	})
 	var lines []string
 	for _, r := range matched {
-		def := defs[r.table+"."+r.name]
+		def := defs[r.schema+"."+r.table+"."+r.name]
 		if !isForeignKey(def) {
 			def = r.definition()
 		}
-		lines = append(lines, fmt.Sprintf(`TABLE "%s" CONSTRAINT "%s" %s`, r.table, r.name, def))
+		// the table has its schema when it is not on the search path, as
+		// psql writes it
+		lines = append(lines, fmt.Sprintf(`TABLE "%s" CONSTRAINT "%s" %s`, f.objectName(ctx, r.schema, r.table), r.name, def))
 	}
 	return lines, nil
 }
@@ -823,6 +934,16 @@ func (f *Formatter) tableTriggers(ctx context.Context, t dbmeta.Table) ([]string
 	return lines, nil
 }
 
+// integer returns a number that the database gives as text as an int64, so
+// that it aligns to the right as psql aligns it, or the text when it is not
+// an integer.
+func integer(v sql.Null[string]) any {
+	if i, err := strconv.ParseInt(v.V, 10, 64); err == nil {
+		return i
+	}
+	return null(v)
+}
+
 // cutPrefixFold is strings.CutPrefix, ignoring case.
 func cutPrefixFold(s, prefix string) (string, bool) {
 	if len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix) {
@@ -843,6 +964,7 @@ func (f *Formatter) describeSequence(ctx context.Context, t dbmeta.Table) error 
 		r.columns = append(r.columns, "Cache")
 	}
 	var ownedBy string
+	var identity bool
 	for _, s := range sequences {
 		if s.Name != t.Name || s.Schema != t.Schema {
 			continue
@@ -854,18 +976,24 @@ func (f *Formatter) describeSequence(ctx context.Context, t dbmeta.Table) error 
 				cycles = "yes"
 			}
 		}
-		v := []any{null(s.DataType), null(s.Start), null(s.Minimum), null(s.Maximum), null(s.Increment), cycles}
+		v := []any{null(s.DataType), integer(s.Start), integer(s.Minimum), integer(s.Maximum), integer(s.Increment), cycles}
 		if cache {
-			v = append(v, null(s.CacheSize))
+			v = append(v, integer(sql.Null[string]{V: null(s.CacheSize), Valid: s.CacheSize.Valid}))
 		}
 		r.add(v...)
-		ownedBy = s.OwnedBy
+		ownedBy, identity = s.OwnedBy, s.Identity.Valid && s.Identity.V
 		break
 	}
 	footer := noFooter
 	if ownedBy != "" {
 		footer = func(out io.Writer) error {
-			_, err := fmt.Fprintln(out, "Owned by: "+ownedBy)
+			// psql names the sequence of an identity column apart from one
+			// that a column owns
+			label := "Owned by: "
+			if identity {
+				label = "Sequence for identity column: "
+			}
+			_, err := fmt.Fprintln(out, label+ownedBy)
 			return err
 		}
 	}
@@ -874,7 +1002,7 @@ func (f *Formatter) describeSequence(ctx context.Context, t dbmeta.Table) error 
 
 // describeIndexes prints each index whose name matches pattern, and returns
 // how many it printed.
-func (f *Formatter) describeIndexes(ctx context.Context, pattern string, showSystem bool) (int, error) {
+func (f *Formatter) describeIndexes(ctx context.Context, pattern string, verbose, showSystem bool) (int, error) {
 	if !f.supports(dbmeta.Indexes) {
 		return 0, nil
 	}
@@ -883,20 +1011,35 @@ func (f *Formatter) describeIndexes(ctx context.Context, pattern string, showSys
 	if err != nil {
 		return 0, f.check(`\d`, err)
 	}
+	if f.pathOnly(pattern) {
+		indexes = slices.DeleteFunc(indexes, func(i dbmeta.Index) bool { return hidden(i.Visible) })
+	}
 	slices.SortStableFunc(indexes, func(a, b dbmeta.Index) int {
 		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
 	})
 	var n int
 	for _, i := range indexes {
-		cols, err := optional(all(ctx, f, dbmeta.IndexColumns, dbmeta.Args{Schema: i.Schema, Parent: i.Table, WithSystem: true}))
-		if err != nil {
+		if err := f.describeIndex(ctx, i, verbose); err != nil {
 			return n, err
 		}
-		cols = slices.DeleteFunc(cols, func(c dbmeta.IndexColumn) bool { return c.Table != i.Table || c.Index != i.Name })
-		slices.SortStableFunc(cols, func(a, b dbmeta.IndexColumn) int { return cmp.Compare(a.Ordinal, b.Ordinal) })
-		// the type of a column of the index is the type of the column of the
-		// table that it names
-		types := make(map[string]string)
+		n++
+	}
+	return n, nil
+}
+
+// describeIndex prints one index, for \d NAME.
+func (f *Formatter) describeIndex(ctx context.Context, i dbmeta.Index, verbose bool) error {
+	cols, err := optional(all(ctx, f, dbmeta.IndexColumns, dbmeta.Args{Schema: i.Schema, Parent: i.Table, WithSystem: true}))
+	if err != nil {
+		return err
+	}
+	cols = slices.DeleteFunc(cols, func(c dbmeta.IndexColumn) bool { return c.Table != i.Table || c.Index != i.Name })
+	slices.SortStableFunc(cols, func(a, b dbmeta.IndexColumn) int { return cmp.Compare(a.Ordinal, b.Ordinal) })
+	// a database that does not give the name and type of a column of the
+	// index gets the name it indexes, and the type of that column of the
+	// table
+	types := make(map[string]string)
+	if !some(cols, func(c dbmeta.IndexColumn) bool { return c.ColumnType.Valid }) {
 		if tcols, err := optional(all(ctx, f, dbmeta.Columns, dbmeta.Args{Schema: i.Schema, Parent: i.Table, WithSystem: true})); err == nil {
 			for _, c := range tcols {
 				if c.Table == i.Table {
@@ -904,49 +1047,66 @@ func (f *Formatter) describeIndexes(ctx context.Context, pattern string, showSys
 				}
 			}
 		}
-		r := &rows{columns: []string{"Column", "Type", "Key?", "Definition"}}
-		for _, c := range cols {
-			def := null(c.Name)
-			if def == "" {
-				def = null(c.Expression)
-			}
-			key := "yes"
-			if c.Include {
-				key = "no"
-			}
-			name := null(c.Name)
-			if name == "" {
-				name = def
-			}
-			r.add(name, types[null(c.Name)], key, def)
-		}
-		var parts []string
-		switch {
-		case i.Primary:
-			parts = append(parts, "primary key")
-		case i.Unique:
-			parts = append(parts, "unique")
-		}
-		if t := method(i); t != "" {
-			parts = append(parts, t)
-		}
-		parts = append(parts, "for table "+qualified(i.Schema, i.Table))
-		if p := null(i.Predicate); p != "" {
-			parts = append(parts, "predicate ("+p+")")
-		}
-		if i.Valid.Valid && !i.Valid.V {
-			parts = append(parts, "invalid")
-		}
-		footer := func(out io.Writer) error {
-			_, err := fmt.Fprintln(out, strings.Join(parts, ", "))
-			return err
-		}
-		if err := encode(f.out, r, "Index "+qualified(i.Schema, i.Name), footer, nil); err != nil {
-			return n, err
-		}
-		n++
 	}
-	return n, nil
+	storage := verbose && some(cols, func(c dbmeta.IndexColumn) bool { return c.Storage.Valid })
+	r := &rows{columns: []string{"Column", "Type", "Key?", "Definition"}}
+	if storage {
+		r.columns = append(r.columns, "Storage", "Stats target")
+	}
+	for _, c := range cols {
+		def := null(c.Name)
+		if def == "" {
+			def = null(c.Expression)
+		}
+		key := "yes"
+		if c.Include {
+			key = "no"
+		}
+		name := cmp.Or(null(c.ColumnName), null(c.Name), def)
+		typ := cmp.Or(null(c.ColumnType), types[null(c.Name)])
+		v := []any{name, typ, key, def}
+		if storage {
+			v = append(v, null(c.Storage), null(c.StatsTarget))
+		}
+		r.add(v...)
+	}
+	var parts []string
+	switch {
+	case i.Primary:
+		parts = append(parts, "primary key")
+	case i.Unique:
+		parts = append(parts, "unique")
+	}
+	if t := method(i); t != "" {
+		parts = append(parts, t)
+	}
+	parts = append(parts, "for table "+qualified(i.Schema, i.Table))
+	if p := null(i.Predicate); p != "" {
+		parts = append(parts, "predicate ("+p+")")
+	}
+	if i.Valid.Valid && !i.Valid.V {
+		parts = append(parts, "invalid")
+	}
+	// an index is a partition of an index, or has partitions, as a table
+	partitioned := i.Partitioned.Valid && i.Partitioned.V
+	t := dbmeta.Table{Schema: i.Schema, Name: i.Name, Type: "index"}
+	title := "Index "
+	if partitioned {
+		t.Type, title = "partitioned index", "Partitioned index "
+	}
+	before, after, err := f.partitionSections(ctx, t, verbose)
+	if err != nil {
+		return err
+	}
+	lines := append(append(before, strings.Join(parts, ", ")), after...)
+	if verbose && partitioned && method(i) != "" {
+		lines = append(lines, "Access method: "+method(i))
+	}
+	footer := func(out io.Writer) error {
+		_, err := fmt.Fprintln(out, strings.Join(lines, "\n"))
+		return err
+	}
+	return encode(f.out, r, title+qualified(i.Schema, i.Name), footer, nil)
 }
 
 // functionKind returns the name that psql prints for the kind of a function,
@@ -992,12 +1152,12 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 	if err != nil {
 		return f.check(cmd, err)
 	}
-	slices.SortStableFunc(funcs, func(a, b dbmeta.Function) int {
-		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name), cmp.Compare(null(a.ArgTypes), null(b.ArgTypes)))
-	})
-	// a database that gives no source gives no leakproof flag either
-	sources := verbose && some(funcs, func(fn dbmeta.Function) bool { return fn.Prosrc.Valid })
-	leakproof := sources
+	if f.pathOnly(pattern) {
+		funcs = slices.DeleteFunc(funcs, func(fn dbmeta.Function) bool { return hidden(fn.Visible) })
+	}
+	// a database that gives no source gives no leakproof flag either. An
+	// empty list has psql's columns.
+	leakproof := verbose && (len(funcs) == 0 || some(funcs, func(fn dbmeta.Function) bool { return fn.Prosrc.Valid }))
 	r := &rows{columns: []string{"Schema", "Name", "Result data type", "Argument data types"}}
 	switch {
 	case aggregates:
@@ -1008,9 +1168,6 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 			r.columns = append(r.columns, "Leakproof?")
 		}
 		r.columns = append(r.columns, "Access privileges", "Language", "Internal name", "Description")
-		if sources {
-			r.columns = append(r.columns, "Source code")
-		}
 	default:
 		r.columns = append(r.columns, "Type")
 	}
@@ -1022,6 +1179,10 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 		v := []any{fn.Schema, fn.Name, null(fn.ResultType), null(fn.ArgTypes)}
 		switch {
 		case aggregates:
+			// psql writes * for an aggregate with no arguments, as count(*)
+			if fn.ArgTypes.V == "" {
+				v[3] = "*"
+			}
 			v = append(v, null(fn.Comment))
 		case verbose:
 			v = append(v, typ, fn.Volatility, fn.Parallel, null(fn.Owner), fn.Security)
@@ -1029,9 +1190,6 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 				v = append(v, yesNo(fn.Leakproof))
 			}
 			v = append(v, null(fn.Access), fn.Language, null(fn.Source), null(fn.Comment))
-			if sources {
-				v = append(v, null(fn.Prosrc))
-			}
 		default:
 			v = append(v, typ)
 		}
@@ -1123,62 +1281,6 @@ func (f *Formatter) ListSchemas(ctx context.Context, pattern string, verbose, sh
 	return encode(f.out, r, text.ListOfSchemas, nil, nil)
 }
 
-// ListIndexes prints the indexes that match pattern, for \di.
-func (f *Formatter) ListIndexes(ctx context.Context, pattern string, verbose, showSystem bool) error {
-	schema, name := f.meta.Dialect().Pattern(pattern)
-	indexes, err := all(ctx, f, dbmeta.Indexes, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
-	if err != nil {
-		return f.check(`\di`, err)
-	}
-	slices.SortStableFunc(indexes, func(a, b dbmeta.Index) int {
-		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
-	})
-	owner := some(indexes, func(i dbmeta.Index) bool { return i.Owner.Valid })
-	persistence := verbose && some(indexes, func(i dbmeta.Index) bool { return i.Persistence.Valid })
-	sizes := verbose && some(indexes, func(i dbmeta.Index) bool { return i.Size.Valid })
-	r := &rows{columns: []string{"Schema", "Name", "Type"}}
-	if owner {
-		r.columns = append(r.columns, "Owner")
-	}
-	r.columns = append(r.columns, "Table")
-	if persistence {
-		r.columns = append(r.columns, "Persistence")
-	}
-	if verbose {
-		r.columns = append(r.columns, "Access method")
-	}
-	if sizes {
-		r.columns = append(r.columns, "Size")
-	}
-	if verbose {
-		r.columns = append(r.columns, "Description")
-	}
-	for _, i := range indexes {
-		v := []any{i.Schema, i.Name, "index"}
-		if owner {
-			v = append(v, null(i.Owner))
-		}
-		v = append(v, i.Table)
-		if persistence {
-			v = append(v, null(i.Persistence))
-		}
-		if verbose {
-			v = append(v, method(i))
-		}
-		if sizes {
-			v = append(v, size(i.Size))
-		}
-		if verbose {
-			v = append(v, null(i.Comment))
-		}
-		r.add(v...)
-	}
-	if len(r.values) == 0 {
-		return f.notFound(pattern)
-	}
-	return encode(f.out, r, "List of indexes", nil, nil)
-}
-
 // ShowStats prints the statistics of the columns of the tables that match
 // pattern, for \ss. k limits the number of common values shown.
 func (f *Formatter) ShowStats(ctx context.Context, pattern string, verbose bool, k int) error {
@@ -1232,6 +1334,9 @@ func (f *Formatter) ListPrivilegeSummaries(ctx context.Context, pattern string, 
 	privs, err := all(ctx, f, dbmeta.Privileges, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
 	if err != nil {
 		return f.check(`\dp`, err)
+	}
+	if f.pathOnly(pattern) {
+		privs = slices.DeleteFunc(privs, func(p dbmeta.Privilege) bool { return hidden(p.Visible) })
 	}
 	slices.SortStableFunc(privs, func(a, b dbmeta.Privilege) int {
 		return cmp.Or(cmp.Compare(null(a.Schema), null(b.Schema)), cmp.Compare(a.Name, b.Name))

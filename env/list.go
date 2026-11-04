@@ -161,7 +161,7 @@ var settingNames = []varName{
 }
 
 var (
-	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json|vertical)$`)
+	formatRE    = regexp.MustCompile(`^(unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms|csv|json|vertical|markdown)$`)
 	linestlyeRE = regexp.MustCompile(`^(ascii|old-ascii|unicode)$`)
 	borderRE    = regexp.MustCompile(`^(single|double)$`)
 )
@@ -197,7 +197,11 @@ var pvarNames = []varName{
 	},
 	{
 		`format`,
-		`set output format [unaligned, aligned, wrapped, vertical, html, asciidoc, csv, json, ...]`,
+		`set output format [unaligned, aligned, wrapped, vertical, html, asciidoc, csv, json, markdown, ...]`,
+	},
+	{
+		`header_align`,
+		`alignment of the column names in aligned, wrapped and markdown output [center, left, right, column] (default center)`,
 	},
 	{
 		`linestyle`,

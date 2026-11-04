@@ -404,7 +404,7 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`) {
 		return CompleteFromList(text, `border`, `columns`, `expanded`, `fieldsep`, `fieldsep_zero`,
-			`footer`, `format`, `linestyle`, `null`, `numericlocale`, `pager`, `pager_min_lines`,
+			`footer`, `format`, `header_align`, `linestyle`, `null`, `numericlocale`, `pager`, `pager_min_lines`,
 			`recordsep`, `recordsep_zero`, `tableattr`, `title`, `title`, `tuples_only`,
 			`unicode_border_linestyle`, `unicode_column_linestyle`, `unicode_header_linestyle`)
 	}
@@ -418,7 +418,10 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		return CompleteFromList(text, "on", "off")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `format`) {
-		return CompleteFromList(text, "unaligned", "aligned", "wrapped", "html", "asciidoc", "latex", "latex-longtable", "troff-ms", "csv", "json", "vertical")
+		return CompleteFromList(text, "unaligned", "aligned", "wrapped", "html", "asciidoc", "latex", "latex-longtable", "troff-ms", "csv", "json", "vertical", "markdown")
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `header_align`) {
+		return CompleteFromList(text, "center", "left", "right", "column")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `linestyle`) {
 		return CompleteFromList(text, "ascii", "old-ascii", "unicode")

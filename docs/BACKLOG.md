@@ -2446,6 +2446,38 @@ columns and the type of an expression, `\dFp+` prints no per-parser table,
 foreign table are empty, and `\dRs+` cannot be compared on a database with no
 subscriptions.
 
+Ken changed the goal on 2026-11-04: the describe output of usql must be the
+same as psql's, not psql's with extras. Ken dropped the Rows column of the
+relation lists and the Source code column of `\df+`, which this item kept
+from v0.21.6. psql 18 has neither, and `\sf` prints the source.
+
+Progress, 2026-11-04, on dbmeta v0.27.0, against psql 18.6 and dbmeta's
+`northwind` fixture on PostgreSQL 18. 124 of the 184 commands of
+`testdata/describe/commands.txt` print what psql prints, byte for byte in the
+aligned format, where 28 did before. 120 of the 196 `\d NAME` and `\d+
+NAME` commands on the relations of the fixture do. The formatter now ends a
+table with psql's blank line, names the kind in its "Did not find" lines,
+lists indexes as one more class of `\d`, shows the definition of a view,
+the constraint of a partition and the not-null constraints only for `+`, and
+follows psql's columns for `\dP`, `\dRs+`, `\dAp`, `\du` and `\dx+`. Left,
+and asked of dbmeta the same day: the visibility of an object on the search
+path (41 commands), the order of the rows, the name and type of an index
+column, its Storage and Stats target, a partitioned index, an identity
+sequence, the pretty form of a generated column, the non-default settings of
+`\dconfig`, the languages of `\dLS`, the system roles of `\drg`, the kinds
+of `\dd`, the case of `\dA`, the `*` of `\da`, and the token types of
+`\dFp+`. The formatter drops its own sort once dbmeta orders the rows as
+psql does.
+
+Progress, 2026-11-04, on dbmeta v0.29.2 (its D262). 180 of the 184 commands
+and all 196 of the `\d NAME` and `\d+ NAME` commands print what psql 18.6
+prints on northwind. The formatter applies psql's rule for the search path,
+keeps the order of dbmeta's queries, and prints the columns, partitions and
+access method of an index, identity sequences, `\dd`, `\dconfig` and `\dFp+`
+as psql does. Left: psql sets `application_name` to `psql`, which
+`\dconfig` lists. And usql writes an error as `error:` where psql writes
+`ERROR:`, with the same text.
+
 
 ## W47. Remove the godror driver: Done
 
@@ -3131,6 +3163,14 @@ Open:
   in the statement (transit's D136). `TestLanguageOracleSlash` and
   `TestSourceMatchesParse` check it, and on Oracle 26ai a `DECLARE` block, a
   `BEGIN` block and a select with no `;`, each ended by `/`, ran.
+  Reversed on 2026-11-04: Ken decided that usql works like psql, not like the
+  client of each database, so a line with only `/` is statement text again
+  (transit's D138, which replaces D135 and D136). Inside a package, or in the
+  declarations of a unit before its `BEGIN`, a script writes each `;` as `\;`,
+  as in psql, and usql keeps the `;` after `END name;`. Done on 2026-11-04 on
+  transit v0.7.2: feed has no slash handling, `TestLanguageOracleSlash` checks
+  that a `/` line stays in the text, and `TestOracleEscapedUnits` checks the
+  units of dbmeta's `oracle-hr.sql` and a trigger that uses `:new`.
 - On ClickHouse, a `$tag$ ... $tag$` or `$$ ... $$` string can hold a `;`.
   Done on 2026-11-02 on dbmeta v0.24.0, which sets `DollarQuotes` (its D251).
   `TestLanguageClickHouse` covers both forms.
@@ -3256,8 +3296,8 @@ line to the text also copied all of it. The cost of a statement grew with the
 square of its size: 13 GB for a statement of 180 KB.
 
 Done on 2026-11-03. `Source` parses again only after a line that can end an
-item: a line with a `;` or a `\`, a line with only `/`, or the end of the
-input. It adds the lines to the text once before each parse. While the text
+item: a line with a `;` or a `\`, or the end of the input. Until transit's
+D138, a line with only `/` was one too. It adds the lines to the text once before each parse. While the text
 only grows, `Parser` parses only what was added, from its last tree, and it
 builds only the first item, and only when it can be fed.
 `TestSourceMatchesParse` checks that reading a line at a time feeds what one

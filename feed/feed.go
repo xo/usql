@@ -11,7 +11,6 @@ package feed
 import (
 	"context"
 	"strings"
-	"unicode"
 
 	"github.com/xo/dbmeta"
 	"github.com/xo/transit"
@@ -24,7 +23,9 @@ import (
 // APPLY BATCH stays one statement, as CQL has it. When s has BeginEndBlocks, the
 // BEGIN ... END body of a stored program stays in its statement (transit's
 // D112), and with AnonymousBlocks, so does an anonymous block of PL/SQL
-// (transit's D128).
+// (transit's D128). Two dashes start a comment only with DashComments, which
+// Cypher and AQL do not have (transit's D139). A line with only / is
+// statement text, as in psql (transit's D138).
 func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 	return usql.LanguageFor(usql.Options{
 		DollarQuotes:    s.DollarQuotes,
@@ -32,6 +33,7 @@ func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 		SlashComments:   s.SlashComments,
 		HashComments:    s.HashComments,
 		Backticks:       s.Backticks,
+		DashComments:    s.DashComments,
 		BeginEndBlocks:  s.BeginEndBlocks,
 		AnonymousBlocks: s.AnonymousBlocks,
 		Batches:         batches,
@@ -254,15 +256,14 @@ func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool
 	return command(firstNode, p.src), true, nil
 }
 
-// terminated reports whether a statement node ends with a ';', or with a line
-// with only '/', which ends a statement of Oracle (transit's D135).
+// terminated reports whether a statement node ends with a ';'.
 func terminated(n transit.Node) bool {
 	count := n.ChildCount()
 	if count == 0 {
 		return false
 	}
 	c, _ := n.Child(count - 1)
-	return c.Kind() == ";" && !c.IsNamed() || c.Kind() == "slash"
+	return c.Kind() == ";" && !c.IsNamed()
 }
 
 // statement returns the item of a statement node.
@@ -276,14 +277,8 @@ func statement(n transit.Node, src []byte) Item {
 	}
 	for i := range n.ChildCount() {
 		c, _ := n.Child(i)
-		switch {
-		case c.Kind() == ";" && !c.IsNamed():
+		if c.Kind() == ";" && !c.IsNamed() {
 			it.Terminated = true
-			continue
-		case c.Kind() == "slash":
-			// a line with only '/' ends the statement, and is not sent
-			it.Terminated = true
-			it.Text = strings.TrimRightFunc(string(src[start:c.StartByte()]), unicode.IsSpace)
 			continue
 		}
 		if p, ok := part(c, src, start); ok {

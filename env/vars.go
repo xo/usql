@@ -114,6 +114,7 @@ func NewDefaultVars() *Variables {
 			"fieldsep_zero":            "off",
 			"footer":                   "on",
 			"format":                   "aligned",
+			"header_align":             "center",
 			"json_indent":              "0",
 			"linestyle":                "ascii",
 			"locale":                   locale,
@@ -325,6 +326,14 @@ func (v *Variables) SetPrint(name, value string) (string, error) {
 			return "", text.ErrInvalidFormatType
 		}
 		v.prnt[name] = value
+	case "header_align":
+		// psql centers the names of the columns, and has no such variable
+		switch value {
+		case "center", "left", "right", "column":
+			v.prnt[name] = value
+		default:
+			return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "center, left, right or column")
+		}
 	case "linestyle":
 		if !linestlyeRE.MatchString(value) {
 			return "", text.ErrInvalidFormatLineStyle
@@ -397,7 +406,7 @@ func (v *Variables) TogglePrint(name, extra string) (string, error) {
 		default:
 			v.prnt[name] = "aligned"
 		}
-	case "linestyle":
+	case "linestyle", "header_align":
 	case "csv_fieldsep", "fieldsep", "null", "recordsep", "time", "timezone", "locale":
 	case "tableattr", "title":
 		v.prnt[name] = ""
@@ -439,9 +448,15 @@ func JSONIndent(params map[string]string) string {
 
 // BlankLineAfter reports whether a table in the output format of params is
 // followed by an empty line. psql writes one after the aligned and wrapped
-// formats, and after no other.
+// formats, and after no other. usql writes one after a markdown table too,
+// which psql does not have, because a line that follows a markdown table
+// becomes one of its rows.
 func BlankLineAfter(params map[string]string) bool {
-	return params["format"] == "aligned" || params["format"] == "wrapped"
+	switch params["format"] {
+	case "aligned", "wrapped", "markdown":
+		return true
+	}
+	return false
 }
 
 // PrintTimeFormat returns the user's time format converted to Go's time.Format

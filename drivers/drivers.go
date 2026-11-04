@@ -148,16 +148,17 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 //
 // dbmeta gives the lexical forms of each database it models. Before a
 // connection, the forms of PostgreSQL apply, as in psql. A database that
-// dbmeta has no model for allows only block comments, which is what nearly
-// every such driver set before dbmeta held the grammar. Allowing more is not
-// safe: a hash comment would swallow SQL Server's #temp table names over ODBC.
+// dbmeta has no model for allows only block comments and comments that start
+// with two dashes, which is what nearly every such driver set before dbmeta
+// held the grammar. Allowing more is not safe: a hash comment would swallow
+// SQL Server's #temp table names over ODBC.
 func Language(u *dburl.URL) *transit.Language {
-	s := dbmeta.Syntax{DollarQuotes: true, BlockComments: true}
+	s := dbmeta.Syntax{DollarQuotes: true, BlockComments: true, DashComments: true}
 	var batches bool
 	if u != nil {
 		var ok bool
 		if s, ok = dbmeta.Dialect(u.Dialect).Syntax(); !ok {
-			s = dbmeta.Syntax{BlockComments: true}
+			s = dbmeta.Syntax{BlockComments: true, DashComments: true}
 		}
 		// a database that has batches, such as CQL, has them as one statement
 		if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
@@ -613,6 +614,8 @@ func init() {
 }
 
 var (
-	endRE       = regexp.MustCompile(`;?\s*$`)
-	endAnchorRE = regexp.MustCompile(`(?i)\send\s*;\s*$`)
+	endRE = regexp.MustCompile(`;?\s*$`)
+	// endAnchorRE is the END of a PL/SQL block, with the name of a package or
+	// a unit after it, as in END payroll;
+	endAnchorRE = regexp.MustCompile(`(?i)(^|\s)end(\s+("[^"]+"|[\pL\pN_$#]+))?\s*;\s*$`)
 )

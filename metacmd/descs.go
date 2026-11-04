@@ -92,7 +92,7 @@ func init() {
 		// Informational
 		{
 			{Describe, `d[S+]`, `[NAME]`, `list tables, views, and sequences or describe table, view, sequence, or index`, false, false},
-			{Describe, `d[tvmsE][S+]`, ``, `alias for \d[S+]`, true, false},
+			{Describe, `d[tvmsEi][S+]`, ``, `alias for \d[S+]`, true, false},
 			{Describe, `da[S+]`, `[PATTERN]`, `list aggregates`, false, false},
 			{Describe, `dA[+]`, `[PATTERN]`, `list access methods`, false, false},
 			{Describe, `dAc[+]`, `[AMPTRN [PATTERN]]`, `list operator classes`, false, false},

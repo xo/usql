@@ -76,6 +76,7 @@ var (
 		`fieldsep_zero`:            `Field separator is zero byte.`,
 		`footer`:                   `Default footer is %s.`,
 		`format`:                   `Output format is %s.`,
+		`header_align`:             `Header alignment is %s.`,
 		`json_indent`:              `JSON indent is %d.`,
 		`linestyle`:                `Line style is %s.`,
 		`locale`:                   `Locale is %q.`,
@@ -103,6 +104,13 @@ var (
 	NotSupportedByDriver      = `%s not supported by %s driver`
 	RelationNotFound          = `Did not find any relation named "%s".`
 	NoRelationsFound          = `Did not find any relations.`
+	NoneFound                 = `Did not find any %s.`
+	NoneFoundNamed            = `Did not find any %s named "%s".`
+	NoRoleSettingsFound       = `Did not find any settings for role "%s" and database "%s".`
+	NoRoleSettingsFoundRole   = `Did not find any settings for role "%s".`
+	NoRoleSettingsFoundAny    = `Did not find any settings.`
+	PublicationNotFound       = `Did not find any publication named "%s".`
+	NoPublicationsFound       = `Did not find any publications.`
 	ListOfRelations           = `List of relations`
 	ListOfFunctions           = `List of functions`
 	ListOfAggregates          = `List of aggregate functions`
@@ -125,6 +133,9 @@ var (
 	ListOfConversions         = `List of conversions`
 	LargeObjects              = `Large objects`
 	ListOfSettings            = `List of configuration parameters`
+	ListOfNonDefaultSettings  = `List of non-default configuration parameters`
+	TSParser                  = `Text search parser "%s"`
+	TSParserTokenTypes        = `Token types for parser "%s"`
 	ObjectDescriptions        = `Object descriptions`
 	ListOfEventTriggers       = `List of event triggers`
 	ListOfExtendedStats       = `List of extended statistics`
@@ -133,6 +144,8 @@ var (
 	ListOfUserMappings        = `List of user mappings`
 	ListOfForeignTables       = `List of foreign tables`
 	ListOfPartitionedRels     = `List of partitioned relations`
+	ListOfPartitionedTables   = `List of partitioned tables`
+	ListOfPartitionedIndexes  = `List of partitioned indexes`
 	ListOfPublications        = `List of publications`
 	Publication               = `Publication %s`
 	ListOfSubscriptions       = `List of subscriptions`

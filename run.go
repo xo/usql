@@ -192,6 +192,7 @@ func New(cliargs []string) ContextExecutor {
 	sf(flags, &args.Pvars, "json", "J", "JSON output mode", "", "format=json")
 	sf(flags, &args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
 	sf(flags, &args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
+	sf(flags, &args.Pvars, "markdown", "M", "markdown output mode", "", "format=markdown")
 	// set bools
 	sf(flags, &args.Usets, "quiet", "q", "run quietly (no messages, only query output)", "", "quiet=on")
 

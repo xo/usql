@@ -973,7 +973,7 @@ func Prompt(p *Params) error {
 // Descs:
 //
 //	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
-//	d[tvmsE][S+]
+//	d[tvmsEi][S+]
 //	da[S+]	[PATTERN]	list aggregates
 //	dA[+]	[PATTERN]	list access methods
 //	dAc[+]	[AMPTRN [PATTERN]]	list operator classes
@@ -1053,13 +1053,11 @@ func Describe(p *Params) error {
 		return m.DescribeFunctions(ctx, name, pattern, verbose, showSystem)
 	case name == "dp", name == "z":
 		return m.ListPrivilegeSummaries(ctx, pattern, showSystem)
-	case name[0] == 'd' && strings.Trim(name[1:], "tvmsE") == "":
-		// any combination of the classes, such as \dtv
+	case name[0] == 'd' && strings.Trim(name[1:], "tvmsEi") == "":
+		// any combination of the classes, such as \dtv and \dti
 		return m.ListTables(ctx, name, pattern, verbose, showSystem)
 	case name == "dn":
 		return m.ListSchemas(ctx, pattern, verbose, showSystem)
-	case name == "di":
-		return m.ListIndexes(ctx, pattern, verbose, showSystem)
 	case name == "l":
 		return m.ListAllDbs(ctx, pattern, verbose)
 	case name == "lo_list":

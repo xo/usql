@@ -51,15 +51,6 @@ func size(v sql.Null[int64]) string {
 	return prettySize(v.V)
 }
 
-// rowCount writes the estimated rows of a table, or nothing before the first
-// analysis, which a database reports as a negative number.
-func rowCount(v sql.Null[int64]) string {
-	if !v.Valid || v.V < 0 {
-		return ""
-	}
-	return strconv.FormatInt(v.V, 10)
-}
-
 // some reports whether f holds for any of items. A database that does not
 // know a fact gives it for no row, and the column that would show it is then
 // left out.
@@ -76,7 +67,7 @@ func some[T any](items []T, f func(T) bool) bool {
 // it, which is the class, but for a partitioned table.
 func relationTypeName(t dbmeta.Table) string {
 	switch typ := strings.ToLower(t.Type); typ {
-	case "partitioned table", "composite type":
+	case "partitioned table", "partitioned index", "composite type":
 		return typ
 	}
 	return className(classOf(t.Type))
@@ -163,4 +154,17 @@ func (f *Formatter) refName(ctx context.Context, schema, name string, visible sq
 		return quoteIdent(schema) + "." + quoteIdent(name)
 	}
 	return f.objectName(ctx, schema, name)
+}
+
+// pathOnly reports whether a list for pattern holds only the objects on the
+// search path, as psql's lists do when the pattern names no schema.
+func (f *Formatter) pathOnly(pattern string) bool {
+	schema, _ := f.meta.Dialect().Pattern(pattern)
+	return schema == ""
+}
+
+// hidden reports whether the database says that an object is not on the
+// search path. An object of a database that does not say is shown.
+func hidden(visible sql.Null[bool]) bool {
+	return visible.Valid && !visible.V
 }

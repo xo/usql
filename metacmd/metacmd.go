@@ -135,12 +135,12 @@ func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
 // they are registered in, so that \dvt finds \dtv, as psql allows.
 func relations(name string) string {
 	base := strings.TrimRight(name, "S+")
-	if len(base) < 2 || base[0] != 'd' || strings.Trim(base[1:], "tvmsE") != "" {
+	if len(base) < 2 || base[0] != 'd' || strings.Trim(base[1:], "tvmsEi") != "" {
 		return name
 	}
 	var b strings.Builder
 	b.WriteByte('d')
-	for _, c := range "tvmsE" {
+	for _, c := range "tvmsEi" {
 		if strings.ContainsRune(base[1:], c) {
 			b.WriteRune(c)
 		}

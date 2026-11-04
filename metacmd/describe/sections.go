@@ -57,8 +57,11 @@ func (f *Formatter) partitionSections(ctx context.Context, t dbmeta.Table, verbo
 	if !f.supports(dbmeta.Partitions) {
 		return nil, nil, nil
 	}
+	// an index has partitions as a table has, and the queries leave them out
+	// unless asked
+	indexes := strings.Contains(strings.ToLower(t.Type), "index")
 	// the parent of a partition
-	parents, err := optional(all(ctx, f, dbmeta.Partitions, dbmeta.Args{Name: t.Name, WithSystem: true}))
+	parents, err := optional(all(ctx, f, dbmeta.Partitions, dbmeta.Args{Name: t.Name, WithSystem: true, WithIndexes: indexes}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -67,12 +70,17 @@ func (f *Formatter) partitionSections(ctx context.Context, t dbmeta.Table, verbo
 			continue
 		}
 		before = append(before, "Partition of: "+f.refName(ctx, p.Schema, p.Table, p.TableVisible)+" "+null(p.Bound))
-		if c := null(p.Constraint); c != "" {
+		// psql prints the constraint of a partition only for \d+
+		switch c := null(p.Constraint); {
+		case !verbose:
+		case c == "":
+			before = append(before, "No partition constraint")
+		default:
 			before = append(before, "Partition constraint: "+c)
 		}
 	}
-	// the partitions of a partitioned table
-	if !strings.EqualFold(t.Type, "partitioned table") {
+	// the partitions of a partitioned table or index
+	if typ := strings.ToLower(t.Type); typ != "partitioned table" && typ != "partitioned index" {
 		return before, nil, nil
 	}
 	keys, err := optional(all(ctx, f, dbmeta.PartitionedTables, dbmeta.Args{Schema: t.Schema, Name: t.Name, WithSystem: true}))
@@ -85,7 +93,7 @@ func (f *Formatter) partitionSections(ctx context.Context, t dbmeta.Table, verbo
 			break
 		}
 	}
-	children, err := optional(all(ctx, f, dbmeta.Partitions, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true}))
+	children, err := optional(all(ctx, f, dbmeta.Partitions, dbmeta.Args{Schema: t.Schema, Parent: t.Name, WithSystem: true, WithIndexes: indexes}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,7 +113,11 @@ func (f *Formatter) partitionSections(ctx context.Context, t dbmeta.Table, verbo
 		if p.Schema != t.Schema || p.Table != t.Name {
 			continue
 		}
-		s := f.refName(ctx, p.PartitionSchema, p.Partition, p.PartitionVisible) + " " + null(p.Bound)
+		// a partition of an index has no bound
+		s := f.refName(ctx, p.PartitionSchema, p.Partition, p.PartitionVisible)
+		if b := null(p.Bound); b != "" {
+			s += " " + b
+		}
 		if p.Partitioned {
 			s += ", PARTITIONED"
 		}
