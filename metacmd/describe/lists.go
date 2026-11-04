@@ -974,49 +974,13 @@ func qualify(schema, name string) string {
 // \sf. name may carry the argument types, as in f(integer), to pick one of
 // several functions with the name. verbose numbers the lines of the body.
 func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool) error {
-	pattern, argTypes, hasArgs := strings.Cut(name, "(")
-	argTypes = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(argTypes), ")"))
-	schema, n := f.meta.Dialect().Pattern(strings.TrimSpace(pattern))
-	funcs, err := all(ctx, f, dbmeta.Functions, dbmeta.Args{Schema: schema, Name: n, WithSystem: true})
+	def, err := f.FunctionDefinition(ctx, name)
 	if err != nil {
-		return f.check(`\sf`, err)
+		return err
 	}
-	var match []dbmeta.Function
-	if hasArgs {
-		want := typeList(strings.Split(argTypes, ","))
-		params, err := f.routineTypes(ctx, schema, n)
-		if err != nil {
-			return err
-		}
-		for _, f := range funcs {
-			// the types alone, or the signature as \df prints it
-			if params[null(f.ID)] == want || typeList(strings.Split(null(f.ArgTypes), ",")) == want {
-				match = append(match, f)
-			}
-		}
-	} else {
-		match = funcs
-	}
-	switch {
-	case len(match) == 0:
-		return fmt.Errorf(text.FunctionNotFound, name)
-	case len(match) > 1:
-		return fmt.Errorf(text.MoreThanOneFunction, name)
-	case !match[0].Definition.Valid:
-		return fmt.Errorf(text.FunctionHasNoDefinition, name)
-	}
-	def := strings.TrimRight(match[0].Definition.V, "\n")
-	plain := strings.Split(def, "\n")
 	lines := strings.Split(f.colored(def), "\n")
-	// psql numbers the body, which starts at the line that begins with AS,
-	// and indents the header above it
-	body := slices.IndexFunc(plain, func(s string) bool {
-		_, ok := cutPrefixFold(s, "AS ")
-		return ok
-	})
-	if body == -1 {
-		body = 0
-	}
+	// psql numbers the body, and indents the header above it
+	body := FunctionBody(def)
 	for i, line := range lines {
 		switch {
 		case verbose && i < body:
@@ -1029,6 +993,60 @@ func (f *Formatter) ShowFunction(ctx context.Context, name string, verbose bool)
 		}
 	}
 	return nil
+}
+
+// FunctionDefinition returns the definition of the function that name
+// names, as \sf prints it and \ef edits it. name may carry the argument
+// types, as in f(integer), to pick one of several functions with the name.
+func (f *Formatter) FunctionDefinition(ctx context.Context, name string) (string, error) {
+	pattern, argTypes, hasArgs := strings.Cut(name, "(")
+	argTypes = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(argTypes), ")"))
+	schema, n := f.meta.Dialect().Pattern(strings.TrimSpace(pattern))
+	funcs, err := all(ctx, f, dbmeta.Functions, dbmeta.Args{Schema: schema, Name: n, WithSystem: true})
+	if err != nil {
+		return "", f.check(`\sf`, err)
+	}
+	var match []dbmeta.Function
+	if hasArgs {
+		want := typeList(strings.Split(argTypes, ","))
+		params, err := f.routineTypes(ctx, schema, n)
+		if err != nil {
+			return "", err
+		}
+		for _, f := range funcs {
+			// the types alone, or the signature as \df prints it
+			if params[null(f.ID)] == want || typeList(strings.Split(null(f.ArgTypes), ",")) == want {
+				match = append(match, f)
+			}
+		}
+	} else {
+		match = funcs
+	}
+	switch {
+	case len(match) == 0:
+		return "", fmt.Errorf(text.FunctionNotFound, name)
+	case len(match) > 1:
+		return "", fmt.Errorf(text.MoreThanOneFunction, name)
+	case !match[0].Definition.Valid:
+		return "", fmt.Errorf(text.FunctionHasNoDefinition, name)
+	}
+	return strings.TrimRight(match[0].Definition.V, "\n"), nil
+}
+
+// FunctionBody returns the index of the line of def where the body of the
+// function starts, which is line 1 for \sf+ and for the LINE of \ef. As in
+// psql, it is the first line that starts with AS, BEGIN or RETURN, or the
+// first line when there is none.
+func FunctionBody(def string) int {
+	i := slices.IndexFunc(strings.Split(def, "\n"), func(s string) bool {
+		for _, prefix := range []string{"AS ", "BEGIN ", "RETURN "} {
+			if _, ok := cutPrefixFold(s, prefix); ok {
+				return true
+			}
+		}
+		return false
+	})
+	return max(i, 0)
 }
 
 // routineTypes returns the types of the arguments of each routine that
@@ -1068,39 +1086,46 @@ func typeList(types []string) string {
 	return strings.Join(v, ",")
 }
 
-// ShowView prints the definition of each view that matches pattern, for \sv.
+// ShowView prints the definition of the view that name names, for \sv.
 // verbose numbers the lines.
-func (f *Formatter) ShowView(ctx context.Context, pattern string, verbose bool) error {
-	schema, name := f.meta.Dialect().Pattern(pattern)
-	views, err := all(ctx, f, dbmeta.Views, dbmeta.Args{Schema: schema, Name: name, WithSystem: true})
+func (f *Formatter) ShowView(ctx context.Context, name string, verbose bool) error {
+	def, err := f.ViewDefinition(ctx, name)
 	if err != nil {
-		return f.check(`\sv`, err)
-	}
-	if len(views) == 0 {
-		_, err := fmt.Fprintf(f.out, text.ViewNotFound+"\n", pattern)
 		return err
 	}
-	for _, v := range views {
-		n := v.Name
-		if v.Schema != "" {
-			n = v.Schema + "." + v.Name
+	for i, line := range strings.Split(f.colored(def), "\n") {
+		if verbose {
+			line = fmt.Sprintf("%-7d %s", i+1, line)
 		}
-		def := null(v.Definition)
-		// SQLite stores the whole statement, and the others the query
-		if _, ok := cutPrefixFold(strings.TrimSpace(def), "CREATE"); !ok {
-			def = "CREATE OR REPLACE VIEW " + n + " AS\n" + def
-		}
-		lines := strings.Split(f.colored(strings.TrimRight(def, "\n")), "\n")
-		for i, line := range lines {
-			if verbose {
-				line = fmt.Sprintf("%-7d %s", i+1, line)
-			}
-			if _, err := fmt.Fprintln(f.out, line); err != nil {
-				return err
-			}
+		if _, err := fmt.Fprintln(f.out, line); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+// ViewDefinition returns the definition of the view that name names, as \sv
+// prints it and \ev edits it: a CREATE OR REPLACE VIEW statement with no
+// semicolon at its end, as psql writes it.
+func (f *Formatter) ViewDefinition(ctx context.Context, name string) (string, error) {
+	schema, n := f.meta.Dialect().Pattern(name)
+	views, err := all(ctx, f, dbmeta.Views, dbmeta.Args{Schema: schema, Name: n, WithSystem: true})
+	switch {
+	case err != nil:
+		return "", f.check(`\sv`, err)
+	case len(views) == 0:
+		return "", fmt.Errorf(text.RelationDoesNotExist, name)
+	case len(views) > 1:
+		return "", fmt.Errorf(text.MoreThanOneView, name)
+	}
+	v := views[0]
+	def := strings.TrimRight(null(v.Definition), " \t\r\n")
+	def = strings.TrimRight(strings.TrimSuffix(def, ";"), " \t\r\n")
+	// SQLite stores the whole statement, and the others the query
+	if _, ok := cutPrefixFold(strings.TrimSpace(def), "CREATE"); !ok {
+		def = "CREATE OR REPLACE VIEW " + qualify(v.Schema, v.Name) + " AS\n" + def
+	}
+	return def, nil
 }
 
 // partitionedType returns the type of a partitioned relation as psql names it,

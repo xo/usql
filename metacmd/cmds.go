@@ -1104,6 +1104,75 @@ func ShowSource(p *Params) error {
 	return m.ShowView(ctx, name, verbose)
 }
 
+// EditSource is a Query Buffer meta command (\ef \ev). Opens the definition
+// of a function or a view in an external editor, and leaves the edited
+// statement in the query buffer.
+//
+// Descs:
+//
+//	ef	[FUNCNAME [LINE]]	edit function definition with external editor
+//	ev	[VIEWNAME [LINE]]	edit view definition with external editor
+func EditSource(p *Params) error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	params, err := p.Patterns()
+	if err != nil {
+		return err
+	}
+	// a last word of digits is the line, as in \ef f(integer) 3
+	var line int
+	if n := len(params); n > 1 {
+		if i, err := strconv.Atoi(params[n-1]); err == nil && i > 0 {
+			line, params = i, params[:n-1]
+		}
+	}
+	name := strings.Join(params, " ")
+	if name == "" {
+		return text.ErrMissingRequiredArgument
+	}
+	m, err := p.Handler.Formatter(ctx)
+	if err != nil {
+		return err
+	}
+	var def string
+	if p.Name == "ef" {
+		def, err = m.FunctionDefinition(ctx, name)
+		// the line of \ef counts from the start of the body, as \sf+ does
+		if line != 0 {
+			line += describe.FunctionBody(def)
+		}
+	} else {
+		def, err = m.ViewDefinition(ctx, name)
+	}
+	if err != nil {
+		return err
+	}
+	var arg string
+	if line != 0 {
+		arg = strconv.Itoa(line)
+	}
+	var out []byte
+	err = onTerminal(p, func() error {
+		var err error
+		out, err = env.EditFile(p.Handler.User(), "", arg, []byte(def))
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	// an unchanged definition is dropped, as psql drops it
+	if strings.TrimRight(string(out), "\n") == def {
+		fmt.Fprintln(p.Handler.Stdout(), text.NoChanges)
+		return nil
+	}
+	// the edited statement is saved to the history, and read as input
+	// again, where it waits for a ; or \g as psql leaves it
+	p.Handler.IO().AddHistory(string(out))
+	p.Handler.Buffer().Reset()
+	p.Handler.Push(string(out))
+	return nil
+}
+
 // Stats is a Informational meta command (\ss and variants). Queries the open
 // database connection for stats and writes it to the output.
 //

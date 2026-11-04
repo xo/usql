@@ -458,11 +458,14 @@ func (f *Formatter) relationFooter(ctx context.Context, t dbmeta.Table, verbose 
 		return nil, err
 	}
 	add(publications)
-	notNulls, err := f.notNullSection(ctx, t)
-	if err != nil {
-		return nil, err
+	// psql lists the not-null constraints only for \d+
+	if verbose {
+		notNulls, err := f.notNullSection(ctx, t)
+		if err != nil {
+			return nil, err
+		}
+		add(notNulls)
 	}
-	add(notNulls)
 	triggers, err := f.tableTriggers(ctx, t)
 	if err != nil {
 		return nil, err

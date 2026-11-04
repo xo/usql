@@ -372,7 +372,8 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(MATCH_CASE, previousWords, `\da*`) {
 		return c.completeWithFunctions(text, true)
 	}
-	if TailMatches(MATCH_CASE, previousWords, `\df*`) {
+	if TailMatches(MATCH_CASE, previousWords, `\df*`) ||
+		TailMatches(MATCH_CASE, previousWords, `\ef|\sf*`) {
 		return c.completeWithFunctions(text, false)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\di*`) {
@@ -387,7 +388,8 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(MATCH_CASE, previousWords, `\dt*`) {
 		return c.completeWithTables(text, "t")
 	}
-	if TailMatches(MATCH_CASE, previousWords, `\dv*`) {
+	if TailMatches(MATCH_CASE, previousWords, `\dv*`) ||
+		TailMatches(MATCH_CASE, previousWords, `\ev|\sv*`) {
 		return c.completeWithTables(text, "v")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\dm*`) {

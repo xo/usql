@@ -119,7 +119,8 @@ func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 		}
 	}
 	// setup args
-	args := []string{path}
+	// the line goes before the path, as psql passes it
+	var args []string
 	if line != "" {
 		if s, ok := Getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG"); ok {
 			args = append(args, s+line)
@@ -127,6 +128,7 @@ func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 			args = append(args, "+"+line)
 		}
 	}
+	args = append(args, path)
 	// create command
 	c := exec.Command(ed, args...)
 	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr

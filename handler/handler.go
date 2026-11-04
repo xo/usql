@@ -1314,7 +1314,7 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		// the command of \g |command quit before it read all the output, as
 		// head does
 		err = nil
-	case err == nil && params["format"] == "aligned":
+	case err == nil && env.BlankLineAfter(params):
 		fmt.Fprintln(w)
 	}
 	if pipe != nil {

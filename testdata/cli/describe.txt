@@ -160,6 +160,8 @@ recv:
 \n
 (1 row)\r
 \n
+\r
+\n
 \e[?2004h\e[32msq::memory:=> \e[39m
 
 
@@ -201,6 +203,8 @@ recv:
 Indexes:\r
 \n
     "sqlite_autoindex_films_1" PRIMARY KEY, btree\r
+\n
+\r
 \n
 \r
 \n

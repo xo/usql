@@ -377,6 +377,63 @@ func TestSourceMatchesParse(t *testing.T) {
 	}
 }
 
+// TestOracleEscapedUnits checks that a PL/SQL unit whose inner semicolons are
+// written as \; is one statement, and that the server gets each as ;. The
+// usql grammar keeps a block that starts at BEGIN or DECLARE whole, but not
+// the declarations of a unit before its BEGIN, nor a package, which has none.
+// The writer escapes those, as in psql.
+func TestOracleEscapedUnits(t *testing.T) {
+	t.Parallel()
+	oracle := dbmeta.Syntax{BlockComments: true, BeginEndBlocks: true, AnonymousBlocks: true}
+	tests := []struct {
+		name, src, exp string
+	}{
+		{
+			"declarations",
+			"create function f return number as\n  n number\\;\nbegin\n  n := 1\\;\n  return n\\;\nend;\n",
+			"create function f return number as\n  n number;\nbegin\n  n := 1;\n  return n;\nend;",
+		},
+		{
+			"declarations, body unescaped",
+			"create function f return number as\n  n number\\;\nbegin\n  n := 1;\n  return n;\nend;\n",
+			"create function f return number as\n  n number;\nbegin\n  n := 1;\n  return n;\nend;",
+		},
+		{
+			"trigger",
+			"create trigger t before insert on x for each row\ndeclare\n  k number\\;\nbegin\n  k := 1\\;\nend;\n",
+			"create trigger t before insert on x for each row\ndeclare\n  k number;\nbegin\n  k := 1;\nend;",
+		},
+		{
+			"package",
+			"create package p as\n  function total return number\\;\n  procedure raise_all\\;\nend p;\n",
+			"create package p as\n  function total return number;\n  procedure raise_all;\nend p;",
+		},
+		{
+			"package body",
+			"create package body p as\n  function total return number as\n    t number\\;\n  begin\n    return t\\;\n  end\\;\nend p;\n",
+			"create package body p as\n  function total return number as\n    t number;\n  begin\n    return t;\n  end;\nend p;",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			p, err := NewParser(Language(oracle, false))
+			if err != nil {
+				t.Fatal(err)
+			}
+			items, err := p.Parse(test.src + "select 1 from dual;\n")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(items) != 2 {
+				t.Fatalf("expected the unit and the select, got: %s", summary(items))
+			}
+			if got := items[0].Expand(nil); got != test.exp {
+				t.Errorf("\n got: %q\nwant: %q", got, test.exp)
+			}
+		})
+	}
+}
+
 // TestSourceLargeStatement checks that a statement of many lines costs about
 // what its size does. A Source once parsed the whole text again for each line
 // it read, so that an INSERT of 830 rows read from a file took gigabytes.

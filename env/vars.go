@@ -437,6 +437,13 @@ func JSONIndent(params map[string]string) string {
 	return strings.Repeat(" ", max(n, 0))
 }
 
+// BlankLineAfter reports whether a table in the output format of params is
+// followed by an empty line. psql writes one after the aligned and wrapped
+// formats, and after no other.
+func BlankLineAfter(params map[string]string) bool {
+	return params["format"] == "aligned" || params["format"] == "wrapped"
+}
+
 // PrintTimeFormat returns the user's time format converted to Go's time.Format
 // value.
 func (v *Variables) PrintTimeFormat() string {

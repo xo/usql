@@ -146,7 +146,9 @@ var (
 	ListOfFamilyFunctions     = `List of support functions of operator families`
 	ListOfExtensions          = `List of installed extensions`
 	ObjectsInExtension        = `Objects in extension %s`
-	ViewNotFound              = `Did not find any view named "%s".`
+	RelationDoesNotExist      = `relation "%s" does not exist`
+	MoreThanOneView           = `more than one view named "%s"`
+	NoChanges                 = `No changes`
 	FunctionNotFound          = `function "%s" does not exist`
 	MoreThanOneFunction       = `more than one function named "%s"`
 	FunctionHasNoDefinition   = `function "%s" has no definition`

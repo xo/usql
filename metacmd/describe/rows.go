@@ -1,6 +1,7 @@
 package describe
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/xo/tblfmt"
@@ -95,5 +96,13 @@ func encode(w io.Writer, r *rows, title string, footer func(io.Writer) error, pa
 	if err != nil {
 		return err
 	}
-	return enc.EncodeAll(w)
+	if err := enc.EncodeAll(w); err != nil {
+		return err
+	}
+	// tblfmt ends a footer with a newline of its own, which leaves the blank
+	// line that psql writes after a table
+	if footer == nil && env.BlankLineAfter(p) {
+		_, err = fmt.Fprintln(w)
+	}
+	return err
 }

@@ -142,6 +142,20 @@ It has no metadata query of its own (D3, D4).
   name between double quotes keeps its case. A pattern also shows the
   objects of the system, as in psql.
 - The package `metacmd/describe` formats the answers.
+- `\ef [FUNCNAME [LINE]]` and `\ev [VIEWNAME [LINE]]` open the definition of
+  a function or a view in the editor, as psql does. The edited statement
+  waits in the query buffer for a `;` or `\g`. An unchanged file prints `No
+  changes` and leaves the buffer empty. The LINE of `\ef` counts from the
+  first line of the body, as `\sf+` numbers it. Each needs a name: psql's
+  empty template for a new function is PostgreSQL's own syntax.
+- `\sv` writes no `;` after the definition, as psql does. A view that does
+  not exist is the error `relation "NAME" does not exist`.
+- A table in the aligned and wrapped formats is followed by a blank line, as
+  in psql. This holds for the describe commands and for a query in the
+  wrapped format, which had none.
+- `\d NAME` lists the not-null constraints only with `+`, as psql 18 does.
+- The editor gets the line before the file, as `+LINE FILE`, as psql passes
+  it.
 - The version in the banner, the current user, and the statement that
   changes a password come from dbmeta. InfluxDB shows its release from
   GET /ping.
@@ -463,7 +477,8 @@ and that they print plain with `\o FILE` and when the output is piped.
 
 For each database that dbmeta has a model for, run `\d`, `\dt`, `\dv`,
 `\di`, `\ds`, `\df`, `\dn`, `\l`, `\dp`, `\du`, `\d NAME` on a table with an
-index, a check, a foreign key and a trigger, `\sv`, `\sf`, and `\ss`. Check
+index, a check, a foreign key and a trigger, `\sv`, `\sf`, `\ev`, `\ef`,
+and `\ss`. Check
 upper case and quoted names on Oracle, and on a database that folds to
 lower case. Check `\uset echo_hidden on` and `noexec`. On a database with no
 model, check that each command says it is not supported.

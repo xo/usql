@@ -86,6 +86,8 @@ func init() {
 			{Write, `write`, ``, `alias for \w`, true, false},
 			{Reset, `r`, ``, `reset (clear) the query buffer`, false, false},
 			{Reset, `reset`, ``, `alias for \r`, true, false},
+			{EditSource, `ef`, `[FUNCNAME [LINE]]`, `edit function definition with external editor`, false, false},
+			{EditSource, `ev`, `[VIEWNAME [LINE]]`, `edit view definition with external editor`, false, false},
 		},
 		// Informational
 		{
