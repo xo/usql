@@ -615,7 +615,8 @@ $ usql sq://path/to/dbname.sqlite3
 $ usql sqlite3://path/to/dbname.sqlite3
 $ usql file:/path/to/dbname.sqlite3
 
-# connect to a named connection in $HOME/.config/usql/config.yaml
+# connect to a named connection in config.yaml (see Configuration below for
+# where it is on each system)
 $ cat $HOME/.config/usql/config.yaml
 connections:
   my_named_connection: sqlserver://user:pass@localhost/
@@ -673,6 +674,31 @@ ms:sa@localhost=>
 
 A command takes one or more parameters. A parameter can be quoted with either
 `'` or `"`, and [can also be backticked][backticks].
+
+#### How input becomes statements
+
+`usql` reads input as `psql` does, on every database:
+
+- A statement ends at a `;` that is outside a string, a quoted name and a
+  comment, or at a meta command such as `\g`.
+- Write `\;` for a `;` that must not end the statement. `usql` sends it as `;`.
+- The body of a stored program between `BEGIN` and `END`, and on Oracle an
+  anonymous block, stays in one statement, so its `;` need no escape. Inside a
+  PL/SQL package, or in the declarations of a unit before its `BEGIN`, write
+  each `;` as `\;`.
+- A line with only `/` and SQL Server's `GO` are not separators. They are
+  text of the statement, as in `psql`.
+- Input that is not typed, from `-c`, `-f`, a pipe or `\i`, runs a last
+  statement that has no `;`.
+
+#### Line editing
+
+The interactive interpreter edits lines with [`rline`][rline], which reads
+`~/.inputrc` (or the file that `INPUTRC` names) as GNU Readline does. For
+example, `set editing-mode vi` turns on vi mode, and
+`"\e[A": history-search-backward` makes Up search the history for entries
+that start with what is typed. Settings inside `$if usql` ... `$endif` apply
+only to `usql`.
 
 ### Backslash Commands
 
@@ -788,7 +814,7 @@ Informational
   \z[S] [PATTERN]                   same as \dp
   \sf[+] FUNCNAME                   show a function's definition
   \sv[+] VIEWNAME                   show a view's definition
-  \ss[+] [TABLE|QUERY] [k]          show stats for a table or a query
+  \ss[+] TABLE [k]                  show stats for the columns of a table
 
 Variables
   \set [NAME [VALUE]]               set script variable, or show all script variables if no
@@ -858,9 +884,17 @@ always appreciated][contributing]!
 #### Configuration
 
 During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
-file [`config.yaml`](_samples/config.yaml). On Windows this is `%AppData%/usql/config.yaml`,
-on macOS this is `$HOME/Library/Application Support/usql/config.yaml`, and on
-Linux and other Unix systems this is normally `$HOME/.config/usql/config.yaml`.
+file [`config.yaml`](_samples/config.yaml). It reads the first of these:
+
+1. The file that `--config` names.
+2. The file that the `USQL_CONFIG` environment variable names.
+3. `usql/config.yaml` in the configuration directory of the system:
+   `%AppData%/usql/config.yaml` on Windows,
+   `$HOME/Library/Application Support/usql/config.yaml` on macOS, and
+   `$XDG_CONFIG_HOME/usql/config.yaml` on Linux and other Unix systems, which
+   is `$HOME/.config/usql/config.yaml` when `XDG_CONFIG_HOME` is not set.
+   macOS does not read `XDG_CONFIG_HOME`. Set `USQL_CONFIG` to use another
+   file there.
 
 ##### `connections:`
 
@@ -1096,6 +1130,7 @@ on_error_stop is on
 (not connected)=> \uset
 echo_hidden           off
 editor                ""
+fetch_count           0
 on_error_stop         on
 pager                 "less -R"
 prompt1               "%S%N%m%/%R%# "
@@ -1320,8 +1355,9 @@ When scripting, or when needing to perform multiple `\copy` operations from/to
 multiple sources/destinations, the best practice is to `\set` connection
 variables either in a script or in [the `$HOME/.usqlrc` RC script][usqlrc].
 
-Similarly, passwords can be stored for easy reuse (and kept out of scripts) by
-storing in [the `$HOME/.usqlpass` password file][usqlpass].
+Similarly, passwords can be kept out of scripts by defining [named
+connections][connection-vars] in [the `config.yaml` file][config]. The
+[`$HOME/.usqlpass` password file][usqlpass] also works, but it is deprecated.
 
 For example:
 
@@ -1601,9 +1637,9 @@ the same database, so a `postgres:` entry also covers `pg://`, `pgx://` and
 own, so CockroachDB, CrateDB and Redshift each need their own entry, and so do
 TiDB, SingleStore and Vitess. A `mysql:` entry does not cover `tidb://`.
 
-While the `.usqlpass` functionality will not be removed, it is recommended to
-[define named connections][connection-vars] preferably via [the `config.yaml`
-file][config].
+The `.usqlpass` file is deprecated, and `usql` prints a warning when it reads a
+password from it. [Define named connections][connection-vars] in [the
+`config.yaml` file][config] instead.
 
 <hr/>
 
@@ -1781,3 +1817,4 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [arewesixelyet]: https://www.arewesixelyet.com
 [chart-command]: #chart-command "\\chart meta command"
 [yaml]: https://yaml.org
+[rline]: https://github.com/xo/rline
