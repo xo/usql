@@ -1,11 +1,8 @@
 # Contributing to usql
 
-Any contributions are welcome. If you found a bug, or a missing feature,
-take a look at existing [issues](https://github.com/xo/usql/issues)
-and create a new one if needed.
-
-You can also open up a [pull request](https://github.com/xo/usql/pulls) (PR)
-with code or documentation changes.
+Report a bug, ask a question, or propose a feature in
+[Discussions](https://github.com/xo/usql/discussions). The repository takes
+no issues and no pull requests.
 
 # Adding a new driver
 

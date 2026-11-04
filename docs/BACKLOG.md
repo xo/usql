@@ -4,10 +4,11 @@ This file records planned work for usql and for the sibling repositories that
 usql depends on. Each item names the files, workflows or issue numbers it
 touches, so that the work can start without rediscovering the context.
 
-This file is the source of truth for the roadmap. The issue tracker is for
-defects and for work that is ready for someone outside the project to pick up.
-Anything recorded in both places drifts, and the roadmap in the tracker was
-also hiding the real bug reports underneath it.
+This file is the source of truth for the roadmap. The repository takes no
+issues and no pull requests since 2026-11-04. Reports, questions and proposals
+go to GitHub Discussions. Anything recorded in both places drifts, so a
+discussion that becomes work gets an item here, and the item names the
+discussion.
 
 ## How to refer to an item
 
@@ -3348,6 +3349,7 @@ Source: GitHub 203, and Ken on 2026-11-04. psql's `\c dbname [user] [host]
 "invalid database scheme", because `\c` takes one argument as a URL and two
 or more as a driver and its DSN. Ken decided against copying psql's form, and
 the design is open. Changing the fields of a URL is dburl's work (hard rule 2).
+Discussion: https://github.com/xo/usql/discussions/598
 
 ## W70. A man page
 
@@ -3362,7 +3364,8 @@ lacks `-U` and `-M`. Generate it from the cobra definitions of the flags, as
 Source: GitHub 322, and Ken on 2026-11-04. usql streams `\copy`, but a CSV
 file read through the csvq driver is held in memory, 623 MB for a file of
 55 MB. Ken decided against a CSV source inside `\copy` for now. The way to
-read a large file is open.
+read a large file is open. Discussion, with the batches of W29:
+https://github.com/xo/usql/discussions/597
 
 ## W72. Move the statement classification to dbmeta: Done
 

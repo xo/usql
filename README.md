@@ -1755,12 +1755,10 @@ $ usql "couchbase://user:pass@localhost/?txtimeout=2m"
 
 ## Contributing
 
-`usql` is currently a WIP, and is aiming towards a 1.0 release soon.
-Well-written PRs are always welcome -- and there is a clear backlog of issues
-marked `help wanted` on the GitHub issue tracker! For [technical details on
-contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
-
-[_Pick up an issue today, and submit a PR tomorrow!_][help-wanted]
+`usql` is currently a WIP, and is aiming towards a 1.0 release soon. Report a
+bug, ask a question, or propose a feature in [GitHub
+Discussions][discussions]. The repository takes no issues and no pull
+requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 
 <br/>
 
@@ -1782,7 +1780,7 @@ contributing, see CONTRIBUTING.md](CONTRIBUTING.md).
 [go-sql]: https://pkg.go.dev/database/sql
 [homebrew]: https://brew.sh/
 [xo-tap]: https://github.com/xo/homebrew-xo
-[help-wanted]: https://github.com/xo/usql/issues?q=is:open+is:issue+label:%22help+wanted%22
+[discussions]: https://github.com/xo/usql/discussions
 [aur]: https://aur.archlinux.org/packages/usql
 [aur-bin]: https://aur.archlinux.org/packages/usql-bin
 [yay]: https://github.com/Jguer/yay
