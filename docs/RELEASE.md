@@ -29,8 +29,8 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.26.0, transit v0.7.1 and rline v0.5.0, all in
-  `go.mod`. It builds with no `go.work`.
+- usql requires dbmeta v0.27.0, tblfmt v0.21.1, transit v0.7.1 and rline
+  v0.5.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
@@ -169,7 +169,7 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 ### The pager
 
 The pager moved out of tblfmt into the new package `pager` of usql (W64).
-usql requires tblfmt v0.21.0, which has no pager. All
+tblfmt v0.21.0 and later have no pager. All
 the output of an entry goes through it: the results of a query, the describe
 commands, `\?`, `\drivers`, `\echo`, and the listings of `\set`, `\uset`,
 `\pset` and `\cset`.
@@ -244,6 +244,14 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   columns and no rows has its header, and expanded, html and asciidoc output
   match psql. `\pset format` takes wrapped, latex, latex-longtable and
   troff-ms.
+- A binary value prints as psql prints a bytea, on every database: `\x` and
+  lower case hex, and `\x` alone for an empty value. dbmeta v0.27.0 says
+  which column types are binary (its D258), and tblfmt v0.21.1 writes the
+  text in every format. usql printed a binary value with Go escapes before,
+  as in `"\x15\x1C/\x00"`. An Oracle
+  `RAW(16)` from `SYS_GUID()` now prints as `\x` and 32 hex digits. A SQL
+  Server uniqueidentifier is not binary, and prints in lower case as a
+  PostgreSQL uuid does.
 - JSON output is compact, one result set on each line, where it was indented
   before. `\pset json_indent N` indents it by N spaces, `on` is two spaces,
   `off` and 0 are compact, and `\pset json_indent` alone switches between
@@ -282,7 +290,7 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, and hive to gohive v2.
-- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.1.1, pure Go.
+- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.2.0, pure Go.
   A wrong user or password now prints ORA-01017, where go-ora printed
   "message code error", and usql prompts for the password. An error no longer
   ends with the line " error occur at position: N". The driver

@@ -1303,6 +1303,8 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	}
 	// align each column by its type, as the model of the dialect records it
 	extra = append(extra, tblfmt.WithColumnAlign(columnAlign(dbmeta.Dialect(h.u.Dialect))))
+	// print a binary value as psql prints a bytea, on every database
+	extra = append(extra, tblfmt.WithBytesFormat(dbmeta.Dialect(h.u.Dialect).FormatBinary))
 	// encode and handle error conditions
 	if indent := env.JSONIndent(params); indent != "" {
 		extra = append(extra, tblfmt.WithIndent(indent))
