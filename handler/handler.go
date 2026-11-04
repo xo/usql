@@ -63,6 +63,9 @@ type Handler struct {
 	// passfileWarned is set once the handler has said that the password file
 	// is deprecated.
 	passfileWarned bool
+	// historyWarned is set once the handler has said that the history file
+	// cannot be read or written.
+	historyWarned bool
 	// reading is set while \prompt reads an answer from the line editor.
 	reading bool
 	// user is the user.
@@ -81,10 +84,11 @@ type Handler struct {
 	buf feed.Buffer
 	// lastExec is the last executed query statement.
 	lastExec string
-	// lastExecPrefix is the last executed query statement prefix.
-	lastExecPrefix string
 	// lastRaw is the last executed raw query statement.
 	lastRaw string
+	// database is the current database that dbmeta reports, which the
+	// prompt's %/ shows, and which USE changes.
+	database sql.Null[string]
 	// bind are bound values for that will be used for statement execution.
 	bind []interface{}
 	// u is the active connection information.
@@ -219,6 +223,7 @@ func (h *Handler) Run() error {
 	for {
 		// the pager of the last entry must exit before the next line is read
 		h.endPage()
+		h.checkHistory(stderr)
 		it, err := h.src.Next()
 		switch {
 		case errors.Is(err, rline.ErrInterrupted):
@@ -285,9 +290,9 @@ func (h *Handler) Run() error {
 // written out, and reports whether the handler must stop, as on_error_stop
 // asks outside a terminal.
 func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, error) {
-	prefix, exp, raw := h.buf.Prefix(), h.buf.Expand(h.Lookup), h.buf.Raw()
+	exp, raw := h.buf.Expand(h.Lookup), h.buf.Raw()
 	if !h.buf.Empty() {
-		h.lastExec, h.lastExecPrefix, h.lastRaw = exp, prefix, raw
+		h.lastExec, h.lastRaw = exp, raw
 		h.buf.Reset()
 	}
 	if h.lastExec == "" || h.lastExec == ";" {
@@ -304,7 +309,7 @@ func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, erro
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	err := h.Execute(ctx, out, opt, h.lastExecPrefix, h.lastExec, h.unbind()...)
+	err := h.Execute(ctx, out, opt, h.lastExec, h.unbind()...)
 	if err == nil {
 		return false, nil
 	}
@@ -354,12 +359,13 @@ func (h *Handler) apply(stdout, stderr io.Writer, it feed.Item) (metacmd.Option,
 }
 
 // Execute executes a query against the connected database.
-func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, bind ...interface{}) error {
+func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, sqlstr string, bind ...interface{}) error {
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
-	// determine type and pre process string
-	prefix, sqlstr, qtyp := drivers.Process(h.u, prefix, sqlstr)
+	// the command tag, the statement to send, and whether it returns rows,
+	// from dbmeta
+	prefix, sqlstr, qtyp := drivers.Process(h.u, sqlstr)
 	f := h.doExecSingle
 	switch opt.Exec {
 	case metacmd.ExecExec:
@@ -380,23 +386,46 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		err = f(ctx, w, opt, prefix, sqlstr, qtyp, bind)
 		h.lost(err)
 	}
+	// USE chooses another database, which the prompt shows
+	if err == nil && strings.EqualFold(prefix, "USE") {
+		h.readDatabase(ctx)
+	}
 	return drivers.WrapErr(h.u.SchemeName, err)
 }
 
-// prefix returns the prefix of the first statement of sqlstr, as \gexec needs
-// for each statement that a query returns.
-func (h *Handler) prefix(sqlstr string) string {
-	items, err := h.src.Parser().Parse(sqlstr)
-	if err != nil || len(items) == 0 {
-		return ""
+// checkHistory says once, at a terminal, that the history file could not be
+// read or written, as the line editor goes on without it and says nothing.
+func (h *Handler) checkHistory(w io.Writer) {
+	if !h.iactive || h.historyWarned {
+		return
 	}
-	return items[0].Prefix()
+	if err := h.l.HistoryErr(); err != nil {
+		h.historyWarned = true
+		fmt.Fprintf(w, text.HistoryNotSaved+"\n", err)
+	}
+}
+
+// readDatabase reads the current database from dbmeta, for the prompt. A
+// database that dbmeta cannot ask leaves it unknown, and the prompt shows the
+// database of the URL.
+func (h *Handler) readDatabase(ctx context.Context) {
+	h.database = sql.Null[string]{}
+	if !h.iactive {
+		return
+	}
+	m, err := h.metadata(ctx)
+	if err != nil {
+		return
+	}
+	if d, ok, err := dbmeta.First(dbmeta.CurrentDatabase.All(ctx, m, h.DB(), nil)); err == nil && ok {
+		h.database = sql.Null[string]{V: d.Name.V, Valid: true}
+	}
 }
 
 // Reset empties the query buffer and forgets the last query.
 func (h *Handler) Reset() {
 	h.buf.Reset()
-	h.lastExec, h.lastExecPrefix, h.lastRaw = "", "", ""
+	h.lastExec, h.lastRaw = "", ""
 }
 
 // Push puts text in front of the input, as \e does with the edited query.
@@ -588,6 +617,12 @@ func (h *Handler) render(prompt string, cont bool) string {
 			switch {
 			case connected && h.u.Opaque != "":
 				buf = append(buf, h.u.Opaque...)
+			case connected && h.database.Valid:
+				// the current database, which follows USE, after the / that
+				// the path of a URL has
+				if h.database.V != "" {
+					buf = append(buf, "/"+h.database.V...)
+				}
 			case connected && h.u.Path != "" && h.u.Path != "/":
 				buf = append(buf, h.u.Path...)
 			}
@@ -783,6 +818,7 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 				}
 				h.l.SetCompleter(c)
 			}
+			h.readDatabase(ctx)
 			return h.Version(ctx)
 		}
 	}
@@ -905,7 +941,7 @@ func (h *Handler) Close() error {
 		}
 		err := h.db.Close()
 		drv := h.u.SchemeName
-		h.db, h.conn, h.u, h.meta = nil, nil, nil, nil
+		h.db, h.conn, h.u, h.meta, h.database = nil, nil, nil, nil, sql.Null[string]{}
 		return drivers.WrapErr(drv, err)
 	}
 	return nil
@@ -1361,7 +1397,7 @@ func (h *Handler) doExecRows(ctx context.Context, w io.Writer, rows *sql.Rows) e
 			}
 			// execute
 			for _, sqlstr := range row {
-				if err = h.Execute(ctx, w, res, h.prefix(sqlstr), sqlstr); err != nil {
+				if err = h.Execute(ctx, w, res, sqlstr); err != nil {
 					return err
 				}
 			}

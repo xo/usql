@@ -260,11 +260,11 @@ above:
 - W4e: usql streams `\copy`. In 322 the csvq driver holds the whole file,
   which W71 records. 427 is fixed: the copy passes each value as its
   `Value()`. 458 is W29.
-- W4f: 504 and 516 are fixed. 448 is with tblfmt: a float8 must print as
-  psql's float8out prints it.
+- W4f: 504 and 516 are fixed. 448 is fixed on tblfmt v0.22.1: a float8
+  prints as psql's float8out prints it.
 - W4g: dbmeta now answers 375 and 440.
-- W4h: closed with the move to rline, except 490 and 483, which are being
-  reproduced, and 66 and 414, which went to rline.
+- W4h: closed with the move to rline. 490 and 483 did not reproduce, and
+  rline v0.6.0 fixes 66, 414 and 215.
 - W4i: 485 is answered. 263 has a README section on how input becomes
   statements. 469's unused `queries:` stub is gone from the sample.
 
@@ -3364,7 +3364,7 @@ file read through the csvq driver is held in memory, 623 MB for a file of
 55 MB. Ken decided against a CSV source inside `\copy` for now. The way to
 read a large file is open.
 
-## W72. Move the statement classification to dbmeta
+## W72. Move the statement classification to dbmeta: Done
 
 Source: Ken, on 2026-11-04, and GitHub 540. `drivers/qtype.go` decides from
 the first words of a statement whether it returns rows, so an `INSERT`,
@@ -3374,9 +3374,21 @@ looks past the first words with its own lexer. A bare `SET` on Impala and Hive,
 which lists the settings, is one of its cases (pull request 573). Asked of
 dbmeta on 2026-11-04. Then usql removes `qtype.go` and calls dbmeta.
 
-## W73. Show the current database in the prompt
+Done on 2026-11-04 on dbmeta v0.31.0 (its D264). `drivers.Process` calls
+`Dialect.Classify` with the whole statement, and `qtype.go` and the prefix
+that `feed` built for it are gone. `RETURNING` printed its rows on
+PostgreSQL and SQLite, and `OUTPUT` on SQL Server.
+
+## W73. Show the current database in the prompt: Done
 
 Source: GitHub 467. The prompt's `%/` comes from the URL, so it is empty on
 SQL Server with `?database=`, and does not follow `USE`. usql reads the
 current database after it connects and after a statement that starts with
 `USE`. dbmeta was asked for a query of the current database on 2026-11-04.
+
+Done on 2026-11-04 on dbmeta v0.31.0 (its D265). The handler reads
+`CurrentDatabase` after an interactive connection and after a statement
+whose tag is `USE`, and `%/` shows it after a `/`, as the path of a URL
+gives it. A URL with a file path, as SQLite's, keeps the path. On SQL Server
+the prompt went from empty to `/northwind`, and to `/master` after `USE
+master`.

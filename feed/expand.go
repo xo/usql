@@ -2,7 +2,6 @@ package feed
 
 import (
 	"strings"
-	"unicode"
 )
 
 // Lookup returns the value of a variable, and false when it is not set.
@@ -57,51 +56,4 @@ func unescape(s string) string {
 		return s
 	}
 	return strings.NewReplacer(`\;`, `;`, `\:`, `:`).Replace(s)
-}
-
-// maxPrefixWords is the most words that Prefix returns.
-const maxPrefixWords = 6
-
-// Prefix returns the first words of a statement, in upper case and joined by
-// spaces, such as "CREATE TABLE". It skips comments, and it stops at the
-// first character that is not a letter or white space, or after six words.
-// usql uses it to decide whether a statement returns rows.
-func (it Item) Prefix() string {
-	var words []string
-	var word strings.Builder
-	flush := func() bool {
-		if word.Len() != 0 {
-			words = append(words, strings.ToUpper(word.String()))
-			word.Reset()
-		}
-		return len(words) < maxPrefixWords
-	}
-	pos := 0
-	for _, p := range append(it.Parts, Part{Start: len(it.Text), End: len(it.Text)}) {
-		for _, r := range it.Text[pos:p.Start] {
-			switch {
-			case unicode.IsLetter(r):
-				word.WriteRune(r)
-			case unicode.IsSpace(r):
-				if !flush() {
-					return strings.Join(words, " ")
-				}
-			default:
-				flush()
-				return strings.Join(words, " ")
-			}
-		}
-		if p.Kind != Comment && p.Start != p.End {
-			// a string, a variable or a name ends the prefix
-			flush()
-			return strings.Join(words, " ")
-		}
-		// a comment separates words
-		if !flush() {
-			return strings.Join(words, " ")
-		}
-		pos = p.End
-	}
-	flush()
-	return strings.Join(words, " ")
 }

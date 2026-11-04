@@ -2,7 +2,6 @@ package describe
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
@@ -49,22 +48,9 @@ func (s source) fold(part string) string {
 	return s.f.meta.Dialect().FoldIdentifier(part)
 }
 
-// plainName is a name that needs no quotes, unless the database folds it.
-var plainName = regexp.MustCompile(`^[\pL_][\pL\pN_$]*$`)
-
-// quote returns name between the quotes of the database when it would not
-// stay the same name without them, such as MyTable on PostgreSQL, which
-// folds it to mytable, or Order Details on SQL Server.
+// quote returns name between the quotes of the database when it needs them.
 func (s source) quote(name string) string {
-	d := s.f.meta.Dialect()
-	if name == "" || plainName.MatchString(name) && d.FoldIdentifier(name) == name {
-		return name
-	}
-	q := `"`
-	if syn, ok := d.Syntax(); ok && syn.Backticks {
-		q = "`"
-	}
-	return q + strings.ReplaceAll(name, q, q+q) + q
+	return s.f.quoteName(name)
 }
 
 // objects returns the objects of kind that f selects.

@@ -110,16 +110,23 @@ func columnDefault(c dbmeta.Column) string {
 	return null(c.Default)
 }
 
-// identRE matches a name that needs no quotes.
-var identRE = regexp.MustCompile(`^[a-z_][a-z0-9_$]*$`)
+// plainName is a name that needs no quotes, unless the database folds it.
+var plainName = regexp.MustCompile(`^[\pL_][\pL\pN_$]*$`)
 
-// quoteIdent quotes a name that PostgreSQL would not read back as the same
-// name, as psql does.
-func quoteIdent(s string) string {
-	if identRE.MatchString(s) {
-		return s
+// quoteName returns name between the quotes of the database when it would not
+// stay the same name without them, such as MyTable on PostgreSQL, which folds
+// it to mytable, or Order Details on SQL Server. A name that the database
+// keeps as it is written, as SQL Server keeps Customers, needs no quotes.
+func (f *Formatter) quoteName(name string) string {
+	d := f.meta.Dialect()
+	if name == "" || plainName.MatchString(name) && d.FoldIdentifier(name) == name {
+		return name
 	}
-	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+	q := `"`
+	if syn, ok := d.Syntax(); ok && syn.Backticks {
+		q = "`"
+	}
+	return q + strings.ReplaceAll(name, q, q+q) + q
 }
 
 // objectName writes the name of an object that another object refers to, as
@@ -138,9 +145,9 @@ func (f *Formatter) objectName(ctx context.Context, schema, name string) string 
 		}
 	}
 	if schema == "" || f.path[schema] {
-		return quoteIdent(name)
+		return f.quoteName(name)
 	}
-	return quoteIdent(schema) + "." + quoteIdent(name)
+	return f.quoteName(schema) + "." + f.quoteName(name)
 }
 
 // refName writes the name of an object that another object refers to. A
@@ -149,9 +156,9 @@ func (f *Formatter) objectName(ctx context.Context, schema, name string) string 
 func (f *Formatter) refName(ctx context.Context, schema, name string, visible sql.Null[bool]) string {
 	if visible.Valid {
 		if visible.V {
-			return quoteIdent(name)
+			return f.quoteName(name)
 		}
-		return quoteIdent(schema) + "." + quoteIdent(name)
+		return f.quoteName(schema) + "." + f.quoteName(name)
 	}
 	return f.objectName(ctx, schema, name)
 }

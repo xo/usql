@@ -15,7 +15,7 @@ require (
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/jmrobles/h2go v0.5.0
 	github.com/kenshaw/colors v0.2.4
-	github.com/kenshaw/rasterm v0.1.21
+	github.com/kenshaw/rasterm v0.1.22
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-runewidth v0.0.31
@@ -31,14 +31,14 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.1
 	github.com/xo/dbimp v0.24.0
-	github.com/xo/dbmeta v0.30.1
-	github.com/xo/dburl v0.55.0
+	github.com/xo/dbmeta v0.31.0
+	github.com/xo/dburl v0.55.1
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.2.0
 	github.com/xo/oracle v0.3.0
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.5.0
-	github.com/xo/tblfmt v0.22.0
+	github.com/xo/rline v0.6.0
+	github.com/xo/tblfmt v0.22.1
 	github.com/xo/terminfo v1.3.0
 	github.com/xo/transit v0.7.2
 	github.com/xo/transit/grammars/clickhouse v0.7.2

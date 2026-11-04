@@ -27,7 +27,7 @@ func TestProcessOracle(t *testing.T) {
 		{"end;", "end;"},
 	}
 	for _, test := range tests {
-		if _, got, _ := Process(u, "", test.src); got != test.exp {
+		if _, got, _ := Process(u, test.src); got != test.exp {
 			t.Errorf("Process(%q): expected %q, got %q", test.src, test.exp, got)
 		}
 	}

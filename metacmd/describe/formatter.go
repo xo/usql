@@ -804,9 +804,11 @@ type reference struct {
 
 // definition returns the definition of a foreign key built from its columns,
 // for a database that records no definition of its own.
-func (r *reference) definition() string {
+func (r *reference) definition(ctx context.Context, f *Formatter) string {
+	// the table that is referred to has its schema when it is not on the
+	// search path, as psql writes it
 	return fmt.Sprintf("FOREIGN KEY (%s) REFERENCES %s(%s)",
-		strings.Join(r.columns, ", "), r.foreignTable, strings.Join(r.foreign, ", "))
+		strings.Join(r.columns, ", "), f.objectName(ctx, r.foreignSchema, r.foreignTable), strings.Join(r.foreign, ", "))
 }
 
 // isForeignKey reports whether def is the definition of a foreign key written
@@ -849,7 +851,7 @@ func (f *Formatter) tableConstraints(ctx context.Context, t dbmeta.Table) ([]str
 					}
 				}
 				if r, ok := refs[t.Schema+"."+t.Name+"."+c.Name]; ok {
-					def = r.definition()
+					def = r.definition(ctx, f)
 				}
 			}
 			foreign = append(foreign, `"`+c.Name+`" `+def)
@@ -897,7 +899,7 @@ func (f *Formatter) referencedBy(ctx context.Context, t dbmeta.Table) ([]string,
 	for _, r := range matched {
 		def := defs[r.schema+"."+r.table+"."+r.name]
 		if !isForeignKey(def) {
-			def = r.definition()
+			def = r.definition(ctx, f)
 		}
 		// the table has its schema when it is not on the search path, as
 		// psql writes it

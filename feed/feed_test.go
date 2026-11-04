@@ -151,31 +151,6 @@ func TestExpand(t *testing.T) {
 	}
 }
 
-func TestPrefix(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		src, exp string
-	}{
-		{`select * from t;`, `SELECT`},
-		{`create table t (a int);`, `CREATE TABLE T`},
-		{`/* x */ insert into t values (1);`, `INSERT INTO T VALUES`},
-		{"-- c\nselect 1;", `SELECT`},
-		{`select/* x */into t;`, `SELECT INTO T`},
-		{`begin batch insert into t values (1);`, `BEGIN BATCH INSERT INTO T VALUES`},
-		{`  `, ``},
-	}
-	for _, test := range tests {
-		items := parse(t, test.src)
-		var got string
-		if len(items) != 0 {
-			got = items[0].Prefix()
-		}
-		if got != test.exp {
-			t.Errorf("%q: expected %q, got %q", test.src, test.exp, got)
-		}
-	}
-}
-
 // entries is a LineReader that returns whole entries, as the line editor does
 // at a terminal.
 type entries []string

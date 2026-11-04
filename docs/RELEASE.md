@@ -29,8 +29,8 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.30.1, tblfmt v0.22.0, transit v0.7.2 and rline
-  v0.5.0, all in `go.mod`. It builds with no `go.work`.
+- usql requires dbmeta v0.31.0, dburl v0.55.1, tblfmt v0.22.1, transit
+  v0.7.2 and rline v0.6.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
@@ -181,7 +181,7 @@ It has no metadata query of its own (D3, D4).
   - `\dA` writes the type of an access method with a capital, as `Index`,
     and `\da` writes `*` for an aggregate with no arguments, as `count(*)`.
   - A list with no schema in its pattern shows only the objects on the
-    search path, as psql does (dbmeta v0.30.1, its D262).
+    search path, as psql does (dbmeta v0.31.0, its D262).
   - The lists keep the order of dbmeta's queries, which is psql's order in
     the collation of the database. usql sorted them again in byte order.
   - `\d INDEX` names the column of the index and its type, as `lower` and
@@ -315,6 +315,11 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   print before. The decimals of the dbimp drivers, such as ClickHouse,
   Trino and BigQuery, printed as left aligned text with an exponent, as in
   `1.5E+10`.
+- A `float8`, and any 64-bit float, prints as psql prints it (tblfmt
+  v0.22.1): with no exponent when its decimal exponent is from -4 to 14, so
+  `1450817.032` where usql printed `1.450817032e+06`, and `1e+15` and
+  `1e-05` otherwise. `numericlocale` groups a float as psql does, and
+  expanded output follows `numericlocale`, `time` and `timezone`.
 - `\pset format markdown`, or `-M` and `--markdown` on the command line as
   `-J` is for JSON, writes a table in markdown, with each column
   padded and its alignment in the delimiter row (tblfmt v0.22.0). It writes
@@ -416,6 +421,33 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 
 ### Other
 
+- The line editor keeps a history file of the old format, where a line such
+  as `\dt` stopped every later save, keeps 500 entries as psql does, where it
+  kept 200, and does not redraw the line while more keys wait, so a paste
+  without bracketed paste is no longer slower with each row (rline v0.6.0).
+  usql warns once when the history file cannot be read or written. Keys
+  typed or pasted right after the start are no longer lost at a terminal
+  that does not answer the query for graphics, such as Emacs or a serial
+  console (rasterm v0.1.22). The
+  prompt starts after output that did not end its row, as after `\echo -n`,
+  and a `[x]` in a prompt stays as it is written.
+- An `INSERT`, `UPDATE` or `DELETE` with `RETURNING` prints its rows, as in
+  psql, on PostgreSQL, CockroachDB, SQLite, DuckDB, MariaDB and Firebird, and
+  so does SQL Server's `OUTPUT` without `INTO`. It printed only its tag.
+  dbmeta now decides from the whole statement whether it returns rows (its
+  D264), and `drivers/qtype.go`, which looked at the first words only, is
+  gone.
+- The prompt's `%/` shows the current database, which dbmeta reads after the
+  connection and after a `USE` (its D265). On SQL Server with
+  `?database=northwind` it was empty, and after `USE master` it showed the
+  old database.
+- A foreign key to a table outside the search path names its schema, as in
+  `REFERENCES hr.departments(id)`, and a name is quoted only when the
+  database would not read it back as written, so SQL Server's `Customers`
+  has no quotes.
+- A `#` inside a field of the `.usqlpass` file belongs to the field, and `\:`
+  and `\\` escape a `:` and a `\`, as in PostgreSQL's `.pgpass` (dburl
+  v0.55.1). A `#` after an entry used to start a comment.
 - Input from `-f`, a pipe or `\i` runs a last statement that has no `;`, as
   psql does. Before, it was dropped and usql exited with status 0.
 - The `editor` setting runs through the shell, as psql runs it, so it can

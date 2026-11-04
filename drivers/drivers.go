@@ -232,10 +232,11 @@ func User(ctx context.Context, u *dburl.URL, db DB) (string, error) {
 	return user, nil
 }
 
-// Process returns the type of the statement sqlstr, whose first words are
-// prefix, the statement to run, and whether to run it as a query. It removes
-// a trailing semicolon where dbmeta says the database refuses one.
-func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool) {
+// Process returns the command tag of the statement sqlstr, the statement to
+// run, and whether to run it as a query, which dbmeta decides for the dialect
+// from the whole statement. It removes a trailing semicolon where dbmeta says
+// the database refuses one.
+func Process(u *dburl.URL, sqlstr string) (string, string, bool) {
 	if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
 		switch info.Terminator {
 		case dbmeta.TerminatorStripped:
@@ -246,8 +247,8 @@ func Process(u *dburl.URL, prefix, sqlstr string) (string, string, bool) {
 			}
 		}
 	}
-	typ, q := QueryExecType(prefix, sqlstr)
-	return typ, sqlstr, q || dbmeta.Dialect(u.Dialect).EveryStatementIsAQuery()
+	typ, q := dbmeta.Dialect(u.Dialect).Classify(sqlstr)
+	return typ, sqlstr, q
 }
 
 // ColumnTypes returns the column types callback for a driver.

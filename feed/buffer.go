@@ -53,12 +53,3 @@ func (b *Buffer) Expand(lookup Lookup) string {
 	}
 	return strings.Join(v, "\n")
 }
-
-// Prefix returns the prefix of the first statement of the buffer. See
-// Item.Prefix.
-func (b *Buffer) Prefix() string {
-	if len(b.items) == 0 {
-		return ""
-	}
-	return b.items[0].Prefix()
-}
