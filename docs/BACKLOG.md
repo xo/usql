@@ -3218,8 +3218,8 @@ Open:
   the same without `Err`. On 2026-11-02 Ken also dropped the hook
   `IsPasswordErr`, so the driver registers with no hooks. Done on 2026-11-02 on
   xo/oracle v0.1.0, and moved to v0.1.1 for its fix of a call after a
-  cancelled one, and to v0.2.0 for its fix of a read of a LOB with an IS JSON
-  check. Both have the method and an `Error()` with no position
+  cancelled one, to v0.2.0 for its fix of a read of a LOB with an IS JSON
+  check, and to v0.3.0, which reports the length of a column. Both have the method and an `Error()` with no position
   line. `drivers/oracle/oracle_test.go` checks the prompt, and on Oracle 26ai
   usql prompted for the password of a URL that had none, and connected. dburl still names sijms/go-ora as the
   package and the URL of the driver, which the README table and the `See:`

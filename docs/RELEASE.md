@@ -29,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.29.2, tblfmt v0.22.0, transit v0.7.2 and rline
+- usql requires dbmeta v0.30.0, tblfmt v0.22.0, transit v0.7.2 and rline
   v0.5.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -181,7 +181,7 @@ It has no metadata query of its own (D3, D4).
   - `\dA` writes the type of an access method with a capital, as `Index`,
     and `\da` writes `*` for an aggregate with no arguments, as `count(*)`.
   - A list with no schema in its pattern shows only the objects on the
-    search path, as psql does (dbmeta v0.29.2, its D262).
+    search path, as psql does (dbmeta v0.30.0, its D262).
   - The lists keep the order of dbmeta's queries, which is psql's order in
     the collation of the database. usql sorted them again in byte order.
   - `\d INDEX` names the column of the index and its type, as `lower` and
@@ -304,9 +304,10 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   which column types are binary (its D258), and tblfmt v0.21.1 writes the
   text in every format. usql printed a binary value with Go escapes before,
   as in `"\x15\x1C/\x00"`. An Oracle
-  `RAW(16)` from `SYS_GUID()` now prints as `\x` and 32 hex digits. A SQL
-  Server uniqueidentifier is not binary, and prints in lower case as a
-  PostgreSQL uuid does.
+  `RAW(16)`, which is how Oracle stores a GUID, prints as a lower case UUID,
+  as a PostgreSQL uuid and a SQL Server uniqueidentifier print (dbmeta
+  v0.30.0, its D263, with the column length from xo/oracle v0.3.0). Any
+  other `RAW` prints as `\x` and hex.
 - A decimal that a driver returns with database/sql's Decompose method
   prints as psql prints a numeric (tblfmt v0.21.2): aligned to the right,
   with no exponent, and as a number in JSON. SAP HANA's DECIMAL failed to
@@ -361,7 +362,7 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
 - flightsql moves to arrow-go v18, and hive to gohive v2.
-- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.2.0, pure Go.
+- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.3.0, pure Go.
   A wrong user or password now prints ORA-01017, where go-ora printed
   "message code error", and usql prompts for the password. An error no longer
   ends with the line " error occur at position: N". The driver
