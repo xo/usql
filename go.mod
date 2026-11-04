@@ -32,7 +32,7 @@ require (
 	github.com/xo/cassandra v0.2.1
 	github.com/xo/dbimp v0.24.0
 	github.com/xo/dbmeta v0.31.0
-	github.com/xo/dburl v0.55.1
+	github.com/xo/dburl v0.55.2
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.2.0
 	github.com/xo/oracle v0.3.0
@@ -108,7 +108,7 @@ require (
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/google/flatbuffers/go v0.0.0-20230110200425-62e4d2e5b215 // indirect
+	github.com/google/flatbuffers v25.12.19+incompatible // indirect
 	github.com/google/pprof v0.0.0-20261026192309-dbd0ed30aa88 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

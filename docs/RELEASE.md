@@ -29,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.31.0, dburl v0.55.1, tblfmt v0.22.1, transit
+- usql requires dbmeta v0.31.0, dburl v0.55.2, tblfmt v0.22.1, transit
   v0.7.2 and rline v0.6.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -410,7 +410,8 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   in `most` and no longer in `all`. Its URL is
   `odbc+<driver>://user:pass@host:port/db` with the settings of the ODBC
   driver in the query. dburl no longer adds a port, a host or a ServiceName,
-  and a URL with no driver is an error.
+  and a URL with no driver is an error. A URL with no host and a path, such
+  as `odbc+sqlite3:/path/to/file.db`, keeps its driver (dburl v0.55.2).
 - MaxCompute, Tablestore and YDB choose TLS with `tls=true` (W41), and
   `yds://` and `ydbs://` are gone. MaxCompute and Tablestore use TLS by
   default.
