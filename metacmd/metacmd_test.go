@@ -4,6 +4,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/metacmd/describe"
 )
@@ -88,5 +89,25 @@ func TestCompletions(t *testing.T) {
 	}
 	if !slices.IsSorted(got) {
 		t.Error("the names are not sorted")
+	}
+}
+
+// TestExpandShell checks that a variable in the text of a command between
+// backticks is replaced as psql replaces it: :name by its value, :'name' by
+// its value quoted for the shell, and a variable that is not set not at all.
+func TestExpandShell(t *testing.T) {
+	_ = env.Vars().Set("shellx", "it's")
+	tests := []struct {
+		s, exp string
+	}{
+		{"echo :shellx", "echo it's"},
+		{"echo :'shellx'", `echo 'it'\''s'`},
+		{"echo :nope :'nope'", "echo :nope :'nope'"},
+		{"echo a:b", "echo a:b"},
+	}
+	for _, test := range tests {
+		if got := expandShell(test.s); got != test.exp {
+			t.Errorf("expandShell(%q): expected %q, got %q", test.s, test.exp, got)
+		}
 	}
 }

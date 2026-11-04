@@ -23,25 +23,26 @@ import (
 type grammar struct {
 	language func() *transit.Language
 	queries  fs.FS
+	keywords func() []string
 }
 
 // The SQL grammars that usql uses. transit does not know the dialects of
 // dbmeta, so usql keeps the match of a dialect to a grammar (transit's
 // docs/USQL.md).
 var (
-	genericGrammar    = grammar{sql.Language, sql.Queries}
-	postgresGrammar   = grammar{postgres.Language, postgres.Queries}
-	mysqlGrammar      = grammar{mysql.Language, mysql.Queries}
-	sqlserverGrammar  = grammar{sqlserver.Language, sqlserver.Queries}
-	oracleGrammar     = grammar{oracle.Language, oracle.Queries}
-	cqlGrammar        = grammar{cql.Language, cql.Queries}
-	sqlite3Grammar    = grammar{sqlite3.Language, sqlite3.Queries}
-	duckdbGrammar     = grammar{duckdb.Language, duckdb.Queries}
-	clickhouseGrammar = grammar{clickhouse.Language, clickhouse.Queries}
-	trinoGrammar      = grammar{trino.Language, trino.Queries}
-	neo4jGrammar      = grammar{neo4j.Language, neo4j.Queries}
-	surrealdbGrammar  = grammar{surrealdb.Language, surrealdb.Queries}
-	ydbGrammar        = grammar{ydb.Language, ydb.Queries}
+	genericGrammar    = grammar{sql.Language, sql.Queries, sql.Keywords}
+	postgresGrammar   = grammar{postgres.Language, postgres.Queries, postgres.Keywords}
+	mysqlGrammar      = grammar{mysql.Language, mysql.Queries, mysql.Keywords}
+	sqlserverGrammar  = grammar{sqlserver.Language, sqlserver.Queries, sqlserver.Keywords}
+	oracleGrammar     = grammar{oracle.Language, oracle.Queries, oracle.Keywords}
+	cqlGrammar        = grammar{cql.Language, cql.Queries, cql.Keywords}
+	sqlite3Grammar    = grammar{sqlite3.Language, sqlite3.Queries, sqlite3.Keywords}
+	duckdbGrammar     = grammar{duckdb.Language, duckdb.Queries, duckdb.Keywords}
+	clickhouseGrammar = grammar{clickhouse.Language, clickhouse.Queries, clickhouse.Keywords}
+	trinoGrammar      = grammar{trino.Language, trino.Queries, trino.Keywords}
+	neo4jGrammar      = grammar{neo4j.Language, neo4j.Queries, neo4j.Keywords}
+	surrealdbGrammar  = grammar{surrealdb.Language, surrealdb.Queries, surrealdb.Keywords}
+	ydbGrammar        = grammar{ydb.Language, ydb.Queries, ydb.Keywords}
 )
 
 // grammarFor returns the SQL grammar for a dialect of dbmeta. A dialect with

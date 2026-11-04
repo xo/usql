@@ -29,7 +29,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.30.0, tblfmt v0.22.0, transit v0.7.2 and rline
+- usql requires dbmeta v0.30.1, tblfmt v0.22.0, transit v0.7.2 and rline
   v0.5.0, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
@@ -181,7 +181,7 @@ It has no metadata query of its own (D3, D4).
   - `\dA` writes the type of an access method with a capital, as `Index`,
     and `\da` writes `*` for an aggregate with no arguments, as `count(*)`.
   - A list with no schema in its pattern shows only the objects on the
-    search path, as psql does (dbmeta v0.30.0, its D262).
+    search path, as psql does (dbmeta v0.30.1, its D262).
   - The lists keep the order of dbmeta's queries, which is psql's order in
     the collation of the database. usql sorted them again in byte order.
   - `\d INDEX` names the column of the index and its type, as `lower` and
@@ -304,10 +304,11 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   which column types are binary (its D258), and tblfmt v0.21.1 writes the
   text in every format. usql printed a binary value with Go escapes before,
   as in `"\x15\x1C/\x00"`. An Oracle
-  `RAW(16)`, which is how Oracle stores a GUID, prints as a lower case UUID,
+  `RAW(16)` whose column name holds `id`, in any case, such as `staff_id`
+  or `GUID`, is how Oracle stores a GUID, and prints as a lower case UUID,
   as a PostgreSQL uuid and a SQL Server uniqueidentifier print (dbmeta
-  v0.30.0, its D263, with the column length from xo/oracle v0.3.0). Any
-  other `RAW` prints as `\x` and hex.
+  v0.30.1, its D263, with the column length from xo/oracle v0.3.0). Any
+  other `RAW`, such as a hash, prints as `\x` and hex.
 - A decimal that a driver returns with database/sql's Decompose method
   prints as psql prints a numeric (tblfmt v0.21.2): aligned to the right,
   with no exponent, and as a number in JSON. SAP HANA's DECIMAL failed to
@@ -414,6 +415,42 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   Druid and DynamoDB are in `most`.
 
 ### Other
+
+- Input from `-f`, a pipe or `\i` runs a last statement that has no `;`, as
+  psql does. Before, it was dropped and usql exited with status 0.
+- The `editor` setting runs through the shell, as psql runs it, so it can
+  hold arguments, as in `code --wait`. With no editor set, `\e` runs `vi` on
+  a new file, where it failed.
+- `\uset fetch_count N`, psql's FETCH_COUNT, shows a result in groups of N
+  rows, so that a large result does not have to fit in memory. A result of a
+  million rows took 627 MB in the aligned format, and takes 71 MB with
+  `fetch_count 1000`.
+- `\copy` passes each value as its `Value()`, so a NULL reaches a driver
+  whose prepared statement takes only plain values, such as csvq's.
+- Tab completion folds the typed text as the database folds a name, so `ord`
+  and `ORD` both find `orders` on PostgreSQL, and quotes a name that needs it,
+  such as `"MyTable"` or `"Order Details"`. After `ALTER` or `DROP` of a
+  kind, it offers the names of that kind. After `CREATE`, `ALTER` and `DROP`,
+  it offers the words that the grammar of the database allows, so SQLite is
+  not offered `DROP DATABASE`.
+- A single-quoted argument of a meta command decodes as psql decodes it:
+  `'\q'` is `q`, `'\61'` is `1`, `'\x4'` is the byte 4, and `'\u0041'` is
+  `u0041`. A variable in a command between backticks is replaced, and
+  `:'name'` is quoted for the shell.
+- `\d` of a temporary relation is titled `Table`, `View` or `Sequence`, as in
+  psql, where usql wrote `Temporary table`.
+- `\ss` needs a table. Its help named a QUERY form that did not exist.
+- `\pset recordsep` says `Record separator is`, where it said `Field
+  separator is`.
+- The `.usqlpass` password file is deprecated. usql prints a warning once
+  when it reads a password from it. Define named connections in
+  `config.yaml` instead.
+- The README says where usql looks for `config.yaml`: `--config`,
+  `USQL_CONFIG`, then the configuration directory of the system, which
+  follows `XDG_CONFIG_HOME` on Linux and not on macOS. The help names the
+  macOS directory with its `/usql`.
+- The sample `config.yaml` no longer has a `queries:` section, which nothing
+  read.
 
 - A SQL Server `uniqueidentifier` prints in lower case, as a PostgreSQL `uuid`
   does, so that a column of UUIDs prints the same on both. SQL Server's tools

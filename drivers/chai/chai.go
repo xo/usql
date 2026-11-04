@@ -1,6 +1,7 @@
 // Package chai defines and registers usql's ChaiSQL driver.
 //
 // See: https://github.com/chaisql/chai
+// Group: most
 package chai
 
 import (

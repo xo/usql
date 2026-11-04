@@ -1,6 +1,7 @@
 // Package impala defines and registers usql's Apache Impala driver.
 //
 // See: https://github.com/sclgo/impala-go
+// Group: most
 package impala
 
 import (

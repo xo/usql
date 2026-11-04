@@ -74,11 +74,11 @@ func relationTypeName(t dbmeta.Table) string {
 }
 
 // prefixed returns name with the persistence of a relation before it, as psql
-// writes the title of an unlogged table: "Unlogged table".
+// writes the title of an unlogged table: "Unlogged table". psql gives a
+// temporary relation no prefix.
 func prefixed(persistence sql.Null[string], name string) string {
-	switch p := strings.ToLower(null(persistence)); p {
-	case "unlogged", "temporary":
-		return strings.ToUpper(p[:1]) + p[1:] + " " + name
+	if p := strings.ToLower(null(persistence)); p == "unlogged" {
+		return "Unlogged " + name
 	}
 	return strings.ToUpper(name[:1]) + name[1:]
 }

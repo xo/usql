@@ -70,7 +70,7 @@ func buildConfigDir(configName string) (string, string) {
 	dir := `$HOME/.config/usql`
 	switch runtime.GOOS {
 	case "darwin":
-		dir = `$HOME/Library/Application Support`
+		dir = `$HOME/Library/Application Support/usql`
 	case "windows":
 		dir = `%AppData%\usql`
 	}
@@ -109,6 +109,10 @@ var settingNames = []varName{
 	{
 		`editor`,
 		`editor used by the \e, \ef, and \ev commands`,
+	},
+	{
+		`fetch_count`,
+		`the number of result rows to read and show at a time, 0 for all of them at once, as psql's FETCH_COUNT (default 0)`,
 	},
 	{
 		`on_error_stop`,

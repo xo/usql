@@ -94,6 +94,7 @@ func NewDefaultVars() *Variables {
 			"quiet":                 "off",
 			"on_error_stop":         "off",
 			"echo_hidden":           "off",
+			"fetch_count":           "0",
 			// prompts
 			"prompt1": "%S%N%m%/%R%# ",
 			"prompt2": "%S%N%m%/%R%# ",
@@ -220,6 +221,17 @@ func (v *Variables) SetSetting(name, value string) error {
 				return err
 			}
 		}
+	case "fetch_count":
+		// psql's FETCH_COUNT: 0 shows a result at once, and a number shows
+		// it in groups of that many rows
+		if value == "" {
+			value = "0"
+		}
+		i, err := strconv.Atoi(value)
+		if err != nil || i < 0 {
+			return fmt.Errorf(text.FormatFieldInvalidValue, value, name, "a number of rows")
+		}
+		value = strconv.Itoa(i)
 	case "syntax_hl_style":
 		if _, ok := styles.Get(value); !ok {
 			return fmt.Errorf(text.UnknownStyle, value)

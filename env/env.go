@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -95,16 +94,21 @@ func OpenFile(u *user.User, path string) (string, *os.File, error) {
 
 // EditFile edits a file. If path is empty, then a temporary file will be
 // created.
+//
+// The editor runs through the shell, as psql runs it, so that the editor
+// setting can hold arguments, such as code --wait.
 func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 	ed, _ := vars.Setting("editor")
-	switch {
-	case ed == "":
-		if ed, _ = exec.LookPath("vi"); ed == "" {
+	if ed == "" {
+		vi, err := exec.LookPath("vi")
+		if err != nil {
 			return nil, text.ErrNoEditorDefined
 		}
-	case path != "":
+		ed = shellQuote(vi)
+	}
+	if path != "" {
 		path = passfile.Expand(u.HomeDir, path)
-	default:
+	} else {
 		f, err := os.CreateTemp("", text.CommandLower()+".*.sql")
 		if err != nil {
 			return nil, err
@@ -118,19 +122,21 @@ func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 			return nil, err
 		}
 	}
-	// setup args
 	// the line goes before the path, as psql passes it
-	var args []string
+	cmd := ed
 	if line != "" {
 		if s, ok := Getenv(text.CommandUpper() + "_EDITOR_LINENUMBER_ARG"); ok {
-			args = append(args, s+line)
+			cmd += " " + shellQuote(s+line)
 		} else {
-			args = append(args, "+"+line)
+			cmd += " " + shellQuote("+"+line)
 		}
 	}
-	args = append(args, path)
-	// create command
-	c := exec.Command(ed, args...)
+	cmd += " " + shellQuote(path)
+	shell, param := Getshell()
+	if shell == "" {
+		return nil, text.ErrNoShellAvailable
+	}
+	c := exec.Command(shell, param, cmd)
 	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := c.Run(); err != nil {
 		return nil, err
@@ -141,6 +147,14 @@ func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 		return nil, err
 	}
 	return bytes.TrimSuffix(buf, lineend), nil
+}
+
+// shellQuote quotes s as one argument for the shell that Getshell returns.
+func shellQuote(s string) string {
+	if runtime.GOOS == "windows" {
+		return `"` + s + `"`
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 // HistoryFile returns the path to the history file.
@@ -257,6 +271,13 @@ func Exec(s string) (string, error) {
 }
 
 // Unquote unquotes a string.
+//
+// A string between single quotes is read as psql reads the argument of a
+// meta command: ” is a quote, \n, \t, \b, \r and \f are control
+// characters, one to three octal digits and \x with one or two hex digits are
+// a byte, and a backslash before any other character is that character, as in
+// \q for q. A string between double quotes or backticks loses its quotes, and
+// keeps the escapes of Go.
 func Unquote(s string) (string, error) {
 	switch n := len(s); {
 	case n == 0:
@@ -267,7 +288,7 @@ func Unquote(s string) (string, error) {
 	quote := s[0]
 	s = s[1 : len(s)-1]
 	if quote == '\'' {
-		s = cleanDoubleRE.ReplaceAllString(s, `$1\'`)
+		return unquoteSingle(s)
 	}
 	// this is the last part of strconv.Unquote
 	var runeTmp [utf8.UTFMax]byte
@@ -289,6 +310,70 @@ func Unquote(s string) (string, error) {
 		}
 	}
 	return string(buf), nil
+}
+
+// unquoteSingle decodes the text between single quotes as psql decodes the
+// argument of a meta command.
+func unquoteSingle(s string) (string, error) {
+	buf := make([]byte, 0, len(s))
+	for i := 0; i < len(s); i++ {
+		switch c := s[i]; {
+		case c == '\'' && i+1 < len(s) && s[i+1] == '\'':
+			buf = append(buf, c)
+			i++
+		case c == '\'':
+			return "", text.ErrInvalidQuotedString
+		case c != '\\' || i+1 == len(s):
+			buf = append(buf, c)
+		default:
+			i++
+			switch c = s[i]; {
+			case c == 'n':
+				buf = append(buf, '\n')
+			case c == 't':
+				buf = append(buf, '\t')
+			case c == 'b':
+				buf = append(buf, '\b')
+			case c == 'r':
+				buf = append(buf, '\r')
+			case c == 'f':
+				buf = append(buf, '\f')
+			case '0' <= c && c <= '7':
+				// one to three octal digits
+				v, j := 0, i
+				for ; j < len(s) && j < i+3 && '0' <= s[j] && s[j] <= '7'; j++ {
+					v = v*8 + int(s[j]-'0')
+				}
+				buf, i = append(buf, byte(v)), j-1
+			case c == 'x' && i+1 < len(s) && isHex(s[i+1]):
+				// one or two hex digits
+				v, j := 0, i+1
+				for ; j < len(s) && j < i+3 && isHex(s[j]); j++ {
+					v = v*16 + hexValue(s[j])
+				}
+				buf, i = append(buf, byte(v)), j-1
+			default:
+				buf = append(buf, c)
+			}
+		}
+	}
+	return string(buf), nil
+}
+
+// isHex reports whether c is a hex digit.
+func isHex(c byte) bool {
+	return '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F'
+}
+
+// hexValue returns the value of the hex digit c.
+func hexValue(c byte) int {
+	switch {
+	case c <= '9':
+		return int(c - '0')
+	case c <= 'F':
+		return int(c-'A') + 10
+	}
+	return int(c-'a') + 10
 }
 
 // Quote quotes a string.
@@ -349,6 +434,3 @@ func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
 
 // lineend is the line ending.
 var lineend = []byte{'\n'}
-
-// cleanDoubleRE matches double quotes.
-var cleanDoubleRE = regexp.MustCompile(`(^|[^\\])''`)

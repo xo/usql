@@ -9,6 +9,7 @@ import (
 	"io"
 	"maps"
 	"os/user"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -228,7 +229,7 @@ func (p *Params) value(a feed.Arg, exec, pattern bool) (string, error) {
 				b.WriteString(raw)
 				continue
 			}
-			out, err := env.Exec(part.Value)
+			out, err := env.Exec(expandShell(part.Value))
 			if err != nil {
 				return "", err
 			}
@@ -501,4 +502,29 @@ func wrap(s string, width, prefixWidth int) string {
 		}
 	}
 	return wrapped
+}
+
+// shellVarRE matches a variable in the text of a shell command: :name, and
+// :'name', which is quoted for the shell.
+var shellVarRE = regexp.MustCompile(`:'([\pL_][\pL\pN_]*)'|:([\pL_][\pL\pN_]*)`)
+
+// expandShell replaces the variables in the text of a command between
+// backticks, as psql does: :name by its value, and :'name' by its value quoted
+// for the shell. A variable that is not set stays as it is written.
+func expandShell(s string) string {
+	return shellVarRE.ReplaceAllStringFunc(s, func(m string) string {
+		sub := shellVarRE.FindStringSubmatch(m)
+		name, quoted := sub[2], false
+		if sub[1] != "" {
+			name, quoted = sub[1], true
+		}
+		v, ok := env.Vars().Get(name)
+		switch {
+		case !ok:
+			return m
+		case quoted:
+			return "'" + strings.ReplaceAll(v, "'", `'\''`) + "'"
+		}
+		return v
+	})
 }

@@ -273,6 +273,42 @@ func TestLanguage(t *testing.T) {
 	}
 }
 
+// TestBacktickNameWithQuote checks that a quote inside a name between
+// backticks, as MySQL and SQLite write names, opens no string, so that the
+// string after it keeps both of its backslashes (GitHub xo/usql#587, from
+// PR xo/usql#593).
+func TestBacktickNameWithQuote(t *testing.T) {
+	t.Parallel()
+	const q = "select 1 as `we'ird`, hex('a\\\\b');"
+	mysql := dbmeta.Syntax{BlockComments: true, DashComments: true, HashComments: true, Backticks: true}
+	p, err := NewParser(Language(mysql, false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, err := p.Parse(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected one statement, got: %s", summary(items))
+	}
+	if got := items[0].Expand(func(string) (string, bool) { return "", false }); !strings.Contains(got, `a\\b`) {
+		t.Errorf("expected a\\\\b in %q", got)
+	}
+	var name bool
+	for _, part := range items[0].Parts {
+		if part.Kind == QuotedIdentifier {
+			name = true
+			if text := items[0].Text[part.Start:part.End]; text != "`we'ird`" {
+				t.Errorf("expected the name `we'ird`, got %q", text)
+			}
+		}
+	}
+	if !name {
+		t.Errorf("expected a quoted name, got parts %+v", items[0].Parts)
+	}
+}
+
 func TestSourceReadLine(t *testing.T) {
 	t.Parallel()
 	e := &entries{"\\prompt 'Name: ' who\nBob\nselect :who;", "select 2;"}

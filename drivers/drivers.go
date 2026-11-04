@@ -5,6 +5,7 @@ package drivers
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -583,6 +584,14 @@ func FlexibleCopyWithInsert(ctx context.Context, db *sql.DB, rows *sql.Rows, tab
 		//don't accept pointer to an argument instead of the arg itself.
 		for i := range values {
 			actuals[i] = valueRefs[i].Elem().Interface()
+			// a destination such as sql.NullString goes as its value, which
+			// every driver takes, and a prepared statement of some drivers,
+			// such as csvq's, takes only that
+			if v, ok := actuals[i].(driver.Valuer); ok {
+				if actuals[i], err = v.Value(); err != nil {
+					return n, fmt.Errorf("failed to convert value: %w", err)
+				}
+			}
 		}
 		res, err := stmt.ExecContext(ctx, actuals...)
 		if err != nil {

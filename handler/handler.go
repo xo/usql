@@ -60,6 +60,9 @@ type Handler struct {
 	hl *highlight.Highlighter
 	// iactive is set when src is the line editor at a terminal.
 	iactive bool
+	// passfileWarned is set once the handler has said that the password file
+	// is deprecated.
+	passfileWarned bool
 	// reading is set while \prompt reads an answer from the line editor.
 	reading bool
 	// user is the user.
@@ -119,7 +122,7 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 	var prompt func() string
 	if h.iactive {
 		prompt = h.prompt
-		l.SetCompleter(complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings())))
+		l.SetCompleter(complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings()), complete.WithKeywords(h.keywords)))
 		var err error
 		if h.hl, err = highlight.New(l); err != nil {
 			return nil, err
@@ -223,8 +226,9 @@ func (h *Handler) Run() error {
 			h.src.Reset()
 			continue
 		case errors.Is(err, io.EOF):
-			// -c sends what is left in the buffer at the end of its text
-			if h.singleLineMode && !h.buf.Empty() {
+			// input that is not typed, from -c, -f, a pipe or \i, sends what
+			// is left in the buffer at its end, as psql does
+			if (h.singleLineMode || !h.iactive) && !h.buf.Empty() {
 				stop, err := h.send(h.Stdout(), stderr, metacmd.Option{})
 				if err != nil {
 					lastErr = err
@@ -768,12 +772,13 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if err == nil {
 		if err = drivers.Ping(ctx, h.u, h.db); err == nil {
 			if h.l.Interactive() {
-				c := complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings()))
+				c := complete.New(complete.WithCommands(metacmd.Completions()), complete.WithConnStrings(h.connStrings()), complete.WithKeywords(h.keywords))
 				if m, err := h.metadata(ctx); err == nil {
 					c = complete.New(
 						complete.WithCommands(metacmd.Completions()),
 						complete.WithSource(describe.Source(m, h.db)),
 						complete.WithConnStrings(h.connStrings()),
+						complete.WithKeywords(h.keywords),
 					)
 				}
 				h.l.SetCompleter(c)
@@ -849,6 +854,11 @@ func (h *Handler) forceParams(u *dburl.URL) {
 		fmt.Fprintln(h.l.Stderr(), "error:", err)
 	case user != nil:
 		u.User = user
+		// named connections in config.yaml replace the password file
+		if !h.passfileWarned {
+			h.passfileWarned = true
+			fmt.Fprintf(h.l.Stderr(), text.PassfileDeprecated+"\n", text.PassfileName)
+		}
 	}
 	// copy back to u
 	z, _ := dburl.Parse(u.String())
@@ -1303,6 +1313,11 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	}
 	// align each column by its type, as the model of the dialect records it
 	extra = append(extra, tblfmt.WithColumnAlign(columnAlign(dbmeta.Dialect(h.u.Dialect))))
+	// show the rows in groups, so that a large result does not have to fit
+	// in memory, as psql's FETCH_COUNT does
+	if n, _ := strconv.Atoi(env.Setting("fetch_count")); n > 0 {
+		extra = append(extra, tblfmt.WithCount(n))
+	}
 	// print a binary value as psql prints a bytea, on every database
 	extra = append(extra, tblfmt.WithBytesFormat(dbmeta.Dialect(h.u.Dialect).FormatBinary))
 	// encode and handle error conditions
@@ -1714,6 +1729,18 @@ func grab(r []rune, i, end int) rune {
 		return r[i]
 	}
 	return 0
+}
+
+// keywords returns the keywords that the grammar of the database accepts
+// after stmt, for the completer. Before a connection, the grammar is the one
+// of PostgreSQL, as in psql.
+func (h *Handler) keywords(stmt string) []string {
+	var dialect string
+	if h.u != nil {
+		dialect = h.u.Dialect
+	}
+	words, _ := highlight.Keywords(context.Background(), dialect, []byte(stmt))
+	return words
 }
 
 // columnAlign returns the alignment of a column of d, from its type. It

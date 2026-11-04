@@ -143,7 +143,7 @@ func init() {
 			{Describe, `z[S]`, `[PATTERN]`, `same as \dp`, false, false},
 			{ShowSource, `sf[+]`, `FUNCNAME`, `show a function's definition`, false, false},
 			{ShowSource, `sv[+]`, `VIEWNAME`, `show a view's definition`, false, false},
-			{Stats, `ss[+]`, `[TABLE|QUERY] [k]`, `show stats for a table or a query`, false, false},
+			{Stats, `ss[+]`, `TABLE [k]`, `show stats for the columns of a table`, false, false},
 		},
 		// Variables
 		{

@@ -17,6 +17,7 @@ var (
 	CommandName              = `usql`
 	CommandVersion           = `0.0.0-dev`
 	PassfileName             = CommandName + `pass`
+	PassfileDeprecated       = `warning: the .%s password file is deprecated: define named connections in config.yaml instead`
 	ConfigName               = "config"
 	Banner                   = `the universal command-line interface for SQL databases`
 	CommandHelpHint          = `hint: try "` + CommandName + ` --help" for more information.`
@@ -84,7 +85,7 @@ var (
 		`numericlocale`:            `Locale-adjusted numeric output is %s.`,
 		`pager`:                    `Pager usage is %s.`,
 		`pager_min_lines`:          `Pager won't be used for less than %d line(s).`,
-		`recordsep`:                `Field separator is %q.`,
+		`recordsep`:                `Record separator is %q.`,
 		`recordsep_zero`:           `Record separator is zero byte.`,
 		`tableattr`:                `Table attributes are %q.`,
 		`time`:                     `Time display is %s.`,

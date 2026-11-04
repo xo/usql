@@ -43,6 +43,3 @@ init: |
   \set 型示師 '本門台初埼本門台初埼'
 # charts path
 charts_path: charts
-# defined queries
-queries:
-  q1:

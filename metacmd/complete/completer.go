@@ -169,6 +169,15 @@ func WithCommands(names []string) Option {
 	}
 }
 
+// WithKeywords sets the function that gives the keywords that the grammar of
+// the database accepts after the text of a statement, which
+// highlight.Keywords gives. Without it, the completer offers generic lists.
+func WithKeywords(f func(stmt string) []string) Option {
+	return func(c *completer) {
+		c.keywords = f
+	}
+}
+
 // WithConnStrings option
 func WithConnStrings(connStrings []string) Option {
 	return func(c *completer) {
@@ -183,6 +192,7 @@ type completer struct {
 	sqlCommands       []string
 	backslashCommands []string
 	connStrings       []string
+	keywords          func(stmt string) []string
 }
 
 func (c completer) Do(line []rune, start int) (newLine [][]rune, length int) {
@@ -250,6 +260,39 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		return CompleteFromList(text, "USING", "WHERE")
 	}
 	/* XXX: implement tab completion for DELETE ... USING */
+
+	/* Complete the name after ALTER or DROP of a kind of object */
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "TABLE") {
+		return c.completeWithTables(text, "t")
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "VIEW") {
+		return c.completeWithTables(text, "v")
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "MATERIALIZED", "VIEW") {
+		return c.completeWithTables(text, "m")
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "INDEX") {
+		return c.completeWithIndexes(text)
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "SEQUENCE") {
+		return c.completeWithSequences(text)
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "FUNCTION|PROCEDURE") {
+		return c.completeWithFunctions(text, false)
+	}
+	if TailMatches(IGNORE_CASE, previousWords, "ALTER|DROP", "SCHEMA") {
+		return c.completeWithSchemas(text)
+	}
+
+	/* Complete the kind of object after CREATE, ALTER and DROP, from the
+	 * grammar of the database */
+	if c.keywords != nil && (TailMatches(IGNORE_CASE, previousWords, "CREATE|ALTER|DROP") ||
+		TailMatches(IGNORE_CASE, previousWords, "CREATE", "OR", "REPLACE") ||
+		TailMatches(IGNORE_CASE, previousWords, "CREATE", "TEMP|TEMPORARY|UNIQUE|UNLOGGED|MATERIALIZED")) {
+		if words := c.keywords(statementText(previousWords)); len(words) != 0 {
+			return CompleteFromList(text, words...)
+		}
+	}
 
 	/* Complete CREATE */
 	if TailMatches(IGNORE_CASE, previousWords, "CREATE") {
@@ -891,4 +934,19 @@ func completeFromFiles(text []rune) [][]rune {
 		matches = append(matches, dir+name)
 	}
 	return CompleteFromList(text, matches...)
+}
+
+// statementText returns the text of the last statement in previousWords,
+// which hold the words before the cursor, the last one first, with a space
+// after it, so that the grammar reads the words before the one that is typed.
+func statementText(previousWords []string) string {
+	var words []string
+	for _, w := range previousWords {
+		if strings.HasSuffix(w, ";") {
+			break
+		}
+		words = append(words, w)
+	}
+	slices.Reverse(words)
+	return strings.Join(words, " ") + " "
 }

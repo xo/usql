@@ -240,6 +240,34 @@ anything over a year old that has no reproduction, no stack trace and no heap
 profile, saying it can be reopened with one. Most will never be reopened. The
 alternative is that the real bugs above stay buried under sixty that are not.
 
+### W4k. The sweep of 2026-11-04
+
+53 issues and 10 pull requests were open. Agents checked each one on main
+2d674b7 against PostgreSQL 18, SQL Server 2025, SQLite and a Linux pty, and
+Gemini and DeepSeek reviewed the findings. OpenAI could not answer, because
+its API key was refused. Ken closed what was fixed or no longer applies: the
+issues 595, 587, 552, 236, 516, 508, 504, 482, 472, 462, 440, 397, 320, 254,
+172, 171, 412, 375, 72, 528, 505, 464, 176, 122, 93, 532 and 485, and the
+pull requests 596, 524, 570, 360, 573 and 565. This corrects the subsections
+above:
+
+- W4c: 587 is fixed by transit's grammar, and `-f` or a pipe now runs a last
+  statement with no `;`, as psql does.
+- W4d: 464 is gone with the old parser. 371 did have a profile: aligned output
+  of 1.85 million rows took 1080 MB against psql's 228 MB. The setting
+  `fetch_count`, psql's FETCH_COUNT, now shows a result in groups. 546 is
+  being reproduced.
+- W4e: usql streams `\copy`. In 322 the csvq driver holds the whole file,
+  which W71 records. 427 is fixed: the copy passes each value as its
+  `Value()`. 458 is W29.
+- W4f: 504 and 516 are fixed. 448 is with tblfmt: a float8 must print as
+  psql's float8out prints it.
+- W4g: dbmeta now answers 375 and 440.
+- W4h: closed with the move to rline, except 490 and 483, which are being
+  reproduced, and 66 and 414, which went to rline.
+- W4i: 485 is answered. 263 has a README section on how input becomes
+  statements. 469's unused `queries:` stub is gone from the sample.
+
 
 ## W5. `\echo -n` and `\warn -n` are erased by the line editor
 
@@ -3311,3 +3339,44 @@ Open:
   of MySQL of 5000 lines, is still parsed after each line. It took 2 min 25 s
   before and takes 12 s. A body in dollar quotes is one token, and each parse
   reads it all: 2.3 s for 5000 lines.
+
+## W69. Reconnect with part of the current connection
+
+Source: GitHub 203, and Ken on 2026-11-04. psql's `\c dbname [user] [host]
+[port]` keeps the fields of the current connection that are not given, and
+`-reuse-previous` says whether it does. In usql, `\c northwind` says
+"invalid database scheme", because `\c` takes one argument as a URL and two
+or more as a driver and its DSN. Ken decided against copying psql's form, and
+the design is open. Changing the fields of a URL is dburl's work (hard rule 2).
+
+## W70. A man page
+
+Source: pull request 521, and Ken on 2026-11-04. usql will ship a man page,
+but not now. The page in the pull request was written by hand and already
+lacks `-U` and `-M`. Generate it from the cobra definitions of the flags, as
+`gen.go` generates the README tables, and do not commit a file under `man/`
+(hard rule 11).
+
+## W71. Copy a large CSV file
+
+Source: GitHub 322, and Ken on 2026-11-04. usql streams `\copy`, but a CSV
+file read through the csvq driver is held in memory, 623 MB for a file of
+55 MB. Ken decided against a CSV source inside `\copy` for now. The way to
+read a large file is open.
+
+## W72. Move the statement classification to dbmeta
+
+Source: Ken, on 2026-11-04, and GitHub 540. `drivers/qtype.go` decides from
+the first words of a statement whether it returns rows, so an `INSERT`,
+`UPDATE` or `DELETE` with `RETURNING`, and SQL Server's `OUTPUT`, print only
+their command tag. dbmeta takes the classification over, per dialect, and
+looks past the first words with its own lexer. A bare `SET` on Impala and Hive,
+which lists the settings, is one of its cases (pull request 573). Asked of
+dbmeta on 2026-11-04. Then usql removes `qtype.go` and calls dbmeta.
+
+## W73. Show the current database in the prompt
+
+Source: GitHub 467. The prompt's `%/` comes from the URL, so it is empty on
+SQL Server with `?database=`, and does not follow `USE`. usql reads the
+current database after it connects and after a statement that starts with
+`USE`. dbmeta was asked for a query of the current database on 2026-11-04.

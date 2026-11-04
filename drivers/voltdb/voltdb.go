@@ -1,6 +1,7 @@
 // Package voltdb defines and registers usql's VoltDB driver.
 //
 // See: https://github.com/VoltDB/voltdb-client-go
+// Group: most
 package voltdb
 
 import (

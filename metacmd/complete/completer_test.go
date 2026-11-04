@@ -1,6 +1,8 @@
 package complete
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/xo/usql/env"
@@ -417,4 +419,51 @@ func (mockSource) Objects(kind Kind, f Filter) ([]Object, error) {
 		return []Object{{Name: f.Catalog}, {Name: f.Schema}, {Name: f.Name}}, nil
 	}
 	return nil, text.ErrNotSupported
+}
+
+// TestCompleterDDL checks that the kinds after CREATE, ALTER and DROP come
+// from the grammar of the database, which WithKeywords gives, and that ALTER
+// and DROP of a kind complete the names of the objects of that kind.
+func TestCompleterDDL(t *testing.T) {
+	var got string
+	keywords := func(stmt string) []string {
+		got = stmt
+		switch strings.ToUpper(stmt) {
+		case "DROP ":
+			return []string{"INDEX", "TABLE", "TRIGGER", "VIEW"}
+		case "CREATE ":
+			return []string{"INDEX", "TABLE", "TEMP", "TRIGGER"}
+		}
+		return nil
+	}
+	completer := New(WithSource(mockSource{}), WithKeywords(keywords))
+	tests := []struct {
+		line string
+		stmt string
+		exp  []string
+	}{
+		{"drop ", "drop ", []string{"INDEX", "TABLE", "TRIGGER", "VIEW"}},
+		{"select 1; create t", "create ", []string{"able", "emp", "rigger"}},
+		{"drop table f", "", []string{"ilm", "actory"}},
+		// with nothing typed, the schemas and catalogs come too, as for
+		// every name
+		{"ALTER TABLE ", "", []string{"film", "factory", "default", "system", "main", "remote"}},
+	}
+	for _, test := range tests {
+		got = ""
+		suggestions, _ := completer.Do([]rune(test.line), len(test.line))
+		var act []string
+		for _, s := range suggestions {
+			act = append(act, string(s))
+		}
+		slices.Sort(act)
+		exp := slices.Clone(test.exp)
+		slices.Sort(exp)
+		if !slices.Equal(act, exp) {
+			t.Errorf("%q: expected %q, got %q", test.line, exp, act)
+		}
+		if got != test.stmt {
+			t.Errorf("%q: expected the grammar to get %q, got %q", test.line, test.stmt, got)
+		}
+	}
 }

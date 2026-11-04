@@ -1176,7 +1176,7 @@ func EditSource(p *Params) error {
 //
 // Descs:
 //
-//	ss[+]	[TABLE|QUERY] [k]	show stats for a table or a query
+//	ss[+]	TABLE [k]	show stats for the columns of a table
 func Stats(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -1185,9 +1185,14 @@ func Stats(p *Params) error {
 		return err
 	}
 	verbose := strings.ContainsRune(p.Name, '+')
+	// a table is required, because the statistics of every column of every
+	// table is a long list that says little
 	pattern, err := p.NextPattern()
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
+	case pattern == "":
+		return text.ErrMissingRequiredArgument
 	}
 	k := 0
 	if verbose {

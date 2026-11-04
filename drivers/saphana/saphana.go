@@ -1,6 +1,7 @@
 // Package saphana defines and registers usql's SAP HANA driver.
 //
 // See: https://github.com/SAP/go-hdb
+// Group: most
 package saphana
 
 import (

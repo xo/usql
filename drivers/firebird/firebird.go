@@ -1,6 +1,7 @@
 // Package firebird defines and registers usql's Firebird driver.
 //
 // See: https://github.com/nakagami/firebirdsql
+// Group: most
 package firebird
 
 import (
