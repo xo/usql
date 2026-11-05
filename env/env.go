@@ -4,6 +4,7 @@ package env
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -157,30 +158,73 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
-// HistoryFile returns the path to the history file.
-//
-// Defaults to ~/.<command name>_history, overridden by environment variable
-// <COMMAND NAME>_HISTORY (ie, ~/.usql_history and USQL_HISTORY).
+// HistoryFile returns the path of the history file: the file that
+// USQL_HISTORY names, or else history in the state directory of usql. It
+// returns an empty path when there is no such directory.
 func HistoryFile(u *user.User) string {
-	n := text.CommandUpper() + "_HISTORY"
-	path := "~/." + strings.ToLower(n)
-	if s, ok := Getenv(n); ok {
-		path = s
+	if s, ok := Getenv(text.CommandUpper() + "_HISTORY"); ok {
+		return passfile.Expand(u.HomeDir, s)
 	}
-	return passfile.Expand(u.HomeDir, path)
+	dir, err := StateDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "history")
 }
 
-// RCFile returns the path to the RC file.
-//
-// Defaults to ~/.<command name>rc, overridden by environment variable
-// <COMMAND NAME>RC (ie, ~/.usqlrc and USQLRC).
-func RCFile(u *user.User) string {
-	n := text.CommandUpper() + "RC"
-	path := "~/." + strings.ToLower(n)
-	if s, ok := Getenv(n); ok {
-		path = s
+// InitFile returns the path of the file that runs at start: the file that
+// USQLRC names, or else init.sql in the configuration directory of usql. It
+// returns an empty path when there is no such directory.
+func InitFile(u *user.User) string {
+	if s, ok := Getenv(text.CommandUpper() + "RC"); ok {
+		return passfile.Expand(u.HomeDir, s)
 	}
-	return passfile.Expand(u.HomeDir, path)
+	dir, err := ConfigDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "init.sql")
+}
+
+// ConfigDir returns the configuration directory of usql:
+// $XDG_CONFIG_HOME/usql on Linux and other Unix systems, which is
+// ~/.config/usql when XDG_CONFIG_HOME is not set, ~/Library/Application
+// Support/usql on macOS, and %AppData%\usql on Windows.
+func ConfigDir() (string, error) {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, text.CommandName), nil
+}
+
+// StateDir returns the directory of what usql keeps from one run to the next,
+// such as its history: $XDG_STATE_HOME/usql on Linux and other Unix systems,
+// which is ~/.local/state/usql when XDG_STATE_HOME is not set, the
+// configuration directory on macOS, and %LocalAppData%\usql on Windows.
+//
+// The XDG Base Directory specification says to ignore a relative path in
+// XDG_STATE_HOME, and so does StateDir.
+func StateDir() (string, error) {
+	switch runtime.GOOS {
+	case "windows":
+		dir := os.Getenv("LocalAppData")
+		if dir == "" {
+			return "", errors.New("%LocalAppData% is not defined")
+		}
+		return filepath.Join(dir, text.CommandName), nil
+	case "darwin", "ios":
+		return ConfigDir()
+	}
+	dir := os.Getenv("XDG_STATE_HOME")
+	if !filepath.IsAbs(dir) {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		dir = filepath.Join(home, ".local", "state")
+	}
+	return filepath.Join(dir, text.CommandName), nil
 }
 
 // Getshell returns the user's defined SHELL, or system default (if found on

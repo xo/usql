@@ -39,7 +39,5 @@ For Ken:
 - Whether Cosmos DB keeps no writes, since dbimp's driver reads only.
 - Whether DuckDB gets a build group of its own, since it is 37% of a `most`
   binary (W32).
-- The history file of gohxs/readline, which rline cannot read (see
-  [PROGRESS.md](PROGRESS.md)).
 - Whether the drivers that are only a registration lose their packages, with
   the build tags written into `internal/` by `gen.go` (W52).

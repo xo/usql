@@ -34,12 +34,5 @@ connections:
     host: localhost
     opts:
       opt1: "😀"
-# init script
-init: |
-  \echo welcome to the jungle `date`
-  \uset syntax_hl_style onedark
-  -- \uset show_host_information false
-  -- \uset syntax_hl false
-  \set 型示師 '本門台初埼本門台初埼'
 # charts path
 charts_path: charts

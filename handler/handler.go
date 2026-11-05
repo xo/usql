@@ -26,7 +26,6 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
-	"github.com/xo/dburl/passfile"
 	"github.com/xo/rline"
 	"github.com/xo/tblfmt"
 	"github.com/xo/usql/drivers"
@@ -60,9 +59,6 @@ type Handler struct {
 	hl *highlight.Highlighter
 	// iactive is set when src is the line editor at a terminal.
 	iactive bool
-	// passfileWarned is set once the handler has said that the password file
-	// is deprecated.
-	passfileWarned bool
 	// historyWarned is set once the handler has said that the history file
 	// cannot be read or written.
 	historyWarned bool
@@ -841,61 +837,21 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 }
 
 func (h *Handler) connStrings() []string {
-	entries, err := passfile.Entries(h.user.HomeDir, text.PassfileName)
-	if err != nil {
-		// ignore the error as this is only used for completer
-		// and it'll be reported again when trying to force params before opening a conn
-		entries = nil
-	}
 	available := drivers.Available()
-	names := make([]string, 0, len(available)+len(entries))
+	names := make([]string, 0, len(available))
 	for schema := range available {
 		_, aliases := dburl.SchemeNameAndAliases(schema)
 		// TODO should we create all combinations of space, :, :// and +transport ?
 		names = append(names, schema)
 		names = append(names, aliases...)
 	}
-	for _, entry := range entries {
-		if entry.Protocol == "*" {
-			continue
-		}
-		user, host, port, dbname := "", "", "", ""
-		if entry.Username != "*" {
-			user = entry.Username + "@"
-			if entry.Host != "*" {
-				host = entry.Host
-				if entry.Port != "*" {
-					port = ":" + entry.Port
-				}
-				if entry.DBName != "*" {
-					dbname = "/" + entry.DBName
-				}
-			}
-		}
-		names = append(names, entry.Protocol+"://"+user+host+port+dbname)
-	}
 	return append(names, slices.Sorted(maps.Keys(env.Vars().Conn()))...)
 }
 
 // forceParams forces connection parameters on a database URL, adding any
-// driver specific required parameters, and the username/password when a
-// matching entry exists in the PASS file.
+// driver specific required parameters.
 func (h *Handler) forceParams(u *dburl.URL) {
-	// force driver parameters
 	drivers.ForceParams(u)
-	// see if password entry is present
-	user, err := passfile.Match(u, h.user.HomeDir, text.PassfileName)
-	switch {
-	case err != nil:
-		fmt.Fprintln(h.l.Stderr(), "error:", err)
-	case user != nil:
-		u.User = user
-		// named connections in config.yaml replace the password file
-		if !h.passfileWarned {
-			h.passfileWarned = true
-			fmt.Fprintf(h.l.Stderr(), text.PassfileDeprecated+"\n", text.PassfileName)
-		}
-	}
 	// copy back to u
 	z, _ := dburl.Parse(u.String())
 	*u = *z

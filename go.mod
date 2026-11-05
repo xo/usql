@@ -3,7 +3,7 @@ module github.com/xo/usql
 go 1.27.1
 
 require (
-	github.com/SAP/go-hdb v1.20.2
+	github.com/SAP/go-hdb v1.21.0
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/apache/arrow-go/v18 v18.8.0
 	github.com/beltran/gohive/v2 v2.1.0
@@ -29,35 +29,36 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
-	github.com/xo/cassandra v0.2.1
-	github.com/xo/dbimp v0.24.0
+	github.com/xo/cassandra v0.2.2
+	github.com/xo/dbimp v0.24.3
 	github.com/xo/dbmeta v0.31.0
 	github.com/xo/dburl v0.55.2
 	github.com/xo/echartsgoja v0.1.1
-	github.com/xo/odbc v0.2.0
+	github.com/xo/odbc v0.3.0
 	github.com/xo/oracle v0.3.0
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.6.0
+	github.com/xo/rline v0.7.1
 	github.com/xo/tblfmt v0.22.1
 	github.com/xo/terminfo v1.3.0
-	github.com/xo/transit v0.7.2
-	github.com/xo/transit/grammars/clickhouse v0.7.2
-	github.com/xo/transit/grammars/cql v0.7.2
-	github.com/xo/transit/grammars/duckdb v0.7.2
-	github.com/xo/transit/grammars/mysql v0.7.2
-	github.com/xo/transit/grammars/neo4j v0.7.2
-	github.com/xo/transit/grammars/oracle v0.7.2
-	github.com/xo/transit/grammars/postgres v0.7.2
-	github.com/xo/transit/grammars/sql v0.7.2
-	github.com/xo/transit/grammars/sqlite3 v0.7.2
-	github.com/xo/transit/grammars/sqlserver v0.7.2
-	github.com/xo/transit/grammars/surrealdb v0.7.2
-	github.com/xo/transit/grammars/trino v0.7.2
-	github.com/xo/transit/grammars/usql v0.7.2
-	github.com/xo/transit/grammars/ydb v0.7.2
-	github.com/xo/transit/styles v0.7.2
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1
+	github.com/xo/transit v0.7.4
+	github.com/xo/transit/grammars/clickhouse v0.7.4
+	github.com/xo/transit/grammars/cql v0.7.4
+	github.com/xo/transit/grammars/duckdb v0.7.4
+	github.com/xo/transit/grammars/mysql v0.7.4
+	github.com/xo/transit/grammars/neo4j v0.7.4
+	github.com/xo/transit/grammars/oracle v0.7.4
+	github.com/xo/transit/grammars/postgres v0.7.4
+	github.com/xo/transit/grammars/sql v0.7.4
+	github.com/xo/transit/grammars/sqlite3 v0.7.4
+	github.com/xo/transit/grammars/sqlserver v0.7.4
+	github.com/xo/transit/grammars/surrealdb v0.7.4
+	github.com/xo/transit/grammars/trino v0.7.4
+	github.com/xo/transit/grammars/usql v0.7.4
+	github.com/xo/transit/grammars/ydb v0.7.4
+	github.com/xo/transit/styles v0.7.4
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
+	golang.org/x/text v0.43.0
 	modernc.org/sqlite v1.61.1
 )
 
@@ -94,7 +95,7 @@ require (
 	github.com/dromara/carbon/v2 v2.7.0 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.20000.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/ebitengine/purego v0.11.2 // indirect
+	github.com/ebitengine/purego v0.11.3 // indirect
 	github.com/elastic/go-sysinfo v1.15.5 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
@@ -184,7 +185,6 @@ require (
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e // indirect
 	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect

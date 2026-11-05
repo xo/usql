@@ -24,8 +24,11 @@ import (
 // BEGIN ... END body of a stored program stays in its statement (transit's
 // D112), and with AnonymousBlocks, so does an anonymous block of PL/SQL
 // (transit's D128). Two dashes start a comment only with DashComments, which
-// Cypher and AQL do not have (transit's D139). A line with only / is
-// statement text, as in psql (transit's D138).
+// Cypher and AQL do not have (transit's D139). With Brackets, a name between
+// [ and ] is a quoted identifier, as in SQL Server and SQLite (transit's D140).
+// A line with only / is statement text, as in psql (transit's D138). A U+FEFF,
+// a byte order mark, is white space outside strings, quoted names and comments
+// (transit's D141).
 func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 	return usql.LanguageFor(usql.Options{
 		DollarQuotes:    s.DollarQuotes,
@@ -37,6 +40,7 @@ func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 		BeginEndBlocks:  s.BeginEndBlocks,
 		AnonymousBlocks: s.AnonymousBlocks,
 		Batches:         batches,
+		Brackets:        s.Brackets,
 	})
 }
 
@@ -199,12 +203,12 @@ func (p *Parser) Parse(src string) ([]Item, error) {
 	return items, nil
 }
 
-// first parses src, and returns its first item when ready says that it can
-// be fed. ready gets how many items src holds, and the last of them, with only
-// its kind, its end and whether it is terminated. Source asks this for each
-// line that can end an item, so first builds no other item, and when src only
-// grew since the last call, it parses only what was added.
-func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool) (Item, bool, error) {
+// readyItems parses src, and returns its first items, as many as ready says
+// can be fed. ready gets how many items src holds, and the last of them, with
+// only its kind, its end and whether it is terminated. Source asks this for
+// each line that can end an item, so no item is built until some can be fed,
+// and when src only grew since the last call, it parses only what was added.
+func (p *Parser) readyItems(src string, grown bool, ready func(n int, last Item) int) ([]Item, error) {
 	var old *transit.Tree
 	if grown && p.tree != nil && len(src) >= len(p.src) {
 		add := src[len(p.src):]
@@ -224,14 +228,13 @@ func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool
 	tree, err := p.p.Parse(context.Background(), p.src, old)
 	if err != nil {
 		p.reset()
-		return Item{}, false, err
+		return nil, err
 	}
 	old.Close()
 	p.tree = tree
 	root := tree.RootNode()
-	var firstNode transit.Node
+	var nodes []transit.Node
 	var last Item
-	var n int
 	for i := range root.ChildCount() {
 		c, _ := root.Child(i)
 		switch c.Kind() {
@@ -242,18 +245,17 @@ func (p *Parser) first(src string, grown bool, ready func(n int, last Item) bool
 		default:
 			continue
 		}
-		if n == 0 {
-			firstNode = c
+		nodes = append(nodes, c)
+	}
+	items := make([]Item, ready(len(nodes), last))
+	for i := range items {
+		if nodes[i].Kind() == "statement" {
+			items[i] = statement(nodes[i], p.src)
+		} else {
+			items[i] = command(nodes[i], p.src)
 		}
-		n++
 	}
-	if !ready(n, last) {
-		return Item{}, false, nil
-	}
-	if firstNode.Kind() == "statement" {
-		return statement(firstNode, p.src), true, nil
-	}
-	return command(firstNode, p.src), true, nil
+	return items, nil
 }
 
 // terminated reports whether a statement node ends with a ';'.

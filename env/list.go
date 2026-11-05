@@ -284,7 +284,7 @@ var envVarNames = []varName{
 	},
 	{
 		text.CommandUpper() + `_HISTORY`,
-		`alternative location for the command history file`,
+		`path of the history file (default the history file in the state directory)`,
 	},
 	{
 		text.CommandUpper() + `_PAGER, PAGER`,
@@ -296,7 +296,7 @@ var envVarNames = []varName{
 	},
 	{
 		text.CommandUpper() + `RC`,
-		`alternative location for the user's .usqlrc file`,
+		`path of the file that runs at start (default init.sql in the config directory)`,
 	},
 	{
 		text.CommandUpper() + `_SSLMODE, SSLMODE`,

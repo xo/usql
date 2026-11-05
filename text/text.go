@@ -16,9 +16,8 @@ import (
 var (
 	CommandName              = `usql`
 	CommandVersion           = `0.0.0-dev`
-	PassfileName             = CommandName + `pass`
 	HistoryNotSaved          = `warning: the history is not saved: %v`
-	PassfileDeprecated       = `warning: the .%s password file is deprecated: define named connections in config.yaml instead`
+	ConfigInitIgnored        = `warning: config.yaml no longer runs init: move the script to %s`
 	ConfigName               = "config"
 	Banner                   = `the universal command-line interface for SQL databases`
 	CommandHelpHint          = `hint: try "` + CommandName + ` --help" for more information.`

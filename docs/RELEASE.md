@@ -12,10 +12,6 @@ file, not here. When a check finds a fault, record it in
 
 Read these first. Some of them can stop the release.
 
-- The history is not saved for a user who has a `~/.usql_history` from
-  gohxs/readline. rline cannot read its backslashes, and then refuses to
-  save. It reports nothing. Ken decides the fix (see
-  [PROGRESS.md](PROGRESS.md)).
 - `\if`, `\elif`, `\else` and `\endif` still do nothing, and every branch
   runs. W36 gives them psql's meaning, and that work is not done.
 - `%R` in a prompt shows only `=` or `-`, because rline draws one prompt for
@@ -30,7 +26,7 @@ Read these first. Some of them can stop the release.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
 - usql requires dbmeta v0.31.0, dburl v0.55.2, tblfmt v0.22.1, transit
-  v0.7.2 and rline v0.6.0, all in `go.mod`. It builds with no `go.work`.
+  v0.7.4 and rline v0.7.1, all in `go.mod`. It builds with no `go.work`.
 - The tests against databases and their recordings were removed, because
   they started their own containers. W37 brings them back on `dbrun`, and
   W38 runs CI on every database. Both are due before the release.
@@ -73,6 +69,23 @@ package and the `stmt` package (W36).
 - On ClickHouse, a `;` inside a name in backticks, a `//`, `# ` or `#!`
   comment, or a `$$` or `$tag$` string no longer ends the statement (dbmeta
   v0.23.0 and v0.24.0, its D250 and D251).
+- On SQL Server, SQLite, libSQL and rqlite, a name between brackets, such as
+  `[n° d'entrée]`, is a quoted name (transit v0.7.4, its D140). A quote, a `;`
+  or `--` inside the brackets no longer opens a string, ends the statement or
+  starts a comment, and `]]` is a `]`. Discussion #600 reported a script
+  that ran no statement after such a name.
+- A U+FEFF, the byte order mark that editors on Windows write, is white space
+  between statements and inside them (transit's D141). Inside a string or a
+  quoted name it stays text. A script that held one anywhere but at its start
+  sent it to the database.
+- A line of many statements is parsed once. usql parsed the rest of the line
+  again for each statement, so 4,000 statements on one line took 14 s and
+  5 GiB, and now take 6 ms.
+- Fuzz tests feed scripts through the parser in each dialect of dbmeta, with
+  names and strings that hold quotes, separators, Unicode that is hard to see,
+  CRLF line ends, a byte order mark, and the encodings of Windows, ISO 8859,
+  KOI8-R, EUC-JP, EUC-KR, Shift JIS, Big5, GBK and GB18030. CONTRIBUTING.md
+  says how to run them.
 - The arguments of a meta command come from the grammar. `\g` reads its
   option list, such as `(format=csv)`, from the grammar.
 - `-o FILE` sends the results to the file, as `\o` does. `\echo` still goes
@@ -83,6 +96,13 @@ package and the `stmt` package (W36).
   readline, Esc no longer clears the line, Up and Down walk the history and
   not the rows of an entry, and Ctrl-J accepts the line as Enter does. F1
   shows nothing.
+- A terminal sends ESC [ I and ESC [ O when its window gains or loses focus.
+  rline v0.7.1 rings the bell once for each and changes nothing, as readline
+  does. It read them as Tab and F3, and the Tab
+  opened the completion menu. This can be the cause of issues 93, 122, 483 and
+  490, where keys act as if Ctrl were held after an alt-tab. That is not shown
+  yet. rline v0.7.0 also reads Ctrl and a letter in the kitty keyboard
+  protocol (CSI u) as the control character.
 - Ctrl-C leaves the entry on the screen with `^C` after it, and starts the
   next prompt below, as psql does. The entry is not run and not kept in the
   history.
@@ -215,7 +235,7 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 - `\uset` shows every setting as a table, `\uset NAME` shows one, and `\uset NAME
   VALUE` sets it and says so. A value is read as an argument of any meta command.
 - `\set pager less` and `\unset quiet` are errors that say to use `\uset`, so a
-  script or a `.usqlrc` that set a setting with `\set` must change. `:pager` is no
+  script or an `init.sql` that set a setting with `\set` must change. `:pager` is no
   longer a variable.
 - The command line has `--uset NAME=VALUE`, or `-U NAME=VALUE`, and `-q` is
   `--uset quiet=on`. `--set` and `-v` give script variables only. psql's `-U`
@@ -377,10 +397,10 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   none. Write the service name in the path of the URL. usql registers the driver with no hooks,
   and the prompt for a refused password comes from the method
   `AuthenticationRefused` of the driver's errors (W66).
-- Cassandra moves to xo/cassandra v0.2.1, which reports a refused credential
+- Cassandra moves to xo/cassandra v0.2.2, which reports a refused credential
   itself (W66), so usql registers it with no hooks. usql now also prompts for
   a missing password on Cassandra, which it did not before.
-- ODBC moves to xo/odbc v0.2.0, which reports a refused credential itself
+- ODBC moves to xo/odbc v0.3.0, which reports a refused credential itself
   (W66). usql now also prompts for the password when PostgreSQL refuses it
   through psqlODBC, which reports it as state 08001 and not in class 28. A
   locked or expired login no longer prompts on SQL Server and MySQL.
@@ -412,6 +432,13 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   driver in the query. dburl no longer adds a port, a host or a ServiceName,
   and a URL with no driver is an error. A URL with no host and a path, such
   as `odbc+sqlite3:/path/to/file.db`, keeps its driver (dburl v0.55.2).
+  The path of the URL means what the ODBC driver needs (xo/odbc v0.3.0, its
+  D28). SQL Server takes the instance and the database, SQLite and DuckDB
+  take the path of the file, and every other driver takes the whole path as
+  the name of the database. The driver once kept only the part after the
+  last `/`, so `odbc+sqlite://home/ken/a.db` made `a.db` in the current
+  directory. That URL has the host `home`, and SQLite and DuckDB now refuse a
+  host other than `localhost`, with an error and no file.
 - MaxCompute, Tablestore and YDB choose TLS with `tls=true` (W41), and
   `yds://` and `ydbs://` are gone. MaxCompute and Tablestore use TLS by
   default.
@@ -420,11 +447,35 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   needs no cgo. Pinot, rqlite, libSQL, Drill, Solr, Elasticsearch, OpenSearch,
   Druid and DynamoDB are in `most`.
 
+### Where usql keeps its files
+
+usql reads and writes no file of its own in the home directory. It follows
+the XDG Base Directory specification on Linux and other Unix systems.
+
+- The history is `$XDG_STATE_HOME/usql/history`, which is
+  `~/.local/state/usql/history` when `XDG_STATE_HOME` is not set. It is
+  `~/Library/Application Support/usql/history` on macOS and
+  `%LocalAppData%\usql\history` on Windows. usql makes the directory.
+  `USQL_HISTORY` still names another file.
+- `~/.usql_history` is not read, and its entries are not moved. The format
+  of rline differs from that of gohxs/readline.
+- At a terminal, usql prints a warning at start when it cannot make the
+  directory or read the file, and then does not save the history.
+- The startup script is `init.sql` in the configuration directory, next to
+  `config.yaml`: `$XDG_CONFIG_HOME/usql/init.sql` or
+  `~/.config/usql/init.sql`. `USQLRC` still names another file, and `-X`
+  still skips it. `~/.usqlrc` is not read.
+- `config.yaml` no longer runs an `init:` script. usql prints a warning, with
+  the path of `init.sql`, when the file still holds one.
+- The `.usqlpass` password file is gone, with no warning. Named connections in
+  `config.yaml` replace it. Tab completion no longer offers its entries.
+- `_samples/usqlrc` is now `_samples/init.sql`, and `_samples/usqlpass` is
+  gone.
+
 ### Other
 
-- The line editor keeps a history file of the old format, where a line such
-  as `\dt` stopped every later save, keeps 500 entries as psql does, where it
-  kept 200, and does not redraw the line while more keys wait, so a paste
+- The line editor keeps 500 entries of history as psql does, where it kept
+  200, and does not redraw the line while more keys wait, so a paste
   without bracketed paste is no longer slower with each row (rline v0.6.0).
   usql warns once when the history file cannot be read or written. Keys
   typed or pasted right after the start are no longer lost at a terminal
@@ -446,9 +497,6 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   `REFERENCES hr.departments(id)`, and a name is quoted only when the
   database would not read it back as written, so SQL Server's `Customers`
   has no quotes.
-- A `#` inside a field of the `.usqlpass` file belongs to the field, and `\:`
-  and `\\` escape a `:` and a `\`, as in PostgreSQL's `.pgpass` (dburl
-  v0.55.1). A `#` after an entry used to start a comment.
 - Input from `-f`, a pipe or `\i` runs a last statement that has no `;`, as
   psql does. Before, it was dropped and usql exited with status 0.
 - The `editor` setting runs through the shell, as psql runs it, so it can
@@ -475,9 +523,6 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 - `\ss` needs a table. Its help named a QUERY form that did not exist.
 - `\pset recordsep` says `Record separator is`, where it said `Field
   separator is`.
-- The `.usqlpass` password file is deprecated. usql prints a warning once
-  when it reads a password from it. Define named connections in
-  `config.yaml` instead.
 - The README says where usql looks for `config.yaml`: `--config`,
   `USQL_CONFIG`, then the configuration directory of the system, which
   follows `XDG_CONFIG_HOME` on Linux and not on macOS. The help names the
@@ -619,7 +664,9 @@ At a terminal:
   readline
 - Ctrl-C on an open entry of one row and of several rows, which stays on the
   screen with `^C` after it, Ctrl-D, and Ctrl-D on an empty entry
-- the history across a restart, with and without an old history file
+- the history across a restart, in `$XDG_STATE_HOME/usql/history` and in
+  `~/.local/state/usql/history`, and the warning at start when the file is a
+  directory
 - tab completion of a meta command, a table, a column, a file, and a
   variable, and the numbered menu of completions
 - a `~/.inputrc` with a binding under `$if usql`, and one with `set
@@ -629,6 +676,10 @@ At a terminal:
 - `\e` and `\e FILE`, with editor set, and Ctrl-C in `\! sleep 10`
 - help, quit and exit as the first word of an entry
 - a terminal that is resized while an entry is open
+- an alt-tab away from the terminal and back, while an entry is open, on
+  Windows Terminal and on one terminal of Linux or macOS. Typing after it
+  inserts the keys, no completion menu opens, and the bell rings at most once
+  for each change of focus.
 
 ### The pager
 
@@ -653,8 +704,8 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
   endings
 - input from a pipe, output to a pipe, and `-o FILE`
 - `-1` with a file, and on_error_stop on and off
-- `--set`, `--variable`, the RC file and `config.yaml` with named
-  connections
+- `--set`, `--variable`, `init.sql`, `USQLRC`, and `config.yaml` with named
+  connections, and the warning for a `config.yaml` that holds `init:`
 - `\copy` between two databases, and into a database with no transactions,
   such as rqlite
 

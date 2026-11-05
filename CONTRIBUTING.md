@@ -275,6 +275,22 @@ Every test runs without a database, wherever usql builds:
 
 On a machine with little memory, run one package at a time with `-p 1`.
 
+## Fuzz tests
+
+The fuzz tests of `feed` read scripts the way `-f` does, in the syntax of
+every dialect that dbmeta has a model for. They put quotes, separators,
+backslashes and unusual Unicode into names, strings and comments, and save
+scripts in encodings other than UTF-8. `go test ./...` runs only their seed
+inputs. To search for new inputs, run one fuzz test at a time:
+
+    go test -run '^$' -fuzz FuzzSplit ./feed
+    go test -run '^$' -fuzz FuzzQuotedNames ./feed
+    go test -run '^$' -fuzz FuzzEncodings ./feed
+
+A fuzz test stops at the first input that fails and writes it under
+`feed/testdata/fuzz`. Commit that file with the fix, so that `go test ./...`
+runs it from then on.
+
 No test of usql starts a database. To try usql against one, start it with
 dbmeta's `dbrun`, which owns every container setup. The tests that ran
 against databases were removed, and W37 in `docs/BACKLOG.md` brings them
@@ -350,8 +366,8 @@ Run it after a change to a PostgreSQL driver or to `drivers/pgwire/pgshared`, an
 after an update of tblfmt.
 
 `contrib/` keeps only the scripts that usql runs against a database and the
-client setup for a few drivers. Sample `config.yaml`, `usqlrc` and `usqlpass`
-files are in `_samples/`.
+client setup for a few drivers. A sample `config.yaml` and a sample `init.sql`
+are in `_samples/`.
 
 # Metadata introspection
 

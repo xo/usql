@@ -42,6 +42,11 @@ type Source struct {
 	grown bool
 	// eof is set once the reader has no more input.
 	eof bool
+	// queue holds the items of the last parse that can be fed and are not
+	// fed yet. Their offsets are in the text that was parsed, and cut is how
+	// much of that text was fed since.
+	queue []Item
+	cut   int
 }
 
 // NewSource returns a Source that reads r, and parses it in the language.
@@ -62,6 +67,7 @@ func (s *Source) Parser() *Parser {
 // SetLanguage changes the language of the source. The text that is not fed
 // yet is parsed again in the new language.
 func (s *Source) SetLanguage(lang *transit.Language) error {
+	s.queue = nil
 	return s.p.SetLanguage(lang)
 }
 
@@ -71,18 +77,19 @@ func (s *Source) Push(text string) {
 	if text != "" && !strings.HasSuffix(text, "\n") {
 		text += "\n"
 	}
-	s.text, s.grown = text+s.text, false
+	s.text, s.grown, s.queue = text+s.text, false, nil
 }
 
 // Reset drops the text that is not fed yet, as after an interrupt.
 func (s *Source) Reset() {
-	s.text, s.grown = "", false
+	s.text, s.grown, s.queue = "", false, nil
 }
 
 // ReadLine reads one line of raw input, as \prompt does. The line comes from
 // the text that is read and not fed yet, if any is left after the end of the
 // line that held the meta command, and otherwise from the reader.
 func (s *Source) ReadLine(prompt string) (string, error) {
+	s.queue = nil
 	if t := strings.TrimPrefix(s.text, "\n"); t != s.text {
 		s.text, s.grown = t, false
 	}
@@ -100,24 +107,29 @@ func (s *Source) ReadLine(prompt string) (string, error) {
 // Next returns the next item. At the end of the input it returns io.EOF. A
 // statement with no ';' at the end of the input is returned before io.EOF.
 //
-// Each call parses the text that is not fed yet, feeds its first item, and
-// cuts the text after it. So a change of language, a pushed text or a line
-// taken by ReadLine applies to the next item, with nothing parsed ahead.
+// A parse of the text that is not fed yet finds each item that can be fed.
+// Next feeds them one for each call, and cuts the text after each one. A
+// change of language, a pushed text or a line taken by ReadLine drops the
+// items that are not fed, so it applies to the next item. A line of many
+// statements is then parsed once, and not once for each statement.
 //
 // A line can end an item only when canEnd says so, so the text is parsed
 // again only after such a line, or at the end of the input. A
 // statement of many lines is then not parsed once for each of its lines.
 func (s *Source) Next() (Item, error) {
+	if len(s.queue) != 0 {
+		it := s.queue[0]
+		s.queue = s.queue[1:]
+		return s.feed(it), nil
+	}
 	for {
-		first, ok, err := s.p.first(s.text, s.grown, func(n int, last Item) bool {
-			return s.ready(n, last) != 0
-		})
+		items, err := s.p.readyItems(s.text, s.grown, s.ready)
 		if err != nil {
 			return Item{}, err
 		}
-		if ok {
-			s.text, s.grown = s.text[first.End:], false
-			return first, nil
+		if len(items) != 0 {
+			s.queue, s.cut = items[1:], 0
+			return s.feed(items[0]), nil
 		}
 		for {
 			if s.eof {
@@ -136,6 +148,14 @@ func (s *Source) Next() (Item, error) {
 		s.more.Reset()
 		s.grown = true
 	}
+}
+
+// feed cuts the text after it, an item of the last parse, and returns it with
+// its offsets in the text that is left, as a parse of that text gives them.
+func (s *Source) feed(it Item) Item {
+	it.Start, it.End = it.Start-s.cut, it.End-s.cut
+	s.text, s.grown, s.cut = s.text[it.End:], false, s.cut+it.End
+	return it
 }
 
 // canEnd reports whether a line can end an item: it holds a ';' or a '\'.

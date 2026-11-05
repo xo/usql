@@ -284,6 +284,62 @@ func TestBacktickNameWithQuote(t *testing.T) {
 	}
 }
 
+// TestBrackets checks that a name between brackets, as SQL Server and SQLite
+// write names, holds a quote, a ';' or the start of a comment as text, and
+// that the statement after it is a statement of its own (GitHub discussion
+// xo/usql#600).
+func TestBrackets(t *testing.T) {
+	t.Parallel()
+	sqlserver := dbmeta.Syntax{BlockComments: true, DashComments: true, Brackets: true, BeginEndBlocks: true}
+	p, err := NewParser(Language(sqlserver, false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		src string
+		exp string
+	}{
+		{"create table t1 ([a'b] int);\nselect 2;", "S:create table t1 ([a'b] int); | S:select 2;"},
+		{"select [a;b], [x]]y] from t;\nselect 2;", "S:select [a;b], [x]]y] from t; | S:select 2;"},
+		{"select [--a], [/*b], [\\] from t;\nselect 2;", "S:select [--a], [/*b], [\\] from t; | S:select 2;"},
+		{"select [a\nb;\nselect 2;", "S:select [a\nb;\nselect 2;(open)"},
+	}
+	for _, test := range tests {
+		items, err := p.Parse(test.src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := summary(items); got != test.exp {
+			t.Errorf("%q:\n got: %s\nwant: %s", test.src, got, test.exp)
+		}
+	}
+	// PostgreSQL has no names between brackets
+	if got := summary(parse(t, "select [a'b];")); !strings.HasSuffix(got, "(open)") {
+		t.Errorf("postgres: expected the quote to open a string, got %s", got)
+	}
+}
+
+// TestByteOrderMark checks that a U+FEFF between items, as a script saved by
+// an editor on Windows starts with, is white space, and that it stays text
+// inside a string (transit's D141).
+func TestByteOrderMark(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		src string
+		exp string
+	}{
+		{"\uFEFFselect 1;\n\uFEFFselect 2;\uFEFF", "S:select 1; | S:select 2;"},
+		{"select\uFEFF1;", "S:select\uFEFF1;"},
+		{"select '\uFEFF';", "S:select '\uFEFF';"},
+		{"\\echo a\uFEFF\n\uFEFF\\echo b", "C:echo[a] | C:echo[b]"},
+	}
+	for _, test := range tests {
+		if got := summary(parse(t, test.src)); got != test.exp {
+			t.Errorf("%q:\n got: %q\nwant: %q", test.src, got, test.exp)
+		}
+	}
+}
+
 func TestSourceReadLine(t *testing.T) {
 	t.Parallel()
 	e := &entries{"\\prompt 'Name: ' who\nBob\nselect :who;", "select 2;"}
@@ -450,6 +506,28 @@ func TestOracleEscapedUnits(t *testing.T) {
 				t.Errorf("\n got: %q\nwant: %q", got, test.exp)
 			}
 		})
+	}
+}
+
+// TestSourceLongLine checks that a line of many statements costs about what
+// its size does. A Source once parsed the rest of the line again for each
+// statement it fed, so that 4,000 statements on one line took 14 seconds and
+// 5 GiB. The fuzz test FuzzSplit found it.
+func TestSourceLongLine(t *testing.T) {
+	src := strings.Repeat("select 1;", 4000) + "\n"
+	s, err := NewSource(NewLines(strings.NewReader(src)), Language(postgres, false), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	if got := strings.Count(feedAll(t, s), "S:select 1;"); got != 4000 {
+		t.Fatalf("expected 4000 statements, got %d", got)
+	}
+	runtime.ReadMemStats(&after)
+	// one parse of the 36 KB line takes a few MiB
+	if mib := (after.TotalAlloc - before.TotalAlloc) >> 20; mib > 64 {
+		t.Errorf("reading %d statements on one line allocated %d MiB", 4000, mib)
 	}
 }
 

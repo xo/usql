@@ -132,8 +132,12 @@ func New(cliargs []string) ContextExecutor {
 			}
 			// fmt.Fprintf(os.Stderr, "\n\n%v\n\n", args.Charts)
 			args.Connections = v.GetStringMap("connections")
-			args.Init = v.GetString("init")
-			args.ConfigFileUsed = v.ConfigFileUsed()
+			// the script that config.yaml ran at start is now init.sql
+			if v.IsSet("init") {
+				if dir, err := env.ConfigDir(); err == nil {
+					fmt.Fprintf(os.Stderr, text.ConfigInitIgnored+"\n", filepath.Join(dir, "init.sql"))
+				}
+			}
 			return Run(cmd.Context(), args)
 		},
 	}
@@ -314,11 +318,20 @@ func Run(ctx context.Context, args *Args) error {
 			}
 		}
 	}
+	// the history is kept at a terminal, in a directory that may not be there
+	// yet
+	history := env.HistoryFile(u)
+	if history != "" && interactive && !forceNonInteractive {
+		if err := os.MkdirAll(filepath.Dir(history), 0o700); err != nil {
+			fmt.Fprintf(os.Stderr, text.HistoryNotSaved+"\n", err)
+			history = ""
+		}
+	}
 	// create the line editor, which asks the handler whether an entry needs
 	// more input
 	var h *handler.Handler
 	l, err := rline.New(
-		rline.WithHistoryFile(env.HistoryFile(u)),
+		rline.WithHistoryFile(history),
 		rline.WithContinue(func(text string) bool {
 			return h != nil && h.Continue(text)
 		}),
@@ -378,16 +391,10 @@ func Run(ctx context.Context, args *Args) error {
 			return err
 		}
 	}
-	// init script
+	// init.sql
 	if !args.NoInit {
-		// rc file
-		if rc := env.RCFile(u); rc != "" {
-			if err = h.Include(rc, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
-				return err
-			}
-		}
-		if args.Init != "" {
-			if err = h.IncludeReader(strings.NewReader(args.Init), args.ConfigFileUsed); err != nil {
+		if name := env.InitFile(u); name != "" {
+			if err = h.Include(name, false); err != nil && err != text.ErrNoSuchFileOrDirectory {
 				return err
 			}
 		}
@@ -423,8 +430,6 @@ type Args struct {
 	Pvars             []string
 	Charts            billy.Filesystem
 	Connections       map[string]interface{}
-	Init              string
-	ConfigFileUsed    string
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,

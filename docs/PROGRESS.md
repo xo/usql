@@ -49,7 +49,7 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
    pseudo-terminal: an entry over two rows, variables and `\q`.
 3. Checked on 2026-10-02: Ctrl-C gives up an open entry, `\e` runs the
    edited text and goes on, and `\c` from SQLite to DuckDB parses what
-   follows with DuckDB's forms. The history is not saved: see below.
+   follows with DuckDB's forms.
 4. TestCLI passes: the nine sessions of `testdata/cli` were re-recorded on 2026-10-11,
    with no color of highlighting, and `line-editing` was rewritten, because Enter
    on a finished entry runs it wherever the cursor is, and rline keeps an open
@@ -67,11 +67,10 @@ Open points that are known:
   lost, and later keys are not. rline may ask the terminal a question when
   it starts and read the answer from the input. Tell rline. It may also lose
   type-ahead at a real terminal.
-- The history is never saved for a user who has a history file from
-  gohxs/readline. rline's format escapes a backslash, so the first line such
-  as `\q` stops the read, and rline then refuses to save, to keep the rest of
-  the file. It ignores the error at start. This is for Ken: migrate the file,
-  use a new file name, or have rline read the old format.
+- Settled on 2026-11-05: the history is `$XDG_STATE_HOME/usql/history`, and
+  the history file of gohxs/readline is not read or moved. rline v0.6.0
+  already reads every line of such a file. usql warns at start when it
+  cannot read the file.
 - dbmeta gives the version of every database that it has a model for, and the
   Version hooks that remain are InfluxDB's (by Ken's decision, dbmeta's D166)
   and csvq's, for which dbmeta has no model. The describe commands read dbmeta

@@ -874,8 +874,8 @@ An overview of `usql`'s features, functionality, and compatibility with `psql`:
 - [Time Formatting][timefmt]
 - [Context Completion][completion]
 - [Host Connection Information](#host-connection-information)
-- [Passwords][usqlpass]
-- [Runtime Configuration (RC) File][usqlrc]
+- [Startup Script][init]
+- [History][history]
 
 The `usql` project's goal is to support as much of `psql`'s core features and
 functionality, and aims to be as compatible as possible - [contributions are
@@ -924,23 +924,6 @@ Type "help" for help.
 
 or:system@localhost/free=>
 ```
-
-##### `init:`
-
-An initialization script can be defined as `init:` as a string:
-
-```yaml
-init: |
-  \echo welcome to the jungle `date`
-  \uset syntax_hl_style paraiso-dark
-  \uset prompt1 '\033[32m%S%M%/%R%#\033[0m '
-```
-
-The `init:` script is commonly used to set [environment variables][variables]
-or other configuration, and can be disabled on the command-line using the
-`--no-init` / `-X` flag. The script will be executed prior to any `-c` /
-`--command` / `-f` / `--file` flag and before starting the interactive
-interpreter.
 
 ##### Other Options
 
@@ -1353,24 +1336,22 @@ sq:booktest.db=>
 The `\copy` command (and all `usql` commands) [works with variables][variables].
 When scripting, or when needing to perform multiple `\copy` operations from/to
 multiple sources/destinations, the best practice is to `\set` connection
-variables either in a script or in [the `$HOME/.usqlrc` RC script][usqlrc].
+variables either in a script or in [the `init.sql` startup script][init].
 
 Similarly, passwords can be kept out of scripts by defining [named
-connections][connection-vars] in [the `config.yaml` file][config]. The
-[`$HOME/.usqlpass` password file][usqlpass] also works, but it is deprecated.
+connections][connection-vars] in [the `config.yaml` file][config].
 
 For example:
 
 ```sh
-$ cat $HOME/.usqlpass
-postgres:*:*:*:postgres:P4ssw0rd
-oracle:*:*:*:system:P4ssw0rd
+$ cat $HOME/.config/usql/config.yaml
+connections:
+  pglocal: postgres://postgres:P4ssw0rd@localhost:49153?sslmode=disable
+  orlocal: oracle://system:P4ssw0rd@localhost:1521/orasid
 $ usql
 Type "help" for help.
 
-(not connected)=> \set pglocal postgres://postgres@localhost:49153?sslmode=disable
-(not connected)=> \set orlocal oracle://system@localhost:1521/orasid
-(not connected)=> \copy :pglocal :orlocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
+(not connected)=> \copy pglocal orlocal 'select staff_id, first_name from staff' 'staff(staff_id, first_name)'
 COPY 18
 ```
 
@@ -1610,57 +1591,26 @@ The following terminals have been tested with `usql`:
 Additional terminals that support [Sixel][sixel-graphics] graphics are
 catalogued on the [Are We Sixel Yet?][arewesixelyet] website.
 
-#### Passwords
+#### Startup Script
 
-`usql` supports reading passwords for databases from a `.usqlpass` file
-contained in the user's `HOME` directory at startup:
+`usql` runs the file `init.sql` in [its configuration directory][config] at
+startup, as `psql` runs `~/.psqlrc`. It runs after `usql` opens the connection
+named on the command line, and before any `-c` / `--command` or `-f` / `--file`
+flag and before the first prompt:
 
-```sh
-$ cat $HOME/.usqlpass
-# format is:
-# protocol:host:port:dbname:user:pass
-postgres:*:*:*:booktest:booktest
-$ usql pg://
-Connected with driver postgres (PostgreSQL 9.6.9)
-Type "help" for help.
+1. `$XDG_CONFIG_HOME/usql/init.sql` on Linux and other Unix systems, which is
+   `$HOME/.config/usql/init.sql` when `XDG_CONFIG_HOME` is not set.
+2. `$HOME/Library/Application Support/usql/init.sql` on macOS.
+3. `%AppData%\usql\init.sql` on Windows.
 
-pg:booktest@=>
-```
-
-See [`_samples/usqlpass`](_samples/usqlpass) for a sample.
-
-An entry applies to a URL when each of its fields is `*` or equal to the
-URL's. An entry never replaces a user that the URL names, and an entry for one
-database applies only to that database. The protocol matches every scheme of
-the same database, so a `postgres:` entry also covers `pg://`, `pgx://` and
-`pq://`. A database that only speaks another's protocol is a database of its
-own, so CockroachDB, CrateDB and Redshift each need their own entry, and so do
-TiDB, SingleStore and Vitess. A `mysql:` entry does not cover `tidb://`.
-
-The `.usqlpass` file is deprecated, and `usql` prints a warning when it reads a
-password from it. [Define named connections][connection-vars] in [the
-`config.yaml` file][config] instead.
-
-<hr/>
-
-> **Note**
->
-> The `.usqlpass` file must not be readable by other users. Set its permissions
-> to `0600`:
+The `USQLRC` environment variable names another file. `usql` reads the file as
+it reads a file passed with `-f` / `--file`, so it can hold any meta command
+and any SQL statement. A statement runs on the connection named on the command
+line, and fails with `error: not connected` when there is none. The file is
+commonly used to set [variables][variables] and settings:
 
 ```sh
-chmod 0600 ~/.usqlpass
-```
-
-<hr/>
-
-#### Runtime Configuration (RC) File
-
-`usql` supports executing a `.usqlrc` runtime configuration (RC) file contained
-in the user's `HOME` directory:
-
-```sh
-$ cat $HOME/.usqlrc
+$ cat $HOME/.config/usql/init.sql
 \echo WELCOME TO THE JUNGLE `date`
 \uset syntax_hl_style paraiso-dark
 
@@ -1675,21 +1625,32 @@ syntax_hl_style is "paraiso-dark"
 (not connected)=>
 ```
 
-See [`_samples/usqlrc`](_samples/usqlrc) for a sample.
+See [`_samples/init.sql`](_samples/init.sql) for a sample.
 
-The `.usqlrc` file is read at startup in the same way as a file passed on the
-command-line with `-f` / `--file`. It is commonly used to set startup
-environment variables and settings.
-
-RC-file execution can be temporarily disabled at startup by passing `-X` or
-`--no-init` on the command-line:
+Pass `-X` or `--no-init` on the command-line to skip the file:
 
 ```sh
 $ usql --no-init pg://
 ```
 
-While the `.usqlrc` functionality will not be removed, it is recommended to set
-an `init` script in [the `config.yaml` file][config].
+`usql` no longer reads `$HOME/.usqlrc`, the `init:` script of `config.yaml` or
+the `$HOME/.usqlpass` password file. Move the script to `init.sql`, and
+[define named connections][connection-vars] in [the `config.yaml`
+file][config] in place of the password file.
+
+#### History
+
+At a terminal, `usql` keeps the history of what was typed in the file
+`history` in its state directory:
+
+1. `$XDG_STATE_HOME/usql/history` on Linux and other Unix systems, which is
+   `$HOME/.local/state/usql/history` when `XDG_STATE_HOME` is not set.
+2. `$HOME/Library/Application Support/usql/history` on macOS.
+3. `%LocalAppData%\usql\history` on Windows.
+
+The `USQL_HISTORY` environment variable names another file. `usql` prints a
+warning at startup when it cannot read the file, and then does not save the
+history. It does not read `$HOME/.usql_history`.
 
 ## Additional Notes
 
@@ -1797,8 +1758,8 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [styles]: https://github.com/xo/transit/tree/master/styles/chroma "Styles of transit"
 [termgraphics]: #terminal-graphics "Terminal Graphics"
 [timefmt]: #time-formatting "Time Formatting"
-[usqlpass]: #passwords "Passwords"
-[usqlrc]: #runtime-configuration-rc-file "Runtime Configuration File"
+[init]: #startup-script "Startup Script"
+[history]: #history "History"
 [variables]: #variables "Variables"
 [settings]: #settings "Settings"
 [runtime-vars]: #runtime-variables "Runtime Variables"

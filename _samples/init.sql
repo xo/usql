@@ -1,0 +1,25 @@
+-- init.sql is usql's equivalent of psql's ~/.psqlrc. usql runs it at start,
+-- after it opens the connection named on the command line, and before -c, -f
+-- or the first prompt. Put it in the configuration directory of usql:
+--
+--   Linux and other Unix systems: $XDG_CONFIG_HOME/usql/init.sql, which is
+--                                 ~/.config/usql/init.sql by default
+--   macOS:                        ~/Library/Application Support/usql/init.sql
+--   Windows:                      %AppData%\usql\init.sql
+--
+-- USQLRC names another file. -X (--no-init) skips it.
+--
+-- usql reads the file as it reads a file given with -f. It can hold any meta
+-- command, such as \uset or \set, and any SQL statement. A statement runs on
+-- the connection named on the command line. With no connection, it fails with
+-- "error: not connected", and usql goes on to the next line.
+--
+-- Settings of usql:
+-- \uset show_host_information false
+-- \uset syntax_hl false
+\uset syntax_hl_style onedark
+--
+-- SQL statements, which run on the connection. Remove the "-- " to use one:
+-- set search_path to app, public;
+-- set statement_timeout = '30s';
+-- select current_user, now();
