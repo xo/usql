@@ -1885,6 +1885,12 @@ and the three embedded databases, which start nothing. A database that has no
 recording is still tested every night by `TestConnect`, and a fault there
 shows in the nightly run.
 
+Update, 2026-11-05, at Ken's request: the first nightly run passed on 116 of
+120 releases and failed on Spanner, Presto and two of Vitess. CI does not need
+to test every database. The workflow has no nightly run now, and its matrix
+names the main databases: `postgres-18`, `sqlserver-2025`, `mysql-26.7`,
+`sqlite3` and `duckdb`. Every other database is tested locally with dbrun.
+
 Not done: the manual checks of `docs/RELEASE.md` for changing passwords are
 still manual, and the describe commands are automated only on the two tables
 of the fixture. No lint job was added, because Ken has not decided the note
@@ -2135,7 +2141,7 @@ What the move changes:
   `IsPasswordErr` takes only 516 today.
 - `SELECT version()` gives the version, which dbmeta already reads.
 - The tests that started ClickHouse in a container are gone. W37's
-  `TestConnect` runs on ClickHouse every night on `dbrun`. dbrun has no
+  `TestConnect` runs on ClickHouse locally on `dbrun`. dbrun has no
   fixture `examples` for it, so `TestDescribe` and `TestCopy` skip.
 
 Size, from W32: `clickhouse-go` adds 4.8 MB to a release build, with ch-go.

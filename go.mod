@@ -30,7 +30,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.2
 	github.com/xo/dbimp v0.24.3
-	github.com/xo/dbmeta v0.33.0
+	github.com/xo/dbmeta v0.33.1
 	github.com/xo/dburl v0.56.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.3.0

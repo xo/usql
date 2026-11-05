@@ -410,12 +410,11 @@ and that is not yet what psql prints (W46). The test replaces the password,
 and the names that SQL Server makes up for a constraint, so a recording does
 not change from one run to the next.
 
-CI runs the same tests, in the workflow `test.yml`. On each push, it runs every
-database that has a recording. So a new recording adds its database to the
-runs on each push. Every night it runs dbrun's tiers `tested` and `nightly`,
-which hold every database that runs on GitHub's runners. The list of databases
-lives in dbmeta, and dbrun is built from the release of dbmeta that `go.mod`
-pins.
+CI runs the same tests, in the workflow `test.yml`, on each push. It tests
+only the main databases: `postgres-18`, `sqlserver-2025`, `mysql-26.7`,
+`sqlite3` and `duckdb`, which the workflow names. Test every other database
+locally with dbrun, as above. dbrun is built from the release of dbmeta that
+`go.mod` pins.
 
 ## Comparing PostgreSQL output with psql
 

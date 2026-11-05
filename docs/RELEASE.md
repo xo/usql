@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.33.0, dburl v0.56.0, tblfmt v0.23.0, transit
+- usql requires dbmeta v0.33.1, dburl v0.56.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
@@ -620,9 +620,9 @@ the XDG Base Directory specification on Linux and other Unix systems.
   for PostgreSQL 18, SQL Server 2025, MySQL 26.7, SQLite, moderncsqlite and
   DuckDB. `TestCopy` runs `\copy` between the database and SQLite, both ways.
   CONTRIBUTING.md says how to run them.
-- CI runs these tests through `dbrun` (W38). On each push it runs the
-  databases that have a recording, and every night it runs dbrun's tiers
-  `tested` and `nightly`. The workflow names no database.
+- CI runs these tests through `dbrun` (W38) on each push, for PostgreSQL 18,
+  SQL Server 2025, MySQL 26.7, SQLite and DuckDB. Every other database is
+  tested locally.
 - `usql --help` no longer shows `(default true)` after each switch, such as
   `--no-align`, which pflag v1.0.10 printed.
 - The message that usql connected goes to the terminal and not to the pager,
