@@ -1,4 +1,4 @@
-//go:build (all || most || libpq) && !no_libpq
+//go:build (!no_drivers || libpq) && !no_libpq
 
 package internal
 

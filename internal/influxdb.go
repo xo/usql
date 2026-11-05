@@ -1,4 +1,4 @@
-//go:build (all || most || influxdb) && !no_influxdb
+//go:build (!no_drivers || influxdb) && !no_influxdb
 
 package internal
 

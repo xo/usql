@@ -6,7 +6,6 @@
 // name influxql.
 //
 // See: https://github.com/xo/dbimp
-// Group: most
 package influxql
 
 import (

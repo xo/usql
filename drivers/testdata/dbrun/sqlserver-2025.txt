@@ -1,0 +1,71 @@
+# What usql prints for the describe commands on sqlserver-2025, with dbrun's
+# fixture examples. TestDescribe in drivers/dbrun_test.go writes this file.
+# Do not edit it. Run the test with -update, and read the diff.
+
+-- \dt authors
+          List of tables
+ Schema |  Name   | Type  | Owner 
+--------+---------+-------+-------
+ dbo    | authors | table | dbo
+(1 row)
+
+
+-- \dt books
+         List of tables
+ Schema | Name  | Type  | Owner 
+--------+-------+-------+-------
+ dbo    | books | table | dbo
+(1 row)
+
+
+-- \d authors
+                             Table "dbo.authors"
+  Column   |     Type     |          Collation           | Nullable | Default 
+-----------+--------------+------------------------------+----------+---------
+ author_id | int          |                              | not null | 
+ name      | varchar(100) | SQL_Latin1_General_CP1_CI_AS | not null | 
+Indexes:
+    "PK__authors__XXXXXXXXXXXXXXXX" PRIMARY KEY, clustered (author_id) CLUSTER
+Referenced by:
+    TABLE "books" CONSTRAINT "FK__books__author_id__XXXXXXXX" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \d books
+                              Table "dbo.books"
+  Column   |     Type     |          Collation           | Nullable | Default 
+-----------+--------------+------------------------------+----------+---------
+ book_id   | int          |                              | not null | 
+ author_id | int          |                              |          | 
+ title     | varchar(200) | SQL_Latin1_General_CP1_CI_AS | not null | 
+Indexes:
+    "PK__books__XXXXXXXXXXXXXXXX" PRIMARY KEY, clustered (book_id) CLUSTER
+Foreign-key constraints:
+    "FK__books__author_id__XXXXXXXX" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \di *authors*
+                     List of indexes
+ Schema |             Name              | Type  |  Table  
+--------+-------------------------------+-------+---------
+ dbo    | PK__authors__XXXXXXXXXXXXXXXX | index | authors
+(1 row)
+
+
+-- \di *books*
+                   List of indexes
+ Schema |            Name             | Type  | Table 
+--------+-----------------------------+-------+-------
+ dbo    | PK__books__XXXXXXXXXXXXXXXX | index | books
+(1 row)
+
+
+-- SELECT book_id, author_id, title FROM books ORDER BY book_id;
+ book_id | author_id |   title    
+---------+-----------+------------
+       1 |         1 | Foundation
+       2 |         1 | I, Robot
+       3 |         2 | Carrie
+       4 |         2 | Cujo
+(4 rows)
+
+

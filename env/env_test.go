@@ -7,6 +7,48 @@ import (
 	"testing"
 )
 
+// TestParseVariableBool checks that a value reads as a boolean as psql's
+// ParseVariableBool reads it. Each case was run as \if in psql 18.6.
+func TestParseVariableBool(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		s     string
+		v, ok bool
+	}{
+		{"true", true, true},
+		{"TR", true, true},
+		{"t", true, true},
+		{"yes", true, true},
+		{"Y", true, true},
+		{"on", true, true},
+		{"ON", true, true},
+		{"1", true, true},
+		{"false", false, true},
+		{"f", false, true},
+		{"no", false, true},
+		{"N", false, true},
+		{"of", false, true},
+		{"Of", false, true},
+		{"off", false, true},
+		{"0", false, true},
+		{"o", false, false},
+		{"", false, false},
+		{"truex", false, false},
+		{"onn", false, false},
+		{"true false", false, false},
+		{"01", false, false},
+		{" true", false, false},
+		{"yeſ", false, false},
+		{"bad", false, false},
+	}
+	for _, test := range tests {
+		v, ok := ParseVariableBool(test.s)
+		if v != test.v || ok != test.ok {
+			t.Errorf("%q: expected %t, %t, got: %t, %t", test.s, test.v, test.ok, v, ok)
+		}
+	}
+}
+
 // TestUnquote checks that a single-quoted argument decodes as psql 18 decodes
 // the argument of a meta command. Each expected value was read from psql.
 func TestUnquote(t *testing.T) {

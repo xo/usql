@@ -12,35 +12,52 @@ file, not here. When a check finds a fault, record it in
 
 Read these first. Some of them can stop the release.
 
-- `\if`, `\elif`, `\else` and `\endif` still do nothing, and every branch
-  runs. W36 gives them psql's meaning, and that work is not done.
-- `%R` in a prompt shows only `=` or `-`, because rline draws one prompt for
-  an entry. rline's backlog item 33 holds a prompt for each row.
-- The keys typed in the first moments after start are lost. At start, usql
-  asks the terminal whether it draws images, through rasterm. rasterm sends
-  ESC[0c and reads up to 1 KB from standard input in one read, so keys typed
-  before or with the answer are read and dropped. On a pty, a query typed up
-  to 3 s after start was lost, and one typed after 4 s ran.
+- `%R` in a prompt shows only `=`, `@` or `-`, because rline draws one prompt
+  for an entry. rline's backlog item 33 holds a prompt for each row.
 - rline writes an escape code to a pipe when color is on. usql turns color off
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.31.0, dburl v0.55.2, tblfmt v0.22.1, transit
-  v0.7.4 and rline v0.7.1, all in `go.mod`. It builds with no `go.work`.
-- The tests against databases and their recordings were removed, because
-  they started their own containers. W37 brings them back on `dbrun`, and
-  W38 runs CI on every database. Both are due before the release.
-- **ODBC crashes in the default build.** With go-sqlite3 and DuckDB both
-  linked, which every `most` build does, the first ODBC query crashes the
-  process, because DuckDB's bindings export the `sqlite3_*` symbols of
-  go-sqlite3 into the executable. Building with `-tags libsqlite3` fixes it,
-  and that changes the SQLite of the release builds. Ken decides how (W40).
-  This stops the release until he does.
+- usql requires dbmeta v0.33.0, dburl v0.56.0, tblfmt v0.23.0, transit
+  v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
 
 ## What changed
+
+### One build, with every driver
+
+usql has one build. A `go build` or `go install` with no build tags includes
+every driver and the chart renderer. A release build is that build, with the
+features of SQLite that `build.sh` adds.
+
+- `no_<tag>` leaves one driver out, as before. `no_charts` leaves out the chart
+  renderer.
+- `no_drivers` leaves out every driver and the chart renderer. A driver or
+  `charts` named by its tag goes back in, so
+  `go build -tags 'no_drivers sqlite3'` builds usql with only the sqlite3
+  driver.
+- The groups `base`, `most`, `all` and `bad` are gone, with the build tags
+  `no_base`, `most`, `all` and `bad`, and the `Group:` line of a driver package.
+  A build that used `-tags most` or `-tags all` now uses no tags. A build that
+  used `-tags 'no_base x y'` now uses `-tags 'no_drivers x y'`.
+- The charts renderer was only in a build with `-tags charts` or `-tags all`.
+  It is now in every build, which adds about 12 MiB to the binary.
+- The h2 and gizmosql drivers are removed. They were the `bad` group. dburl
+  v0.56.0 drops their schemes, with the aliases `gz` and `gizmo`.
+- A driver with no hooks has no package under `drivers`. `gen.go` writes its
+  import and its registration into `internal/`, from `plainDrivers` in
+  `gen.go`, and `\drivers` lists the same drivers as before (W52). Their
+  packages are gone, such as `drivers/oracle`, `drivers/duckdb` and
+  `drivers/odbc`.
+- On Linux, the SQLite ODBC driver crashes in a build that links go-sqlite3
+  and DuckDB. The build is not changed for it (W40). The README says to build
+  with the tag `libsqlite3`, or with `-tags 'no_drivers odbc libsqlite3'`.
+- When a URL names a driver that the build left out, usql prints
+  `go install github.com/xo/usql@<version>`, with no tags. It printed
+  `-tags 'most <driver>'`, and the name of the branch was `master`, where it is
+  `main`. A scheme that usql has no driver for prints no hint.
 
 ### Input: rline and transit's usql grammar
 
@@ -78,6 +95,22 @@ package and the `stmt` package (W36).
   between statements and inside them (transit's D141). Inside a string or a
   quoted name it stays text. A script that held one anywhere but at its start
   sent it to the database.
+- A backslash escapes the next character in a string between single quotes
+  and in a name between double quotes only where the database reads it so:
+  MySQL and its family, ClickHouse, Databend, Impala, Neo4j, Spanner and the
+  others that dbmeta v0.32.0 marks with `BackslashEscapes` (its D266, and
+  transit's D142). Everywhere else a backslash is text, as in psql, so
+  `select 'C:\data\';` on PostgreSQL, SQL Server, Oracle or SQLite ends the
+  statement, where usql waited for more input. `E'...'` keeps its escapes.
+- A script given with `-f`, `\i`, `init.sql` or a pipe must be valid UTF-8,
+  or usql stops with an error that names the file and the line. Before, usql
+  read a script as bytes. A byte order mark at the start of the script decides
+  its encoding: UTF-8, UTF-16 or UTF-32. Otherwise the new setting `encoding`
+  names it, by the names of the WHATWG Encoding Standard, as in `\uset
+  encoding windows-1252` or `--uset encoding=shift_jis`. A file takes the
+  setting when it is opened, and a pipe when it is first read. usql decodes a
+  script before it parses it, so the byte 0x5C inside a Shift JIS, Big5, GBK
+  or GB18030 character is not a backslash.
 - A line of many statements is parsed once. usql parsed the rest of the line
   again for each statement, so 4,000 statements on one line took 14 s and
   5 GiB, and now take 6 ms.
@@ -305,8 +338,8 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   CockroachDB, CrateDB and QuestDB then use libpq, through the new package
   `drivers/pgwire`.
 - A driver that is built on another driver goes when that driver goes:
-  `no_mysql` leaves out memsql, tidb and vitess, `no_influxdb` leaves out
-  influxql, and `no_flightsql` leaves out gizmosql. `gen.go` reads this from
+  `no_mysql` leaves out memsql, tidb and vitess, and `no_influxdb` leaves out
+  influxql. `gen.go` reads this from
   the imports of the driver package.
 - PostgreSQL prints more as psql does, with both drivers (W63). float4 has
   the digits of a float4, oid, xid, cid and xid8 are aligned to the right,
@@ -426,8 +459,7 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
 - Trino and Presto move to `github.com/xo/dbimp/trino` (W40). A URL with no
   user connects as `user`. `trs://` and `trinos://` are gone. Presto has
   `\copy` now.
-- ODBC moves to `github.com/xo/odbc` (W40), which needs no cgo, and so it is
-  in `most` and no longer in `all`. Its URL is
+- ODBC moves to `github.com/xo/odbc` (W40), which needs no cgo. Its URL is
   `odbc+<driver>://user:pass@host:port/db` with the settings of the ODBC
   driver in the query. dburl no longer adds a port, a host or a ServiceName,
   and a URL with no driver is an error. A URL with no host and a path, such
@@ -443,9 +475,6 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   `yds://` and `ydbs://` are gone. MaxCompute and Tablestore use TLS by
   default.
 - The registry is keyed by the scheme of dburl.
-- A driver goes in the group `most` when its scheme names a dialect and it
-  needs no cgo. Pinot, rqlite, libSQL, Drill, Solr, Elasticsearch, OpenSearch,
-  Druid and DynamoDB are in `most`.
 
 ### Where usql keeps its files
 
@@ -474,13 +503,22 @@ the XDG Base Directory specification on Linux and other Unix systems.
 
 ### Other
 
+- tblfmt v0.23.0: with `numericlocale`, a number uses the digits, the group
+  sizes, the decimal point and the minus sign of the locale. On Windows, the
+  html, asciidoc, latex, latex-longtable, troff-ms and vertical formats end
+  each line with `\r\n`. The unaligned format ends its last line with a
+  newline, not with `recordsep`, as psql does. The markdown format writes a
+  backslash as `\\`.
 - The line editor keeps 500 entries of history as psql does, where it kept
   200, and does not redraw the line while more keys wait, so a paste
   without bracketed paste is no longer slower with each row (rline v0.6.0).
   usql warns once when the history file cannot be read or written. Keys
   typed or pasted right after the start are no longer lost at a terminal
   that does not answer the query for graphics, such as Emacs or a serial
-  console (rasterm v0.1.22). The
+  console (rasterm v0.1.22). Keys typed while usql asks the terminal whether
+  it draws images are no longer lost: rasterm v0.1.23 keeps them, and rline
+  v0.8.0 reads them first. Before, `select 1;` typed at once ran as `elect
+  1;`. The
   prompt starts after output that did not end its row, as after `\echo -n`,
   and a `[x]` in a prompt stays as it is written.
 - An `INSERT`, `UPDATE` or `DELETE` with `RETURNING` prints its rows, as in
@@ -499,6 +537,25 @@ the XDG Base Directory specification on Linux and other Unix systems.
   has no quotes.
 - Input from `-f`, a pipe or `\i` runs a last statement that has no `;`, as
   psql does. Before, it was dropped and usql exited with status 0.
+- `\if`, `\elif`, `\else` and `\endif` work as in psql (W36). Before, they
+  did nothing, and every branch ran.
+  - Blocks nest. The expression is a boolean, read after its variables are
+    replaced: true, false, yes, no, on, off, 1 or 0, in any case, or a unique
+    prefix of one. Any other value is an error, and the branch does not run.
+  - A branch that does not run sends no statement, runs no meta command
+    other than these four, and replaces no variable. Its statements do not go into the
+    query buffer, and a file that its `\i` names is not read.
+  - An `\elif` or `\else` after `\else`, and an `\elif`, `\else` or
+    `\endif` with no `\if`, are errors with psql's text.
+  - The terminal, the text of `-c`, and each file of `-f` and `\i` have
+    their own blocks. When one ends inside a block, usql prints psql's error
+    `reached EOF without finding closing \endif(s)`. The exit status does not
+    change, as in psql, unless on_error_stop is on.
+  - At a terminal, `%R` in the prompt shows `@` in a branch that does not
+    run. A statement or a meta command there prints that it is ignored, and
+    Ctrl-C leaves the innermost block, as in psql.
+  - An unknown meta command prints `Invalid command \foo. Try \? for help.`,
+    where it printed `error: unknown command`.
 - The `editor` setting runs through the shell, as psql runs it, so it can
   hold arguments, as in `code --wait`. With no editor set, `\e` runs `vi` on
   a new file, where it failed.
@@ -554,6 +611,18 @@ the XDG Base Directory specification on Linux and other Unix systems.
 - `go run gen.go -examples` writes the examples of the README from what usql
   prints, against SQL Server with dbmeta's fixture `examples`. CONTRIBUTING.md
   says how.
+- The tests against databases are back, on servers that dbmeta's `dbrun`
+  starts (W37). They started containers of their own, and were removed for
+  that. `TestConnect`, `TestDescribe` and `TestCopy` in
+  `drivers/dbrun_test.go` read the URL of the database from `USQL_TEST_URL`,
+  and skip when it is not set. `TestDescribe` records what the describe
+  commands print on dbrun's fixture `examples`, in `drivers/testdata/dbrun`,
+  for PostgreSQL 18, SQL Server 2025, MySQL 26.7, SQLite, moderncsqlite and
+  DuckDB. `TestCopy` runs `\copy` between the database and SQLite, both ways.
+  CONTRIBUTING.md says how to run them.
+- CI runs these tests through `dbrun` (W38). On each push it runs the
+  databases that have a recording, and every night it runs dbrun's tiers
+  `tested` and `nightly`. The workflow names no database.
 - `usql --help` no longer shows `(default true)` after each switch, such as
   `--no-align`, which pflag v1.0.10 printed.
 - The message that usql connected goes to the terminal and not to the pager,
@@ -702,7 +771,14 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
 - `-c` with a statement, with a meta command, and with several of each
 - `-f FILE`, `\i`, `\ir`, a file that ends without a `;`, and Windows line
   endings
+- `\if`, `\elif`, `\else` and `\endif` in a file of `-f`, in a file of `\i`
+  inside a block, and at the terminal, where the prompt shows `@` in a branch
+  that does not run and Ctrl-C leaves the block. Compare the output with
+  psql's.
 - input from a pipe, output to a pipe, and `-o FILE`
+- a script in Windows-1252 and one in Shift JIS with `\uset encoding`, a
+  script in UTF-16 that Notepad or PowerShell saved, and the error for a
+  script that is not valid UTF-8, with `-f`, `\i` and a pipe
 - `-1` with a file, and on_error_stop on and off
 - `--set`, `--variable`, `init.sql`, `USQLRC`, and `config.yaml` with named
   connections, and the warning for a `config.yaml` that holds `init:`
@@ -727,8 +803,16 @@ left, as in psql. This was checked on PostgreSQL 18, Oracle and SQLite on
 
 ### Builds and packages
 
-- `go build -tags all`, the default build, and `-tags no_base`
-- `./size.sh -g most`, compared with W32
+- `go build` with no tags, `-tags no_drivers`, `-tags 'no_drivers sqlite3'`
+  and `-tags no_sqlite3`, and `\drivers` of each: every driver of the README
+  table, none, only sqlite3, and moderncsqlite in place of sqlite3
+- `\chart` in a build with no tags, and the error of `\chart` in a build with
+  `-tags no_charts`
+- `./size.sh`, compared with W32. The chart renderer is now in the build.
+- on Linux, an ODBC query through the SQLite ODBC driver in a build with
+  `-tags libsqlite3`, and through the PostgreSQL Unicode driver in a build with
+  no tags
+- the 32 bit arm build of `build.sh`, which leaves out ChaiSQL and DuckDB
 - the static builds of `build.sh`, for amd64 and arm64
 - macOS, Windows and Linux
 - the release archives, the Homebrew formula, the AUR packages and the

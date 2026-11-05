@@ -6,7 +6,6 @@
 // the build has no pgx.
 //
 // See: https://github.com/lib/pq
-// Group: most
 package libpq
 
 import (

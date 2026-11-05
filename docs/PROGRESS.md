@@ -54,11 +54,14 @@ of gohxs/readline, usql's own `rline` package and the `stmt` package.
    with no color of highlighting, and `line-editing` was rewritten, because Enter
    on a finished entry runs it wherever the cursor is, and rline keeps an open
    entry as rows, where readline ran its line.
+5. Done on 2026-11-05: `\if`, `\elif`, `\else` and `\endif` work as in
+   psql, with a stack for each input in `handler/cond.go`. Checked against
+   psql 18.6 with `-f`, with `\i`, and at a pseudo-terminal.
 
 Open points that are known:
 
-- `%R` shows only `=` or `-`, because rline draws one prompt for an entry.
-  A prompt for each row waits on rline's backlog item 33.
+- `%R` shows only `=`, `@` or `-`, because rline draws one prompt for an
+  entry. A prompt for each row waits on rline's backlog item 33.
 - rline writes `\x1b[m` before the first text when color is on and the
   output is not a terminal. run.go turns color off unless both input and
   output are a terminal. Tell rline: its session was not running on
@@ -78,7 +81,7 @@ Open points that are known:
 
 ## How to build
 
-usql requires dbmeta v0.31.0, dburl v0.55.1, tblfmt v0.22.1, transit v0.7.2 with its usql
+usql requires dbmeta v0.31.0, dburl v0.56.0, tblfmt v0.22.1, transit v0.7.2 with its usql
 grammar v0.7.2, and rline v0.6.0 in `go.mod`. It builds with plain modules and no `go.work`, and
 `go mod tidy` leaves `go.mod` as it is. A workspace is still how to build
 against a local checkout of a sibling that has not tagged a change yet: write a
@@ -87,5 +90,6 @@ loads two modules that provide `github.com/google/flatbuffers/go`, a `replace`
 to an empty module, a directory with only a `go.mod` that reads `module
 github.com/google/flatbuffers/go` and `go 1.21`, ends the conflict.
 
-The recordings in `drivers/testdata` were removed with the tests against
-databases. W37 brings them back.
+The tests against databases are back in `drivers/dbrun_test.go`, with their
+recordings in `drivers/testdata/dbrun` (W37). CI runs them through dbrun
+(W38). CONTRIBUTING.md says how to run them.

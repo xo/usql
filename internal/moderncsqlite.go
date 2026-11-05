@@ -1,4 +1,4 @@
-//go:build (all || most || moderncsqlite) && !no_moderncsqlite
+//go:build (!no_drivers || moderncsqlite) && !no_moderncsqlite
 
 package internal
 

@@ -1,4 +1,4 @@
-//go:build (!no_base || cratedb) && !no_cratedb
+//go:build (!no_drivers || cratedb) && !no_cratedb
 
 package internal
 

@@ -60,7 +60,7 @@ var (
 	// ErrGraphicsNotSupported is the graphics not supported error.
 	ErrGraphicsNotSupported = errors.New(`\chart: graphics not supported in terminal`)
 	// ErrChartsNotSupported is the charts not built in error.
-	ErrChartsNotSupported = errors.New(`\chart: this build of usql has no chart renderer (build with -tags charts)`)
+	ErrChartsNotSupported = errors.New(`\chart: this build of usql has no chart renderer (its build tags left out charts)`)
 	// ErrNoNumericColumns is the no numeric columns error.
 	ErrNoNumericColumns = errors.New(`\chart: no numeric columns found`)
 	// ErrInvalidQuotedString is the invalid quoted string error.
@@ -83,8 +83,19 @@ var (
 	ErrNamedConnectionIsNotAURL = errors.New(`named connection is not a url`)
 	// ErrInvalidConfig is the invalid config error.
 	ErrInvalidConfig = errors.New(`invalid config`)
-	// ErrIfEscaped is the if escaped error.
-	ErrIfEscaped = errors.New(`\if escaped`)
-	// ErrEndIfNoMatchingIf is the endif no matching if error.
+	// ErrIfEscaped is the error when Ctrl-C at a terminal leaves the innermost
+	// \if block, as in psql.
+	ErrIfEscaped = errors.New(`\if: escaped`)
+	// ErrElifNoMatchingIf is the error of an \elif outside an \if block.
+	ErrElifNoMatchingIf = errors.New(`\elif: no matching \if`)
+	// ErrElseNoMatchingIf is the error of an \else outside an \if block.
+	ErrElseNoMatchingIf = errors.New(`\else: no matching \if`)
+	// ErrEndIfNoMatchingIf is the error of an \endif outside an \if block.
 	ErrEndIfNoMatchingIf = errors.New(`\endif: no matching \if`)
+	// ErrElifAfterElse is the error of an \elif after the \else of its block.
+	ErrElifAfterElse = errors.New(`\elif: cannot occur after \else`)
+	// ErrElseAfterElse is the error of a second \else in a block.
+	ErrElseAfterElse = errors.New(`\else: cannot occur after \else`)
+	// ErrUnclosedIf is the error of an input that ends inside an \if block.
+	ErrUnclosedIf = errors.New(`reached EOF without finding closing \endif(s)`)
 )

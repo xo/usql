@@ -61,6 +61,17 @@ type Handler interface {
 	ReadVar(string, string) (string, error)
 	// Include includes a file.
 	Include(string, bool) error
+	// If starts a conditional block. The handler calls the function for the
+	// value of the expression only when the block starts in a branch that
+	// runs.
+	If(func() (bool, error)) error
+	// ElseIf starts the next branch of the conditional block. The handler
+	// calls the function only when no branch of the block ran yet.
+	ElseIf(func() (bool, error)) error
+	// Else starts the last branch of the conditional block.
+	Else() error
+	// EndIf ends the conditional block.
+	EndIf() error
 	// Begin begins a transaction.
 	Begin(*sql.TxOptions) error
 	// Commit commits the current transaction.

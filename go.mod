@@ -13,9 +13,8 @@ require (
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
-	github.com/jmrobles/h2go v0.5.0
 	github.com/kenshaw/colors v0.2.4
-	github.com/kenshaw/rasterm v0.1.22
+	github.com/kenshaw/rasterm v0.1.23
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-runewidth v0.0.31
@@ -31,31 +30,31 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.2
 	github.com/xo/dbimp v0.24.3
-	github.com/xo/dbmeta v0.31.0
-	github.com/xo/dburl v0.55.2
+	github.com/xo/dbmeta v0.33.0
+	github.com/xo/dburl v0.56.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.3.0
 	github.com/xo/oracle v0.3.0
 	github.com/xo/resvg v0.13.0
-	github.com/xo/rline v0.7.1
-	github.com/xo/tblfmt v0.22.1
-	github.com/xo/terminfo v1.3.0
-	github.com/xo/transit v0.7.4
-	github.com/xo/transit/grammars/clickhouse v0.7.4
-	github.com/xo/transit/grammars/cql v0.7.4
-	github.com/xo/transit/grammars/duckdb v0.7.4
-	github.com/xo/transit/grammars/mysql v0.7.4
-	github.com/xo/transit/grammars/neo4j v0.7.4
-	github.com/xo/transit/grammars/oracle v0.7.4
-	github.com/xo/transit/grammars/postgres v0.7.4
-	github.com/xo/transit/grammars/sql v0.7.4
-	github.com/xo/transit/grammars/sqlite3 v0.7.4
-	github.com/xo/transit/grammars/sqlserver v0.7.4
-	github.com/xo/transit/grammars/surrealdb v0.7.4
-	github.com/xo/transit/grammars/trino v0.7.4
-	github.com/xo/transit/grammars/usql v0.7.4
-	github.com/xo/transit/grammars/ydb v0.7.4
-	github.com/xo/transit/styles v0.7.4
+	github.com/xo/rline v0.8.0
+	github.com/xo/tblfmt v0.23.0
+	github.com/xo/terminfo v1.3.1
+	github.com/xo/transit v0.7.5
+	github.com/xo/transit/grammars/clickhouse v0.7.5
+	github.com/xo/transit/grammars/cql v0.7.5
+	github.com/xo/transit/grammars/duckdb v0.7.5
+	github.com/xo/transit/grammars/mysql v0.7.5
+	github.com/xo/transit/grammars/neo4j v0.7.5
+	github.com/xo/transit/grammars/oracle v0.7.5
+	github.com/xo/transit/grammars/postgres v0.7.5
+	github.com/xo/transit/grammars/sql v0.7.5
+	github.com/xo/transit/grammars/sqlite3 v0.7.5
+	github.com/xo/transit/grammars/sqlserver v0.7.5
+	github.com/xo/transit/grammars/surrealdb v0.7.5
+	github.com/xo/transit/grammars/trino v0.7.5
+	github.com/xo/transit/grammars/usql v0.7.5
+	github.com/xo/transit/grammars/ydb v0.7.5
+	github.com/xo/transit/styles v0.7.5
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/text v0.43.0
@@ -151,7 +150,6 @@ require (
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/shopspring/decimal v1.6.0 // indirect
-	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/soniakeys/quant v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect

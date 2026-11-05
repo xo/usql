@@ -309,7 +309,7 @@ usql keeps its own fallback for every name dbmeta does not cover. That fallback
 is `SELECT version();`, which several products do not have.
 
 Oracle is not one of the products that falls through to it, because dbmeta has
-a model for it. The oracle driver registers itself in `drivers/oracle/oracle.go`.
+a model for it. The oracle driver registers itself in `internal/oracle.go`, which `gen.go` writes.
 It used to register through a shared package, `orshared`, that godror also used,
 and that path made an earlier count of registered schemes too low. The package
 is gone, since nothing else used it.

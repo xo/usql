@@ -21,7 +21,7 @@ var (
 	ConfigName               = "config"
 	Banner                   = `the universal command-line interface for SQL databases`
 	CommandHelpHint          = `hint: try "` + CommandName + ` --help" for more information.`
-	GoInstallHint            = "\ntry:\n\n  go install -tags 'most %s' github.com/xo/usql@%s\n\n"
+	GoInstallHint            = "\nthis build of usql leaves out the %s driver. try:\n\n  go install github.com/xo/usql@%s\n\n"
 	NotConnected             = `(not connected)`
 	HelpPrefix               = `help`
 	QuitPrefix               = `quit`
@@ -45,7 +45,8 @@ var (
 	PasswordChangeFailed     = `\password for %q failed: %v`
 	CouldNotSetVariable      = `could not set variable %q`
 	ChartParseFailed         = `\chart: invalid argument for %q: %v`
-	CommandIgnoredUseEndIf   = `%s command ignored; use \endif or %s to exit current \if block`
+	CommandIgnoredUseEndIf   = `\%s command ignored; use \endif or Ctrl-C to exit current \if block`
+	QueryIgnoredUseEndIf     = `query ignored; use \endif or Ctrl-C to exit current \if block`
 	UnrecognizedValueForCond = `unrecognized value %q for "\%s expression": Boolean expected`
 	// PasswordChangeSucceeded = `\password succeeded for %q`
 	HelpDesc          string

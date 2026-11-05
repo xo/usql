@@ -4,7 +4,6 @@
 // mysql driver. This package registers that driver under the name memsql.
 //
 // See: https://github.com/go-sql-driver/mysql
-// Group: base
 package memsql
 
 import (

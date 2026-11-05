@@ -1,4 +1,4 @@
-//go:build (all || most || vertica) && !no_vertica
+//go:build (!no_drivers || vertica) && !no_vertica
 
 package internal
 

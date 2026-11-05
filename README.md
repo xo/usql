@@ -71,7 +71,7 @@ Install `usql` from the [`xo/xo` tap][xo-tap] in the usual way with the [`brew`
 command][homebrew]:
 
 ```sh
-# install usql with most drivers
+# install usql
 $ brew install xo/xo/usql
 ```
 
@@ -92,7 +92,7 @@ Install `usql` from the [Arch Linux AUR][aur-bin] in the usual way with the
 [`yay` command][yay]:
 
 ```sh
-# install usql with most drivers
+# install usql
 $ yay -S usql-bin
 ```
 
@@ -101,7 +101,7 @@ $ yay -S usql-bin
 every driver:
 
 ```sh
-# build usql with most drivers from source
+# build usql from source
 $ yay -S usql
 ```
 
@@ -117,14 +117,12 @@ $ makepkg -si
 Install `usql` in the usual Go fashion:
 
 ```sh
-# install latest usql version with base drivers
+# install the latest usql version, with every driver
 $ go install github.com/xo/usql@latest
-
-# alternately, install usql with most drivers (see below for info about build tags)
-$ go install -tags most github.com/xo/usql@latest
 ```
 
-See [below for information](#building) on `usql` build tags.
+See [below for information](#building) on the build tags that leave drivers
+out.
 
 ### Installing via Docker
 
@@ -167,42 +165,35 @@ $ docker run --rm -it docker.io/usql/usql:0.21.5
 
 ## Building
 
-When building `usql` out-of-the-box with `go build` or `go install`, only the
-[`base` drivers][databases] for PostgreSQL, MySQL, SQLite3, Microsoft SQL
-Server, Oracle, CSVQ will be included in the build:
+usql has one build. A `go build` or `go install` with no build tags includes
+[every driver][databases] and the [chart renderer][chart-command]:
 
 ```sh
-# build/install with base drivers (PostgreSQL, MySQL, SQLite3, Microsoft SQL Server,
-# Oracle, CSVQ)
+# build/install with every driver
 $ go install github.com/xo/usql@main
 ```
 
-Other databases can be enabled by specifying the [build tag for their database
-driver][databases].
+Each driver has a build tag, which the [table of drivers][databases] lists in
+its `Scheme / Tag` column. The build tag `no_<tag>` leaves that driver out:
 
 ```sh
-# build/install with base, Avatica, and ODBC drivers
-$ go install -tags 'avatica odbc' github.com/xo/usql@main
+# build/install every driver except Avatica, Couchbase and PostgreSQL
+$ go install -tags 'no_avatica no_couchbase no_postgres' github.com/xo/usql@main
 ```
 
-For every build tag `<driver>`, there is also a `no_<driver>` build tag
-that will disable the driver:
+The build tag `no_drivers` leaves out every driver. Name a driver by its tag
+to put it back:
 
 ```sh
-# build/install most drivers, excluding Avatica, Couchbase, and PostgreSQL
-$ go install -tags 'most no_avatica no_couchbase no_postgres' github.com/xo/usql@main
+# build/install with only the SQLite3 driver
+$ go install -tags 'no_drivers sqlite3' github.com/xo/usql@main
+
+# build/install with only the PostgreSQL and MySQL drivers
+$ go install -tags 'no_drivers pgx mysql' github.com/xo/usql@main
 ```
 
-By specifying the build tags `most` or `all`, the build will include most, and
-all SQL drivers, respectively:
-
-```sh
-# build/install with most drivers (excludes CGO drivers and problematic drivers)
-$ go install -tags most github.com/xo/usql@main
-
-# build/install all drivers (includes CGO drivers and problematic drivers)
-$ go install -tags all github.com/xo/usql@main
-```
+`no_drivers` also leaves out the chart renderer. Add the tag `charts` to keep
+it. The tag `no_charts` leaves it out of any build.
 
 ## Database Support
 
@@ -216,8 +207,8 @@ The list of drivers that `usql` was built with can be displayed with the
 ```sh
 $ cd $GOPATH/src/github.com/xo/usql
 
-# build excluding the base drivers, and including cassandra, moderncsqlite and mysql
-$ go build -tags 'no_base cassandra moderncsqlite mysql'
+# build with only the cassandra, moderncsqlite and mysql drivers
+$ go build -tags 'no_drivers cassandra moderncsqlite mysql'
 
 # show built driver support
 $ ./usql -c '\drivers'
@@ -247,19 +238,11 @@ associated database, scheme / build tag, and scheme aliases:
 | Oracle Database      | `oracle`        | `or`, `ora`, `oci`, `oci8`, `odpi`, `odpi-c`     | [github.com/xo/oracle][d-oracle]                                                            |
 | SQLite3              | `sqlite3`       | `sq`, `sqlite`, `file`                           | [github.com/mattn/go-sqlite3][d-sqlite3] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup>   |
 | DuckDB               | `duckdb`        | `dk`, `ddb`, `duck`, `file`                      | [github.com/duckdb/duckdb-go/v2][d-duckdb] <sup>[†][f-cgo]</sup> <sup>[§][f-embedded]</sup> |
-| ClickHouse           | `clickhouse`    | `ch`                                             | [github.com/xo/dbimp/clickhouse][d-clickhouse]                                              |
-| CockroachDB          | `cockroachdb`   | `cr`, `cdb`, `crdb`, `cockroach`                 | [github.com/jackc/pgx/v5/stdlib][d-cockroachdb]                                             |
-| CrateDB              | `cratedb`       | `ct`, `crate`                                    | [github.com/jackc/pgx/v5/stdlib][d-cratedb]                                                 |
-| SingleStore MemSQL   | `memsql`        | `me`                                             | [github.com/go-sql-driver/mysql][d-memsql]                                                  |
-| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
-| Amazon Redshift      | `redshift`      | `rs`                                             | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
-| TiDB                 | `tidb`          | `ti`                                             | [github.com/go-sql-driver/mysql][d-tidb]                                                    |
-| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
-| Vitess Database      | `vitess`        | `vt`                                             | [github.com/go-sql-driver/mysql][d-vitess]                                                  |
 |                      |                 |                                                  |                                                                                             |
 | Alibaba MaxCompute   | `maxcompute`    | `mc`                                             | [github.com/xo/dbimp/maxcompute][d-maxcompute] <sup>[¶][f-hosted]</sup>                     |
 | Alibaba Tablestore   | `tablestore`    | `ot`, `ots`                                      | [github.com/xo/dbimp/tablestore][d-tablestore] <sup>[¶][f-hosted]</sup>                     |
 | Amazon Athena        | `athena`        | `s3`, `aws`, `awsathena`                         | [github.com/xo/dbimp/athena][d-athena] <sup>[¶][f-hosted]</sup>                             |
+| Amazon Redshift      | `redshift`      | `rs`                                             | [github.com/jackc/pgx/v5/stdlib][d-redshift] <sup>[¶][f-hosted]</sup>                       |
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                  | [github.com/xo/dbimp/avatica][d-avatica]                                                    |
 | Apache Drill         | `drill`         | `dl`                                             | [github.com/xo/dbimp/drill][d-drill]                                                        |
 | Apache Druid         | `druid`         | `dr`                                             | [github.com/xo/dbimp/druid][d-druid]                                                        |
@@ -271,7 +254,10 @@ associated database, scheme / build tag, and scheme aliases:
 | Azure Cosmos DB      | `cosmos`        | `cm`                                             | [github.com/xo/dbimp/cosmos][d-cosmos] <sup>[¶][f-hosted]</sup>                             |
 | Cassandra            | `cassandra`     | `ca`, `cql`, `scy`, `cass`, `scylla`, `datastax` | [github.com/xo/cassandra][d-cassandra]                                                      |
 | ChaiSQL              | `chai`          | `ci`, `genji`, `chaisql`                         | [github.com/chaisql/chai][d-chai] <sup>[§][f-embedded]</sup>                                |
+| ClickHouse           | `clickhouse`    | `ch`                                             | [github.com/xo/dbimp/clickhouse][d-clickhouse]                                              |
+| CockroachDB          | `cockroachdb`   | `cr`, `cdb`, `crdb`, `cockroach`                 | [github.com/jackc/pgx/v5/stdlib][d-cockroachdb]                                             |
 | Couchbase            | `couchbase`     | `n1`, `n1ql`                                     | [github.com/xo/dbimp/couchbase][d-couchbase]                                                |
+| CrateDB              | `cratedb`       | `ct`, `crate`                                    | [github.com/jackc/pgx/v5/stdlib][d-cratedb]                                                 |
 | CSVQ                 | `csvq`          | `cs`, `csv`, `tsv`, `json`                       | [github.com/mithrandie/csvq-driver][d-csvq] <sup>[§][f-embedded]</sup>                      |
 | Databend             | `databend`      | `dd`, `bend`                                     | [github.com/xo/dbimp/databend][d-databend]                                                  |
 | Databricks           | `databricks`    | `br`, `brick`, `bricks`, `databrick`             | [github.com/xo/dbimp/databricks][d-databricks] <sup>[¶][f-hosted]</sup>                     |
@@ -290,25 +276,22 @@ associated database, scheme / build tag, and scheme aliases:
 | ODBC                 | `odbc`          | `od`                                             | [github.com/xo/odbc][d-odbc]                                                                |
 | OpenSearch           | `opensearch`    | `os`, `open`                                     | [github.com/xo/dbimp/opensearch][d-opensearch]                                              |
 | PostgreSQL lib/pq    | `libpq`         | `pq`                                             | [github.com/lib/pq][d-libpq]                                                                |
+| Presto               | `presto`        | `pr`, `prestodb`                                 | [github.com/xo/dbimp/trino][d-presto]                                                       |
 | QuestDB              | `questdb`       | `qs`                                             | [github.com/jackc/pgx/v5/stdlib][d-questdb]                                                 |
 | rqlite               | `rqlite`        | `rq`                                             | [github.com/xo/dbimp/rqlite][d-rqlite]                                                      |
 | SAP HANA             | `saphana`       | `sa`, `sap`, `hana`, `hdb`                       | [github.com/SAP/go-hdb/driver][d-saphana]                                                   |
+| SingleStore MemSQL   | `memsql`        | `me`                                             | [github.com/go-sql-driver/mysql][d-memsql]                                                  |
 | Snowflake            | `snowflake`     | `sf`                                             | [github.com/xo/dbimp/snowflake][d-snowflake] <sup>[¶][f-hosted]</sup>                       |
 | SurrealDB            | `surrealdb`     | `sr`, `sur`, `surreal`                           | [github.com/xo/dbimp/surrealdb][d-surrealdb]                                                |
+| TiDB                 | `tidb`          | `ti`                                             | [github.com/go-sql-driver/mysql][d-tidb]                                                    |
+| Trino                | `trino`         | `tr`                                             | [github.com/xo/dbimp/trino][d-trino]                                                        |
 | Vertica              | `vertica`       | `ve`                                             | [github.com/vertica/vertica-sql-go][d-vertica]                                              |
+| Vitess Database      | `vitess`        | `vt`                                             | [github.com/go-sql-driver/mysql][d-vitess]                                                  |
 | VoltDB               | `voltdb`        | `vo`, `vdb`, `volt`                              | [github.com/VoltDB/voltdb-client-go/voltdbclient][d-voltdb]                                 |
 | YDB                  | `ydb`           | `yd`                                             | [github.com/ydb-platform/ydb-go-sdk/v3][d-ydb]                                              |
 |                      |                 |                                                  |                                                                                             |
-|                      |                 |                                                  |                                                                                             |
-|                      |                 |                                                  |                                                                                             |
-| Apache H2            | `h2`            |                                                  | [github.com/jmrobles/h2go][d-h2]                                                            |
-| GizmoSQL             | `gizmosql`      | `gz`, `gizmo`                                    | [github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver][d-gizmosql]                  |
-|                      |                 |                                                  |                                                                                             |
-| **NO DRIVERS**       | `no_base`       |                                                  | _no base drivers (useful for development)_                                                  |
-| **MOST DRIVERS**     | `most`          |                                                  | _all stable drivers_                                                                        |
-| **ALL DRIVERS**      | `all`           |                                                  | _all drivers, excluding bad drivers_                                                        |
-| **BAD DRIVERS**      | `bad`           |                                                  | _bad drivers (broken/non-working drivers)_                                                  |
-| **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                  | _exclude driver with `<tag>`_                                                               |
+| **NO DRIVERS**       | `no_drivers`    |                                                  | _leave out every driver that is not named by its tag_                                       |
+| **NO &lt;TAG&gt;**   | `no_<tag>`      |                                                  | _leave out the driver with `<tag>`_                                                         |
 
 [d-arangodb]: https://github.com/xo/dbimp
 [d-athena]: https://github.com/xo/dbimp
@@ -332,8 +315,6 @@ associated database, scheme / build tag, and scheme aliases:
 [d-exasol]: https://github.com/xo/dbimp
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-flightsql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
-[d-gizmosql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
-[d-h2]: https://github.com/jmrobles/h2go
 [d-hive]: https://github.com/beltran/gohive
 [d-impala]: https://github.com/sclgo/impala-go
 [d-influxdb]: https://github.com/xo/dbimp
@@ -650,26 +631,26 @@ $ usql sqlserver://sa:pass@localhost
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-ms:sa@localhost=> select * from authors;
+ms:sa@localhost/master=> select * from authors;
  author_id |     name
 -----------+--------------
          1 | Isaac Asimov
          2 | Stephen King
 (2 rows)
 
-ms:sa@localhost=> select title from books
-ms:sa@localhost-> where author_id = 2
-ms:sa@localhost-> \p
+ms:sa@localhost/master=> select title from books
+ms:sa@localhost/master-> where author_id = 2
+ms:sa@localhost/master-> \p
 select title from books
 where author_id = 2
-ms:sa@localhost-> \g
+ms:sa@localhost/master-> \g
  title
 --------
  Carrie
  Cujo
 (2 rows)
 
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 A command takes one or more parameters. A parameter can be quoted with either
@@ -690,6 +671,9 @@ A command takes one or more parameters. A parameter can be quoted with either
   text of the statement, as in `psql`.
 - Input that is not typed, from `-c`, `-f`, a pipe or `\i`, runs a last
   statement that has no `;`.
+- `\if`, `\elif`, `\else` and `\endif` choose the lines that run, as in
+  `psql`. A branch that does not run sends no statement, runs no other meta
+  command and replaces no variable, and the prompt's `%R` shows `@` there.
 
 #### Line editing
 
@@ -965,14 +949,14 @@ When a script variable `NAME` has been `\set`, then `:NAME`, `:'NAME'`, and
 
 <!-- EXAMPLE interpolate -->
 ```sh
-ms:sa@localhost=> \set FOO 'Stephen King'
-ms:sa@localhost=> select * from authors where name = :'FOO';
+ms:sa@localhost/master=> \set FOO 'Stephen King'
+ms:sa@localhost/master=> select * from authors where name = :'FOO';
  author_id |     name
 -----------+--------------
          2 | Stephen King
 (1 row)
 
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 Where a runtime variable is used as `:'NAME'` or `:"NAME"` the interpolated
@@ -980,11 +964,11 @@ value will be quoted using `'` or `"` respectively:
 
 <!-- EXAMPLE interpolate-quoted -->
 ```sh
-ms:sa@localhost=> \set TBLNAME authors
-ms:sa@localhost=> \set COLNAME name
-ms:sa@localhost=> \set FOO 'Isaac Asimov'
-ms:sa@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
-ms:sa@localhost->
+ms:sa@localhost/master=> \set TBLNAME authors
+ms:sa@localhost/master=> \set COLNAME name
+ms:sa@localhost/master=> \set FOO 'Isaac Asimov'
+ms:sa@localhost/master=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost/master->
 ```
 
 The query buffer and interpolated values can be displayed with `\p` and
@@ -992,12 +976,12 @@ The query buffer and interpolated values can be displayed with `\p` and
 
 <!-- EXAMPLE interpolate-print -->
 ```sh
-ms:sa@localhost=> select * from :TBLNAME where :"COLNAME" = :'FOO'
-ms:sa@localhost-> \p
+ms:sa@localhost/master=> select * from :TBLNAME where :"COLNAME" = :'FOO'
+ms:sa@localhost/master-> \p
 select * from authors where "name" = 'Isaac Asimov'
-ms:sa@localhost-> \raw
+ms:sa@localhost/master-> \raw
 select * from :TBLNAME where :"COLNAME" = :'FOO'
-ms:sa@localhost->
+ms:sa@localhost/master->
 ```
 
 <hr/>
@@ -1008,15 +992,15 @@ ms:sa@localhost->
 
 <!-- EXAMPLE not-interpolated -->
 ```sh
-ms:sa@localhost=> select ':FOO' as foo;
+ms:sa@localhost/master=> select ':FOO' as foo;
  foo
 ------
  :FOO
 (1 row)
 
-ms:sa@localhost=> \p
+ms:sa@localhost/master=> \p
 select ':FOO' as foo;
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 <hr/>
@@ -1032,7 +1016,7 @@ or [other commands][commands]:
 (not connected)=> \cset my_conn sqlserver://sa:pass@localhost
 (not connected)=> \c my_conn
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 Connection variables are not interpolated into queries. See the [configuration
@@ -1113,6 +1097,7 @@ on_error_stop is on
 (not connected)=> \uset
 echo_hidden           off
 editor                ""
+encoding              utf-8
 fetch_count           0
 on_error_stop         on
 pager                 "less -R"
@@ -1134,6 +1119,20 @@ A setting can also be given on the command line with `--uset NAME=VALUE`, or
 `USQL_PAGER`, `PAGER`, `USQL_EDITOR`, `EDITOR`, `VISUAL`, `USQL_SSLMODE`,
 `USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS` give the first value of
 their settings.
+
+A script read with `-f`, `\i`, `\ir`, `init.sql` or from a pipe is UTF-8 unless
+it starts with the byte order mark of UTF-16 or UTF-32, as a file that Windows
+Notepad or PowerShell saved can. For a script in another encoding, set
+`encoding` to its name in the [WHATWG Encoding Standard][whatwg-encoding], such
+as `windows-1252`, `shift_jis`, `euc-kr` or `gb18030`:
+
+```sh
+$ usql --uset encoding=windows-1252 -f legacy.sql pg://
+```
+
+A file takes the setting when it is opened, and a pipe when it is first read. A
+script that is not valid UTF-8 in its encoding stops `usql` with an error that
+names the file and the line.
 
 Use the `\? variables` [command][commands] to display help information and to
 list the variables and the settings recognized by `usql`:
@@ -1397,7 +1396,7 @@ $ usql sqlserver://sa:pass@localhost
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-ms:sa@localhost=> select * f
+ms:sa@localhost/master=> select * f
  1 from
  2 fetch
  3 full outer join
@@ -1412,7 +1411,7 @@ $ usql sqlserver://sa:pass@localhost
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-ms:sa@localhost=> \g
+ms:sa@localhost/master=> \g
  1 \g        4 \gset
  2 \go       5 \gexec
  3 \gx       6 \getenv
@@ -1435,23 +1434,23 @@ $ usql sqlserver://sa:pass@localhost
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
 Type "help" for help.
 
-ms:sa@localhost=> \pset time
+ms:sa@localhost/master=> \pset time
 Time display is "RFC3339Nano" ("2006-01-02T15:04:05.999999999Z07:00").
-ms:sa@localhost=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
+ms:sa@localhost/master=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
             stamp
 -----------------------------
  2026-10-31T09:41:27.123456Z
 (1 row)
 
-ms:sa@localhost=> \pset time Kitchen
+ms:sa@localhost/master=> \pset time Kitchen
 Time display is "Kitchen" ("3:04PM").
-ms:sa@localhost=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
+ms:sa@localhost/master=> select cast('2026-10-31 09:41:27.123456' as datetime2) as stamp;
  stamp
 --------
  9:41AM
 (1 row)
 
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 `usql`'s time format supports any [Go supported time format][go-time], or can
@@ -1501,7 +1500,7 @@ $ export USQL_SHOW_HOST_INFORMATION=false
 $ usql sqlserver://sa:pass@localhost
 Type "help" for help.
 
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 `show_host_information` is a [setting][settings] of `usql`, and is set with
@@ -1512,11 +1511,11 @@ ms:sa@localhost=>
 $ usql --uset show_host_information=false sqlserver://sa:pass@localhost
 Type "help" for help.
 
-ms:sa@localhost=> \uset show_host_information true
+ms:sa@localhost/master=> \uset show_host_information true
 show_host_information is true
-ms:sa@localhost=> \connect sqlserver://sa:pass@localhost
+ms:sa@localhost/master=> \connect sqlserver://sa:pass@localhost
 Connected with driver sqlserver (Microsoft SQL Server 2025 17.0.5005.3, RTM-CU9, Enterprise Developer Edition (64-bit))
-ms:sa@localhost=>
+ms:sa@localhost/master=>
 ```
 
 #### Terminal Graphics
@@ -1549,11 +1548,11 @@ directly in the terminal:
 
 See [the section on the `\chart` meta command][chart-command] for details.
 
-Charts are not part of a default build. The renderer runs Apache ECharts in a
-JavaScript engine and rasterizes the result with an SVG renderer, which together
-add about 12 MiB to the binary, so it is behind the `charts` build tag. Build
-with `-tags charts`, or with `-tags all`, to include it. A build without it
-reports that it has no chart renderer.
+The renderer runs Apache ECharts in a JavaScript engine and rasterizes the
+result with an SVG renderer, which together add about 12 MiB to the binary.
+Every build has it, unless its build tags leave it out. The tag `no_charts`
+leaves it out, and so does `no_drivers` unless the tag `charts` is also given.
+A build without it reports that it has no chart renderer.
 
 ##### Enabling/Disabling Terminal Graphics
 
@@ -1658,8 +1657,9 @@ The following are additional notes and miscellania related to `usql`:
 
 ### Release Builds
 
-[Release builds][releases] are built with the `most` build tag and with
-additional [SQLite3 build tags (see: `build.sh`)](build.sh).
+[Release builds][releases] include every driver, and are built with
+additional [SQLite3 build tags (see: `build.sh`)](build.sh). The 32 bit arm
+build leaves out ChaiSQL and DuckDB.
 
 ### macOS
 
@@ -1687,6 +1687,35 @@ Running `brew update --auto-update`...
 $ usql
 (not connected)=>
 ```
+
+### ODBC FAQ
+
+#### Why does the SQLite ODBC driver crash on Linux?
+
+On Linux, the first query through the SQLite ODBC driver crashes `usql` in a
+build that links both the `sqlite3` driver and DuckDB, as a build with every
+driver does. The DuckDB bindings export the `sqlite3_*` functions of the SQLite
+that the `sqlite3` driver carries. The SQLite ODBC driver then gets some of its
+`sqlite3_*` functions from `usql` and some from the system SQLite, and the two
+copies do not match. The [odbc project explains it in full][odbc-crash].
+
+If you need the SQLite ODBC driver, build with the tag `libsqlite3`. The
+`sqlite3` driver then uses the SQLite of the system, and exports no `sqlite3_*`
+function. Add the tag to a build with every driver, or build with only the
+ODBC driver:
+
+```sh
+# every driver, with the SQLite of the system
+$ go install -tags libsqlite3 github.com/xo/usql@main
+
+# only the ODBC driver
+$ go install -tags 'no_drivers odbc libsqlite3' github.com/xo/usql@main
+```
+
+The other ODBC drivers work without the tag. The PostgreSQL Unicode driver was
+checked against PostgreSQL 18.
+
+[odbc-crash]: https://github.com/xo/odbc#why-does-my-program-crash-when-it-links-go-sqlite3-and-duckdb
 
 ### Couchbase FAQ
 
@@ -1759,6 +1788,7 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [termgraphics]: #terminal-graphics "Terminal Graphics"
 [timefmt]: #time-formatting "Time Formatting"
 [init]: #startup-script "Startup Script"
+[whatwg-encoding]: https://encoding.spec.whatwg.org/#names-and-labels "WHATWG Encoding Standard: names and labels"
 [history]: #history "History"
 [variables]: #variables "Variables"
 [settings]: #settings "Settings"

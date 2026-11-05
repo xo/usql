@@ -1,7 +1,15 @@
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    # every night, for every database that dbrun starts in CI
+    - cron: "23 4 * * *"
+  workflow_dispatch:
 name: Test usql
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # The event is in the group, so that the nightly run and a push to main do
+  # not cancel each other.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
   # Build and run the tests that need no database, on every platform usql
@@ -96,9 +104,8 @@ jobs:
             ./metacmd/complete \
             ./metacmd/describe \
             ./drivers
-      # The chart renderer is behind the charts build tag, so the job above
-      # never links it. Test it here: it is the one package whose failure the
-      # rest of the matrix cannot see, and it needs no database.
+      # The step above names its packages, and the chart renderer is not one
+      # of them. Test it here. It needs no database.
       - name: Test the chart renderer
         shell: bash
         run: go test ./metacmd/charts/...
@@ -124,14 +131,30 @@ jobs:
         with:
           go-version: stable
       - name: Record and compare
-        run: go test -v -tags "sqlite3 no_base" -run TestCLI .
+        run: go test -v -tags "sqlite3 no_drivers" -run TestCLI .
 
-  # Build with every driver enabled. This is the build that breaks when a
-  # driver is added or a dependency moves, and it is slow, so it is its own
-  # job rather than part of the matrix.
-  build-all:
-    name: Build with all drivers
+  # Build what the database jobs run, once, and choose the databases.
+  #
+  # dbmeta's dbrun starts every database, which is hard rule 7, and the
+  # workflow names no database. dbrun is built from the release of dbmeta
+  # that go.mod pins, so that the list of databases matches the models that
+  # usql reads.
+  #
+  # On a push, the matrix is the databases that have a recording in
+  # drivers/testdata/dbrun, so the list lives in the recordings. dbrun fails
+  # on a name it does not know, so a recording of a release that dbmeta
+  # dropped stops this job. At night, and when run by hand, the matrix is
+  # dbrun's tiers tested and nightly: every database that runs on GitHub's
+  # runners. A database with no recording runs the commands and compares
+  # nothing.
+  #
+  # Linking every driver takes most of the time of a job, so the binaries are
+  # built here and each job of the matrix downloads them.
+  databases:
+    name: Build dbrun and the database tests
     runs-on: ubuntu-latest
+    outputs:
+      servers: ${{ steps.list.outputs.servers }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -143,5 +166,110 @@ jobs:
         run: |
           sudo apt-get -qq update
           sudo apt-get install -y build-essential libicu-dev unixodbc unixodbc-dev
+      - name: Read the release of dbmeta
+        id: dbmeta
+        run: echo "version=$(go list -m -f '{{.Version}}' github.com/xo/dbmeta)" >> "$GITHUB_OUTPUT"
+      - name: Checkout dbmeta
+        uses: actions/checkout@v7
+        with:
+          repository: xo/dbmeta
+          ref: ${{ steps.dbmeta.outputs.version }}
+          path: dbmeta
+      # usql is for dbrun fixture, which loads the fixture of an embedded
+      # database with usql. The tests are built with the tags of a release.
       - name: Build
-        run: ./build.sh -b -t all
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          (cd dbmeta/test && go build -o "$RUNNER_TEMP/bin/dbrun" ./cmd/dbrun)
+          go build -tags "$(./build.sh -T)" -o "$RUNNER_TEMP/bin/usql" .
+          go test -tags "$(./build.sh -T)" -c -o "$RUNNER_TEMP/bin/drivers.test" ./drivers
+      - name: Upload them
+        uses: actions/upload-artifact@v7
+        with:
+          name: databases-bin
+          path: |
+            ${{ runner.temp }}/bin/dbrun
+            ${{ runner.temp }}/bin/usql
+            ${{ runner.temp }}/bin/drivers.test
+          retention-days: 1
+          if-no-files-found: error
+      - name: Choose the databases
+        id: list
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$EVENT" in
+            schedule|workflow_dispatch)
+              selectors="tested nightly"
+              ;;
+            *)
+              selectors=$(cd drivers/testdata/dbrun && ls -- *.txt | sed 's/\.txt$//')
+              ;;
+          esac
+          servers=$("$RUNNER_TEMP/bin/dbrun" list --json --names $selectors)
+          echo "$servers"
+          echo "servers=$servers" >> "$GITHUB_OUTPUT"
+
+  # One job for each database. dbrun starts it and loads dbrun's fixture
+  # examples, the tables authors and books. Then the tests of drivers that
+  # need a database run against it: TestConnect on every database, and
+  # TestDescribe and TestCopy on each that holds the fixture.
+  database:
+    name: ${{ matrix.server }}
+    needs: databases
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        server: ${{ fromJSON(needs.databases.outputs.servers) }}
+    env:
+      DBMETA_RUNNER: docker
+      DBMETA_OWNER_NAME: usql
+      USQL_TEST_NAME: ${{ matrix.server }}
+    steps:
+      # The tests read drivers/testdata at run time.
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Download the binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: databases-bin
+          path: ${{ runner.temp }}/bin
+      # The artifact does not carry the mode bit. dbrun fixture finds usql
+      # on the path. An embedded database is a file in DBMETA_EMBEDDED_STATE,
+      # and the directory must exist before usql opens the file.
+      - name: Prepare
+        run: |
+          chmod +x "$RUNNER_TEMP/bin/dbrun" "$RUNNER_TEMP/bin/usql" "$RUNNER_TEMP/bin/drivers.test"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          mkdir -p "$RUNNER_TEMP/embedded"
+          echo "DBMETA_EMBEDDED_STATE=$RUNNER_TEMP/embedded" >> "$GITHUB_ENV"
+      # The URL holds the password of the server. It goes to the next steps
+      # through GITHUB_ENV, which the log does not show, and add-mask hides
+      # it in anything that prints it, such as the line of dbrun start.
+      - name: Read the URL of ${{ matrix.server }}
+        run: |
+          url=$(dbrun dsn --json "$USQL_TEST_NAME" | jq -r '.[0].url')
+          pass=$(printf '%s' "$url" | python3 -c 'import sys, urllib.parse as p; print(p.urlsplit(sys.stdin.read()).password or "")')
+          if [ -n "$pass" ]; then
+            echo "::add-mask::$pass"
+            echo "::add-mask::$(printf '%s' "$pass" | python3 -c 'import sys, urllib.parse as p; print(p.unquote(sys.stdin.read()))')"
+          fi
+          echo "USQL_TEST_URL=$url" >> "$GITHUB_ENV"
+      - name: Start ${{ matrix.server }}
+        run: dbrun start "$USQL_TEST_NAME"
+      # dbrun has the fixture for some products only. On the others the
+      # tests that need it skip, unless the database has a recording.
+      - name: Load the fixture examples
+        run: |
+          if ! dbrun fixture examples "$USQL_TEST_NAME"; then
+            echo "::notice::dbrun did not load the fixture examples on $USQL_TEST_NAME"
+          fi
+      - name: Test against ${{ matrix.server }}
+        working-directory: drivers
+        run: |
+          "$RUNNER_TEMP/bin/drivers.test" -test.v -test.count=1 \
+            -test.run '^(TestConnect|TestDescribe|TestCopy)$'
+      - name: Show the log of ${{ matrix.server }}
+        if: failure()
+        run: dbrun logs "$USQL_TEST_NAME" || true

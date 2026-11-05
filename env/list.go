@@ -139,6 +139,10 @@ var settingNames = []varName{
 		`display host information when connecting to a database`,
 	},
 	{
+		`encoding`,
+		`encoding of a script read with -f, \i or from a pipe, such as windows-1252 or shift_jis (default utf-8)`,
+	},
+	{
 		`sslmode`,
 		`when set to 'retry', allows connections to attempt to reconnect when no ?sslmode= was specified on the url`,
 	},

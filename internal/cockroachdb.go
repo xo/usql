@@ -1,4 +1,4 @@
-//go:build (!no_base || cockroachdb) && !no_cockroachdb
+//go:build (!no_drivers || cockroachdb) && !no_cockroachdb
 
 package internal
 

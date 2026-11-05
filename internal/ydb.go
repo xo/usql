@@ -1,4 +1,4 @@
-//go:build (all || most || ydb) && !no_ydb
+//go:build (!no_drivers || ydb) && !no_ydb
 
 package internal
 

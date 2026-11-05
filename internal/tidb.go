@@ -1,4 +1,4 @@
-//go:build (!no_base || tidb) && !no_tidb && !no_mysql
+//go:build (!no_drivers || tidb) && !no_tidb && !no_mysql
 
 package internal
 

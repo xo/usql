@@ -598,6 +598,11 @@ by it.
 
 ## W13. Shrink the charts stack
 
+Update, 2026-11-05: usql has one build, and the chart renderer is in it, so
+this now affects every build and every release. `no_charts` leaves it out, and
+so does `no_drivers` unless the build names `charts`. The text below is from
+before the change.
+
 Charts are behind the `charts` build tag as of 2026-09-22, so this only affects
 a build made with `-tags charts` or `-tags all`. Measured on linux/amd64 by
 diffing a `-tags charts` build against a `-tags none` build, both stripped with
@@ -734,9 +739,10 @@ builds on top of it.
 141 and 142, LaTeX and troff table output, both for psql parity. These belong
 to tblfmt rather than usql.
 
-147, `\if`, `\elif`, `\else` and `\end`. Note that psql's condition evaluation
-is deliberately simplistic, treating any non-empty string as true, so parity
-here is easier than it looks.
+147, `\if`, `\elif`, `\else` and `\endif`. Done on 2026-11-05 as part of W36.
+psql reads the expression as a boolean, and any other value is an error. An
+earlier note here said that psql reads any string that is not empty as true.
+That was wrong.
 
 158, `\ef` and `\ev`, which need introspection in place first.
 
@@ -1249,7 +1255,7 @@ same as prompt1's, and `%R` shows `-` in it. A row inside a string or a
 comment still shows `-`, because rline draws one prompt for all the rows after
 the first. prompt3 and `%w` are open.
 
-## W27. Retire, replace and regroup drivers
+## W27. Retire, replace and regroup drivers: Done
 
 Source: a review of every driver on 2026-09-27, with Gemini. DeepSeek was asked
 five times and returned nothing each time. Ken made the decisions below the
@@ -1324,6 +1330,12 @@ copy of Netezza is available to test with.
 Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `AGENTS.md`. Add the line to each
 as they are touched.
+
+Done on 2026-11-05. usql has one build, and the groups and the `Group:` line
+are gone, so the paragraph above no longer applies. Rule 10 of `AGENTS.md`
+now says that every driver is in the one build. h2, which went to `bad` as
+triage, is removed, and so is gizmosql, the other driver in `bad`. dburl
+v0.56.0 drops both schemes. Everything else above was already done.
 
 ## W28. Statement handling for ODBC, csvq, Athena and Cosmos
 
@@ -1478,7 +1490,15 @@ A describe command now reads a name between double quotes as it is written,
 as psql does. Before, usql removed the quotes before the pattern was folded,
 so `\d "Foo"` looked up `foo`.
 
-## W32. Review the size that each driver adds to the binary
+## W32. Review the size that each driver adds to the binary: Dropped
+
+Dropped on 2026-11-05. Ken decided that usql has one build, with every driver,
+and that DuckDB stays in it. So the question of a group of its own for DuckDB
+is closed, and no driver can move between groups. The measurement below is the
+last one. `./size.sh`, which takes no `-g` now, still measures each driver of
+the one build and the chart renderer, which is now in that build. A driver
+whose share grows a lot is a question for Ken: keep it, or find a smaller
+module.
 
 Source: Ken, on 2026-10-01. Measure again at each of these times:
 
@@ -1724,7 +1744,10 @@ Oracle's `/` and T-SQL's GO are usql's to handle, as today.
   is never scanned again. That fixes the splicing of `:'x'` and the colon of
   `::`. `:'x'` and `:"x"` double the quote in the value, as psql does.
 - `\if`, `\elif`, `\else` and `\endif` get psql's meaning: a stack, and
-  an inactive branch runs nothing and expands nothing.
+  an inactive branch runs nothing and expands nothing. Done on 2026-11-05.
+  `handler/cond.go` holds the stack. The terminal, the text of `-c`, and each
+  file of `-f` and `\i` have a stack of their own, and `%R` shows `@` in a
+  branch that does not run.
 - help, quit and exit are recognized when an entry is only that word.
 - CQL batches keep the joining that usql does today, from dbmeta's Batches.
 - The stmt package goes after a differential test passes. The test runs the
@@ -1754,7 +1777,7 @@ Ken also decided that usql does not add T-SQL's GO. Taken as defaults, for
 Ken to change: Oracle's `/` stays out too, as in psql, and the package that
 replaces stmt is named `input`.
 
-## W37. Bring back the tests against databases, and their recordings
+## W37. Bring back the tests against databases, and their recordings: Done
 
 Source: Ken, on 2026-10-02. Due before the next release.
 
@@ -1783,7 +1806,37 @@ of usql's plumbing is updated first. Then:
   TestCLI in `testdata/cli`.
 - Cover `\copy` between two databases again.
 
-## W38. Run CI on every database, through dbmeta and dbrun
+Done on 2026-11-05, on dbmeta v0.32.0. `drivers/dbrun_test.go` holds three
+tests. Each reads the URL of the database from `USQL_TEST_URL`, which is the
+field `url` of `dbrun dsn --json`, and skips when it is not set. dbrun's
+variables such as `DBMETA_MYSQL` hold the connection string of the Go driver,
+which is not a URL for MySQL or for an embedded database, and hard rule 2
+keeps the parsing of one out of usql. `USQL_TEST_NAME` holds the dbrun name,
+such as `postgres-18`, which names the recording.
+
+- `TestConnect` connects and reads the version, on any database.
+- `TestDescribe` runs `\dt`, `\d` and `\di` on the tables `authors` and
+  `books`, and one query, and compares the output with
+  `drivers/testdata/dbrun/NAME.txt`. A recording is per release, because the
+  output differs between releases. A database with no recording runs the
+  commands and compares nothing.
+- `TestCopy` copies `books` with `\copy` into a new SQLite database, and back
+  into a new table of the database.
+
+The fixture is dbrun's `examples`, which `dbrun fixture examples` loads over
+the connection. It is the fixture of the README examples, and dbrun has it for
+PostgreSQL, MySQL, MariaDB, SQL Server, Oracle, SQLite and DuckDB. On another
+database the two tests that need it skip. On a database that has a recording
+they fail without it. The commands name the two tables, because a server or an
+embedded file of dbrun can hold the objects of other tests.
+
+Recorded on postgres-18, sqlserver-2025, mysql-26.7, sqlite3, moderncsqlite
+and duckdb. The test replaces the password, and the hexadecimal end of the
+names that SQL Server makes up for a constraint, with the same number of `X`,
+so that the columns stay aligned. The sessions of TestCLI in `testdata/cli`
+use SQLite in memory, need no server, and pass as they are recorded.
+
+## W38. Run CI on every database, through dbmeta and dbrun: Done
 
 Source: Ken, on 2026-10-02. Due before the next release.
 
@@ -1810,6 +1863,32 @@ before the other. dburl suggests pinning both in the lint job, such as Go 1.27.1
 and golangci-lint v2.14.0, bumping them together on purpose, and keeping the
 test job on `stable` so that a new Go release still shows test breakage. usql
 runs no linter today. Ken has not decided.
+
+Done on 2026-11-05, in `.github/workflows/test.yml`. It has not run on GitHub
+yet, so its first run is the check. The jobs `test` and `terminal` stay as
+they were, and `terminal` runs TestCLI. `release.yml` keeps the static builds
+and the release archives. Two jobs are new:
+
+- `databases` checks out dbmeta at the release that `go.mod` pins, and builds
+  `dbrun`, `usql` and the test binary of `drivers` once. It chooses the
+  databases. On a push, they are the names of the recordings in
+  `drivers/testdata/dbrun`. At night and when run by hand, they are dbrun's
+  tiers `tested` and `nightly`, 115 releases on dbmeta v0.32.0. The workflow
+  names no database. dbrun fails on a name it does not know, so a recording of
+  a release that dbmeta drops stops the job.
+- `database` runs one job for each. dbrun starts the database and loads the
+  fixture `examples`, and the job runs W37's tests. The password is masked in
+  the log, and reaches the tests through `GITHUB_ENV`.
+
+The push set is small on purpose: the newest PostgreSQL, SQL Server and MySQL,
+and the three embedded databases, which start nothing. A database that has no
+recording is still tested every night by `TestConnect`, and a fault there
+shows in the nightly run.
+
+Not done: the manual checks of `docs/RELEASE.md` for changing passwords are
+still manual, and the describe commands are automated only on the two tables
+of the fixture. No lint job was added, because Ken has not decided the note
+above.
 
 ## W39. Move Avatica to dbimp's driver: Done
 
@@ -1845,6 +1924,16 @@ table, a duplicate key, a rollback and a commit, and a wrong password.
 avatica-1.28.0 was not run.
 
 ## W40. Move ODBC, Trino and Presto to the drivers that dburl now names
+
+Update, 2026-11-05: Ken decided that the build is not changed for the crash
+at the end of this item. The release keeps go-sqlite3 with its own SQLite, and
+DuckDB, in its one build. The README has an ODBC FAQ that explains the crash,
+links the explanation of the odbc project, and says to build with the tag
+`libsqlite3`, or with `-tags 'no_drivers odbc libsqlite3'`. ODBC with the
+other ODBC drivers works without the tag: Ken checked the PostgreSQL Unicode
+driver against PostgreSQL 18. The crash no longer stops the release. What is
+left of this item is the Homebrew formula in `xo/homebrew-xo` and the README
+paragraph about `--with-odbc`, because ODBC is no longer an extra.
 
 Progress on 2026-10-07, on dburl v0.44.0, dbimp v0.13.0 and xo/odbc v0.1.0.
 Trino and Presto are moved and checked. ODBC is moved, and it crashes in the
@@ -2045,8 +2134,9 @@ What the move changes:
   `clickhouse.Error`, and a wrong password has the code 194 or 516. usql's
   `IsPasswordErr` takes only 516 today.
 - `SELECT version()` gives the version, which dbmeta already reads.
-- The tests that started ClickHouse in a container are gone with W37. They
-  come back on `dbrun`.
+- The tests that started ClickHouse in a container are gone. W37's
+  `TestConnect` runs on ClickHouse every night on `dbrun`. dbrun has no
+  fixture `examples` for it, so `TestDescribe` and `TestCopy` skip.
 
 Size, from W32: `clickhouse-go` adds 4.8 MB to a release build, with ch-go.
 dbimp's driver would drop most of that, and the answer depends on what it
@@ -2219,6 +2309,14 @@ details. Report it upstream.
 ## Lowest priority
 
 ### Confirm that the non-Windows, non-macOS, non-Linux builds now work
+
+Update, 2026-11-05: usql has one build, and the chart renderer is in it, so a
+default build links resvg again on every platform. On a platform that resvg
+has no library for, the build needs `-tags no_charts`, or a `Build` constraint
+on the charts feature in `gen.go` that names the six platforms of resvg. That
+is a question for Ken. DuckDB has been in the default build since 2026-09-23,
+so such a platform can need `no_duckdb` as well. The text below is
+from before the change.
 
 Charts are behind the `charts` build tag as of this change, so resvg is linked
 only by `go build -tags charts` and `go build -tags all`. A default build and a
@@ -2407,8 +2505,9 @@ kind of PostgreSQL object, `commands.txt` lists 179 commands in their forms, and
 `run.sh` runs them on psql, the old usql and the new one, as csv.
 `compare.py` lists the columns that psql has and usql lacks, `values.py` lists
 the cells that differ for columns both have, and `sections.py` compares the
-sections of `\d+ NAME`. It starts no database, so it is not a test (rule 6), and
-W37 will turn its results into goldens.
+sections of `\d+ NAME`. It starts no database, so it is not a test (rule 6).
+W37 records a smaller set of describe commands as goldens, in
+`drivers/testdata/dbrun`, and this harness stays the comparison with psql.
 
 First run, 2026-10-08, on postgres-18 with dbmeta v0.4.0:
 
@@ -2684,6 +2783,20 @@ nothing else. `drivers.Available` could list every dburl scheme whose driver
 database/sql has registered, and `gen.go` could write the blank import of the
 dbimp package into `internal/` for a scheme with no hooks, so that no
 `drivers/<name>` package exists for it.
+
+Update, 2026-11-05: the next reduction is done, at Ken's request, together with
+the move to one build. Every driver whose package held only a blank import and
+`drivers.Register(name, drivers.Driver{})` lost its package. That was 36
+drivers, the eight above and also the drivers of dbimp, Oracle, Cassandra,
+ODBC, DuckDB, ChaiSQL, Firebird, FlightSQL, Hive and VoltDB. Each is an entry
+in `plainDrivers` in `gen.go`, which holds its build tag, a build constraint
+where it needs one, and in a comment what usql knows of it. `gen.go` takes the
+package to import and the name to register from the dburl scheme of the tag,
+and writes both into `internal/<tag>.go`, so `\drivers` and
+`drivers.Available` list the same drivers as before. The tests of Avatica,
+Cassandra, ODBC and Oracle moved to `drivers/refused_test.go`. A driver with a
+hook keeps its package, and so do the drivers that register another driver
+under their own scheme, such as tidb and cockroachdb.
 
 
 ## W53. Move the configuration facts of the drivers into dbmeta: Done
@@ -3205,6 +3318,10 @@ Open:
   `TestLanguageClickHouse` covers both forms.
 
 ## W66. Drivers say themselves that the server refused the credential
+
+Update, 2026-11-05: Oracle, Cassandra and ODBC have no package under `drivers`
+now (W52). The tests named below that check the prompt, and the one of
+Avatica, are in `drivers/refused_test.go`.
 
 Source: Ken, on 2026-11-02. usql prompts for a password when the server
 refuses the credential, and `drivers.IsPasswordErr` decides it. A dbimp driver

@@ -24,6 +24,7 @@ import (
 	"unicode"
 
 	"github.com/go-git/go-billy/v5"
+	"github.com/kenshaw/rasterm"
 	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
 	"github.com/xo/rline"
@@ -78,6 +79,10 @@ type Handler struct {
 	singleLineMode bool
 	// buf is psql's query buffer.
 	buf feed.Buffer
+	// cond is the stack of \if blocks of src. A branch that does not run
+	// sends no statement, and runs no meta command other than \if, \elif,
+	// \else and \endif.
+	cond conds
 	// lastExec is the last executed query statement.
 	lastExec string
 	// lastRaw is the last executed raw query statement.
@@ -220,22 +225,41 @@ func (h *Handler) Run() error {
 		// the pager of the last entry must exit before the next line is read
 		h.endPage()
 		h.checkHistory(stderr)
+		// the keys typed while rasterm asked the terminal whether it draws
+		// images go to the line editor, before the terminal
+		if b := rasterm.PendingInput(); h.iactive && len(b) != 0 {
+			h.l.PushInput(b)
+		}
 		it, err := h.src.Next()
 		switch {
 		case errors.Is(err, rline.ErrInterrupted):
 			h.buf.Reset()
 			h.src.Reset()
+			// Ctrl-C also leaves the innermost \if block, as in psql
+			if len(h.cond) != 0 {
+				h.cond = h.cond[:len(h.cond)-1]
+				fmt.Fprintln(stderr, "error:", text.ErrIfEscaped)
+			}
 			continue
 		case errors.Is(err, io.EOF):
 			// input that is not typed, from -c, -f, a pipe or \i, sends what
-			// is left in the buffer at its end, as psql does
-			if (h.singleLineMode || !h.iactive) && !h.buf.Empty() {
+			// is left in the buffer at its end, as psql does, unless the
+			// input ends in a branch that does not run
+			if (h.singleLineMode || !h.iactive) && !h.buf.Empty() && h.cond.active() {
 				stop, err := h.send(h.Stdout(), stderr, metacmd.Option{})
 				if err != nil {
 					lastErr = err
 				}
 				if stop {
 					return err
+				}
+			}
+			// each input closes its own \if blocks. psql reports the error
+			// and keeps its exit status, unless on_error_stop is on.
+			if len(h.cond) != 0 {
+				fmt.Fprintln(stderr, "error:", text.ErrUnclosedIf)
+				if env.Setting("on_error_stop") == "on" && !h.iactive {
+					return WrapErr("", text.ErrUnclosedIf)
 				}
 			}
 			return lastErr
@@ -251,6 +275,15 @@ func (h *Handler) Run() error {
 					continue
 				}
 				return nil
+			}
+			// a branch that does not run drops its statements, so they do
+			// not join the query buffer, and their variables are not
+			// expanded
+			if !h.cond.active() {
+				if h.iactive && it.Terminated {
+					fmt.Fprintln(stderr, text.QueryIgnoredUseEndIf)
+				}
+				continue
 			}
 			h.buf.Add(it)
 			if !it.Terminated {
@@ -332,14 +365,22 @@ func (h *Handler) apply(stdout, stderr io.Writer, it feed.Item) (metacmd.Option,
 	f, err := metacmd.Decode(it)
 	if err != nil {
 		switch err = WrapErr(cmd, err); {
-		case err == text.ErrUnknownCommand:
+		case errors.Is(err, text.ErrUnknownCommand):
 			fmt.Fprintln(stderr, fmt.Sprintf(text.InvalidCommand, cmd))
-		case err == text.ErrMissingRequiredArgument:
+		case errors.Is(err, text.ErrMissingRequiredArgument):
 			fmt.Fprintln(stderr, fmt.Sprintf(text.MissingRequiredArg, cmd))
 		default:
 			fmt.Fprintln(stderr, "error:", err)
 		}
 		return metacmd.Option{}, true, err
+	}
+	// a branch that does not run runs no meta command but \if, \elif, \else
+	// and \endif. psql reports an unknown command there too.
+	if !h.cond.active() && !isConditional(cmd) {
+		if h.iactive {
+			fmt.Fprintf(stderr, text.CommandIgnoredUseEndIf+"\n", cmd)
+		}
+		return metacmd.Option{}, true, nil
 	}
 	opt, unread, err := f(h)
 	if err != nil && !errors.Is(err, rline.ErrInterrupted) {
@@ -442,8 +483,10 @@ func (h *Handler) Lookup(name string) (string, bool) {
 // RunCommand runs the text of -c, as its own input. A statement left in the
 // buffer at the end of the text is sent.
 func (h *Handler) RunCommand(text string) error {
-	src := h.src
-	defer func() { h.src = src }()
+	// the text has \if blocks of its own, as a file has
+	src, cond := h.src, h.cond
+	defer func() { h.src, h.cond = src, cond }()
+	h.cond = nil
 	var err error
 	if h.src, err = feed.NewSource(feed.NewLines(strings.NewReader(text)), drivers.Language(h.u), nil); err != nil {
 		return err
@@ -668,14 +711,18 @@ func (h *Handler) render(prompt string, cont bool) string {
 			}
 		// case 'p': // the process id of the connected backend -- never going to be supported
 		case 'R': // statement state
-			// = for a new statement and - while the buffer holds one or the
-			// entry continues on another row. The line editor draws one
-			// prompt for the rows after the first, so the state inside a
-			// string or a comment is not shown.
-			if h.buf.Empty() && !cont {
-				buf = append(buf, '=')
-			} else {
+			// = for a new statement, @ for a new statement in a branch of
+			// \if that does not run, and - while the buffer holds a
+			// statement or the entry continues on another row. The line
+			// editor draws one prompt for the rows after the first, so the
+			// state inside a string or a comment is not shown.
+			switch {
+			case cont || !h.buf.Empty():
 				buf = append(buf, '-')
+			case !h.cond.active():
+				buf = append(buf, '@')
+			default:
+				buf = append(buf, '=')
 			}
 		case 'x': // empty when not in a transaction block, * in transaction block, ! in failed transaction block, or ? when indeterminate
 		case 'l': // line number
@@ -1503,30 +1550,39 @@ func (h *Handler) Rollback() error {
 	return nil
 }
 
-// If starts an if block.
-func (h *Handler) If(ok bool) error {
-	return nil
+// If starts a conditional block, as \if does. It calls eval for the value of
+// the expression only when the block starts in a branch that runs.
+func (h *Handler) If(eval func() (bool, error)) error {
+	return h.cond.begin(eval)
 }
 
-// ElseIf starts an else if block.
-func (h *Handler) ElseIf(ok bool) error {
-	return nil
+// ElseIf starts the next branch of the conditional block, as \elif does. It
+// calls eval only when no branch of the block ran yet.
+func (h *Handler) ElseIf(eval func() (bool, error)) error {
+	return h.cond.elif(eval)
 }
 
-// Else starts an else block.
-func (h *Handler) Else(bool) error {
-	return nil
+// Else starts the last branch of the conditional block, as \else does.
+func (h *Handler) Else() error {
+	return h.cond.els()
 }
 
-// EndIf closes an if block.
-func (h *Handler) EndIf(bool) error {
-	return nil
+// EndIf ends the conditional block, as \endif does.
+func (h *Handler) EndIf() error {
+	return h.cond.end()
 }
 
 // IncludeReader includes the content of rdr, as \i does. A handler of its
 // own reads rdr, on the same connection, and the connection it ends with is
 // kept, so that a \c in the file applies after it.
+//
+// rdr is decoded from the encoding setting, or from the byte order mark at
+// its start (see feed.Decode).
 func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
+	rdr, err := feed.Decode(rdr, env.Setting("encoding"))
+	if err != nil {
+		return err
+	}
 	p, err := New(h.l, feed.NewLines(rdr), h.user, filepath.Dir(path), h.charts, h.nopw)
 	if err != nil {
 		return err
@@ -1536,6 +1592,9 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 		return err
 	}
 	err = p.Run()
+	if errors.Is(err, feed.ErrInvalidUTF8) {
+		err = fmt.Errorf("%s: %w", path, err)
+	}
 	h.db, h.conn, h.tx, h.u, h.meta = p.db, p.conn, p.tx, p.u, p.meta
 	if lerr := h.setLanguage(); err == nil {
 		err = lerr

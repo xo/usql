@@ -28,7 +28,7 @@ var usqlPath string
 // buildTags are the tags the recorded binary is built with. Only the drivers
 // the sessions use are needed, and a smaller set builds much faster than the
 // full one.
-const buildTags = "sqlite3 sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_math_functions sqlite_stat4 sqlite_vtable no_base"
+const buildTags = "sqlite3 sqlite_app_armor sqlite_fts5 sqlite_introspect sqlite_json1 sqlite_math_functions sqlite_stat4 sqlite_vtable no_drivers"
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -131,6 +131,20 @@ func sessions() []capture.Session {
 				{Send: `select :n as answer;` + capture.KeyEnter},
 				{Send: `\unset n` + capture.KeyEnter},
 				{Send: `\set` + capture.KeyEnter},
+				{Send: `\q` + capture.KeyEnter},
+			},
+		},
+		{
+			Name:  "conditionals",
+			About: `\if runs one branch, a branch that does not run ignores its statements, and %R in the prompt is @ there`,
+			Args:  args(memory),
+			Steps: []capture.Step{
+				{Send: `\set x on` + capture.KeyEnter},
+				{Send: `\if :x` + capture.KeyEnter},
+				{Send: `\echo yes` + capture.KeyEnter},
+				{Send: `\else` + capture.KeyEnter},
+				{Send: `select 1;` + capture.KeyEnter},
+				{Send: `\endif` + capture.KeyEnter},
 				{Send: `\q` + capture.KeyEnter},
 			},
 		},

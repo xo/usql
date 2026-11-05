@@ -1,0 +1,71 @@
+# What usql prints for the describe commands on postgres-18, with dbrun's
+# fixture examples. TestDescribe in drivers/dbrun_test.go writes this file.
+# Do not edit it. Run the test with -update, and read the diff.
+
+-- \dt authors
+           List of tables
+ Schema |  Name   | Type  |  Owner   
+--------+---------+-------+----------
+ public | authors | table | postgres
+(1 row)
+
+
+-- \dt books
+          List of tables
+ Schema | Name  | Type  |  Owner   
+--------+-------+-------+----------
+ public | books | table | postgres
+(1 row)
+
+
+-- \d authors
+                       Table "public.authors"
+  Column   |          Type          | Collation | Nullable | Default 
+-----------+------------------------+-----------+----------+---------
+ author_id | integer                |           | not null | 
+ name      | character varying(100) |           | not null | 
+Indexes:
+    "authors_pkey" PRIMARY KEY, btree (author_id)
+Referenced by:
+    TABLE "books" CONSTRAINT "books_author_id_fkey" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \d books
+                        Table "public.books"
+  Column   |          Type          | Collation | Nullable | Default 
+-----------+------------------------+-----------+----------+---------
+ book_id   | integer                |           | not null | 
+ author_id | integer                |           |          | 
+ title     | character varying(200) |           | not null | 
+Indexes:
+    "books_pkey" PRIMARY KEY, btree (book_id)
+Foreign-key constraints:
+    "books_author_id_fkey" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \di *authors*
+                  List of indexes
+ Schema |     Name     | Type  |  Owner   |  Table  
+--------+--------------+-------+----------+---------
+ public | authors_pkey | index | postgres | authors
+(1 row)
+
+
+-- \di *books*
+                List of indexes
+ Schema |    Name    | Type  |  Owner   | Table 
+--------+------------+-------+----------+-------
+ public | books_pkey | index | postgres | books
+(1 row)
+
+
+-- SELECT book_id, author_id, title FROM books ORDER BY book_id;
+ book_id | author_id |   title    
+---------+-----------+------------
+       1 |         1 | Foundation
+       2 |         1 | I, Robot
+       3 |         2 | Carrie
+       4 |         2 | Cujo
+(4 rows)
+
+

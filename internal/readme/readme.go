@@ -39,7 +39,7 @@ type Example struct {
 	// Name is the name in the marker of the block.
 	Name string
 	// Tags are the build tags of the usql that runs the example. Empty is the
-	// most group, which a release ships.
+	// build with every driver, which a release ships.
 	Tags string
 	// Lines are written at the top of the block as they are, such as a
 	// comment or a go build command.
@@ -128,9 +128,6 @@ func Generate(ctx context.Context, opts Options) error {
 	}
 	bins := make(map[string]string)
 	for _, ex := range Examples {
-		if ex.Tags == "" {
-			ex.Tags = "most"
-		}
 		bin, ok := bins[ex.Tags]
 		if !ok {
 			bin = filepath.Join(tmp, fmt.Sprintf("usql-%d", len(bins)))
@@ -211,7 +208,7 @@ func openDB(ctx context.Context, dbmeta, selector string) (*db, error) {
 	// the prompt shows the host up to its first dot, so 127.0.0.1 shows as
 	// 127. localhost is not used to connect, because a driver can try only
 	// its IPv6 address, where the server does not listen.
-	pairs := []string{u.String(), "", "@127=>", "@localhost=>", "@127->", "@localhost->", "127.0.0.1", "localhost"}
+	pairs := []string{u.String(), "", "@127=>", "@localhost=>", "@127->", "@localhost->", "@127/", "@localhost/", "127.0.0.1", "localhost"}
 	shown := &url.URL{Scheme: u.Scheme, Host: "localhost", Path: u.Path, Opaque: u.Opaque}
 	if u.User != nil {
 		shown.User = url.UserPassword(u.User.Username(), "pass")

@@ -3,8 +3,10 @@ package feed
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/xo/transit"
 )
@@ -42,6 +44,8 @@ type Source struct {
 	grown bool
 	// eof is set once the reader has no more input.
 	eof bool
+	// line is how many lines were read, for an error that names a line.
+	line int
 	// queue holds the items of the last parse that can be fed and are not
 	// fed yet. Their offsets are in the text that was parsed, and cut is how
 	// much of that text was fed since.
@@ -179,7 +183,8 @@ func (s *Source) ready(n int, last Item) int {
 	return n - 1
 }
 
-// read reads one more line or entry, and returns it.
+// read reads one more line or entry, and returns it. A line that is not valid
+// UTF-8 is an error that wraps ErrInvalidUTF8 and names the line.
 func (s *Source) read() (string, error) {
 	var prompt string
 	if s.prompt != nil {
@@ -192,6 +197,10 @@ func (s *Source) read() (string, error) {
 		return "", nil
 	case err != nil:
 		return "", err
+	}
+	s.line += strings.Count(line, "\n") + 1
+	if !utf8.ValidString(line) {
+		return "", fmt.Errorf("line %d: %w", s.line, ErrInvalidUTF8)
 	}
 	s.more.WriteString(line)
 	s.more.WriteByte('\n')

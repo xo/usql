@@ -4,7 +4,6 @@
 // driver. This package registers that driver under the name vitess.
 //
 // See: https://github.com/go-sql-driver/mysql
-// Group: base
 package vitess
 
 import (

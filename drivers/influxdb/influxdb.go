@@ -22,7 +22,6 @@
 // Apache DataFusion, which it uses only to choose its statements.
 //
 // See: https://github.com/xo/dbimp
-// Group: most
 package influxdb
 
 import (

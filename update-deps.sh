@@ -61,10 +61,10 @@ GETFLAGS+=("$@")
 
 cd $SRC
 
-# BUILD_TAGS is exactly what build.sh uses, ALL_TAGS additionally enables every
-# driver and any test-only code
+# BUILD_TAGS is exactly what build.sh uses, which builds every driver.
+# ALL_TAGS adds any test-only code.
 BUILD_TAGS=$($SRC/build.sh -T)
-ALL_TAGS="${BUILD_TAGS/most/all} test"
+ALL_TAGS="$BUILD_TAGS test"
 
 # updatable lists every non-main module providing a package in the build graph,
 # minus SKIP

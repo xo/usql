@@ -1,4 +1,4 @@
-//go:build (!no_base || redshift) && !no_redshift
+//go:build (!no_drivers || redshift) && !no_redshift
 
 package internal
 

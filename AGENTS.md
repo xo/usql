@@ -57,17 +57,21 @@ add a row for it or delete it.
    dburl reaches the README tables only after `go.mod` moves to a dburl
    release that holds it.
 
-4. Build with `-tags all` before claiming that a driver change works. A
-   duplicate scheme or alias panics at registration time, which the default
-   build does not reach.
+4. Build and test with no build tags before claiming that a driver change
+   works, because only that build links every driver. A duplicate scheme or
+   alias panics at registration time, which a build that leaves a driver out
+   does not reach. Also build with `-tags 'no_drivers <tag>'`, which finds a
+   driver that compiles only beside another.
 
 5. Compilation is not evidence that a driver works. Nearly every field of
    `drivers.Driver` is optional, so a driver that cannot connect still
    compiles, registers, and passes `go test ./...`.
 
 6. No test of usql starts a database, and every test must pass wherever
-   usql builds. The tests that ran against databases were removed, and W37
-   in `docs/BACKLOG.md` brings them back.
+   usql builds. A test that needs a database reads its URL from the
+   environment, and skips when that is not set, so `go test ./...` passes
+   on a machine with no database. The tests of `drivers/dbrun_test.go` read
+   `USQL_TEST_URL`. CONTRIBUTING.md says how to run them.
 
 7. Start a database only with dbmeta's `dbrun`, never with a container
    command of usql's own. dbmeta owns every container setup.
@@ -77,12 +81,14 @@ add a row for it or delete it.
    gains a status. See the rules at the top of `docs/BACKLOG.md`.
 
 9. A driver may register itself with `database/sql` and do nothing else. A
-   driver that writes global process state from `init()` belongs in the `bad`
-   group or out of the tree. `slog.SetDefault` is the case that has already
-   happened.
+   driver that writes global process state from `init()` goes out of the
+   tree. `slog.SetDefault` is the case that has already happened.
 
-10. Always write a `Group:` line in a driver's package comment. A driver that
-    omits it defaults to `most`, which ships in regular builds.
+10. usql has one build, and every driver is in it. Do not add a build group,
+    or a build tag that selects more than one driver. `no_<tag>` leaves one
+    driver out, and `no_drivers` leaves out every driver that the build does
+    not name by its tag. A driver that needs no hook gets no package under
+    `drivers`. It gets an entry in `plainDrivers` in `gen.go`.
 
 11. The repository root holds four documents: `README.md`, `AGENTS.md`,
     `CLAUDE.md` and `CONTRIBUTING.md`. Every other document goes under

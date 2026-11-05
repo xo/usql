@@ -460,6 +460,40 @@ func ParseBool(value, name string) (string, error) {
 	return "", fmt.Errorf(text.FormatFieldInvalidValue, value, name, "Boolean")
 }
 
+// ParseVariableBool reads value as a boolean, as psql's ParseVariableBool
+// reads the expression of \if. It takes true, false, yes, no, on, off, 1 and
+// 0, in any case. A prefix of a word is enough when it is unique, so t is
+// true and n is no. A prefix of on or off needs two letters, because o starts
+// both. It reports false when value is not a boolean.
+func ParseVariableBool(value string) (v, ok bool) {
+	switch {
+	case hasPrefixFold("true", value, 1), hasPrefixFold("yes", value, 1), hasPrefixFold("on", value, 2), value == "1":
+		return true, true
+	case hasPrefixFold("false", value, 1), hasPrefixFold("no", value, 1), hasPrefixFold("off", value, 2), value == "0":
+		return false, true
+	}
+	return false, false
+}
+
+// hasPrefixFold reports whether s is a prefix of word of at least n bytes,
+// where word is in lower case. Only the ASCII letters of s fold, as in psql,
+// so the long s (U+017F) does not match an s.
+func hasPrefixFold(word, s string, n int) bool {
+	if len(s) < n || len(s) > len(word) {
+		return false
+	}
+	for i := range len(s) {
+		c := s[i]
+		if 'A' <= c && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		if c != word[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func ParseKeywordBool(value, name string, keywords ...string) (string, error) {
 	v := strings.ToLower(value)
 	switch v {

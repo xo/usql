@@ -32,6 +32,8 @@ echo_hidden           off\r
 \n
 editor                ""\r
 \n
+encoding              utf-8\r
+\n
 fetch_count           0\r
 \n
 on_error_stop         off\r

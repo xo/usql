@@ -21,6 +21,10 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
   bare registration, because its errors, row counts and refused credentials are
   generic here. W27 records the review that retired, replaced and regrouped the
   drivers.
+- usql has one build, with every driver. `no_<tag>` leaves one driver out, and
+  `no_drivers` leaves out every driver that the build does not name by its tag.
+  A driver with no hooks has no package, and `gen.go` writes its import and its
+  registration into `internal/` (W52).
 - What describes a database (the lexical forms, the placeholder of `\copy`, the
   statement that every one of its statements is a query, the product string) is
   in dbmeta, and the defaults of a DSN are in dburl. A driver holds only Go code.
@@ -31,13 +35,4 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
 
 ## Open questions
 
-For Ken:
-
-- How the release handles the ODBC crash that go-sqlite3 and DuckDB cause
-  together: build with `-tags libsqlite3`, leave ODBC out, or make `moderncsqlite`
-  the SQLite of a release (W40).
-- Whether Cosmos DB keeps no writes, since dbimp's driver reads only.
-- Whether DuckDB gets a build group of its own, since it is 37% of a `most`
-  binary (W32).
-- Whether the drivers that are only a registration lose their packages, with
-  the build tags written into `internal/` by `gen.go` (W52).
+None are open for Ken.

@@ -2,20 +2,18 @@ package feed
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/xo/dbmeta"
 	_ "github.com/xo/dbmeta/all"
 	"github.com/xo/transit"
 	"golang.org/x/text/encoding"
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/encoding/japanese"
-	"golang.org/x/text/encoding/korean"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/encoding/htmlindex"
 )
 
 // The fuzz tests feed scripts through a Source, as usql reads a file given
@@ -119,21 +117,47 @@ func dialects(tb testing.TB) []dialect {
 }
 
 // feedScript returns every item that a Source feeds from src, read one line at
-// a time, as from a file.
-func feedScript(tb testing.TB, d dialect, src string) []Item {
+// a time, as from a file. With enc, src is saved in that encoding first, as
+// feedEncoded does.
+func feedScript(tb testing.TB, d dialect, src, enc string) []Item {
 	tb.Helper()
-	s, err := NewSource(NewLines(strings.NewReader(src)), d.language(), nil)
+	items, err := feedEncoded(d, src, enc)
 	if err != nil {
-		tb.Fatal(err)
+		tb.Fatalf("%s: %v", d.name, err)
+	}
+	return items
+}
+
+// feedEncoded reads src through a Source, as feedScript does, and returns the
+// first error. With enc, src is saved in that encoding first, and read with
+// the encoding setting set to it.
+func feedEncoded(d dialect, src, enc string) ([]Item, error) {
+	var r io.Reader = strings.NewReader(src)
+	if enc != "" {
+		e, err := htmlindex.Get(enc)
+		if err != nil {
+			return nil, err
+		}
+		b, err := e.NewEncoder().String(src)
+		if err != nil {
+			return nil, fmt.Errorf("saving the script in %s: %w", enc, err)
+		}
+		if r, err = Decode(strings.NewReader(b), enc); err != nil {
+			return nil, err
+		}
+	}
+	s, err := NewSource(NewLines(r), d.language(), nil)
+	if err != nil {
+		return nil, err
 	}
 	var items []Item
 	for {
 		it, err := s.Next()
 		if errors.Is(err, io.EOF) {
-			return items
+			return items, nil
 		}
 		if err != nil {
-			tb.Fatalf("%s: %v", d.name, err)
+			return items, err
 		}
 		items = append(items, it)
 	}
@@ -152,8 +176,9 @@ func asLines(src string) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
-// FuzzSplit checks that any input, valid UTF-8 or not, feeds the same items
-// line by line as it parses in one piece, in every dialect.
+// FuzzSplit checks that any input that is valid UTF-8 feeds the same items
+// line by line as it parses in one piece, in every dialect, and that any other
+// input is refused.
 func FuzzSplit(f *testing.F) {
 	for _, s := range exotic {
 		f.Add("select '" + s + "' as x;\nselect 2;\n")
@@ -182,7 +207,14 @@ func FuzzSplit(f *testing.F) {
 			if err != nil {
 				t.Fatalf("%s: %v", d.name, err)
 			}
-			if got, exp := summary(feedScript(t, d, src)), summary(parsed); got != exp {
+			// a script that is not valid UTF-8 is refused, with the line
+			if !utf8.ValidString(src) {
+				if _, err := feedEncoded(d, src, ""); !errors.Is(err, ErrInvalidUTF8) {
+					t.Errorf("%s: %q: expected %v, got %v", d.name, src, ErrInvalidUTF8, err)
+				}
+				continue
+			}
+			if got, exp := summary(feedScript(t, d, src, "")), summary(parsed); got != exp {
 				t.Errorf("%s: %q\n got: %q\nwant: %q", d.name, src, got, exp)
 			}
 		}
@@ -191,7 +223,11 @@ func FuzzSplit(f *testing.F) {
 
 // quoteForms returns each way that d writes name as a quoted identifier.
 func quoteForms(d dialect, name string) []string {
-	v := []string{`"` + strings.ReplaceAll(name, `"`, `""`) + `"`}
+	dq := name
+	if d.syntax.BackslashEscapes {
+		dq = strings.ReplaceAll(dq, `\`, `\\`)
+	}
+	v := []string{`"` + strings.ReplaceAll(dq, `"`, `""`) + `"`}
 	if d.syntax.Backticks {
 		v = append(v, "`"+strings.ReplaceAll(name, "`", "``")+"`")
 	}
@@ -201,20 +237,22 @@ func quoteForms(d dialect, name string) []string {
 	return v
 }
 
-// quoteString returns value as a string between single quotes. A backslash
-// escapes the next character in a string of every family (transit's D105),
-// so it is doubled as well as the quote.
-func quoteString(value string) string {
-	value = strings.ReplaceAll(value, `\`, `\\`)
+// quoteString returns value as a string between single quotes of d. Where a
+// backslash escapes the next character (transit's D142), it is doubled as
+// well as the quote.
+func quoteString(d dialect, value string) string {
+	if d.syntax.BackslashEscapes {
+		value = strings.ReplaceAll(value, `\`, `\\`)
+	}
 	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
 }
 
 // checkScript checks that a script that writes name and value in the quotes of
 // d, and in its comments, feeds three statements, and that the quoted name and
 // the string are each one part of their statement.
-func checkScript(t *testing.T, d dialect, name, value string, crlf, bom bool) {
+func checkScript(t *testing.T, d dialect, name, value string, crlf, bom bool, enc string) {
 	t.Helper()
-	str := quoteString(value)
+	str := quoteString(d, value)
 	for _, q := range quoteForms(d, name) {
 		stmts := []string{
 			"create table " + q + " (" + q + " int);",
@@ -241,7 +279,7 @@ func checkScript(t *testing.T, d dialect, name, value string, crlf, bom bool) {
 		if bom {
 			src = "\ufeff" + src
 		}
-		items := feedScript(t, d, src)
+		items := feedScript(t, d, src, enc)
 		if len(items) != len(stmts) {
 			t.Errorf("%s %s: expected %d statements, got %d: %q\n%s", d.name, q, len(stmts), len(items), src, summary(items))
 			continue
@@ -285,47 +323,40 @@ func FuzzQuotedNames(f *testing.F) {
 	}
 	dias := dialects(f)
 	f.Fuzz(func(t *testing.T, name, value string, crlf, bom bool) {
+		// usql refuses a script that is not valid UTF-8, which FuzzSplit checks
+		if !utf8.ValidString(name) || !utf8.ValidString(value) {
+			t.Skip()
+		}
 		for _, d := range dias {
-			checkScript(t, d, name, value, crlf, bom)
+			checkScript(t, d, name, value, crlf, bom, "")
 		}
 	})
 }
 
-// legacy are encodings that a script can be saved in. In each one a byte under
-// 0x80 is always the ASCII character, so usql, which reads UTF-8, finds the
-// same quotes and separators as in the UTF-8 text.
-var legacy = []struct {
-	name string
-	enc  encoding.Encoding
-}{
-	{"Windows-1252", charmap.Windows1252},
-	{"ISO-8859-1", charmap.ISO8859_1},
-	{"ISO-8859-15", charmap.ISO8859_15},
-	{"Windows-1251", charmap.Windows1251},
-	{"KOI8-R", charmap.KOI8R},
-	{"Windows-1253", charmap.Windows1253},
-	{"EUC-JP", japanese.EUCJP},
-	{"EUC-KR", korean.EUCKR},
+// encodings are encodings that a script can be saved in, by the names of the
+// WHATWG Encoding Standard, which the encoding setting takes. Shift JIS, Big5,
+// GBK and GB18030 can have 0x5C, the byte of a backslash, as the second byte
+// of a character, as in the Shift JIS 表 (0x95 0x5C). usql decodes a script
+// before it parses it, so that byte is not a backslash.
+var encodings = []string{
+	"windows-1252",
+	"iso-8859-15",
+	"windows-1251",
+	"koi8-r",
+	"windows-1253",
+	"euc-jp",
+	"euc-kr",
+	"shift_jis",
+	"big5",
+	"gbk",
+	"gb18030",
+	"utf-16le",
+	"utf-16be",
 }
 
-// multibyte are encodings where the second byte of a character can be an
-// ASCII byte, such as 0x5C, the backslash, in the Shift JIS 表 (0x95 0x5C). A
-// backslash escapes the next character in a string (transit's D105), so these
-// are checked only in a name between double quotes, where a backslash is
-// plain text.
-var multibyte = []struct {
-	name string
-	enc  encoding.Encoding
-}{
-	{"Shift JIS", japanese.ShiftJIS},
-	{"Big5", traditionalchinese.Big5},
-	{"GBK", simplifiedchinese.GBK},
-	{"GB18030", simplifiedchinese.GB18030},
-}
-
-// FuzzEncodings checks scripts saved in other encodings than UTF-8. text is
-// encoded first, and a character that the encoding lacks becomes a
-// replacement.
+// FuzzEncodings checks scripts saved in other encodings than UTF-8 and read
+// with the encoding setting. A character of text that an encoding lacks
+// becomes a replacement before the script is built.
 func FuzzEncodings(f *testing.F) {
 	f.Add("n° d'entrée")
 	f.Add("Привет, мир")
@@ -337,30 +368,24 @@ func FuzzEncodings(f *testing.F) {
 	f.Add("日本語表")
 	dias := dialects(f)
 	f.Fuzz(func(t *testing.T, text string) {
-		for _, e := range legacy {
-			b, err := encoding.ReplaceUnsupported(e.enc.NewEncoder()).String(text)
-			if err != nil {
-				t.Skip()
-			}
-			for _, d := range dias {
-				checkScript(t, d, b, b, false, false)
-			}
+		if !utf8.ValidString(text) {
+			t.Skip()
 		}
-		for _, e := range multibyte {
-			b, err := encoding.ReplaceUnsupported(e.enc.NewEncoder()).String(text)
+		for _, name := range encodings {
+			enc, err := htmlindex.Get(name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := encoding.ReplaceUnsupported(enc.NewEncoder()).String(text)
 			if err != nil {
 				t.Skip()
 			}
+			value, err := enc.NewDecoder().String(b)
+			if err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
 			for _, d := range dias {
-				q := `"` + strings.ReplaceAll(b, `"`, `""`) + `"`
-				src := "select 1 as " + q + ";\nselect 2;\n"
-				items := feedScript(t, d, asLines(src))
-				if got, exp := summary(items), summary([]Item{
-					{Kind: Statement, Text: strings.TrimSuffix(asLines("select 1 as "+q+";"), "\n"), Terminated: true},
-					{Kind: Statement, Text: "select 2;", Terminated: true},
-				}); got != exp {
-					t.Errorf("%s %s:\n got: %q\nwant: %q", e.name, d.name, got, exp)
-				}
+				checkScript(t, d, value, value, false, false, name)
 			}
 		}
 	})

@@ -1,0 +1,119 @@
+# usql capture transcript v1
+session: conditionals
+about: \if runs one branch, a branch that does not run ignores its statements, and %R in the prompt is @ there
+term: xterm-256color
+size: 80x24
+
+## step 0
+send:
+
+recv:
+\e[mConnected with driver sqlite3 (VERSION)\r
+\n
+\e[0cType "help" for help.\r
+\n
+\r
+\n
+\e[?2004h\e[32msq::memory:=> \e[39m
+
+
+## step 1
+send:
+\\set x on\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mx\e[39m \e[38;5;231mon\e[39m\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m \e[38;5;231mx\e[39m \e[38;5;231mon\e[39m\e[K\r
+\e[23C\e[?2004l\r
+\n
+\e[?2004h\e[32msq::memory:=> \e[39m
+
+
+## step 2
+send:
+\\if :x\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\if\e[39m \e[38;5;186m:\e[38;5;231mx\e[39m\e[K\r
+\e[20C\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\if\e[39m \e[38;5;186m:\e[38;5;231mx\e[39m\e[K\r
+\e[20C\e[?2004l\r
+\n
+\e[?2004h\e[32msq::memory:=> \e[39m
+
+
+## step 3
+send:
+\\echo yes\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\echo\e[39m \e[38;5;231myes\e[39m\e[K\r
+\e[23C\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\echo\e[39m \e[38;5;231myes\e[39m\e[K\r
+\e[23C\e[?2004l\r
+\n
+yes\r
+\n
+\e[?2004h\e[32msq::memory:=> \e[39m
+
+
+## step 4
+send:
+\\else\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\else\e[39m\e[K\r
+\e[19C\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\else\e[39m\e[K\r
+\e[19C\e[?2004l\r
+\n
+\e[?2004h\e[32msq::memory:@> \e[39m
+
+
+## step 5
+send:
+select 1;\r
+
+recv:
+\r
+\e[32msq::memory:@> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[38;5;231m;\e[39m\e[K\r
+\e[23C\r
+\e[32msq::memory:@> \e[39m\e[38;5;81mselect\e[39m \e[38;5;141m1\e[38;5;231m;\e[39m\e[K\r
+\e[23C\e[?2004l\r
+\n
+query ignored; use \\endif or Ctrl-C to exit current \\if block\r
+\n
+\e[?2004h\e[32msq::memory:@> \e[39m
+
+
+## step 6
+send:
+\\endif\r
+
+recv:
+\r
+\e[32msq::memory:@> \e[39m\e[38;5;231m\\endif\e[39m\e[K\r
+\e[20C\r
+\e[32msq::memory:@> \e[39m\e[38;5;231m\\endif\e[39m\e[K\r
+\e[20C\e[?2004l\r
+\n
+\e[?2004h\e[32msq::memory:=> \e[39m
+
+
+## step 7
+send:
+\\q\r
+
+recv:
+\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
+\e[16C\r
+\e[32msq::memory:=> \e[39m\e[38;5;231m\\q\e[39m\e[K\r
+\e[16C\e[?2004l\r
+\n
+

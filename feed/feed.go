@@ -28,19 +28,22 @@ import (
 // [ and ] is a quoted identifier, as in SQL Server and SQLite (transit's D140).
 // A line with only / is statement text, as in psql (transit's D138). A U+FEFF,
 // a byte order mark, is white space outside strings, quoted names and comments
-// (transit's D141).
+// (transit's D141). With BackslashEscapes, a backslash escapes the next
+// character in a string between single quotes and in a name between double
+// quotes, as in MySQL. Without it, a backslash there is text (transit's D142).
 func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 	return usql.LanguageFor(usql.Options{
-		DollarQuotes:    s.DollarQuotes,
-		BlockComments:   s.BlockComments,
-		SlashComments:   s.SlashComments,
-		HashComments:    s.HashComments,
-		Backticks:       s.Backticks,
-		DashComments:    s.DashComments,
-		BeginEndBlocks:  s.BeginEndBlocks,
-		AnonymousBlocks: s.AnonymousBlocks,
-		Batches:         batches,
-		Brackets:        s.Brackets,
+		DollarQuotes:     s.DollarQuotes,
+		BlockComments:    s.BlockComments,
+		SlashComments:    s.SlashComments,
+		HashComments:     s.HashComments,
+		Backticks:        s.Backticks,
+		DashComments:     s.DashComments,
+		BeginEndBlocks:   s.BeginEndBlocks,
+		AnonymousBlocks:  s.AnonymousBlocks,
+		Batches:          batches,
+		Brackets:         s.Brackets,
+		BackslashEscapes: s.BackslashEscapes,
 	})
 }
 

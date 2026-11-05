@@ -4,7 +4,6 @@
 // own names, through Driver.
 //
 // See: https://github.com/go-sql-driver/mysql
-// Group: base
 package mysql
 
 import (

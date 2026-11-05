@@ -1,7 +1,6 @@
 // Package ydb defines and registers usql's YDB driver.
 //
 // See: https://github.com/ydb-platform/ydb-go-sdk
-// Group: most
 package ydb
 
 import (

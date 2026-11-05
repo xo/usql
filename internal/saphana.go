@@ -1,4 +1,4 @@
-//go:build (all || most || saphana) && !no_saphana
+//go:build (!no_drivers || saphana) && !no_saphana
 
 package internal
 

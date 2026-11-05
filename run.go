@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -330,7 +331,7 @@ func Run(ctx context.Context, args *Args) error {
 	// create the line editor, which asks the handler whether an entry needs
 	// more input
 	var h *handler.Handler
-	l, err := rline.New(
+	opts := []rline.Option{
 		rline.WithHistoryFile(history),
 		rline.WithContinue(func(text string) bool {
 			return h != nil && h.Continue(text)
@@ -349,7 +350,12 @@ func Run(ctx context.Context, args *Args) error {
 		rline.WithAppName(text.CommandName),
 		// Ctrl-C leaves the entry on the screen with ^C after it, as psql does
 		rline.WithKeepInterrupted(true),
-	)
+	}
+	// input from a pipe or a file is decoded as a script given with -f is
+	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+		opts = append(opts, rline.WithStdin(&decodedStdin{}))
+	}
+	l, err := rline.New(opts...)
 	if err != nil {
 		return err
 	}
@@ -413,6 +419,24 @@ func Run(ctx context.Context, args *Args) error {
 		return h.Commit()
 	}
 	return nil
+}
+
+// decodedStdin is standard input as UTF-8. It is decoded on its first read,
+// so that the encoding setting of the command line or of init.sql applies.
+type decodedStdin struct {
+	r io.Reader
+}
+
+// Read satisfies io.Reader.
+func (s *decodedStdin) Read(p []byte) (int, error) {
+	if s.r == nil {
+		r, err := feed.Decode(os.Stdin, env.Setting("encoding"))
+		if err != nil {
+			return 0, err
+		}
+		s.r = r
+	}
+	return s.r.Read(p)
 }
 
 // Args are the command line arguments.

@@ -1,7 +1,6 @@
 // Package vertica defines and registers usql's Vertica driver.
 //
 // See: https://github.com/vertica/vertica-sql-go
-// Group: most
 package vertica
 
 import (

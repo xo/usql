@@ -1,0 +1,62 @@
+# What usql prints for the describe commands on mysql-26.7, with dbrun's
+# fixture examples. TestDescribe in drivers/dbrun_test.go writes this file.
+# Do not edit it. Run the test with -update, and read the diff.
+
+-- \dt authors
+       List of tables
+  Schema  |  Name   | Type  
+----------+---------+-------
+ examples | authors | table
+(1 row)
+
+
+-- \dt books
+      List of tables
+  Schema  | Name  | Type  
+----------+-------+-------
+ examples | books | table
+(1 row)
+
+
+-- \d authors
+                      Table "examples.authors"
+  Column   |     Type     |     Collation      | Nullable | Default 
+-----------+--------------+--------------------+----------+---------
+ author_id | int          |                    | not null | 
+ name      | varchar(100) | utf8mb4_0900_ai_ci | not null | 
+Indexes:
+    "PRIMARY" PRIMARY KEY, BTREE
+Referenced by:
+    TABLE "books" CONSTRAINT "books_ibfk_1" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \d books
+                       Table "examples.books"
+  Column   |     Type     |     Collation      | Nullable | Default 
+-----------+--------------+--------------------+----------+---------
+ book_id   | int          |                    | not null | 
+ author_id | int          |                    |          | 
+ title     | varchar(200) | utf8mb4_0900_ai_ci | not null | 
+Indexes:
+    "PRIMARY" PRIMARY KEY, BTREE
+    "author_id" BTREE
+Foreign-key constraints:
+    "books_ibfk_1" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \di *authors*
+Did not find any indexes named "*authors*".
+
+-- \di *books*
+Did not find any indexes named "*books*".
+
+-- SELECT book_id, author_id, title FROM books ORDER BY book_id;
+ book_id | author_id |   title    
+---------+-----------+------------
+       1 |         1 | Foundation
+       2 |         1 | I, Robot
+       3 |         2 | Carrie
+       4 |         2 | Cujo
+(4 rows)
+
+

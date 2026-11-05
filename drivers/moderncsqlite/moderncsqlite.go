@@ -2,7 +2,6 @@
 // Transpilation of SQLite3 to Go.
 //
 // See: https://gitlab.com/cznic/sqlite
-// Group: most
 package moderncsqlite
 
 import (

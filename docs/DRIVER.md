@@ -33,9 +33,10 @@ yours. Report what you found and wait.
 
 ## Step 1. The pre-flight gate
 
-Answer four questions before you create any package. Record the answers in the
-driver's package comment, so that a later reader can see what was checked and
-when.
+Answer four questions before you add the driver. Record the answers in the
+comment above its entry in `plainDrivers` in `gen.go`, or in its package
+comment, and in the commit message, so that a later reader can see what was
+checked and when.
 
 This gate exists because of what the history shows. Several drivers were added
 and later removed, and the cause was never the SQL. It was an upstream that
@@ -71,11 +72,12 @@ driver changed the output of the whole binary.
 
 ### What does it link?
 
-Record whether the driver is pure Go. A driver that needs cgo, ships a
-prebuilt native library, or requires a client install cannot go in the default
-build. It also costs far more binary size than a pure Go driver.
+Record whether the driver is pure Go. usql has one build, and every driver is
+in it. So a driver that needs cgo, ships a prebuilt native library, or requires
+a client install changes every build. It also costs far more binary size than
+a pure Go driver.
 
-A build of the `most` group is 185.2 MB, and DuckDB is 72.8 MB of it (W32). Two known causes are worth
+A release build was 178.6 MiB, and DuckDB was 72.8 MiB of it (W32). Two known causes are worth
 recognizing, because both survive `-s -w` stripping: `-rdynamic` in cgo
 LDFLAGS, and any use of Go's `plugin` package. Both force dynamic symbol
 export.
@@ -108,14 +110,16 @@ Read `docs/SCHEME.md` in dburl. It is ten numbered steps written for this
 task. What follows is only the part that affects choices you make on the usql
 side.
 
-### The scheme and the directory name may differ
+### The scheme and the build tag can differ
 
 usql's README table has a column headed `Scheme / Tag`. It holds the build
-tag, which is the directory name under `drivers/`, and not the scheme.
+tag, which is the `Tag` of the entry in `plainDrivers` or the directory name
+under `drivers/`, and not the scheme.
 
-They are allowed to differ and sometimes do. The lib/pq driver is the directory
-`libpq` and the scheme `pq`. It works, because the tag is also a dburl alias of
-the scheme.
+They are allowed to differ and sometimes do. The lib/pq driver has the tag
+`libpq` and the scheme `pq`, and the firebird driver has the tag `firebird`
+and the scheme `firebirdsql`. It works, because the tag is also a dburl alias
+of the scheme.
 
 You are choosing two names. Do not assume they must match.
 
@@ -180,31 +184,26 @@ Read the connection string parser in the exact driver version that usql pins
 in `go.mod`. Not the driver's documentation, and not memory. Presto broke
 because nobody did.
 
-## Step 3. The driver package
+## Step 3. The driver
 
-Create `drivers/<tag>/<tag>.go`. The package needs an `init()` that calls
-`drivers.Register`.
+usql has one build, and every driver is in it. A plain `go build` links the
+new driver, `no_<tag>` leaves it out, and `no_drivers` leaves it out unless the
+build names its tag. There are no build groups to choose from.
 
-A minimal driver is short, because nearly every hook is optional:
+### A driver with no hooks has no package
 
-    package mydb
+Most drivers need no hook, because nearly every field of `drivers.Driver` is
+optional. Such a driver gets no package under `drivers`. Add an entry for its
+build tag to `plainDrivers` in `gen.go`, in the order of the tags:
 
-    import (
-        _ "github.com/example/mydb-go-driver" // DRIVER
-        "github.com/xo/usql/drivers"
-    )
+    // pure Go, over HTTP. The pre-flight answers of Step 1 go here.
+    {Tag: "mydb"},
 
-    func init() {
-        drivers.Register("mydb", drivers.Driver{})
-    }
-
-A field that describes the database rather than the Go driver is not set
-here. dbmeta holds it, keyed by the dialect: the comment and quoting forms
-the lexer allows, what happens to a trailing semicolon, the statements that
-open and close a batch, whether a password change needs the old password, and
-how the database folds the case of a name. D5 records this. A database with
-no dbmeta model gets only block comments. W28 holds the four drivers whose
-statement handling waits for dbmeta.
+`gen.go` reads the rest from the dburl scheme of the tag: the package to
+import, the name to register, the description and the URL of the README row.
+It writes `internal/mydb.go`, which imports the package, with the comment
+`// DRIVER`, and calls `drivers.Register("mydb", drivers.Driver{})`. Other
+tools in the family find a driver by searching for that comment.
 
 A driver of [dbimp](https://github.com/xo/dbimp) is exactly this, and nothing
 more. dbimp's errors print as they are, an error that matches
@@ -214,36 +213,51 @@ fails with `dbimp.ErrNotSupported`. Set a hook only for a fact that none of thes
 cover, and put a fact about the database in dbmeta and a default of the DSN in
 dburl.
 
-Keep the `// DRIVER` comment on the driver import. Other tools in the family
-find the driver package by searching for it.
+A field that describes the database rather than the Go driver is not set in
+usql. dbmeta holds it, keyed by the dialect: the comment and quoting forms
+the lexer allows, what happens to a trailing semicolon, the statements that
+open and close a batch, whether a password change needs the old password, and
+how the database folds the case of a name. D5 records this. A database with
+no dbmeta model gets only block comments. W28 holds the four drivers whose
+statement handling waits for dbmeta.
 
-### The package comment carries machine readable lines
+A driver that cannot compile everywhere gives a constraint in the `Build`
+field, and `gen.go` adds it to the generated file under `internal`. DuckDB
+uses it, because its prebuilt library has no 32 bit arm build:
 
-`gen.go` reads the package comment. Three lines in it are not decoration.
+    {Tag: "duckdb", Build: "!(linux && arm)"},
 
-A `Build:` line gives a constraint for drivers that cannot compile everywhere,
-and `gen.go` copies it into the generated file under `internal`:
+### A driver with a hook has a package
 
-    // Build: !(linux && arm) && !windows
+A driver that needs a hook, such as `Err`, `Version` or `Open`, gets a package
+`drivers/<tag>/<tag>.go` instead, with an `init()` that calls
+`drivers.Register`. Do not give it an entry in `plainDrivers` as well. `gen.go`
+stops with an error when a tag has both.
 
-The duckdb driver uses that constraint, because its prebuilt library has no 32
-bit arm build and no Windows build.
+    // Package mydb defines and registers usql's MyDB driver.
+    //
+    // See: https://github.com/example/mydb-go-driver
+    package mydb
 
-A `Group:` line puts the driver in a build group. The groups are `base`, which
-is the default build, `most`, `all`, and `bad` for drivers that are known to be
-broken.
+    import (
+        "github.com/example/mydb-go-driver" // DRIVER
+        "github.com/xo/usql/drivers"
+    )
 
-Always write the `Group:` line, even where it says what the default would.
-A driver that omits it lands in `most` without anyone having decided that.
+    func init() {
+        drivers.Register("mydb", drivers.Driver{
+            Err: func(err error) (string, string) { ... },
+        })
+    }
 
-Ken's rule decides between `most` and `all`. A driver goes in `most` when its
-dburl scheme names a dialect and it does not need cgo. A driver that needs cgo
-goes in `all`. No driver is in `all` today, because godror was the last one
-and was removed on 2026-10-09. A driver that is known to be broken goes in
-`bad`.
+Keep the `// DRIVER` comment on the driver import. The `See:` line must be the
+URL that dburl records for the scheme, and `TestDriverSeeMatchesDburl` checks
+it.
 
-Promoting a driver to `base` is a decision for the maintainer, not part of
-adding it.
+`gen.go` reads two other lines of the package comment. A `Build:` line gives a
+constraint, as the `Build` field of `plainDrivers` does:
+
+    // Build: !(linux && arm)
 
 A `Tags:` line names further build tags that select the driver. Each one
 selects it as the driver's own tag does, and its `no_` form leaves the driver
@@ -259,7 +273,7 @@ dialect of the driver, the row takes the name of the database from it. That is
 why pgx has one row, named PostgreSQL.
 
 Most drivers have no `Tags:` line. A `Build:` line cannot do this job, because
-`gen.go` combines it with the group constraint using `&&`, so it can only
+`gen.go` combines it with the constraint of the tags using `&&`, so it can only
 narrow where a driver builds.
 
 ### A driver built on another driver
@@ -274,12 +288,11 @@ A database that speaks the PostgreSQL protocol imports `drivers/pgwire`
 instead. pgwire gives pgx when the build has pgx, and libpq when it does not,
 so `no_pgx` leaves pgx out and these drivers keep working.
 
-### The order of the base rows
+### The order of the rows
 
-`baseOrder` in `gen.go` names the base drivers that come first in the README,
-in order. The other base drivers follow in the order of their tags. A driver
-that is promoted to the base group needs no edit there, unless it must come
-first.
+`firstOrder` in `gen.go` names the drivers that come first in the README
+table, in order. The other drivers follow in the order of their descriptions.
+A new driver needs no edit there.
 
 ## Step 4. Generate, do not edit
 
@@ -293,14 +306,15 @@ that holds it.
 
 These files are generated. Do not edit them by hand:
 
-1. `internal/<tag>.go`, which carries the build constraints.
+1. `internal/<tag>.go`, which carries the build constraints, and for a driver
+   in `plainDrivers` the import and the registration.
 2. The driver tables in `README.md`.
 3. The bundled license files.
 
-The alias column and the file marker in the README come from dburl's registry.
-The description, the package path and the `Scheme / Tag` column come from
-usql's own data in `gen.go`. So regenerating rewrites the alias column and
-leaves the rest of the row alone.
+The description, the package, the link, the aliases and the markers of a
+README row come from dburl's registry. Only the `Scheme / Tag` column comes
+from usql, as the build tag. So a change to any other part of a row is made in
+dburl.
 
 Then add the module and tidy:
 
@@ -331,13 +345,15 @@ than a summary of it.
 ### Without a database
 
     go run gen.go                       # then inspect git diff
-    go build ./...                      # default build
-    go build -tags all ./...            # every driver
+    go build ./...                      # every driver
+    go build -tags 'no_drivers mydb' .  # the new driver alone
     go vet ./...
     go test ./...
 
-The `-tags all` build matters on its own, because a duplicate scheme or alias
-panics at registration time rather than at compile time.
+`go test ./...` matters on its own, because it starts usql with every driver,
+and a duplicate scheme or alias panics at registration time rather than at
+compile time. The build with `no_drivers` finds a driver that compiles only
+beside another.
 
 Every test must pass. No test of usql needs a database.
 
@@ -378,13 +394,14 @@ connection string parsing inside the usql driver package. That parsing does not
 belong there and will be rejected. If the scheme is missing, stop at Step 2.
 
 The second most common is hand editing a generated file. The change survives
-until somebody runs `go generate`, and then it disappears.
+until somebody runs `go run gen.go`, and then it disappears.
 
 ## The checks that tell you what you forgot
 
 | Check | What fails it |
 | --- | --- |
-| `go build -tags all ./...` | A duplicate scheme or alias, which panics at registration |
+| `go test ./...` | A duplicate scheme or alias, which panics at registration |
+| `go build -tags 'no_drivers <tag>' .` | A driver that compiles only beside another |
 | `git diff` after `go run gen.go` | A generated file that was edited by hand |
 | A malformed connection string | A panic where an error was wanted |
 | A file path that does not exist | A missing extension pattern in dburl |

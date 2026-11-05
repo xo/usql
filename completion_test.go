@@ -20,7 +20,7 @@ var ansiRE = regexp.MustCompile(`\x1b\[[0-9;?]*[A-Za-z]`)
 // completionTags are the tags the recorded binary is built with. duckdb needs
 // cgo and prebuilt archives, so this is slow, but it is the driver that found
 // the bug this test exists for.
-const completionTags = "duckdb no_base"
+const completionTags = "duckdb no_drivers"
 
 // TestCompletion checks that pressing tab offers the names of the tables in
 // the database.

@@ -6,7 +6,6 @@
 // register the same driver under their own names, through pgwire.
 //
 // See: https://github.com/jackc/pgx
-// Group: base
 // Tags: postgres
 package pgx
 

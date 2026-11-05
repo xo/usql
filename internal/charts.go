@@ -1,4 +1,4 @@
-//go:build (all || charts) && !no_charts
+//go:build (!no_drivers || charts) && !no_charts
 
 package internal
 

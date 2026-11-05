@@ -1,4 +1,4 @@
-//go:build (!no_base || mysql) && !no_mysql
+//go:build (!no_drivers || mysql) && !no_mysql
 
 package internal
 

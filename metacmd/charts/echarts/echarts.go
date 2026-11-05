@@ -2,12 +2,11 @@
 //
 // The renderer draws a chart by running Apache ECharts in a JavaScript engine
 // to produce an SVG document, then rasterizing that document. Both of those
-// are large: together they are roughly 12 MB of every binary they are linked
-// into, which is why this package is behind the charts build tag and is
-// reached only through the generated file internal/charts.go.
+// are large: together they are roughly 12 MiB of every binary they are linked
+// into. So this package is reached only through the generated file
+// internal/charts.go, and the build tag no_charts leaves it out.
 //
 // See: https://github.com/xo/echartsgoja
-// Group: all
 package echarts
 
 import (

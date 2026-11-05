@@ -13,9 +13,9 @@ import (
 // A renderer is not part of every usql build. The implementation draws the
 // chart with a JavaScript engine and rasterizes the result with an SVG
 // renderer, and those two together are a large part of the size of the binary,
-// so they are behind the charts build tag. Register is called from the init of
-// the implementation package, which the generated file internal/charts.go
-// imports when that tag is set.
+// so the build tag no_charts leaves them out. Register is called from the init
+// of the implementation package, which the generated file internal/charts.go
+// imports unless the build leaves it out.
 type Renderer interface {
 	// RenderSVG draws the ECharts option document opts as an SVG document.
 	RenderSVG(ctx context.Context, opts string, width, height int) ([]byte, error)
@@ -24,8 +24,8 @@ type Renderer interface {
 	Rasterize(svg []byte, bg color.Color) (image.Image, error)
 }
 
-// renderer is the registered renderer. It is nil when usql was built without
-// the charts build tag.
+// renderer is the registered renderer. It is nil when the build left the
+// charts out.
 var renderer Renderer
 
 // Register registers the chart renderer. It panics when a renderer is already

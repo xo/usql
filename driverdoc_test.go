@@ -54,9 +54,10 @@ func TestDriverSeeMatchesDburl(t *testing.T) {
 		}
 	}
 	// A test that checks nothing passes. Guard the count as well as the
-	// values, so that a walk which stops finding drivers fails.
-	if checked < 40 {
-		t.Errorf("compared %d See: lines against dburl, expected at least 40.\n"+
+	// values, so that a walk which stops finding drivers fails. The drivers in
+	// plainDrivers of gen.go have no package, and so no See: line.
+	if checked < 15 {
+		t.Errorf("compared %d See: lines against dburl, expected at least 15.\n"+
 			"The driver walk is probably not finding them any more.", checked)
 	}
 }
@@ -76,8 +77,8 @@ func schemeIndex() map[string]dburl.Scheme {
 	return m
 }
 
-// driverTags returns the build tag of every driver, which is the name of its
-// directory under drivers/.
+// driverTags returns the build tag of every driver that has a package, which
+// is the name of its directory under drivers/.
 func driverTags(t *testing.T) []string {
 	t.Helper()
 	entries, err := os.ReadDir("drivers")
@@ -138,7 +139,7 @@ func TestRegistryIsKeyedByScheme(t *testing.T) {
 				" Register it under its scheme's Name, which is what URL.SchemeName holds.", name)
 		}
 	}
-	// gen.go writes each driver package's scheme Name into KnownBuildTags.
+	// gen.go writes the scheme Name of each driver into KnownBuildTags.
 	// A registered name that no package documents is one registered under
 	// the wrong name, and registering one name twice already panics.
 	documented := make(map[string]string)

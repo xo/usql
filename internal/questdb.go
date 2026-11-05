@@ -1,4 +1,4 @@
-//go:build (all || most || questdb) && !no_questdb
+//go:build (!no_drivers || questdb) && !no_questdb
 
 package internal
 

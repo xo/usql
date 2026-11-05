@@ -6,7 +6,6 @@
 // STDIN: \copy inserts each row.
 //
 // See: https://github.com/jackc/pgx
-// Group: base
 package redshift
 
 import (

@@ -13,6 +13,7 @@ import (
 	syslocale "github.com/jeandeaual/go-locale"
 	"github.com/xo/terminfo"
 	"github.com/xo/transit/styles"
+	"github.com/xo/usql/feed"
 	"github.com/xo/usql/text"
 )
 
@@ -105,6 +106,7 @@ func NewDefaultVars() *Variables {
 			"syntax_hl_override_bg": "true",
 			"sslmode":               sslmode,
 			"term_graphics":         "none",
+			"encoding":              feed.UTF8,
 		},
 		prnt: map[string]string{
 			"border":                   "1",
@@ -232,6 +234,11 @@ func (v *Variables) SetSetting(name, value string) error {
 			return fmt.Errorf(text.FormatFieldInvalidValue, value, name, "a number of rows")
 		}
 		value = strconv.Itoa(i)
+	case "encoding":
+		var err error
+		if value, err = feed.Encoding(value); err != nil {
+			return err
+		}
 	case "syntax_hl_style":
 		if _, ok := styles.Get(value); !ok {
 			return fmt.Errorf(text.UnknownStyle, value)

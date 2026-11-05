@@ -20,8 +20,9 @@ PLATFORM=$(go env GOOS)
 ARCH=$(go env GOARCH)
 GOARCH=$ARCH
 
+# A build has every driver unless a tag leaves it out, so these are only the
+# features of SQLite that go-sqlite3 compiles in.
 TAGS=(
-  most
   sqlite_app_armor
   sqlite_fts5
   sqlite_introspect
@@ -63,7 +64,8 @@ examples:
   build.sh -b                     build for the host, keep nothing
   build.sh -r                     build and pack the most recent tag
   build.sh -a arm64 -v 1.2.3      cross build version 1.2.3 for arm64
-  build.sh -t 'all' -b            build with every driver
+  build.sh -t 'no_drivers sqlite3' -b
+                                  build with only the sqlite3 driver
   go test -tags "$(build.sh -T)"  test with the same tags as the build
 END
 }

@@ -1215,6 +1215,11 @@ func Stats(p *Params) error {
 // \endif). Starts, closes, and ends a conditional block within the
 // application.
 //
+// The expression of \if and \elif is a boolean, read as psql reads it: its
+// arguments, with their variables replaced, joined by a space. A branch that
+// does not run reads no expression, so it replaces no variable and runs no
+// command between backticks.
+//
 // Descs:
 //
 //	if	EXPR	begin conditional block
@@ -1224,11 +1229,37 @@ func Stats(p *Params) error {
 func Conditional(p *Params) error {
 	switch p.Name {
 	case "if":
+		defer p.skip()
+		return p.Handler.If(p.boolean)
 	case "elif":
+		defer p.skip()
+		return p.Handler.ElseIf(p.boolean)
 	case "else":
+		return p.Handler.Else()
 	case "endif":
+		return p.Handler.EndIf()
 	}
 	return nil
+}
+
+// boolean returns the value of the expression of \if or \elif.
+func (p *Params) boolean() (bool, error) {
+	args, err := p.All(true)
+	if err != nil {
+		return false, err
+	}
+	s := strings.Join(args, " ")
+	v, ok := env.ParseVariableBool(s)
+	if !ok {
+		return false, fmt.Errorf(text.UnrecognizedValueForCond, s, p.Name)
+	}
+	return v, nil
+}
+
+// skip marks the arguments that are left as read, so that the handler does
+// not report them as ignored.
+func (p *Params) skip() {
+	p.next = len(p.item.Args)
 }
 
 // Shell is a Operating System/Environment meta command (\!). Executes a

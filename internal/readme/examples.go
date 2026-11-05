@@ -4,12 +4,12 @@ package readme
 var Examples = []Example{
 	{
 		Name: "drivers",
-		Tags: "no_base cassandra moderncsqlite mysql",
+		Tags: "no_drivers cassandra moderncsqlite mysql",
 		Lines: []string{
 			"$ cd $GOPATH/src/github.com/xo/usql",
 			"",
-			"# build excluding the base drivers, and including cassandra, moderncsqlite and mysql",
-			"$ go build -tags 'no_base cassandra moderncsqlite mysql'",
+			"# build with only the cassandra, moderncsqlite and mysql drivers",
+			"$ go build -tags 'no_drivers cassandra moderncsqlite mysql'",
 			"",
 			"# show built driver support",
 		},

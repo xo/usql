@@ -1,7 +1,6 @@
 // Package sqlite3 defines and registers usql's SQLite3 driver. Requires CGO.
 //
 // See: https://github.com/mattn/go-sqlite3
-// Group: base
 package sqlite3
 
 import (

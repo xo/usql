@@ -8,7 +8,7 @@
 // "Command line tests" in CONTRIBUTING.md says, and pass its URL as -dsn. Build
 // the usql to test first:
 //
-//	go build -tags all -o /tmp/usql .
+//	go build -o /tmp/usql .
 //	go run ./internal/cmd/pgcompare -usql /tmp/usql -dsn "$(cd ../dbmeta/test && go run ./cmd/dbrun dsn --json postgres-18 | jq -r '.[0].url')"
 //
 // The same -seed makes the same values. The report is REPORT.md in the -out

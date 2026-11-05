@@ -1,4 +1,4 @@
-//go:build (all || most || impala) && !no_impala
+//go:build (!no_drivers || impala) && !no_impala
 
 package internal
 

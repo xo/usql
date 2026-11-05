@@ -15,8 +15,9 @@ The short version:
 1. Answer the pre-flight questions. Is the upstream driver maintained, does it
    touch global process state, what does it link, and can it be tested?
 2. Add the scheme in [dburl](https://github.com/xo/dburl).
-3. Create a package in `drivers` with an `init()` that calls
-   `drivers.Register()`.
+3. Add the build tag to `plainDrivers` in `gen.go`. Only a driver that needs a
+   hook, such as `Err` or `Version`, gets a package in `drivers`, with an
+   `init()` that calls `drivers.Register()`.
 4. Regenerate the `internal` package, the driver tables in `README.md` and the
    license files by running `go run gen.go`.
 5. Add the module with `go get`, then run `go mod tidy`.
@@ -26,10 +27,15 @@ The short version:
 7. Verify against a live database. Compilation is not evidence, because nearly
    every field of `drivers.Driver` is optional.
 
-A driver that cannot compile everywhere says so in its package comment with a
-`Build:` line, and `gen.go` adds that constraint to the file it generates in
-`internal`. The duckdb driver uses `Build: !(linux && arm) && !windows`, because
-its prebuilt library has no 32 bit arm build and no windows build.
+A driver that cannot compile everywhere says so with a build constraint: the
+`Build` field of its entry in `plainDrivers`, or a `Build:` line in the comment
+of its package. `gen.go` adds that constraint to the file it generates in
+`internal`. The duckdb driver uses `Build: "!(linux && arm)"`, because its
+prebuilt library has no 32 bit arm build.
+
+usql has one build. A build with no tags has every driver. The tag `no_<tag>`
+leaves one driver out, and `no_drivers` leaves out every driver that the build
+does not name by its tag.
 
 ## Building duckdb on Windows
 
@@ -54,16 +60,18 @@ It lands under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\` in a
 `mingw64\bin` directory. `go build` finds `gcc` there and turns CGO on by
 itself. The workflows install the same package for the same reason.
 
-Checking that `go build ./drivers/duckdb/` succeeds is not enough. Building a
+Checking that `go build github.com/duckdb/duckdb-go/v2` succeeds is not enough. Building a
 package compiles it; the archives are only linked when an executable is
 produced, so every failure above appears at the binary link and not before.
 Build the binary.
 
 ## Adding a platform constraint to a driver
 
-Put the constraint in the driver's package comment rather than in `build.sh`. A constraint in the
-generated file also excludes the driver from `go build -tags most`, while one in
-the script only applies to a build made through the script.
+Put the constraint in the `Build` field of the driver's entry in
+`plainDrivers`, or in the driver's package comment, rather than in `build.sh`.
+A constraint in the generated file also excludes the driver from a plain
+`go build`, while one in the script only applies to a build made through the
+script.
 
 > Tip: check out closed PRs for examples, and/or search the codebase
 > for names of databases you're familiar with.
@@ -80,14 +88,12 @@ judged on whether it works on its own. It is judged on whether it can share a
 process with forty-nine others and with a command line tool whose standard
 output is the data.
 
-### Put it in the `bad` group
+### What makes a driver unfit
 
-Set `Group: bad` in the driver's package comment and run `go generate`. The
-generated constraint becomes `(bad || <tag>) && !no_<tag>`, so the driver
-leaves the default, `most` and `all` builds and is reachable only with
-`-tags bad` or `-tags <driver>`.
-
-Do that for any of these. Each is detectable rather than a matter of taste, and
+usql has one build, and every driver is in it. There is no group that keeps a
+driver in the tree and out of the build. A driver with any of these faults is
+fixed upstream first, or removed. Each is detectable rather than a matter of
+taste, and
 the detection is worth running against the whole module, not just the driver
 package, because the fault is usually several levels down a transitive import.
 
@@ -122,7 +128,7 @@ panics at init and takes the whole binary with it.
 Needing cgo, shipping prebuilt object files, or linking on only some of the
 platforms usql releases for. That is not automatically disqualifying, because
 duckdb and sqlite3 both need cgo. A driver that cannot build on a release
-target needs a `Build:` constraint as well. See the section above.
+target needs a build constraint as well. See the section above.
 
 Module hygiene that breaks consumers. An `exclude` or `replace` directive in
 its own `go.mod`, a missing `go.mod`, or a `+incompatible` version that will
@@ -133,18 +139,17 @@ not resolve. Confirm with a real install rather than reasoning about it:
 A licence that is not compatible with usql's, or a size cost out of all
 proportion to what the driver offers.
 
-### Remove it entirely
+### Remove it
 
-The `bad` group is triage, not a retirement home. A driver sits there while
-someone decides, and the decision is expected.
+Remove the driver when it has a fault above that upstream does not fix, or when
+upstream has stopped. The signals are concrete. The repository is archived.
+There is no release or commit for eighteen months. A security report goes
+unanswered. The module no longer resolves. Nobody replies.
 
-Remove the driver outright when the fault cannot be contained by not linking
-it, or when upstream has stopped. The signals are concrete. The repository is archived. There is no release or
-commit for eighteen months. A security report goes unanswered. The module no
-longer resolves. Nobody replies.
-Removing means the driver directory, the generated file in `internal`, the
-dependency in `go.mod`, and the README row. `go generate` handles all of it
-except the directory and the dependency.
+Removing means the entry in `plainDrivers` or the driver directory, the
+generated file in `internal`, the dependency in `go.mod`, and the README row.
+`go run gen.go` removes the generated file and the README row. `go mod tidy`
+removes the dependency. The scheme is then dropped from dburl.
 
 The bar for keeping an unmaintained driver is not that someone could use it. It
 is whether usql can carry it without cost to everyone else. A driver that is both
@@ -152,17 +157,18 @@ unmaintained and badly behaved does not get parked. It gets dropped.
 
 ### What has actually happened
 
-The history is worth knowing, because it shows the group used in both
-directions rather than as a one-way door.
-
-`bad` was created in August 2022 to hold impala. hive was demoted a month
-later, briefly re-enabled in November 2023, and put straight back the same day.
-genji went in during July 2023 and left in January 2024 by being replaced with
-chai, which is maintained and is in the `most` group. impala came back in April 2025,
-three years after it went in. So a driver in `bad` is not written off.
+usql once had build groups. A `bad` group held the drivers that were known to
+be broken, out of every build that did not ask for them. It was created in
+August 2022 to hold impala. hive was demoted a month later, briefly re-enabled
+in November 2023, and put straight back the same day. genji went in during July
+2023 and left in January 2024 by being replaced with chai. impala came back in
+April 2025, three years after it went in. In November 2026 the groups were
+removed, and the last two drivers in `bad`, h2 and gizmosql, were removed with
+them.
 
 Removed outright, at various times: YQL in 2017, avatica in 2017, snowflake in
-2024, dameng in September 2026, and RamSQL in September 2026. avatica and
+2024, dameng in September 2026, RamSQL in September 2026, and h2 and gizmosql
+in November 2026. avatica and
 snowflake later returned, which is the other half of the point: removal is not
 a judgement on the database, only on the driver as it stands.
 
@@ -182,12 +188,12 @@ removed instead.
 ## Measuring the size of a driver
 
 `size.sh` measures how much each driver adds to the usql binary. It builds
-usql once with every driver of a group, and once more for each driver with
-only that driver left out. The difference is what removing that driver saves.
+usql once with every driver, and once more for each driver with only that
+driver left out, through its `no_<tag>` build tag. The difference is what
+removing that driver saves. It measures the charts feature in the same way.
 The builds are stripped, as `build.sh` strips a release.
 
-    ./size.sh              # every driver, in the all group
-    ./size.sh -g most      # the drivers that a release ships
+    ./size.sh
 
 Two drivers that share a module each save only what the other does not use.
 So the savings do not add up to the size of the binary.
@@ -216,7 +222,7 @@ schemas are the users `northwind` and `hr`:
 
     (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun fixture northwind postgres-18)
 
-The run builds usql with the `most` group and types each example into it
+The run builds usql with every driver and types each example into it
 under a pseudo-terminal, so it takes some minutes. The README shows `pass` for
 the password and `localhost` for the host and port.
 
@@ -242,17 +248,17 @@ itself, so these are gated the same way the drivers are. Add an entry to the
 
 ```go
 {
-    Tag:   "charts",
-    Pkg:   "github.com/xo/usql/metacmd/charts/echarts",
-    Desc:  "ECharts chart renderer",
-    Group: "all",
+    Tag:  "charts",
+    Pkg:  "github.com/xo/usql/metacmd/charts/echarts",
+    Desc: "ECharts chart renderer",
 }
 ```
 
 `gen.go` then writes `internal/charts.go`, which imports that package under the
-constraint the group gives. The group has the same meaning as a driver's, and
-`Build:` works the same way, so a feature that cannot compile everywhere states
-so there.
+same constraint as a driver's. A build includes the feature, `no_charts` leaves
+it out, and `no_drivers` leaves it out unless the build also names `charts`.
+`Build` works as it does for a driver, so a feature that cannot compile
+everywhere states so there.
 
 A feature is not a driver. It registers no URL scheme, and it does not appear in
 `internal.KnownBuildTags` or in the driver table in the README.
@@ -264,7 +270,7 @@ package that costs nothing, have the gated package register itself from its
 `metacmd/charts/echarts/echarts.go` for the implementation. Without that, the
 import in the caller links the package back in and the tag does nothing.
 
-Run `go generate` after editing `gen.go`. It reads dburl from the version
+Run `go run gen.go` after editing `gen.go`. It reads dburl from the version
 pinned in `go.mod`.
 
 # Running the tests
@@ -279,8 +285,9 @@ On a machine with little memory, run one package at a time with `-p 1`.
 
 The fuzz tests of `feed` read scripts the way `-f` does, in the syntax of
 every dialect that dbmeta has a model for. They put quotes, separators,
-backslashes and unusual Unicode into names, strings and comments, and save
-scripts in encodings other than UTF-8. `go test ./...` runs only their seed
+backslashes and unusual Unicode into names, strings and comments. They save
+scripts in encodings other than UTF-8 and read them with the `encoding`
+setting, and check that a script that is not valid UTF-8 is refused. `go test ./...` runs only their seed
 inputs. To search for new inputs, run one fuzz test at a time:
 
     go test -run '^$' -fuzz FuzzSplit ./feed
@@ -291,10 +298,9 @@ A fuzz test stops at the first input that fails and writes it under
 `feed/testdata/fuzz`. Commit that file with the fix, so that `go test ./...`
 runs it from then on.
 
-No test of usql starts a database. To try usql against one, start it with
-dbmeta's `dbrun`, which owns every container setup. The tests that ran
-against databases were removed, and W37 in `docs/BACKLOG.md` brings them
-back.
+No test of usql starts a database. A test that needs one skips when the
+environment names none. [Tests against a database](#tests-against-a-database)
+says how to start one with dbmeta's `dbrun`, which owns every container setup.
 
 ## Terminal tests
 
@@ -303,14 +309,14 @@ own a terminal, so piping input into it exercises none of them. `cli_test.go`
 records sessions against a real pseudo-terminal and compares them against the
 golden transcripts in `testdata/cli`:
 
-    go test -tags "sqlite3 no_base" -run TestCLI .
+    go test -tags "sqlite3 no_drivers" -run TestCLI .
 
 Every session uses SQLite, so none of them needs a container. Linux and macOS
 record. Windows has no pseudo-terminal device file, so the test skips there.
 
 Re-record after a deliberate change to the output:
 
-    go test -tags "sqlite3 no_base" -run TestCLI -update .
+    go test -tags "sqlite3 no_drivers" -run TestCLI -update .
 
 Read the diff before you keep a re-recording. A golden here records what usql
 does rather than what it ought to do, so accepting one blindly freezes whatever
@@ -346,6 +352,71 @@ limit and the rules for a server that another session started.
 
 [dbrun]: https://github.com/xo/dbmeta/blob/main/docs/DBRUN.md
 
+## Tests against a database
+
+The tests in `drivers/dbrun_test.go` run against a database that dbrun
+started. They read two variables:
+
+- `USQL_TEST_URL` is the URL of the database. It is the field `url` that
+  `dbrun dsn --json` prints. When it is not set, the tests skip.
+- `USQL_TEST_NAME` is the dbrun name of the database, such as `postgres-18`.
+  It names the recording.
+
+dbmeta's own tests read variables such as `DBMETA_POSTGRES`. These hold the
+connection string of the Go driver, which for MySQL and for an embedded
+database is not a URL. usql takes only URLs, so its tests read a URL of their
+own.
+
+There are three tests:
+
+- `TestConnect` connects and reads the version of the server. It needs no
+  fixture, so it runs on every database.
+- `TestDescribe` runs the describe commands on the tables `authors` and `books`
+  of dbrun's fixture `examples`. It compares what usql prints with the
+  recording in `drivers/testdata/dbrun/NAME.txt`. If there is no recording,
+  the commands run and the test skips the comparison.
+- `TestCopy` copies `books` with `\copy` into a new SQLite database, and from
+  there into a new table of the database under test. Each copy must arrive
+  whole.
+
+dbrun has the fixture `examples` for PostgreSQL, MySQL, MariaDB, SQL Server,
+Oracle, SQLite and DuckDB. On another database, `TestDescribe` and `TestCopy`
+skip. On a database that has a recording, they fail when the fixture is not
+there. On MySQL and MariaDB, dbrun puts the fixture in the database `examples`,
+and the tests connect to it when the URL names no database.
+
+To run the tests against PostgreSQL 18, from a usql checkout with dbmeta cloned
+beside it:
+
+    dbrun() { (cd ../dbmeta/test && go run ./cmd/dbrun "$@"); }
+    dbrun start postgres-18
+    dbrun fixture examples postgres-18
+    USQL_TEST_URL="$(dbrun dsn --json postgres-18 | jq -r '.[0].url')" \
+      USQL_TEST_NAME=postgres-18 \
+      go test -count=1 -v -run 'TestConnect|TestDescribe|TestCopy' ./drivers
+    dbrun stop postgres-18
+
+SQLite and DuckDB need no `start`. For an embedded database, `dbrun fixture`
+runs the `usql` on your PATH to load the fixture, so build usql first.
+
+If you change what the describe commands print, record the output again with
+`-update`, against each database that has a recording:
+
+    USQL_TEST_URL=... USQL_TEST_NAME=postgres-18 \
+      go test -count=1 -run TestDescribe ./drivers -update
+
+Read the diff before you keep it. A recording holds what usql prints today,
+and that is not yet what psql prints (W46). The test replaces the password,
+and the names that SQL Server makes up for a constraint, so a recording does
+not change from one run to the next.
+
+CI runs the same tests, in the workflow `test.yml`. On each push, it runs every
+database that has a recording. So a new recording adds its database to the
+runs on each push. Every night it runs dbrun's tiers `tested` and `nightly`,
+which hold every database that runs on GitHub's runners. The list of databases
+lives in dbmeta, and dbrun is built from the release of dbmeta that `go.mod`
+pins.
+
 ## Comparing PostgreSQL output with psql
 
 `internal/cmd/pgcompare` compares how psql and usql print every built-in type of
@@ -355,7 +426,7 @@ It compares the aligned, unaligned and CSV output, and it writes a report of eac
 difference. It needs `psql` on your PATH and a PostgreSQL server that dbrun
 started, as above:
 
-    go build -tags all -o /tmp/usql .
+    go build -o /tmp/usql .
     go run ./internal/cmd/pgcompare -usql /tmp/usql -dsn "$(cd ../dbmeta/test && go run ./cmd/dbrun dsn --json postgres-18 | jq -r '.[0].url')"
 
 The command prints where its report is. `REPORT.md` holds the differences, and

@@ -556,3 +556,36 @@ func TestSourceLargeStatement(t *testing.T) {
 		t.Errorf("reading a statement of %d bytes allocated %d MiB", sb.Len(), mib)
 	}
 }
+
+// TestBackslashEscapes checks that a backslash escapes in a string and in a
+// name between double quotes only where the dialect says so, as MySQL does,
+// and that it is text elsewhere, as psql reads it (transit's D142).
+func TestBackslashEscapes(t *testing.T) {
+	t.Parallel()
+	mysql := dbmeta.Syntax{BlockComments: true, DashComments: true, HashComments: true, Backticks: true, BackslashEscapes: true}
+	tests := []struct {
+		syntax dbmeta.Syntax
+		src    string
+		exp    string
+	}{
+		{postgres, "select 'C:\\data\\';\nselect 2;", "S:select 'C:\\data\\'; | S:select 2;"},
+		{postgres, "select E'a\\'b';\nselect 2;", "S:select E'a\\'b'; | S:select 2;"},
+		{postgres, "select 1 as \"a\\\";\nselect 2;", "S:select 1 as \"a\\\"; | S:select 2;"},
+		{mysql, "select 'a\\'b';\nselect 2;", "S:select 'a\\'b'; | S:select 2;"},
+		{mysql, "select 'C:\\data\\';\nselect 2;", "S:select 'C:\\data\\';\nselect 2;(open)"},
+		{mysql, "select 1 as \"a\\\"b\";\nselect 2;", "S:select 1 as \"a\\\"b\"; | S:select 2;"},
+	}
+	for _, test := range tests {
+		p, err := NewParser(Language(test.syntax, false))
+		if err != nil {
+			t.Fatal(err)
+		}
+		items, err := p.Parse(test.src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := summary(items); got != test.exp {
+			t.Errorf("%q:\n got: %q\nwant: %q", test.src, got, test.exp)
+		}
+	}
+}

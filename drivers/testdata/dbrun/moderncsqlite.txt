@@ -1,0 +1,57 @@
+# What usql prints for the describe commands on moderncsqlite, with dbrun's
+# fixture examples. TestDescribe in drivers/dbrun_test.go writes this file.
+# Do not edit it. Run the test with -update, and read the diff.
+
+-- \dt authors
+      List of tables
+ Schema |  Name   | Type  
+--------+---------+-------
+ main   | authors | table
+(1 row)
+
+
+-- \dt books
+     List of tables
+ Schema | Name  | Type  
+--------+-------+-------
+ main   | books | table
+(1 row)
+
+
+-- \d authors
+             Table "main.authors"
+  Column   |     Type     | Nullable | Default 
+-----------+--------------+----------+---------
+ author_id | INTEGER      |          | 
+ name      | VARCHAR(100) | not null | 
+Referenced by:
+    TABLE "books" CONSTRAINT "fk_books_0" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \d books
+              Table "main.books"
+  Column   |     Type     | Nullable | Default 
+-----------+--------------+----------+---------
+ book_id   | INTEGER      |          | 
+ author_id | INTEGER      |          | 
+ title     | VARCHAR(200) | not null | 
+Foreign-key constraints:
+    "fk_books_0" FOREIGN KEY (author_id) REFERENCES authors(author_id)
+
+
+-- \di *authors*
+Did not find any indexes named "*authors*".
+
+-- \di *books*
+Did not find any indexes named "*books*".
+
+-- SELECT book_id, author_id, title FROM books ORDER BY book_id;
+ book_id | author_id |   title    
+---------+-----------+------------
+       1 |         1 | Foundation
+       2 |         1 | I, Robot
+       3 |         2 | Carrie
+       4 |         2 | Cujo
+(4 rows)
+
+

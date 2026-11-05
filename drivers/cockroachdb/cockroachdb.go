@@ -6,7 +6,6 @@
 // dbmeta reads its metadata and its version.
 //
 // See: https://github.com/jackc/pgx
-// Group: base
 package cockroachdb
 
 import (
