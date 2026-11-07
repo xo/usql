@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/xo/dbfwd"
 	"github.com/xo/dburl"
 	"github.com/xo/rline"
 	"github.com/xo/usql/drivers"
@@ -428,6 +429,150 @@ func ConnectionInfo(p *Params) error {
 		add(local, redacted(u))
 	}
 	return describe.Table(p.Handler.Stdout(), "Connection Information", []string{"Parameter", "Value"}, values)
+}
+
+// Kubernetes is a Connection meta command (\k). Lists the databases that
+// dbfwd can reach in a Kubernetes cluster, with the URL that \c opens.
+//
+// The scope is a k8s URL whose k:// is optional, such as * for the current
+// namespace, pg*.prod, *.* for every namespace, or cnpg://* for the
+// CloudNativePG clusters. The options -A, -n NAMESPACE and --context NAME fill
+// in what the scope leaves out, as kubectl reads them, and dbfwd reports an
+// option that disagrees with it.
+//
+// Descs:
+//
+//	k[+]	[OPTIONS] [SCOPE]	list databases in Kubernetes, with the URL for \c (OPTIONS: -A, -n NAMESPACE, --context NAME)
+func Kubernetes(p *Params) error {
+	var all bool
+	var namespace, kubeContext, scope string
+	for {
+		v, ok, err := p.NextOK(true)
+		switch {
+		case err != nil:
+			return err
+		case !ok:
+			return listKubernetes(p, scope, all, namespace, kubeContext)
+		}
+		name, value, hasValue := strings.Cut(v, "=")
+		switch {
+		case v == "-A" || v == "--all-namespaces":
+			all = true
+		case name == "-n" || name == "--namespace" || name == "--context":
+			if !hasValue {
+				if value, err = p.Next(true); err != nil {
+					return err
+				}
+			}
+			if value == "" {
+				return fmt.Errorf(text.KubernetesMissingValue, name)
+			}
+			if name == "--context" {
+				kubeContext = value
+			} else {
+				namespace = value
+			}
+		case strings.HasPrefix(v, "-") && v != "-":
+			return fmt.Errorf(text.InvalidOption, v)
+		case scope != "":
+			return fmt.Errorf(text.KubernetesExtraArgument, v, scope)
+		default:
+			scope = v
+		}
+	}
+}
+
+// listKubernetes lists the databases of a scope, and writes them as a table.
+func listKubernetes(p *Params, scope string, all bool, namespace, kubeContext string) error {
+	var where []dbfwd.Field
+	switch {
+	case all && namespace != "":
+		return fmt.Errorf(text.KubernetesAllAndNamespace, namespace)
+	case all:
+		namespace = "*"
+	}
+	if namespace != "" {
+		where = append(where, dbfwd.Field{Name: "namespace", Value: namespace})
+	}
+	if kubeContext != "" {
+		where = append(where, dbfwd.Field{Name: "context", Value: kubeContext})
+	}
+	u, err := dbfwd.ListURL("k8s", scope, where...)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	var opts []dbfwd.Option
+	if l := p.Handler.IO(); l.Interactive() {
+		opts = append(opts, dbfwd.WithInteractive(l.Release))
+	}
+	listing, err := dbfwd.List(ctx, u, opts...)
+	switch {
+	case errors.Is(err, dbfwd.ErrForbidden) && namespace == "*":
+		return fmt.Errorf(text.KubernetesAllForbidden, err)
+	case err != nil:
+		return err
+	}
+	w, scopeName := p.Handler.Stdout(), scopeText(listing.Scope)
+	if len(listing.Entries) == 0 {
+		fmt.Fprintf(w, text.KubernetesNotFound+"\n", scopeName)
+	} else {
+		plus := strings.HasSuffix(p.Name, "+")
+		columns := []string{"Namespace", "Name", "Type", "Kind", "Operator"}
+		if plus {
+			columns = append(columns, "Roles", "Ready", "Databases", "Credential")
+		}
+		columns = append(columns, "URL")
+		values := make([][]any, 0, len(listing.Entries))
+		for _, e := range listing.Entries {
+			row := []any{fieldValue(e.Target.Scope, "namespace"), e.Target.Name, e.Target.Type, e.Target.Kind, e.Operator}
+			if plus {
+				row = append(row,
+					strings.Join(e.Roles, ", "),
+					strconv.Itoa(e.Ready)+"/"+strconv.Itoa(e.Pods),
+					strings.Join(e.Databases, ", "),
+					e.Credential,
+				)
+			}
+			values = append(values, append(row, e.URL))
+		}
+		if err := describe.Table(w, fmt.Sprintf(text.KubernetesTitle, scopeName), columns, values); err != nil {
+			return err
+		}
+	}
+	// what RBAC kept from the listing goes to stderr after the table, as psql
+	// writes its notes
+	for _, s := range listing.Skipped {
+		fmt.Fprintln(p.Handler.IO().Stderr(), fmt.Sprintf(text.KubernetesSkipped, s.Kind, scopeText(s.Scope), s.Reason))
+	}
+	return nil
+}
+
+// scopeText returns a scope of dbfwd as text, such as "context kind-prod,
+// namespace prod". Every namespace reads as "every namespace".
+func scopeText(scope []dbfwd.Field) string {
+	parts := make([]string, 0, len(scope))
+	for _, f := range scope {
+		switch {
+		case f.Value == "":
+		case f.Name == "namespace" && f.Value == "*":
+			parts = append(parts, "every namespace")
+		default:
+			parts = append(parts, f.Name+" "+f.Value)
+		}
+	}
+	return strings.Join(parts, ", ")
+}
+
+// fieldValue returns the value of the field name of a scope of dbfwd.
+func fieldValue(scope []dbfwd.Field, name string) string {
+	for _, f := range scope {
+		if f.Name == name {
+			return f.Value
+		}
+	}
+	return ""
 }
 
 // redacted returns u with its password written as xxxxx, as the Redacted

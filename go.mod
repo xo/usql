@@ -29,7 +29,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.2
-	github.com/xo/dbfwd v0.1.1
+	github.com/xo/dbfwd v0.3.0
 	github.com/xo/dbimp v0.24.3
 	github.com/xo/dbmeta v0.35.0
 	github.com/xo/dburl v0.57.0

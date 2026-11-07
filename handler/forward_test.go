@@ -27,6 +27,7 @@ type fakeBackend struct {
 	mu      sync.Mutex
 	url     string
 	tunnels []*fakeTunnel
+	listed  []listCall
 }
 
 // backend is registered once, because dbfwd panics on a second registration
@@ -68,6 +69,13 @@ func (b *fakeBackend) opened() []*fakeTunnel {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return append([]*fakeTunnel(nil), b.tunnels...)
+}
+
+// lists returns what \k passed to dbfwd.ListURL.
+func (b *fakeBackend) lists() []listCall {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return append([]listCall(nil), b.listed...)
 }
 
 // fakeTunnel is a forward that stops when it is closed or lost.

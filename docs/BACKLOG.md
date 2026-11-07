@@ -3536,8 +3536,9 @@ every build. Checked against PostgreSQL 18 in a kind cluster from dbrun.
 
 Open:
 
-- No build tag leaves the `k8s` backend out. Hard rule 10 is about drivers,
-  and Ken has not said whether a backend gets a `no_` tag.
+- No build tag leaves the `k8s` backend out. Ken decided on 2026-11-08 that
+  it gets none. It adds about 273 KiB to a stripped build, and it needs
+  nothing but the standard library and dburl.
 - On macOS, Windows and the other BSDs, `kubectl` keeps running after usql is
   killed with `SIGKILL`. dbfwd v0.1.1 stops it with its parent only on Linux
   and FreeBSD (dbfwd's D17), because only they have `Pdeathsig`.
@@ -3551,3 +3552,31 @@ URL, which is enough for `k8s`, whose credential does not expire. Before
 usql uses such a backend, it opens the pool with `sql.OpenDB` and a
 `driver.Connector` whose `Connect` calls `Forward.URL`. The drivers whose
 `Open` builds the pool themselves, such as pgx, need a way to do the same.
+
+## W76. List the databases in Kubernetes: Done
+
+Source: Ken, on 2026-11-08. A meta command lists the databases that dbfwd can
+reach in a cluster, as the `\d` commands list, with the URL that `\c` opens.
+dbfwd lists them (its D18), and builds the URL of a listing from the scope
+and the options with `ListURL`, so that usql holds no parsing of the scope
+(hard rule 2).
+
+Ken decided the design on 2026-11-08, after dbfwd and the flagship models:
+
+- The name is `\k`, for Kubernetes only. A later backend of dbfwd gets a
+  command of its own.
+- `\k [-A | -n NAMESPACE] [--context NAME] [SCOPE]`. The scope is a k8s URL
+  whose `k://` is optional, so `*`, `pg*.prod` and `cnpg://*` work, and only
+  `*` is a wildcard. A bare `\k` lists the current namespace. `-A` with `-n`
+  is an error, and dbfwd reports an option that disagrees with the scope.
+- The columns are Namespace, Name, Type, Kind, Operator and URL, and `\k+`
+  adds Roles, Ready, Databases and Credential before the URL. The title and
+  the empty result name the context and the namespace. Skipped kinds go to
+  stderr after the table.
+- A listed URL carries `?context=` only when `\k` named a context.
+- No completion of `\c` from a listing, until completion has the cache that
+  https://github.com/xo/usql/discussions/599 proposes, because completion must
+  be fast.
+
+Done on 2026-11-08 on dbfwd v0.3.0. Checked against PostgreSQL 18 in a kind
+cluster from dbrun.

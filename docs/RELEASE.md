@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbfwd v0.1.1, dbmeta v0.35.0, dburl v0.57.0, tblfmt v0.23.0, transit
+- usql requires dbfwd v0.3.0, dbmeta v0.35.0, dburl v0.57.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
@@ -512,13 +512,21 @@ the XDG Base Directory specification on Linux and other Unix systems.
   no variable for the password alone, and `USQL_PASSWORD` is still the
   variable of `-W`.
 - usql opens a database in Kubernetes from a URL such as `k://pg.prod/app` or
-  `k8s+cnpg://pg.prod/app`, through dbfwd v0.1.1 and `kubectl port-forward`.
+  `k8s+cnpg://pg.prod/app`, through dbfwd v0.3.0 and `kubectl port-forward`.
   dburl v0.57.0 parses the `k8s` scheme, with the aliases `k`, `kc`, `k8`,
-  `kube` and `kubernetes`. The password comes from the Secret, so `-W` gives
+  `kube` and `kubernetes`. The type after `+` takes dburl's aliases, so
+  `k+pg://` is PostgreSQL. The password comes from the Secret, so `-W` gives
   an error. The banner and `\conninfo` name what the forward reached, and the
   prompt shows the host from the URL. A lost forward stops each statement
   with its reason, and `\c` with no argument starts it again. usql stops the
   forward on `\c`, `\Z` and at exit.
+- `\k` lists the databases that usql can reach in Kubernetes, with the URL
+  that `\c` opens. `\k` lists the current namespace, `\k -A` every
+  namespace, `-n NAMESPACE` one namespace, and `--context NAME` another
+  context. A scope narrows the list, such as `pg*`, `pg*.prod` or `cnpg://*`,
+  and its `k://` is optional. `\k+` adds the roles, the ready pods, the
+  databases and where the password comes from. No Secret is read. The URLs
+  carry `?context=` only when `\k` named a context.
 - On Windows, a path on the drive `K:`, such as `K:\data\app.db`, now parses
   as a `k8s` URL and fails. Write it as `file:///K:/data/app.db`.
 - `\c` closes the connection that it replaces. Before, the pool of the old
@@ -699,6 +707,8 @@ prints. Put a database and its Secret in a namespace of your own.
   check that it reports the lost forward. Scale it up, and check that `\c`
   connects again.
 - Check that no `kubectl` process is left after `\q`.
+- Run `\k`, `\k+`, `\k -A`, `\k -n NAMESPACE`, `\k pg://*` and
+  `\k --context NAME`, and open a listed URL with `\c`.
 
 ### Changing passwords
 

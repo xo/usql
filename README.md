@@ -415,11 +415,11 @@ Arguments:
 Flags:
   -c, --command COMMAND                     run only single command (SQL or internal) and exit
   -f, --file FILE                           execute commands from file and exit
-  -w, --no-password                         never prompt for password
-  -X, --no-init                             do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-usqlrc)
+  -w, --no-password[=true|false]            never prompt for password
+  -X, --no-init[=true|false]                do not execute initialization scripts (aliases: --no-rc --no-psqlrc --no-usqlrc)
   -o, --out FILE                            output file
-  -W, --password                            force password prompt (should happen automatically)
-  -1, --single-transaction                  execute as a single transaction (if non-interactive)
+  -W, --password[=true|false]               force password prompt (should happen automatically)
+  -1, --single-transaction[=true|false]     execute as a single transaction (if non-interactive)
   -v, --set NAME=VALUE                      set script variable NAME to VALUE (see \set command, aliases: --var --variable)
   -U, --uset NAME=VALUE                     set setting NAME of usql to VALUE (see \uset command)
   -N, --cset NAME=DSN                       set named connection NAME to DSN (see \cset command)
@@ -439,8 +439,8 @@ Flags:
   -M, --markdown                            markdown output mode
   -q, --quiet                               run quietly (no messages, only query output)
       --config string                       config file
-  -V, --version                             output version information, then exit
-  -?, --help                                show this help, then exit
+  -V, --version[=true|false]                output version information, then exit
+  -?, --help[=true|false]                   show this help, then exit
 ```
 
 ### Connecting to Databases
@@ -575,6 +575,24 @@ such as `pg`, in place of the local address and port. When the pod restarts, the
 the first statement after that fails as it does after a server restart. When
 no pod runs for two minutes, the forward is lost, and `\c` with no argument
 starts it again.
+
+`\k` lists the databases that `usql` can reach, with the URL that `\c` opens:
+
+```txt
+=> \k -A
+    List of Kubernetes databases in context kind-prod, every namespace
+ Namespace | Name |   Type   |  Kind   |     Operator     |      URL
+-----------+------+----------+---------+------------------+----------------
+ prod      | pg   | postgres | Cluster | CloudNativePG    | k://pg.prod/
+ prod      | shop | mariadb  | MariaDB | mariadb-operator | k://shop.prod/
+(2 rows)
+```
+
+`\k` lists the current namespace, `-A` every namespace, `-n NAMESPACE` one
+namespace, and `--context NAME` another context. A scope narrows the list,
+such as `pg*`, `pg*.prod` or `cnpg://*`, and its `k://` is optional. Only `*`
+is a wildcard. `\k+` adds the roles, the ready pods, the databases, and where
+the password comes from. `\k` reads no Secret.
 
 On Linux and FreeBSD, if `usql` is killed, `kubectl` stops with it. On other
 systems, a `kubectl port-forward` can keep running after `usql` is killed with
@@ -773,6 +791,8 @@ Connection
   \password [USER]                  change password for user
   \conninfo [-password]             display information about the current database connection,
                                     with the password when -password is given
+  \k[+] [OPTIONS] [SCOPE]           list databases in Kubernetes, with the URL for \c (OPTIONS:
+                                    -A, -n NAMESPACE, --context NAME)
 
 Query Execute
   \g [(OPTIONS)] [FILE] or ;        execute query (and send results to file or |pipe)
@@ -1338,7 +1358,7 @@ Type "help" for help.
 (not connected)=> \set DESTINATION_DSN sqlite3:booktest.db
 (not connected)=> -- connecting to the destination and creating the schema
 (not connected)=> \c :DESTINATION_DSN
-Connected with driver sqlite3 (SQLite 3.53.4)
+Connected with driver sqlite3 (SQLite 3.54.1)
 sq:booktest.db=> create table authors (author_id integer, name text);
 CREATE TABLE
 sq:booktest.db=> create table books (book_id integer not null primary key autoincrement, author_id integer, title text);
@@ -1354,7 +1374,7 @@ COPY 2
 (not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select author_id, title from books' 'books(author_id, title)'
 COPY 3
 (not connected)=> \c :DESTINATION_DSN
-Connected with driver sqlite3 (SQLite 3.53.4)
+Connected with driver sqlite3 (SQLite 3.54.1)
 sq:booktest.db=> select * from authors;
  author_id |     name
 -----------+--------------

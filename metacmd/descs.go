@@ -53,6 +53,7 @@ func init() {
 			{Password, `password`, `[USER]`, `change password for user`, false, false},
 			{Password, `passwd`, ``, `alias for \password`, true, false},
 			{ConnectionInfo, `conninfo`, `[-password]`, `display information about the current database connection, with the password when -password is given`, false, false},
+			{Kubernetes, `k[+]`, `[OPTIONS] [SCOPE]`, `list databases in Kubernetes, with the URL for \c (OPTIONS: -A, -n NAMESPACE, --context NAME)`, false, false},
 		},
 		// Query Execute
 		{
