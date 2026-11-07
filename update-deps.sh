@@ -67,11 +67,13 @@ BUILD_TAGS=$($SRC/build.sh -T)
 ALL_TAGS="$BUILD_TAGS test"
 
 # updatable lists every non-main module providing a package in the build graph,
-# minus SKIP
+# minus SKIP. It also leaves out resvg's libresvg modules, one for each
+# platform. resvg's go.mod pins them, so updating resvg updates them, and
+# `go get -u` fails on them.
 updatable() {
   go list -tags "$ALL_TAGS" -deps -test \
     -f '{{with .Module}}{{if not .Main}}{{.Path}}{{end}}{{end}}' ./... \
-    | grep . | sort -u \
+    | grep . | grep -v '^github.com/xo/resvg/libresvg/' | sort -u \
     | comm -23 - <(printf '%s\n' ${SKIP[@]+"${SKIP[@]}"} | sort -u)
 }
 
