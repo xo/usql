@@ -238,6 +238,10 @@ jobs:
           sha256sum ./scan/*
       - name: Submit to VirusTotal
         id: virustotal
+        # Only a release uses the analysis, in its notes. A push to main does
+        # not spend the daily limit of the VirusTotal API, and does not fail
+        # when VirusTotal is down.
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: crazy-max/ghaction-virustotal@v5
         with:
           vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
