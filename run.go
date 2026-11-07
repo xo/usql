@@ -370,6 +370,15 @@ func Run(ctx context.Context, args *Args) error {
 	if h, err = handler.New(l, r, u, wd, args.Charts, args.NoPassword); err != nil {
 		return err
 	}
+	// closing the connection at exit stops the forward that dbfwd runs for
+	// it. An open transaction is rolled back, as the server does when psql
+	// exits.
+	defer func() {
+		if h.Close() == text.ErrPreviousTransactionExists {
+			_ = h.Rollback()
+			_ = h.Close()
+		}
+	}()
 	// -o sends the results to a file, as \o does
 	if args.Out != "" {
 		f, err := os.OpenFile(args.Out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)

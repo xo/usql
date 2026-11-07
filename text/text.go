@@ -37,6 +37,8 @@ var (
 	RowCount                 = `(%d rows)`
 	AvailableDrivers         = `Available Drivers:`
 	ConnInfo                 = `Connected with driver %s (%s)`
+	ForwardInfo              = `Forwarded to %s`
+	ForwardLost              = `%w (\c starts it again)`
 	EnterPassword            = `Enter password: `
 	EnterPreviousPassword    = `Enter previous password: `
 	PasswordsDoNotMatch      = `Passwords do not match, trying again ...`

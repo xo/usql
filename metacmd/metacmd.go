@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mattn/go-runewidth"
+	"github.com/xo/dbfwd"
 	"github.com/xo/dburl"
 	"github.com/xo/rline"
 	"github.com/xo/usql/drivers"
@@ -35,6 +36,9 @@ type Handler interface {
 	User() *user.User
 	// URL returns the current database URL.
 	URL() *dburl.URL
+	// Forward returns the URL that the forward of the connection resolved,
+	// and the forward, or nil and nil.
+	Forward() (*dburl.URL, *dbfwd.Forward)
 	// DB returns the current database connection.
 	DB() drivers.DB
 	// LastExec returns the last executed query.

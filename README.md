@@ -552,6 +552,41 @@ pager and the editor do not get the password. `\c` never reads the variable.
 
 `usql` has no environment variable for the password alone.
 
+#### Databases in Kubernetes
+
+`usql` opens a database that runs in Kubernetes through a port forward. The
+[`dbfwd`][dbfwd] package finds the database and its credentials, and runs
+`kubectl port-forward` to it. `kubectl` must be on the `PATH`, and it uses the
+current context of the kubeconfig, or the one that `?context=` names:
+
+```sh
+# the Service, StatefulSet or pod pg in the namespace prod
+$ usql k://pg.prod/app
+
+# the CloudNativePG cluster pg, with another context
+$ usql 'k8s+cnpg://pg.prod/app?context=staging'
+```
+
+The URL holds no password. `dbfwd` reads it from the Secret of the operator or
+of the pod, so `-W` does not apply. The banner and `\conninfo` name what the
+forward reached, such as `Service pg-rw in context kind-prod, namespace prod,
+owned by CloudNativePG Cluster pg`, and the prompt shows the host from the URL,
+such as `pg`, in place of the local address and port. When the pod restarts, the forward follows it, and
+the first statement after that fails as it does after a server restart. When
+no pod runs for two minutes, the forward is lost, and `\c` with no argument
+starts it again.
+
+On Linux and FreeBSD, if `usql` is killed, `kubectl` stops with it. On other
+systems, a `kubectl port-forward` can keep running after `usql` is killed with
+`SIGKILL`, and it must be stopped by hand.
+
+See `dbfwd`'s [URL rules][dbfwd-url] for the types and the parts of the URL, and
+its [lookup rules][dbfwd-lookup] for how it finds a database from a name.
+
+[dbfwd]: https://github.com/xo/dbfwd
+[dbfwd-url]: https://github.com/xo/dbfwd/blob/main/docs/URL.md
+[dbfwd-lookup]: https://github.com/xo/dbfwd/blob/main/docs/LOOKUP.md
+
 ### Connection Examples
 
 The following are example connection strings and additional ways to connect to

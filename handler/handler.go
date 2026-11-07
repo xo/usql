@@ -25,6 +25,7 @@ import (
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/kenshaw/rasterm"
+	"github.com/xo/dbfwd"
 	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
 	"github.com/xo/rline"
@@ -92,8 +93,16 @@ type Handler struct {
 	database sql.Null[string]
 	// bind are bound values for that will be used for statement execution.
 	bind []interface{}
-	// u is the active connection information.
+	// u is the active connection information. For a forward, it is the URL
+	// of the local end, and it holds the password.
 	u *dburl.URL
+	// fwd is the forward that dbfwd runs for the connection, or nil.
+	fwd *dbfwd.Forward
+	// fwdURL is the URL that fwd resolved, such as k+cnpg://pg.prod/app. It
+	// holds no password.
+	fwdURL *dburl.URL
+	// fwdDSN is the text of fwdURL, which \c with no argument opens again.
+	fwdDSN string
 	// db is the pool of the active database connection.
 	db *sql.DB
 	// conn is the one connection of db that the statements of the session
@@ -400,6 +409,10 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	if h.db == nil {
 		return text.ErrNotConnected
 	}
+	// no statement reaches a database whose forward is lost
+	if err := h.forwardLost(); err != nil {
+		return err
+	}
 	// the command tag, the statement to send, and whether it returns rows,
 	// from dbmeta
 	prefix, sqlstr, qtyp := drivers.Process(h.u, sqlstr)
@@ -426,6 +439,10 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	// USE chooses another database, which the prompt shows
 	if err == nil && strings.EqualFold(prefix, "USE") {
 		h.readDatabase(ctx)
+	}
+	// a forward that is lost explains the error of the driver
+	if lost := h.forwardLost(); err != nil && lost != nil {
+		return lost
 	}
 	return drivers.WrapErr(h.u.SchemeName, err)
 }
@@ -623,11 +640,11 @@ func (h *Handler) render(prompt string, cont bool) string {
 			}
 		case 'M': // full host name with domain
 			if connected {
-				buf = append(buf, h.u.Hostname()...)
+				buf = append(buf, h.host().Hostname()...)
 			}
 		case 'm': // host name truncated at first dot, or [local] if it's a domain socket
 			if connected {
-				s := h.u.Hostname()
+				s := h.host().Hostname()
 				if i := strings.Index(s, "."); i != -1 {
 					s = s[:i]
 				}
@@ -635,7 +652,7 @@ func (h *Handler) render(prompt string, cont bool) string {
 			}
 		case '>': // the port number
 			if connected {
-				s := h.u.Port()
+				s := h.host().Port()
 				if s != "" {
 					s = ":" + s
 				}
@@ -736,6 +753,16 @@ func (h *Handler) render(prompt string, cont bool) string {
 	return string(buf)
 }
 
+// host returns the URL whose host and port the prompt shows. For a forward,
+// it is the URL that the forward resolved, such as pg.prod in
+// k+cnpg://pg.prod/app, because the local port changes on each connection.
+func (h *Handler) host() *dburl.URL {
+	if h.fwd != nil {
+		return h.fwdURL
+	}
+	return h.u
+}
+
 // Interactive reports whether the handler reads entries from the line editor
 // at a terminal.
 func (h *Handler) Interactive() bool {
@@ -809,7 +836,11 @@ func (h *Handler) LastRaw() string {
 // domain socket, directory, or regular file, respectively).
 func (h *Handler) Open(ctx context.Context, params ...string) error {
 	if len(params) == 0 || params[0] == "" {
-		return nil
+		// with no argument, \c opens a forward again, as after it was lost
+		if h.fwdDSN == "" {
+			return nil
+		}
+		params = []string{h.fwdDSN}
 	}
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
@@ -819,21 +850,40 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 			params = v
 		}
 	}
+	var u, fwdURL *dburl.URL
+	var fwd *dbfwd.Forward
 	if len(params) < 2 {
 		dsn := params[0]
 		// parse dsn
-		u, err := dburl.Parse(dsn)
-		if err != nil {
+		var err error
+		if u, err = dburl.Parse(dsn); err != nil {
 			return err
 		}
-		h.u = u
+		// a URL such as k+cnpg://pg.prod/app opens through a forward. The
+		// current connection stays when the forward cannot start.
+		if dbfwd.Handles(u) {
+			if fwd, err = h.forward(ctx, u); err != nil {
+				return err
+			}
+			fwdURL = u
+			if u, err = fwd.URL(ctx); err != nil {
+				_ = fwd.Close()
+				return err
+			}
+		}
 		// force parameters
-		h.forceParams(h.u)
+		h.forceParams(u)
 	} else {
-		h.u = &dburl.URL{
+		u = &dburl.URL{
 			Driver: params[0],
 			DSN:    strings.Join(params[1:], " "),
 		}
+	}
+	// the new connection replaces the current one
+	h.drop()
+	h.u, h.fwd, h.fwdURL, h.fwdDSN = u, fwd, fwdURL, ""
+	if fwd != nil {
+		h.fwdDSN = params[0]
 	}
 	// open connection
 	var err error
@@ -865,8 +915,9 @@ func (h *Handler) Open(ctx context.Context, params ...string) error {
 			return h.Version(ctx)
 		}
 	}
-	// bail without getting password
-	if h.nopw || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {
+	// bail without getting password. A forward reads its password where the
+	// database runs, so a prompt cannot help.
+	if h.nopw || h.fwd != nil || !drivers.IsPasswordErr(h.u, err) || len(params) > 1 || !h.l.Interactive() {
 		defer h.Close()
 		return err
 	}
@@ -890,6 +941,11 @@ func (h *Handler) connStrings() []string {
 		_, aliases := dburl.SchemeNameAndAliases(schema)
 		// TODO should we create all combinations of space, :, :// and +transport ?
 		names = append(names, schema)
+		names = append(names, aliases...)
+	}
+	// the schemes that dbfwd opens through a forward
+	if name, aliases := dburl.SchemeNameAndAliases("k8s"); name != "" && dbfwd.Handles(&dburl.URL{SchemeName: name}) {
+		names = append(names, name)
 		names = append(names, aliases...)
 	}
 	return append(names, slices.Sorted(maps.Keys(env.Vars().Conn()))...)
@@ -919,6 +975,9 @@ func (h *Handler) Password(dsn string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if dbfwd.Handles(u) {
+		return "", text.ErrPasswordForward
+	}
 	user := h.user.Username
 	if u.User != nil {
 		user = u.User.Username()
@@ -933,19 +992,69 @@ func (h *Handler) Password(dsn string) (string, error) {
 	return u.String(), nil
 }
 
-// Close closes the database connection if it is open.
+// Close closes the database connection if it is open, and stops its forward.
 func (h *Handler) Close() error {
 	if h.tx != nil {
 		return text.ErrPreviousTransactionExists
 	}
+	var drv string
+	if h.u != nil {
+		drv = h.u.SchemeName
+	}
+	err := h.drop()
+	h.u, h.fwdURL, h.fwdDSN = nil, nil, ""
+	return drivers.WrapErr(drv, err)
+}
+
+// drop closes the connection of the session, the pool and the forward, and
+// returns the error of closing the pool.
+func (h *Handler) drop() error {
+	var err error
+	if h.conn != nil {
+		_ = h.conn.Close()
+	}
 	if h.db != nil {
-		if h.conn != nil {
-			_ = h.conn.Close()
-		}
-		err := h.db.Close()
-		drv := h.u.SchemeName
-		h.db, h.conn, h.u, h.meta, h.database = nil, nil, nil, nil, sql.Null[string]{}
-		return drivers.WrapErr(drv, err)
+		err = h.db.Close()
+	}
+	if h.fwd != nil {
+		_ = h.fwd.Close()
+	}
+	h.db, h.conn, h.fwd, h.meta, h.database = nil, nil, nil, nil, sql.Null[string]{}
+	return err
+}
+
+// forward starts the forward for u. At a terminal, kubectl and the other
+// tools that dbfwd runs get the terminal, so that a login can prompt.
+func (h *Handler) forward(ctx context.Context, u *dburl.URL) (*dbfwd.Forward, error) {
+	var opts []dbfwd.Option
+	if h.l.Interactive() {
+		opts = append(opts, dbfwd.WithInteractive(h.l.Release))
+	}
+	return dbfwd.Resolve(ctx, u, opts...)
+}
+
+// Forward returns the URL that the forward of the connection resolved, and
+// the forward. Both are nil when the connection has no forward.
+func (h *Handler) Forward() (*dburl.URL, *dbfwd.Forward) {
+	if h.fwd == nil {
+		return nil, nil
+	}
+	return h.fwdURL, h.fwd
+}
+
+// forwardLost returns why the forward of the connection was lost, and nil
+// while it runs or when there is none.
+func (h *Handler) forwardLost() error {
+	if h.fwd == nil {
+		return nil
+	}
+	select {
+	case <-h.fwd.Done():
+	default:
+		return nil
+	}
+	if err := h.fwd.Err(); err != nil {
+		return fmt.Errorf(text.ForwardLost, err)
 	}
 	return nil
 }
@@ -1077,6 +1186,9 @@ func (h *Handler) Version(ctx context.Context) error {
 	// that a long version does not open the pager
 	if env.Setting("quiet") != "on" {
 		fmt.Fprintln(h.l, fmt.Sprintf(text.ConnInfo, h.u.SchemeName, ver))
+		if h.fwd != nil {
+			fmt.Fprintln(h.l, fmt.Sprintf(text.ForwardInfo, h.fwd))
+		}
 	}
 	return nil
 }
@@ -1588,6 +1700,7 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 		return err
 	}
 	p.db, p.conn, p.tx, p.u, p.meta = h.db, h.conn, h.tx, h.u, h.meta
+	p.fwd, p.fwdURL, p.fwdDSN = h.fwd, h.fwdURL, h.fwdDSN
 	if err := p.src.SetLanguage(drivers.Language(p.u)); err != nil {
 		return err
 	}
@@ -1596,6 +1709,7 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 		err = fmt.Errorf("%s: %w", path, err)
 	}
 	h.db, h.conn, h.tx, h.u, h.meta = p.db, p.conn, p.tx, p.u, p.meta
+	h.fwd, h.fwdURL, h.fwdDSN = p.fwd, p.fwdURL, p.fwdDSN
 	if lerr := h.setLanguage(); err == nil {
 		err = lerr
 	}

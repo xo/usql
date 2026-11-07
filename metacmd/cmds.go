@@ -409,12 +409,23 @@ func ConnectionInfo(p *Params) error {
 		ver = fmt.Sprintf("<unknown, error: %v>", err)
 	}
 	add("Server Version", ver)
+	// a forward names what it reached, and its URL holds no password. The
+	// URL of the local end holds the password that the forward read.
+	fwdURL, fwd := p.Handler.Forward()
+	if fwd != nil {
+		add("Forward", fwd.String())
+		add("URL", fwdURL.String())
+	}
+	local := "URL"
+	if fwd != nil {
+		local = "Local URL"
+	}
 	// the password shows only when it is asked for
 	if ok {
-		add("URL", u.String())
+		add(local, u.String())
 		add("DSN", u.DSN)
 	} else {
-		add("URL", redacted(u))
+		add(local, redacted(u))
 	}
 	return describe.Table(p.Handler.Stdout(), "Connection Information", []string{"Parameter", "Value"}, values)
 }

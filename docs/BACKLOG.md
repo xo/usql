@@ -3518,3 +3518,36 @@ whose tag is `USE`, and `%/` shows it after a `/`, as the path of a URL
 gives it. A URL with a file path, as SQLite's, keeps the path. On SQL Server
 the prompt went from empty to `/northwind`, and to `/master` after `USE
 master`.
+
+## W74. Open databases in Kubernetes through dbfwd: Done
+
+Source: Ken. A URL such as `k+cnpg://pg.prod/app` opens a
+database in Kubernetes. dbfwd finds the database and its credentials and runs
+`kubectl port-forward`. dburl parses the scheme (hard rule 2), and dbfwd holds
+the operators and the lookup.
+
+Done on 2026-11-08 on dbfwd v0.1.1 and dburl v0.57.0. The handler calls
+`dbfwd.Resolve` for a URL that `dbfwd.Handles`, and connects to the local URL
+of the forward. It closes the forward on `\c`, `\Z` and at exit. The banner
+and `\conninfo` name the forward, the prompt shows the host of the URL, `-W`
+gives an error, a lost forward stops each statement with its reason, and `\c`
+with no argument starts it again. `dbfwd.go` imports the `k8s` backend in
+every build. Checked against PostgreSQL 18 in a kind cluster from dbrun.
+
+Open:
+
+- No build tag leaves the `k8s` backend out. Hard rule 10 is about drivers,
+  and Ken has not said whether a backend gets a `no_` tag.
+- On macOS, Windows and the other BSDs, `kubectl` keeps running after usql is
+  killed with `SIGKILL`. dbfwd v0.1.1 stops it with its parent only on Linux
+  and FreeBSD (dbfwd's D17), because only they have `Pdeathsig`.
+
+## W75. Renew an expiring credential of a forward
+
+Source: dbfwd's D15. A later backend of dbfwd, such as AWS RDS with IAM
+tokens, gives a credential that expires. `Forward.URL` returns a new one, and
+must be called for each new connection. usql opens the pool once, from one
+URL, which is enough for `k8s`, whose credential does not expire. Before
+usql uses such a backend, it opens the pool with `sql.OpenDB` and a
+`driver.Connector` whose `Connect` calls `Forward.URL`. The drivers whose
+`Open` builds the pool themselves, such as pgx, need a way to do the same.

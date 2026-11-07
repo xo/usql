@@ -135,6 +135,7 @@ between them.
 | `xo/cassandra` | The Cassandra driver |
 | `xo/odbc` | The ODBC driver |
 | `xo/dbtpl` | Code generation from database schemas |
+| `xo/dbfwd` | Forwards to databases in Kubernetes, which usql opens from a `k8s` URL |
 
 usql records its own decisions as `D1`, `D2` and so on, one file each in
 `docs/decisions/`. `dburl` and `dbmeta` number theirs the same way, so a

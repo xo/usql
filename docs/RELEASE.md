@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbmeta v0.34.0, dburl v0.57.0, tblfmt v0.23.0, transit
+- usql requires dbfwd v0.1.1, dbmeta v0.35.0, dburl v0.57.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
@@ -511,11 +511,19 @@ the XDG Base Directory specification on Linux and other Unix systems.
   reads it, so that `\!`, the pager and the editor do not get it. There is
   no variable for the password alone, and `USQL_PASSWORD` is still the
   variable of `-W`.
-- dburl v0.57.0 parses the `k8s` scheme, with the aliases `k`, `kc`, `k8`,
-  `kube` and `kubernetes`, for databases in Kubernetes. usql cannot open
-  such a URL yet, and it prints `k8s: driver not available`. On Windows, a
-  path on the drive `K:`, such as `K:\data\app.db`, now parses as a `k8s` URL
-  and fails. Write it as `file:///K:/data/app.db`.
+- usql opens a database in Kubernetes from a URL such as `k://pg.prod/app` or
+  `k8s+cnpg://pg.prod/app`, through dbfwd v0.1.1 and `kubectl port-forward`.
+  dburl v0.57.0 parses the `k8s` scheme, with the aliases `k`, `kc`, `k8`,
+  `kube` and `kubernetes`. The password comes from the Secret, so `-W` gives
+  an error. The banner and `\conninfo` name what the forward reached, and the
+  prompt shows the host from the URL. A lost forward stops each statement
+  with its reason, and `\c` with no argument starts it again. usql stops the
+  forward on `\c`, `\Z` and at exit.
+- On Windows, a path on the drive `K:`, such as `K:\data\app.db`, now parses
+  as a `k8s` URL and fails. Write it as `file:///K:/data/app.db`.
+- `\c` closes the connection that it replaces. Before, the pool of the old
+  connection stayed open until usql exited. usql also closes the connection
+  at exit, and rolls back a transaction that is still open.
 - tblfmt v0.23.0: with `numericlocale`, a number uses the digits, the group
   sizes, the decimal point and the minus sign of the locale. On Windows, the
   html, asciidoc, latex, latex-longtable, troff-ms and vertical formats end
@@ -675,6 +683,22 @@ one error, and a wrong password:
 - ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
   after the crash is fixed
 - Couchbase and Databend on dbimp
+
+### Databases in Kubernetes
+
+Start a cluster with `DBMETA_OWNER_NAME=usql go run ./cmd/dbrun start
+k8s-1.37`, and set `KUBECONFIG` to the path that `dbrun dsn --json k8s-1.37`
+prints. Put a database and its Secret in a namespace of your own.
+
+- Connect with `k://NAME.NAMESPACE/` and with a type, such as
+  `k8s+postgres://`, and run a query.
+- Check the banner and the prompt at a terminal, and `\conninfo`, which shows
+  the forward, the URL, and the local URL with the password hidden.
+- Check that a name that does not exist lists each step that was tried.
+- Scale the database to zero for more than two minutes, run a statement, and
+  check that it reports the lost forward. Scale it up, and check that `\c`
+  connects again.
+- Check that no `kubectl` process is left after `\q`.
 
 ### Changing passwords
 
