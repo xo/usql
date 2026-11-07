@@ -534,6 +534,24 @@ $ usql pg://
 See the relevant documentation [on database drivers][databases] for more
 information.
 
+#### The `USQL_DSN` Environment Variable
+
+When the command line names no DSN, `usql` opens the DSN in the `USQL_DSN`
+environment variable. A program or a script that holds a password can use it
+to keep the password out of the argument list, which every user of the
+machine can read:
+
+```sh
+$ USQL_DSN="pg://app:$PASSWORD@localhost:15432/app" usql
+```
+
+The variable holds a full DSN or the name of a connection. A DSN on the
+command line wins, and `usql` then does not read the variable. `usql` removes
+the variable from its own environment after it reads it, so that `\!`, the
+pager and the editor do not get the password. `\c` never reads the variable.
+
+`usql` has no environment variable for the password alone.
+
 ### Connection Examples
 
 The following are example connection strings and additional ways to connect to

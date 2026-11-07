@@ -123,6 +123,7 @@ func New(cliargs []string) ContextExecutor {
 				return errors.New("unknown shorthand flag: 'h' in -h")
 			}
 			// run
+			args.DSN = dsnFromEnv()
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
@@ -579,6 +580,18 @@ func chartsFS(v *viper.Viper) (billy.Filesystem, error) {
 		return memfs.New(), nil
 	}
 	return fs.Chroot(chartsPath)
+}
+
+// dsnFromEnv returns the value of USQL_DSN, the DSN that usql opens when the
+// command line names none. It removes the variable from the environment of
+// usql, so that a password in it does not reach a shell, a pager or an editor
+// that usql starts. A DSN on the command line wins, and \c never reads the
+// variable.
+func dsnFromEnv() string {
+	name := text.CommandUpper() + "_DSN"
+	dsn := strings.TrimSpace(os.Getenv(name))
+	_ = os.Unsetenv(name)
+	return dsn
 }
 
 // setConn sets a connection name to a DSN built from the passed value.

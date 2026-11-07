@@ -503,6 +503,14 @@ the XDG Base Directory specification on Linux and other Unix systems.
 
 ### Other
 
+- `USQL_DSN` names the DSN to open when the command line names none. A
+  program that holds a password, such as one that forwards a port, can run
+  usql with it and keep the password out of the argument list, which every
+  user of the machine can read. A DSN on the command line wins, and `\c`
+  never reads the variable. usql removes it from its environment after it
+  reads it, so that `\!`, the pager and the editor do not get it. There is
+  no variable for the password alone, and `USQL_PASSWORD` is still the
+  variable of `-W`.
 - tblfmt v0.23.0: with `numericlocale`, a number uses the digits, the group
   sizes, the decimal point and the minus sign of the locale. On Windows, the
   html, asciidoc, latex, latex-longtable, troff-ms and vertical formats end

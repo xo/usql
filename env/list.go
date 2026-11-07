@@ -279,6 +279,10 @@ var pvarNames = []varName{
 
 var envVarNames = []varName{
 	{
+		text.CommandUpper() + `_DSN`,
+		`DSN to open when the command line names none, removed from the environment after it is read`,
+	},
+	{
 		text.CommandUpper() + `_EDITOR, EDITOR, VISUAL`,
 		`editor used by the \e, \ef, and \ev commands`,
 	},
