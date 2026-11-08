@@ -537,7 +537,7 @@ the XDG Base Directory specification on Linux and other Unix systems.
   codes. A driver library with no package in usql gives its fields through a
   method `ErrVerbose`, which usql finds with `errors.As`: Oracle (xo/oracle
   v0.4.1), Cassandra (xo/cassandra v0.2.4), ODBC (xo/odbc v0.4.1) and the 27
-  drivers of dbimp (v0.25.1). Each library moved to psql's layout on
+  drivers of dbimp (v0.25.2). Each library moved to psql's layout on
   2026-11-08, and was checked against a live server. Another driver shows the
   error as usql prints it.
 - `\gdesc` shows the name and the type of each column of the query in the
