@@ -66,8 +66,9 @@ func init() {
 			}
 			return "", msg
 		},
-		// sqlcmd writes each message of the batch as Msg 208, Level 16,
-		// State 1, Server srv, Line 1, and the message on the next line
+		// psql's layout, with the number of the error as the code. The level,
+		// the state and the server go in DETAIL, the procedure and the line
+		// in CONTEXT, and each other error of the batch in its own DETAIL.
 		ErrVerbose: func(err error, _ string) string {
 			var e sqlserver.Error
 			if !errors.As(err, &e) {
@@ -77,19 +78,20 @@ func init() {
 			if len(all) == 0 {
 				all = []sqlserver.Error{e}
 			}
-			var lines []string
-			for _, m := range all {
-				s := fmt.Sprintf("Msg %d, Level %d, State %d", m.Number, m.Class, m.State)
-				if m.ServerName != "" {
-					s += ", Server " + m.ServerName
-				}
-				if m.ProcName != "" {
-					s += ", Procedure " + m.ProcName
-				}
-				s += fmt.Sprintf(", Line %d", m.LineNo)
-				lines = append(lines, s, m.Message)
+			first := all[0]
+			detail := fmt.Sprintf("level %d, state %d", first.Class, first.State)
+			if first.ServerName != "" {
+				detail += ", server " + first.ServerName
 			}
-			return strings.Join(lines, "\n")
+			context := fmt.Sprintf("line %d", first.LineNo)
+			if first.ProcName != "" {
+				context = "procedure " + first.ProcName + ", " + context
+			}
+			fields := [][2]string{{"DETAIL", detail}, {"CONTEXT", context}}
+			for _, m := range all[1:] {
+				fields = append(fields, [2]string{"DETAIL", fmt.Sprintf("%d: %s", m.Number, m.Message)})
+			}
+			return drivers.Verbose(strconv.Itoa(int(first.Number)), first.Message, fields...)
 		},
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")

@@ -6,7 +6,6 @@ package moderncsqlite
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 
@@ -33,7 +32,8 @@ func init() {
 			}
 			return "", err.Error()
 		},
-		// the extended result code, by number and by name
+		// psql's layout, with the extended result code as the code, and its
+		// name in DETAIL
 		ErrVerbose: func(err error, _ string) string {
 			var e *sqlite.Error
 			if !errors.As(err, &e) {
@@ -43,7 +43,7 @@ func init() {
 			if m := errorRE.FindStringSubmatch(msg); m != nil {
 				msg = m[1]
 			}
-			return fmt.Sprintf("ERROR:  %d (%s): %s", e.Code(), sqlite.ErrorCodeString[e.Code()], msg)
+			return drivers.Verbose(strconv.Itoa(e.Code()), msg, [2]string{"DETAIL", sqlite.ErrorCodeString[e.Code()]})
 		},
 		ConvertBytes: sqshared.ConvertBytes,
 	})

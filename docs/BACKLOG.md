@@ -3715,3 +3715,28 @@ The steps, in order:
 W29, the SQL of `\copy` in dbmeta, and W71, a large CSV file, overlap with the
 new `\copy`, and are decided with it.
 
+## W78. SQL*Plus's slash line on Oracle
+
+Source: found on 2026-11-08, while checking `\errverbose` on Oracle 21c. Ken
+asked for this item.
+
+A SQL*Plus script ends a PL/SQL block with a line that holds only `/`:
+
+```sql
+begin
+  nosuch;
+end;
+/
+```
+
+usql ran the block when it read `end;`. It then sent the `/` line to Oracle as a
+statement of its own, and Oracle answered `ORA-00900: invalid SQL statement`.
+So every SQL*Plus script with a block fails once for each block.
+
+In SQL*Plus, a block ends at the `/` line and not at `end;`, because a block
+holds statements that end in `;`. The line `/` alone also runs the buffer
+again after a plain statement. Not investigated yet: whether the oracle
+grammar of transit or dbmeta's syntax of the dialect owns the rule, and how
+the block ends today. Database knowledge belongs to them and not to usql, so
+the fix is asked of the owner.
+

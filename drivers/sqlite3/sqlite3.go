@@ -25,13 +25,15 @@ func init() {
 			}
 			return code, msg
 		},
-		// the primary and the extended result codes, by number and by name
+		// psql's layout, with the primary result code as the code, and its
+		// name and the extended code in DETAIL
 		ErrVerbose: func(err error, _ string) string {
 			var e sqlite3.Error
 			if !errors.As(err, &e) {
 				return ""
 			}
-			return fmt.Sprintf("ERROR:  %d (%s), extended code %d: %s", int(e.Code), e.Code.Error(), int(e.ExtendedCode), e.Error())
+			detail := fmt.Sprintf("%s, extended code %d", e.Code.Error(), int(e.ExtendedCode))
+			return drivers.Verbose(strconv.Itoa(int(e.Code)), e.Error(), [2]string{"DETAIL", detail})
 		},
 		ConvertBytes: sqshared.ConvertBytes,
 	})

@@ -29,17 +29,18 @@ func Driver() drivers.Driver {
 			}
 			return "", err.Error()
 		},
-		// the mysql client writes ERROR 1146 (42S02): Table 'x' doesn't exist
+		// psql's layout, with the SQLSTATE as the code, and MySQL's own
+		// number of the error in DETAIL
 		ErrVerbose: func(err error, _ string) string {
 			var e *mysql.MySQLError
 			if !errors.As(err, &e) {
 				return ""
 			}
-			s := "ERROR " + strconv.Itoa(int(e.Number))
+			var code string
 			if e.SQLState != [5]byte{} {
-				s += " (" + string(e.SQLState[:]) + ")"
+				code = string(e.SQLState[:])
 			}
-			return s + ": " + e.Message
+			return drivers.Verbose(code, e.Message, [2]string{"DETAIL", "error " + strconv.Itoa(int(e.Number))})
 		},
 		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*mysql.MySQLError); ok {

@@ -529,17 +529,17 @@ the XDG Base Directory specification on Linux and other Unix systems.
   statements run and no meta command does, so a meta command in the data of
   a dump cannot run. Before, usql printed "Invalid command" for both lines.
 - `\errverbose` shows the error of the last statement that failed, with every
-  field that the driver gives: psql's verbose form for PostgreSQL, through
-  pgx or lib/pq, the `mysql` client's form for MySQL, `sqlcmd`'s form for SQL
-  Server, and the result codes for SQLite. A driver library with no package
-  in usql gives its fields through a method `ErrVerbose`, which usql finds
-  with `errors.As`: SQL*Plus's form for Oracle, with the line, a `*` under the
-  position and the stack of ORA- errors (xo/oracle v0.4.0), cqlsh's form for
-  Cassandra (xo/cassandra v0.2.3), and
-  each diagnostic record with its SQLSTATE for ODBC (xo/odbc v0.4.0), and
-  the message and then each field that the server sent for the 27 drivers
-  of dbimp, such as ClickHouse's code and name (dbimp v0.25.0).
-  Another driver shows the error as usql prints it.
+  field that the driver gives, in psql's verbose layout for every database:
+  `ERROR:  CODE: MESSAGE`, then `LINE` and a caret where the server gives a
+  position, then one `NAME:  value` line for each other field. PostgreSQL,
+  through pgx or lib/pq, matches psql. MySQL gives its SQLSTATE and its own
+  number, SQL Server its number, level, state and line, and SQLite its result
+  codes. A driver library with no package in usql gives its fields through a
+  method `ErrVerbose`, which usql finds with `errors.As`: Oracle (xo/oracle
+  v0.4.1), Cassandra (xo/cassandra v0.2.4), ODBC (xo/odbc v0.4.1) and the 27
+  drivers of dbimp (v0.25.1). Each library moved to psql's layout on
+  2026-11-08, and was checked against a live server. Another driver shows the
+  error as usql prints it.
 - `\gdesc` shows the name and the type of each column of the query in the
   buffer, without running it, as psql does. It works on PostgreSQL and the
   databases on pgx, which prepare the query and name its types with dbmeta,

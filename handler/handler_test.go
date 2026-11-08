@@ -46,7 +46,10 @@ func TestRunCommandMetaCommand(t *testing.T) {
 // number of each entry, and only the last entries when it is given a count,
 // and that \s writes it as psql does, to the output or to a file.
 func TestHistory(t *testing.T) {
-	file := filepath.Join(t.TempDir(), "history.txt")
+	// a meta command reads a backslash as the start of another command, so
+	// the path of the file is written with forward slashes, which Windows
+	// also takes
+	file := filepath.ToSlash(filepath.Join(t.TempDir(), "history.txt"))
 	tests := []struct {
 		cmd  string
 		want string
@@ -124,6 +127,8 @@ func TestErrVerbose(t *testing.T) {
 	if err := h.Open(context.Background(), "moderncsqlite:"+filepath.Join(t.TempDir(), "e.db")); err != nil {
 		t.Fatal(err)
 	}
+	// Windows cannot remove the file of the database while it is open
+	defer h.Close()
 	if err := h.RunCommand(`\errverbose`); err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +144,7 @@ func TestErrVerbose(t *testing.T) {
 	if err := h.RunCommand(`\errverbose`); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := stderr.String(), "ERROR:  1 (Generic error (SQLITE_ERROR)): no such table: nope\n"; got != want {
+	if got, want := stderr.String(), "ERROR:  1: no such table: nope\nDETAIL:  Generic error (SQLITE_ERROR)\n"; got != want {
 		t.Errorf("stderr = %q, want %q", got, want)
 	}
 }
@@ -166,6 +171,8 @@ func TestRestrict(t *testing.T) {
 	if err := h.Open(context.Background(), "moderncsqlite:"+filepath.Join(t.TempDir(), "r.db")); err != nil {
 		t.Fatal(err)
 	}
+	// Windows cannot remove the file of the database while it is open
+	defer h.Close()
 	script := strings.Join([]string{
 		`\unrestrict abc`,
 		`\restrict abc`,

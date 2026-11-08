@@ -92,3 +92,23 @@ func ErrVerbose(err error, query string) string {
 	}
 	return err.Error()
 }
+
+// Verbose writes an error in psql's verbose layout, for \errverbose, so that
+// every database shows its errors the same way: "ERROR:  CODE: MESSAGE" on the
+// first line, then each field with a value as an upper case name, a colon, two
+// spaces and the value, such as "DETAIL:  ...". A code that is empty is left
+// out of the first line.
+func Verbose(code, message string, fields ...[2]string) string {
+	var b strings.Builder
+	b.WriteString("ERROR:  ")
+	if code != "" {
+		b.WriteString(code + ": ")
+	}
+	b.WriteString(message)
+	for _, f := range fields {
+		if f[1] != "" {
+			b.WriteString("\n" + f[0] + ":  " + f[1])
+		}
+	}
+	return b.String()
+}
