@@ -343,12 +343,12 @@ github.com/vertica/vertica-sql-go v1.3.9 h1:QL2ccdxFHQ0A3ViXnjCevuIFvA0LeYO7DZVT
 github.com/vertica/vertica-sql-go v1.3.9/go.mod h1:c4OZ8lq1Ztc18w8a0nG+dzQh69BzJRcKN2LZOnYbERI=
 github.com/xo/cassandra v0.2.2 h1:4LCYMD8r/38maRA3ms/XIBi2HQR3qt/8mmjJjcZdkeQ=
 github.com/xo/cassandra v0.2.2/go.mod h1:t1SCWXvpbHQYb3sEeIGDMzdza8IHp7qcL5LlJU9MO+o=
-github.com/xo/dbfwd v0.3.0 h1:6cV8IBOfjhidHOwZS1WtcHveBAifA1BqwXpMirfP3z0=
-github.com/xo/dbfwd v0.3.0/go.mod h1:Eu88+I9E8T2aEDKItyO2bx+GzhT/xMU6EBy5F0SIvv8=
+github.com/xo/dbfwd v0.3.1 h1:wKgo6ak+Lsnbu4R2Nms+rQI2XC7x/WPy/YAX65bquS0=
+github.com/xo/dbfwd v0.3.1/go.mod h1:Eu88+I9E8T2aEDKItyO2bx+GzhT/xMU6EBy5F0SIvv8=
 github.com/xo/dbimp v0.24.3 h1:cWQ0m8SpQAUG/OqPvL6jiHrvuxFmgA4j8uD1nVmFXF4=
 github.com/xo/dbimp v0.24.3/go.mod h1:aQzslxgd1TByjLVc5Whe8EuKQsq8SAgse4tQz1jWXd0=
-github.com/xo/dbmeta v0.35.0 h1:hx6isR4K1u1ykgoE+4hJDE1zuLr/uogMxEiu8QVt5Yg=
-github.com/xo/dbmeta v0.35.0/go.mod h1:MDuDrRxVooo2zNsM8kOFfDrJ7Y0N4998MlaKDEvegk4=
+github.com/xo/dbmeta v0.36.0 h1:XpdTVCoYAyocSDTPR7e0uLo6kc0b5YkNVK8hk1jnfyg=
+github.com/xo/dbmeta v0.36.0/go.mod h1:MDuDrRxVooo2zNsM8kOFfDrJ7Y0N4998MlaKDEvegk4=
 github.com/xo/dburl v0.57.0 h1:lPaECT64gRES4Gs6pH0Tyi9w6Sg0hSkiNwEhqfkOl3w=
 github.com/xo/dburl v0.57.0/go.mod h1:uazlaAQxj4gkshhfuuYyvwCBouOmNnG2aDxTCFZpmL4=
 github.com/xo/echartsgoja v0.1.1 h1:9ZH7rhjovE/caGzWTFw1X5GItCsPw5eFV2Qwfgmjt7M=

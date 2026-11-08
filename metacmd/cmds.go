@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,6 +32,48 @@ import (
 //	quit
 func Quit(p *Params) error {
 	p.Option.Quit = true
+	return nil
+}
+
+// Restrict is a General meta command (\restrict, \unrestrict). Enters and
+// leaves restricted mode, in which no meta command runs but \unrestrict with
+// the key, as psql does. pg_dump writes \restrict at the start of a dump and
+// \unrestrict at its end, so that the data of the dump cannot run a command.
+//
+// Descs:
+//
+//	restrict	RESTRICT_KEY	enter restricted mode with provided key
+//	unrestrict	RESTRICT_KEY	exit restricted mode if key matches
+func Restrict(p *Params) error {
+	key, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	if p.Name == "unrestrict" {
+		err = p.Handler.Unrestrict(key)
+	} else {
+		err = p.Handler.Restrict(key)
+	}
+	if err != nil {
+		return fmt.Errorf(`\%s: %w`, p.Name, err)
+	}
+	return nil
+}
+
+// ErrVerbose is a General meta command (\errverbose). Writes the error of the
+// last statement that failed, with every field that the driver gives, as the
+// client of the database writes them, as psql's \errverbose does.
+//
+// Descs:
+//
+//	errverbose	show most recent error message at maximum verbosity
+func ErrVerbose(p *Params) error {
+	err, query := p.Handler.LastError()
+	if err == nil {
+		fmt.Fprintln(p.Handler.Stdout(), text.NoPreviousError)
+		return nil
+	}
+	fmt.Fprintln(p.Handler.IO().Stderr(), drivers.ErrVerbose(err, query))
 	return nil
 }
 
@@ -115,6 +158,7 @@ func Help(p *Params) error {
 //	G	[(OPTIONS)] [FILE]	as \g, but forces vertical output mode
 //	ego:G
 //	gx	[(OPTIONS)] [FILE]	as \g, but forces expanded output mode
+//	gdesc	describe result of query, without executing it
 //	gexec	execute query and execute each value of the result
 //	gset	[PREFIX]	execute query and store results in {{CommandName}} variables
 func Execute(p *Params) error {
@@ -157,6 +201,8 @@ func Execute(p *Params) error {
 		}
 	case "gexec":
 		p.Option.Exec = ExecExec
+	case "gdesc":
+		p.Option.Exec = ExecDescribe
 	}
 	return nil
 }
@@ -706,6 +752,73 @@ func Reset(p *Params) error {
 	return nil
 }
 
+// History is a Query Buffer meta command (\history). Writes the history of
+// the line editor, oldest first, with the number of each entry, as the
+// history command of bash does. A count shows only the last entries.
+//
+// Descs:
+//
+//	history	[COUNT]	show the history, or its last COUNT entries
+func History(p *Params) error {
+	s, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	entries := p.Handler.IO().History()
+	slices.Reverse(entries)
+	start := 0
+	if s != "" {
+		n, err := strconv.Atoi(s)
+		if err != nil || n < 0 {
+			return fmt.Errorf(text.HistoryInvalidCount, s)
+		}
+		start = max(len(entries)-n, 0)
+	}
+	w := p.Handler.Stdout()
+	for i := start; i < len(entries); i++ {
+		// the rows after the first of an entry line up under its text
+		entry := strings.ReplaceAll(entries[i], "\n", "\n       ")
+		if _, err := fmt.Fprintf(w, "%5d  %s\n", i+1, entry); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SaveHistory is a Query Buffer meta command (\s). Writes the history of the
+// line editor, oldest first, as psql does: to the output, or to a file when
+// one is named.
+//
+// Descs:
+//
+//	s	[FILE]	display history or save it to file
+func SaveHistory(p *Params) error {
+	name, err := p.Next(true)
+	if err != nil {
+		return err
+	}
+	entries := p.Handler.IO().History()
+	slices.Reverse(entries)
+	if name == "" {
+		w := p.Handler.Stdout()
+		for _, entry := range entries {
+			if _, err := fmt.Fprintln(w, entry); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	var b strings.Builder
+	for _, entry := range entries {
+		b.WriteString(entry + "\n")
+	}
+	if err := os.WriteFile(name, []byte(b.String()), 0o600); err != nil {
+		return fmt.Errorf("\\s: %w", err)
+	}
+	p.Handler.Print(text.HistoryWritten, name)
+	return nil
+}
+
 // Echo is a Input/Output meta command (\echo, \warn, \qecho). Writes a message
 // to the output.
 //
@@ -990,6 +1103,7 @@ func Unset(p *Params) error {
 //	C	[TITLE]	set table title, or unset if none	DEPRECATED
 //	f	[SEPARATOR]	show or set field separator for unaligned query output	DEPRECATED
 //	H		toggle HTML output mode	DEPRECATED
+//	html:H
 //	T	[ATTRIBUTES]	set HTML <table> tag attributes, or unset if none	DEPRECATED
 //	t	[on|off]	show only rows	DEPRECATED
 //	x	[on|off|auto]	toggle expanded output	DEPRECATED
@@ -997,6 +1111,10 @@ func SetPrint(p *Params) error {
 	var ok bool
 	var val string
 	var err error
+	// \html is psql's long name of \H
+	if p.Name == "html" {
+		p.Name = "H"
+	}
 	switch p.Name {
 	case "a", "H":
 	default:
@@ -1128,56 +1246,57 @@ func Prompt(p *Params) error {
 //
 // Descs:
 //
-//	d[S+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
-//	d[tvmsEi][S+]
-//	da[S+]	[PATTERN]	list aggregates
-//	dA[+]	[PATTERN]	list access methods
-//	dAc[+]	[AMPTRN [PATTERN]]	list operator classes
-//	dAf[+]	[AMPTRN [PATTERN]]	list operator families
-//	dAo[+]	[AMPTRN [PATTERN]]	list operators of operator families
-//	dAp[+]	[AMPTRN [PATTERN]]	list support functions of operator families
-//	db[+]	[PATTERN]	list tablespaces
-//	dc[S+]	[PATTERN]	list conversions
-//	dconfig[+]	[PATTERN]	list configuration parameters
-//	dC[+]	[PATTERN]	list casts
-//	dd[S]	[PATTERN]	show object descriptions not displayed elsewhere
-//	dD[S+]	[PATTERN]	list domains
-//	ddp	[PATTERN]	list default privileges
-//	dE[S+]	[PATTERN]	list foreign tables
-//	des[+]	[PATTERN]	list foreign servers
-//	det[+]	[PATTERN]	list foreign tables and their servers
-//	deu[+]	[PATTERN]	list user mappings
-//	dew[+]	[PATTERN]	list foreign-data wrappers
-//	df[anptw][S+]	[PATTERN]	list [only agg/normal/procedure/trigger/window] functions
-//	dF[+]	[PATTERN]	list text search configurations
-//	dFd[+]	[PATTERN]	list text search dictionaries
-//	dFp[+]	[PATTERN]	list text search parsers
-//	dFt[+]	[PATTERN]	list text search templates
-//	dg[S+]	[PATTERN]	list roles
-//	di[S+]	[PATTERN]	list indexes
-//	dl[+]	list large objects, same as \lo_list
-//	dL[S+]	[PATTERN]	list procedural languages
-//	dm[S+]	[PATTERN]	list materialized views
-//	dn[S+]	[PATTERN]	list schemas
-//	do[S+]	[PATTERN]	list operators
-//	dO[S+]	[PATTERN]	list collations
-//	dp[S]	[PATTERN]	list table, view, and sequence access privileges
-//	dP[itn+]	[PATTERN]	list [only index/table] partitioned relations [n=nested]
-//	drds	[ROLEPTRN [DBPTRN]]	list per-database role settings
-//	drg[S]	[PATTERN]	list role grants
-//	dRp[+]	[PATTERN]	list replication publications
-//	dRs[+]	[PATTERN]	list replication subscriptions
-//	ds[S+]	[PATTERN]	list sequences
-//	dt[S+]	[PATTERN]	list tables
-//	dT[S+]	[PATTERN]	list data types
-//	du[S+]	[PATTERN]	list roles
-//	dv[S+]	[PATTERN]	list views
-//	dx[+]	[PATTERN]	list extensions
-//	dX	[PATTERN]	list extended statistics
-//	dy[+]	[PATTERN]	list event triggers
-//	l[+]	[PATTERN]	list databases
-//	lo_list[+]:dl
-//	z[S]	[PATTERN]	same as \dp
+//	d[Sx+]	[NAME]	list tables, views, and sequences or describe table, view, sequence, or index
+//	d[tvmsEi][Sx+]
+//	da[Sx+]	[PATTERN]	list aggregates
+//	dA[x+]	[PATTERN]	list access methods
+//	dAc[x+]	[AMPTRN [PATTERN]]	list operator classes
+//	dAf[x+]	[AMPTRN [PATTERN]]	list operator families
+//	dAo[x+]	[AMPTRN [PATTERN]]	list operators of operator families
+//	dAp[x+]	[AMPTRN [PATTERN]]	list support functions of operator families
+//	db[x+]	[PATTERN]	list tablespaces
+//	dc[Sx+]	[PATTERN]	list conversions
+//	dconfig[x+]	[PATTERN]	list configuration parameters
+//	dC[x+]	[PATTERN]	list casts
+//	dd[Sx]	[PATTERN]	show object descriptions not displayed elsewhere
+//	dD[Sx+]	[PATTERN]	list domains
+//	ddp[x]	[PATTERN]	list default privileges
+//	dE[Sx+]	[PATTERN]	list foreign tables
+//	des[x+]	[PATTERN]	list foreign servers
+//	det[x+]	[PATTERN]	list foreign tables and their servers
+//	deu[x+]	[PATTERN]	list user mappings
+//	dew[x+]	[PATTERN]	list foreign-data wrappers
+//	df[anptw][Sx+]	[NAME [TYPES]]	list [only agg/normal/procedure/trigger/window] functions
+//	dF[x+]	[PATTERN]	list text search configurations
+//	dFd[x+]	[PATTERN]	list text search dictionaries
+//	dFp[x+]	[PATTERN]	list text search parsers
+//	dFt[x+]	[PATTERN]	list text search templates
+//	dg[Sx+]	[PATTERN]	list roles
+//	di[Sx+]	[PATTERN]	list indexes
+//	dl[x+]	list large objects, same as \lo_list
+//	dL[Sx+]	[PATTERN]	list procedural languages
+//	dm[Sx+]	[PATTERN]	list materialized views
+//	dn[Sx+]	[PATTERN]	list schemas
+//	do[Sx+]	[NAME [TYPES]]	list operators
+//	dO[Sx+]	[PATTERN]	list collations
+//	dp[Sx]	[PATTERN]	list table, view, and sequence access privileges
+//	dP[itn][x+]	[PATTERN]	list [only index/table] partitioned relations [n=nested]
+//	drds[x]	[ROLEPTRN [DBPTRN]]	list per-database role settings
+//	drg[Sx]	[PATTERN]	list role grants
+//	dRp[x+]	[PATTERN]	list replication publications
+//	dRs[x+]	[PATTERN]	list replication subscriptions
+//	ds[Sx+]	[PATTERN]	list sequences
+//	dt[Sx+]	[PATTERN]	list tables
+//	dT[Sx+]	[PATTERN]	list data types
+//	du[Sx+]	[PATTERN]	list roles
+//	dv[Sx+]	[PATTERN]	list views
+//	dx[x+]	[PATTERN]	list extensions
+//	dX[x]	[PATTERN]	list extended statistics
+//	dy[x+]	[PATTERN]	list event triggers
+//	l[x+]	[PATTERN]	list databases
+//	list[x+]:l
+//	lo_list[x+]:dl
+//	z[Sx]	[PATTERN]	same as \dp
 func Describe(p *Params) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -1185,9 +1304,14 @@ func Describe(p *Params) error {
 	if err != nil {
 		return err
 	}
-	verbose := strings.ContainsRune(p.Name, '+')
-	showSystem := strings.ContainsRune(p.Name, 'S')
-	name := strings.TrimRight(p.Name, "S+")
+	verbose, showSystem := p.Modifier('+'), p.Modifier('S')
+	// x prints this command in expanded mode, as in psql 18
+	m.SetExpanded(p.Modifier('x'))
+	name := p.Base()
+	// \list is psql's long name of \l
+	if name == "list" {
+		name = "l"
+	}
 	patterns, err := p.Patterns()
 	if err != nil {
 		return err
@@ -1206,7 +1330,13 @@ func Describe(p *Params) error {
 		}
 		return m.ListTables(ctx, "tvmsE", pattern, verbose, showSystem)
 	case name == "da", strings.HasPrefix(name, "df"):
-		return m.DescribeFunctions(ctx, name, pattern, verbose, showSystem)
+		// psql's \df takes the types of the arguments after the name, and
+		// its \da takes none
+		var types []string
+		if strings.HasPrefix(name, "df") && len(patterns) > 1 {
+			types = patterns[1:]
+		}
+		return m.DescribeFunctions(ctx, name, pattern, types, verbose, showSystem)
 	case name == "dp", name == "z":
 		return m.ListPrivilegeSummaries(ctx, pattern, showSystem)
 	case name[0] == 'd' && strings.Trim(name[1:], "tvmsEi") == "":

@@ -79,6 +79,12 @@ var (
 	ErrWrongNumberOfArguments = errors.New(`wrong number of arguments`)
 	// ErrUnknownFileType is the unknown file type error.
 	ErrUnknownFileType = errors.New(`unknown file type`)
+	// ErrRestricted is the error for a meta command in restricted mode.
+	ErrRestricted = errors.New(`backslash commands are restricted: only \unrestrict is allowed`)
+	// ErrNotRestricted is the error for \unrestrict outside restricted mode.
+	ErrNotRestricted = errors.New(`not currently in restricted mode`)
+	// ErrWrongRestrictKey is the error for \unrestrict with another key.
+	ErrWrongRestrictKey = errors.New(`wrong key`)
 	// ErrPasswordForward is the error when a password is asked for a URL that
 	// dbfwd opens, which reads the password where the database runs.
 	ErrPasswordForward = errors.New(`a forwarded connection reads its password where the database runs, so -W does not apply`)

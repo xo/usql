@@ -4,6 +4,8 @@
 package sqlite3
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/mattn/go-sqlite3" // DRIVER
@@ -22,6 +24,14 @@ func init() {
 				code = strconv.Itoa(int(e))
 			}
 			return code, msg
+		},
+		// the primary and the extended result codes, by number and by name
+		ErrVerbose: func(err error, _ string) string {
+			var e sqlite3.Error
+			if !errors.As(err, &e) {
+				return ""
+			}
+			return fmt.Sprintf("ERROR:  %d (%s), extended code %d: %s", int(e.Code), e.Code.Error(), int(e.ExtendedCode), e.Error())
 		},
 		ConvertBytes: sqshared.ConvertBytes,
 	})

@@ -39,6 +39,11 @@ var (
 	ConnInfo                  = `Connected with driver %s (%s)`
 	ForwardInfo               = `Forwarded to %s`
 	ForwardLost               = `%w (\c starts it again)`
+	GdescNoColumns            = `The command has no result, or the result has no columns.`
+	WithArgumentTypes         = `with argument types`
+	NoPreviousError           = `There is no previous error.`
+	HistoryWritten            = `Wrote history to file "%s".`
+	HistoryInvalidCount       = `\history: %q is not a count`
 	KubernetesTitle           = `List of Kubernetes databases in %s`
 	KubernetesNotFound        = `Did not find any Kubernetes databases in %s.`
 	KubernetesSkipped         = `note: skipped %s in %s: %s`

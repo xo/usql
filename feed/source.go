@@ -51,6 +51,16 @@ type Source struct {
 	// much of that text was fed since.
 	queue []Item
 	cut   int
+	// alone reports whether a line, read when nothing waits to be fed, is
+	// fed at once as a statement with no ';', as psql reads help, quit and
+	// exit typed alone. It is nil unless SetAlone set it.
+	alone func(line string) bool
+}
+
+// SetAlone sets the test for a line that is fed at once when nothing else
+// waits to be fed, such as help typed alone at a terminal.
+func (s *Source) SetAlone(alone func(line string) bool) {
+	s.alone = alone
 }
 
 // NewSource returns a Source that reads r, and parses it in the language.
@@ -143,6 +153,10 @@ func (s *Source) Next() (Item, error) {
 			line, err := s.read()
 			if err != nil {
 				return Item{}, err
+			}
+			if s.alone != nil && !s.eof && s.text == "" && s.more.Len() == len(line)+1 && s.alone(line) {
+				s.more.Reset()
+				return Item{Kind: Statement, Text: line}, nil
 			}
 			if s.eof || canEnd(line) {
 				break

@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/lib/pq" // DRIVER
@@ -83,6 +84,35 @@ func Driver() drivers.Driver {
 				return string(e.Code), e.Message
 			}
 			return "", err.Error()
+		},
+		ErrVerbose: func(err error, query string) string {
+			var e *pq.Error
+			if !errors.As(err, &e) {
+				return ""
+			}
+			number := func(s string) int {
+				n, _ := strconv.Atoi(s)
+				return n
+			}
+			return pgshared.Verbose(pgshared.ErrorFields{
+				Severity:         e.Severity,
+				Code:             string(e.Code),
+				Message:          e.Message,
+				Detail:           e.Detail,
+				Hint:             e.Hint,
+				Position:         number(e.Position),
+				InternalPosition: number(e.InternalPosition),
+				InternalQuery:    e.InternalQuery,
+				Where:            e.Where,
+				SchemaName:       e.Schema,
+				TableName:        e.Table,
+				ColumnName:       e.Column,
+				DataTypeName:     e.DataTypeName,
+				ConstraintName:   e.Constraint,
+				File:             e.File,
+				Line:             number(e.Line),
+				Routine:          e.Routine,
+			}, query)
 		},
 		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*pq.Error); ok {

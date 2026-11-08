@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbfwd v0.3.0, dbmeta v0.35.0, dburl v0.57.0, tblfmt v0.23.0, transit
+- usql requires dbfwd v0.3.1, dbmeta v0.36.0, dburl v0.57.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
@@ -512,7 +512,7 @@ the XDG Base Directory specification on Linux and other Unix systems.
   no variable for the password alone, and `USQL_PASSWORD` is still the
   variable of `-W`.
 - usql opens a database in Kubernetes from a URL such as `k://pg.prod/app` or
-  `k8s+cnpg://pg.prod/app`, through dbfwd v0.3.0 and `kubectl port-forward`.
+  `k8s+cnpg://pg.prod/app`, through dbfwd v0.3.1 and `kubectl port-forward`.
   dburl v0.57.0 parses the `k8s` scheme, with the aliases `k`, `kc`, `k8`,
   `kube` and `kubernetes`. The type after `+` takes dburl's aliases, so
   `k+pg://` is PostgreSQL. The password comes from the Secret, so `-W` gives
@@ -520,6 +520,36 @@ the XDG Base Directory specification on Linux and other Unix systems.
   prompt shows the host from the URL. A lost forward stops each statement
   with its reason, and `\c` with no argument starts it again. usql stops the
   forward on `\c`, `\Z` and at exit.
+- The describe commands, `\l` and `\lo_list` take psql 18's modifier `x`,
+  which shows one result in expanded mode, such as `\dtx` or `\dSx t`. The
+  modifiers go in the order `S`, `x`, `+`, so `\dtx+` works and `\dt+x` does
+  not. `\dx` is still the extensions, and `\dxx` shows them expanded.
+- `\restrict KEY` and `\unrestrict KEY` work as in psql 18. pg_dump 18
+  writes them on the first and the last line of a plain dump. Between them,
+  statements run and no meta command does, so a meta command in the data of
+  a dump cannot run. Before, usql printed "Invalid command" for both lines.
+- `\errverbose` shows the error of the last statement that failed, with every
+  field that the driver gives: psql's verbose form for PostgreSQL, through
+  pgx or lib/pq, the `mysql` client's form for MySQL, `sqlcmd`'s form for SQL
+  Server, and the result codes for SQLite. Another driver shows the error as
+  usql prints it.
+- `\gdesc` shows the name and the type of each column of the query in the
+  buffer, without running it, as psql does. It works on PostgreSQL and the
+  databases on pgx, which prepare the query and name its types with dbmeta,
+  and on SQL Server, through `sp_describe_first_result_set`. Any other
+  database refuses it, because it can describe a query only by running it.
+- `\df PATTERN TYPES...` lists only the functions whose arguments have the
+  types, and `\do PATTERN [LEFT] RIGHT` the operators whose operands do, as
+  in psql. `-` means no argument. Only PostgreSQL and CockroachDB match the
+  types, and another database says so (dbmeta v0.36.0).
+- `\list` and `\html` are psql's long names of `\l` and `\H`.
+- At a terminal, `help`, `quit` and `exit` typed alone on a line, with or
+  without a `;`, show the help, or quit, as psql does and as usql did before
+  the input moved to transit. Inside a statement they are part of the
+  statement.
+- `\history [COUNT]` shows the history of the line editor, with the number of
+  each entry, as bash's `history` does. `\s [FILE]` shows it as psql does,
+  or writes it to a file.
 - `\k` lists the databases that usql can reach in Kubernetes, with the URL
   that `\c` opens. `\k` lists the current namespace, `\k -A` every
   namespace, `-n NAMESPACE` one namespace, and `--context NAME` another
@@ -812,6 +842,12 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
 - CSV and JSON output that is taller than the terminal
 - `\timing on` with a query that pages
 - on Windows, with PAGER unset, which uses more
+
+### Restricted mode
+
+- Make a plain dump with pg_dump 18, add a line such as `\! echo ran` after
+  its `\restrict` line, and run the dump with `usql -f`. Check that usql
+  refuses the line, and that `\unrestrict` at the end of the dump passes.
 
 ### Scripts, pipes and the command line
 

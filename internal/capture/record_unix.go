@@ -91,27 +91,34 @@ func Record(ctx context.Context, path string, s Session) (*Transcript, error) {
 		Cols:    s.Cols,
 		Rows:    s.Rows,
 	}
-	recErr := run(leader, s, t)
+	ended, recErr := run(leader, s, t)
+	// A session whose last step leaves usql at a prompt holds all its output
+	// now, so usql is stopped here. Waiting for it would last until the limit
+	// of the session ends it, which took 30 seconds for each such session.
+	if !ended {
+		_ = cmd.Process.Kill()
+	}
 	_ = cmd.Wait()
 	return t, recErr
 }
 
 // run collects the startup output, then sends every step and collects its
 // answer. It appends each exchange to the transcript as it goes, so that a
-// recording that fails still shows how far it reached.
-func run(leader *os.File, s Session, t *Transcript) error {
+// recording that fails still shows how far it reached. It reports whether
+// the program ended the stream.
+func run(leader *os.File, s Session, t *Transcript) (bool, error) {
 	// Wait for usql to say something before the quiet rule applies, so that a
 	// program that has not started yet is not mistaken for one that has
 	// finished writing.
 	b, done, err := drain(leader, s.Replies, s.Quiet, s.Start)
 	t.Exchanges = append(t.Exchanges, Exchange{Recv: b})
 	if err != nil || done {
-		return err
+		return done, err
 	}
 	for i, step := range s.Steps {
 		if step.Send != "" {
 			if _, err := leader.WriteString(step.Send); err != nil {
-				return fmt.Errorf("sending step %d: %w", i, err)
+				return false, fmt.Errorf("sending step %d: %w", i, err)
 			}
 		}
 		quiet := step.Wait
@@ -121,13 +128,13 @@ func run(leader *os.File, s Session, t *Transcript) error {
 		b, done, err := drain(leader, s.Replies, quiet, quiet)
 		t.Exchanges = append(t.Exchanges, Exchange{Send: []byte(step.Send), Recv: b})
 		if err != nil {
-			return err
+			return done, err
 		}
 		if done {
-			return nil
+			return true, nil
 		}
 	}
-	return nil
+	return false, nil
 }
 
 // drain reads until the program writes nothing for the quiet period. It

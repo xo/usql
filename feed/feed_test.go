@@ -208,6 +208,33 @@ func TestSourceEntries(t *testing.T) {
 	}
 }
 
+// TestSourceAlone checks that a line that SetAlone accepts is fed at once
+// when nothing waits to be fed, and joins a statement that is open.
+func TestSourceAlone(t *testing.T) {
+	t.Parallel()
+	alone := func(line string) bool { return strings.TrimSpace(line) == "help" }
+	tests := []struct {
+		entries entries
+		alone   func(string) bool
+		exp     string
+	}{
+		{entries{"help", "select 1;"}, alone, "S:help(open) | S:select 1;"},
+		{entries{"select", "help", "1;"}, alone, "S:select\nhelp\n1;"},
+		{entries{"help", "select 1;"}, nil, "S:help\nselect 1;"},
+	}
+	for _, test := range tests {
+		e := test.entries
+		s, err := NewSource(&e, Language(postgres, false), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.SetAlone(test.alone)
+		if got := feedAll(t, s); got != test.exp {
+			t.Errorf("\n got: %q\nwant: %q", got, test.exp)
+		}
+	}
+}
+
 func TestSourcePush(t *testing.T) {
 	t.Parallel()
 	e := &entries{"select 2;"}

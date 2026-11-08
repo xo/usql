@@ -18,11 +18,41 @@ func TestNames(t *testing.T) {
 		{`q`, []string{`q`}},
 		{`l[+]`, []string{`l`, `l+`}},
 		{`d[S+]`, []string{`d`, `dS`, `d+`, `dS+`}},
+		{`dx[x+]`, []string{`dx`, `dxx`, `dx+`, `dxx+`}},
 		{`df[an][S]`, []string{`df`, `dfa`, `dfn`, `dfan`, `dfS`, `dfaS`, `dfnS`, `dfanS`}},
 	}
 	for _, test := range tests {
 		if got := (desc{Name: test.name}).Names(); !slices.Equal(got, test.exp) {
 			t.Errorf("%s: expected %q, got %q", test.name, test.exp, got)
+		}
+	}
+}
+
+// TestModifiers checks the base name and the modifiers of a command name. A
+// name that two commands register belongs to the later one, so \dx is the
+// extensions, as in psql, and \dxx lists them in expanded mode.
+func TestModifiers(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name, base, mods string
+	}{
+		{`d`, `d`, ``},
+		{`dSx+`, `d`, `Sx+`},
+		{`dx`, `dx`, ``},
+		{`dx+`, `dx`, `+`},
+		{`dxx+`, `dx`, `x+`},
+		{`dtx`, `dt`, `x`},
+		{`dfanSx`, `dfan`, `Sx`},
+		{`dPitx+`, `dPit`, `x+`},
+		{`lx`, `l`, `x`},
+		{`listx+`, `list`, `x+`},
+		{`ddpx`, `ddp`, `x`},
+		{`conninfo`, `conninfo`, ``},
+	}
+	for _, test := range tests {
+		p := &Params{Name: test.name, mods: modifiers(test.name)}
+		if p.mods != test.mods || p.Base() != test.base {
+			t.Errorf("%s: got base %q and modifiers %q, want %q and %q", test.name, p.Base(), p.mods, test.base, test.mods)
 		}
 	}
 }

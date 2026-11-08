@@ -30,6 +30,29 @@ type Call struct {
 	Flags string
 }
 
+// typePatterns returns psql's type patterns, such as int* or
+// pg_catalog.int4, as dbmeta's Args.ArgTypes takes them: folded as the
+// product folds a name, with * and ? as LIKE's % and _, and - kept for no
+// argument. It returns nil for no patterns.
+func (f *Formatter) typePatterns(patterns []string) []string {
+	if len(patterns) == 0 {
+		return nil
+	}
+	types := make([]string, len(patterns))
+	for i, p := range patterns {
+		if p == "-" {
+			types[i] = p
+			continue
+		}
+		schema, name := f.meta.Dialect().Pattern(p)
+		if schema != "" {
+			name = schema + "." + name
+		}
+		types[i] = name
+	}
+	return types
+}
+
 // pattern returns the i'th pattern, or an empty string.
 func (c Call) pattern(i int) string {
 	if i < len(c.Patterns) {
@@ -125,6 +148,10 @@ type spec[T any] struct {
 	// noCount leaves out the count of rows below the list, as psql does for
 	// the roles of \du.
 	noCount bool
+	// operands reads the patterns after the first as the types of the left
+	// and the right operand, as psql's \do does. One type pattern alone is
+	// the right operand of a prefix operator.
+	operands bool
 	// visible, if set, says whether a row is on the search path, for
 	// onPath.
 	visible func(T) sql.Null[bool]
@@ -156,13 +183,13 @@ func (s spec[T]) read(ctx context.Context, f *Formatter, c Call, a dbmeta.Args) 
 	a.WithSystem = c.System
 	res, err := all(ctx, f, s.q, a)
 	if err != nil {
-		return nil, f.check(s.cmd, err)
+		return nil, f.checkTypes(s.cmd, a.ArgTypes, err)
 	}
 	return res, nil
 }
 
-// print prints res.
-func (s spec[T]) print(out io.Writer, res []T, verbose bool) error {
+// print prints res to the output of f.
+func (s spec[T]) print(f *Formatter, res []T, verbose bool) error {
 	r := &rows{}
 	var shown []field[T]
 	for _, f := range s.fields {
@@ -184,17 +211,25 @@ func (s spec[T]) print(out io.Writer, res []T, verbose bool) error {
 	if s.noCount {
 		footer = noFooter
 	}
-	return encode(out, r, s.title, footer, nil)
+	return encode(f.out, r, s.title, footer, f.params())
 }
 
 // list returns the command that prints s.
 func list[T any](s spec[T]) command {
 	return func(ctx context.Context, f *Formatter, c Call) error {
-		res, err := s.read(ctx, f, c, s.named(f, c.pattern(0)))
+		a := s.named(f, c.pattern(0))
+		if s.operands && len(c.Patterns) > 1 {
+			types := c.Patterns[1:]
+			if len(types) == 1 {
+				types = []string{"-", types[0]}
+			}
+			a.ArgTypes = f.typePatterns(types)
+		}
+		res, err := s.read(ctx, f, c, a)
 		if err != nil {
 			return err
 		}
-		return s.print(f.out, s.onPath(f, c.pattern(0), res), c.Verbose)
+		return s.print(f, s.onPath(f, c.pattern(0), res), c.Verbose)
 	}
 }
 
@@ -208,7 +243,7 @@ func byAccessMethod[T any](s spec[T]) command {
 		if err != nil {
 			return err
 		}
-		return s.print(f.out, res, c.Verbose)
+		return s.print(f, res, c.Verbose)
 	}
 }
 
@@ -307,7 +342,7 @@ func notNull(nullable bool) string {
 }
 
 var operators = list(spec[dbmeta.Operator]{
-	cmd: `\do`, title: text.ListOfOperators, q: dbmeta.Operators,
+	cmd: `\do`, title: text.ListOfOperators, q: dbmeta.Operators, operands: true,
 	fields: []field[dbmeta.Operator]{
 		{name: "Schema", value: func(o dbmeta.Operator) any { return o.Schema }},
 		{name: "Name", value: func(o dbmeta.Operator) any { return o.Name }},
@@ -415,7 +450,7 @@ var roleSettings = func(ctx context.Context, f *Formatter, c Call) error {
 		}
 		return err
 	}
-	return s.print(f.out, res, c.Verbose)
+	return s.print(f, res, c.Verbose)
 }
 
 var roleGrants = list(spec[dbmeta.RoleGrant]{
@@ -524,14 +559,14 @@ var settings = func(ctx context.Context, f *Formatter, c Call) error {
 		return err
 	case c.pattern(0) != "" || !some(res, func(s dbmeta.Setting) bool { return s.Source.Valid }):
 		// a database that does not say where a value came from lists all
-		return settingList.print(f.out, res, c.Verbose)
+		return settingList.print(f, res, c.Verbose)
 	}
 	res = slices.DeleteFunc(res, func(s dbmeta.Setting) bool {
 		return s.Source.V == "default" || s.Value == s.Boot
 	})
 	s := settingList
 	s.title = text.ListOfNonDefaultSettings
-	return s.print(f.out, res, c.Verbose)
+	return s.print(f, res, c.Verbose)
 }
 
 var settingList = spec[dbmeta.Setting]{
@@ -559,7 +594,7 @@ var comments = func(ctx context.Context, f *Formatter, c Call) error {
 		}
 		return true
 	})
-	return commentList.print(f.out, res, c.Verbose)
+	return commentList.print(f, res, c.Verbose)
 }
 
 var commentList = spec[dbmeta.Comment]{
@@ -746,7 +781,7 @@ func partitionedTables(ctx context.Context, f *Formatter, c Call) error {
 		}
 		return false
 	})
-	return spec.print(f.out, res, c.Verbose)
+	return spec.print(f, res, c.Verbose)
 }
 
 // publicationList is the list that \dRp prints. \dRp+ prints each
@@ -773,7 +808,7 @@ func publications(ctx context.Context, f *Formatter, c Call) error {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return publicationList.print(f.out, pubs, false)
+		return publicationList.print(f, pubs, false)
 	case len(pubs) == 0 && c.pattern(0) != "":
 		_, err := fmt.Fprintf(f.out, text.PublicationNotFound+"\n", c.pattern(0))
 		return err
@@ -819,7 +854,7 @@ func publications(ctx context.Context, f *Formatter, c Call) error {
 			row = append(row, f.value(p))
 		}
 		r.add(row...)
-		if err := encode(f.out, r, fmt.Sprintf(text.Publication, p.Name), footer, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.Publication, p.Name), footer, f.params()); err != nil {
 			return err
 		}
 	}
@@ -867,7 +902,7 @@ func subscriptions(ctx context.Context, f *Formatter, c Call) error {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return subscriptionList.print(f.out, subs, false)
+		return subscriptionList.print(f, subs, false)
 	}
 	// a role that may not read the connection strings gets none
 	conninfo := make(map[string]string)
@@ -884,7 +919,7 @@ func subscriptions(ctx context.Context, f *Formatter, c Call) error {
 			spec.fields[i].value = func(s dbmeta.Subscription) any { return conninfo[s.Name] }
 		}
 	}
-	return spec.print(f.out, subs, true)
+	return spec.print(f, subs, true)
 }
 
 // configList is the list that \dF prints. \dF+ prints the token map of each
@@ -904,7 +939,7 @@ func textSearchConfigs(ctx context.Context, f *Formatter, c Call) error {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return configList.print(f.out, configs, false)
+		return configList.print(f, configs, false)
 	}
 	slices.SortStableFunc(configs, func(a, b dbmeta.TextSearchConfig) int {
 		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
@@ -930,7 +965,7 @@ func textSearchConfigs(ctx context.Context, f *Formatter, c Call) error {
 			r.add(m.Token, m.Dictionary)
 		}
 		title := fmt.Sprintf(text.TSConfig, t.Schema+"."+t.Name) + "\n" + fmt.Sprintf(text.TSConfigParser, qualify(null(t.ParserSchema), t.Parser))
-		if err := encode(f.out, r, title, noFooter, nil); err != nil {
+		if err := encode(f.out, r, title, noFooter, f.params()); err != nil {
 			return err
 		}
 	}
@@ -972,7 +1007,7 @@ func textSearchParsers(ctx context.Context, f *Formatter, c Call) error {
 	case err != nil:
 		return err
 	case !c.Verbose || !f.supports(dbmeta.TextSearchParserFunctions):
-		return parserList.print(f.out, parsers, c.Verbose)
+		return parserList.print(f, parsers, c.Verbose)
 	}
 	slices.SortStableFunc(parsers, func(a, b dbmeta.TextSearchParser) int {
 		return cmp.Or(cmp.Compare(a.Schema, b.Schema), cmp.Compare(a.Name, b.Name))
@@ -992,7 +1027,7 @@ func textSearchParsers(ctx context.Context, f *Formatter, c Call) error {
 			r.add(parserMethod(fn.Method), fn.Function, null(fn.Comment))
 		}
 		name := qualify(p.Schema, p.Name)
-		if err := encode(f.out, r, fmt.Sprintf(text.TSParser, name), noFooter, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.TSParser, name), noFooter, f.params()); err != nil {
 			return err
 		}
 		if !f.supports(dbmeta.TextSearchParserTokenTypes) {
@@ -1008,7 +1043,7 @@ func textSearchParsers(ctx context.Context, f *Formatter, c Call) error {
 				r.add(t.Alias, t.Description)
 			}
 		}
-		if err := encode(f.out, r, fmt.Sprintf(text.TSParserTokenTypes, name), nil, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.TSParserTokenTypes, name), nil, f.params()); err != nil {
 			return err
 		}
 	}
@@ -1116,7 +1151,7 @@ func extensions(ctx context.Context, f *Formatter, c Call) error {
 	case err != nil:
 		return err
 	case !c.Verbose:
-		return extensionList.print(f.out, exts, false)
+		return extensionList.print(f, exts, false)
 	}
 	slices.SortStableFunc(exts, func(a, b dbmeta.Extension) int {
 		return cmp.Compare(a.Name, b.Name)
@@ -1132,7 +1167,7 @@ func extensions(ctx context.Context, f *Formatter, c Call) error {
 				r.add(o.Description)
 			}
 		}
-		if err := encode(f.out, r, fmt.Sprintf(text.ObjectsInExtension, `"`+e.Name+`"`), nil, nil); err != nil {
+		if err := encode(f.out, r, fmt.Sprintf(text.ObjectsInExtension, `"`+e.Name+`"`), nil, f.params()); err != nil {
 			return err
 		}
 	}

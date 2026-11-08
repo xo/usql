@@ -37,6 +37,25 @@ type Formatter struct {
 	// printed
 	path     map[string]bool
 	pathRead bool
+
+	// expanded prints in expanded mode, as the x modifier of psql 18 asks
+	// for one command
+	expanded bool
+}
+
+// SetExpanded prints what follows in expanded mode, or in the mode of the
+// session, as the x modifier of a describe command asks.
+func (f *Formatter) SetExpanded(expanded bool) {
+	f.expanded = expanded
+}
+
+// params returns the print settings that differ from those of the session
+// for the command that runs now.
+func (f *Formatter) params() map[string]string {
+	if f.expanded {
+		return map[string]string{"expanded": "on"}
+	}
+	return nil
 }
 
 // NewFormatter returns a Formatter that reads the database db through m, and
@@ -67,10 +86,20 @@ func (f *Formatter) notSupported(cmd string) error {
 
 // check turns ErrNotSupported into the message for cmd.
 func (f *Formatter) check(cmd string, err error) error {
-	if errors.Is(err, ErrNotSupported) {
+	if errors.Is(err, ErrNotSupported) || errors.Is(err, dbmeta.ErrNotSupported) {
 		return f.notSupported(cmd)
 	}
 	return err
+}
+
+// checkTypes is check for a command given the types of the arguments, which
+// only some databases can match, so that the message does not say that the
+// command itself is not supported.
+func (f *Formatter) checkTypes(cmd string, types []string, err error) error {
+	if len(types) != 0 {
+		cmd += " " + text.WithArgumentTypes
+	}
+	return f.check(cmd, err)
 }
 
 // The classes of relation that \d lists, keyed by the letter of the command:
@@ -351,7 +380,7 @@ func (f *Formatter) ListTables(ctx context.Context, types, pattern string, verbo
 		}
 		r.add(v...)
 	}
-	return encode(f.out, r, relationsTitle(want), nil, nil)
+	return encode(f.out, r, relationsTitle(want), nil, f.params())
 }
 
 // relationsTitle returns the title that psql gives a list of the classes in
@@ -492,7 +521,7 @@ func (f *Formatter) describeRelation(ctx context.Context, t dbmeta.Table, verbos
 	if err != nil {
 		return err
 	}
-	return encode(f.out, r, title(t), footer, nil)
+	return encode(f.out, r, title(t), footer, f.params())
 }
 
 // relationFooter returns the lines that psql prints below the columns of a
@@ -999,7 +1028,7 @@ func (f *Formatter) describeSequence(ctx context.Context, t dbmeta.Table) error 
 			return err
 		}
 	}
-	return encode(f.out, r, title(t), footer, nil)
+	return encode(f.out, r, title(t), footer, f.params())
 }
 
 // describeIndexes prints each index whose name matches pattern, and returns
@@ -1108,7 +1137,7 @@ func (f *Formatter) describeIndex(ctx context.Context, i dbmeta.Index, verbose b
 		_, err := fmt.Fprintln(out, strings.Join(lines, "\n"))
 		return err
 	}
-	return encode(f.out, r, title+qualified(i.Schema, i.Name), footer, nil)
+	return encode(f.out, r, title+qualified(i.Schema, i.Name), footer, f.params())
 }
 
 // functionKind returns the name that psql prints for the kind of a function,
@@ -1132,7 +1161,10 @@ func functionKind(kind string) (string, rune) {
 // DescribeFunctions prints the functions that match pattern, for \df and
 // \da. funcTypes is the name of the command, and a letter after its first
 // two, as in dfn, selects the kinds of function.
-func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern string, verbose, showSystem bool) error {
+//
+// The types are the patterns of psql's \df after the name, one for each
+// argument in order, and - for no more arguments.
+func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern string, types []string, verbose, showSystem bool) error {
 	cmd := `\` + funcTypes
 	aggregates := strings.HasPrefix(funcTypes, "da")
 	want := make(map[rune]bool)
@@ -1150,9 +1182,9 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 		}
 	}
 	schema, name := f.meta.Dialect().Pattern(pattern)
-	funcs, err := all(ctx, f, q, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem})
+	funcs, err := all(ctx, f, q, dbmeta.Args{Schema: schema, Name: name, WithSystem: showSystem, ArgTypes: f.typePatterns(types)})
 	if err != nil {
-		return f.check(cmd, err)
+		return f.checkTypes(cmd, types, err)
 	}
 	if f.pathOnly(pattern) {
 		funcs = slices.DeleteFunc(funcs, func(fn dbmeta.Function) bool { return hidden(fn.Visible) })
@@ -1201,7 +1233,7 @@ func (f *Formatter) DescribeFunctions(ctx context.Context, funcTypes, pattern st
 	if aggregates {
 		title = text.ListOfAggregates
 	}
-	return encode(f.out, r, title, nil, nil)
+	return encode(f.out, r, title, nil, f.params())
 }
 
 // ListAllDbs prints the databases that match pattern, for \l.
@@ -1250,7 +1282,7 @@ func (f *Formatter) ListAllDbs(ctx context.Context, pattern string, verbose bool
 		}
 		r.add(v...)
 	}
-	return encode(f.out, r, text.ListOfDatabases, nil, nil)
+	return encode(f.out, r, text.ListOfDatabases, nil, f.params())
 }
 
 // ListSchemas prints the schemas that match pattern, for \dn.
@@ -1280,7 +1312,7 @@ func (f *Formatter) ListSchemas(ctx context.Context, pattern string, verbose, sh
 		}
 		r.add(v...)
 	}
-	return encode(f.out, r, text.ListOfSchemas, nil, nil)
+	return encode(f.out, r, text.ListOfSchemas, nil, f.params())
 }
 
 // ShowStats prints the statistics of the columns of the tables that match
@@ -1305,7 +1337,7 @@ func (f *Formatter) ShowStats(ctx context.Context, pattern string, verbose bool,
 		}
 		r.add(v...)
 	}
-	return encode(f.out, r, text.ColumnStats, nil, nil)
+	return encode(f.out, r, text.ColumnStats, nil, f.params())
 }
 
 // float returns a fraction as psql prints it, or an empty string for NULL.
@@ -1365,5 +1397,5 @@ func (f *Formatter) ListPrivilegeSummaries(ctx context.Context, pattern string, 
 		}
 		r.add(null(p.Schema), p.Name, strings.ToLower(p.Type), null(p.Access), cols, pols)
 	}
-	return encode(f.out, r, text.AccessPrivileges, nil, nil)
+	return encode(f.out, r, text.AccessPrivileges, nil, f.params())
 }

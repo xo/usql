@@ -223,7 +223,7 @@ schemas are the users `northwind` and `hr`:
     (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun fixture northwind postgres-18)
 
 The run builds usql with every driver and types each example into it
-under a pseudo-terminal, so it takes some minutes. The README shows `pass` for
+under a pseudo-terminal, which takes about a minute. The README shows `pass` for
 the password and `localhost` for the host and port.
 
 To compare the examples on another base database, name its `dbrun` selector,

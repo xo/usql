@@ -74,6 +74,54 @@ func Driver() drivers.Driver {
 			}
 			return "", err.Error()
 		},
+		// pgx prepares the statement unnamed, which describes its result
+		// without running it, as psql's \gdesc does with PQdescribePrepared
+		Describe: func(ctx context.Context, conn drivers.DB, query string) ([]drivers.ResultType, error) {
+			var types []drivers.ResultType
+			ok, err := drivers.Raw(ctx, conn, func(dc any) error {
+				c, ok := dc.(*stdlib.Conn)
+				if !ok {
+					return drivers.ErrDescribeNotSupported
+				}
+				sd, err := c.Conn().Prepare(ctx, "", query)
+				if err != nil {
+					return err
+				}
+				for _, f := range sd.Fields {
+					types = append(types, drivers.ResultType{Name: f.Name, OID: f.DataTypeOID, Modifier: f.TypeModifier})
+				}
+				return nil
+			})
+			if !ok {
+				return nil, drivers.ErrDescribeNotSupported
+			}
+			return types, err
+		},
+		ErrVerbose: func(err error, query string) string {
+			var e *pgconn.PgError
+			if !errors.As(err, &e) {
+				return ""
+			}
+			return pgshared.Verbose(pgshared.ErrorFields{
+				Severity:         e.Severity,
+				Code:             e.Code,
+				Message:          e.Message,
+				Detail:           e.Detail,
+				Hint:             e.Hint,
+				Position:         int(e.Position),
+				InternalPosition: int(e.InternalPosition),
+				InternalQuery:    e.InternalQuery,
+				Where:            e.Where,
+				SchemaName:       e.SchemaName,
+				TableName:        e.TableName,
+				ColumnName:       e.ColumnName,
+				DataTypeName:     e.DataTypeName,
+				ConstraintName:   e.ConstraintName,
+				File:             e.File,
+				Line:             int(e.Line),
+				Routine:          e.Routine,
+			}, query)
+		},
 		// class 28 is a refused authorization: PostgreSQL says 28P01, and Redshift
 		// says 28000
 		IsPasswordErr: func(err error) bool {

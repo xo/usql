@@ -45,6 +45,14 @@ type Handler interface {
 	LastExec() string
 	// LastRaw returns the last raw (non-interpolated) query.
 	LastRaw() string
+	// LastError returns the error of the last statement that failed, and
+	// the statement, or nil when none failed.
+	LastError() (error, string)
+	// Restrict enters restricted mode, in which no meta command runs but
+	// \unrestrict with the same key.
+	Restrict(string) error
+	// Unrestrict leaves restricted mode when the key matches.
+	Unrestrict(string) error
 	// Buffer returns the query buffer.
 	Buffer() *feed.Buffer
 	// Lookup returns the value of a variable, for expanding the buffer.
@@ -129,9 +137,11 @@ func Dump(w io.Writer, hidden bool) error {
 // not read.
 func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
 	name := it.Name
+	registered := name
 	f, ok := cmds[name]
 	if !ok {
-		f, ok = cmds[relations(name)]
+		registered = relations(name)
+		f, ok = cmds[registered]
 	}
 	if !ok || name == "" {
 		return nil, text.ErrUnknownCommand
@@ -140,6 +150,7 @@ func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
 		p := &Params{
 			Handler: h,
 			Name:    name,
+			mods:    modifiers(registered),
 			item:    it,
 		}
 		err := f(p)
@@ -150,7 +161,7 @@ func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
 // relations returns name with the class letters of \d in the order that
 // they are registered in, so that \dvt finds \dtv, as psql allows.
 func relations(name string) string {
-	base := strings.TrimRight(name, "S+")
+	base := strings.TrimRight(name, modifierLetters)
 	if len(base) < 2 || base[0] != 'd' || strings.Trim(base[1:], "tvmsEi") != "" {
 		return name
 	}
@@ -175,12 +186,26 @@ type Params struct {
 	// Option contains resulting command execution options.
 	Option Option
 
+	// mods are the letters of Name that are modifiers, such as S, x and +.
+	mods string
 	// item is the meta command.
 	item feed.Item
 	// next is the index of the next argument to read.
 	next int
 	// options is set once the option list of \g has been read.
 	options bool
+}
+
+// Base returns the name of the command without its modifiers, such as dt for
+// \dtS+ and dx for \dxx.
+func (p *Params) Base() string {
+	return p.Name[:len(p.Name)-len(p.mods)]
+}
+
+// Modifier reports whether the command was given the modifier c, such as S,
+// x or +.
+func (p *Params) Modifier(c rune) bool {
+	return strings.ContainsRune(p.mods, c)
 }
 
 // arg returns the next argument that is not an option list, and moves past
@@ -397,6 +422,9 @@ const (
 	ExecSet
 	// ExecExec indicates execution and executing the resulting rows (\gexec).
 	ExecExec
+	// ExecDescribe indicates describing the result without executing the
+	// query (\gdesc).
+	ExecDescribe
 	// ExecCrosstab indicates execution using crosstabview (\crosstabview).
 	ExecCrosstab
 	// ExecChart indicates execution using chart (\chart).
@@ -419,19 +447,47 @@ type desc struct {
 // brackets adds every combination of its letters, in their order, so d[S+]
 // is d, dS, d+ and dS+, and df[an][S+] adds dfa, dfan, dfaS+ and the rest.
 func (d desc) Names() []string {
+	var names []string
+	for _, n := range d.names() {
+		names = append(names, n.name)
+	}
+	return names
+}
+
+// modifierLetters are the letters of a group between brackets that is a group
+// of modifiers: S for the objects of the system, x for expanded output, and +
+// for more columns.
+const modifierLetters = "Sx+"
+
+// name is one name of a command, and the letters of it that are modifiers.
+type name struct {
+	name string
+	mods string
+}
+
+// names returns the names for the command, as Names does, each with the
+// letters that came from a group of modifiers. A group is one of modifiers
+// when each of its letters is in modifierLetters, as [Sx+] is and [an] is not.
+func (d desc) names() []name {
 	i := strings.Index(d.Name, "[")
 	if i == -1 {
-		return []string{d.Name}
+		return []name{{name: d.Name}}
 	}
-	names := []string{d.Name[:i]}
+	names := []name{{name: d.Name[:i]}}
 	for s := d.Name[i:]; s != ""; {
 		j := strings.Index(s, "]")
 		if s[0] != '[' || j == -1 {
 			panic(fmt.Sprintf("invalid command %q", d.Name))
 		}
-		for _, c := range s[1:j] {
+		group := s[1:j]
+		mod := strings.Trim(group, modifierLetters) == ""
+		for _, c := range group {
 			for _, n := range names {
-				names = append(names, n+string(c))
+				m := n.mods
+				if mod {
+					m += string(c)
+				}
+				names = append(names, name{name: n.name + string(c), mods: m})
 			}
 		}
 		s = s[j+1:]
@@ -439,10 +495,27 @@ func (d desc) Names() []string {
 	return names
 }
 
+// modifiers returns the letters of name that are modifiers, by the command
+// that registers name. A later command wins, as it does in cmds, so \dx is
+// the extensions and not \d with x.
+func modifiers(cmd string) string {
+	var mods string
+	for _, section := range descs {
+		for _, d := range section {
+			for _, n := range d.names() {
+				if n.name == cmd {
+					mods = n.mods
+				}
+			}
+		}
+	}
+	return mods
+}
+
 // Completions returns the names of the commands, with their backslash, for
 // the completer. A group of letters between brackets that names a kind of
 // object, as the a and n of df[an], adds each letter alone, and the modifiers
-// S and + add each combination of them, as Names does. So \d<Tab> offers
+// S, x and + add each combination of them, as Names does. So \d<Tab> offers
 // \dfa and \dfS+, and not \dfan. A deprecated command is left out.
 func Completions() []string {
 	seen := make(map[string]bool)
@@ -473,7 +546,7 @@ func (d desc) completions() []string {
 		}
 		var kinds, mods []rune
 		for _, c := range s[1:j] {
-			if c == 'S' || c == '+' {
+			if strings.ContainsRune(modifierLetters, c) {
 				mods = append(mods, c)
 			} else {
 				kinds = append(kinds, c)

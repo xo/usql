@@ -115,6 +115,59 @@ the ones that are not implemented: `%M`, `%m`, `%>`, `%n`, `%/`, `%~`, `%#`,
 the database named in the connection URL instead of the database in use after
 a `\c` command or a `USE` statement.
 
+### The meta commands that usql lacks, against psql 18.6
+
+Compared on 2026-11-08, from `psql --help=commands` and psql's long aliases,
+against `metacmd/descs.go`. `\s` was added that day, with `\history`, which
+numbers the entries as bash does. usql has every other command of psql's
+General, Query Buffer, Input/Output, Conditional, Informational, Formatting,
+Operating System and Variables sections, except these:
+
+1. `\restrict KEY` and `\unrestrict KEY`. pg_dump 18 writes `\restrict` on
+   the first line of a plain dump, and psql then refuses every meta command
+   until `\unrestrict` with the same key. usql printed "Invalid command" for
+   both lines of such a dump, and ran the rest with no restriction. Done on
+   2026-11-08, and checked with a dump from pg_dump 18.6.
+2. The modifier `x` of psql 18, which shows the result of one describe
+   command in expanded mode, such as `\dtx`. psql has it on every `\d`
+   command, `\l` and `\lo_list`. Done on 2026-11-08. usql takes the
+   modifiers in the order `S`, `x`, `+`, and psql takes them in any order.
+3. `\errverbose`, which shows the last error with every field that the
+   driver gives. GitHub 160. Done on 2026-11-08 for pgx, lib/pq, MySQL, SQL
+   Server and both SQLite drivers, through the driver hook `ErrVerbose`.
+4. `\gdesc`, which shows the columns of a query's result without running it.
+   Ken asked for it on 2026-11-08. database/sql cannot describe a statement
+   without running it. dbmeta proposed `Dialect.DescribeResult` for SQL
+   Server (`sp_describe_first_result_set`), and the type names of
+   PostgreSQL for a description that pgx gives, in its v0.36.0. Waiting for
+   Ken's approval, and his choice for the other databases: refuse, or run
+   the query wrapped so that it returns no rows. Done on 2026-11-08 on
+   dbmeta v0.36.0 (its D273), for PostgreSQL through pgx, and SQL Server.
+   Every other database refuses, and output matched psql 18.
+5. `\encoding [ENCODING]`, which shows or sets the client encoding of the
+   server. usql's `encoding` setting is the encoding of input files, which
+   is another thing. Ken decided on 2026-11-08 not to add it, because it is
+   a setting of PostgreSQL alone.
+6. `\h [NAME]` and `\help`, the syntax of SQL statements. Ken decided on
+   2026-11-08 not to add them, because the syntax differs for each database.
+7. The long aliases `\list` for `\l` and `\html` for `\H`. Done on
+   2026-11-08.
+8. `\lo_export`, `\lo_import` and `\lo_unlink`, for PostgreSQL's large
+   objects. usql has `\lo_list`. Ken decided on 2026-11-08 not to add them,
+   because large objects are PostgreSQL's alone.
+9. The extended query protocol and pipelines of PostgreSQL: `\parse`,
+   `\bind_named`, `\close_prepared`, `\startpipeline`, `\syncpipeline`,
+   `\sendpipeline`, `\endpipeline`, `\flush`, `\flushrequest` and
+   `\getresults`. usql has `\bind`.
+10. Patterns after the first: `\df` takes argument types, as in
+    `\df FUNCPTRN [TYPEPTRN ...]`, and `\do` takes operand types. usql reads
+    one pattern for each. Ken asked for it on 2026-11-08. dbmeta proposed
+    `Args.ArgTypes`, matched with PostgreSQL's aliases of type names, in its
+    v0.36.0. Done on 2026-11-08 on dbmeta v0.36.0 (its D272), and output
+    matched psql 18.
+11. psql's form of `\c` with a database, a user, a host and a port, and `-`
+    for a field to keep. That is W69.
+
 ## W4. Work through GitHub
 
 93 issues and 24 pull requests are open, reviewed on 2026-09-23. Gemini and
@@ -3580,3 +3633,85 @@ Ken decided the design on 2026-11-08, after dbfwd and the flagship models:
 
 Done on 2026-11-08 on dbfwd v0.3.0. Checked against PostgreSQL 18 in a kind
 cluster from dbrun.
+
+## W77. Dump a database, and copy between connections
+
+Source: Ken, on 2026-11-08. Not designed yet, and nothing is built until Ken
+approves a design.
+
+Ken asked for:
+
+- `--dump`, with the short form `-D`, on the command line, which dumps the
+  connected database as pg_dump does, but always as a usql script.
+- `\dump [FILE]`, which writes everything needed to recreate the database,
+  and fails for a database whose data cannot be dumped.
+- A target dialect, as in `\dump -target duckdb mydatabase.sql`, which writes
+  the schema and the data of the current database as DuckDB statements, and
+  options such as `-schema-only` and `-data-only`.
+- A rewritten `\copy` that copies data between two tables, on one connection
+  or on two, and uses the same statements as the dump.
+- All per-database knowledge in dbmeta: reading the schema, the CREATE and
+  INSERT statements, quoting, literals, and where dumping is not possible.
+- A comparison with pg_dump, mysqldump and the dump tools of other databases,
+  and with schema migration tools, to choose what usql takes.
+
+The steps, in order:
+
+1. dbmeta proposes its side. Asked on 2026-11-08, and written the same day in
+   dbmeta's `docs/DUMP.md`: a package `dbmeta/dump` that reads a snapshot of
+   the schema and builds statements in pg_dump's three stages, a neutral type
+   model, literals and INSERT builders for each target, and a statement of
+   what each product can dump. It needs Ken to amend dbmeta's D5, D56 and
+   D273, because dbmeta would build DDL and INSERT text.
+2. The flagship models review the whole design. Done on 2026-11-08 with
+   Astra, Gemini and DeepSeek. They agree that `\dump` writes text only,
+   to a file or to stdout, and that loading into a live connection is the
+   job of `\copy`. They also agree on multi-row INSERT with column names,
+   `ON_ERROR_STOP` and `\restrict` in the script, failing on a type with no
+   equivalent, and views and routines for the same family only. They
+   differ on whether `tinyint(1)` is a boolean, on `--clean` in the first
+   phase, and on whether `\copy` commits once or after each batch. Astra
+   adds that SQLite cannot add a foreign key after the table exists, that
+   a dropped collation changes comparisons, and that a dump should check
+   everything before it writes, then write the file whole.
+3. Ken decides the design. Ken decided dbmeta's side on 2026-11-08, as
+   dbmeta's D274: dbmeta builds statements and runs nothing, in a package
+   `dump` of its root module. The first targets are PostgreSQL, SQLite,
+   DuckDB and MySQL, then SQL Server and Oracle. There is no translation of
+   SQL in dbmeta or usql: views, functions, procedures and triggers come out
+   as the source's text, marked as not translated, and usql warns or stops
+   when the target is another dialect. A type with no equivalent fails
+   unless a flag allows a fallback. usql answered dbmeta on the fallbacks the
+   same day: three levels, Exact, Lossy and Text, chosen for all columns or
+   for one column, and a plan that reports every column's mapping before the
+   first statement is written.
+
+   Ken decided usql's side on 2026-11-08:
+
+   - Three phases. Phase 1 is a dump to the same dialect, for PostgreSQL,
+     SQLite, MySQL and DuckDB, with `-schema-only`, `-data-only`, filters
+     for tables and schemas, and one read transaction where the database
+     has a consistent snapshot. Phase 2 is the new `\copy`, on the same
+     builders. Phase 3 is `-target` to another of the four. SQL Server,
+     Oracle, `-clean` and faster bulk loading come later.
+   - dbmeta knows the conventional idioms of schema design, such as MySQL's
+     `TINYINT(1)` and `BIT(1)` for a boolean, and their idiomatic Go type,
+     and translates them on export. The display of query results in usql
+     does not change because of it, apart from cases decided before, such
+     as recognizing a UUID.
+   - `\copy` commits after each batch.
+   - On the command line, the dump's filters are long options only, and
+     hidden, because psql's output options already use `-t`, `-T` and `-N`.
+     `-D` is free.
+   - Ken asked that a schema can also be written in an intermediate format,
+     as dbtpl writes YAML. dbmeta's snapshot of the schema is that format:
+     its json names define it, it has a version, it holds the schema only
+     and no plan, and its order is stable. usql proposed `\dump -format
+     sql|json|yaml`, with `sql` as the default and the encoders in usql, and
+     reading a file back as the source of a schema-only dump in phase 3.
+     dbmeta's `docs/DUMP.md` holds the rules. Ken has not decided usql's
+     options for it.
+
+W29, the SQL of `\copy` in dbmeta, and W71, a large CSV file, overlap with the
+new `\copy`, and are decided with it.
+

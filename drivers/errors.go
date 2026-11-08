@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"errors"
 	"strings"
 	"unicode"
 )
@@ -55,4 +56,20 @@ func (e *Error) Unwrap() error {
 // chop chops off a "prefix: " prefix from a string.
 func chop(s, prefix string) string {
 	return strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), prefix+":"), unicode.IsSpace)
+}
+
+// ErrVerbose returns err with every field that its driver gives, for
+// \errverbose, as the client of the database writes them. query is the
+// statement that failed. A driver with no ErrVerbose gives err as usql
+// prints it.
+func ErrVerbose(err error, query string) string {
+	var e *Error
+	if errors.As(err, &e) {
+		if d, ok := drivers[e.Driver]; ok && d.ErrVerbose != nil {
+			if s := d.ErrVerbose(e.Err, query); s != "" {
+				return s
+			}
+		}
+	}
+	return err.Error()
 }

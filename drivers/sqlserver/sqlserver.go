@@ -5,6 +5,8 @@ package sqlserver
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -63,6 +65,31 @@ func init() {
 				msg = msg[i:]
 			}
 			return "", msg
+		},
+		// sqlcmd writes each message of the batch as Msg 208, Level 16,
+		// State 1, Server srv, Line 1, and the message on the next line
+		ErrVerbose: func(err error, _ string) string {
+			var e sqlserver.Error
+			if !errors.As(err, &e) {
+				return ""
+			}
+			all := e.All
+			if len(all) == 0 {
+				all = []sqlserver.Error{e}
+			}
+			var lines []string
+			for _, m := range all {
+				s := fmt.Sprintf("Msg %d, Level %d, State %d", m.Number, m.Class, m.State)
+				if m.ServerName != "" {
+					s += ", Server " + m.ServerName
+				}
+				if m.ProcName != "" {
+					s += ", Procedure " + m.ProcName
+				}
+				s += fmt.Sprintf(", Line %d", m.LineNo)
+				lines = append(lines, s, m.Message)
+			}
+			return strings.Join(lines, "\n")
 		},
 		IsPasswordErr: func(err error) bool {
 			return strings.Contains(err.Error(), "Login failed for")

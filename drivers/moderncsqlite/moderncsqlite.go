@@ -5,6 +5,8 @@
 package moderncsqlite
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -30,6 +32,18 @@ func init() {
 				return strconv.Itoa(e.Code()), msg
 			}
 			return "", err.Error()
+		},
+		// the extended result code, by number and by name
+		ErrVerbose: func(err error, _ string) string {
+			var e *sqlite.Error
+			if !errors.As(err, &e) {
+				return ""
+			}
+			msg := e.Error()
+			if m := errorRE.FindStringSubmatch(msg); m != nil {
+				msg = m[1]
+			}
+			return fmt.Sprintf("ERROR:  %d (%s): %s", e.Code(), sqlite.ErrorCodeString[e.Code()], msg)
 		},
 		ConvertBytes: sqshared.ConvertBytes,
 	})

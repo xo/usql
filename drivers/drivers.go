@@ -54,6 +54,15 @@ type Driver struct {
 	ColumnTypes func(*sql.ColumnType) (interface{}, error)
 	// Err will be used by Error.Error if defined.
 	Err func(error) (string, string)
+	// ErrVerbose returns every field of an error that the driver gives, for
+	// \errverbose, as the client of the database writes them. query is the
+	// statement that failed, for the position of the error in it. It returns
+	// "" for an error that is not the driver's own.
+	ErrVerbose func(err error, query string) string
+	// Describe returns the columns of the result of query without running
+	// it, by the numbers of their types, for \gdesc. conn is the connection
+	// of the session.
+	Describe func(ctx context.Context, conn DB, query string) ([]ResultType, error)
 	// ConvertBytes will be used by ConvertBytes to convert a raw []byte
 	// slice to a string if defined.
 	ConvertBytes func([]byte, string) (string, error)

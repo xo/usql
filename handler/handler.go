@@ -88,6 +88,13 @@ type Handler struct {
 	lastExec string
 	// lastRaw is the last executed raw query statement.
 	lastRaw string
+	// restrictKey is the key of \restrict. While it is set, no meta command
+	// runs but \unrestrict with the same key.
+	restrictKey string
+	// lastErr is the error of the last statement that failed, and
+	// lastErrQuery the statement, which \errverbose shows.
+	lastErr      error
+	lastErrQuery string
 	// database is the current database that dbmeta reports, which the
 	// prompt's %/ shows, and which USE changes.
 	database sql.Null[string]
@@ -147,6 +154,10 @@ func New(l *rline.Prompt, r feed.LineReader, user *user.User, wd string, charts 
 	if h.src, err = feed.NewSource(r, drivers.Language(nil), prompt); err != nil {
 		return nil, err
 	}
+	// at a terminal, help, quit and exit typed alone need no ';'
+	if h.iactive {
+		h.src.SetAlone(isHelpQuitExit)
+	}
 	return h, nil
 }
 
@@ -191,9 +202,10 @@ func (h *Handler) Continue(text string) bool {
 	return !feed.Finished(items)
 }
 
-// isHelpQuitExit reports whether s is only help, quit or exit.
+// isHelpQuitExit reports whether s is only help, quit or exit, which may end
+// with a ';', as psql reads them.
 func isHelpQuitExit(s string) bool {
-	switch strings.ToLower(strings.TrimSpace(s)) {
+	switch strings.ToLower(strings.TrimSuffix(strings.TrimSpace(s), ";")) {
 	case text.HelpPrefix, text.QuitPrefix, text.ExitPrefix:
 		return true
 	}
@@ -278,8 +290,8 @@ func (h *Handler) Run() error {
 		var opt metacmd.Option
 		switch it.Kind {
 		case feed.Statement:
-			if h.iactive && h.buf.Empty() && !it.Terminated && isHelpQuitExit(it.Text) {
-				if strings.EqualFold(strings.TrimSpace(it.Text), text.HelpPrefix) {
+			if h.iactive && h.buf.Empty() && isHelpQuitExit(it.Text) {
+				if strings.EqualFold(strings.TrimSuffix(strings.TrimSpace(it.Text), ";"), text.HelpPrefix) {
 					fmt.Fprintln(h.Stdout(), text.HelpDesc)
 					continue
 				}
@@ -371,6 +383,12 @@ func (h *Handler) send(stdout, stderr io.Writer, opt metacmd.Option) (bool, erro
 // that the handler goes on to the next item.
 func (h *Handler) apply(stdout, stderr io.Writer, it feed.Item) (metacmd.Option, bool, error) {
 	cmd := it.Name
+	// pg_dump writes \restrict on the first line of a dump, so that a meta
+	// command in the data of the dump cannot run, as in psql
+	if h.restrictKey != "" && cmd != "unrestrict" {
+		fmt.Fprintln(stderr, "error:", text.ErrRestricted)
+		return metacmd.Option{}, true, WrapErr(cmd, text.ErrRestricted)
+	}
 	f, err := metacmd.Decode(it)
 	if err != nil {
 		switch err = WrapErr(cmd, err); {
@@ -426,6 +444,8 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		f = h.doExecWatch
 	case metacmd.ExecChart:
 		f = h.doExecChart
+	case metacmd.ExecDescribe:
+		f = h.doExecDescribe
 	}
 	err := f(ctx, w, opt, prefix, sqlstr, qtyp, bind)
 	// a driver says that the connection is bad only before the statement
@@ -444,7 +464,40 @@ func (h *Handler) Execute(ctx context.Context, w io.Writer, opt metacmd.Option, 
 	if lost := h.forwardLost(); err != nil && lost != nil {
 		return lost
 	}
-	return drivers.WrapErr(h.u.SchemeName, err)
+	if err = drivers.WrapErr(h.u.SchemeName, err); err != nil {
+		h.lastErr, h.lastErrQuery = err, sqlstr
+	}
+	return err
+}
+
+// Restrict enters restricted mode, as \restrict does: no meta command runs
+// until \unrestrict gives the same key.
+func (h *Handler) Restrict(key string) error {
+	if key == "" {
+		return text.ErrMissingRequiredArgument
+	}
+	h.restrictKey = key
+	return nil
+}
+
+// Unrestrict leaves restricted mode when key is the key of \restrict.
+func (h *Handler) Unrestrict(key string) error {
+	switch {
+	case h.restrictKey == "":
+		return text.ErrNotRestricted
+	case key == "":
+		return text.ErrMissingRequiredArgument
+	case key != h.restrictKey:
+		return text.ErrWrongRestrictKey
+	}
+	h.restrictKey = ""
+	return nil
+}
+
+// LastError returns the error of the last statement that failed, and the
+// statement, or nil when none failed.
+func (h *Handler) LastError() (error, string) {
+	return h.lastErr, h.lastErrQuery
 }
 
 // checkHistory says once, at a terminal, that the history file could not be
@@ -1201,6 +1254,33 @@ func (h *Handler) Print(s string, v ...interface{}) {
 	fmt.Fprintln(h.Stdout(), fmt.Sprintf(s, v...))
 }
 
+// doExecDescribe writes the name and the type of each column of the result of
+// the query, without running it, as psql's \gdesc does.
+func (h *Handler) doExecDescribe(ctx context.Context, w io.Writer, _ metacmd.Option, _, sqlstr string, _ bool, _ []interface{}) error {
+	// DB takes the connection of the session when there is none yet, and a
+	// driver describes the query on that connection
+	db := h.DB()
+	var conn drivers.DB
+	if h.conn != nil {
+		conn = h.conn
+	}
+	cols, err := drivers.Describe(ctx, h.u, db, conn, sqlstr)
+	switch {
+	case errors.Is(err, drivers.ErrDescribeNotSupported):
+		return fmt.Errorf(`\gdesc: %w`, err)
+	case err != nil:
+		return err
+	case len(cols) == 0:
+		fmt.Fprintln(w, text.GdescNoColumns)
+		return nil
+	}
+	values := make([][]any, len(cols))
+	for i, c := range cols {
+		values[i] = []any{c.Name, c.Type}
+	}
+	return describe.Table(w, "", []string{"Column", "Type"}, values)
+}
+
 // doExecWatch repeatedly executes a query against the database.
 func (h *Handler) doExecWatch(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, qtyp bool, bind []interface{}) error {
 	for {
@@ -1701,6 +1781,7 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 	}
 	p.db, p.conn, p.tx, p.u, p.meta = h.db, h.conn, h.tx, h.u, h.meta
 	p.fwd, p.fwdURL, p.fwdDSN = h.fwd, h.fwdURL, h.fwdDSN
+	p.restrictKey = h.restrictKey
 	if err := p.src.SetLanguage(drivers.Language(p.u)); err != nil {
 		return err
 	}
@@ -1710,6 +1791,7 @@ func (h *Handler) IncludeReader(rdr io.Reader, path string) error {
 	}
 	h.db, h.conn, h.tx, h.u, h.meta = p.db, p.conn, p.tx, p.u, p.meta
 	h.fwd, h.fwdURL, h.fwdDSN = p.fwd, p.fwdURL, p.fwdDSN
+	h.restrictKey = p.restrictKey
 	if lerr := h.setLanguage(); err == nil {
 		err = lerr
 	}

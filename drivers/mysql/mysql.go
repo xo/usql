@@ -7,6 +7,7 @@
 package mysql
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql" // DRIVER
@@ -27,6 +28,18 @@ func Driver() drivers.Driver {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
 			return "", err.Error()
+		},
+		// the mysql client writes ERROR 1146 (42S02): Table 'x' doesn't exist
+		ErrVerbose: func(err error, _ string) string {
+			var e *mysql.MySQLError
+			if !errors.As(err, &e) {
+				return ""
+			}
+			s := "ERROR " + strconv.Itoa(int(e.Number))
+			if e.SQLState != [5]byte{} {
+				s += " (" + string(e.SQLState[:]) + ")"
+			}
+			return s + ": " + e.Message
 		},
 		IsPasswordErr: func(err error) bool {
 			if e, ok := err.(*mysql.MySQLError); ok {
