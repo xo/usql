@@ -58,10 +58,23 @@ func chop(s, prefix string) string {
 	return strings.TrimLeftFunc(strings.TrimPrefix(strings.TrimSpace(s), prefix+":"), unicode.IsSpace)
 }
 
+// VerboseError is an error of a driver library that writes every field it
+// holds, as the client of the database writes them, for \errverbose. query is
+// the statement that failed, for the position of the error in it. It returns
+// "" when it has nothing more than its message.
+//
+// A driver with no package in usql, such as Oracle's, Cassandra's or ODBC's,
+// gives \errverbose its fields this way, since usql cannot name its types.
+type VerboseError interface {
+	error
+	ErrVerbose(query string) string
+}
+
 // ErrVerbose returns err with every field that its driver gives, for
 // \errverbose, as the client of the database writes them. query is the
-// statement that failed. A driver with no ErrVerbose gives err as usql
-// prints it.
+// statement that failed. The ErrVerbose hook of the driver wins, then an
+// error in the chain that is a VerboseError, and otherwise err is returned
+// as usql prints it.
 func ErrVerbose(err error, query string) string {
 	var e *Error
 	if errors.As(err, &e) {
@@ -69,6 +82,12 @@ func ErrVerbose(err error, query string) string {
 			if s := d.ErrVerbose(e.Err, query); s != "" {
 				return s
 			}
+		}
+	}
+	var v VerboseError
+	if errors.As(err, &v) {
+		if s := v.ErrVerbose(query); s != "" {
+			return s
 		}
 	}
 	return err.Error()

@@ -531,8 +531,15 @@ the XDG Base Directory specification on Linux and other Unix systems.
 - `\errverbose` shows the error of the last statement that failed, with every
   field that the driver gives: psql's verbose form for PostgreSQL, through
   pgx or lib/pq, the `mysql` client's form for MySQL, `sqlcmd`'s form for SQL
-  Server, and the result codes for SQLite. Another driver shows the error as
-  usql prints it.
+  Server, and the result codes for SQLite. A driver library with no package
+  in usql gives its fields through a method `ErrVerbose`, which usql finds
+  with `errors.As`: SQL*Plus's form for Oracle, with the line, a `*` under the
+  position and the stack of ORA- errors (xo/oracle v0.4.0), cqlsh's form for
+  Cassandra (xo/cassandra v0.2.3), and
+  each diagnostic record with its SQLSTATE for ODBC (xo/odbc v0.4.0), and
+  the message and then each field that the server sent for the 27 drivers
+  of dbimp, such as ClickHouse's code and name (dbimp v0.25.0).
+  Another driver shows the error as usql prints it.
 - `\gdesc` shows the name and the type of each column of the query in the
   buffer, without running it, as psql does. It works on PostgreSQL and the
   databases on pgx, which prepare the query and name its types with dbmeta,

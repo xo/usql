@@ -28,14 +28,14 @@ require (
 	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
-	github.com/xo/cassandra v0.2.2
+	github.com/xo/cassandra v0.2.3
 	github.com/xo/dbfwd v0.3.1
-	github.com/xo/dbimp v0.24.3
+	github.com/xo/dbimp v0.25.0
 	github.com/xo/dbmeta v0.36.0
 	github.com/xo/dburl v0.57.0
 	github.com/xo/echartsgoja v0.1.1
-	github.com/xo/odbc v0.3.0
-	github.com/xo/oracle v0.3.0
+	github.com/xo/odbc v0.4.0
+	github.com/xo/oracle v0.4.0
 	github.com/xo/resvg v0.13.0
 	github.com/xo/rline v0.8.0
 	github.com/xo/tblfmt v0.23.0
