@@ -81,7 +81,7 @@ Open points that are known:
 
 ## How to build
 
-usql requires dbfwd v0.3.1, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit v0.7.5 with its usql
+usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit v0.7.5 with its usql
 grammar v0.7.5, and rline v0.8.0 in `go.mod`. It builds with plain modules and no `go.work`, and
 `go mod tidy` leaves `go.mod` as it is. A workspace is still how to build
 against a local checkout of a sibling that has not tagged a change yet: write a

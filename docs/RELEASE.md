@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbfwd v0.3.1, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit
+- usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the

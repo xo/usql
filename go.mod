@@ -26,8 +26,8 @@ require (
 	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
-	github.com/xo/cassandra v0.2.4
-	github.com/xo/dbfwd v0.3.1
+	github.com/xo/cassandra v0.2.5
+	github.com/xo/dbfwd v0.3.2
 	github.com/xo/dbimp v0.26.1
 	github.com/xo/dbmeta v0.39.0
 	github.com/xo/dburl v0.58.0
@@ -57,7 +57,7 @@ require (
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/text v0.43.0
-	modernc.org/sqlite v1.61.1
+	modernc.org/sqlite v1.62.0
 )
 
 require (
