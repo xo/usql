@@ -2,7 +2,8 @@
 
 This file lists what changed in usql since v0.21.6, and what must be checked
 by hand before the release. It is the largest set of changes that usql has
-had. Automated tests cover much of it, and Ken checks the rest by hand.
+had. Automated tests cover much of it, and a maintainer checks the rest by
+hand.
 
 Each check names the databases it covers. Tick a check off in a copy of this
 file, not here. When a check finds a fault, record it in
@@ -18,13 +19,17 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit
-  v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
+- `--dump` has gaps in dbmeta, which W77 lists. The ones that change data: a
+  MySQL `TIMESTAMP` moves when the client is not in UTC, and a JSON column of
+  MariaDB loses its check of `json_valid`.
 
 ## What changed
+
+usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.24.0,
+transit v0.7.6 and rline v0.8.1, all in `go.mod`. It builds with no `go.work`.
 
 ### One build, with every driver
 
@@ -163,11 +168,20 @@ package and the `stmt` package (W36).
 - Syntax highlighting parses the input with the grammars of transit, and
   colors it with the styles of transit, in place of Chroma. These have a
   grammar of their own, from transit v0.7.0: PostgreSQL, MySQL, SQL Server,
-  Oracle, CQL, SQLite (with libSQL and rqlite), DuckDB (with GizmoSQL),
+  Oracle, CQL, SQLite (with libSQL and rqlite), DuckDB,
   ClickHouse, Trino (with Presto and Athena), Neo4j, SurrealDB and YDB. The
   other dialects use the generic SQL grammar. transit wrote the PostgreSQL,
   Oracle and SQL Server grammars again, and they are smaller (W32 has the
-  sizes).
+  sizes). From transit v0.7.6, transit also writes the generic grammar, in
+  place of DerekStride's (transit's D143). It reads the forms of Snowflake,
+  BigQuery and Databricks, and adds about 1.3 MB to the binary, where the
+  old one added 3.0 MB.
+- `\pset xheader_width` sets the width of the header line of a record in
+  expanded output, as in psql 16 and later: `full` (the default), `column`,
+  `page` or a number (W81). The output is the same as psql's, byte for byte.
+- `\? styles` lists the names of the syntax highlighting styles in columns,
+  and names the style in use. Tab completes a style name after
+  `\uset syntax_hl_style`.
 - A line with only `/` is statement text on every database, as in psql. It
   does not end a statement as SQL*Plus ends one (transit's D138). A script
   for Oracle ends each statement with `;`, and writes each `;` inside a
@@ -259,9 +273,9 @@ It has no metadata query of its own (D3, D4).
 usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
 (W61). `\set` is only for script variables, and its `:name` interpolation.
 
-- The settings are echo_hidden, editor, on_error_stop, pager, prompt1, prompt2,
-  quiet, show_host_information, sslmode, syntax_hl, syntax_hl_format,
-  syntax_hl_override_bg, syntax_hl_style and term_graphics.
+- The settings are echo_hidden, editor, encoding, fetch_count, on_error_stop,
+  pager, prompt1, prompt2, quiet, show_host_information, sslmode, syntax_hl,
+  syntax_hl_format, syntax_hl_override_bg, syntax_hl_style and term_graphics.
 - prompt2 is the prompt of the rows after the first in an entry. Its default
   is the same as prompt1's, and its `%R` shows `-`, so a continued statement
   shows `pg:user@host/db-> ` as psql does.
@@ -274,13 +288,75 @@ usql's own settings left `\set` for the new `\uset`, which works as `\pset` does
   `--uset quiet=on`. `--set` and `-v` give script variables only. psql's `-U`
   is the user name, and usql's is not: usql reads the user from the URL.
 
+### The configuration: `config.yaml`, `\config` and `-O`
+
+Every setting has a full name, SECTION.NAME, as in `print.border` (W80, D6).
+The sections are `usql`, `print`, `vars`, `charts`, `env`, `connections` and
+`aliases`. `config.yaml` sets all of them, and `\config` and `-O` set them
+by their full names.
+
+- `\config` shows the sections `usql` and `print` as one table.
+  `\config -all` shows every section, `\config SECTION` shows one section,
+  `\config NAME` shows one setting, and `\config NAME VALUE` sets it. A
+  connection URL shows its password as `xxxxx`, unless `-password` is given.
+- `\pset`, `\uset`, `\set`, `\cset` and `\setenv` set the sections
+  `print`, `usql`, `vars`, `connections` and `env`, as before. With no
+  arguments, `\pset`, `\uset`, `\set` and `\cset` show their section as
+  before, by the names without the section, such as `border`. Only `\config`
+  shows the full names. `\cset` shows a table of names and values, as `\pset`
+  and `\uset` do, where it wrote `NAME = 'URL'`. It writes the password of a
+  URL as `xxxxx`, and `\config -password connections` shows it.
+- `--option NAME=VALUE`, or `-O NAME=VALUE`, sets a setting on the command
+  line. `-v`, `-U`, `-N`, `-P` and the options that imply a setting, such as
+  `-x` and `-q`, apply in the order that they are given, together with `-O`.
+  A setting of the command line that fails stops usql, as an invalid `-v`
+  stops psql. Before, only `-P` and `-N` stopped it.
+- usql reads `config.yaml` with goccy/go-yaml, not with viper. A value keeps
+  the text it is written with. Loading the file prints nothing. A setting
+  that fails is an error that names the file, the line and the setting, on
+  standard error, and usql goes on. Before, a named connection that failed
+  printed a warning only at a terminal.
+- usql reads `config.yaml` or `config.yml`. viper also read `config.json`,
+  `config.toml` and others, and usql no longer does.
+- The settings apply in this order: the defaults, which read `PAGER`,
+  `EDITOR`, `VISUAL`, `SSLMODE`, `NO_COLOR` and `TERM_GRAPHICS`, then
+  `config.yaml`, then `USQL_PAGER`, `USQL_EDITOR`, `USQL_SSLMODE`,
+  `USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS`, then the command line,
+  then `init.sql`, then the session. Outside a terminal, `term_graphics` is
+  `none` unless the command line sets it.
+- `config.yaml` no longer sets an option of the command line at the top of the
+  file, such as `quiet: true`. Such a key is an error that names the section
+  where it belongs, as `quiet: move it to usql.quiet`.
+- `charts_path` is now `charts.path`. A file that still has `charts_path` gets
+  an error, and the default `charts` applies.
+- The `env` section adds variables to the environment of each command that
+  usql runs: `\!`, a backtick, `\g |command`, `\o |command`, the pager and
+  the editor. `\setenv` sets `env` too, and no longer changes the
+  environment of usql. `\setenv NAME` removes the variable, where it set it
+  to an empty string. `\getenv` reads the same environment as the commands.
+- The `aliases` section holds meta commands of the user. With `tables: '\dt+'`,
+  `\tables` runs `\dt+`. An alias runs as the text of `-c` runs, but leaves
+  a statement in the query buffer. It takes no arguments, cannot take the name
+  of a meta command, and cannot run more than 16 aliases inside each other.
+  Only `config.yaml` sets one. `\? commands` lists them.
+- `\? variables` names the section of each group of settings, and lists the
+  settings by their names, as psql lists its variables.
+- `USQL_SHELL` names the shell, before `SHELL`, as `USQL_PAGER` names the
+  pager before `PAGER`. A shell named `cmd` or `cmd.exe` gets `/c`, and any
+  other `-c`.
+- `ROW_COUNT` is set after every statement, as psql sets it: to the number of
+  rows that a query or `\gset` returns, to the number of rows that another
+  statement changes, and to 0 when the statement fails. It was set only after
+  a statement that returns no rows, so a script read the count of an earlier
+  statement.
+
 ### The pager
 
 The pager moved out of tblfmt into the new package `pager` of usql (W64).
 tblfmt v0.21.0 and later have no pager. All
 the output of an entry goes through it: the results of a query, the describe
-commands, `\?`, `\drivers`, `\echo`, and the listings of `\set`, `\uset`,
-`\pset` and `\cset`.
+commands, `\?`, `\drivers`, `\echo`, and the listings of `\config`, `\set`,
+`\uset`, `\pset` and `\cset`.
 
 - usql holds the output of an entry until it is as tall as the terminal or
   wider than it. Then it starts the pager, and gives it the held output and the
@@ -432,7 +508,7 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   database no longer gets `default`. The driver has no transactions, and
   writes each argument into the text of the statement. Impala does not
   report how many rows a statement changed.
-- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.3.0, pure Go.
+- Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.4.1, pure Go.
   A wrong user or password now prints ORA-01017, where go-ora printed
   "message code error", and usql prompts for the password. An error no longer
   ends with the line " error occur at position: N". The driver
@@ -441,15 +517,16 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   none. Write the service name in the path of the URL. usql registers the driver with no hooks,
   and the prompt for a refused password comes from the method
   `AuthenticationRefused` of the driver's errors (W66).
-- Cassandra moves to xo/cassandra v0.2.2, which reports a refused credential
-  itself (W66), so usql registers it with no hooks. usql now also prompts for
-  a missing password on Cassandra, which it did not before.
-- ODBC moves to xo/odbc v0.3.0, which reports a refused credential itself
-  (W66). usql now also prompts for the password when PostgreSQL refuses it
-  through psqlODBC, which reports it as state 08001 and not in class 28. A
-  locked or expired login no longer prompts on SQL Server and MySQL.
+- xo/cassandra v0.2.2 reports a refused credential itself (W66), so usql
+  registers Cassandra with no hooks. usql now also prompts for a missing
+  password on Cassandra, which it did not before.
+- xo/odbc v0.3.0 reports a refused credential itself (W66). usql now also
+  prompts for the password when PostgreSQL refuses it through psqlODBC, which
+  reports it as state 08001 and not in class 28. A locked or expired login no
+  longer prompts on SQL Server and MySQL.
 - MaxCompute and Tablestore move to `github.com/xo/dbimp` (dbimp v0.23.0,
-  dburl v0.54.0), and dbmeta v0.16.0 reads their metadata. The URLs are `maxcompute://id:key@host/project` and
+  dburl v0.54.0), and dbmeta v0.16.0 reads their metadata. The URLs are
+  `maxcompute://id:key@host/project` and
   `tablestore://id:secret@host/instance`, and every earlier URL must change.
   A host that is not `service.<region>.maxcompute.aliyun.com` needs the
   option `region`. A Tablestore host of the form `instance.region` gets the
@@ -505,7 +582,7 @@ the XDG Base Directory specification on Linux and other Unix systems.
   `config.yaml`: `$XDG_CONFIG_HOME/usql/init.sql` or
   `~/.config/usql/init.sql`. `USQLRC` still names another file, and `-X`
   still skips it. `~/.usqlrc` is not read.
-- `config.yaml` no longer runs an `init:` script. usql prints a warning, with
+- `config.yaml` no longer runs an `init:` script. usql prints an error, with
   the path of `init.sql`, when the file still holds one.
 - The `.usqlpass` password file is gone, with no warning. Named connections in
   `config.yaml` replace it. Tab completion no longer offers its entries.
@@ -514,6 +591,21 @@ the XDG Base Directory specification on Linux and other Unix systems.
 
 ### Other
 
+- `--dump`, or `-D`, writes the connected database as a usql script, to
+  standard output or to the file of `-o`, and `usql -f` loads it. It works
+  for PostgreSQL, MySQL, MariaDB, SQLite and DuckDB, and dbmeta builds every
+  statement (W77). The script stops at the first error, and its `\restrict`
+  line stops a meta command that a value could smuggle in. Hidden long
+  options write only the schema or only the rows, choose schemas and
+  tables, and write for another database with `--target`. A dump to a file
+  replaces the file only when it is complete.
+- `\dump [OPTIONS] [FILE]` writes the same script from inside usql, to the
+  output, to a file, or to a command after `|`. It takes the options of
+  `--dump`, written as `-NAME`, from the same table, so the two write the
+  same script with the same options (W77). Inside a transaction that
+  `\begin` started, it reads in that transaction.
+- `\gset` with a query that returns no row gives psql's error, `no rows
+  returned for \gset`. usql stopped with a panic before.
 - `USQL_DSN` names the DSN to open when the command line names none. A
   program that holds a password, such as one that forwards a port, can run
   usql with it and keep the password out of the argument list, which every
@@ -523,7 +615,7 @@ the XDG Base Directory specification on Linux and other Unix systems.
   no variable for the password alone, and `USQL_PASSWORD` is still the
   variable of `-W`.
 - usql opens a database in Kubernetes from a URL such as `k://pg.prod/app` or
-  `k8s+cnpg://pg.prod/app`, through dbfwd v0.3.1 and `kubectl port-forward`.
+  `k8s+cnpg://pg.prod/app`, through dbfwd v0.3.2 and `kubectl port-forward`.
   dburl v0.57.0 parses the `k8s` scheme, with the aliases `k`, `kc`, `k8`,
   `kube` and `kubernetes`. The type after `+` takes dburl's aliases, so
   `k+pg://` is PostgreSQL. The password comes from the Secret, so `-W` gives
@@ -549,8 +641,9 @@ the XDG Base Directory specification on Linux and other Unix systems.
   method `ErrVerbose`, which usql finds with `errors.As`: Oracle (xo/oracle
   v0.4.1), Cassandra (xo/cassandra v0.2.4), ODBC (xo/odbc v0.4.1) and the 27
   drivers of dbimp (v0.25.2). Each library moved to psql's layout on
-  2026-11-08, and was checked against a live server. Another driver shows the
-  error as usql prints it.
+  2026-11-08, and was checked against a live server. dbimp v0.26.1 adds Hive
+  and Impala, through its hive driver, which also has the method. Another
+  driver shows the error as usql prints it.
 - `\gdesc` shows the name and the type of each column of the query in the
   buffer, without running it, as psql does. It works on PostgreSQL and the
   databases on pgx, which prepare the query and name its types with dbmeta,
@@ -565,9 +658,9 @@ the XDG Base Directory specification on Linux and other Unix systems.
   without a `;`, show the help, or quit, as psql does and as usql did before
   the input moved to transit. Inside a statement they are part of the
   statement.
-- `\history [COUNT]` shows the history of the line editor, with the number of
-  each entry, as bash's `history` does. `\s [FILE]` shows it as psql does,
-  or writes it to a file.
+- `\hist [COUNT]`, with the alias `\history`, shows the history of the line
+  editor, with the number of each entry, as bash's `history` does. `\s [FILE]`
+  shows it as psql does, or writes it to a file.
 - `\k` lists the databases that usql can reach in Kubernetes, with the URL
   that `\c` opens. `\k` lists the current namespace, `\k -A` every
   namespace, `-n NAMESPACE` one namespace, and `--context NAME` another
@@ -575,6 +668,20 @@ the XDG Base Directory specification on Linux and other Unix systems.
   and its `k://` is optional. `\k+` adds the roles, the ready pods, the
   databases and where the password comes from. No Secret is read. The URLs
   carry `?context=` only when `\k` named a context.
+  `\kube` is an alias for `\k`.
+- `\e`, `\p` and `\w` take `-raw`, and no longer take `-exec`. Each writes the
+  query buffer with its variables replaced, as usql sends it, and `-raw`
+  writes it as it was typed. `\e` opened the typed text before, and opens
+  the replaced text now. `\p -raw` and `\w -raw` were not read before, and
+  `\w -raw FILE` wrote to a file named `-raw`. `\raw` is `\p -raw`, and
+  `\exec` is an alias for `\p`.
+- `\?` has new sections, closer to psql's order. `\config`, `\pset`, `\uset`
+  and `\cset` are in Settings, and the section Variables is gone. `\set`,
+  `\unset`, `\prompt`, `\restrict` and `\unrestrict` are in
+  Control/Conditional.
+  `\k` is the last command of Informational, which starts with the line of
+  psql that explains S, x and +.
+  `\? commands` has a line of its own, and shows every alias.
 - On Windows, a path on the drive `K:`, such as `K:\data\app.db`, now parses
   as a `k8s` URL and fails. Write it as `file:///K:/data/app.db`.
 - `\c` closes the connection that it replaces. Before, the pool of the old
@@ -663,7 +770,6 @@ the XDG Base Directory specification on Linux and other Unix systems.
   macOS directory with its `/usql`.
 - The sample `config.yaml` no longer has a `queries:` section, which nothing
   read.
-
 - A SQL Server `uniqueidentifier` prints in lower case, as a PostgreSQL `uuid`
   does, so that a column of UUIDs prints the same on both. SQL Server's tools
   print it in upper case.
@@ -706,7 +812,8 @@ the XDG Base Directory specification on Linux and other Unix systems.
   so a long version of the server does not open the pager.
 - The Releases badge drops `sort=semver`, on which shields.io times out.
 - The README ends with the bar of links to the sister projects.
-- The backlog gains W28 to W38.
+- `docs/BACKLOG.md` is new. It lists the planned work, each item with a W
+  number.
 - `internal/cmd/pgcompare` compares the output of every PostgreSQL type with
   psql (W63).
 - `gen.go` lists Trino and Presto in a fixed place in the README table of the
@@ -736,8 +843,8 @@ one error, and a wrong password:
 - Redshift, as a user who is not a superuser: `\dt`, `\d` and `\dv` work, and
   `\dt+` shows no size and rows
 - ClickHouse on its HTTP port, and Trino and Presto, with and without a user
-- ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
-  after the crash is fixed
+- ODBC with a real driver, such as SQL Server's and PostgreSQL's, and
+  SQLite's in a build with `-tags libsqlite3`
 - Couchbase and Databend on dbimp
 - Hive and Impala on dbimp's hive driver, over HTTP: `select version()`,
   `\conninfo`, and `\copy` into a table, which inserts each
@@ -823,6 +930,28 @@ upper case and quoted names on Oracle, and on a database that folds to
 lower case. Check `\uset echo_hidden on` and `noexec`. On a database with no
 model, check that each command says it is not supported.
 
+### Dump
+
+On PostgreSQL, MySQL, MariaDB, SQLite and DuckDB, with a database that holds
+tables with keys, indexes, views and rows of several types:
+
+- [ ] `usql URL --dump -o dump.sql`, then `usql NEWURL -f dump.sql` into an
+      empty database, gives the same rows. A second dump of the copy is the
+      same text, apart from the name of a MySQL database.
+- [ ] `--schema-only`, then `--data-only`, into an empty database, gives the
+      same as the whole dump.
+- [ ] `--target duckdb` from PostgreSQL and `--target sqlite` from MySQL
+      warn for each column that is not exact and each view that is not
+      translated, and the script loads.
+- [ ] A dump that fails, such as `--target nosuchdb -o dump.sql`, leaves
+      `dump.sql` as it was.
+- [ ] `-D` at a terminal prints the script and asks for nothing.
+- [ ] `\dump` at a terminal shows the script in the pager. `\dump FILE` and
+      `\dump |gzip > FILE.gz` write the same script as `--dump`. Tab after
+      `\dump -` offers the options.
+- [ ] `\begin`, an INSERT, then `\dump`, includes the new row, and
+      `\rollback` leaves the database as it was.
+
 ### The line editor
 
 At a terminal:
@@ -847,6 +976,11 @@ At a terminal:
   Windows Terminal and on one terminal of Linux or macOS. Typing after it
   inserts the keys, no completion menu opens, and the bell rings at most once
   for each change of focus.
+- [ ] Enter a statement over two rows, then another statement. Ctrl-R, a few
+      letters, and Ctrl-R again find the newer statement, then the one over
+      two rows, whose second row lines up under the prompt, as with Up.
+      rline v0.8.1 fixed the second row, which was drawn 15 columns too far
+      to the right.
 
 ### The pager
 
@@ -885,9 +1019,19 @@ At a terminal, with PAGER unset, with `PAGER=less`, and with
   script that is not valid UTF-8, with `-f`, `\i` and a pipe
 - `-1` with a file, and on_error_stop on and off
 - `--set`, `--variable`, `init.sql`, `USQLRC`, and `config.yaml` with named
-  connections, and the warning for a `config.yaml` that holds `init:`
+  connections, and the error for a `config.yaml` that holds `init:`
 - `\copy` between two databases, and into a database with no transactions,
   such as rqlite
+
+### The configuration
+
+Copy `_samples/config.yaml` to the configuration directory, and start usql
+at a terminal. It prints nothing. Run `\config`, `\config -all`,
+`\config -all -password`, `\tables` and `\hello`. Set `env.FOO` with
+`\setenv FOO bar`, and run `\! echo $FOO` and ``\echo `echo $FOO` ``. Start
+usql with a key of the file misspelled, and read the error. Run
+`usql -O print.border=2 -c 'select 1'` on SQLite. On Windows, check that
+`\!` and the pager get the settings of `env`.
 
 ### The meta commands
 

@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/user"
@@ -12,7 +13,9 @@ import (
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/xo/rline"
+	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
+	"github.com/xo/usql/text"
 )
 
 // TestRunCommandMetaCommand checks that the text of -c runs a meta command
@@ -42,7 +45,7 @@ func TestRunCommandMetaCommand(t *testing.T) {
 	}
 }
 
-// TestHistory checks that \history writes the history oldest first, with the
+// TestHistory checks that \hist writes the history oldest first, with the
 // number of each entry, and only the last entries when it is given a count,
 // and that \s writes it as psql does, to the output or to a file.
 func TestHistory(t *testing.T) {
@@ -55,11 +58,12 @@ func TestHistory(t *testing.T) {
 		want string
 		err  string
 	}{
-		{`\history`, "    1  select 1;\n    2  select\n       2;\n    3  \\dt\n", ""},
-		{`\history 2`, "    2  select\n       2;\n    3  \\dt\n", ""},
+		{`\hist`, "    1  select 1;\n    2  select\n       2;\n    3  \\dt\n", ""},
+		{`\hist 2`, "    2  select\n       2;\n    3  \\dt\n", ""},
 		{`\history 9`, "    1  select 1;\n    2  select\n       2;\n    3  \\dt\n", ""},
 		{`\history 0`, "", ""},
 		{`\history x`, "", `\history: "x" is not a count`},
+		{`\hist x`, "", `\hist: "x" is not a count`},
 		{`\s`, "select 1;\nselect\n2;\n\\dt\n", ""},
 		{`\s ` + file, "Wrote history to file \"" + file + "\".\n", ""},
 	}
@@ -146,6 +150,102 @@ func TestErrVerbose(t *testing.T) {
 	}
 	if got, want := stderr.String(), "ERROR:  1: no such table: nope\nDETAIL:  Generic error (SQLITE_ERROR)\n"; got != want {
 		t.Errorf("stderr = %q, want %q", got, want)
+	}
+}
+
+// TestGsetRows checks that \gset refuses a query that returns no row or more
+// than one, as psql does, and sets the variables from a single row.
+func TestGsetRows(t *testing.T) {
+	l, err := rline.New(
+		rline.WithStdin(strings.NewReader("")),
+		rline.WithStdout(new(bytes.Buffer)),
+		rline.WithStderr(new(bytes.Buffer)),
+		rline.WithColor(false),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	h, err := New(l, feed.NewLines(strings.NewReader("")), &user.User{}, ".", memfs.New(), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := h.Open(context.Background(), "moderncsqlite:"+filepath.Join(t.TempDir(), "g.db")); err != nil {
+		t.Fatal(err)
+	}
+	// Windows cannot remove the file of the database while it is open
+	defer h.Close()
+	if err := h.RunCommand(`select 1 as gset_a where 1 = 0 \gset`); !errors.Is(err, text.ErrNoRowsGset) {
+		t.Errorf("\\gset with no rows = %v, want %v", err, text.ErrNoRowsGset)
+	}
+	if err := h.RunCommand(`select 1 as gset_a union all select 2 \gset`); !errors.Is(err, text.ErrTooManyRows) {
+		t.Errorf("\\gset with two rows = %v, want %v", err, text.ErrTooManyRows)
+	}
+	if err := h.RunCommand(`select 7 as gset_a \gset`); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := env.Vars().Get("gset_a"); got != "7" {
+		t.Errorf("gset_a = %q, want 7", got)
+	}
+	_ = env.Vars().Unset("gset_a")
+}
+
+// TestQueryBufferRaw checks that \p and \w write the query buffer with its
+// variables replaced, as it is sent, and as it was written with -raw. \raw is
+// \p -raw, \exec is \p, and -exec is not an option.
+func TestQueryBufferRaw(t *testing.T) {
+	stdout := new(bytes.Buffer)
+	l, err := rline.New(
+		rline.WithStdin(strings.NewReader("")),
+		rline.WithStdout(stdout),
+		rline.WithStderr(new(bytes.Buffer)),
+		rline.WithColor(false),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	h, err := New(l, feed.NewLines(strings.NewReader("")), &user.User{}, ".", memfs.New(), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	if err := h.Open(context.Background(), "moderncsqlite:"+filepath.Join(dir, "q.db")); err != nil {
+		t.Fatal(err)
+	}
+	// Windows cannot remove the file of the database while it is open
+	defer h.Close()
+	if err := env.Vars().Set("qbuf_x", "42"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = env.Vars().Unset("qbuf_x") }()
+	// a meta command reads a backslash as the start of another command, so
+	// the paths are written with forward slashes, which Windows also takes
+	exp, raw := filepath.ToSlash(filepath.Join(dir, "exp.sql")), filepath.ToSlash(filepath.Join(dir, "raw.sql"))
+	// the buffer holds the query
+	if err := h.RunCommand(`select :qbuf_x as v \p \p -raw \raw \exec \w ` + exp + ` \w -raw ` + raw); err != nil {
+		t.Fatal(err)
+	}
+	if want := "select 42 as v\nselect :qbuf_x as v\nselect :qbuf_x as v\nselect 42 as v\n"; !strings.HasPrefix(stdout.String(), want) {
+		t.Errorf("stdout = %q, want it to start with %q", stdout.String(), want)
+	}
+	for file, want := range map[string]string{exp: "select 42 as v\n", raw: "select :qbuf_x as v\n"} {
+		if b, err := os.ReadFile(file); err != nil || string(b) != want {
+			t.Errorf("%s = %q, %v, want %q", file, b, err, want)
+		}
+	}
+	// the buffer is empty, and the last query is written
+	stdout.Reset()
+	if err := h.RunCommand(`\p \p -raw`); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := stdout.String(), "select 42 as v\nselect :qbuf_x as v\n"; got != want {
+		t.Errorf("stdout = %q, want %q", got, want)
+	}
+	for _, cmd := range []string{`\p -exec`, `\w -exec ` + exp, `\e -exec`} {
+		if err := h.RunCommand(cmd); err == nil || err.Error() != `invalid option "exec"` {
+			t.Errorf("%s = %v, want invalid option", cmd, err)
+		}
 	}
 }
 

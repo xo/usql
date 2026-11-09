@@ -96,6 +96,8 @@ recv:
 \e[32msq::memory:=> \e[39m\e[38;5;231m\\set\e[39m\e[K\r
 \e[18C\e[?2004l\r
 \n
+ROW_COUNT = '1'\r
+\n
 \e[?2004h\e[32msq::memory:=> \e[39m
 
 

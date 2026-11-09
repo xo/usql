@@ -2,7 +2,7 @@
 
 Status: Decided.
 
-Ken decided on 2026-09-27 that every repository in the `xo` namespace is set
+The maintainer decided on 2026-09-27 that every repository in the `xo` namespace is set
 up for coding agents the same way. dbmeta records the standard as its D110.
 This decision adopts it for usql.
 
@@ -26,7 +26,7 @@ In the root:
 
 In `docs/`:
 
-- `PLAN.md`, which holds the plan and the open questions for Ken.
+- `PLAN.md`, which holds the plan and the open questions for the maintainers.
 - `decisions/`, one file per decision, with an index. D2 says why.
 - `BACKLOG.md`, which holds the work that is known and not done.
 
@@ -35,20 +35,20 @@ In `docs/`:
 The repository commits `simple-english` and `go-pedantry`. Each is an
 ordinary folder in `.agents/skills/<name>` and in `.claude/skills/<name>`,
 installed with `--copy`. `TestSkillsAreCopies` fails on a link, on a missing
-copy and on two copies that differ. Ken installs the skills himself.
+copy and on two copies that differ. A maintainer installs the skills.
 
 ## The standing rules
 
 `AGENTS.md` opens with three rules that are the same in every repository:
 
-1. Stage changes for review. Commit and push only when Ken says so.
+1. Stage changes for review. Commit and push only when a maintainer says so.
 2. Load `simple-english` before writing any text that a person reads: project
    documentation, a code comment, an error message or a commit message.
 3. Load `go-pedantry` before writing or reviewing Go code. A rule of the
    project wins where the two conflict.
 
-Until now each agent learned the first rule from Ken and kept it in its own
-memory, so an agent new to the repository did not know it.
+Before this decision, each agent learned the first rule from the maintainer
+and kept it in its own memory, so an agent new to the repository did not know it.
 
 ## What changed in usql
 

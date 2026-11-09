@@ -39,6 +39,11 @@ var Examples = []Example{
 		Input:   []string{`\?`},
 	},
 	{
+		Name:  "config",
+		Setup: []string{`\set FOO bar`},
+		Input: []string{`\config print.border 2`, `\config print.border`, `\config vars`},
+	},
+	{
 		Name:  "set-unset",
 		Input: []string{`\unset FOO`, `\set FOO bar`},
 	},

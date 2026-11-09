@@ -1,0 +1,9 @@
+# The lines that mysqldump can write differently for a copy that usql made
+# and a copy that mysqldump made. Each line below is a regular expression of
+# Go, and a line of either dump that it matches is left out of the
+# comparison.
+
+# MariaDB stores a JSON column as LONGTEXT with a check of json_valid on the
+# column. dbmeta writes the LONGTEXT and leaves the check out, so the copy
+# takes any text. Reported to dbmeta on 2026-11-09, after v0.39.0.
+^\s*`profile` longtext

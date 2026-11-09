@@ -131,3 +131,39 @@ func TestStatePaths(t *testing.T) {
 		t.Errorf("init.sql with USQLRC: got %q, want %q", got, exp)
 	}
 }
+
+// TestGetshell reads USQL_SHELL before SHELL, and gives cmd.exe /c.
+func TestGetshell(t *testing.T) {
+	for _, test := range []struct {
+		usqlShell, shell string
+		want, param      string
+	}{
+		{"", "/bin/bash", "/bin/bash", "-c"},
+		{"/bin/zsh", "/bin/bash", "/bin/zsh", "-c"},
+		{"cmd.exe", "/bin/bash", "cmd.exe", "/c"},
+		{"CMD", "", "CMD", "/c"},
+	} {
+		if test.usqlShell != "" {
+			t.Setenv("USQL_SHELL", test.usqlShell)
+		} else {
+			unsetenv(t, "USQL_SHELL")
+		}
+		if test.shell != "" {
+			t.Setenv("SHELL", test.shell)
+		} else {
+			unsetenv(t, "SHELL")
+		}
+		if shell, param := Getshell(); shell != test.want || param != test.param {
+			t.Errorf("USQL_SHELL=%q SHELL=%q: Getshell() = %q, %q, want %q, %q", test.usqlShell, test.shell, shell, param, test.want, test.param)
+		}
+	}
+}
+
+// unsetenv removes a variable of the environment for the rest of the test.
+func unsetenv(t *testing.T, name string) {
+	t.Helper()
+	t.Setenv(name, "")
+	if err := os.Unsetenv(name); err != nil {
+		t.Fatal(err)
+	}
+}

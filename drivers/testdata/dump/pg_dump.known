@@ -1,0 +1,9 @@
+# The lines that pg_dump can write differently for a copy that usql made and
+# a copy that pg_dump made. Each line below is a regular expression of Go,
+# and a line of either dump that it matches is left out of the comparison.
+
+# dbmeta sets a sequence that a column owns to the largest value of the
+# column, and pg_dump to the last value of the sequence. Both give the same
+# next value. A sequence that no column owns, such as app.ticket_seq, keeps
+# the value it starts with. Reported to dbmeta on 2026-11-08.
+^SELECT pg_catalog\.setval\(

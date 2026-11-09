@@ -62,7 +62,7 @@ func grammarFor(dialect string) grammar {
 		return cqlGrammar
 	case "sqlite3", "libsql", "rqlite":
 		return sqlite3Grammar
-	case "duckdb", "gizmosql":
+	case "duckdb":
 		return duckdbGrammar
 	case "clickhouse":
 		return clickhouseGrammar

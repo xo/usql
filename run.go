@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -17,11 +18,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/xo/dburl"
 	"github.com/xo/rline"
+	"github.com/xo/usql/dump"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/handler"
+	"github.com/xo/usql/metacmd"
 	"github.com/xo/usql/text"
 )
 
@@ -58,29 +60,20 @@ func New(cliargs []string) ContextExecutor {
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			commandUpper := text.CommandUpper()
-			configFile := strings.TrimSpace(os.Getenv(commandUpper + "_CONFIG"))
+			args.ConfigFile = strings.TrimSpace(os.Getenv(commandUpper + "_CONFIG"))
 			cmd.Flags().VisitAll(func(f *pflag.Flag) {
 				if s := strings.TrimSpace(f.Value.String()); f.Name == "config" && s != "" {
-					configFile = s
+					args.ConfigFile = s
 				}
 			})
-			if configFile != "" {
-				v.SetConfigFile(configFile)
-			} else {
-				v.SetConfigName(text.ConfigName)
-				if configDir, err := os.UserConfigDir(); err == nil {
-					v.AddConfigPath(filepath.Join(configDir, text.CommandName))
-				}
-			}
-			if err := v.ReadInConfig(); err != nil {
-				if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-					return err
-				}
-			}
+			// viper gives an option the value of its USQL_ variable. The
+			// configuration file holds no options of the command line.
 			v.SetEnvPrefix(commandUpper)
 			v.AutomaticEnv()
 			cmd.Flags().VisitAll(func(f *pflag.Flag) {
-				if f.Name == "config" {
+				// a dump reads its options from the command line only, so
+				// that a variable cannot change what it writes
+				if f.Name == "config" || f.Annotations[dumpAnnotation] != nil {
 					return
 				}
 				_ = v.BindEnv(f.Name, commandUpper+"_"+strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_")))
@@ -127,19 +120,6 @@ func New(cliargs []string) ContextExecutor {
 			if len(cliargs) > 0 {
 				args.DSN = cliargs[0]
 			}
-			// create charts chroot
-			var err error
-			if args.Charts, err = chartsFS(v); err != nil {
-				return err
-			}
-			// fmt.Fprintf(os.Stderr, "\n\n%v\n\n", args.Charts)
-			args.Connections = v.GetStringMap("connections")
-			// the script that config.yaml ran at start is now init.sql
-			if v.IsSet("init") {
-				if dir, err := env.ConfigDir(); err == nil {
-					fmt.Fprintf(os.Stderr, text.ConfigInitIgnored+"\n", filepath.Join(dir, "init.sql"))
-				}
-			}
 			return Run(cmd.Context(), args)
 		},
 	}
@@ -173,34 +153,49 @@ func New(cliargs []string) ContextExecutor {
 	flags.VarP(filevar{&args.Out}, "out", "o", "output file")
 	flags.BoolVarP(&args.ForcePassword, "password", "W", false, "force password prompt (should happen automatically)")
 	flags.BoolVarP(&args.SingleTransaction, "single-transaction", "1", false, "execute as a single transaction (if non-interactive)")
+	flags.BoolVarP(&args.Dump, "dump", "D", false, "write the database as a "+text.CommandName+" script to standard output or to the file of -o, then exit")
 
+	// the options of --dump come from the table that \dump reads too. They
+	// are long options only, and hidden, because the short options of psql's
+	// output use -t, -T and -N.
+	for _, df := range dump.Flags {
+		f := flags.VarPF(dumpFlag{df, args}, df.Name, "", df.Usage)
+		if df.Value == "" {
+			f.NoOptDefVal = "true"
+		}
+		f.Hidden = true
+		_ = flags.SetAnnotation(df.Name, dumpAnnotation, []string{"true"})
+	}
+
+	// every setting of the configuration, by its full name
+	sf(flags, &args.Options, "option", "O", "", `set configuration option NAME (SECTION.NAME) to VALUE (see \config command)`, "NAME=VALUE")
 	// set
-	sf(flags, &args.Vars, "set", "v", `set script variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
-	sf(flags, &args.Vars, "var", "", "set variable NAME to VALUE", "NAME=VALUE")
-	sf(flags, &args.Vars, "variable", "", "set variable NAME to VALUE", "NAME=VALUE")
+	sf(flags, &args.Options, "set", "v", env.SectionVars, `set script variable NAME to VALUE (see \set command, aliases: --var --variable)`, "NAME=VALUE")
+	sf(flags, &args.Options, "var", "", env.SectionVars, "set variable NAME to VALUE", "NAME=VALUE")
+	sf(flags, &args.Options, "variable", "", env.SectionVars, "set variable NAME to VALUE", "NAME=VALUE")
 	// uset
-	sf(flags, &args.Usets, "uset", "U", `set setting NAME of `+text.CommandName+` to VALUE (see \uset command)`, "NAME=VALUE")
+	sf(flags, &args.Options, "uset", "U", env.SectionUsql, `set setting NAME of `+text.CommandName+` to VALUE (see \uset command)`, "NAME=VALUE")
 	// cset
-	sf(flags, &args.Cvars, "cset", "N", `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
+	sf(flags, &args.Options, "cset", "N", env.SectionConnections, `set named connection NAME to DSN (see \cset command)`, "NAME=DSN")
 	// pset
-	sf(flags, &args.Pvars, "pset", "P", `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
+	sf(flags, &args.Options, "pset", "P", env.SectionPrint, `set printing option VAR to ARG (see \pset command)`, "VAR=ARG")
 	// pset flags
-	sf(flags, &args.Pvars, "field-separator", "F", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "fieldsep=%q", "csv_fieldsep=%q")
-	sf(flags, &args.Pvars, "record-separator", "R", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "recordsep=%q")
-	sf(flags, &args.Pvars, "table-attr", "T", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "tableattr=%q")
+	sf(flags, &args.Options, "field-separator", "F", "", `field separator for unaligned and CSV output (default "|" and ",")`, "FIELD-SEPARATOR", "print.fieldsep=%q", "print.csv_fieldsep=%q")
+	sf(flags, &args.Options, "record-separator", "R", "", `record separator for unaligned and CSV output (default \n)`, "RECORD-SEPARATOR", "print.recordsep=%q")
+	sf(flags, &args.Options, "table-attr", "T", "", "set HTML table tag attributes (e.g., width, border)", "TABLE-ATTR", "print.tableattr=%q")
 	// pset bools
-	sf(flags, &args.Pvars, "no-align", "A", "unaligned table output mode", "", "format=unaligned")
-	sf(flags, &args.Pvars, "html", "H", "HTML table output mode", "", "format=html")
-	sf(flags, &args.Pvars, "tuples-only", "t", "print rows only", "", "tuples_only=on")
-	sf(flags, &args.Pvars, "expanded", "x", "turn on expanded table output", "", "expanded=on")
-	sf(flags, &args.Pvars, "field-separator-zero", "z", "set field separator for unaligned and CSV output to zero byte", "", "fieldsep_zero=on")
-	sf(flags, &args.Pvars, "record-separator-zero", "0", "set record separator for unaligned and CSV output to zero byte", "", "recordsep_zero=on")
-	sf(flags, &args.Pvars, "json", "J", "JSON output mode", "", "format=json")
-	sf(flags, &args.Pvars, "csv", "C", "CSV output mode", "", "format=csv")
-	sf(flags, &args.Pvars, "vertical", "G", "vertical output mode", "", "format=vertical")
-	sf(flags, &args.Pvars, "markdown", "M", "markdown output mode", "", "format=markdown")
+	sf(flags, &args.Options, "no-align", "A", "", "unaligned table output mode", "", "print.format=unaligned")
+	sf(flags, &args.Options, "html", "H", "", "HTML table output mode", "", "print.format=html")
+	sf(flags, &args.Options, "tuples-only", "t", "", "print rows only", "", "print.tuples_only=on")
+	sf(flags, &args.Options, "expanded", "x", "", "turn on expanded table output", "", "print.expanded=on")
+	sf(flags, &args.Options, "field-separator-zero", "z", "", "set field separator for unaligned and CSV output to zero byte", "", "print.fieldsep_zero=on")
+	sf(flags, &args.Options, "record-separator-zero", "0", "", "set record separator for unaligned and CSV output to zero byte", "", "print.recordsep_zero=on")
+	sf(flags, &args.Options, "json", "J", "", "JSON output mode", "", "print.format=json")
+	sf(flags, &args.Options, "csv", "C", "", "CSV output mode", "", "print.format=csv")
+	sf(flags, &args.Options, "vertical", "G", "", "vertical output mode", "", "print.format=vertical")
+	sf(flags, &args.Options, "markdown", "M", "", "markdown output mode", "", "print.format=markdown")
 	// set bools
-	sf(flags, &args.Usets, "quiet", "q", "run quietly (no messages, only query output)", "", "quiet=on")
+	sf(flags, &args.Options, "quiet", "q", "", "run quietly (no messages, only query output)", "", "usql.quiet=on")
 
 	// app config
 	_ = flags.StringP("config", "", "", "config file")
@@ -241,84 +236,32 @@ func Run(ctx context.Context, args *Args) error {
 
 	// determine if interactive
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
-	forceNonInteractive := len(args.CommandOrFiles) != 0
-
-	// enable term graphics
-	if !forceNonInteractive && interactive {
-		// NOTE: this is done here and not in the env.init() package, because
-		// NOTE: we need to determine if it is interactive first, otherwise it
-		// NOTE: could mess up the non-interactive output with control characters
-		var typ string
-		if s, _ := env.Getenv(text.CommandUpper()+"_TERM_GRAPHICS", "TERM_GRAPHICS"); s != "" {
-			typ = s
+	forceNonInteractive := len(args.CommandOrFiles) != 0 || args.Dump
+	if args.Dump {
+		switch {
+		case len(args.CommandOrFiles) != 0:
+			return text.ErrDumpWithCommands
+		case args.SingleTransaction:
+			return text.ErrDumpWithSingleTransaction
 		}
-		if err := env.Vars().SetSetting("term_graphics", typ); err != nil {
-			return err
-		}
+	} else if args.DumpOptionSet {
+		return text.ErrDumpOptionWithoutDump
 	}
 
-	// configured named connections
-	for name, v := range args.Connections {
-		if err := setConn(name, v); err != nil && !forceNonInteractive && interactive {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf(text.InvalidNamedConnection, name, err))
+	// the settings apply from the first source to the last, so that the
+	// last wins: the defaults, the configuration file, the variables of
+	// usql's environment, then the command line
+	configFile, err := applyConfig(args.ConfigFile, !forceNonInteractive && interactive)
+	if err != nil {
+		return err
+	}
+	for _, opt := range args.Options {
+		if err := env.Vars().SetOption(opt); err != nil {
+			return fmt.Errorf("%s: %w", opt, err)
 		}
 	}
-
-	// fmt.Fprintf(os.Stdout, "VARS: %v\nCVARS: %v\nPVARS: %v\n", args.Vars, args.Cvars, args.Pvars)
-
-	// set vars, which are for scripts, and the settings of the application
-	for _, v := range args.Vars {
-		var err error
-		if i := strings.Index(v, "="); i != -1 {
-			err = env.Vars().Set(v[:i], v[i+1:])
-		} else {
-			err = env.Vars().Unset(v)
-		}
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-		}
-	}
-	for _, v := range args.Usets {
-		name, value, _ := strings.Cut(v, "=")
-		if err := env.Vars().SetSetting(name, value); err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-		}
-	}
-	// set cvars
-	for _, v := range args.Cvars {
-		if i := strings.Index(v, "="); i != -1 {
-			s := v[i+1:]
-			if c := s[0]; c == '\'' || c == '"' {
-				if s, err = env.Unquote(s); err != nil {
-					return err
-				}
-			}
-			if err = env.Vars().SetConn(v[:i], s); err != nil {
-				return err
-			}
-		} else {
-			if err = env.Vars().SetConn(v, ""); err != nil {
-				return err
-			}
-		}
-	}
-	// set pvars
-	for _, v := range args.Pvars {
-		if i := strings.Index(v, "="); i != -1 {
-			s := v[i+1:]
-			if c := s[0]; c == '\'' || c == '"' {
-				if s, err = env.Unquote(s); err != nil {
-					return err
-				}
-			}
-			if _, err = env.Vars().SetPrint(v[:i], s); err != nil {
-				return err
-			}
-		} else {
-			if _, err = env.Vars().TogglePrint(v, ""); err != nil {
-				return err
-			}
-		}
+	if args.Charts, err = chartsFS(configFile); err != nil {
+		return err
 	}
 	// the history is kept at a terminal, in a directory that may not be there
 	// yet
@@ -380,7 +323,7 @@ func Run(ctx context.Context, args *Args) error {
 		}
 	}()
 	// -o sends the results to a file, as \o does
-	if args.Out != "" {
+	if args.Out != "" && !args.Dump {
 		f, err := os.OpenFile(args.Out, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return err
@@ -406,6 +349,10 @@ func Run(ctx context.Context, args *Args) error {
 		if err = h.BeginTx(ctx, nil); err != nil {
 			return err
 		}
+	}
+	// a dump runs no script, as pg_dump reads no psqlrc
+	if args.Dump {
+		return dumpTo(ctx, h, args.Out, args.DumpOptions)
 	}
 	// init.sql
 	if !args.NoInit {
@@ -458,12 +405,64 @@ type Args struct {
 	NoPassword        bool
 	NoInit            bool
 	SingleTransaction bool
-	Vars              []string
-	Usets             []string
-	Cvars             []string
-	Pvars             []string
-	Charts            billy.Filesystem
-	Connections       map[string]interface{}
+	// Options are the settings of the command line, as SECTION.NAME=VALUE,
+	// in the order that they were given.
+	Options []string
+	// ConfigFile is the configuration file that --config or USQL_CONFIG
+	// names.
+	ConfigFile string
+	Charts     billy.Filesystem
+	// Dump writes the database as a script, with the options of DumpOptions.
+	// DumpOptionSet is set when the command line gives an option of a dump.
+	Dump          bool
+	DumpOptions   dump.Options
+	DumpOptionSet bool
+}
+
+// dumpAnnotation marks the options of --dump.
+const dumpAnnotation = "usql_dump"
+
+// dumpFlag provides a [pflag.Value] for an option of a dump.
+type dumpFlag struct {
+	f    dump.Flag
+	args *Args
+}
+
+// Set satisfies the [pflag.Value] interface.
+func (d dumpFlag) Set(value string) error {
+	d.args.DumpOptionSet = true
+	return d.f.Set(&d.args.DumpOptions, value)
+}
+
+// String satisfies the [pflag.Value] interface.
+func (dumpFlag) String() string {
+	return ""
+}
+
+// Type satisfies the [pflag.Value] interface.
+func (d dumpFlag) Type() string {
+	if d.f.Value == "" {
+		return "bool"
+	}
+	return d.f.Value
+}
+
+// dumpTo writes the dump of the database to the file name, or to standard
+// output when name is empty or -. A file is written whole or not at all (see
+// [dump.WriteFile]).
+func dumpTo(ctx context.Context, h *handler.Handler, name string, opts dump.Options) error {
+	write := func(out io.Writer) error {
+		w := bufio.NewWriter(out)
+		if err := h.Dump(ctx, w, opts); err != nil {
+			_ = w.Flush()
+			return err
+		}
+		return w.Flush()
+	}
+	if name == "" || name == "-" {
+		return write(os.Stdout)
+	}
+	return dump.WriteFile(name, write)
 }
 
 // CommandOrFile is a special type to deal with interspersed -c, -f,
@@ -505,8 +504,10 @@ func (c commandOrFile) Type() string {
 // vs handles setting vars with predefined values.
 type vs struct {
 	vars *[]string
-	vals []string
-	typ  string
+	// section is the section of the value, which goes before its name.
+	section string
+	vals    []string
+	typ     string
 }
 
 // Set satisfies the [pflag.Value] interface.
@@ -519,6 +520,8 @@ func (p vs) Set(value string) error {
 				*p.vars = append(*p.vars, v)
 			}
 		}
+	} else if p.section != "" {
+		*p.vars = append(*p.vars, p.section+"."+value)
 	} else {
 		*p.vars = append(*p.vars, value)
 	}
@@ -559,21 +562,78 @@ func (filevar) Type() string {
 	return "FILE"
 }
 
-// chartsFS creates a filesystem for charts.
-func chartsFS(v *viper.Viper) (billy.Filesystem, error) {
-	var configDir string
-	if s := v.ConfigFileUsed(); s != "" {
-		configDir = filepath.Dir(s)
-	} else {
+// applyConfig applies the configuration file, then the variables of usql's
+// environment, such as USQL_PAGER, over the defaults. It reads the file that
+// name names, or else config.yaml or config.yml in the configuration
+// directory. The errors of the file and of the variables are written out, and
+// do not stop usql, but a file that name names must exist. It returns the
+// file that it read.
+//
+// The terminal graphics are off unless the output is a terminal, so that no
+// control characters reach a pipe or a file. Only the command line turns them
+// on there.
+func applyConfig(name string, interactive bool) (string, error) {
+	// at a terminal, the terminal graphics are found out, unless
+	// TERM_GRAPHICS names them
+	if interactive {
+		s, _ := env.Getenv("TERM_GRAPHICS")
+		if err := env.Vars().SetSetting("term_graphics", s); err != nil {
+			fmt.Fprintln(os.Stderr, "error: TERM_GRAPHICS:", err)
+		}
+	}
+	if name == "" {
+		name = defaultConfigFile()
+	} else if _, err := os.Stat(name); err != nil {
+		return "", err
+	}
+	if name != "" {
+		for _, err := range env.Vars().LoadConfig(name, metacmd.Has) {
+			fmt.Fprintln(os.Stderr, "error:", err)
+		}
+	}
+	if err := env.Vars().ApplyEnviron(); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+	}
+	if s, ok := env.Getenv(text.CommandUpper() + "_TERM_GRAPHICS"); ok && interactive {
+		if err := env.Vars().SetSetting("term_graphics", s); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %s_TERM_GRAPHICS: %v\n", text.CommandUpper(), err)
+		}
+	}
+	if !interactive {
+		_ = env.Vars().SetSetting("term_graphics", "none")
+	}
+	return name, nil
+}
+
+// defaultConfigFile returns config.yaml or config.yml in the configuration
+// directory, whichever exists first, or an empty string.
+func defaultConfigFile() string {
+	dir, err := env.ConfigDir()
+	if err != nil {
+		return ""
+	}
+	for _, ext := range []string{".yaml", ".yml"} {
+		name := filepath.Join(dir, text.ConfigName+ext)
+		if _, err := os.Stat(name); err == nil {
+			return name
+		}
+	}
+	return ""
+}
+
+// chartsFS creates a filesystem for charts, in the setting charts.path, which
+// is relative to the directory of the configuration file.
+func chartsFS(configFile string) (billy.Filesystem, error) {
+	configDir := filepath.Dir(configFile)
+	if configFile == "" {
 		var err error
-		if configDir, err = os.UserConfigDir(); err != nil {
+		if configDir, err = env.ConfigDir(); err != nil {
 			return nil, err
 		}
-		configDir = filepath.Join(configDir, text.CommandName)
 	}
-	chartsPath := "charts"
-	if s := v.GetString("charts_path"); s != "" {
-		chartsPath = s
+	chartsPath := env.Vars().Chart("path")
+	if chartsPath == "" {
+		chartsPath = "charts"
 	}
 	fs := osfs.New(configDir, osfs.WithBoundOS())
 	switch fi, err := fs.Stat(chartsPath); {
@@ -603,23 +663,6 @@ func dsnFromEnv() string {
 	return dsn
 }
 
-// setConn sets a connection name to a DSN built from the passed value.
-func setConn(name string, value interface{}) error {
-	switch x := value.(type) {
-	case string:
-		return env.Vars().SetConn(name, x)
-	case []interface{}:
-		return env.Vars().SetConn(name, convSlice(x)...)
-	case map[string]interface{}:
-		urlstr, err := dburl.BuildURL(x)
-		if err != nil {
-			return err
-		}
-		return env.Vars().SetConn(name, urlstr)
-	}
-	return text.ErrInvalidConfig
-}
-
 // runCommandOrFiles processes all the supplied commands or files.
 func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func() error {
 	return func() error {
@@ -638,20 +681,12 @@ func runCommandOrFiles(h *handler.Handler, commandsOrFiles []CommandOrFile) func
 	}
 }
 
-// sf sets a flag.
-func sf(flags *pflag.FlagSet, v *[]string, name, short, usage, placeholder string, vals ...string) {
-	f := flags.VarPF(vs{v, vals, placeholder}, name, short, usage)
+// sf sets a flag. The value of the flag goes in section, unless vals give
+// the full names that the flag sets.
+func sf(flags *pflag.FlagSet, v *[]string, name, short, section, usage, placeholder string, vals ...string) {
+	f := flags.VarPF(vs{v, section, vals, placeholder}, name, short, usage)
 	if placeholder == "" {
 		// a flag with no value is a switch, and is off until it is given
 		f.NoOptDefVal = "true"
 	}
-}
-
-// convSlice converts a generic slice to a string slice.
-func convSlice(v []interface{}) []string {
-	s := make([]string, len(v))
-	for i, x := range v {
-		s[i] = fmt.Sprintf("%s", x)
-	}
-	return s
 }

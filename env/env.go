@@ -138,7 +138,7 @@ func EditFile(u *user.User, path, line string, buf []byte) ([]byte, error) {
 		return nil, text.ErrNoShellAvailable
 	}
 	c := exec.Command(shell, param, cmd)
-	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
+	c.Stdin, c.Stdout, c.Stderr, c.Env = os.Stdin, os.Stdout, os.Stderr, vars.Environ()
 	if err := c.Run(); err != nil {
 		return nil, err
 	}
@@ -227,14 +227,18 @@ func StateDir() (string, error) {
 	return filepath.Join(dir, text.CommandName), nil
 }
 
-// Getshell returns the user's defined SHELL, or system default (if found on
+// Getshell returns the user's defined shell, or system default (if found on
 // path) and the appropriate command-line argument for the returned shell.
 //
-// Looks at the SHELL environment variable first, and then COMSPEC/ComSpec on
-// Windows. Defaults to sh on non-Windows systems, and to cmd.exe on Windows.
+// Looks at the USQL_SHELL and SHELL environment variables first, and then
+// COMSPEC/ComSpec on Windows. Defaults to sh on non-Windows systems, and to
+// cmd.exe on Windows. cmd.exe takes /c, and any other shell -c.
 func Getshell() (string, string) {
-	shell, ok := Getenv("SHELL")
+	shell, ok := Getenv(text.CommandUpper()+"_SHELL", "SHELL")
 	param := "-c"
+	if ok && strings.TrimSuffix(strings.ToLower(filepath.Base(shell)), ".exe") == "cmd" {
+		param = "/c"
+	}
 	if !ok && runtime.GOOS == "windows" {
 		shell, _ = Getenv("COMSPEC", "ComSpec")
 		param = "/c"
@@ -256,7 +260,7 @@ func Getshell() (string, string) {
 	return shell, param
 }
 
-// Shell runs s as a shell. When s is empty the user's SHELL or COMSPEC is
+// Shell runs s as a shell. When s is empty the user's shell or COMSPEC is
 // used. See Getshell.
 func Shell(s string) error {
 	shell, param := Getshell()
@@ -270,7 +274,7 @@ func Shell(s string) error {
 	}
 	// drop to shell
 	cmd := exec.Command(shell, params...)
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	cmd.Stdin, cmd.Stdout, cmd.Stderr, cmd.Env = os.Stdin, os.Stdout, os.Stderr, vars.Environ()
 	_ = cmd.Run()
 	return nil
 }
@@ -282,7 +286,7 @@ func Pipe(stdout, stderr io.Writer, c string) (io.WriteCloser, *exec.Cmd, error)
 		return nil, nil, text.ErrNoShellAvailable
 	}
 	cmd := exec.Command(shell, param, c)
-	cmd.Stdout, cmd.Stderr = stdout, stderr
+	cmd.Stdout, cmd.Stderr, cmd.Env = stdout, stderr, vars.Environ()
 	out, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, nil, err
@@ -290,10 +294,10 @@ func Pipe(stdout, stderr io.Writer, c string) (io.WriteCloser, *exec.Cmd, error)
 	return out, cmd, cmd.Start()
 }
 
-// Exec executes s using the user's SHELL / COMSPEC with -c (or /c) and
+// Exec executes s using the user's shell / COMSPEC with -c (or /c) and
 // returning the captured output. See Getshell.
 //
-// When SHELL or COMSPEC is not defined, then "sh" / "cmd.exe" will be used
+// When USQL_SHELL, SHELL or COMSPEC is not defined, then "sh" / "cmd.exe" will be used
 // instead, assuming it is found on the system's PATH.
 func Exec(s string) (string, error) {
 	s = strings.TrimSpace(s)
@@ -304,7 +308,9 @@ func Exec(s string) (string, error) {
 	if shell == "" {
 		return "", text.ErrNoShellAvailable
 	}
-	buf, err := exec.Command(shell, param, s).CombinedOutput()
+	cmd := exec.Command(shell, param, s)
+	cmd.Env = vars.Environ()
+	buf, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}

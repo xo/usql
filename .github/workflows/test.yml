@@ -181,8 +181,9 @@ jobs:
   # One job for each of the main databases. The other databases are tested
   # locally, as CONTRIBUTING.md says. dbrun starts each one and loads its fixture
   # examples, the tables authors and books. Then the tests of drivers that
-  # need a database run against it: TestConnect on every database, and
-  # TestDescribe and TestCopy on each that holds the fixture.
+  # need a database run against it: TestConnect on every database,
+  # TestDescribe and TestCopy on each that holds the fixture, and TestDump on
+  # each that usql can dump.
   database:
     name: ${{ matrix.server }}
     needs: databases
@@ -239,11 +240,22 @@ jobs:
           if ! dbrun fixture examples "$USQL_TEST_NAME"; then
             echo "::notice::dbrun did not load the fixture examples on $USQL_TEST_NAME"
           fi
+      # TestDump compares a copy that usql made with a copy that pg_dump
+      # made, and skips when pg_dump is older than the server. The runner has
+      # an older pg_dump, so the client of the release comes from PGDG.
+      - name: Install the client of PostgreSQL 18
+        if: matrix.server == 'postgres-18'
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
       - name: Test against ${{ matrix.server }}
         working-directory: drivers
         run: |
           "$RUNNER_TEMP/bin/drivers.test" -test.v -test.count=1 \
-            -test.run '^(TestConnect|TestDescribe|TestCopy)$'
+            -test.run '^(TestConnect|TestDescribe|TestCopy|TestDump)$'
       - name: Show the log of ${{ matrix.server }}
         if: failure()
         run: dbrun logs "$USQL_TEST_NAME" || true

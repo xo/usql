@@ -15,7 +15,7 @@ var sections = []string{
 	"Query View",
 	"Query Buffer",
 	"Informational",
-	"Variables",
+	"Settings",
 	"Input/Output",
 	"Control/Conditional",
 	"Transaction",
@@ -34,29 +34,28 @@ func init() {
 		{
 			{Quit, `q`, ``, `quit ` + text.CommandName + ``, false, false},
 			{Quit, `quit`, ``, `alias for \q`, true, false},
-			{Restrict, `restrict`, `RESTRICT_KEY`, `enter restricted mode with provided key`, false, false},
-			{Restrict, `unrestrict`, `RESTRICT_KEY`, `exit restricted mode if key matches`, false, false},
-			{ErrVerbose, `errverbose`, ``, `show most recent error message at maximum verbosity`, false, false},
 			{Copyright, `copyright`, ``, `show usage and distribution terms for ` + text.CommandName + ``, false, false},
+			{ErrVerbose, `errverbose`, ``, `show most recent error message at maximum verbosity`, false, false},
 			{Drivers, `drivers`, ``, `show database drivers available to ` + text.CommandName + ``, false, false},
 		},
 		// Help
 		{
-			{Help, `?`, `[commands]`, `show help on ` + text.CommandName + `'s meta (backslash) commands`, false, false},
+			{Help, `?`, ``, `show help on ` + text.CommandName + `'s meta (backslash) commands`, false, false},
+			{Help, `?`, `commands`, `as \?, but shows all command aliases`, false, false},
 			{Help, `?`, `options`, `show help on ` + text.CommandName + ` command-line options`, false, false},
 			{Help, `?`, `variables`, `show help on special ` + text.CommandName + ` variables`, false, false},
+			{Help, `?`, `styles`, `show ` + text.CommandName + ` syntax highlighting styles`, false, false},
 		},
 		// Connection
 		{
 			{Connect, `c`, `DSN or \c NAME`, `connect to dsn or named database connection`, false, false},
 			{Connect, `c`, `DRIVER PARAMS...`, `connect to database with driver and parameters`, false, false},
 			{Connect, `connect`, ``, `alias for \c`, true, false},
+			{ConnectionInfo, `conninfo`, `[-password]`, `display information about the current database connection, with the password when -password is given`, false, false},
 			{Disconnect, `Z`, ``, `close (disconnect) database connection`, false, false},
 			{Disconnect, `disconnect`, ``, `alias for \Z`, true, false},
 			{Password, `password`, `[USER]`, `change password for user`, false, false},
 			{Password, `passwd`, ``, `alias for \password`, true, false},
-			{ConnectionInfo, `conninfo`, `[-password]`, `display information about the current database connection, with the password when -password is given`, false, false},
-			{Kubernetes, `k[+]`, `[OPTIONS] [SCOPE]`, `list databases in Kubernetes, with the URL for \c (OPTIONS: -A, -n NAMESPACE, --context NAME)`, false, false},
 		},
 		// Query Execute
 		{
@@ -65,9 +64,9 @@ func init() {
 			{Execute, `G`, `[(OPTIONS)] [FILE]`, `as \g, but forces vertical output mode`, false, false},
 			{Execute, `ego`, ``, `alias for \G`, true, false},
 			{Execute, `gx`, `[(OPTIONS)] [FILE]`, `as \g, but forces expanded output mode`, false, false},
-			{Execute, `gdesc`, ``, `describe result of query, without executing it`, false, false},
 			{Execute, `gexec`, ``, `execute query and execute each value of the result`, false, false},
 			{Execute, `gset`, `[PREFIX]`, `execute query and store results in ` + text.CommandName + ` variables`, false, false},
+			{Execute, `gdesc`, ``, `describe result of query, without executing it`, false, false},
 			{Bind, `bind`, `[PARAM]...`, `set query parameters`, false, false},
 			{Timing, `timing`, `[on|off]`, `toggle timing of commands`, false, false},
 		},
@@ -81,20 +80,21 @@ func init() {
 		},
 		// Query Buffer
 		{
-			{Edit, `e`, `[-raw|-exec] [FILE] [LINE]`, `edit the query buffer, raw (non-interpolated) buffer, the exec buffer, or a file with external editor`, false, false},
+			{Edit, `e`, `[-raw] [FILE] [LINE]`, `edit the query buffer (or file) with external editor (-raw for the non-interpolated buffer)`, false, false},
 			{Edit, `edit`, ``, `alias for \e`, true, false},
-			{Print, `p`, `[-raw|-exec]`, `show the contents of the query buffer, the raw (non-interpolated) buffer or the exec buffer`, false, false},
+			{EditSource, `ef`, `[FUNCNAME [LINE]]`, `edit function definition with external editor`, false, false},
+			{EditSource, `ev`, `[VIEWNAME [LINE]]`, `edit view definition with external editor`, false, false},
+			{Print, `p`, `[-raw]`, `show the contents of the query buffer (-raw for the non-interpolated buffer)`, false, false},
 			{Print, `print`, ``, `alias for \p`, true, false},
-			{Print, `raw`, ``, `alias for \p`, true, false},
 			{Print, `exec`, ``, `alias for \p`, true, false},
-			{Write, `w`, `[-raw|-exec] FILE`, `write the contents of the query buffer, raw (non-interpolated) buffer, or exec buffer to file`, false, false},
+			{Print, `raw`, ``, `as \p, but forces raw mode`, false, false},
+			{Write, `w`, `[-raw] FILE`, `write the query buffer to file (-raw for the non-interpolated buffer)`, false, false},
 			{Write, `write`, ``, `alias for \w`, true, false},
 			{Reset, `r`, ``, `reset (clear) the query buffer`, false, false},
 			{Reset, `reset`, ``, `alias for \r`, true, false},
-			{History, `history`, `[COUNT]`, `show the history, or its last COUNT entries`, false, false},
 			{SaveHistory, `s`, `[FILE]`, `display history or save it to file`, false, false},
-			{EditSource, `ef`, `[FUNCNAME [LINE]]`, `edit function definition with external editor`, false, false},
-			{EditSource, `ev`, `[VIEWNAME [LINE]]`, `edit view definition with external editor`, false, false},
+			{History, `hist`, `[COUNT]`, `show the history, or its last COUNT entries`, false, false},
+			{History, `history`, ``, `alias for \hist`, true, false},
 		},
 		// Informational
 		{
@@ -152,12 +152,12 @@ func init() {
 			{ShowSource, `sf[+]`, `FUNCNAME`, `show a function's definition`, false, false},
 			{ShowSource, `sv[+]`, `VIEWNAME`, `show a view's definition`, false, false},
 			{Stats, `ss[+]`, `TABLE [k]`, `show stats for the columns of a table`, false, false},
+			{Kubernetes, `k[+]`, `[OPTIONS] [SCOPE]`, `list databases in Kubernetes, with the URL for \c (OPTIONS: -A, -n NAMESPACE, --context NAME)`, false, false},
+			{Kubernetes, `kube[+]`, ``, `alias for \k`, true, false},
 		},
-		// Variables
+		// Settings
 		{
-			{Set, `set`, `[NAME [VALUE]]`, `set script variable, or show all script variables if no parameters`, false, false},
-			{Uset, `uset`, `[NAME [VALUE]]`, `set a setting of ` + text.CommandName + `, show it if there is no value, or show all settings if no parameters`, false, false},
-			{Unset, `unset`, `NAME`, `unset (delete) script variable`, false, false},
+			{Config, `config`, `[OPTIONS] [NAME [VALUE]]`, `set configuration option NAME (SECTION.NAME), or show the settings of usql and print if no parameters (OPTIONS: -all shows every section, -password shows passwords)`, false, false},
 			{SetPrint, `pset`, `[NAME [VALUE]]`, `set table print formatting option, or show all print formatting options if no parameters`, false, false},
 			{SetPrint, `a`, ``, `toggle between unaligned and aligned output mode`, false, true},
 			{SetPrint, `C`, `[TITLE]`, `set table title, or unset if none`, false, true},
@@ -167,9 +167,9 @@ func init() {
 			{SetPrint, `T`, `[ATTRIBUTES]`, `set HTML <table> tag attributes, or unset if none`, false, true},
 			{SetPrint, `t`, `[on|off]`, `show only rows`, false, true},
 			{SetPrint, `x`, `[on|off|auto]`, `toggle expanded output`, false, true},
+			{Uset, `uset`, `[NAME [VALUE]]`, `set ` + text.CommandName + ` configuration option, or show all ` + text.CommandName + ` settings if no parameters`, false, false},
 			{SetConn, `cset`, `[NAME [URL]]`, `set named connection, or show all named connections if no parameters`, false, false},
 			{SetConn, `cset`, `NAME DRIVER PARAMS...`, `set named connection for driver and parameters`, false, false},
-			{Prompt, `prompt`, `[-TYPE] VAR [PROMPT]`, `prompt user to set application variable`, false, false},
 		},
 		// Input/Output
 		{
@@ -180,9 +180,13 @@ func init() {
 			{Out, `out`, ``, `alias for \o`, true, false},
 			{Copy, `copy`, `SRC DST QUERY TABLE`, `copy results of query from source database into table on destination database`, false, false},
 			{Copy, `copy`, `SRC DST QUERY TABLE(A,...)`, `copy results of query from source database into table's columns on destination database`, false, false},
+			{DumpDatabase, `dump`, `[OPTIONS] [FILE]`, `write the database as a ` + text.CommandName + ` script to the output, a file or |pipe (OPTIONS: -target DRIVER, -schema-only, -data-only, -schema PATTERN, -exclude-schema PATTERN, -table PATTERN, -exclude-table PATTERN, -allow-lossy, -allow-text, -restrict-key KEY)`, false, false},
 		},
 		// Control/Conditional
 		{
+			{Set, `set`, `[NAME [VALUE]]`, `set script variable, or show all script variables if no parameters`, false, false},
+			{Unset, `unset`, `NAME`, `unset (delete) script variable`, false, false},
+			{Prompt, `prompt`, `[-TYPE] VAR [PROMPT]`, `prompt user to set script variable`, false, false},
 			{Include, `i`, `FILE`, `execute commands from file`, false, false},
 			{Include, `include`, ``, `alias for \i`, true, false},
 			{Include, `ir`, `FILE`, `as \i, but relative to location of current script`, false, false},
@@ -191,6 +195,8 @@ func init() {
 			{Conditional, `elif`, `EXPR`, `alternative within current conditional block`, false, false},
 			{Conditional, `else`, ``, `final alternative within current conditional block`, false, false},
 			{Conditional, `endif`, ``, `end conditional block`, false, false},
+			{Restrict, `restrict`, `RESTRICT_KEY`, `enter restricted mode with provided key`, false, false},
+			{Restrict, `unrestrict`, `RESTRICT_KEY`, `exit restricted mode if key matches`, false, false},
 		},
 		// Transaction
 		{
@@ -204,7 +210,7 @@ func init() {
 			{Shell, `!`, `[COMMAND]`, `execute command in shell or start interactive shell`, false, false},
 			{Chdir, `cd`, `[DIR]`, `change the current working directory`, false, false},
 			{Getenv, `getenv`, `VARNAME ENVVAR`, `fetch environment variable`, false, false},
-			{Setenv, `setenv`, `NAME [VALUE]`, `set or unset environment variable`, false, false},
+			{Setenv, `setenv`, `NAME [VALUE]`, `set or unset environment variable of the commands that ` + text.CommandName + ` runs`, false, false},
 		},
 	}
 	cmds = make(map[string]func(*Params) error)

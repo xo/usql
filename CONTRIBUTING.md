@@ -13,7 +13,8 @@ them must happen first.
 The short version:
 
 1. Answer the pre-flight questions. Is the upstream driver maintained, does it
-   touch global process state, what does it link, and can it be tested?
+   touch global process state, what does it link, can it be tested, and is it
+   worth the wrapper it needs?
 2. Add the scheme in [dburl](https://github.com/xo/dburl).
 3. Add the build tag to `plainDrivers` in `gen.go`. Only a driver that needs a
    hook, such as `Err` or `Version`, gets a package in `drivers`, with an
@@ -21,9 +22,10 @@ The short version:
 4. Regenerate the `internal` package, the driver tables in `README.md` and the
    license files by running `go run gen.go`.
 5. Add the module with `go get`, then run `go mod tidy`.
-6. Write no metadata reader. Metadata is moving into
-   [dbmeta](https://github.com/xo/dbmeta), so describe commands on a new
-   driver report that they are not supported. See D3.
+6. Write no metadata reader. usql reads all metadata from
+   [dbmeta](https://github.com/xo/dbmeta). If dbmeta has no model for the
+   database, the describe commands of the new driver report that they are not
+   supported. See D3 and D4.
 7. Verify against a live database. Compilation is not evidence, because nearly
    every field of `drivers.Driver` is optional.
 
@@ -60,10 +62,10 @@ It lands under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\` in a
 `mingw64\bin` directory. `go build` finds `gcc` there and turns CGO on by
 itself. The workflows install the same package for the same reason.
 
-Checking that `go build github.com/duckdb/duckdb-go/v2` succeeds is not enough. Building a
-package compiles it; the archives are only linked when an executable is
-produced, so every failure above appears at the binary link and not before.
-Build the binary.
+Checking that `go build github.com/duckdb/duckdb-go/v2` succeeds is not
+enough. Building a package compiles it. The archives are only linked when an
+executable is produced, so every failure above appears at the binary link and
+not before. Build the binary.
 
 ## Adding a platform constraint to a driver
 
@@ -73,8 +75,8 @@ A constraint in the generated file also excludes the driver from a plain
 `go build`, while one in the script only applies to a build made through the
 script.
 
-> Tip: check out closed PRs for examples, and/or search the codebase
-> for names of databases you're familiar with.
+> Tip: for examples, read the history of the repository, or search the code
+> for the name of a database that you know.
 
 ## When a driver is broken, and what to do about it
 
@@ -83,9 +85,9 @@ usql's. It is written for anyone working on the tree, including coding agents,
 because the judgement it describes is easy to get wrong in the direction of
 keeping something that has to go.
 
-usql links about fifty drivers into one process. A driver is therefore not
-judged on whether it works on its own. It is judged on whether it can share a
-process with forty-nine others and with a command line tool whose standard
+usql links more than fifty drivers into one process. A driver is therefore
+not judged on whether it works on its own. It is judged on whether it can share
+a process with all the others and with a command line tool whose standard
 output is the data.
 
 ### What makes a driver unfit
@@ -93,8 +95,7 @@ output is the data.
 usql has one build, and every driver is in it. There is no group that keeps a
 driver in the tree and out of the build. A driver with any of these faults is
 fixed upstream first, or removed. Each is detectable rather than a matter of
-taste, and
-the detection is worth running against the whole module, not just the driver
+taste. Run the detection against the whole module, not only the driver
 package, because the fault is usually several levels down a transitive import.
 
 Mutating process-global state from `init`. That covers the standard logger, the
@@ -168,9 +169,9 @@ them.
 
 Removed outright, at various times: YQL in 2017, avatica in 2017, snowflake in
 2024, dameng in September 2026, RamSQL in September 2026, and h2 and gizmosql
-in November 2026. avatica and
-snowflake later returned, which is the other half of the point: removal is not
-a judgement on the database, only on the driver as it stands.
+in November 2026. avatica and snowflake later returned, which is the other half
+of the point: removal is not a judgement on the database, only on the driver as
+it stands.
 
 RamSQL is the case this section was written from. Its `engine/log` called
 `slog.SetDefault` from `init` with a handler on `os.Stdout`. A default slog
@@ -216,9 +217,11 @@ Check out dbmeta next to usql, start the server, and then regenerate:
     go run gen.go -examples
 
 For the describe commands, dbmeta's fixture `northwind` builds Microsoft's
-Northwind on PostgreSQL, SQL Server and Oracle 12.2 or later, with a schema
-`hr` of views, functions, triggers, types and partitions. On Oracle, the
-schemas are the users `northwind` and `hr`:
+Northwind on PostgreSQL, MySQL, MariaDB, SQL Server, Oracle 12.2 or later,
+Firebird, SAP HANA, SQLite and DuckDB. On PostgreSQL, SQL Server and Oracle it
+also builds a schema `hr` of views, functions, triggers, types and partitions.
+On Oracle, the schemas are the users `northwind` and `hr`. dbrun loads the
+fixture with the `usql` on your PATH, so build usql first:
 
     (cd ../dbmeta/test && DBMETA_OWNER_NAME=usql go run ./cmd/dbrun fixture northwind postgres-18)
 
@@ -287,8 +290,9 @@ The fuzz tests of `feed` read scripts the way `-f` does, in the syntax of
 every dialect that dbmeta has a model for. They put quotes, separators,
 backslashes and unusual Unicode into names, strings and comments. They save
 scripts in encodings other than UTF-8 and read them with the `encoding`
-setting, and check that a script that is not valid UTF-8 is refused. `go test ./...` runs only their seed
-inputs. To search for new inputs, run one fuzz test at a time:
+setting, and check that a script that is not valid UTF-8 is refused.
+`go test ./...` runs only their seed inputs. To search for new inputs, run one
+fuzz test at a time:
 
     go test -run '^$' -fuzz FuzzSplit ./feed
     go test -run '^$' -fuzz FuzzQuotedNames ./feed
@@ -335,6 +339,10 @@ the test module there has a replace directive:
     cd dbmeta/test
     go run ./cmd/dbrun start postgres-18
 
+If you are a coding agent, set `DBMETA_OWNER_NAME=usql` on every `dbrun`
+command, as DBRUN.md asks. Then `dbrun status` shows which session owns each
+server.
+
 A bare product name starts the newest release, and `postgres-12` names one
 release. dbrun assigns each release its own host port, so read the URL from
 `dbrun dsn` rather than writing it down. A plain `dsn` prints two columns, so
@@ -354,8 +362,8 @@ limit and the rules for a server that another session started.
 
 ## Tests against a database
 
-The tests in `drivers/dbrun_test.go` run against a database that dbrun
-started. They read two variables:
+The tests in `drivers/dbrun_test.go` and `drivers/dump_test.go` run against a
+database that dbrun started. They read two variables:
 
 - `USQL_TEST_URL` is the URL of the database. It is the field `url` that
   `dbrun dsn --json` prints. When it is not set, the tests skip.
@@ -367,7 +375,7 @@ connection string of the Go driver, which for MySQL and for an embedded
 database is not a URL. usql takes only URLs, so its tests read a URL of their
 own.
 
-There are three tests:
+There are four tests:
 
 - `TestConnect` connects and reads the version of the server. It needs no
   fixture, so it runs on every database.
@@ -378,6 +386,13 @@ There are three tests:
 - `TestCopy` copies `books` with `\copy` into a new SQLite database, and from
   there into a new table of the database under test. Each copy must arrive
   whole.
+- `TestDump` loads the fixture of the dialect in `drivers/testdata/dump` into
+  a new database, dumps it with `--dump`, and loads the dump into another new
+  database. The two dumps must be the same text. It also loads a dump of
+  only the schema and then a dump of only the rows, and dumps to SQLite and
+  DuckDB and back, where the number of rows of each table must be the same.
+  It makes the databases `usql_dump_src` and others like it on the server,
+  and drops them at the end. It skips a database that usql cannot dump yet.
 
 dbrun has the fixture `examples` for PostgreSQL, MySQL, MariaDB, SQL Server,
 Oracle, SQLite and DuckDB. On another database, `TestDescribe` and `TestCopy`
@@ -393,11 +408,22 @@ beside it:
     dbrun fixture examples postgres-18
     USQL_TEST_URL="$(dbrun dsn --json postgres-18 | jq -r '.[0].url')" \
       USQL_TEST_NAME=postgres-18 \
-      go test -count=1 -v -run 'TestConnect|TestDescribe|TestCopy' ./drivers
+      go test -count=1 -v -run 'TestConnect|TestDescribe|TestCopy|TestDump' ./drivers
     dbrun stop postgres-18
 
 SQLite and DuckDB need no `start`. For an embedded database, `dbrun fixture`
 runs the `usql` on your PATH to load the fixture, so build usql first.
+
+When `pg_dump` and `psql` are on the path for PostgreSQL, or `mysqldump` and
+`mysql` for MySQL, `TestDump` also compares with that tool. It loads a dump
+of the tool into one database and a dump of usql into another, and the tool
+must write the same dump of both. The lines of the tool's dump that are
+known to differ are in `drivers/testdata/dump/TOOL.known`, each with the
+reason. The comparison skips when the tool is missing, or cannot load its own
+dump, as `pg_dump` cannot for a server of a newer release.
+
+`TestDumpEmbedded` needs no server, and runs with the other tests. It dumps
+SQLite and DuckDB to themselves and to each other.
 
 If you change what the describe commands print, record the output again with
 `-update`, against each database that has a recording:
@@ -444,8 +470,8 @@ are in `_samples/`.
 The `\d` family of commands, and the names that tab completion offers, read
 the structure of a database through [dbmeta](https://github.com/xo/dbmeta).
 `drivers.Meta` picks dbmeta's model by the dialect that dburl sets on the
-URL, and `metacmd/describe` formats the answers the way psql does. usql writes no query of its
-own for this (D3).
+URL, and `metacmd/describe` formats the answers the way psql does. usql
+writes no query of its own for this (D3, D4).
 
 A driver does nothing to take part. A database that dbmeta has a model for
 answers the describe commands and completes names. One that it has none for

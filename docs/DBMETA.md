@@ -6,7 +6,8 @@
 > every statement is a query, the product string and the scan by type) from
 > dbmeta, and `go.mod` names its release. The steps below are the plan as it was
 > written, kept for what they decided and why. W46 holds what the describe
-> commands still lack against psql.
+> commands still lack against psql. W28 holds the statement handling of four
+> drivers, which still waits for dbmeta (D5).
 
 This is the plan for moving usql off its own metadata `Reader` and `Writer` and
 onto [dbmeta](https://github.com/xo/dbmeta). It was implemented on 2026-09-30,
@@ -297,6 +298,9 @@ saying why.
 The list then shows how many entries say "not yet" and how many say "cannot",
 which are different states that look identical today.
 
+This is done. `noModel` in `metadata_test.go` is the list, and
+`TestEveryDriverReadsThroughDbmeta` is the test.
+
 ## Step 5. Version queries
 
 Version queries move to dbmeta, and the data already exists there. Every model
@@ -309,14 +313,15 @@ usql keeps its own fallback for every name dbmeta does not cover. That fallback
 is `SELECT version();`, which several products do not have.
 
 Oracle is not one of the products that falls through to it, because dbmeta has
-a model for it. The oracle driver registers itself in `internal/oracle.go`, which `gen.go` writes.
-It used to register through a shared package, `orshared`, that godror also used,
-and that path made an earlier count of registered schemes too low. The package
-is gone, since nothing else used it.
+a model for it. The oracle driver registers itself in `internal/oracle.go`,
+which `gen.go` writes. It used to register through a shared package,
+`orshared`, that godror also used, and that path made an earlier count of
+registered schemes too low. The package is gone, since nothing else used it.
 
-Oracle has a different defect, and two open pull requests report it. Its
-version query is `SELECT version FROM v$instance`, and `v$instance` needs
-privileges an ordinary user does not have. See W22.
+Oracle had a different defect, which two pull requests reported. Its version
+query was `SELECT version FROM v$instance`, and `v$instance` needs privileges
+an ordinary user does not have. dbmeta reads `v$version`, which every user can
+read, so the defect went with the move to dbmeta. See W22.
 
 The version is read once when the connection opens, because everything else
 resolves against it. That is a change to usql's connection path, not to a
@@ -385,6 +390,9 @@ products separately on both sides means twice the containers for one behavior.
 This is the same conclusion the [W6](BACKLOG.md) tombstone reached from the
 other direction.
 
+This is done. usql starts every database with dbmeta's `dbrun`, and keeps no
+container list of its own.
+
 ## Smaller things that are cheap now and expensive later
 
 dbmeta's arguments carry a catalog filter and `metadata.Filter` does not. Only
@@ -412,6 +420,9 @@ The tag follows the work rather than leading it, because a tag published while
 the API still moves is a promise nobody can keep.
 
 Do not add dbmeta to `go.mod` before that tag exists.
+
+dbmeta was tagged on 2026-10-02, and `go.mod` names a release of dbmeta from
+then on (D4).
 
 A point release during this period comes off a `release-*` branch. The main
 branch is expected to carry working changes for the length of this cycle.

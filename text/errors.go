@@ -21,6 +21,14 @@ var (
 	ErrPasswordAttemptsExhausted = errors.New(`password attempts exhausted`)
 	// ErrSingleTransactionCannotBeUsedWithInteractiveMode is the single transaction cannot be used with interactive mode error.
 	ErrSingleTransactionCannotBeUsedWithInteractiveMode = errors.New(`--single-transaction cannot be used with interactive mode`)
+	// ErrDumpWithCommands is the error for --dump with -c or -f.
+	ErrDumpWithCommands = errors.New(`--dump cannot be used with -c or -f`)
+	// ErrDumpWithSingleTransaction is the error for --dump with
+	// --single-transaction.
+	ErrDumpWithSingleTransaction = errors.New(`--dump cannot be used with --single-transaction`)
+	// ErrDumpOptionWithoutDump is the error for an option of --dump without
+	// --dump.
+	ErrDumpOptionWithoutDump = errors.New(`the options of a dump need --dump`)
 	// ErrNoEditorDefined is the no editor defined error.
 	ErrNoEditorDefined = errors.New(`no editor defined`)
 	// ErrUnknownCommand is the unknown command error.
@@ -45,6 +53,9 @@ var (
 	ErrInvalidValue = errors.New(`invalid value`)
 	// ErrTooManyRows is the too many rows error.
 	ErrTooManyRows = errors.New(`too many rows`)
+	// ErrNoRowsGset is the error for \gset with a query that returns no
+	// rows, as psql words it.
+	ErrNoRowsGset = errors.New(`no rows returned for \gset`)
 	// ErrInvalidFormatType is the invalid format type error.
 	ErrInvalidFormatType = errors.New(`\pset: allowed formats are unaligned, aligned, wrapped, html, asciidoc, latex, latex-longtable, troff-ms, json, csv, markdown`)
 	// ErrInvalidFormatPagerType is the invalid format pager error.
@@ -90,8 +101,23 @@ var (
 	ErrPasswordForward = errors.New(`a forwarded connection reads its password where the database runs, so -W does not apply`)
 	// ErrNamedConnectionIsNotAURL is the named connection is not a url error.
 	ErrNamedConnectionIsNotAURL = errors.New(`named connection is not a url`)
-	// ErrInvalidConfig is the invalid config error.
-	ErrInvalidConfig = errors.New(`invalid config`)
+	// ErrConfigNotAMap is the error of a section of the configuration file
+	// that is not a map.
+	// ErrInvalidXheaderWidth is the error of a value of xheader_width that
+	// psql refuses.
+	ErrInvalidXheaderWidth = errors.New(`allowed xheader_width values are "full" (default), "column", "page", or a number specifying the exact width`)
+	ErrConfigNotAMap       = errors.New(`not a map of names and values`)
+	// ErrConfigNotAValue is the error of a setting of the configuration file
+	// that is a list or a map.
+	ErrConfigNotAValue = errors.New(`not a value: a setting takes a string, a number or a Boolean`)
+	// ErrAliasConfigOnly is the error of setting an alias other than in the
+	// configuration file.
+	ErrAliasConfigOnly = errors.New(`only the configuration file sets an alias`)
+	// ErrAliasArguments is the error of an alias that is given arguments.
+	ErrAliasArguments = errors.New(`an alias takes no arguments`)
+	// ErrAliasTooDeep is the error of aliases that run each other too many
+	// times.
+	ErrAliasTooDeep = errors.New(`aliases run each other too many times`)
 	// ErrIfEscaped is the error when Ctrl-C at a terminal leaves the innermost
 	// \if block, as in psql.
 	ErrIfEscaped = errors.New(`\if: escaped`)

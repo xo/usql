@@ -17,8 +17,20 @@ var (
 	CommandName               = `usql`
 	CommandVersion            = `0.0.0-dev`
 	HistoryNotSaved           = `warning: the history is not saved: %v`
-	ConfigInitIgnored         = `warning: config.yaml no longer runs init: move the script to %s`
 	ConfigName                = "config"
+	ConfigInitMoved           = `the configuration file no longer runs a script: move it to %s`
+	ConfigUseFullName         = `%s names no section: use %s`
+	ConfigUnknownName         = `unknown configuration name: %s`
+	ConfigUnknownSection      = `unknown configuration section: %s`
+	ConfigNeedsName           = `%s is a section: name a setting in it, as %[1]s.NAME`
+	ConfigMoveTo              = `move it to %s`
+	ConfigNotSet              = `%s is not set`
+	DumpOptionNeedsValue      = `-%s needs a value: %s`
+	StylesTitle               = `Syntax highlighting styles:`
+	StylesCurrent             = "The style in use is %s.\nChange it with \\uset syntax_hl_style NAME, or \\config %s.syntax_hl_style NAME."
+	InvalidEnvName            = `invalid name of an environment variable: %q`
+	AliasRuns                 = `runs %s`
+	AliasIsACommand           = `\%s is a meta command of ` + CommandName + `, so an alias cannot take the name`
 	Banner                    = `the universal command-line interface for SQL databases`
 	CommandHelpHint           = `hint: try "` + CommandName + ` --help" for more information.`
 	GoInstallHint             = "\nthis build of usql leaves out the %s driver. try:\n\n  go install github.com/xo/usql@%s\n\n"
@@ -43,7 +55,7 @@ var (
 	WithArgumentTypes         = `with argument types`
 	NoPreviousError           = `There is no previous error.`
 	HistoryWritten            = `Wrote history to file "%s".`
-	HistoryInvalidCount       = `\history: %q is not a count`
+	HistoryInvalidCount       = `\%s: %q is not a count`
 	KubernetesTitle           = `List of Kubernetes databases in %s`
 	KubernetesNotFound        = `Did not find any Kubernetes databases in %s.`
 	KubernetesSkipped         = `note: skipped %s in %s: %s`
@@ -109,6 +121,8 @@ var (
 		`unicode_border_linestyle`: `Unicode border line style is %q.`,
 		`unicode_column_linestyle`: `Unicode column line style is %q.`,
 		`unicode_header_linestyle`: `Unicode header line style is %q.`,
+		`xheader_width`:            `Expanded header width is %q.`,
+		`xheader_width_n`:          `Expanded header width is %d.`,
 	}
 	FormatFieldNameUnsetMap = map[string]string{
 		`tableattr`: `Table attributes unset.`,
@@ -187,7 +201,6 @@ var (
 	NotificationReceived      = `Asynchronous notification %q %sreceived from server process with PID %d.`
 	NotificationPayload       = `with payload %q `
 	UnknownShortAlias         = `(unk)`
-	InvalidNamedConnection    = `warning: named connection %q was not defined: %v`
 	ChartsPathDoesNotExist    = `warning: charts_path %q does not exist`
 	ChartsPathIsNotADirectory = `warning: charts_path %q is not a directory`
 	UsageTemplate             = `Usage:

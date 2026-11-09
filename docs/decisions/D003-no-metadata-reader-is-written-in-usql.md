@@ -2,11 +2,11 @@
 
 Status: Decided.
 
-Ken decided on 2026-09-27 that all database metadata moves into `dbmeta`, so
+The maintainer decided on 2026-09-27 that all database metadata moves into `dbmeta`, so
 no metadata reader is written in usql. The question came up for the SurrealDB
 driver, which has none.
 
-This extends the freeze that W21 records. On 2026-09-26 Ken decided that
+This extends the freeze that W21 records. On 2026-09-26 the maintainer decided that
 `drivers/metadata` takes no more changes before the migration to `dbmeta`.
 That covered the existing readers. This decision covers new ones too.
 

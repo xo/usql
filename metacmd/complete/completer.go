@@ -13,7 +13,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/xo/rline"
+	"github.com/xo/transit/styles"
 
+	"github.com/xo/usql/dump"
 	"github.com/xo/usql/env"
 )
 
@@ -466,17 +468,33 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `header_align`) {
 		return CompleteFromList(text, "center", "left", "right", "column")
 	}
+	if TailMatches(MATCH_CASE, previousWords, `\pset`, `xheader_width`) {
+		return CompleteFromList(text, "full", "column", "page")
+	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `linestyle`) {
 		return CompleteFromList(text, "ascii", "old-ascii", "unicode")
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\pset`, `unicode_border_linestyle|unicode_column_linestyle|unicode_header_linestyle`) {
 		return CompleteFromList(text, "single", "double")
 	}
+	if TailMatches(MATCH_CASE, previousWords, `\dump`) {
+		var names []string
+		for _, f := range dump.Flags {
+			names = append(names, "-"+f.Name)
+		}
+		return CompleteFromList(text, names...)
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\config`) {
+		return CompleteFromList(text, env.Vars().ConfigNames()...)
+	}
 	if TailMatches(MATCH_CASE, previousWords, `\uset`) {
 		return CompleteFromList(text, slices.Sorted(maps.Keys(env.Vars().Settings()))...)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\uset`, `on_error_stop|quiet|show_host_information|syntax_hl|syntax_hl_override_bg`) {
 		return CompleteFromList(text, "on", "off")
+	}
+	if TailMatches(MATCH_CASE, previousWords, `\uset`, `syntax_hl_style`) {
+		return CompleteFromList(text, styles.Names()...)
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\uset`, `echo_hidden`) {
 		return CompleteFromList(text, "on", "off", "noexec")
@@ -490,7 +508,7 @@ func (c completer) complete(previousWords []string, text []rune) [][]rune {
 		return nil
 	}
 	if TailMatches(MATCH_CASE, previousWords, `\?`) {
-		return CompleteFromList(text, "commands", "options", "variables")
+		return CompleteFromList(text, "commands", "options", "styles", "variables")
 	}
 	// is suggesting basic sql commands better than nothing?
 	return CompleteFromList(text, c.sqlCommands...)

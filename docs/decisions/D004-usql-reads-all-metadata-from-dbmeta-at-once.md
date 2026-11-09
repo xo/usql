@@ -2,15 +2,15 @@
 
 Status: Decided.
 
-Ken decided on 2026-09-30 how usql moves onto dbmeta, which W21 holds. He
-made three choices.
+The maintainer decided on 2026-09-30 how usql moves onto dbmeta, which W21
+holds. The decision made three choices.
 
 ## All at once, not driver by driver
 
 `docs/DBMETA.md` planned the move one driver at a time, keeping usql's own
-readers for a database that dbmeta did not model. Ken chose to remove them all
-at once, because D3 and his rule that database knowledge belongs in dbmeta
-point there.
+readers for a database that dbmeta did not model. The maintainer chose to
+remove them all at once, because D3 and the rule that database knowledge
+belongs in dbmeta point there.
 
 So `drivers/metadata` holds no query of its own. It picks dbmeta's model by
 `URL.Dialect`, runs dbmeta's queries, and prints the answers. The readers that
@@ -33,7 +33,8 @@ has gained a model.
 dbmeta has no release tag. usql builds against a dbmeta checkout beside it
 through `go.work`, as `docs/DBMETA.md` decided, and `go.work` is not
 committed. So the change is not committed until dbmeta is tagged. Then
-`go.mod` requires that tag and the workspace goes.
+`go.mod` requires that tag and the workspace goes. dbmeta was tagged on
+2026-10-02, and `go.mod` has required a release of dbmeta since then.
 
 ## Follow dbmeta and psql
 

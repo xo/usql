@@ -953,7 +953,7 @@ var sections = []string{
 	"Query View",
 	"Query Buffer",
 	"Informational",
-	"Variables",
+	"Settings",
 	"Input/Output",
 	"Control/Conditional",
 	"Transaction",

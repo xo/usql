@@ -25,7 +25,8 @@ at different work is worse than one that points at nothing, because nothing
 tells the reader it moved.
 
 A heading with no status is open. The statuses in use are `Done`, `Dropped`
-and `Superseded by Wn`.
+and `Superseded by Wn`. The status follows the title after a colon, as in
+`## W8. Switch to xo/rline: Done`.
 
 These rules exist because the items are cited. They are cited in this file, in
 commit messages, and in conversation. Before these rules the numbers were
@@ -39,10 +40,10 @@ message.
 
 ## Where the items came from
 
-W2 to W9 are Ken's work items, in his order. W10 to W15 were added from work
-that followed. W16 is the roadmap that used to live in the GitHub issue
-tracker, and W17 came from it. W18 and after were added later, and each says
-where it came from.
+W2 to W9 are the work items of the maintainer, in the maintainer's order. W10 to
+W15 were added from work that followed. W16 is the roadmap that used to live in
+the GitHub issue tracker, and W17 came from it. W18 and after were added later,
+and each says where it came from.
 
 W1, bringing CI and CD up to date, is finished.
 
@@ -100,20 +101,20 @@ fixed.
 Compare usql against the current psql command line tool, feature by feature,
 and close the gaps that matter.
 
-`\prompt` must work in a non-interactive script. Issue 53, which Ken accepted
-in the thread after first closing it: psql allows `\prompt` in a
-non-interactive terminal, so usql should too, and "I will make it a point to
-have this fixed in the next major release" is the commitment. He also named the
-obstacle, which is that the readline package makes it hard to enable on
-scripts, so this is entangled with W8. Without it a `-f` script cannot ask
-for a value, and `--set NAME=VALUE` is the only way to pass one in.
+`\prompt` must work in a non-interactive script. Issue 53, which the maintainer
+accepted in the thread after first closing it: psql allows `\prompt` in a
+non-interactive terminal, so usql must allow it too, and "I will make it a point
+to have this fixed in the next major release" is the commitment. The maintainer
+also named the obstacle, which is that the readline package makes it hard to
+enable on scripts, so this is entangled with W8. Without it a `-f` script cannot
+ask for a value, and `--set NAME=VALUE` is the only way to pass one in.
 
 The psql-compatible variables in `env/vars.go` are part of this. The prompt
-substitution escapes are the visible gap. `handler/handler.go` line 498 lists
-the ones that are not implemented: `%M`, `%m`, `%>`, `%n`, `%/`, `%~`, `%#`,
-`%p`, `%R` and `%x`. Issue 467 is the user-facing report for `%/`, which shows
-the database named in the connection URL instead of the database in use after
-a `\c` command or a `USE` statement.
+substitution escapes are the visible gap. In `Prompt` in `handler/handler.go`,
+`%~`, `%p`, `%x`, `%l`, `%:`, `%[`, `%]` and `%w` do nothing yet, and `%#`
+does not test for a superuser. Issue 467 was the user-facing report for `%/`,
+which showed the database named in the connection URL instead of the database
+in use after a `\c` command or a `USE` statement. W73 fixed it.
 
 ### The meta commands that usql lacks, against psql 18.6
 
@@ -123,55 +124,55 @@ numbers the entries as bash does. usql has every other command of psql's
 General, Query Buffer, Input/Output, Conditional, Informational, Formatting,
 Operating System and Variables sections, except these:
 
-1. `\restrict KEY` and `\unrestrict KEY`. pg_dump 18 writes `\restrict` on
-   the first line of a plain dump, and psql then refuses every meta command
-   until `\unrestrict` with the same key. usql printed "Invalid command" for
-   both lines of such a dump, and ran the rest with no restriction. Done on
+1. `\restrict KEY` and `\unrestrict KEY`. pg_dump 18 writes `\restrict` on the
+   first line of a plain dump, and psql then refuses every meta command until
+   `\unrestrict` with the same key. usql printed "Invalid command" for both
+   lines of such a dump, and ran the rest with no restriction. Done on
    2026-11-08, and checked with a dump from pg_dump 18.6.
-2. The modifier `x` of psql 18, which shows the result of one describe
-   command in expanded mode, such as `\dtx`. psql has it on every `\d`
-   command, `\l` and `\lo_list`. Done on 2026-11-08. usql takes the
-   modifiers in the order `S`, `x`, `+`, and psql takes them in any order.
-3. `\errverbose`, which shows the last error with every field that the
-   driver gives. GitHub 160. Done on 2026-11-08 for pgx, lib/pq, MySQL, SQL
-   Server and both SQLite drivers, through the driver hook `ErrVerbose`.
-4. `\gdesc`, which shows the columns of a query's result without running it.
-   Ken asked for it on 2026-11-08. database/sql cannot describe a statement
-   without running it. dbmeta proposed `Dialect.DescribeResult` for SQL
-   Server (`sp_describe_first_result_set`), and the type names of
-   PostgreSQL for a description that pgx gives, in its v0.36.0. Waiting for
-   Ken's approval, and his choice for the other databases: refuse, or run
-   the query wrapped so that it returns no rows. Done on 2026-11-08 on
-   dbmeta v0.36.0 (its D273), for PostgreSQL through pgx, and SQL Server.
-   Every other database refuses, and output matched psql 18.
+2. The modifier `x` of psql 18, which shows the result of one describe command
+   in expanded mode, such as `\dtx`. psql has it on every `\d` command, `\l` and
+   `\lo_list`. Done on 2026-11-08. usql takes the modifiers in the order `S`,
+   `x`, `+`, and psql takes them in any order.
+3. `\errverbose`, which shows the last error with every field that the driver
+   gives. GitHub 160. Done on 2026-11-08 for pgx, lib/pq, MySQL, SQL Server and
+   both SQLite drivers, through the driver hook `ErrVerbose`.
+4. `\gdesc`, which shows the columns of a query's result without running it. The
+   maintainer asked for it on 2026-11-08. database/sql cannot describe a
+   statement without running it. dbmeta proposed `Dialect.DescribeResult` for
+   SQL Server (`sp_describe_first_result_set`), and the type names of PostgreSQL
+   for a description that pgx gives, in its v0.36.0. It waited for the
+   maintainer's approval, and for a choice for the other databases: refuse, or
+   run the query wrapped so that it returns no rows. Done on 2026-11-08 on
+   dbmeta v0.36.0 (its D273), for PostgreSQL through pgx, and SQL Server. Every
+   other database refuses, and output matched psql 18.
 5. `\encoding [ENCODING]`, which shows or sets the client encoding of the
-   server. usql's `encoding` setting is the encoding of input files, which
-   is another thing. Ken decided on 2026-11-08 not to add it, because it is
-   a setting of PostgreSQL alone.
-6. `\h [NAME]` and `\help`, the syntax of SQL statements. Ken decided on
-   2026-11-08 not to add them, because the syntax differs for each database.
-7. The long aliases `\list` for `\l` and `\html` for `\H`. Done on
-   2026-11-08.
-8. `\lo_export`, `\lo_import` and `\lo_unlink`, for PostgreSQL's large
-   objects. usql has `\lo_list`. Ken decided on 2026-11-08 not to add them,
+   server. usql's `encoding` setting is the encoding of input files, which is
+   another thing. The maintainer decided on 2026-11-08 not to add it, because it
+   is a setting of PostgreSQL alone.
+6. `\h [NAME]` and `\help`, the syntax of SQL statements. The maintainer decided
+   on 2026-11-08 not to add them, because the syntax differs for each database.
+7. The long aliases `\list` for `\l` and `\html` for `\H`. Done on 2026-11-08.
+8. `\lo_export`, `\lo_import` and `\lo_unlink`, for PostgreSQL's large objects.
+   usql has `\lo_list`. The maintainer decided on 2026-11-08 not to add them,
    because large objects are PostgreSQL's alone.
 9. The extended query protocol and pipelines of PostgreSQL: `\parse`,
    `\bind_named`, `\close_prepared`, `\startpipeline`, `\syncpipeline`,
-   `\sendpipeline`, `\endpipeline`, `\flush`, `\flushrequest` and
-   `\getresults`. usql has `\bind`.
-10. Patterns after the first: `\df` takes argument types, as in
-    `\df FUNCPTRN [TYPEPTRN ...]`, and `\do` takes operand types. usql reads
-    one pattern for each. Ken asked for it on 2026-11-08. dbmeta proposed
+   `\sendpipeline`, `\endpipeline`, `\flush`, `\flushrequest` and `\getresults`.
+   usql has `\bind`.
+10. Patterns after the first: `\df` takes argument types, as in `\df FUNCPTRN
+    [TYPEPTRN ...]`, and `\do` takes operand types. usql reads one pattern for
+    each. The maintainer asked for it on 2026-11-08. dbmeta proposed
     `Args.ArgTypes`, matched with PostgreSQL's aliases of type names, in its
-    v0.36.0. Done on 2026-11-08 on dbmeta v0.36.0 (its D272), and output
-    matched psql 18.
-11. psql's form of `\c` with a database, a user, a host and a port, and `-`
-    for a field to keep. That is W69.
+    v0.36.0. Done on 2026-11-08 on dbmeta v0.36.0 (its D272), and output matched
+    psql 18.
+11. psql's form of `\c` with a database, a user, a host and a port, and `-` for
+    a field to keep. That is W69.
 
 ## W4. Work through GitHub
 
 93 issues and 24 pull requests are open, reviewed on 2026-09-23. Gemini and
-DeepSeek were consulted on which are real; where they disagreed it is said so.
+DeepSeek were consulted on which are real. Where they disagreed, this file says
+so.
 
 ### W4a. The nine scanner reports: close them
 
@@ -181,7 +182,7 @@ reports that nothing reachable is affected: 0 vulnerabilities in usql's code,
 0 in imported packages, and 3 in required modules that are never called, being
 GO-2026-5932, GO-2022-0646 and GO-2022-0635.
 
-They are not defects in usql and should be closed. Both models agreed that a
+They are not defects in usql, so close them. Both models agreed that a
 shipped CLI is still operationally different from a library: enterprise
 scanners read `go.mod` from the binary's build info and ignore reachability, so
 a compliance gate can block the binary whatever `govulncheck` says. The reports
@@ -240,13 +241,13 @@ close it if none arrives.
 Issues 254, 322, 397, 427, 458, 462 and 495. Gemini called this the top
 priority after stability, on the grounds that a tool which mangles data or runs
 out of memory on a large load gets dropped immediately. 397, 254 and 462 are
-probably one fault, the NULL scan in `\copy`; see W14. 322 is a 500 MB file
+probably one fault, the NULL scan in `\copy`. See W14. 322 is a 500 MB file
 failing, which suggests the copy reads a whole payload rather than streaming.
 
 ### W4f. Output faults, cheap and visible
 
-Issue 448, numbers shown as `1.450817032e+`, is a formatting default and should
-be a small fix. Issue 509, control characters in a text field breaking the
+Issue 448, numbers shown as `1.450817032e+`, is a formatting default and is
+likely a small fix. Issue 509, control characters in a text field breaking the
 output, needs the cell sanitised. Issue 504, `\dt` listing SQLite system
 tables, is a missing `sqlite_%` filter. All three are quick and user facing.
 
@@ -272,7 +273,8 @@ not get fixed one at a time in usql. They close with the move to `xo/rline`.
 
 Issues 263, 469 and 485 are questions, and pull request 360 is titled as one.
 None can move, because Discussions is switched off for the repository.
-Enabling it is a settings change and is Ken's call. Until then they stay open,
+Enabling it was a settings change for the maintainer. Discussions is enabled
+now, and W4k says what became of these issues. Until then they stayed open,
 because closing a question the author cannot re-ask elsewhere is worse than
 leaving it.
 
@@ -298,12 +300,11 @@ alternative is that the real bugs above stay buried under sixty that are not.
 
 53 issues and 10 pull requests were open. Agents checked each one on main
 2d674b7 against PostgreSQL 18, SQL Server 2025, SQLite and a Linux pty, and
-Gemini and DeepSeek reviewed the findings. OpenAI could not answer, because
-its API key was refused. Ken closed what was fixed or no longer applies: the
-issues 595, 587, 552, 236, 516, 508, 504, 482, 472, 462, 440, 397, 320, 254,
-172, 171, 412, 375, 72, 528, 505, 464, 176, 122, 93, 532 and 485, and the
-pull requests 596, 524, 570, 360, 573 and 565. This corrects the subsections
-above:
+Gemini and DeepSeek reviewed the findings. OpenAI could not answer, because its
+API key was refused. The maintainer closed what was fixed or no longer applies:
+the issues 595, 587, 552, 236, 516, 508, 504, 482, 472, 462, 440, 397, 320, 254,
+172, 171, 412, 375, 72, 528, 505, 464, 176, 122, 93, 532 and 485, and the pull
+requests 596, 524, 570, 360, 573 and 565. This corrects the subsections above:
 
 - W4c: 587 is fixed by transit's grammar, and `-f` or a pipe now runs a last
   statement with no `;`, as psql does.
@@ -343,11 +344,11 @@ psql leaves it in place and draws the prompt after it:
 The output is being written and then overwritten, so the fix is in how the
 prompt is redrawn after a command that deliberately left the cursor mid-line.
 That makes it a question for W8 as much as for the `\echo` implementation,
-and it should be checked against `xo/rline` before being fixed in the current
+and it must be checked against `xo/rline` before being fixed in the current
 in-tree editor.
 
 
-## W6. Create a dbtest package (Dropped)
+## W6. Create a dbtest package: Dropped
 
 Dropped on 2026-09-26. Do not start this work and do not reinstate it without
 reading what follows.
@@ -373,7 +374,11 @@ file. dbmeta records the products it does not model yet, with their images,
 ports and setup steps, in its `docs/EVALUATION.md`. The sample `config.yaml`,
 `usqlrc` and `usqlpass` files moved to `_samples/`.
 
-## W7. Create a dbmeta package (In progress, outside this repository)
+## W7. Create a dbmeta package: Done
+
+Done on 2026-10-02. W21 moved every metadata reader of usql to dbmeta, and
+`go.mod` requires dbmeta since v0.1.0. `drivers/metadata` is gone. The text
+below is from before the move.
 
 Move the database metadata out of usql into its own repository, so that the
 dbtpl project can share it. The code here is in `drivers/metadata/`.
@@ -397,7 +402,11 @@ usql declares 19 interfaces in `drivers/metadata/metadata.go`. Fourteen are
 leaf readers, aggregated by `ExtendedReader`. Seven of the fourteen decide
 whether a command runs at all. The other seven decide how much `\d+` prints.
 
-## W8. Switch to xo/rline
+## W8. Switch to xo/rline: Done
+
+Done on 2026-10-02, with W36. usql reads its input through
+`github.com/xo/rline`, and `gohxs/readline` is out of `go.mod`. The text below
+is from before the switch.
 
 Replace the readline implementation with `github.com/xo/rline`. usql currently
 depends on `github.com/gohxs/readline`, which has had no commits since 2017.
@@ -448,7 +457,7 @@ how the editor behaves. 467 is prompt content and 516 is pager configuration.
 546, a busy loop at 100% CPU against `usql_static`, is tagged but unconfirmed.
 The reporter's diagnosis, which they say came from an AI and nobody has
 verified, is that the read loop stops blocking in a static build and returns
-empty results. If that is right it is rline's; if not it is ours.
+empty results. If that is right, it is rline's. If not, it is ours.
 
 ### What the rline session found, 2026-09-23
 
@@ -476,7 +485,7 @@ The rline session then reproduced it against its own port, with a control:
 without a child holding the terminal the editor read 10 of 10 keys, and with
 one it read 0 of 10. The child there was `cat` rather than `less`, and the
 difference is the useful part. `cat` reads greedily in a loop and takes
-everything; `less` reads one key and waits, which is why the report describes a
+everything. `less` reads one key and waits, which is why the report describes a
 clean alternation rather than total starvation. **The split is a property of
 the other reader, not of the bug.** So a fix that tunes the sharing rather than
 ending it would behave differently against every program somebody sets `PAGER`
@@ -485,8 +494,8 @@ to.
 rline needs an explicit contract for handing the terminal to a child and taking
 it back. Two constraints on that design. The first pager invocation after
 startup behaves and later ones do not, which the two-readers account does not
-explain on its own, since two readers should race the first time as readily as
-the tenth; either the first invocation differs, or it races and wins. And the
+explain on its own, since two readers race the first time as readily as
+the tenth. Either the first invocation differs, or it races and wins. And the
 fix has to end the sharing rather than tune it, for the reason above.
 
 472, sending a literal tab, is a feature request against rline rather than a
@@ -526,7 +535,7 @@ the Windows binary now carries the same driver set as the others.
 ## W11. Report the three size defects upstream
 
 Measured on 2026-09-22 on linux/amd64, stripped with `-trimpath -ldflags "-s
--w"`. `docs/` holds no copy of the data; the numbers below are what the builds
+-w"`. `docs/` holds no copy of the data. The numbers below are what the builds
 reported.
 
 ### go-ora declares its character set tables as `int`
@@ -610,7 +619,7 @@ not vary.
 duckdb is a base driver as of 2026-09-23, which makes the cost below apply to
 the default build rather than only to `most`. `go build` with no tags went from
 45.7 MB to 99.9 MB. Issue 446 asked for the promotion and had been declined
-because duckdb was not available on Windows out of the box; that stopped being
+because duckdb was not available on Windows out of the box. That stopped being
 true when the MinGW toolchain went into the release workflow. linux/arm still
 excludes it through the `Build:` constraint, so the 32-bit arm build is
 unaffected.
@@ -699,11 +708,11 @@ That session has also split libresvg into one Go module per platform, released
 in xo/resvg v0.9.1, with each `libresvg/<platform>` tagged v0.48.1 to match the
 vendored resvg version. usql is on v0.10.0, which adds an embedded font for
 that project's own tests and a `WithSansSerifFamily` option, and is the same
-size. Measured with an empty module cache, a
+size. usql is on v0.13.0 now. Measured with an empty module cache, a
 linux/amd64 build now downloads 11 MiB of archives rather than the 184 MiB of
 the monolith, and each platform links only its own submodule. Note that
-`go mod tidy` still records all six as indirect requires, so `go mod download`
-with no arguments fetches all of them; a build does not.
+`go mod tidy` still records every platform module as an indirect require, so
+`go mod download` with no arguments fetches all of them. A build does not.
 
 That is a download win, not a binary size win: the charts build is 58.2 MB
 either way, because it is the same archive. It does not resolve issue 494
@@ -745,18 +754,18 @@ anything tblfmt can fix.
 
 ## W16. Roadmap, moved here from GitHub issues
 
-Eighteen issues that Ken filed, mostly in January 2021, as his own roadmap in
-issue form. They were never stale, only in the wrong place: a roadmap kept in
+Eighteen issues that the maintainer filed, mostly in January 2021, as a roadmap
+in issue form. They were never stale, only in the wrong place: a roadmap kept in
 an issue tracker and a roadmap kept in this file are two roadmaps, and the
 issue count then hides the real bug reports underneath them. Gemini and
 DeepSeek were both asked where they belonged, and both said the duplication was
-the problem; Gemini's answer, that this file is the source of truth and the
+the problem. Gemini's answer, that this file is the source of truth and the
 tracker is for defects and contributor-ready work, is the one taken.
 
 They are closed on GitHub with a comment pointing here. Issue 215 stayed open
 as a defect and is W5.
 
-Anything below that is ready for someone else to pick up should be re-filed as
+Anything below that is ready for someone else to pick up is to be filed again as
 a narrow issue with acceptance criteria when that is true, rather than left
 here with `help wanted` on it. That was the one real cost of the move, and it
 is worth paying attention to: `is:issue label:"help wanted"` is how outside
@@ -784,7 +793,7 @@ is the reference. W3, and the largest single piece of it.
 217, additional variable types, evaluation and interpolation. A long proposal
 that deliberately breaks from psql: extended variable types with their own
 prefixes for connections and queries, plus shell and ruby style interpolation
-and expression evaluation. W3 should settle psql parity first, since this
+and expression evaluation. W3 settles psql parity first, since this
 builds on top of it.
 
 ### psql compatibility, still wanted
@@ -804,7 +813,7 @@ beyond the message.
 
 161, the `--echo-*` command line flags.
 
-374, document prompt formatting. The prompt escapes are W3; this is the
+374, document prompt formatting. The prompt escapes are W3. This is the
 documentation half.
 
 ### Proposals, not scheduled
@@ -818,8 +827,8 @@ questions in it are still open, and item 4e holds the current `\copy` defects.
 
 154, an expanded test suite covering SELECT, INSERT, UPDATE and DELETE against
 each major database and syntax compatibility across all of them, plus the
-popular non-major ones. W2 has taken the container half of this; the
-per-database statement coverage has not been done.
+popular non-major ones. W2 took the container half of this. The
+per-database statement coverage is not done.
 
 157, support for databases that have a Go API but no `database/sql` driver:
 Redis, InfluxDB and IQL, Aerospike AQL, ArangoDB AQL, OrientDB SQL, Cypher and
@@ -842,11 +851,11 @@ evaluation syntax.
 
 ## W17. A password command hook
 
-Issue 422, accepted by Ken in the thread and moved here. Not started.
+Issue 422, accepted by the maintainer in the thread and moved here. Not started.
 
 Let a user point usql at a command that returns a password, so a password
 manager can be the source instead of a plaintext `.usqlpass`. The reporter has
-twelve databases and keeps their passwords in KeePass; they explicitly did not
+twelve databases and keeps their passwords in KeePass. They explicitly did not
 ask for KeePass support, only a hook, so that 1Password, Bitwarden, Vault,
 `pass` and anything else can be wired up by the user.
 
@@ -876,7 +885,7 @@ of running anything, so the hook belongs in usql above it rather than inside
 dburl.
 
 
-## W18. Two missing interfaces account for every metadata gap (Superseded by W21)
+## W18. Two missing interfaces account for every metadata gap: Superseded by W21
 
 Source: measured on 2026-09-26 while checking dbmeta's `docs/USQL.md`.
 
@@ -1022,7 +1031,11 @@ the standard `log` flags and prefix, `flag.CommandLine` and
 `http.DefaultClient` are unchanged after the import. It answers the question
 by observation rather than by analysis, and it needs no module resolution.
 
-## W21. Migrate metadata to dbmeta
+## W21. Migrate metadata to dbmeta: Done
+
+Done on 2026-10-02. The move was committed on 2026-10-01, and `go.mod` requires
+dbmeta from v0.1.0 on 2026-10-02. `docs/DBMETA.md` says what moved. The
+sections below are the plan and the state before the commit.
 
 Source: planned on 2026-09-26 with the dbmeta session, gemini and deepseek.
 
@@ -1061,7 +1074,7 @@ skipped.
 30 of 51 registered names have no reader. dbmeta's shared information schema
 model answers 12 object kinds against any database with a standard
 `information_schema`, with no per-driver query written. That adapter lands
-coverage across a set of names at once and should ship before any native model
+coverage across a set of names at once, and it ships before any native model
 moves.
 
 MariaDB is the first native model to move. The command gain is one, `\l`,
@@ -1116,8 +1129,8 @@ Decided on 2026-09-26. `drivers/metadata` takes no more changes before the
 migration.
 
 Small fixes are still worth having in principle, and both external reviews
-argued for merging them, on the grounds that the migration has no date and
-main ships to users today. Ken decided the other way: the layer is being
+argued for merging them, on the grounds that the migration has no date and main
+ships to users today. The maintainer decided the other way: the layer is being
 replaced, and churn in it costs merge pain for code that is going away.
 
 So pull requests against the metadata readers are held rather than merged, and
@@ -1142,12 +1155,14 @@ It builds against a dbmeta checkout through a local `go.work`, and is not
 committed until dbmeta has a tag for `go.mod` to require. The steps of
 `docs/DBMETA.md` it covers are 0 to 2, 4 to 6, and the count of step 4.
 Step 3, the information schema model for a database with no model of its own,
-is dbmeta's to register, and Ken is deciding which databases get one.
+is dbmeta's to register, and the maintainer was deciding which databases get
+one.
 
 ### Open decision
 
 dbmeta has no release tag and its API is still moving. Whether usql depends on
-an unreleased module, and whose cadence wins, is Ken's call. The per-driver
+an unreleased module, and whose cadence wins, was the maintainer's decision.
+dbmeta tagged v0.1.0 on 2026-10-02, and `go.mod` requires it. The per-driver
 shape of the move limits the exposure without removing it.
 
 When usql calls dbmeta, choose the dialect from `u.Dialect`, which dburl
@@ -1157,7 +1172,7 @@ v0.32.0 sets, and never from `u.Driver`. Every PostgreSQL URL now has Driver
 SingleStore and Vitess. dbmeta's `docs/COMMANDS.md` says the same under "Wiring
 usql up".
 
-## W22. Metadata and version queries assume a privileged user (Superseded by W21)
+## W22. Metadata and version queries assume a privileged user: Superseded by W21
 
 Source: found on 2026-09-26 while triaging pull requests 524 and 570. Answered
 the same day.
@@ -1235,7 +1250,7 @@ rather than ahead of it. Doing it piecemeal means touching `\copy` twice.
 Source: pull request 479, triaged 2026-09-26. Planned for the next major
 release.
 
-`usql -c -` and `usql -f -` should read from standard input, which is what
+`usql -c -` and `usql -f -` are to read from standard input, which is what
 psql does.
 
 Pull request 479 is closed rather than merged. It called `scanner.Scan()`
@@ -1247,7 +1262,10 @@ to `run.go`.
 The feature is wanted. Read all of standard input rather than one line, and
 decide what `-f -` does when it is given more than once.
 
-## W25. Stop leaking `readline.AutoCompleter` out of the rline package
+## W25. Stop leaking `readline.AutoCompleter` out of the rline package: Done
+
+Done on 2026-09-26. W8 later removed the `rline` package of usql and
+`gohxs/readline`, so the files named below are gone.
 
 Source: found on 2026-09-26 while triaging pull requests 418 and 535.
 
@@ -1274,7 +1292,7 @@ means W8 does not have to change the driver API.
 
 Source: pull requests 577 and 578, closed 2026-09-26. To be done differently.
 
-usql has `PROMPT1` and nothing else. `handler/handler.go:561` already documents
+usql has `PROMPT1` and nothing else. `handler/handler.go` already documents
 `%w` as "Whitespace of the same width as the most recent output of PROMPT1.
 This can be used as a PROMPT2 setting", so the documentation already describes
 a variable that does not exist.
@@ -1311,8 +1329,8 @@ the first. prompt3 and `%w` are open.
 ## W27. Retire, replace and regroup drivers: Done
 
 Source: a review of every driver on 2026-09-27, with Gemini. DeepSeek was asked
-five times and returned nothing each time. Ken made the decisions below the
-same day. Module dates come from the Go proxy.
+five times and returned nothing each time. The maintainer made the decisions
+below the same day. Module dates come from the Go proxy.
 
 Remove these four. Each also drops its scheme from dburl, which has been told:
 
@@ -1342,7 +1360,7 @@ Regroup these two:
 - h2 moves to `bad`, as triage before removal. `github.com/jmrobles/h2go` last
   released on 2020-11-14.
 
-Keep these two, on forks that Ken is starting:
+Keep these two, on forks that the maintainer started:
 
 - cassandra. `github.com/MichaelS11/go-cql-driver` last released on
   2020-09-20 and wraps `gocql/gocql`, which has since moved to
@@ -1376,9 +1394,9 @@ landed with dburl v0.33.0, which renamed the scheme from `n1ql` and keeps
 after 15 seconds by default. It does not set `durability_level`, and a
 single-node server needs `durability_level=none` to commit a transaction.
 
-Netezza was removed on 2026-09-29, and its scheme goes from dburl. Ken
-decided it: the driver was never tested, nobody is known to use it, and no
-copy of Netezza is available to test with.
+Netezza was removed on 2026-09-29, and its scheme goes from dburl. The
+maintainer decided it: the driver was never tested, nobody is known to use it,
+and no copy of Netezza is available to test with.
 
 Most driver packages under `drivers/` have no `Group:` line and fall to
 `most` by default, which breaks rule 10 in `AGENTS.md`. Add the line to each
@@ -1392,13 +1410,13 @@ v0.56.0 drops both schemes. Everything else above was already done.
 
 ## W28. Statement handling for ODBC, csvq, Athena and Cosmos
 
-Source: Ken, on 2026-09-30, while dbmeta took over the grammar of each
+Source: requested on 2026-09-30, while dbmeta took over the grammar of each
 database as its D143.
 
-Four drivers changed a statement before usql ran it, through the `Process`
-field of `drivers.Driver`. Ken removed those hooks. What a database does with a
-statement belongs in dbmeta's syntax options, applied for every driver of it,
-and that needs a larger design than D143. Each database is taken on its own.
+Four drivers changed a statement before usql ran it, through the `Process` field
+of `drivers.Driver`. The maintainer removed those hooks. What a database does
+with a statement belongs in dbmeta's syntax options, applied for every driver of
+it, and that needs a larger design than D143. Each database is taken on its own.
 
 What each hook did, and what is lost until this item is done:
 
@@ -1411,14 +1429,16 @@ What each hook did, and what is lost until this item is done:
 - Athena and Cosmos stripped a trailing semicolon.
 
 The other `Process` hooks, in arangodb, influxdb, neo4j and surrealdb, did
-nothing but run every statement as a query. That is now the `AlwaysQuery`
-field, and `Process` is no longer a field of `drivers.Driver`.
+nothing but run every statement as a query. That became the `AlwaysQuery`
+field, and `Process` is no longer a field of `drivers.Driver`. W54 later moved
+the fact to dbmeta, as `Info.EveryStatementIsAQuery`, and the field is gone.
 
 ### Open for discussion
 
-Ken may remove ODBC, Athena and Cosmos, because none of them can be tested
-against a server that CI can start. He would keep csvq, and wants to discuss
-it with others first. Nothing is removed until that discussion.
+The maintainer is thinking of removing ODBC, Athena and Cosmos, because none of
+them can be tested against a server that CI can start. The maintainer wants to
+keep csvq, and to discuss it with others first. Nothing is removed until that
+discussion.
 
 ### What has to be true when it is done
 
@@ -1428,10 +1448,10 @@ it with others first. Nothing is removed until that discussion.
 
 ## W29. Move the SQL of \copy into dbmeta
 
-Source: Ken, on 2026-09-30. After the metadata readers went to dbmeta (D4),
-the `Copy` hook of `drivers.Driver` holds the last SQL that usql writes for
-one database or another. It needs a careful design, like W28. Ken set it due
-before the next release, on 2026-10-02.
+Source: requested on 2026-09-30. After the metadata readers went to dbmeta (D4),
+the `Copy` hook of `drivers.Driver` holds the last SQL that usql writes for one
+database or another. It needs a careful design, like W28. The maintainer set it
+due before the next release, on 2026-10-02.
 
 What `\copy` builds today:
 
@@ -1469,7 +1489,7 @@ reads metadata, runs DDL or changes a password. These remain:
 - The keyword tables in `drivers/qtype.go`, which decide whether a statement
   returns rows. They hold statements of PostgreSQL, MySQL and CQL.
 
-Ken decides which of these move to dbmeta, and in which item.
+A maintainer decides which of these move to dbmeta, and in which item.
 
 ## W30. Research an ODBC driver written on purego: Done
 
@@ -1477,7 +1497,7 @@ Done on 2026-10-07. `github.com/xo/odbc` v0.1.0 is that driver, pure Go on
 purego, with no cgo, and usql uses it. The crash that it has in usql's default
 build, and the question of its metadata, are in W40.
 
-Source: Ken, on 2026-09-30.
+Source: requested on 2026-09-30.
 
 Research a new ODBC driver for `database/sql`, written from the start on
 `github.com/ebitengine/purego`. purego calls C functions from Go without cgo,
@@ -1506,9 +1526,9 @@ without cgo could join the `most` group, and it could be tested.
 
 ## W31. The rest of psql's describe commands
 
-Source: Ken, on 2026-09-30, once W21 put all of usql's metadata on dbmeta.
+Source: requested on 2026-09-30, once W21 put all of usql's metadata on dbmeta.
 
-Status: Implemented, waiting for W21 to be committed.
+Status: Implemented, and committed with W21 on 2026-10-01.
 
 usql now answers every command in dbmeta's `docs/COMMANDS.md` that dbmeta has
 a query for. `metacmd/describe/lists.go` holds one spec for each: the query,
@@ -1545,24 +1565,25 @@ so `\d "Foo"` looked up `foo`.
 
 ## W32. Review the size that each driver adds to the binary: Dropped
 
-Dropped on 2026-11-05. Ken decided that usql has one build, with every driver,
-and that DuckDB stays in it. So the question of a group of its own for DuckDB
-is closed, and no driver can move between groups. The measurement below is the
-last one. `./size.sh`, which takes no `-g` now, still measures each driver of
-the one build and the chart renderer, which is now in that build. A driver
-whose share grows a lot is a question for Ken: keep it, or find a smaller
-module.
+Dropped on 2026-11-05. The maintainer decided that usql has one build, with
+every driver, and that DuckDB stays in it. So the question of a group of its own
+for DuckDB is closed, and no driver can move between groups. The measurement
+below is the last one. `./size.sh`, which takes no `-g` now, still measures each
+driver of the one build and the chart renderer, which is now in that build. A
+driver whose share grows a lot is a question for a maintainer: keep it, or find
+a smaller module. The steps below, with their groups and `-g`, are from before
+that decision.
 
-Source: Ken, on 2026-10-01. Measure again at each of these times:
+Source: requested on 2026-10-01. Measure again at each of these times:
 
 - Before a release.
 - After `update-deps.sh` moves the dependencies.
 - When a driver is added or switched to another module.
 
-Run `./size.sh -g most`, which measures the drivers that a release ships,
-and replace the table below. CONTRIBUTING.md says how the script works. A
-driver whose share grows a lot is a question for Ken: keep it in `most`,
-move it to `all`, or find a smaller module.
+Run `./size.sh -g most`, which measures the drivers that a release ships, and
+replace the table below. CONTRIBUTING.md says how the script works. A driver
+whose share grows a lot is a question for a maintainer: keep it in `most`, move
+it to `all`, or find a smaller module.
 
 ### The measurement of 2026-11-02
 
@@ -1620,7 +1641,8 @@ no room in the file. 32 MiB of it is the buffer of Go's FIPS random number
 generator (`crypto/internal/fips140/drbg.memory`), which counts in the memory
 of a running usql.
 
-The grammars of transit, in MiB of symbols:
+The grammars of transit, in MiB of symbols, on 2026-11-02. The gizmosql driver
+went on 2026-11-05 (W27).
 
 | MiB | Grammar | Dialects |
 | ---: | --- | --- |
@@ -1645,15 +1667,16 @@ Things to read the tables by:
 - A number of the driver table is what leaving out that one driver saves. Two
   drivers that share a module each save only what the other does not use.
 - `bad` drivers are not measured, because no release builds them.
-- The largest savings are DuckDB (a decision for Ken: its own group), then
-  Pebble for chai (10.0 MiB), then the YDB SDK (7.4 MiB) and Arrow (6.9 MiB).
+- The largest savings are DuckDB (a decision for a maintainer: its own group),
+  then Pebble for chai (10.0 MiB), then the YDB SDK (7.4 MiB) and Arrow (6.9
+  MiB).
 - The Neo4j grammar is the largest grammar, at 4.2 MiB, for a dialect that few
-  use. A build tag for each grammar, or a grammar that follows the driver, is
-  a question for Ken.
+  use. A build tag for each grammar, or a grammar that follows the driver, is a
+  question for a maintainer.
 
 ## W33. Make the README a landing page
 
-Source: Ken, on 2026-10-01, after a review with Gemini and DeepSeek.
+Source: requested on 2026-10-01, after a review with Gemini and DeepSeek.
 
 README.md is 1662 lines. 714 of them are Features and Compatibility, and 184
 are pasted output of `--help` and `\?`. Both reviewers proposed that the
@@ -1679,13 +1702,14 @@ troubleshooting become pages of their own. The two reviewers agreed that the
 database names stay in the README, because a visitor and GitHub's search look
 for them there.
 
-Open for Ken: the names of the files under docs/, and whether one generator
-writes the README sections, docs/ and the man pages of W34 from one source.
+Open for a maintainer: the names of the files under docs/, and whether one
+generator writes the README sections, docs/ and the man pages of W34 from one
+source.
 
 ## W34. Man pages for usql
 
-Source: Ken, on 2026-10-01, after a review with Gemini and DeepSeek. The man
-pages are generated from code, a person can edit their prose, and every
+Source: requested on 2026-10-01, after a review with Gemini and DeepSeek. The
+man pages are generated from code, a person can edit their prose, and every
 release package installs them.
 
 The pages:
@@ -1725,15 +1749,15 @@ How they are installed:
   is a DSN, such as a named connection. usql prints its completion scripts
   through flags too, such as `--completion-script-bash`.
 
-Open for Ken: Markdown or man(7) for the prose, the name of the flag, and how
-the version in `.TH` gets into a committed page.
+Open for a maintainer: Markdown or man(7) for the prose, the name of the flag,
+and how the version in `.TH` gets into a committed page.
 
 ## W35. Match usql to transit's usql grammar
 
-Source: Ken decided the design of transit's usql grammar on 2026-10-01, as
-transit's D101 and D102. The grammar parses usql's input: the meta commands,
-the variables, and the SQL that it hands to a SQL grammar for the dialect.
-Nothing is due until usql uses the grammar. Two points touch usql:
+Source: the maintainer decided the design of transit's usql grammar on
+2026-10-01, as transit's D101 and D102. The grammar parses usql's input: the
+meta commands, the variables, and the SQL that it hands to a SQL grammar for the
+dialect. Nothing is due until usql uses the grammar. Two points touch usql:
 
 - Outside a string, `\\` is psql's separator meta command. It ends the
   arguments of the meta command before it, and the rest of the line is SQL.
@@ -1752,7 +1776,7 @@ branches are flat commands, as in psql.
 
 ## W36. Read input through rline and the usql grammar
 
-Source: Ken, on 2026-10-01. The usql grammar of transit replaces the stmt
+Source: requested on 2026-10-01. The usql grammar of transit replaces the stmt
 package, and rline replaces gohxs/readline and usql's rline package. usql has
 no API to keep, and it takes the API of rline and transit as they are. This
 design came from transit, rline, Gemini and DeepSeek. Where they disagreed,
@@ -1810,7 +1834,7 @@ Oracle's `/` and T-SQL's GO are usql's to handle, as today.
 
 ### What waits for rline
 
-These are rline's backlog items 33, 34 and 35, which are for Ken:
+These are rline's backlog items 33, 34 and 35, which wait for a maintainer:
 
 - A prompt for each row of an entry, for `%R`. Until then, a fixed
   continuation marker.
@@ -1822,21 +1846,22 @@ These are rline's backlog items 33, 34 and 35, which are for Ken:
 
 ### Decided
 
-Ken decided on 2026-10-01 that the chroma lexer goes, with no temporary
-highlighter in its place. Highlighting comes back from transit's grammars,
-whose tag is due soon. Until then, input has no color.
+The maintainer decided on 2026-10-01 that the chroma lexer goes, with no
+temporary highlighter in its place. Highlighting comes back from transit's
+grammars, whose tag is due soon. Until then, input has no color.
 
-Ken also decided that usql does not add T-SQL's GO. Taken as defaults, for
-Ken to change: Oracle's `/` stays out too, as in psql, and the package that
-replaces stmt is named `input`.
+The maintainer also decided that usql does not add T-SQL's GO. Taken as
+defaults, which a maintainer can change: Oracle's `/` stays out too, as in psql,
+and the package that replaces stmt is named `input`.
 
 ## W37. Bring back the tests against databases, and their recordings: Done
 
-Source: Ken, on 2026-10-02. Due before the next release.
+Source: requested on 2026-10-02. Due before the next release.
 
 The tests of `drivers` and `drivers/clickhouse` started their own containers
 through `ory/dockertest`, and loaded jOOQ's Sakila schema into PostgreSQL,
-MySQL, SQL Server, Trino and ClickHouse. Ken had them removed on 2026-10-02,
+MySQL, SQL Server, Trino and ClickHouse. The maintainer had them removed on
+2026-10-02,
 with their recordings, because dbmeta owns every container setup. These went:
 
 - TestWriter, which compared the output of the describe commands with the
@@ -1891,7 +1916,7 @@ use SQLite in memory, need no server, and pass as they are recorded.
 
 ## W38. Run CI on every database, through dbmeta and dbrun: Done
 
-Source: Ken, on 2026-10-02. Due before the next release.
+Source: requested on 2026-10-02. Due before the next release.
 
 Overhaul usql's workflows, so that they test usql against every database
 that can run on GitHub's runners, through dbmeta's `dbrun`. usql writes no
@@ -1915,7 +1940,7 @@ version and pins the linter, or the reverse, fails whenever one side releases
 before the other. dburl suggests pinning both in the lint job, such as Go 1.27.1
 and golangci-lint v2.14.0, bumping them together on purpose, and keeping the
 test job on `stable` so that a new Go release still shows test breakage. usql
-runs no linter today. Ken has not decided.
+runs no linter today. The question waits for a maintainer.
 
 Done on 2026-11-05, in `.github/workflows/test.yml`. It has not run on GitHub
 yet, so its first run is the check. The jobs `test` and `terminal` stay as
@@ -1938,16 +1963,16 @@ and the three embedded databases, which start nothing. A database that has no
 recording is still tested every night by `TestConnect`, and a fault there
 shows in the nightly run.
 
-Update, 2026-11-05, at Ken's request: the first nightly run passed on 116 of
-120 releases and failed on Spanner, Presto and two of Vitess. CI does not need
-to test every database. The workflow has no nightly run now, and its matrix
+Update, 2026-11-05, at the maintainer's request: the first nightly run passed on
+116 of 120 releases and failed on Spanner, Presto and two of Vitess. CI does not
+need to test every database. The workflow has no nightly run now, and its matrix
 names the main databases: `postgres-18`, `sqlserver-2025`, `mysql-26.7`,
 `sqlite3` and `duckdb`. Every other database is tested locally with dbrun.
 
 Not done: the manual checks of `docs/RELEASE.md` for changing passwords are
 still manual, and the describe commands are automated only on the two tables
-of the fixture. No lint job was added, because Ken has not decided the note
-above.
+of the fixture. No lint job was added, because the note above waits for a
+maintainer.
 
 ## W39. Move Avatica to dbimp's driver: Done
 
@@ -1984,15 +2009,15 @@ avatica-1.28.0 was not run.
 
 ## W40. Move ODBC, Trino and Presto to the drivers that dburl now names
 
-Update, 2026-11-05: Ken decided that the build is not changed for the crash
-at the end of this item. The release keeps go-sqlite3 with its own SQLite, and
-DuckDB, in its one build. The README has an ODBC FAQ that explains the crash,
-links the explanation of the odbc project, and says to build with the tag
-`libsqlite3`, or with `-tags 'no_drivers odbc libsqlite3'`. ODBC with the
-other ODBC drivers works without the tag: Ken checked the PostgreSQL Unicode
-driver against PostgreSQL 18. The crash no longer stops the release. What is
-left of this item is the Homebrew formula in `xo/homebrew-xo` and the README
-paragraph about `--with-odbc`, because ODBC is no longer an extra.
+Update, 2026-11-05: the maintainer decided that the build is not changed for the
+crash at the end of this item. The release keeps go-sqlite3 with its own SQLite,
+and DuckDB, in its one build. The README has an ODBC FAQ that explains the
+crash, links the explanation of the odbc project, and says to build with the tag
+`libsqlite3`, or with `-tags 'no_drivers odbc libsqlite3'`. ODBC with the other
+ODBC drivers works without the tag: the maintainer checked the PostgreSQL
+Unicode driver against PostgreSQL 18. The crash no longer stops the release.
+What is left of this item is the Homebrew formula in `xo/homebrew-xo` and the
+README paragraph about `--with-odbc`, because ODBC is no longer an extra.
 
 Progress on 2026-10-07, on dburl v0.44.0, dbimp v0.13.0 and xo/odbc v0.1.0.
 Trino and Presto are moved and checked. ODBC is moved, and it crashes in the
@@ -2013,14 +2038,14 @@ default build. See the end of this item.
   counts one row for an insert that gives no count, and still stops on any
   other error.
 
-Source: dburl, on 2026-10-07. Ken decided three scheme moves in dburl that
-day (its D49 and D50). They are staged there and not released. Do nothing in
-usql until dburl sends the tag.
+Source: dburl, on 2026-10-07. The maintainer decided three scheme moves in dburl
+that day (its D49 and D50). They are staged there and not released. Do nothing
+in usql until dburl sends the tag.
 
 - ODBC moves to `github.com/xo/odbc`, which needs no cgo. The registered name
   stays `odbc`, and the connection string is passed on as it is. This bears
   on W30, which researched an ODBC driver on purego, and on W28, which asked
-  whether to keep ODBC at all. Take both to Ken.
+  whether to keep ODBC at all. Take both to a maintainer.
 
   xo/odbc v0.1.0 was released on 2026-10-07, so dburl's release no longer
   waits for it. It is a purego driver for Linux, macOS and Windows, with no
@@ -2037,7 +2062,7 @@ usql until dburl sends the tag.
   dbmeta decided on 2026-10-07 to build no model on them, and the sender says
   that the fallback for a database that dbmeta does not know belongs to the
   client. That would be a metadata reader in usql, which D3 forbids. It is
-  Ken's decision whether ODBC is the exception, or whether its describe
+  a maintainer's decision whether ODBC is the exception, or whether its describe
   commands stay unsupported.
 - Trino and Presto both move to `github.com/xo/dbimp/trino`, which registers
   `trino`. For `presto`, `URL.SchemeName` is `presto` and `URL.Driver` is
@@ -2058,16 +2083,16 @@ user does not: `trino://host` and `presto://host` give `trino://host`, and
 the driver refuses it with "no user, and both servers need one". dburl
 v0.42.0 forced the user `user`.
 
-Ken decided on 2026-10-07 that dburl writes the default user `user` for a
-trino or presto URL that has none, and that the driver keeps its error.
+The maintainer decided on 2026-10-07 that dburl writes the default user `user`
+for a trino or presto URL that has none, and that the driver keeps its error.
 dburl staged it in its D50, and also made the scheme set `flavor=trino` or
 `flavor=presto` unless the URL names it, so `presto://u@host/cat` becomes
-`trino://u@host/cat?flavor=presto` and the driver does not ask the server.
-It is not released, because `xo/odbc` has no tag and D49 is in the same
-release. So usql waits for that release, which comes after v0.43.0. Then
-it takes that release, moves the drivers, and tests, in one commit. `Version`
-reads `SELECT version()` on Trino, and /v1/info or nothing on Presto, which
-has no `version()`.
+`trino://u@host/cat?flavor=presto` and the driver does not ask the server. It is
+not released, because `xo/odbc` has no tag and D49 is in the same release. So
+usql waits for that release, which comes after v0.43.0. Then it takes that
+release, moves the drivers, and tests, in one commit. `Version` reads `SELECT
+version()` on Trino, and /v1/info or nothing on Presto, which has no
+`version()`.
 
 ODBC, on 2026-10-07: `drivers/odbc` imports `github.com/xo/odbc` v0.1.0,
 and `alexbrainman/odbc` is out of `go.mod`. It needs no cgo, so by the rule
@@ -2094,7 +2119,7 @@ crashes the process with a SIGSEGV. The odbc project found the cause on
   linked. On that build ODBC gave data with NULLs, errors with their SQLSTATE,
   and a rollback that undid its insert.
 
-The ways out are Ken's decision, because each changes a release:
+The ways out were the maintainer's decision, because each changes a release:
 
 1. Build with `-tags libsqlite3`. go-sqlite3 then uses the SQLite of the
    system, so the tags of `build.sh` (`sqlite_fts5`, `sqlite_json1` and the
@@ -2107,7 +2132,9 @@ The ways out are Ken's decision, because each changes a release:
    release builds, and keep go-sqlite3 behind a tag.
 4. Ask the DuckDB bindings to stop exporting symbols.
 
-Not decided. Do not release until one is.
+Decided on 2026-11-05: the release build does not change, and the README tells
+a user of ODBC to build with the tag `libsqlite3`. See the update at the start
+of this item.
 
 Two limits of the drivers, not usql's: the SQLite ODBC driver fails on
 `values (1)` with HY010, because it returns no data from the execute, and
@@ -2115,7 +2142,8 @@ Two limits of the drivers, not usql's: the SQLite ODBC driver fails on
 that returns no result set when it goes through `QueryContext`, such as
 `create table`, with "fetching: return code -1". usql runs `create table`
 through `ExecContext`, so it does not meet that today. The odbc project has the
-fix in its working tree, and Ken decides about a v0.1.1.
+fix in its working tree, and the maintainer was to decide about a v0.1.1.
+usql is on xo/odbc v0.4.1 now.
 
 The Homebrew formula in `xo/homebrew-xo` and the README paragraph about
 `--with-odbc` need a look at the same time, because ODBC is no longer an extra.
@@ -2126,19 +2154,18 @@ Done on 2026-10-07 on dburl v0.44.0. The MaxCompute example of the README now
 uses `tls=false`, and the generated table lost `yds`, `ydbs`, `trs` and
 `trinos`.
 
-Source: dburl, on 2026-10-07. Ken decided that no scheme chooses TLS by its
-scheme or transport any more, because the dbimp drivers read `tls=true`
-(dburl's D51). dburl released it in v0.43.0, together with D49 and D50 of
-W40.
+Source: dburl, on 2026-10-07. The maintainer decided that no scheme chooses TLS
+by its scheme or transport any more, because the dbimp drivers read `tls=true`
+(dburl's D51). dburl released it in v0.43.0, together with D49 and D50 of W40.
 
-usql cannot take v0.43.0 yet. Checked on 2026-10-07, with usql's own
-drivers: `trino://u:p@host:8443/cat/sch` generated the DSN
+usql cannot take v0.43.0 yet. Checked on 2026-10-07, with usql's own drivers:
+`trino://u:p@host:8443/cat/sch` generated the DSN
 `http://u:p@host:8443?catalog=cat&schema=sch` in v0.42.0, which
 `trino-go-client` reads, and generates `trino://u:p@host:8443/cat/sch` in
 v0.43.0, which it does not. `presto://` changes its driver from `presto` to
-`trino` the same way. So a bump breaks both drivers until dbimp's Trino
-driver exists, and usql moves them in the same change (W40). usql stays on
-dburl v0.42.0 until then, unless Ken asks dburl for a release that holds D51
+`trino` the same way. So a bump breaks both drivers until dbimp's Trino driver
+exists, and usql moves them in the same change (W40). usql stays on dburl
+v0.42.0 until then, unless a maintainer asks dburl for a release that holds D51
 alone.
 
 - ydb: the aliases `yds` and `ydbs` go, and return an unknown scheme error.
@@ -2163,19 +2190,19 @@ What usql has to change when it bumps:
 
 ## W42. Decide whether ClickHouse moves to dbimp's driver: Done
 
-Done on 2026-10-07. Ken decided to move (dburl's D53), and usql took it on
-dburl v0.44.0 and dbimp v0.13.0. The ClickHouse driver is dbimp's, over HTTP
-only, and `clickhouse-go` is out of `go.mod`. Its `RowsAffected` is the shared
-`drivers.RowsAffectedOrZero`, its `Err` and `IsPasswordErr` read the codes 194
-and 516 of `*clickhouse.Error`, and `\copy` inserts without a transaction,
-because the server has none. Checked on clickhouse-26.9 with dbrun: the
-banner, types with NULLs, a count, errors, a wrong password, `\copy` of three
-rows, and `\dt` and `\d`.
+Done on 2026-10-07. The maintainer decided to move (dburl's D53), and usql took
+it on dburl v0.44.0 and dbimp v0.13.0. The ClickHouse driver is dbimp's, over
+HTTP only, and `clickhouse-go` is out of `go.mod`. Its `RowsAffected` is the
+shared `drivers.RowsAffectedOrZero`, its `Err` and `IsPasswordErr` read the
+codes 194 and 516 of `*clickhouse.Error`, and `\copy` inserts without a
+transaction, because the server has none. Checked on clickhouse-26.9 with dbrun:
+the banner, types with NULLs, a count, errors, a wrong password, `\copy` of
+three rows, and `\dt` and `\d`.
 
 Source: dbimp, on 2026-10-07. dbimp v0.13.0 has `github.com/xo/dbimp/clickhouse`,
 for ClickHouse over HTTP. It could replace `ClickHouse/clickhouse-go/v2` in
-`drivers/clickhouse`. dbimp asks usql to wait for dburl and for Ken, because
-the choice is his. Nothing is done.
+`drivers/clickhouse`. dbimp asks usql to wait for dburl and for the maintainer,
+because the choice is the maintainer's. Nothing is done.
 
 What the move changes:
 
@@ -2201,9 +2228,9 @@ Size, from W32: `clickhouse-go` adds 4.8 MB to a release build, with ch-go.
 dbimp's driver would drop most of that, and the answer depends on what it
 imports.
 
-Open for Ken: whether to move at all, and whether to keep the native
-protocol. If it moves, dburl moves its scheme first, and usql follows in one
-commit, as with Avatica (W39).
+Open for the maintainer until the decision above: whether to move at all, and
+whether to keep the native protocol. If it moves, dburl moves its scheme first,
+and usql follows in one commit, as with Avatica (W39).
 
 ## Tier 2: GitHub issues and pull requests
 
@@ -2214,8 +2241,8 @@ is the remaining working list, reviewed on 2026-09-21 and updated on
 ### Add the official Oracle driver
 
 Add `github.com/oracle/go-oracledb`, Oracle's own driver for Go, as an
-additional Oracle driver. This does not replace `github.com/sijms/go-ora/v3`,
-which stays as it is.
+additional Oracle driver. This does not replace `github.com/xo/oracle`, which
+replaced `github.com/sijms/go-ora/v3` on 2026-11-02 (W66).
 
 ### Released defects
 
@@ -2223,7 +2250,7 @@ Both are resolved and both issues are closed. 590 broke `go install` on 0.21.5
 and was fixed by replacing the `exclude` directive with an ordinary pin of
 `github.com/uber-go/tally v3.5.10+incompatible`, since `go install
 module@version` refuses any `exclude` or `replace`. 589 reported the Dameng
-driver failing; the driver has since been removed, so it was closed as not
+driver failing. The driver was removed later, so it was closed as not
 planned.
 
 ### Make the completion test comprehensive
@@ -2286,7 +2313,7 @@ Done on 2026-09-23. The nine scanner reports 543, 556, 567, 568, 574, 575, 579,
 
 Still open and waiting on something. W8 subsumes the terminal cluster, so
 122, 137, 236, 483, 490, 528 and 552 close when the rline switch lands, not
-before. 263, 469 and 485 need Discussions enabled; see item 4i.
+before. 263, 469 and 485 needed Discussions enabled. See W4i.
 
 ### The theme being underweighted
 
@@ -2309,9 +2336,9 @@ not, and those were discarded.
 | rqlite              | `github.com/rqlite/gorqlite/stdlib`                | v0.0.0-20260504155303 | 2026-05-04 |
 | openGauss and MogDB | `gitee.com/opengauss/openGauss-connector-go-pq`    | v1.0.8                | 2025-08-20 |
 
-IBM Db2 is out of scope. Ken decided on 2026-09-29 that it cannot be tested
-here, so usql removed its Db2 client setup from `contrib/` and does not add a
-Db2 driver. dbmeta records the decision as its D130.
+IBM Db2 is out of scope. The maintainer decided on 2026-09-29 that it cannot be
+tested here, so usql removed its Db2 client setup from `contrib/` and does not
+add a Db2 driver. dbmeta records the decision as its D130.
 
 TDengine is dropped as well. dbimp writes no TDengine driver (its D127), and
 dburl v0.38.0 removed the provisional scheme (its D41).
@@ -2370,11 +2397,11 @@ details. Report it upstream.
 ### Confirm that the non-Windows, non-macOS, non-Linux builds now work
 
 Update, 2026-11-05: usql has one build, and the chart renderer is in it, so a
-default build links resvg again on every platform. On a platform that resvg
-has no library for, the build needs `-tags no_charts`, or a `Build` constraint
-on the charts feature in `gen.go` that names the six platforms of resvg. That
-is a question for Ken. DuckDB has been in the default build since 2026-09-23,
-so such a platform can need `no_duckdb` as well. The text below is
+default build links resvg again on every platform. On a platform that resvg has
+no library for, the build needs `-tags no_charts`, or a `Build` constraint on
+the charts feature in `gen.go` that names the platforms of resvg. That is a
+question for a maintainer. DuckDB has been in the default build since
+2026-09-23, so such a platform can need `no_duckdb` as well. The text below is
 from before the change.
 
 Charts are behind the `charts` build tag as of this change, so resvg is linked
@@ -2392,8 +2419,8 @@ line matches. The linker therefore receives no `-L` and no `-lresvg`, and every
 `resvg_` symbol is undefined. Issue 494 is this failure on the FreeBSD port for
 arm64, armv7 and i386.
 
-That failure should now be reachable only with the `charts` tag, so a default
-build and a `most` build should work on those platforms. Build usql on the
+That failure is now expected only with the `charts` tag, so a default build and
+a `most` build are expected to work on those platforms. Build usql on the
 freebsd-rline, netbsd-rline and omnios-rline machines to confirm it. Note that
 resvg may not be the only package those platforms cannot build, so a failure
 there is not by itself a sign that this gating is wrong.
@@ -2422,7 +2449,7 @@ nothing is outdated. The branch also still carries an obsolete
 `github.com/opencontainers/runc` entry in `SKIP`. The fix is in a stash on that
 branch named `release-21: update-deps.sh REMAINING report fix`.
 
-## W43. Take the Drill, Solr, Elasticsearch, OpenSearch and DynamoDB drivers: Done, with one gap
+## W43. Take the Drill, Solr, Elasticsearch, OpenSearch and DynamoDB drivers: Done
 
 Done on 2026-10-07 on dburl v0.46.0 and dbimp v0.14.0. The five drivers are
 dbimp's, pure Go over HTTP, and all are in the group `most`. DynamoDB replaces
@@ -2479,34 +2506,34 @@ none.
 
 ## W45. Move Cassandra from xo/cql to xo/cassandra: Done
 
-Waits on dburl and xo/cassandra. Ken said on 2026-10-08 that the Cassandra
-driver moves from `github.com/xo/cql` to `github.com/xo/cassandra`, and drops
-the CQL name, so that it is consistent with the other drivers. Checked the
-same day: the checkout of `xo/cassandra` still has the module path
-`github.com/xo/cql` and the tag v0.1.0, and dburl v0.46.0 still names the
-scheme `cql`, with the aliases `ca`, `cassandra`, `datastax`, `scy` and
-`scylla`. Nothing has been released under the new name.
+Waits on dburl and xo/cassandra. The maintainer said on 2026-10-08 that the
+Cassandra driver moves from `github.com/xo/cql` to `github.com/xo/cassandra`,
+and drops the CQL name, so that it is consistent with the other drivers. Checked
+the same day: the checkout of `xo/cassandra` still has the module path
+`github.com/xo/cql` and the tag v0.1.0, and dburl v0.46.0 still names the scheme
+`cql`, with the aliases `ca`, `cassandra`, `datastax`, `scy` and `scylla`.
+Nothing has been released under the new name.
 
 What usql changes when dburl and the driver release it:
 
-- `go.mod` takes the new module, and `drivers/cassandra` imports it, in
-  place of `github.com/xo/cql`, and registers under the scheme name that
-  dburl then gives, which is `cassandra` in place of `cql`. The `See:` and
-  `// DRIVER` lines follow, and `gen.go` rewrites the README tables, the
-  `internal` build tags and the link bar.
-- `CQL_DEBUG` and its log line are renamed. Check whether the old name stays
-  as a spelling that is still read, which Ken decides.
-- The scheme `cql` goes from dburl, or stays as an alias. That is dburl's
-  and Ken's decision, and usql adds no alias of its own (rule 12). The
+- `go.mod` takes the new module, and `drivers/cassandra` imports it, in place of
+  `github.com/xo/cql`, and registers under the scheme name that dburl then
+  gives, which is `cassandra` in place of `cql`. The `See:` and `// DRIVER`
+  lines follow, and `gen.go` rewrites the README tables, the `internal` build
+  tags and the link bar.
+- `CQL_DEBUG` and its log line are renamed. Check whether the old name stays as
+  a spelling that is still read, which a maintainer decides.
+- The scheme `cql` goes from dburl, or stays as an alias. That is dburl's and
+  the maintainer's decision, and usql adds no alias of its own (rule 12). The
   README example `usql cql://host/` and the tag `cql` change with it.
 - dbmeta names its dialect `cql`, and `drivers.Language` and the version and
-  metadata reads go through it. Ask dbmeta whether the dialect keeps its
-  name, because the language is still CQL.
-- `docs/RELEASE.md` names `cql` in the password-change list and the table
-  of dialects, and says "Cassandra moves to `github.com/xo/cql`". Fix all
-  three. The batches of CQL stay, because that is the name of the language.
-- Check on a server from dbrun: the banner, a query, `BEGIN BATCH` to
-  `APPLY BATCH`, a wrong password, `\dt` and `\copy`.
+  metadata reads go through it. Ask dbmeta whether the dialect keeps its name,
+  because the language is still CQL.
+- `docs/RELEASE.md` names `cql` in the password-change list and the table of
+  dialects, and says "Cassandra moves to `github.com/xo/cql`". Fix all three.
+  The batches of CQL stay, because that is the name of the language.
+- Check on a server from dbrun: the banner, a query, `BEGIN BATCH` to `APPLY
+  BATCH`, a wrong password, `\dt` and `\copy`.
 
 Update, 2026-10-08: the cassandra project says the module is now
 `github.com/xo/cassandra` and the driver registers as `cassandra`, but it has
@@ -2550,12 +2577,23 @@ release. The `cql` rows of the password and statement-form lists in
 checked on a server: the banner, a query, `BEGIN BATCH`, a wrong password,
 `\dt`, `\copy` (the `BeginTx` problem above) and the new value types.
 
+Done on 2026-10-08. dbmeta v0.7.0 names the dialect `cassandra`, and usql took it,
+so `TestEveryDriverReadsThroughDbmeta` passes again. Checked through usql on
+cassandra-5.0 from dbrun: the banner (`Cassandra 5.0.9, CQL 3.4.7, Protocol
+v5`), a query with NULLs, and the types decimal, varint, date, time, inet,
+list, map and duration, `BEGIN BATCH` with a `$$x;y$$` string, a wrong
+password, and `\dt` and `\d`. `\copy` says that the driver does not support it,
+as it never did, because the driver has no Copy hook. Open: dbmeta's Cassandra
+model ignores the schema and name filters, and the formatter does not narrow
+the result, so `\dt ks.*` also lists the system keyspaces. dbmeta has been
+asked for one shared helper. Not checked: scylla.
+
 ## W46. Bring the describe output back to psql and to v0.21.6, PostgreSQL first
 
-Ken asked on 2026-10-08 for the describe commands to give at least the
-information of the last release (v0.21.6), with the columns and names of psql,
-and the same column names where it is the same column. Extra columns and extra
-commands are fine. psql's style and names win over the old usql's. The
+The maintainer asked on 2026-10-08 for the describe commands to give at least
+the information of the last release (v0.21.6), with the columns and names of
+psql, and the same column names where it is the same column. Extra columns and
+extra commands are fine. psql's style and names win over the old usql's. The
 databases follow PostgreSQL one at a time, with v0.21.6 as the baseline where
 there is no psql.
 
@@ -2588,17 +2626,6 @@ First run, 2026-10-08, on postgres-18 with dbmeta v0.4.0:
 
 The report went to dbmeta on 2026-10-08, which owns the fields. usql's
 formatter owns the layout, the names and the order.
-
-Done on 2026-10-08. dbmeta v0.7.0 names the dialect `cassandra`, and usql took it,
-so `TestEveryDriverReadsThroughDbmeta` passes again. Checked through usql on
-cassandra-5.0 from dbrun: the banner (`Cassandra 5.0.9, CQL 3.4.7, Protocol
-v5`), a query with NULLs, and the types decimal, varint, date, time, inet,
-list, map and duration, `BEGIN BATCH` with a `$$x;y$$` string, a wrong
-password, and `\dt` and `\d`. `\copy` says that the driver does not support it,
-as it never did, because the driver has no Copy hook. Open: dbmeta's Cassandra
-model ignores the schema and name filters, and the formatter does not narrow
-the result, so `\dt ks.*` also lists the system keyspaces. dbmeta has been
-asked for one shared helper. Not checked: scylla.
 
 
 Progress, 2026-10-08, on dbmeta v0.8.0 (D197 and D198). The three scan
@@ -2633,8 +2660,9 @@ columns and the type of an expression, `\dFp+` prints no per-parser table,
 foreign table are empty, and `\dRs+` cannot be compared on a database with no
 subscriptions.
 
-Ken changed the goal on 2026-11-04: the describe output of usql must be the
-same as psql's, not psql's with extras. Ken dropped the Rows column of the
+The maintainer changed the goal on 2026-11-04: the describe output of usql must
+be the same as psql's, not psql's with extras. The maintainer dropped the Rows
+column of the
 relation lists and the Source code column of `\df+`, which this item kept
 from v0.21.6. psql 18 has neither, and `\sf` prints the source.
 
@@ -2668,27 +2696,26 @@ as psql does. Left: psql sets `application_name` to `psql`, which
 
 ## W47. Remove the godror driver: Done
 
-Done on 2026-10-09 at Ken's request: godror is not needed, because the oracle
-driver is pure Go. The driver, its generated file and its modules are gone, and
-the README and the samples use `oracle`. No driver is in the group `all` now.
-dburl v0.48.0 dropped the scheme `godror` and its alias `gr`, and usql took it,
-as AGENTS.md asks.
-Also stale in `_samples/usqlpass`: the lines for `cql`, `ignite` and `mymysql`,
-schemes that went in earlier changes.
+Done on 2026-10-09 at the maintainer's request: godror is not needed, because
+the oracle driver is pure Go. The driver, its generated file and its modules are
+gone, and the README and the samples use `oracle`. No driver is in the group
+`all` now. dburl v0.48.0 dropped the scheme `godror` and its alias `gr`, and
+usql took it, as AGENTS.md asks. Also stale in `_samples/usqlpass`: the lines
+for `cql`, `ignite` and `mymysql`, schemes that went in earlier changes.
 
 ## W48. Fold orshared into the oracle driver: Done
 
-Done on 2026-10-09 at Ken's request. `drivers/oracle/orshared` held the
-registration that the oracle and godror drivers shared. godror is gone, so the
-registration is in `drivers/oracle/oracle.go` and the package is removed.
+Done on 2026-10-09 at the maintainer's request. `drivers/oracle/orshared` held
+the registration that the oracle and godror drivers shared. godror is gone, so
+the registration is in `drivers/oracle/oracle.go` and the package is removed.
 
-## W49. Move Snowflake to dbimp's driver: done, not run
+## W49. Move Snowflake to dbimp's driver: Done
 
-Waits on dburl and on Ken. dbimp v0.16.0 (2026-10-10) has
+Waits on dburl and on the maintainer. dbimp v0.16.0 (2026-10-10) has
 `github.com/xo/dbimp/snowflake`, a driver over the SQL REST API with no Arrow,
 which could replace `gosnowflake` in `drivers/snowflake`. dbimp asks usql to
-wait until dburl writes the key as the password of the URL, and until Ken
-decides. What it says the move changes: `RowsAffected` wraps
+wait until dburl writes the key as the password of the URL, and until the
+maintainer decides. What it says the move changes: `RowsAffected` wraps
 `dbimp.ErrNotSupported` when the server gives no count, which
 `drivers.RowsAffectedOrZero` already handles. The version statement is
 `SELECT CURRENT_VERSION()`, and dbmeta's Snowflake model gives it already.
@@ -2704,15 +2731,15 @@ and dburl now writes the URL for the dbimp driver. `drivers/snowflake` imports
 key, counts no row for a statement with no count, and copies without a
 transaction. `gosnowflake` and the modules that only it needed are out of
 `go.mod`. It builds and the tests pass, but nothing has run it against
-Snowflake, because the credentials are dbmeta's. Ken decides whether dbmeta
-tests it, or runs it himself.
+Snowflake, because the credentials are dbmeta's. A maintainer decides whether
+dbmeta tests it, or runs it by hand.
 
 
-## W50. Move BigQuery, Cosmos DB, Athena, Databricks and Spanner to dbimp's drivers: Done, not run
+## W50. Move BigQuery, Cosmos DB, Athena, Databricks and Spanner to dbimp's drivers: Done
 
-Waits on dbimp and dburl. Ken decided on 2026-10-10 (told by dbmeta) that dbimp
-writes drivers for BigQuery, Cosmos DB and Athena, and dburl renames the
-schemes to name them. usql will then import them in place of
+Waits on dbimp and dburl. The maintainer decided on 2026-10-10 (told by dbmeta)
+that dbimp writes drivers for BigQuery, Cosmos DB and Athena, and dburl renames
+the schemes to name them. usql will then import them in place of
 `gorm.io/driver/bigquery`, `gocosmos` and `athenadriver`. dbmeta has no model
 for the three (its D194), so usql keeps their `noModel` entries.
 
@@ -2726,20 +2753,20 @@ rest follows the move of ClickHouse (W42): the error type, the wrong password,
 fails. usql has no account for any of the three, so the checks are by hand or
 through dbmeta. Nothing is done.
 
-Update, 2026-10-11. Ken said that all five are dbimp implementations now, and
-dburl moved the five schemes (athena, bigquery, cosmos, databricks and spanner).
-usql wrote the five drivers against the local checkouts of dburl, dbimp and
-dbmeta through `go.work`, which is not committed: each reads the error type of
-its package, takes a wrong credential from HTTP 401 (BigQuery, Cosmos DB and
-Spanner), from the signature error (Athena) and from the message "Invalid
-access token" (Databricks, which answers 403), and counts no row for a
-statement with no count. Athena, BigQuery and Databricks copy without a
-transaction, because `BeginTx` fails. Cosmos DB reads only, and Spanner has
-transactions. The Athena Version hook is gone, because dbmeta has a model.
-`go.mod` still names released versions, so the commit waits for the tags of
-dburl and dbimp, and for dbmeta to rename its Athena dialect from `awsathena`
-to `athena`, which `TestEveryDriverReadsThroughDbmeta` needs. Not checked on any
-server: usql has no account for any of the five.
+Update, 2026-10-11. The maintainer said that all five are dbimp implementations
+now, and dburl moved the five schemes (athena, bigquery, cosmos, databricks and
+spanner). usql wrote the five drivers against the local checkouts of dburl,
+dbimp and dbmeta through `go.work`, which is not committed: each reads the error
+type of its package, takes a wrong credential from HTTP 401 (BigQuery, Cosmos DB
+and Spanner), from the signature error (Athena) and from the message "Invalid
+access token" (Databricks, which answers 403), and counts no row for a statement
+with no count. Athena, BigQuery and Databricks copy without a transaction,
+because `BeginTx` fails. Cosmos DB reads only, and Spanner has transactions. The
+Athena Version hook is gone, because dbmeta has a model. `go.mod` still names
+released versions, so the commit waits for the tags of dburl and dbimp, and for
+dbmeta to rename its Athena dialect from `awsathena` to `athena`, which
+`TestEveryDriverReadsThroughDbmeta` needs. Not checked on any server: usql has
+no account for any of the five.
 
 
 Update, 2026-10-11, from dbimp v0.17.0 (it holds the five packages, and dburl
@@ -2750,20 +2777,20 @@ has not tagged the schemes yet):
   dbmeta's model gives.
 - Cosmos DB: the new driver reads only, and every `Exec` fails with
   `dbimp.ErrNotSupported`. A user who writes documents loses that, because
-  `gocosmos` could write. Ken decides whether that stays, since usql has no
-  other way to write to Cosmos DB.
+  `gocosmos` could write. A maintainer decides whether that stays, since usql
+  has no other way to write to Cosmos DB.
 - Credentials: BigQuery and Spanner take the PATH of a service account key file
   in the query (`credential_file`), never the key text. Databricks takes the
   token as the password, Athena takes the key and the secret as the user and the
   password, and Cosmos DB takes the master key as the password. The README and
   the samples name none of the five today.
 - Statements: Spanner and Athena refuse several statements in one request, and
-  BigQuery returns the last result. Cosmos DB strips one trailing semicolon,
-  and Athena and Databricks accept one.
-- Types to check by hand when a server is there: what usql prints for a
-  DECIMAL (`*apd.Decimal`), a UUID, an interval (`dbimp.Interval`) and JSON.
-  Cosmos DB columns are the keys of the first row, and Databricks returns an
-  error for a cut or chunked result.
+  BigQuery returns the last result. Cosmos DB strips one trailing semicolon, and
+  Athena and Databricks accept one.
+- Types to check by hand when a server is there: what usql prints for a DECIMAL
+  (`*apd.Decimal`), a UUID, an interval (`dbimp.Interval`) and JSON. Cosmos DB
+  columns are the keys of the first row, and Databricks returns an error for a
+  cut or chunked result.
 
 Done on 2026-10-11 on dburl v0.50.0, dbimp v0.17.0 and dbmeta v0.13.0. The five
 drivers are in, `go.mod` names the released versions, and `gocosmos`,
@@ -2782,9 +2809,9 @@ longer collects the statements of a batch itself: its fields, the check
 `drivers.IsBatchQueryPrefix` and the `\g` rule for a batch are gone, and the
 interactive prompt no longer changes inside a batch. The Cassandra driver is
 rewritten to the two things usql still adds: a timeout of five minutes for a
-request when the URL has no `timeout` key, which Ken kept on 2026-10-11 after
-trying without it, and the check for a wrong password, because the driver has
-no type for it. Its errors, row counts and value types come from
+request when the URL has no `timeout` key, which the maintainer kept on
+2026-10-11 after trying without it, and the check for a wrong password, because
+the driver has no type for it. Its errors, row counts and value types come from
 `github.com/xo/cassandra`, and the debug logger, the error regexps, the row
 count and the JSON conversion are gone. Checked on cassandra-5.0: a batch with a
 `$$x;y$$` string, an unlogged batch on one line, a `decimal`, a list, a map, a
@@ -2795,9 +2822,9 @@ BATCH`, and an unfinished batch sent with `\g` fails at the server.
 
 ## W52. Scrub the drivers of dbimp down to what only usql knows: Done
 
-Done on 2026-10-11 at Ken's request, after the Cassandra rewrite (W51). A dbimp
-driver reports its own errors and counts, so usql's generic code does what
-the hooks did:
+Done on 2026-10-11 at the maintainer's request, after the Cassandra rewrite
+(W51). A dbimp driver reports its own errors and counts, so usql's generic code
+does what the hooks did:
 
 - `drivers.IsPasswordErr` takes an HTTP 401 as a wrong credential for every
   driver, so a hook for 401 alone is gone.
@@ -2836,33 +2863,37 @@ Athena, Avatica, ClickHouse, Databricks, Drill, DynamoDB and Neo4j are gone.
 `go.work` that is not committed. dbimp tagged it in v0.18.0 on 2026-10-11, and
 `go.mod` names that release.
 
-Next reduction, for Ken to decide: eight drivers (Avatica, Cosmos DB, Drill,
-Druid, Elasticsearch, OpenSearch, Solr and Spanner) are now a registration and
-nothing else. `drivers.Available` could list every dburl scheme whose driver
-database/sql has registered, and `gen.go` could write the blank import of the
-dbimp package into `internal/` for a scheme with no hooks, so that no
-`drivers/<name>` package exists for it.
+Next reduction, for the maintainer to decide: eight drivers (Avatica, Cosmos DB,
+Drill, Druid, Elasticsearch, OpenSearch, Solr and Spanner) are now a
+registration and nothing else. `drivers.Available` could list every dburl scheme
+whose driver database/sql has registered, and `gen.go` could write the blank
+import of the dbimp package into `internal/` for a scheme with no hooks, so that
+no `drivers/<name>` package exists for it.
 
-Update, 2026-11-05: the next reduction is done, at Ken's request, together with
-the move to one build. Every driver whose package held only a blank import and
-`drivers.Register(name, drivers.Driver{})` lost its package. That was 36
-drivers, the eight above and also the drivers of dbimp, Oracle, Cassandra,
-ODBC, DuckDB, ChaiSQL, Firebird, FlightSQL, Hive and VoltDB. Each is an entry
-in `plainDrivers` in `gen.go`, which holds its build tag, a build constraint
-where it needs one, and in a comment what usql knows of it. `gen.go` takes the
-package to import and the name to register from the dburl scheme of the tag,
-and writes both into `internal/<tag>.go`, so `\drivers` and
+Update, 2026-11-05: the next reduction is done, at the maintainer's request,
+together with the move to one build. Every driver whose package held only a
+blank import and `drivers.Register(name, drivers.Driver{})` lost its package.
+That was 36 drivers, the eight above and also the drivers of dbimp, Oracle,
+Cassandra, ODBC, DuckDB, ChaiSQL, Firebird, FlightSQL, Hive and VoltDB. Each is
+an entry in `plainDrivers` in `gen.go`, which holds its build tag, a build
+constraint where it needs one, and in a comment what usql knows of it. `gen.go`
+takes the package to import and the name to register from the dburl scheme of
+the tag, and writes both into `internal/<tag>.go`, so `\drivers` and
 `drivers.Available` list the same drivers as before. The tests of Avatica,
 Cassandra, ODBC and Oracle moved to `drivers/refused_test.go`. A driver with a
-hook keeps its package, and so do the drivers that register another driver
-under their own scheme, such as tidb and cockroachdb.
+hook keeps its package, and so do the drivers that register another driver under
+their own scheme, such as tidb and cockroachdb.
 
 
 ## W53. Move the configuration facts of the drivers into dbmeta: Done
 
-Waits on dbmeta. Ken asked on 2026-10-11 that the common facts that drivers set
-by hand come from dbmeta's `Info`, so that usql applies them for every driver and
-no code names a database (D3). usql told dbmeta the inventory the same day:
+Done on 2026-10-11, on dbmeta v0.14.0 and dburl v0.51.0. The update of
+2026-10-11 in W54 says what moved.
+
+Waits on dbmeta. The maintainer asked on 2026-10-11 that the common facts that
+drivers set by hand come from dbmeta's `Info`, so that usql applies them for
+every driver and no code names a database (D3). usql told dbmeta the inventory
+the same day:
 
 - The placeholder of `\copy`'s `INSERT` (`?`, `:1`, `@p1` or `$1`) from
   `Info.Placeholder`, and a flag for Trino and Presto, which refuse a write inside
@@ -2882,49 +2913,50 @@ package (see W52).
 
 ## W54. Share the native COPY of lib/pq and pgx: Done
 
-Done on 2026-10-11 at Ken's request. lib/pq has deprecated `pq.CopyIn` and
-`pq.CopyInSchema`, which the `libpq` driver used, and the `pgx` driver
-repeated the code that finds the columns of the target table. Both now use
-`drivers.CopyTarget`, which reads the schema, the name and the columns of the
-target, and `drivers.CopyRows`, which scans the source rows for a copy. The
+Done on 2026-10-11 at the maintainer's request. lib/pq has deprecated
+`pq.CopyIn` and `pq.CopyInSchema`, which the `libpq` driver used, and the `pgx`
+driver repeated the code that finds the columns of the target table. Both now
+use `drivers.CopyTarget`, which reads the schema, the name and the columns of
+the target, and `drivers.CopyRows`, which scans the source rows for a copy. The
 `libpq` driver writes `COPY "schema"."table" (columns) FROM STDIN` itself, with
 `pq.QuoteIdentifier`, and reads the bytes that lib/pq returns for a numeric as
 text, which it did not before (a numeric failed with `invalid input syntax`).
 `pgx` closes its connection and its statements, which it did not. A name may be
-quoted (`"Mixed Case"` and `public."Odd.Table"`), and a name with no quotes keeps
-the case of its letters. Both drivers dropped the path for a copy whose target is
-an `INSERT` statement, which failed in lib/pq and was never in pgx. Checked on
-postgres-18 through `postgres://` (pgx) and `pq://`: 2,501 rows with NULLs,
-numeric, timestamptz, bytea and jsonb, a schema-qualified table, a list of
-columns and a quoted name. CockroachDB, Redshift, CrateDB and QuestDB share the
-pgx copy and are not checked.
+quoted (`"Mixed Case"` and `public."Odd.Table"`), and a name with no quotes
+keeps the case of its letters. Both drivers dropped the path for a copy whose
+target is an `INSERT` statement, which failed in lib/pq and was never in pgx.
+Checked on postgres-18 through `postgres://` (pgx) and `pq://`: 2,501 rows with
+NULLs, numeric, timestamptz, bytea and jsonb, a schema-qualified table, a list
+of columns and a quoted name. CockroachDB, Redshift, CrateDB and QuestDB share
+the pgx copy and are not checked.
 
-Update, 2026-10-11. Ken decided that the copy placeholder (with the flag for
-Trino and Presto), the rule that every statement is a query, the static product
-string and the scan by the driver's type live in dbmeta, and that the DSN
-defaults live in dburl, which released them in v0.51.0. usql read them:
+Update, 2026-10-11. The maintainer decided that the copy placeholder (with the
+flag for Trino and Presto), the rule that every statement is a query, the static
+product string and the scan by the driver's type live in dbmeta, and that the
+DSN defaults live in dburl, which released them in v0.51.0. usql read them:
 `drivers.Copy` writes the INSERT of a database that has a placeholder, and takes
-each row alone for one that needs autocommit; `drivers.Process` runs each
-statement of such a database as a query; `drivers.Version` prints the product
-string; `drivers.UseColumnTypes` asks the dialect. The `Copy`, `AlwaysQuery`,
+each row alone for one that needs autocommit. `drivers.Process` runs each
+statement of such a database as a query. `drivers.Version` prints the product
+string. `drivers.UseColumnTypes` asks the dialect. The `Copy`, `AlwaysQuery`,
 `UseColumnTypes` and `ForceParams` hooks, the static `Version` hooks of DynamoDB
 and Pinot, and the helpers they used are gone, except Oracle's `ORACLE_SID`, the
 native copies of libpq and pgx, and InfluxDB's and csvq's version. A MySQL or
-SQLite URL that writes `loc=UTC` now keeps it, because dburl sets `loc` only when
-the URL has none, where usql forced it. A driver with a placeholder in dbmeta and
-no `Copy` hook now tries the INSERT, where it said that copy is not supported.
-dbmeta tagged the facts in v0.14.0 on 2026-10-11, and `go.mod` names it, so the
-build needs no `go.work`.
+SQLite URL that writes `loc=UTC` now keeps it, because dburl sets `loc` only
+when the URL has none, where usql forced it. A driver with a placeholder in
+dbmeta and no `Copy` hook now tries the INSERT, where it said that copy is not
+supported. dbmeta tagged the facts in v0.14.0 on 2026-10-11, and `go.mod` names
+it, so the build needs no `go.work`.
 
 
 ## W55. Run usql against the hosted services: Done
 
-Done on 2026-10-11 at Ken's request, with the accounts that dbsetup made for usql
-(a user or a scratch schema of its own on each service, files in
-`~/.config/dbmeta/usql`, read into the process only). Each service got the banner, a
-query with NULLs and the common types, an error, a wrong credential where it can
-be built, `\dt` and `\d`, a table of `usql_*` with rows with NULLs, `\copy` of
-them into a second table, and a trailing semicolon. The tables are dropped.
+Done on 2026-10-11 at the maintainer's request, with the accounts that dbsetup
+made for usql (a user or a scratch schema of its own on each service, files in
+`~/.config/dbmeta/usql`, read into the process only). Each service got the
+banner, a query with NULLs and the common types, an error, a wrong credential
+where it can be built, `\dt` and `\d`, a table of `usql_*` with rows with NULLs,
+`\copy` of them into a second table, and a trailing semicolon. The tables are
+dropped.
 
 - Snowflake, BigQuery, Spanner, Athena (an Iceberg table), Databricks and
   Redshift Serverless worked, with the exceptions below. Cosmos DB reads only: a
@@ -2949,12 +2981,14 @@ them into a second table, and a trailing semicolon. The tables are dropped.
 
 ## W56. Move Exasol to dbimp's driver: Done
 
-Waits on dburl and the tags of dbimp. Ken said on 2026-10-11 that Exasol is moving
-to a dbimp implementation. dbimp has `github.com/xo/dbimp/exasol` (its W44) in its
-repository, over the WebSocket API with no cgo, and has not tagged it. dburl
-still names `github.com/exasol/exasol-driver-go` and writes the DSN of that driver
+Waits on dburl and the tags of dbimp. The maintainer said on 2026-10-11 that
+Exasol is moving to a dbimp implementation. dbimp has
+`github.com/xo/dbimp/exasol` (its W44) in its repository, over the WebSocket API
+with no cgo, and has not tagged it. dburl still names
+`github.com/exasol/exasol-driver-go` and writes the DSN of that driver
 (`host:port?user=...`), so the move needs dburl to name the new package and to
-write the form that dbimp reads (`exasol://user:password@host:8563/schema?tls=...`).
+write the form that dbimp reads
+(`exasol://user:password@host:8563/schema?tls=...`).
 
 usql wrote its side against the local checkout of dbimp (not committed, through a
 `go.work`): `drivers/exasol` is a bare registration, because dbimp's errors, row
@@ -2993,29 +3027,30 @@ gone.
 
 ## W57. Sweep the documents and the code for what the refactoring left: Done
 
-Done on 2026-10-11 at Ken's request. The sweep found and fixed:
+Done on 2026-10-11 at the maintainer's request. The sweep found and fixed:
 
-- The README said that interactive queries are syntax highlighted with Chroma, and
-  listed the Chroma variables. Highlighting is not part of this release, so the
-  README, the feature list and the descriptions of the `SYNTAX_*` variables now say
-  that they do nothing yet.
+- The README said that interactive queries are syntax highlighted with Chroma,
+  and listed the Chroma variables. Highlighting is not part of this release, so
+  the README, the feature list and the descriptions of the `SYNTAX_*` variables
+  now say that they do nothing yet.
 - The completer logged an error to standard output on every failure to list
-  objects, through a logger that nothing could change. It stays silent now, and the
-  four options that nothing used are gone.
+  objects, through a logger that nothing could change. It stays silent now, and
+  the four options that nothing used are gone.
 - Dead code: the `adodb` fallback of `internal/z.go`, `env.Untick`,
   `env.GetPrint`, `indexCols.all` and the placeholder of the SQL Server driver.
-- Package comments of the drivers named the drivers that they replaced, and said that
-  usql has not tested the hosted services, which it has (W55). Spanner said that
-  dbmeta has no model for it. The Spanner, Cosmos DB and Exasol comments are
-  current. Five package comments had lost the `See:` and `Group:` lines to a blank
-  line before `package`, which `TestDriverSeeMatchesDburl` caught.
+- Package comments of the drivers named the drivers that they replaced, and said
+  that usql has not tested the hosted services, which it has (W55). Spanner said
+  that dbmeta has no model for it. The Spanner, Cosmos DB and Exasol comments
+  are current. Five package comments had lost the `See:` and `Group:` lines to a
+  blank line before `package`, which `TestDriverSeeMatchesDburl` caught.
 - `docs/DRIVER.md` quoted the size of an all-driver binary (215 MB) and a scheme
-  that differed from its tag (DynamoDB) that no longer exist, and now says what a
-  dbimp driver needs. `docs/PLAN.md` lists the questions that are open for Ken,
-  where it said none. `docs/DBMETA.md` says that the migration is done and no longer
-  describes a `go.work`. `docs/PROGRESS.md` and `docs/RELEASE.md` follow the hosted
-  runs, the facts that moved to dbmeta and dburl, and the removed hooks. AGENTS.md
-  lists dbimp, transit, cassandra and odbc as siblings.
+  that differed from its tag (DynamoDB) that no longer exist, and now says what
+  a dbimp driver needs. `docs/PLAN.md` lists the questions that are open for a
+  maintainer, where it said none. `docs/DBMETA.md` says that the migration is
+  done and no longer describes a `go.work`. `docs/PROGRESS.md` and
+  `docs/RELEASE.md` follow the hosted runs, the facts that moved to dbmeta and
+  dburl, and the removed hooks. AGENTS.md lists dbimp, transit, cassandra and
+  odbc as siblings.
 - The samples no longer name `cql`, `mymysql` or `ignite`.
 
 What the sweep left alone, as history: BACKLOG.md and the decisions, and the
@@ -3023,12 +3058,13 @@ accounts of removed drivers in CONTRIBUTING.md.
 
 ## W58. Put the highlighting documentation back when highlighting returns: Done
 
-Done on 2026-10-14 at Ken's request. The new `highlight` package draws the input
-as it is typed. It parses the text with the usql grammar of transit, parses each
-statement with the SQL grammar of the dialect, and runs the highlight queries of
-both. The colors come from transit's `styles` module, which has the styles of
-Chroma, and the line editor draws them at the depth that the terminal allows.
-The README, `env/list.go`, `docs/RELEASE.md` and `docs/PROGRESS.md` say so again.
+Done on 2026-10-14 at the maintainer's request. The new `highlight` package
+draws the input as it is typed. It parses the text with the usql grammar of
+transit, parses each statement with the SQL grammar of the dialect, and runs the
+highlight queries of both. The colors come from transit's `styles` module, which
+has the styles of Chroma, and the line editor draws them at the depth that the
+terminal allows. The README, `env/list.go`, `docs/RELEASE.md` and
+`docs/PROGRESS.md` say so again.
 
 The settings keep their names and their defaults:
 
@@ -3049,15 +3085,15 @@ own. Every other dialect uses the generic SQL grammar. Before a connection,
 PostgreSQL applies, as in psql.
 
 On 2026-11-02, on transit v0.7.0, more dialects got a grammar of their own:
-SQLite for sqlite3, libsql and rqlite, DuckDB for duckdb and gizmosql,
-ClickHouse, Trino for trino, presto and athena, Neo4j (Cypher), SurrealDB and
-YDB. `TestCapture` checks each, with a Cypher statement for Neo4j. W32 has the
-size of each grammar.
+SQLite for sqlite3, libsql and rqlite, DuckDB for duckdb and gizmosql (gizmosql
+went with its driver on 2026-11-05, see W27), ClickHouse, Trino for trino,
+presto and athena, Neo4j (Cypher), SurrealDB and YDB. `TestCapture` checks each,
+with a Cypher statement for Neo4j. W32 has the size of each grammar.
 
-The cost is in the binary. The grammars add about 23 MB to the default build, and
-15 MB of that is the PostgreSQL grammar. Ken may choose to give PostgreSQL the
-generic grammar, which is 2.7 MB, and to keep the PostgreSQL grammar for the
-completer.
+The cost is in the binary. The grammars add about 23 MB to the default build,
+and 15 MB of that is the PostgreSQL grammar. A maintainer can choose to give
+PostgreSQL the generic grammar, which is 2.7 MB, and to keep the PostgreSQL
+grammar for the completer.
 
 Update, 2026-11-02, on transit v0.7.0: xo wrote the PostgreSQL grammar again,
 and it is 1.3 MiB. All the grammars are 16.1 MiB, and the Neo4j grammar is the
@@ -3069,35 +3105,36 @@ of MySQL, SQL Server and Oracle stored programs split at each `;`, because the
 input does not turn on `BeginEndBlocks` yet, and so each part is highlighted
 alone.
 
-Done on 2026-11-02 at Ken's request: `\p` prints the query buffer in color, and
-`\sv` and `\sf` print the definition in color, as before the move to transit.
-`Highlighter.Text` writes the colors as escape sequences of the terminal. It
-parses the text with a tree of its own, so the tree of the line editor stays.
-The text is in color only when the input is highlighted, the output is the
-terminal, and `\o` is not set.
+Done on 2026-11-02 at the maintainer's request: `\p` prints the query buffer in
+color, and `\sv` and `\sf` print the definition in color, as before the move to
+transit. `Highlighter.Text` writes the colors as escape sequences of the
+terminal. It parses the text with a tree of its own, so the tree of the line
+editor stays. The text is in color only when the input is highlighted, the
+output is the terminal, and `\o` is not set.
 
 ## W59. Record the terminal sessions again: Done
 
-Done on 2026-10-11 at Ken's request, after the CI job "Terminal sessions" failed on
-`4a11b57` on Ubuntu and macOS. All nine sessions of `testdata/cli` held the output of
-the old line editor and its highlighting, so each failed on the first line (rline
-writes `\e[m` before the banner, and draws the prompt in green). They are recorded
-again, and the diff was read: no color of highlighting, the prompt row by row as
-rline redraws it, and `describe` with the output of `metacmd/describe`. The
-session `line-editing` could never end, because the old script pressed Enter on an
-open entry and Ctrl-U to throw it away, which rline keeps as rows, so `\q` was
-typed into the entry and the session ran to its limit of 30 seconds. It now types
-a finished statement, corrects it with Backspace, goes to the start of the line
-with Ctrl-A, adds a statement there, and Enter runs both, in 2.8 seconds.
+Done on 2026-10-11 at the maintainer's request, after the CI job "Terminal
+sessions" failed on `4a11b57` on Ubuntu and macOS. All nine sessions of
+`testdata/cli` held the output of the old line editor and its highlighting, so
+each failed on the first line (rline writes `\e[m` before the banner, and draws
+the prompt in green). They are recorded again, and the diff was read: no color
+of highlighting, the prompt row by row as rline redraws it, and `describe` with
+the output of `metacmd/describe`. The session `line-editing` could never end,
+because the old script pressed Enter on an open entry and Ctrl-U to throw it
+away, which rline keeps as rows, so `\q` was typed into the entry and the
+session ran to its limit of 30 seconds. It now types a finished statement,
+corrects it with Backspace, goes to the start of the line with Ctrl-A, adds a
+statement there, and Enter runs both, in 2.8 seconds.
 
 
 ## W60. Make the two SQLite drivers and MySQL print the same
 
-Source: Ken, on 2026-10-11. usql compared go-sqlite3 (`sqlite3`), modernc.org/sqlite
-(`moderncsqlite`) and MySQL 26.7 on one set of values: integers up to the largest
-int64, reals, decimals, text with accents and a tab, blobs, NULLs, timestamps with
-and without an offset, dates and booleans, under UTC and under
-America/Los_Angeles.
+Source: requested on 2026-10-11. usql compared go-sqlite3 (`sqlite3`),
+modernc.org/sqlite (`moderncsqlite`) and MySQL 26.7 on one set of values:
+integers up to the largest int64, reals, decimals, text with accents and a tab,
+blobs, NULLs, timestamps with and without an offset, dates and booleans, under
+UTC and under America/Los_Angeles.
 
 Same in both SQLite drivers: every integer, real, text, blob, NULL and timestamp,
 the declared types, the arithmetic, and the aggregates. What differed:
@@ -3121,29 +3158,31 @@ DECIMAL keeps its scale (`-5.00`, and left aligned as text) where SQLite stores
 `-5` as a number, `1.0` is a decimal in MySQL and an integer in SQLite, a JSON
 column is written with spaces, and `1/2` is `0.5000` in MySQL and `0` in SQLite.
 A DATE prints as a timestamp at midnight (`2026-10-10T00:00:00Z`) in all three,
-where psql prints `2026-10-10`: tblfmt or the driver formats it, and a date
-column should print as a date.
+where psql prints `2026-10-10`: tblfmt or the driver formats it, and the goal
+is that a date column prints as a date.
 
 
 ## W61. Move the settings of usql from \set to \uset: Done
 
-Done on 2026-10-11 at Ken's request. psql keeps its own settings and its script
-variables in one place, and usql diverges from it: the settings that usql adds
-(echo_hidden, editor, on_error_stop, pager, prompt1, prompt2, quiet,
-show_host_information, sslmode, syntax_hl, syntax_hl_format, syntax_hl_override_bg,
-syntax_hl_style and term_graphics) belong to `\uset`, and `\set` is for scripts.
+Done on 2026-10-11 at the maintainer's request. psql keeps its own settings and
+its script variables in one place, and usql diverges from it: the settings that
+usql adds (echo_hidden, editor, on_error_stop, pager, prompt1, prompt2, quiet,
+show_host_information, sslmode, syntax_hl, syntax_hl_format,
+syntax_hl_override_bg, syntax_hl_style and term_graphics) belong to `\uset`, and
+`\set` is for scripts.
 
-The names are lower case, as the names of `\pset` are and as Ken asked, and they
-are not the names of environment variables, which are upper case.
+The names are lower case, as the names of `\pset` are and as the maintainer
+asked, and they are not the names of environment variables, which are upper
+case.
 
-The name: Ken asked whether it should be `\uset` or `\eset`, then also named `\env`
-and `\config`. Gemini 3.1 Pro and DeepSeek V4 Pro both chose `\uset`: it follows
-`\pset` (print) and `\cset` (connection), it matches the flag `--uset`, and
-`\eset` and `\env` read like `\setenv`, which sets operating system environment
-variables. `\config` breaks the pattern and fills `\c<Tab>` with a second command.
-The models split on one point: Gemini advised against toggling a boolean when only
-the name is given, as `\pset` does. usql shows the setting, and does not toggle it,
-which Ken may change.
+The name: the maintainer asked whether to name it `\uset` or `\eset`, then also
+named `\env` and `\config`. Gemini 3.1 Pro and DeepSeek V4 Pro both chose
+`\uset`: it follows `\pset` (print) and `\cset` (connection), it matches the
+flag `--uset`, and `\eset` and `\env` read like `\setenv`, which sets operating
+system environment variables. `\config` breaks the pattern and fills `\c<Tab>`
+with a second command. The models split on one point: Gemini advised against
+toggling a boolean when only the name is given, as `\pset` does. usql shows the
+setting, and does not toggle it, which a maintainer can change.
 
 How it works: `\uset` with no arguments prints the settings as a table of names
 and values, as `\pset` does. `\uset NAME` shows one, and `\uset NAME VALUE` sets it
@@ -3160,10 +3199,10 @@ What a setting is not: it is not a variable, so `:pager` no longer interpolates.
 
 ## W62. A compatibility mode for the output of psql and of the old usql
 
-Source: Ken, on 2026-10-22, from the comparison of W63. When the overhaul of
-the input (rline, transit) is done, a setting of `\uset` turns on a strict
-compatibility mode, so that usql prints as psql does, or as the usql before
-this release did. The default stays as it is.
+Source: requested on 2026-10-22, from the comparison of W63. When the overhaul
+of the input (rline, transit) is done, a setting of `\uset` turns on a strict
+compatibility mode, so that usql prints as psql does, or as the usql before this
+release did. The default stays as it is.
 
 What the mode changes, from the comparison with psql 18.6:
 
@@ -3178,19 +3217,19 @@ What the mode changes, from the comparison with psql 18.6:
   stays in the zone of the session, so the two drivers differ today. For an old
   date, the zone has an offset with seconds, such as `+07:07:12`, and RFC 3339
   drops the seconds of the offset.
-- The aligned table: the encodings that wait on Ken in W63, such as the case of
-  the hexadecimal digits of an escape, if he takes them for the mode and not for
-  the default. The mode changes how a value is encoded and never the alignment.
-  psql counts each code point alone, so its columns break on an emoji, and usql
-  keeps its own alignment in the mode.
+- The aligned table: the encodings that wait on a maintainer in W63, such as the
+  case of the hexadecimal digits of an escape, if the maintainer takes them for
+  the mode and not for the default. The mode changes how a value is encoded and
+  never the alignment. psql counts each code point alone, so its columns break
+  on an emoji, and usql keeps its own alignment in the mode.
 
 CSV does not change in the mode. usql quotes every field that holds a space,
 and psql quotes a field only when it must. Both are valid CSV, and CSV is read by
-a program and not by a person, so Ken keeps the quoting of Go.
+a program and not by a person, so the maintainer keeps the quoting of Go.
 
 ## W63. Print every PostgreSQL type as psql prints it
 
-Source: Ken, on 2026-10-22. `internal/cmd/pgcompare` runs values of every
+Source: requested on 2026-10-22. `internal/cmd/pgcompare` runs values of every
 built-in type of PostgreSQL through psql and through usql with pgx and libpq,
 and compares the aligned, unaligned and CSV output. CONTRIBUTING.md says how to
 run it.
@@ -3218,13 +3257,13 @@ Open:
   through the line editor. With color off, as on a pipe, rline's
   `term.appendEsc` also drops an SGR escape sequence whole, so `a\x1b[31mb`
   prints as `ab`. It is a loss of data. The rule comes from isocline, and rline
-  keeps it on purpose (rline's D4). rline records it as its item 42, and Ken
-  decides the fix. usql does not work around it in the meantime.
+  keeps it on purpose (rline's D4). rline records it as its item 42, and a
+  maintainer decides the fix. usql does not work around it in the meantime.
 - bytea prints as raw bytes with both drivers. Pull request 596 fixes it with a
   `sql.Null` of a named type that prints in the hex format of psql.
 - lib/pq names an xid8 column with the empty string, so libpq cannot find it,
   and it stays aligned to the left.
-- The aligned table. Ken decides each of these:
+- The aligned table. A maintainer decides each of these:
   - usql pads the last column with a space where psql does not (tblfmt's D28).
   - usql escapes a character of zero width, such as U+200D, U+200B, U+FEFF and
     U+202E, as `\u200d`. psql prints it as it is. An emoji that joins people
@@ -3240,24 +3279,24 @@ Open:
   cell by code point, so an emoji broke the column. `👍🏽` (U+1F44D U+1F3FD)
   counted as 4 and a terminal draws it as 2. tblfmt now measures by grapheme
   cluster, and counts a narrow base with U+FE0F, such as `❤️` and `1️⃣`, as 2
-  (tblfmt's D39 and D41). psql has the same fault, and Ken wants the alignment
-  right and not as psql has it. The width that a terminal draws differs between
-  terminals: Ghostty, kitty, WezTerm and iTerm2 draw a cluster as one, and xterm
-  and some tmux setups count each code point.
-- pg_ndistinct, pg_dependencies, pg_mcv_list, the pg_brin types and gtsvector are
-  not compared, because PostgreSQL takes no literal of them.
+  (tblfmt's D39 and D41). psql has the same fault, and the maintainer wants the
+  alignment right and not as psql has it. The width that a terminal draws
+  differs between terminals: Ghostty, kitty, WezTerm and iTerm2 draw a cluster
+  as one, and xterm and some tmux setups count each code point.
+- pg_ndistinct, pg_dependencies, pg_mcv_list, the pg_brin types and gtsvector
+  are not compared, because PostgreSQL takes no literal of them.
 - JSON is not compared, because psql has no JSON output.
 
 ## W64. Page all output through usql's own pager
 
-Source: Ken, on 2026-10-28 and 2026-10-29. The pager did not work. tblfmt
+Source: requested on 2026-10-28 and 2026-10-29. The pager did not work. tblfmt
 started it with `exec.Command(pagerCmd)`, so `PAGER="less -S"` failed. Its
 output went through the line editor and not to the terminal, so less acted like
 cat. Only the aligned and unaligned formats paged, and the decision used one
 batch of rows. `\?` and `\drivers` paged with a helper of their own that
 ignored `\pset pager off` and the size of the terminal. Gemini Pro and DeepSeek
-Pro both said that paging does not belong in tblfmt, and Ken chose a package of
-usql.
+Pro both said that paging does not belong in tblfmt, and the maintainer chose a
+package of usql.
 
 Done in usql on 2026-10-29: the package `pager`, and every entry writes through
 `Handler.Stdout`. RELEASE.md lists what changed. tblfmt v0.20.0 removed its
@@ -3294,10 +3333,10 @@ which keeps each of these in one statement. It leaves `BEGIN; ...; END;`, a
 transaction, split. usql never turns it on. W58 records the same split for
 highlighting.
 
-Ken decided on 2026-11-01 that dbmeta records which dialects have such bodies,
-as `Info.Batches` records the batches of CQL. usql then sets `BeginEndBlocks`
-from it, as it sets `Batches`. usql keeps no list of
-dialects. The request went to dbmeta on 2026-11-01.
+The maintainer decided on 2026-11-01 that dbmeta records which dialects have
+such bodies, as `Info.Batches` records the batches of CQL. usql then sets
+`BeginEndBlocks` from it, as it sets `Batches`. usql keeps no list of dialects.
+The request went to dbmeta on 2026-11-01.
 
 Progress on 2026-11-01. dbmeta built the field `Syntax.BeginEndBlocks` (its
 D249), and held each model to a live server. It is not released. The field is
@@ -3326,45 +3365,45 @@ SQLite and fired both. Before, SQLite refused it with "incomplete input".
 
 Open:
 
-- An Oracle anonymous block, `BEGIN ... END` or `DECLARE ... BEGIN ... END`
-  with no `CREATE`, still splits with `BeginEndBlocks`. It is question 103 in
-  transit's docs/PLAN.md, and needs a separate option. Ken decided it on
-  2026-11-01 (transit's D128). The usql grammar gets the option
+- An Oracle anonymous block, `BEGIN ... END` or `DECLARE ... BEGIN ... END` with
+  no `CREATE`, still splits with `BeginEndBlocks`. It is question 103 in
+  transit's docs/PLAN.md, and needs a separate option. The maintainer decided it
+  on 2026-11-01 (transit's D128). The usql grammar gets the option
   `AnonymousBlocks`, for Oracle only. With it, a statement that starts with
   `BEGIN` or `DECLARE` ends at the `;` after its last `END`, or at a line that
   holds only `/`. usql takes it from a flag of dbmeta, as it takes
   `BeginEndBlocks`. The flag was asked of dbmeta on 2026-11-01. Both wait on
   their releases.
-- Firebird's `EXECUTE BLOCK ... AS ... BEGIN ... END` and SAP HANA's `DO
-  BEGIN ... END` still split, although `CREATE PROCEDURE` stays whole on both.
-  dbmeta measured both forms on live servers. The request went to transit on
+- Firebird's `EXECUTE BLOCK ... AS ... BEGIN ... END` and SAP HANA's `DO BEGIN
+  ... END` still split, although `CREATE PROCEDURE` stays whole on both. dbmeta
+  measured both forms on live servers. The request went to transit on
   2026-11-01: `BeginEndBlocks` treats both openers as it treats `CREATE ...
   PROCEDURE`. dbmeta already sets `BeginEndBlocks` for both dialects.
 - Progress on 2026-11-02. transit built both fixes, and will release them after
   its ClickHouse and Trino grammars. `AnonymousBlocks` is transit's D128 and
-  D131, and the openers `EXECUTE BLOCK` and `DO BEGIN` are its D130. dbmeta
-  adds `Syntax.AnonymousBlocks`, true for Oracle only. Then `feed.Language`
-  passes it, and `TestLanguageBeginEndBlocks` gains the three forms. dbmeta v0.24.0
-  has the field, measured on Oracle 19c, and usql takes it. Done on 2026-11-02
-  on transit v0.7.0: `feed.Language` passes `AnonymousBlocks`, and
+  D131, and the openers `EXECUTE BLOCK` and `DO BEGIN` are its D130. dbmeta adds
+  `Syntax.AnonymousBlocks`, true for Oracle only. Then `feed.Language` passes
+  it, and `TestLanguageBeginEndBlocks` gains the three forms. dbmeta v0.24.0 has
+  the field, measured on Oracle 19c, and usql takes it. Done on 2026-11-02 on
+  transit v0.7.0: `feed.Language` passes `AnonymousBlocks`, and
   `TestLanguageBeginEndBlocks` checks an Oracle block with `BEGIN` and with
-  `DECLARE`, Firebird's `EXECUTE BLOCK`, SAP HANA's `DO BEGIN` and Trino's
-  `WITH FUNCTION`, and that SQL Server's `DECLARE @x int;` stays a statement
-  of its own. On Oracle 26ai a block and the select after it ran.
+  `DECLARE`, Firebird's `EXECUTE BLOCK`, SAP HANA's `DO BEGIN` and Trino's `WITH
+  FUNCTION`, and that SQL Server's `DECLARE @x int;` stays a statement of its
+  own. On Oracle 26ai a block and the select after it ran.
 - On Oracle, a line with only `/` after a block or a statement starts the next
   statement, so usql sends `/` and the statement after it, and Oracle answers
-  ORA-00900. `CREATE PROCEDURE ... END;` and `/` does the same. Ken decided it
-  on 2026-11-02 (transit's D135): with `AnonymousBlocks`, a `/` line after a
-  statement that ended with `;` is a node of its own that feed drops, and a
-  `/` line after a statement with no `;` ends it, outside its text. It waits
-  for the release of transit. Then feed drops the node, and the test gains the
-  `/` cases. Done on 2026-11-04 on transit v0.7.1: a statement whose last child
-  is the node `slash` is terminated, and its text stops before the `/`. A
-  `slash` between statements is skipped. Inside parentheses, a `/` line stays
-  in the statement (transit's D136). `TestLanguageOracleSlash` and
+  ORA-00900. `CREATE PROCEDURE ... END;` and `/` does the same. The maintainer
+  decided it on 2026-11-02 (transit's D135): with `AnonymousBlocks`, a `/` line
+  after a statement that ended with `;` is a node of its own that feed drops,
+  and a `/` line after a statement with no `;` ends it, outside its text. It
+  waits for the release of transit. Then feed drops the node, and the test gains
+  the `/` cases. Done on 2026-11-04 on transit v0.7.1: a statement whose last
+  child is the node `slash` is terminated, and its text stops before the `/`. A
+  `slash` between statements is skipped. Inside parentheses, a `/` line stays in
+  the statement (transit's D136). `TestLanguageOracleSlash` and
   `TestSourceMatchesParse` check it, and on Oracle 26ai a `DECLARE` block, a
-  `BEGIN` block and a select with no `;`, each ended by `/`, ran.
-  Reversed on 2026-11-04: Ken decided that usql works like psql, not like the
+  `BEGIN` block and a select with no `;`, each ended by `/`, ran. Reversed on
+  2026-11-04: the maintainer decided that usql works like psql, not like the
   client of each database, so a line with only `/` is statement text again
   (transit's D138, which replaces D135 and D136). Inside a package, or in the
   declarations of a unit before its `BEGIN`, a script writes each `;` as `\;`,
@@ -3372,17 +3411,20 @@ Open:
   transit v0.7.2: feed has no slash handling, `TestLanguageOracleSlash` checks
   that a `/` line stays in the text, and `TestOracleEscapedUnits` checks the
   units of dbmeta's `oracle-hr.sql` and a trigger that uses `:new`.
-- On ClickHouse, a `$tag$ ... $tag$` or `$$ ... $$` string can hold a `;`.
-  Done on 2026-11-02 on dbmeta v0.24.0, which sets `DollarQuotes` (its D251).
+- On ClickHouse, a `$tag$ ... $tag$` or `$$ ... $$` string can hold a `;`. Done
+  on 2026-11-02 on dbmeta v0.24.0, which sets `DollarQuotes` (its D251).
   `TestLanguageClickHouse` covers both forms.
 
-## W66. Drivers say themselves that the server refused the credential
+## W66. Drivers say themselves that the server refused the credential: Done
+
+Done on 2026-11-02. Each point under Open below is done, and no driver of usql
+has a hook for a wrong password.
 
 Update, 2026-11-05: Oracle, Cassandra and ODBC have no package under `drivers`
 now (W52). The tests named below that check the prompt, and the one of
 Avatica, are in `drivers/refused_test.go`.
 
-Source: Ken, on 2026-11-02. usql prompts for a password when the server
+Source: requested on 2026-11-02. usql prompts for a password when the server
 refuses the credential, and `drivers.IsPasswordErr` decides it. A dbimp driver
 matches `dbimp.ErrAuthentication`. Three drivers that xo keeps outside dbimp
 need a hook in usql each:
@@ -3393,11 +3435,11 @@ need a hook in usql each:
 - ODBC: usql reads the SQLSTATE of each record for class 28.
 
 Gemini Pro and DeepSeek were asked. Gemini Pro proposed a method on the error,
-and DeepSeek a sentinel error shared by every driver. Ken chose the method on
-2026-11-02. An error of a driver has the method `AuthenticationRefused() bool`,
-which is true when the server refused the credential and false for a refusal
-for lack of a permission. usql declares the interface, and a driver does not
-import usql or dbimp.
+and DeepSeek a sentinel error shared by every driver. The maintainer chose the
+method on 2026-11-02. An error of a driver has the method
+`AuthenticationRefused() bool`, which is true when the server refused the
+credential and false for a refusal for lack of a permission. usql declares the
+interface, and a driver does not import usql or dbimp.
 
 usql asks each error of the tree of the error, and not only the first one that
 has the method, as `errors.As` would. An error that returns false can come
@@ -3405,56 +3447,55 @@ before one that returns true, such as the first record of an ODBC diagnostic.
 
 Done in usql on 2026-11-02: `drivers.IsPasswordErr` asks the method, and
 `TestIsPasswordErrMethod` covers it. The requests went to the sessions of dbimp,
-oracle and odbc on 2026-11-02. No cassandra session was running, so Ken holds
-that request.
+oracle and odbc on 2026-11-02. No cassandra session was running, so the
+maintainer held that request.
 
 Open:
 
-- xo/oracle: the method on its errors. Staged in xo/oracle on 2026-11-02 and
-  not released: `*ServerError` is true for ORA-01017 and ORA-01005, and false
-  for ORA-01031, ORA-01045, ORA-28000, ORA-28001 and ORA-28041. The server
-  answers an empty password with ORA-01005, tested live on 26ai, 18c and 11g,
-  so the driver has no check of its own. The driver raises ORA-28041 itself
-  when it cannot read the logon data of the server, where a new password does
-  not help.
-  On 2026-11-02, at Ken's request, usql moved from sijms/go-ora to xo/oracle,
-  at a version with no release, and dropped the hooks `Err` and `ForceParams`
-  of the oracle driver. The output of every error checked on Oracle 26ai was
-  the same without `Err`. On 2026-11-02 Ken also dropped the hook
-  `IsPasswordErr`, so the driver registers with no hooks. Done on 2026-11-02 on
-  xo/oracle v0.1.0, and moved to v0.1.1 for its fix of a call after a
-  cancelled one, to v0.2.0 for its fix of a read of a LOB with an IS JSON
-  check, and to v0.3.0, which reports the length of a column. Both have the method and an `Error()` with no position
-  line. `drivers/oracle/oracle_test.go` checks the prompt, and on Oracle 26ai
-  usql prompted for the password of a URL that had none, and connected. dburl still names sijms/go-ora as the
-  package and the URL of the driver, which the README table and the `See:`
-  line follow. dburl staged the change on 2026-11-02 (its D69): the package and
-  the URL name xo/oracle, and a new `GenOracle` passes the URL as written,
-  with port 1521 when it has none. It waits for Ken's release of dburl, which
-  waits for a tag of xo/oracle. dburl v0.55.0 has it, and usql took it on
-  2026-11-02: the README table and the `See:` line name xo/oracle. xo/oracle also staged an `Error()` that returns the message of the
-  server alone, with no line " error occur at position: N" and no line feed at
-  the end, on 2026-11-02. `ErrPos()` keeps the position. The first tag of
-  xo/oracle must be v0 or v1, or its path becomes `/v3`, because v3.0.0 and
-  v3.0.1 are tags of sijms. Ken decides it. usql then moves from sijms/go-ora to
-  xo/oracle, which has no release of its own yet. Its v3.0.0 and v3.0.1 tags
-  are those of sijms, whose go.mod declares `github.com/sijms/go-ora`.
-- xo/cassandra: done on 2026-11-02 on xo/cassandra v0.2.0, whose module path
-  is `github.com/xo/cassandra`. Its errors have the method, from gocql's
+- xo/oracle: the method on its errors. Staged in xo/oracle on 2026-11-02 and not
+  released: `*ServerError` is true for ORA-01017 and ORA-01005, and false for
+  ORA-01031, ORA-01045, ORA-28000, ORA-28001 and ORA-28041. The server answers
+  an empty password with ORA-01005, tested live on 26ai, 18c and 11g, so the
+  driver has no check of its own. The driver raises ORA-28041 itself when it
+  cannot read the logon data of the server, where a new password does not help.
+  On 2026-11-02, at the maintainer's request, usql moved from sijms/go-ora to
+  xo/oracle, at a version with no release, and dropped the hooks `Err` and
+  `ForceParams` of the oracle driver. The output of every error checked on
+  Oracle 26ai was the same without `Err`. On 2026-11-02 the maintainer also
+  dropped the hook `IsPasswordErr`, so the driver registers with no hooks. Done
+  on 2026-11-02 on xo/oracle v0.1.0, and moved to v0.1.1 for its fix of a call
+  after a cancelled one, to v0.2.0 for its fix of a read of a LOB with an IS
+  JSON check, and to v0.3.0, which reports the length of a column. Both have the
+  method and an `Error()` with no position line. `drivers/oracle/oracle_test.go`
+  checks the prompt, and on Oracle 26ai usql prompted for the password of a URL
+  that had none, and connected. dburl still names sijms/go-ora as the package
+  and the URL of the driver, which the README table and the `See:` line follow.
+  dburl staged the change on 2026-11-02 (its D69): the package and the URL name
+  xo/oracle, and a new `GenOracle` passes the URL as written, with port 1521
+  when it has none. It waited for a release of dburl, which waited for a tag of
+  xo/oracle. dburl v0.55.0 has it, and usql took it on 2026-11-02: the README
+  table and the `See:` line name xo/oracle. xo/oracle also staged an `Error()`
+  that returns the message of the server alone, with no line " error occur at
+  position: N" and no line feed at the end, on 2026-11-02. `ErrPos()` keeps the
+  position. The first tag of xo/oracle had to be v0 or v1, or its path became
+  `/v3`, because v3.0.0 and v3.0.1 are tags of sijms, whose go.mod declares
+  `github.com/sijms/go-ora`. The first tag is v0.1.0, and usql is on v0.4.1 now.
+- xo/cassandra: done on 2026-11-02 on xo/cassandra v0.2.0, whose module path is
+  `github.com/xo/cassandra`. Its errors have the method, from gocql's
   `*RequestErrCredentials` or, when gocql loses the type while it creates the
   session, from the text "password are incorrect". usql registers the driver
-  with no hooks, and `drivers/cassandra/cassandra_test.go` checks the prompt.
-  On Cassandra 5.0.9, a URL with a user and no password failed with "Password
-  must not be null" and gave no prompt, which the old hook missed too.
-  xo/cassandra v0.2.1 counts it, and "authentication required (using" too. On
-  Cassandra 5.0.9 on 2026-11-02, usql prompted for a missing and for a wrong
-  password, and connected with the right one. usql fills a missing password from
+  with no hooks, and `drivers/cassandra/cassandra_test.go` checks the prompt. On
+  Cassandra 5.0.9, a URL with a user and no password failed with "Password must
+  not be null" and gave no prompt, which the old hook missed too. xo/cassandra
+  v0.2.1 counts it, and "authentication required (using" too. On Cassandra 5.0.9
+  on 2026-11-02, usql prompted for a missing and for a wrong password, and
+  connected with the right one. usql fills a missing password from
   `~/.usqlpass`, so a test of it sets `USQLPASS` to an empty file.
-- xo/odbc: done on 2026-11-02. xo/odbc v0.2.0 has the method on `*Error`
-  (its D025). It is true for class 28 in any record, and for state 08001 with
-  libpq's text of a failed password, because psqlODBC sends a wrong password
-  as 08001 and never as 28P01. It is false for a locked or expired login that
-  the native code tells apart. usql registers the driver with no hooks, and
+- xo/odbc: done on 2026-11-02. xo/odbc v0.2.0 has the method on `*Error` (its
+  D025). It is true for class 28 in any record, and for state 08001 with libpq's
+  text of a failed password, because psqlODBC sends a wrong password as 08001
+  and never as 28P01. It is false for a locked or expired login that the native
+  code tells apart. usql registers the driver with no hooks, and
   `drivers/odbc/odbc_test.go` checks the prompt.
 - dbimp: done on 2026-11-02. dbimp v0.24.0 has the method on `dbimp.Error`,
   `*dbimp.StatusError` and the error of each driver (its D227), and usql no
@@ -3464,14 +3505,13 @@ Open:
 
 ## W67. Run a session on one connection: Done
 
-Source: Ken, on 2026-11-02, while Northwind was loaded into SQL Server for the
-describe commands. `SET IDENTITY_INSERT ... ON` did not hold until the next
-statement, so every insert with an identity value failed. The session ID
-stayed the same, but go-mssqldb resets the state of a connection each time
-database/sql takes it back into its pool. usql ran each statement on the
-pool, `*sql.DB`, since its first version in 2017, so a `SET`, a temporary
-table or a variable of the session held only by chance, and never on SQL
-Server.
+Source: requested on 2026-11-02, while Northwind was loaded into SQL Server for
+the describe commands. `SET IDENTITY_INSERT ... ON` did not hold until the next
+statement, so every insert with an identity value failed. The session ID stayed
+the same, but go-mssqldb resets the state of a connection each time database/sql
+takes it back into its pool. usql ran each statement on the pool, `*sql.DB`,
+since its first version in 2017, so a `SET`, a temporary table or a variable of
+the session held only by chance, and never on SQL Server.
 
 Done on 2026-11-03. The handler takes one connection of the pool for the
 session, `drivers.Session`, as psql runs a session on one connection. Each
@@ -3493,7 +3533,7 @@ on a new connection, with the notice.
 
 ## W68. Read a large statement in about the time of its size: Done
 
-Source: Ken, on 2026-11-02. A file with an `INSERT` of 830 rows in one
+Source: requested on 2026-11-02. A file with an `INSERT` of 830 rows in one
 statement, 158 KiB, made usql run out of memory at more than 4 GB in
 `feed.statement`. `feed.Source` parsed the whole text again after each line it
 read until the statement ended, and built every item each time. Adding each
@@ -3519,39 +3559,39 @@ Open:
 
 ## W69. Reconnect with part of the current connection
 
-Source: GitHub 203, and Ken on 2026-11-04. psql's `\c dbname [user] [host]
-[port]` keeps the fields of the current connection that are not given, and
-`-reuse-previous` says whether it does. In usql, `\c northwind` says
-"invalid database scheme", because `\c` takes one argument as a URL and two
-or more as a driver and its DSN. Ken decided against copying psql's form, and
-the design is open. Changing the fields of a URL is dburl's work (hard rule 2).
-Discussion: https://github.com/xo/usql/discussions/598
+Source: GitHub 203, and the maintainer on 2026-11-04. psql's `\c dbname [user]
+[host] [port]` keeps the fields of the current connection that are not given,
+and `-reuse-previous` says whether it does. In usql, `\c northwind` says
+"invalid database scheme", because `\c` takes one argument as a URL and two or
+more as a driver and its DSN. The maintainer decided against copying psql's
+form, and the design is open. Changing the fields of a URL is dburl's work (hard
+rule 2). Discussion: https://github.com/xo/usql/discussions/598
 
 ## W70. A man page
 
-Source: pull request 521, and Ken on 2026-11-04. usql will ship a man page,
-but not now. The page in the pull request was written by hand and already
+Source: pull request 521, and the maintainer on 2026-11-04. usql will ship a man
+page, but not now. The page in the pull request was written by hand and already
 lacks `-U` and `-M`. Generate it from the cobra definitions of the flags, as
 `gen.go` generates the README tables, and do not commit a file under `man/`
 (hard rule 11).
 
 ## W71. Copy a large CSV file
 
-Source: GitHub 322, and Ken on 2026-11-04. usql streams `\copy`, but a CSV
-file read through the csvq driver is held in memory, 623 MB for a file of
-55 MB. Ken decided against a CSV source inside `\copy` for now. The way to
-read a large file is open. Discussion, with the batches of W29:
+Source: GitHub 322, and the maintainer on 2026-11-04. usql streams `\copy`, but
+a CSV file read through the csvq driver is held in memory, 623 MB for a file of
+55 MB. The maintainer decided against a CSV source inside `\copy` for now. The
+way to read a large file is open. Discussion, with the batches of W29:
 https://github.com/xo/usql/discussions/597
 
 ## W72. Move the statement classification to dbmeta: Done
 
-Source: Ken, on 2026-11-04, and GitHub 540. `drivers/qtype.go` decides from
-the first words of a statement whether it returns rows, so an `INSERT`,
+Source: GitHub 540, and the maintainer on 2026-11-04. `drivers/qtype.go` decides
+from the first words of a statement whether it returns rows, so an `INSERT`,
 `UPDATE` or `DELETE` with `RETURNING`, and SQL Server's `OUTPUT`, print only
-their command tag. dbmeta takes the classification over, per dialect, and
-looks past the first words with its own lexer. A bare `SET` on Impala and Hive,
-which lists the settings, is one of its cases (pull request 573). Asked of
-dbmeta on 2026-11-04. Then usql removes `qtype.go` and calls dbmeta.
+their command tag. dbmeta takes the classification over, per dialect, and looks
+past the first words with its own lexer. A bare `SET` on Impala and Hive, which
+lists the settings, is one of its cases (pull request 573). Asked of dbmeta on
+2026-11-04. Then usql removes `qtype.go` and calls dbmeta.
 
 Done on 2026-11-04 on dbmeta v0.31.0 (its D264). `drivers.Process` calls
 `Dialect.Classify` with the whole statement, and `qtype.go` and the prefix
@@ -3574,7 +3614,7 @@ master`.
 
 ## W74. Open databases in Kubernetes through dbfwd: Done
 
-Source: Ken. A URL such as `k+cnpg://pg.prod/app` opens a
+Source: the maintainer. A URL such as `k+cnpg://pg.prod/app` opens a
 database in Kubernetes. dbfwd finds the database and its credentials and runs
 `kubectl port-forward`. dburl parses the scheme (hard rule 2), and dbfwd holds
 the operators and the lookup.
@@ -3589,12 +3629,12 @@ every build. Checked against PostgreSQL 18 in a kind cluster from dbrun.
 
 Open:
 
-- No build tag leaves the `k8s` backend out. Ken decided on 2026-11-08 that
-  it gets none. It adds about 273 KiB to a stripped build, and it needs
-  nothing but the standard library and dburl.
+- No build tag leaves the `k8s` backend out. The maintainer decided on
+  2026-11-08 that it gets none. It adds about 273 KiB to a stripped build, and
+  it needs nothing but the standard library and dburl.
 - On macOS, Windows and the other BSDs, `kubectl` keeps running after usql is
-  killed with `SIGKILL`. dbfwd v0.1.1 stops it with its parent only on Linux
-  and FreeBSD (dbfwd's D17), because only they have `Pdeathsig`.
+  killed with `SIGKILL`. dbfwd v0.1.1 stops it with its parent only on Linux and
+  FreeBSD (dbfwd's D17), because only they have `Pdeathsig`.
 
 ## W75. Renew an expiring credential of a forward
 
@@ -3608,13 +3648,14 @@ usql uses such a backend, it opens the pool with `sql.OpenDB` and a
 
 ## W76. List the databases in Kubernetes: Done
 
-Source: Ken, on 2026-11-08. A meta command lists the databases that dbfwd can
-reach in a cluster, as the `\d` commands list, with the URL that `\c` opens.
-dbfwd lists them (its D18), and builds the URL of a listing from the scope
-and the options with `ListURL`, so that usql holds no parsing of the scope
-(hard rule 2).
+Source: requested on 2026-11-08. A meta command lists the databases that dbfwd
+can reach in a cluster, as the `\d` commands list, with the URL that `\c` opens.
+dbfwd lists them (its D18), and builds the URL of a listing from the scope and
+the options with `ListURL`, so that usql holds no parsing of the scope (hard
+rule 2).
 
-Ken decided the design on 2026-11-08, after dbfwd and the flagship models:
+The maintainer decided the design on 2026-11-08, after dbfwd and the flagship
+models:
 
 - The name is `\k`, for Kubernetes only. A later backend of dbfwd gets a
   command of its own.
@@ -3636,10 +3677,11 @@ cluster from dbrun.
 
 ## W77. Dump a database, and copy between connections
 
-Source: Ken, on 2026-11-08. Not designed yet, and nothing is built until Ken
-approves a design.
+Source: requested on 2026-11-08. At first nothing was to be built until a
+maintainer approved a design. Step 3 records the design that the maintainer
+decided, and step 4 records what is built.
 
-Ken asked for:
+The maintainer asked for:
 
 - `--dump`, with the short form `-D`, on the command line, which dumps the
   connected database as pg_dump does, but always as a usql script.
@@ -3658,67 +3700,180 @@ Ken asked for:
 The steps, in order:
 
 1. dbmeta proposes its side. Asked on 2026-11-08, and written the same day in
-   dbmeta's `docs/DUMP.md`: a package `dbmeta/dump` that reads a snapshot of
-   the schema and builds statements in pg_dump's three stages, a neutral type
-   model, literals and INSERT builders for each target, and a statement of
-   what each product can dump. It needs Ken to amend dbmeta's D5, D56 and
+   dbmeta's `docs/DUMP.md`: a package `dbmeta/dump` that reads a snapshot of the
+   schema and builds statements in pg_dump's three stages, a neutral type model,
+   literals and INSERT builders for each target, and a statement of what each
+   product can dump. It needed the maintainer to amend dbmeta's D5, D56 and
    D273, because dbmeta would build DDL and INSERT text.
-2. The flagship models review the whole design. Done on 2026-11-08 with
-   Astra, Gemini and DeepSeek. They agree that `\dump` writes text only,
-   to a file or to stdout, and that loading into a live connection is the
-   job of `\copy`. They also agree on multi-row INSERT with column names,
-   `ON_ERROR_STOP` and `\restrict` in the script, failing on a type with no
-   equivalent, and views and routines for the same family only. They
-   differ on whether `tinyint(1)` is a boolean, on `--clean` in the first
-   phase, and on whether `\copy` commits once or after each batch. Astra
-   adds that SQLite cannot add a foreign key after the table exists, that
-   a dropped collation changes comparisons, and that a dump should check
-   everything before it writes, then write the file whole.
-3. Ken decides the design. Ken decided dbmeta's side on 2026-11-08, as
-   dbmeta's D274: dbmeta builds statements and runs nothing, in a package
-   `dump` of its root module. The first targets are PostgreSQL, SQLite,
-   DuckDB and MySQL, then SQL Server and Oracle. There is no translation of
-   SQL in dbmeta or usql: views, functions, procedures and triggers come out
-   as the source's text, marked as not translated, and usql warns or stops
-   when the target is another dialect. A type with no equivalent fails
-   unless a flag allows a fallback. usql answered dbmeta on the fallbacks the
-   same day: three levels, Exact, Lossy and Text, chosen for all columns or
-   for one column, and a plan that reports every column's mapping before the
-   first statement is written.
+2. The flagship models review the whole design. Done on 2026-11-08 with Astra,
+   Gemini and DeepSeek. They agree that `\dump` writes text only, to a file or
+   to stdout, and that loading into a live connection is the job of `\copy`.
+   They also agree on multi-row INSERT with column names, `ON_ERROR_STOP` and
+   `\restrict` in the script, failing on a type with no equivalent, and views
+   and routines for the same family only. They differ on whether `tinyint(1)` is
+   a boolean, on `--clean` in the first phase, and on whether `\copy` commits
+   once or after each batch. Astra adds that SQLite cannot add a foreign key
+   after the table exists, that a dropped collation changes comparisons, and
+   that a dump checks everything before it writes, then write the file whole.
+3. A maintainer decides the design. The maintainer decided dbmeta's side on
+   2026-11-08, as dbmeta's D274: dbmeta builds statements and runs nothing, in a
+   package `dump` of its root module. The first targets are PostgreSQL, SQLite,
+   DuckDB and MySQL, then SQL Server and Oracle. There is no translation of SQL
+   in dbmeta or usql: views, functions, procedures and triggers come out as the
+   source's text, marked as not translated, and usql warns or stops when the
+   target is another dialect. A type with no equivalent fails unless a flag
+   allows a fallback. usql answered dbmeta on the fallbacks the same day: three
+   levels, Exact, Lossy and Text, chosen for all columns or for one column, and
+   a plan that reports every column's mapping before the first statement is
+   written.
 
-   Ken decided usql's side on 2026-11-08:
+   The maintainer decided usql's side on 2026-11-08:
 
    - Three phases. Phase 1 is a dump to the same dialect, for PostgreSQL,
-     SQLite, MySQL and DuckDB, with `-schema-only`, `-data-only`, filters
-     for tables and schemas, and one read transaction where the database
-     has a consistent snapshot. Phase 2 is the new `\copy`, on the same
-     builders. Phase 3 is `-target` to another of the four. SQL Server,
-     Oracle, `-clean` and faster bulk loading come later.
+     SQLite, MySQL and DuckDB, with `-schema-only`, `-data-only`, filters for
+     tables and schemas, and one read transaction where the database has a
+     consistent snapshot. Phase 2 is the new `\copy`, on the same builders.
+     Phase 3 is `-target` to another of the four. SQL Server, Oracle, `-clean`
+     and faster bulk loading come later.
    - dbmeta knows the conventional idioms of schema design, such as MySQL's
-     `TINYINT(1)` and `BIT(1)` for a boolean, and their idiomatic Go type,
-     and translates them on export. The display of query results in usql
-     does not change because of it, apart from cases decided before, such
-     as recognizing a UUID.
+     `TINYINT(1)` and `BIT(1)` for a boolean, and their idiomatic Go type, and
+     translates them on export. The display of query results in usql does not
+     change because of it, apart from cases decided before, such as recognizing
+     a UUID.
    - `\copy` commits after each batch.
-   - On the command line, the dump's filters are long options only, and
-     hidden, because psql's output options already use `-t`, `-T` and `-N`.
-     `-D` is free.
-   - Ken asked that a schema can also be written in an intermediate format,
-     as dbtpl writes YAML. dbmeta's snapshot of the schema is that format:
-     its json names define it, it has a version, it holds the schema only
-     and no plan, and its order is stable. usql proposed `\dump -format
+   - On the command line, the dump's filters are long options only, and hidden,
+     because psql's output options already use `-t`, `-T` and `-N`. `-D` is
+     free.
+   - The maintainer asked that a schema can also be written in an intermediate
+     format, as dbtpl writes YAML. dbmeta's snapshot of the schema is that
+     format: its json names define it, it has a version, it holds the schema
+     only and no plan, and its order is stable. usql proposed `\dump -format
      sql|json|yaml`, with `sql` as the default and the encoders in usql, and
      reading a file back as the source of a schema-only dump in phase 3.
-     dbmeta's `docs/DUMP.md` holds the rules. Ken has not decided usql's
-     options for it.
+     dbmeta's `docs/DUMP.md` holds the rules. usql's options for it wait for a
+     maintainer.
 
 W29, the SQL of `\copy` in dbmeta, and W71, a large CSV file, overlap with the
 new `\copy`, and are decided with it.
 
+4. Built on 2026-11-08, on dbmeta v0.37.0, which holds the `dump` package. The
+   maintainer asked for the plumbing and the tests from the command line,
+   because the meta command is not designed yet. There is no `\dump`.
+
+   - The package `dump` of usql reads the schema with dbmeta, reads the rows
+     a table at a time, and writes a usql script. The script starts with
+     `\uset on_error_stop on` and a `\restrict` line, and ends with
+     `\unrestrict`. Each statement has a comment with its name, its kind
+     and its stage, as pg_dump writes. A statement that is not translated
+     for another dialect is written as a comment, and usql warns.
+   - `handler.Dump` reads in one transaction: read only and repeatable read
+     where the driver takes it, and the open transaction when there is one.
+   - `--dump` and `-D` on the command line write to standard output, or to
+     the file of `-o`. A file is written to a temporary file in the same
+     directory and renamed when the dump is complete, so a failed dump leaves
+     the old file. The file can be read by its owner only. `--dump` runs no
+     init.sql, and refuses `-c`, `-f` and `-1`.
+   - The hidden long options are `--target`, `--schema-only`, `--data-only`,
+     `--schema`, `--exclude-schema`, `--table`, `--exclude-table`,
+     `--allow-lossy`, `--allow-text` and `--restrict-key`. No variable and no
+     configuration file sets them. The names follow pg_dump. Step 6 kept
+     them.
+   - The tests are `TestDumpEmbedded`, `TestDump` and `TestDumpCLI`.
+     CONTRIBUTING.md describes them. On 2026-11-08 they passed against
+     postgres-17, mariadb-13.0 and mysql-26.7, with the comparison against
+     pg_dump 18.6 and against the mysqldump of MariaDB 13.0.
+
+   Reported to dbmeta on 2026-11-08, and worked around in the fixtures or
+   the tests, each with a note that names the report:
+
+   - A `time` of PostgreSQL reads as the year 0, and the loader refuses it.
+   - The loader has no literal for NaN or an infinity in PostgreSQL.
+   - The reader of PostgreSQL lists each sequence as skipped, and the dump
+     writes it all the same, so usql prints a false warning.
+   - A sequence is set to the largest value of the column that owns it, and
+     a sequence that no column owns keeps its start value. pg_dump writes
+     the last value of the sequence.
+   - The reader of MySQL takes each database of the server as a schema, so a
+     dump with no `--schema` reads every database that the user can see.
+     dbmeta has no fact that says that a schema of a product is a database.
+   - A view of MySQL keeps the name of its database, so a copy reads the
+     tables of the source.
+   - dburl gives MySQL `loc=Local`, the session is in the zone of the server,
+     and the script sets no `time_zone`, so a `TIMESTAMP` moves when the two
+     zones differ.
+   - The check of json_valid on a JSON column of MariaDB comes back as a
+     table constraint named after the column.
+   - A unique index of SQLite is written as an unnamed `UNIQUE` inside
+     CREATE TABLE, and the copy lists it in another place.
+   - An array of PostgreSQL is written in its text form for DuckDB.
+   - An index of a DuckDB VARCHAR is written for a MySQL TEXT with no key
+     length, which MySQL refuses and MariaDB takes.
+   - SQLite loses `AUTOINCREMENT` and the CHECK constraints of a table.
+   - A check, such as SQLite's `PRAGMA foreign_key_check`, prints its rows,
+     and the script does not stop on them. usql has no way in a script to
+     stop when a query returns a row.
+
+   Left for a maintainer: the names of the options, the meta command `\dump`,
+   the format option of the snapshot, and phase 2, the new `\copy`.
+
+5. Updated on 2026-11-09, on dbmeta v0.39.0. usql runs the statements of
+   `Loader.SourceSession()` on the transaction of the dump before it reads
+   the first table. MySQL sets the zone of the session to UTC with them.
+   `TestDump` passed against postgres-18 with pg_dump 18, mysql-26.7 and
+   mariadb-13.0 with its mysqldump.
+
+   These findings are fixed, and their workarounds are gone:
+
+   - The `time` of PostgreSQL, and NaN and the infinities. The fixture holds
+     them again. NaN and the infinities are in the table `app.floats`, which
+     a dump to SQLite leaves out, because SQLite cannot hold them.
+   - The false warnings for the sequences of PostgreSQL.
+   - A MySQL dump with no `--schema` reads the database of the connection
+     only.
+   - A view of MySQL no longer names its database.
+   - The index of a DuckDB VARCHAR on MySQL.
+
+   These are left, and were reported to dbmeta again on 2026-11-09:
+
+   - A MySQL `TIMESTAMP` still moves when the client is not in UTC. The
+     session is in UTC, but dburl gives the driver `loc=Local`, so the driver
+     reads the clock of the session as local time, and the loader moves it
+     to UTC. The test sets `time.Local` to UTC.
+   - The check of json_valid on a JSON column of MariaDB is no longer a
+     table constraint, but the copy has no check at all.
+
+   The SQLite unique index, `AUTOINCREMENT` and checks, the arrays of
+   PostgreSQL for DuckDB, the value of a sequence that no column owns, and a
+   check that returns rows are still open in dbmeta's backlog.
+
+6. Built on 2026-11-09: the meta command `\dump`, which the maintainer agreed
+   to the same day. It answers the names of the options and the meta command,
+   which step 4 left for a maintainer.
+
+   - The options keep the names of pg_dump. They are one table, `dump.Flags`
+     in `dump/flags.go`. `run.go` registers each one as a hidden `--NAME`,
+     and `\dump` reads each one as `-NAME`, or `--NAME`. A new option in the
+     table reaches both. `TestDumpHelpNamesEveryOption` fails when the help
+     of `\dump` does not name an option of the table.
+   - `\dump [OPTIONS] [FILE]` writes to the output, which `\o` can redirect,
+     to a file, or to a command after `|`, as `\o` does. A lone `-` is the
+     output. Its arguments are read as those of any meta command, so `:name`
+     is expanded and a backtick runs.
+   - A file goes through `dump.WriteFile`, which `--dump -o` uses too: it is
+     written whole or not at all, and only its owner can read it.
+   - A failed `\dump` reports the error, and the session goes on. Inside a
+     transaction that `\begin` started, it reads in that transaction, so it
+     includes the changes that are not committed yet.
+   - `TestDumpCLI` checks that `\dump` writes the same script as `--dump`
+     with the same options, to the output, to a file and to a command.
+
+   Still left for a maintainer: the format option of the snapshot, and phase
+   2, the new `\copy`.
+
 ## W78. SQL*Plus's slash line on Oracle
 
-Source: found on 2026-11-08, while checking `\errverbose` on Oracle 21c. Ken
-asked for this item.
+Source: found on 2026-11-08, while checking `\errverbose` on Oracle 21c. The
+maintainer asked for this item.
 
 A SQL*Plus script ends a PL/SQL block with a line that holds only `/`:
 
@@ -3740,3 +3895,228 @@ grammar of transit or dbmeta's syntax of the dialect owns the rule, and how
 the block ends today. Database knowledge belongs to them and not to usql, so
 the fix is asked of the owner.
 
+## W79. A COPY FROM STDIN in a script
+
+Source: found on 2026-11-08, while loading the output of pg_dump with usql
+for TestDump.
+
+pg_dump writes the rows of a table as `COPY ... FROM stdin;`, followed by the
+rows and a line that holds only `\.`. psql reads those lines from the script
+as the data of the COPY. usql run with `-f` on such a file does not finish,
+and has to be stopped. So usql cannot load the plain output of pg_dump, and
+TestDump loads it with psql. Not investigated yet: whether usql sends the
+statement and waits on its own standard input, and where the data lines go.
+
+## W80. One configuration model: config.yaml, `\config` and `-O`: Done
+
+Source: the maintainer asked for this plan on 2026-11-09, and answered its
+questions the same day. It was built on 2026-11-09, and D6 records the model.
+One question is still open in [PLAN.md](PLAN.md): how an alias takes arguments.
+Until a maintainer answers it, an alias takes none, and an argument is an error.
+
+### How it was built
+
+- `env/config.go` holds the sections, `SetConfig`, `SetOption` for the
+  command line, `DumpConfig`, the environment of the commands, and the loader
+  of `config.yaml`, which reads the YAML tree of goccy/go-yaml so that a value
+  keeps the text it is written with.
+- `\config` is in `metacmd/cmds.go`. With no arguments it shows only the
+  sections `usql` and `print`, and `-all` shows every section, as the
+  maintainer asked on 2026-11-09. Step 4 below said every section but the
+  connections and the aliases.
+- `\? variables` lists the settings by their names, as psql does, and names
+  the section of each group, as the maintainer asked on 2026-11-09. Step 10
+  below said full names.
+- `\pset`, `\uset`, `\set` and `\cset`
+  show their sections as before, by the names without the section, as the
+  maintainer asked on 2026-11-09. Only `\config` shows full names. `\setenv` and
+  `\getenv` use the section `env`.
+- The handler runs an alias as it runs the text of `-c`, with a limit of 16
+  aliases inside each other. A statement that the alias leaves in the query
+  buffer stays there, so an alias can add to a query.
+- `run.go` keeps every option of the command line that sets a setting in one
+  list, in the order given. So `-O` and `-v`, `-U`, `-N` and `-P` apply
+  together, in their order, and not `-O` first as step 3 below said.
+- `ROW_COUNT` was set only after a statement that returns no rows. It is now
+  set after every query and after `\gset`, as psql sets it.
+
+### What the maintainer asked for
+
+1. `config.yaml` has the sections `usql`, `print`, `aliases`, `env` and
+   `connections`. `usql` holds the settings of `\uset`, `print` the
+   settings of `\pset`, and `connections` the named connections of `\cset`.
+2. A new meta command `\config` sets any setting by its full name, as in
+   `\config usql.quiet on`. The command line option `--option`, with the
+   short form `-O`, does the same, as in `-O usql.quiet=on`. `\cset`,
+   `\pset`, `\uset` and `\set` become aliases of `\config`.
+3. `\config` with no arguments shows every setting in one table, as `\pset`
+   does now, with the section in front of each name, as in `print.border`.
+   It leaves out the connections. `\config -all` shows them too, and
+   `\config connections` shows only them.
+4. Loading `config.yaml` prints nothing. Its settings apply before the other
+   sources, by the usual rules of precedence.
+5. The settings of `env` are added to the environment of each program that
+   usql starts.
+6. `aliases` names commands of the user. Only `config.yaml` sets them.
+
+### How it works today
+
+This section describes usql before the change, as the plan found it.
+
+- `run.go` reads `config.yaml` with viper. It takes `connections`,
+  `charts_path` and `init`, which only prints a warning. viper also sets any
+  command line option whose name is a key at the top of the file, and
+  `USQL_<OPTION>` from the environment.
+- `env.Variables` in `env/vars.go` keeps four maps: `vars` (`\set`), `uset`
+  (`\uset`), `prnt` (`\pset`) and `conn` (`\cset`). Each has its own setter
+  and its own checks: `Set`, `SetSetting`, `SetPrint` and `SetConn`.
+- `NewDefaultVars` reads `PAGER`, `EDITOR`, `NO_COLOR`, `USQL_PAGER`,
+  `USQL_EDITOR`, `USQL_SSLMODE` and `USQL_SHOW_HOST_INFORMATION`.
+- `Run` applies the sources in this order: the connections of
+  `config.yaml`, then `-v`, `-U`, `-N` and `-P` with the options that imply
+  them, such as `-x` and `-q`, then `init.sql`.
+- `-O` is free. `-U` is `--uset`, `-N` is `--cset`, `-P` is `--pset` and `-v`
+  is `--set`.
+- `\!`, a backtick, `\g |cmd`, `\o |cmd`, the pager and the editor start
+  their programs in `env/env.go` (`Shell`, `Exec`, `Pipe` and `EditFile`).
+  Each takes the environment of the usql process.
+
+### The plan
+
+1. Names. Each setting has the name `SECTION.NAME`. A section is one of
+   `usql`, `print`, `vars`, `charts`, `env`, `connections` and `aliases`.
+   `vars` holds the script variables of `\set`. `charts` holds the settings
+   of `\chart`, which start with `charts.path`, the setting `charts_path` of
+   today. More settings of charts come later. A package `env` registry maps each section to the setter of
+   today, so that the checks and the messages of `\pset` and `\uset` stay.
+   An empty value keeps the meaning it has today in each section. For
+   example, `\pset expanded` with no value still switches expanded mode.
+2. The file. usql reads `config.yaml` with `github.com/goccy/go-yaml` and
+   not with viper. cobra and viper stay for the command line until
+   `github.com/xo/ox` can replace them. On 2026-11-09, ox had no release,
+   no way to fill an option from `USQL_*` variables, no annotations of an
+   option, no completion of hidden options, and no usage text as a string.
+   Reading the file with goccy/go-yaml in usql does not depend on ox. viper turns every key into lower case, and the names of
+   `env`, `vars` and `aliases` must keep their case. viper stays for the
+   command line options. Each value goes through the same setter as
+   `\config`, with its messages turned off. An error names the file, the
+   key and the reason, on standard error, and usql goes on. No
+   confirmation, such as "Border style is 2.", is printed.
+3. Precedence, from the first applied to the last, so that the last wins:
+   1. The defaults of usql, including `PAGER`, `EDITOR` and `NO_COLOR`.
+   2. `config.yaml`.
+   3. The `USQL_*` environment variables, such as `USQL_PAGER`.
+   4. The command line: `-O`, then `-v`, `-U`, `-N`, `-P`, and the options
+      that imply a setting, such as `-x` and `-q`, in the order given.
+   5. `init.sql`.
+   6. What the session sets.
+4. `\config`, in the Settings section of `\?`:
+   - `\config` shows every setting but the connections and the aliases, as
+     one table of names and values.
+   - `\config -all` adds the connections and the aliases.
+   - `\config SECTION` shows one section, as in `\config print`.
+   - `\config NAME` shows one setting, and `\config NAME VALUE` sets it.
+   - `\config aliases.NAME VALUE` fails, because only `config.yaml` sets an
+     alias.
+   - Nothing that `\config` sets is saved to the file.
+5. The aliases. `\pset NAME VALUE` runs `\config print.NAME VALUE`, and
+   `\pset` alone runs `\config print`. `\uset` maps to `usql`, `\cset` to
+   `connections` and `\set` to `vars`. `\unset NAME` removes `vars.NAME`.
+   `\setenv NAME VALUE` runs `\config env.NAME VALUE`.
+   The old aliases of `\pset`, such as `\x` and `\a`, keep their meaning.
+6. `-O NAME=VALUE`, or `--option`, can be given many times. `-P`, `-U`,
+   `-N` and `-v` stay as short forms that add the section.
+7. `env`. One function in `env/env.go` builds the environment of a child
+   program: the environment of usql, with the settings of `env` added.
+   `Shell`, `Exec`, `Pipe`, `EditFile` and the pager use it. The settings
+   of `env` do not change the environment of usql itself, so
+   `env.USQL_PAGER` does not set the pager. `\setenv` sets `env` too, so it
+   no longer changes the environment of usql.
+8. `aliases`. An alias is a meta command of the user: with
+   `do_something: '\set FOO bar'`, the input `\do_something` runs
+   `\set FOO bar`. An alias cannot take the name of a command of usql. The
+   handler looks it up only when no command has the name. The text of an
+   alias can be a meta command, SQL, or several lines. `\? commands` lists
+   the aliases under a section of their own.
+9. Passwords. `\config -all` and `\config connections` hide the password
+   of a connection URL, as `\conninfo` does, and `-password` shows it.
+10. Help. `\? variables` lists the settings by their full names. The README
+   section Configuration, `_samples/config.yaml` and `docs/RELEASE.md`
+   describe the new file. A decision records the model.
+11. Tests:
+    - The loader keeps the case of names, prints nothing, and reports a bad
+      key.
+    - Precedence: one setting set by each source in turn.
+    - `\config` and each alias of it, and the old forms of `\pset`.
+    - `-O`, and the refusal of `-O aliases.NAME=VALUE`.
+    - An alias, and an alias that takes the name of a command.
+    - A setting of `env` seen by `\!` and by a backtick.
+
+### What it changes for a user
+
+- A `config.yaml` that sets a command line option at the top of the file, such
+  as `quiet: true`, is no longer read. An unknown key at the top of the file
+  gets a warning that names the section where it belongs.
+- `charts_path` moves to `charts.path`.
+- `\set` with no arguments shows the variables as before, as `FOO = 'bar'`. The
+  maintainer changed this on 2026-11-09: only `\config` shows full names.
+- `\setenv` no longer changes the environment of usql, only that of the programs
+  it starts.
+
+## W81. Add psql's `xheader_width` print setting: Done
+
+Source: requested on 2026-11-09.
+
+psql 16 added `\pset xheader_width`. It limits the width of the header line
+of a record in expanded output. usql has no such setting, and
+`\pset xheader_width column` fails with "unknown option: xheader_width".
+With the default, `full`, usql already writes the header line as psql 18.6
+does, for border 0, 1 and 2.
+
+psql 18.6 takes these values:
+
+- `full`, the default: the header line is as wide as the widest line of the
+  record.
+- `column`: the header line ends with the label, `-[ RECORD 1 ]`. With
+  border 2, the top line is `+-[ RECORD 1 ]` and the bottom line ends after
+  the first column, as `+---+`. With border 0, the label `* Record 1` is not
+  padded with spaces.
+- `page`: the header line is as wide as the terminal, or as `\pset columns`
+  when it is set. With neither, it is `full`.
+- A number: the header line is that many characters wide, but never shorter
+  than the label and never wider than with `full`. With border 2, the bottom
+  line is cut to the same width. psql accepts a negative number, shows it,
+  and treats it as `full`. It refuses 0 and any other word with `\pset:
+  allowed xheader_width values are "full" (default), "column", "page", or a
+  number specifying the exact width`.
+
+`\pset xheader_width VALUE` writes `Expanded header width is "full".` for a
+word and `Expanded header width is 20.` for a number. `\pset` lists the
+setting as `xheader_width`.
+
+Steps:
+
+1. tblfmt writes the header line by the width. The tblfmt session staged it
+   on 2026-11-09, and it waits for a release that a maintainer approves.
+   - `FromMap` reads `xheader_width` for the aligned and wrapped formats.
+   - It reads the value as psql 18 does: `full`, `column` and `page` in any
+     case, or else the number that the value starts with, as `atoi` in C
+     reads it. A negative number is `full`.
+   - For 0, an empty value or a value with no number, the encoder returns
+     `ErrInvalidExpandedHeaderWidth`.
+   - It also applies when `expanded=auto` switches a table to expanded
+     output.
+   - tblfmt's `TestPsql` compares each value with psql 18.6, for borders 0 to
+     2, both line styles, the wrapped format and `tuples_only`.
+2. Once tblfmt has a release with it, usql adds `xheader_width` to the print
+   settings in `env/vars.go`, with the checks and the messages of psql, and
+   passes it to tblfmt. The check reads the value as tblfmt does, so that
+   `\pset xheader_width 20abc` is 20, as in psql.
+3. A test of the handler compares each value with the recordings of psql.
+
+Done on 2026-11-09, on tblfmt v0.24.0. `xheader_width` is a print setting
+with the default `full`. `env.XheaderWidth` reads a value as tblfmt and psql
+read it, and keeps the word in lower case or the number. `\pset
+xheader_width` writes psql's messages, and Tab after it offers `full`,
+`column` and `page`. `TestXheaderWidth` compares the output of each value
+with the recordings of psql 18.6 above, for borders 0, 1 and 2.

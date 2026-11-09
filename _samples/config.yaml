@@ -1,5 +1,33 @@
 ---
-# named connections
+# Each section holds the settings of one kind. \config shows and sets any of
+# them by its full name, as in \config print.border 2, and -O sets it on the
+# command line, as in -O print.border=2.
+
+# the settings of usql (\uset)
+usql:
+  on_error_stop: off
+  syntax_hl_style: onedark
+
+# the display formatting settings (\pset)
+print:
+  border: 1
+  null: ""
+
+# the script variables (\set)
+vars:
+  SCHEMA: public
+
+# the settings of \chart. charts.path is relative to the directory of this
+# file.
+charts:
+  path: charts
+
+# variables added to the environment of the commands that usql runs, such as
+# the pager, the editor and \! (\setenv)
+env:
+  PGAPPNAME: usql
+
+# named connections (\cset)
 connections:
   my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
   my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
@@ -34,5 +62,10 @@ connections:
     host: localhost
     opts:
       opt1: "😀"
-# charts path
-charts_path: charts
+
+# meta commands of the user: \tables runs \dt+. Only this file sets an alias.
+aliases:
+  tables: '\dt+'
+  hello: |
+    \echo hello
+    \echo from usql

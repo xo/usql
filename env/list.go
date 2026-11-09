@@ -14,26 +14,11 @@ import (
 	"github.com/yookoala/realpath"
 )
 
-// Listing writes a formatted listing of the special environment variables to
-// w, separated in sections based on variable type.
+// Listing writes the settings of the configuration to w, by their full
+// names, one section at a time, and then the variables of the environment.
 func Listing(w io.Writer) error {
-	varsWithDesc := make([]string, len(varNames))
-	for i, v := range varNames {
-		varsWithDesc[i] = v.String()
-	}
-	settingsWithDesc := make([]string, len(settingNames))
-	for i, v := range settingNames {
-		settingsWithDesc[i] = v.String()
-	}
-	pvarsWithDesc := make([]string, len(pvarNames))
-	for i, v := range pvarNames {
-		pvarsWithDesc[i] = v.String()
-	}
-
 	// determine config dir name
 	configDir, configExtra := buildConfigDir("config.yaml")
-
-	// environment var names
 	configDesc := configDir
 	if configExtra != "" {
 		configDesc = configExtra
@@ -44,11 +29,6 @@ func Listing(w io.Writer) error {
 			fmt.Sprintf(`config file path (default %q)`, configDesc),
 		},
 	}
-	envVarsWithDesc := make([]string, len(envVarNames)+1)
-	for i, v := range append(ev, envVarNames...) {
-		envVarsWithDesc[i] = v.String()
-	}
-
 	if configExtra != "" {
 		configExtra = " (" + configExtra + ")"
 	}
@@ -56,14 +36,25 @@ func Listing(w io.Writer) error {
 		w,
 		variableTpl,
 		text.CommandName,
-		strings.TrimRightFunc(strings.Join(varsWithDesc, ""), unicode.IsSpace),
-		strings.TrimRightFunc(strings.Join(pvarsWithDesc, ""), unicode.IsSpace),
-		strings.TrimRightFunc(strings.Join(envVarsWithDesc, ""), unicode.IsSpace),
 		configDir,
 		configExtra,
-		strings.TrimRightFunc(strings.Join(settingsWithDesc, ""), unicode.IsSpace),
+		names(settingNames),
+		names(pvarNames),
+		names(varNames),
+		names(chartNames),
+		names(append(ev, envVarNames...)),
 	)
 	return nil
+}
+
+// names returns the names and the descriptions of a section, without the
+// section, as psql lists its variables.
+func names(v []varName) string {
+	var b strings.Builder
+	for _, n := range v {
+		b.WriteString(n.String())
+	}
+	return strings.TrimRightFunc(b.String(), unicode.IsSpace)
 }
 
 func buildConfigDir(configName string) (string, string) {
@@ -96,7 +87,15 @@ func (v varName) String() string {
 var varNames = []varName{
 	{
 		`ROW_COUNT`,
-		`number of rows returned or affected by last query, or 0`,
+		`number of rows returned or affected by the last query, or 0 if it failed`,
+	},
+}
+
+// chartNames are the settings of \chart.
+var chartNames = []varName{
+	{
+		`path`,
+		`directory of the chart files, relative to the directory of the configuration file (default "charts")`,
 	},
 }
 
@@ -275,6 +274,10 @@ var pvarNames = []varName{
 		`unicode_header_linestyle`,
 		`set the style of Unicode line drawing [single, double]`,
 	},
+	{
+		`xheader_width`,
+		`maximum width of the header of a record in expanded output [full, column, page, N] (default full)`,
+	},
 }
 
 var envVarNames = []varName{
@@ -311,49 +314,68 @@ var envVarNames = []varName{
 		`when set to 'retry', allows connections to attempt to reconnect when no ?sslmode= was specified on the url`,
 	},
 	{
-		`TERM_GRAPHICS`,
+		text.CommandUpper() + `_TERM_GRAPHICS, TERM_GRAPHICS`,
 		`use the specified terminal graphics`,
 	},
 	{
-		`SHELL`,
-		`shell used by the \! command`,
+		text.CommandUpper() + `_SHELL, SHELL`,
+		`shell that runs the \! command, a backtick, \g |command, \o |command, the pager and the editor`,
 	},
 }
 
 const variableTpl = `List of specially treated variables
 
-%s script variables, for scripts and queries:
+Each setting belongs to a section. \config and -O name a setting as
+SECTION.NAME, as in print.border. The configuration file holds each section
+as a map of names and values:
+  %[2]s%[3]s
+
+%[1]s script variables (section vars):
 Usage:
   %[1]s --set=NAME=VALUE
   or \set NAME VALUE inside %[1]s
 
-%[2]s
+%[6]s
 
-Settings of %[1]s:
+Settings of %[1]s (section usql):
 Usage:
   %[1]s --uset=NAME=VALUE
   or \uset NAME VALUE inside %[1]s
 
-%[7]s
+%[4]s
 
-Display settings:
+Display settings (section print):
 Usage:
   %[1]s --pset=NAME[=VALUE]
   or \pset NAME [VALUE] inside %[1]s
 
-%[3]s
+%[5]s
+
+Chart settings (section charts):
+Usage:
+  %[1]s --option=charts.NAME=VALUE
+  or \config charts.NAME VALUE inside %[1]s
+
+%[7]s
+
+Environment of the commands that %[1]s runs, such as \!, the pager and the editor (section env):
+Usage:
+  %[1]s --option=env.NAME=VALUE
+  or \setenv NAME [VALUE] inside %[1]s
+
+Named connections (section connections):
+Usage:
+  %[1]s --cset=NAME=DSN
+  or \cset NAME [DSN] inside %[1]s
+  or \cset NAME DRIVER PARAMS... inside %[1]s
+
+Aliases, the meta commands of the user (section aliases):
+Usage:
+  NAME: TEXT under aliases: in %[2]s, which \NAME runs
 
 Environment variables:
 Usage:
   NAME=VALUE [NAME=VALUE] %[1]s ...
-  or \setenv NAME [VALUE] inside %[1]s
 
-%[4]s
-
-Connection variables:
-Usage:
-  %[1]s --cset NAME[=DSN]
-  or \cset NAME [DSN] inside %[1]s
-  or \cset NAME DRIVER PARAMS... inside %[1]s
-  or define in %[5]s%[6]s
+%[8]s
 `

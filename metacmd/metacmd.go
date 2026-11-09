@@ -19,6 +19,7 @@ import (
 	"github.com/xo/dburl"
 	"github.com/xo/rline"
 	"github.com/xo/usql/drivers"
+	"github.com/xo/usql/dump"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/feed"
 	"github.com/xo/usql/metacmd/describe"
@@ -102,10 +103,18 @@ type Handler interface {
 	Formatter(context.Context) (*describe.Formatter, error)
 	// Print formats according to a format specifier and writes to handler's standard output.
 	Print(string, ...interface{})
+	// Dump writes the database of the connection as a script.
+	Dump(context.Context, io.Writer, dump.Options) error
 	// Highlight returns SQL in color for the terminal, when the input is
 	// highlighted and the output goes to the terminal, and as it is
 	// otherwise.
 	Highlight(string) string
+}
+
+// notes are the lines that follow the name of a section in the help, as in
+// psql.
+var notes = map[string]string{
+	"Informational": "(options: S = show system objects, x = expanded mode, + = additional detail)",
 }
 
 // Dump writes the command descriptions to w, separated by section.
@@ -123,10 +132,23 @@ func Dump(w io.Writer, hidden bool) error {
 			fmt.Fprintln(w)
 		}
 		fmt.Fprintln(w, s)
+		if note, ok := notes[s]; ok {
+			fmt.Fprintln(w, "  "+note)
+		}
 		for _, desc := range descs[i] {
 			if (!desc.Hidden && !desc.Deprecated) || hidden {
 				_, _ = fmt.Fprintf(w, "  \\%- *s  %s\n", n, desc.Name+" "+desc.Params, wrap(desc.Desc, 95, n+5))
 			}
+		}
+	}
+	// the aliases of the configuration file follow, with the text that
+	// each one runs
+	if names := env.Vars().AliasNames(); hidden && len(names) != 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Aliases")
+		for _, name := range names {
+			body, _ := env.Vars().Alias(name)
+			_, _ = fmt.Fprintf(w, "  \\%- *s  %s\n", n, name, wrap(fmt.Sprintf(text.AliasRuns, env.Quote(body)), 95, n+5))
 		}
 	}
 	return nil
@@ -156,6 +178,49 @@ func Decode(it feed.Item) (func(Handler) (Option, []string, error), error) {
 		err := f(p)
 		return p.Option, p.Unread(), err
 	}, nil
+}
+
+// Styles writes the names of the syntax highlighting styles to w, in columns
+// that read down, as ls lists files, and then the style in use.
+func Styles(w io.Writer, names []string, current string) error {
+	width := 0
+	for _, name := range names {
+		width = max(width, runewidth.StringWidth(name))
+	}
+	width += 2
+	cols := max(1, (95-2)/width)
+	rows := (len(names) + cols - 1) / cols
+	if _, err := fmt.Fprintln(w, text.StylesTitle); err != nil {
+		return err
+	}
+	for r := range rows {
+		var b strings.Builder
+		b.WriteString("  ")
+		for c := range cols {
+			i := c*rows + r
+			if i >= len(names) {
+				break
+			}
+			b.WriteString(names[i])
+			if c != cols-1 && i+rows < len(names) {
+				b.WriteString(strings.Repeat(" ", width-runewidth.StringWidth(names[i])))
+			}
+		}
+		if _, err := fmt.Fprintln(w, b.String()); err != nil {
+			return err
+		}
+	}
+	_, err := fmt.Fprintf(w, "\n"+text.StylesCurrent+"\n", current, text.CommandName)
+	return err
+}
+
+// Has reports whether a meta command has the name, as Decode finds it.
+func Has(name string) bool {
+	_, ok := cmds[name]
+	if !ok {
+		_, ok = cmds[relations(name)]
+	}
+	return ok
 }
 
 // relations returns name with the class letters of \d in the order that
@@ -313,6 +378,40 @@ func (p *Params) NextOpt(exec bool) (string, bool, error) {
 		return v[1:], true, nil
 	}
 	return v, false, nil
+}
+
+// RawOpt reads the option -raw, which \e, \p and \w take before their other
+// arguments, and returns true when it is there. It leaves any other argument
+// unread, and fails on any other option.
+func (p *Params) RawOpt() (bool, error) {
+	opts, err := p.flags("raw")
+	return opts["raw"], err
+}
+
+// flags reads the options that come before the other arguments, such as -all,
+// and returns the ones that were given. It leaves the first argument that is
+// not an option unread, and fails on an option that is not one of names.
+func (p *Params) flags(names ...string) (map[string]bool, error) {
+	opts := make(map[string]bool)
+	for {
+		next := p.next
+		a, ok := p.arg()
+		if !ok {
+			return opts, nil
+		}
+		v, err := p.value(a, false, false)
+		switch {
+		case err != nil:
+			return nil, err
+		case len(v) > 1 && v[0] == '-' && slices.Contains(names, v[1:]):
+			opts[v[1:]] = true
+			continue
+		case len(v) > 1 && v[0] == '-':
+			return nil, fmt.Errorf(text.InvalidOption, v[1:])
+		}
+		p.next = next
+		return opts, nil
+	}
 }
 
 // All returns the values of the arguments that are left.
@@ -583,7 +682,7 @@ func wrap(s string, width, prefixWidth int) string {
 	for _, word := range words[1:] {
 		if left < len(word)+1 {
 			wrapped += "\n" + prefix + word
-			left = width - len(word)
+			left = width - prefixWidth - len(word)
 		} else {
 			wrapped += " " + word
 			left -= 1 + len(word)

@@ -4,8 +4,9 @@ Every decision this project made is a file in this folder, one per decision,
 named by its number and its title. This table is the index. Find the number
 here, then open the file.
 
-Each file opens with its status. "Decided" means Ken chose it. "Proposed"
-means an agent or a peer session suggested it and Ken has not confirmed it.
+Each file opens with its status. "Decided" means a maintainer chose it.
+"Proposed" means an agent or a peer session suggested it and no maintainer has
+confirmed it.
 "Open" means nobody has chosen yet. A decision that changes an earlier one
 says so in its status, as "Amends D1", and the earlier one says it back, as
 "Amended by D3". Read the status before the decision.
@@ -24,3 +25,4 @@ reference to one of theirs names the repository, as in "dburl's D22".
 | [D3](D003-no-metadata-reader-is-written-in-usql.md) | No metadata reader is written in usql | Decided |
 | [D4](D004-usql-reads-all-metadata-from-dbmeta-at-once.md) | usql reads all metadata from dbmeta, at once | Decided |
 | [D5](D005-a-driver-field-that-describes-the-database-moves-to-dbmeta.md) | A driver field that describes the database moves to dbmeta | Decided |
+| [D6](D006-every-setting-has-a-section-and-one-way-to-set-it.md) | Every setting has a section, and one way to set it | Decided |

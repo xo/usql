@@ -2,8 +2,8 @@
 
 Status: Decided.
 
-Ken decided on 2026-09-27 that a large project keeps each decision in a file
-of its own, because a markdown file many thousands of lines long is not
+The maintainer decided on 2026-09-27 that a large project keeps each decision
+in a file of its own, because a markdown file many thousands of lines long is not
 readable. dbmeta records it as its D111, and names usql among the large
 projects.
 

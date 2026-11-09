@@ -78,6 +78,11 @@ type Handler struct {
 	timing bool
 	// singleLineMode is single line mode.
 	singleLineMode bool
+	// aliasDepth is the number of aliases that are running, one inside the
+	// other.
+	aliasDepth int
+	// quit is set when \q ran inside an alias, so that the handler stops.
+	quit bool
 	// buf is psql's query buffer.
 	buf feed.Buffer
 	// cond is the stack of \if blocks of src. A branch that does not run
@@ -225,7 +230,6 @@ func (h *Handler) SetTiming(timing bool) {
 // Run reads the input, and runs each statement and meta command in turn, until
 // the input ends.
 func (h *Handler) Run() error {
-	stderr := h.l.Stderr()
 	// display welcome info
 	if h.iactive && env.Setting("quiet") == "off" {
 		// logo
@@ -238,6 +242,13 @@ func (h *Handler) Run() error {
 		fmt.Fprintln(h.l, text.WelcomeDesc)
 		fmt.Fprintln(h.l)
 	}
+	return h.loop()
+}
+
+// loop reads the input, and runs each statement and meta command in turn,
+// until the input ends.
+func (h *Handler) loop() error {
+	stderr := h.l.Stderr()
 	// the output of the last entry goes to the pager or the terminal before
 	// the handler stops
 	defer h.endPage()
@@ -266,7 +277,9 @@ func (h *Handler) Run() error {
 			// input that is not typed, from -c, -f, a pipe or \i, sends what
 			// is left in the buffer at its end, as psql does, unless the
 			// input ends in a branch that does not run
-			if (h.singleLineMode || !h.iactive) && !h.buf.Empty() && h.cond.active() {
+			// The end of an alias sends nothing, so that an alias can
+			// add to the query buffer, as typed text does.
+			if (h.singleLineMode || !h.iactive) && h.aliasDepth == 0 && !h.buf.Empty() && h.cond.active() {
 				stop, err := h.send(h.Stdout(), stderr, metacmd.Option{})
 				if err != nil {
 					lastErr = err
@@ -317,6 +330,10 @@ func (h *Handler) Run() error {
 			case cont:
 				continue
 			case opt.Quit:
+				if h.aliasDepth != 0 {
+					h.quit = true
+					return nil
+				}
 				if h.out != nil {
 					h.out.Close()
 				}
@@ -390,6 +407,21 @@ func (h *Handler) apply(stdout, stderr io.Writer, it feed.Item) (metacmd.Option,
 		return metacmd.Option{}, true, WrapErr(cmd, text.ErrRestricted)
 	}
 	f, err := metacmd.Decode(it)
+	// an alias of the configuration file has a name that no command has
+	if body, ok := env.Vars().Alias(cmd); ok && errors.Is(err, text.ErrUnknownCommand) {
+		if !h.cond.active() {
+			if h.iactive {
+				fmt.Fprintf(stderr, text.CommandIgnoredUseEndIf+"\n", cmd)
+			}
+			return metacmd.Option{}, true, nil
+		}
+		err := h.runAlias(stderr, body, it)
+		if h.quit {
+			h.quit = false
+			return metacmd.Option{Quit: true}, false, err
+		}
+		return metacmd.Option{}, true, WrapErr(cmd, err)
+	}
 	if err != nil {
 		switch err = WrapErr(cmd, err); {
 		case errors.Is(err, text.ErrUnknownCommand):
@@ -553,17 +585,46 @@ func (h *Handler) Lookup(name string) (string, bool) {
 // RunCommand runs the text of -c, as its own input. A statement left in the
 // buffer at the end of the text is sent.
 func (h *Handler) RunCommand(text string) error {
-	// the text has \if blocks of its own, as a file has
+	single := h.singleLineMode
+	h.singleLineMode = true
+	defer func() { h.singleLineMode = single }()
+	return h.runText(text)
+}
+
+// maxAliasDepth is the number of aliases that can run one inside the other.
+const maxAliasDepth = 16
+
+// runAlias runs the text of an alias, as its own input. It takes no
+// arguments, and a statement left in the buffer at its end stays there. Each
+// error is written out once, where it happens.
+func (h *Handler) runAlias(stderr io.Writer, body string, it feed.Item) error {
+	var err error
+	switch {
+	case len(it.Args) != 0:
+		err = text.ErrAliasArguments
+	case h.aliasDepth >= maxAliasDepth:
+		err = text.ErrAliasTooDeep
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, "error:", err)
+		return err
+	}
+	h.aliasDepth++
+	defer func() { h.aliasDepth-- }()
+	return h.runText(body)
+}
+
+// runText runs s as its own input, which has \if blocks of its own, as a
+// file has.
+func (h *Handler) runText(s string) error {
 	src, cond := h.src, h.cond
 	defer func() { h.src, h.cond = src, cond }()
 	h.cond = nil
 	var err error
-	if h.src, err = feed.NewSource(feed.NewLines(strings.NewReader(text)), drivers.Language(h.u), nil); err != nil {
+	if h.src, err = feed.NewSource(feed.NewLines(strings.NewReader(s)), drivers.Language(h.u), nil); err != nil {
 		return err
 	}
-	h.singleLineMode = true
-	defer func() { h.singleLineMode = false }()
-	return h.Run()
+	return h.loop()
 }
 
 // Bind sets the bind parameters for the next query execution.
@@ -1414,7 +1475,16 @@ func (h *Handler) doExecSingle(ctx context.Context, w io.Writer, opt metacmd.Opt
 }
 
 // doExecSet executes a SQL query, setting all returned columns as variables.
-func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, _ bool, bind []interface{}) error {
+func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option, prefix, sqlstr string, _ bool, bind []interface{}) (err error) {
+	// ROW_COUNT is the number of rows, or 0 when the query fails, as psql
+	// sets it
+	var i int
+	defer func() {
+		if err != nil {
+			i = 0
+		}
+		_ = env.Vars().Set("ROW_COUNT", strconv.Itoa(i))
+	}()
 	// query
 	rows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
 	if err != nil {
@@ -1427,7 +1497,6 @@ func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option
 		return err
 	}
 	// process row(s)
-	var i int
 	var row []string
 	clen, tfmt := len(cols), env.Vars().PrintTimeFormat()
 	for rows.Next() {
@@ -1439,7 +1508,13 @@ func (h *Handler) doExecSet(ctx context.Context, w io.Writer, opt metacmd.Option
 		}
 		i++
 	}
-	if i > 1 {
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	switch {
+	case i == 0:
+		return text.ErrNoRowsGset
+	case i > 1:
 		return text.ErrTooManyRows
 	}
 	// set vars
@@ -1475,14 +1550,25 @@ func (h *Handler) doExecExec(ctx context.Context, w io.Writer, _ metacmd.Option,
 	return nil
 }
 
-// doQuery executes a doQuery against the database.
-func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string, bind []interface{}) error {
+// doQuery executes a query against the database, and writes its result. It
+// sets ROW_COUNT to the number of rows of the last result set, or to 0 when the
+// query fails, as psql does.
+func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, typ, sqlstr string, bind []interface{}) (err error) {
 	// run query
-	rows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
+	sqlRows, err := h.DB().QueryContext(ctx, sqlstr, bind...)
 	if err != nil {
+		_ = env.Vars().Set("ROW_COUNT", "0")
 		return err
 	}
+	rows := &countedRows{Rows: sqlRows}
 	defer rows.Close()
+	defer func() {
+		n := rows.n
+		if err != nil {
+			n = 0
+		}
+		_ = env.Vars().Set("ROW_COUNT", strconv.FormatInt(n, 10))
+	}()
 	params := env.Vars().Print()
 	params["time"] = env.Vars().PrintTimeFormat()
 	for k, v := range opt.Params {
@@ -1570,6 +1656,31 @@ func (h *Handler) doQuery(ctx context.Context, w io.Writer, opt metacmd.Option, 
 		}
 	}
 	return err
+}
+
+// countedRows counts the rows that are read from the last result set, for
+// ROW_COUNT. It keeps the ColumnTypes method of sql.Rows, which tblfmt uses.
+type countedRows struct {
+	*sql.Rows
+	n int64
+}
+
+// Next satisfies the tblfmt.ResultSet interface.
+func (r *countedRows) Next() bool {
+	ok := r.Rows.Next()
+	if ok {
+		r.n++
+	}
+	return ok
+}
+
+// NextResultSet satisfies the tblfmt.ResultSet interface.
+func (r *countedRows) NextResultSet() bool {
+	ok := r.Rows.NextResultSet()
+	if ok {
+		r.n = 0
+	}
+	return ok
 }
 
 // doExecRows executes all the columns in the row.
@@ -1906,6 +2017,7 @@ func (h *Handler) pagerConfig() pager.Config {
 	return pager.Config{
 		Command:  command,
 		Shell:    []string{shell, param},
+		Env:      env.Vars().Environ(),
 		Always:   mode == "always",
 		Width:    width,
 		Height:   height,

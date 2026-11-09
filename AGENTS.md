@@ -8,7 +8,7 @@ below.
 
 These hold in every `xo` repository, for every coding agent (D1).
 
-1. Stage changes for review. Commit and push only when Ken says so.
+1. Stage changes for review. Commit and push only when a maintainer says so.
 2. Load the `simple-english` skill before you write any text that a person
    reads: a document, a code comment, an error message or a commit message.
    Follow it for that text.
@@ -31,7 +31,7 @@ every other agent read the same rules. Edit this file, not that one.
 | Measuring what each driver adds to the binary | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Moving metadata to dbmeta | [docs/DBMETA.md](docs/DBMETA.md) |
 | Planned work, and how to cite it | [docs/BACKLOG.md](docs/BACKLOG.md) |
-| The plan, and the questions open for Ken | [docs/PLAN.md](docs/PLAN.md) |
+| The plan, and the questions open for the maintainers | [docs/PLAN.md](docs/PLAN.md) |
 | Picking up the work in progress | [docs/PROGRESS.md](docs/PROGRESS.md) |
 | What changed for the next release, and what to check | [docs/RELEASE.md](docs/RELEASE.md) |
 | Why something is the way it is | [docs/decisions/README.md](docs/decisions/README.md) |
@@ -43,9 +43,10 @@ add a row for it or delete it.
 
 ## Hard rules
 
-1. Do not edit generated files. `internal/*.go`, the driver tables in
-   `README.md`, the blocks of `README.md` that have an `<!-- EXAMPLE name -->`
-   marker, and the bundled license files are all produced by `gen.go`.
+1. Do not edit generated files. `internal/*.go`, `metacmd/descs.go`, the
+   driver tables in `README.md`, the blocks of `README.md` that have an
+   `<!-- EXAMPLE name -->` marker, `LICENSE` and `text/license.go` are all
+   produced by `gen.go`.
    Change `gen.go` or the source it reads, such as
    `internal/readme/examples.go`, then regenerate.
 
@@ -98,10 +99,11 @@ add a row for it or delete it.
     use. usql publishes every alias in its README table, so an alias is
     advertised from the moment it exists, and removing one is a break.
 
-13. Do not write or change a metadata reader. All database metadata is moving
-    into `dbmeta`, and `metacmd/describe` takes no new reader and no fix. A
-    new driver registers no reader, so its describe commands report that they
-    are not supported. See D3.
+13. Do not write or change a metadata reader. All database metadata comes
+    from `dbmeta`, and `metacmd/describe` takes no new reader and no fix. A
+    new driver registers no reader. Its describe commands work when dbmeta
+    has a model for its database, and report that they are not supported
+    when it has none. See D3 and D4.
 
 ## Writing
 
@@ -109,20 +111,24 @@ Documentation and comments in this project are written in plain English.
 Short sentences, active voice, no semicolons, and no em dashes. State the fact
 rather than its importance.
 
+Do not name a maintainer in the documentation or in a comment. Write "the
+maintainer" for a decision that was made, with its date, and "a maintainer"
+for a rule or for something still to decide.
+
 Where a number in prose can be generated from something the code already
 knows, generate it. `gen.go` builds the README driver tables from dburl's
 registry for this reason: a generated table cannot go stale, because there is
 nothing for it to drift from.
 
-Where a number cannot be generated, a test should check it. Put the unit into
+Where a number cannot be generated, a test must check it. Put the unit into
 the sentence the test searches, so that changing the unit breaks the test.
 Every wrong figure found in this project so far was a right count of the wrong
 thing.
 
 ## Sibling repositories
 
-usql depends on several repositories in the same family. Changes often cross
-between them.
+usql belongs to a family of repositories, and requires most of them in
+`go.mod`. Changes often cross between them.
 
 | Repository | What it holds |
 | --- | --- |
@@ -136,6 +142,10 @@ between them.
 | `xo/odbc` | The ODBC driver |
 | `xo/dbtpl` | Code generation from database schemas |
 | `xo/dbfwd` | Forwards to databases in Kubernetes, which usql opens from a `k8s` URL |
+| `xo/oracle` | The Oracle driver |
+| `xo/echartsgoja` and `xo/resvg` | The chart renderer of `\chart`: ECharts in a JavaScript engine, and the rasterizer of its SVG |
+| `xo/terminfo` | The color depth of the terminal |
+| `xo/ox` | A command line parser, planned to replace cobra and viper (W80) |
 
 usql records its own decisions as `D1`, `D2` and so on, one file each in
 `docs/decisions/`. `dburl` and `dbmeta` number theirs the same way, so a

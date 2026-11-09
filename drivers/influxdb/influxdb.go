@@ -17,8 +17,8 @@
 // has no model, so an influxql:// connection has no describe commands.
 //
 // The version that usql shows is the release of InfluxDB, which Version below
-// reads from GET /ping, for both, because no statement names it. Ken decided
-// this on 2026-10-02 (dbmeta's D166). dbmeta's model reads the release of
+// reads from GET /ping, for both, because no statement names it. The maintainer
+// decided this on 2026-10-02 (dbmeta's D166). dbmeta's model reads the release of
 // Apache DataFusion, which it uses only to choose its statements.
 //
 // See: https://github.com/xo/dbimp

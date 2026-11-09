@@ -5,9 +5,9 @@
 commands.
 
 This file holds the direction of the project and the questions that are open
-for Ken. The work items are in [BACKLOG.md](BACKLOG.md), each with a `W`
-number. The decisions are in [decisions/](decisions/README.md), each with a
-`D` number.
+for the maintainers. The work items are in [BACKLOG.md](BACKLOG.md), each with
+a `W` number. The decisions are in [decisions/](decisions/README.md), each with
+a `D` number.
 
 ## Direction
 
@@ -35,4 +35,9 @@ number. The decisions are in [decisions/](decisions/README.md), each with a
 
 ## Open questions
 
-None are open for Ken.
+1. W80, the configuration model: does an alias take arguments, and how?
+   For example, the words after `\NAME` could be added to the end of its
+   text, or be read as `:1` and `:2`. The maintainer settled the other
+   questions of W80 on 2026-11-09, and W80 records the answers. W80 is built.
+   Until this question is answered, an alias that is given an argument fails
+   with "an alias takes no arguments".

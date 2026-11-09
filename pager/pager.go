@@ -32,6 +32,9 @@ type Config struct {
 	// Shell is the shell and its argument that run Command, such as
 	// {"sh", "-c"}.
 	Shell []string
+	// Env is the environment of the pager. When it is nil, the pager gets
+	// the environment of usql.
+	Env []string
 	// Always starts the pager for any output, as \pset pager always does.
 	Always bool
 	// Width and Height are the size of the terminal. Output that has a line
@@ -167,6 +170,7 @@ var errNoTerminal = errors.New("no terminal")
 func (w *Writer) start() error {
 	args := append(w.cfg.Shell[1:len(w.cfg.Shell):len(w.cfg.Shell)], w.cfg.Command)
 	cmd := exec.Command(w.cfg.Shell[0], args...)
+	cmd.Env = w.cfg.Env
 	stdin, err := cmd.StdinPipe()
 	if err == nil {
 		started, done := make(chan error, 1), make(chan error, 1)

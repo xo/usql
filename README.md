@@ -420,6 +420,8 @@ Flags:
   -o, --out FILE                            output file
   -W, --password[=true|false]               force password prompt (should happen automatically)
   -1, --single-transaction[=true|false]     execute as a single transaction (if non-interactive)
+  -D, --dump[=true|false]                   write the database as a usql script to standard output or to the file of -o, then exit
+  -O, --option NAME=VALUE                   set configuration option NAME (SECTION.NAME) to VALUE (see \config command)
   -v, --set NAME=VALUE                      set script variable NAME to VALUE (see \set command, aliases: --var --variable)
   -U, --uset NAME=VALUE                     set setting NAME of usql to VALUE (see \uset command)
   -N, --cset NAME=DSN                       set named connection NAME to DSN (see \cset command)
@@ -571,10 +573,10 @@ The URL holds no password. `dbfwd` reads it from the Secret of the operator or
 of the pod, so `-W` does not apply. The banner and `\conninfo` name what the
 forward reached, such as `Service pg-rw in context kind-prod, namespace prod,
 owned by CloudNativePG Cluster pg`, and the prompt shows the host from the URL,
-such as `pg`, in place of the local address and port. When the pod restarts, the forward follows it, and
-the first statement after that fails as it does after a server restart. When
-no pod runs for two minutes, the forward is lost, and `\c` with no argument
-starts it again.
+such as `pg`, in place of the local address and port. When the pod restarts,
+the forward follows it, and the first statement after that fails as it does
+after a server restart. When no pod runs for two minutes, the forward is lost,
+and `\c` with no argument starts it again.
 
 `\k` lists the databases that `usql` can reach, with the URL that `\c` opens:
 
@@ -776,34 +778,32 @@ Type "help" for help.
 (not connected)=> \?
 General
   \q                                quit usql
-  \restrict RESTRICT_KEY            enter restricted mode with provided key
-  \unrestrict RESTRICT_KEY          exit restricted mode if key matches
-  \errverbose                       show most recent error message at maximum verbosity
   \copyright                        show usage and distribution terms for usql
+  \errverbose                       show most recent error message at maximum verbosity
   \drivers                          show database drivers available to usql
 
 Help
-  \? [commands]                     show help on usql's meta (backslash) commands
+  \?                                show help on usql's meta (backslash) commands
+  \? commands                       as \?, but shows all command aliases
   \? options                        show help on usql command-line options
   \? variables                      show help on special usql variables
+  \? styles                         show usql syntax highlighting styles
 
 Connection
   \c DSN or \c NAME                 connect to dsn or named database connection
   \c DRIVER PARAMS...               connect to database with driver and parameters
-  \Z                                close (disconnect) database connection
-  \password [USER]                  change password for user
   \conninfo [-password]             display information about the current database connection,
                                     with the password when -password is given
-  \k[+] [OPTIONS] [SCOPE]           list databases in Kubernetes, with the URL for \c (OPTIONS:
-                                    -A, -n NAMESPACE, --context NAME)
+  \Z                                close (disconnect) database connection
+  \password [USER]                  change password for user
 
 Query Execute
   \g [(OPTIONS)] [FILE] or ;        execute query (and send results to file or |pipe)
   \G [(OPTIONS)] [FILE]             as \g, but forces vertical output mode
   \gx [(OPTIONS)] [FILE]            as \g, but forces expanded output mode
-  \gdesc                            describe result of query, without executing it
   \gexec                            execute query and execute each value of the result
   \gset [PREFIX]                    execute query and store results in usql variables
+  \gdesc                            describe result of query, without executing it
   \bind [PARAM]...                  set query parameters
   \timing [on|off]                  toggle timing of commands
 
@@ -813,19 +813,21 @@ Query View
   \watch [(OPTIONS)] [INTERVAL]     execute query every specified interval
 
 Query Buffer
-  \e [-raw|-exec] [FILE] [LINE]     edit the query buffer, raw (non-interpolated) buffer, the
-                                    exec buffer, or a file with external editor
-  \p [-raw|-exec]                   show the contents of the query buffer, the raw
-                                    (non-interpolated) buffer or the exec buffer
-  \w [-raw|-exec] FILE              write the contents of the query buffer, raw
-                                    (non-interpolated) buffer, or exec buffer to file
-  \r                                reset (clear) the query buffer
-  \history [COUNT]                  show the history, or its last COUNT entries
-  \s [FILE]                         display history or save it to file
+  \e [-raw] [FILE] [LINE]           edit the query buffer (or file) with external editor (-raw
+                                    for the non-interpolated buffer)
   \ef [FUNCNAME [LINE]]             edit function definition with external editor
   \ev [VIEWNAME [LINE]]             edit view definition with external editor
+  \p [-raw]                         show the contents of the query buffer (-raw for the
+                                    non-interpolated buffer)
+  \raw                              as \p, but forces raw mode
+  \w [-raw] FILE                    write the query buffer to file (-raw for the
+                                    non-interpolated buffer)
+  \r                                reset (clear) the query buffer
+  \s [FILE]                         display history or save it to file
+  \hist [COUNT]                     show the history, or its last COUNT entries
 
 Informational
+  (options: S = show system objects, x = expanded mode, + = additional detail)
   \d[Sx+] [NAME]                    list tables, views, and sequences or describe table, view,
                                     sequence, or index
   \da[Sx+] [PATTERN]                list aggregates
@@ -878,19 +880,20 @@ Informational
   \sf[+] FUNCNAME                   show a function's definition
   \sv[+] VIEWNAME                   show a view's definition
   \ss[+] TABLE [k]                  show stats for the columns of a table
+  \k[+] [OPTIONS] [SCOPE]           list databases in Kubernetes, with the URL for \c (OPTIONS:
+                                    -A, -n NAMESPACE, --context NAME)
 
-Variables
-  \set [NAME [VALUE]]               set script variable, or show all script variables if no
-                                    parameters
-  \uset [NAME [VALUE]]              set a setting of usql, show it if there is no value, or
-                                    show all settings if no parameters
-  \unset NAME                       unset (delete) script variable
+Settings
+  \config [OPTIONS] [NAME [VALUE]]  set configuration option NAME (SECTION.NAME), or show the
+                                    settings of usql and print if no parameters (OPTIONS: -all
+                                    shows every section, -password shows passwords)
   \pset [NAME [VALUE]]              set table print formatting option, or show all print
                                     formatting options if no parameters
+  \uset [NAME [VALUE]]              set usql configuration option, or show all usql settings if
+                                    no parameters
   \cset [NAME [URL]]                set named connection, or show all named connections if no
                                     parameters
   \cset NAME DRIVER PARAMS...       set named connection for driver and parameters
-  \prompt [-TYPE] VAR [PROMPT]      prompt user to set application variable
 
 Input/Output
   \echo [-n] [MESSAGE]...           write message to standard output (-n for no newline)
@@ -901,14 +904,25 @@ Input/Output
                                     destination database
   \copy SRC DST QUERY TABLE(A,...)  copy results of query from source database into table's
                                     columns on destination database
+  \dump [OPTIONS] [FILE]            write the database as a usql script to the output, a file
+                                    or |pipe (OPTIONS: -target DRIVER, -schema-only,
+                                    -data-only, -schema PATTERN, -exclude-schema PATTERN,
+                                    -table PATTERN, -exclude-table PATTERN, -allow-lossy,
+                                    -allow-text, -restrict-key KEY)
 
 Control/Conditional
+  \set [NAME [VALUE]]               set script variable, or show all script variables if no
+                                    parameters
+  \unset NAME                       unset (delete) script variable
+  \prompt [-TYPE] VAR [PROMPT]      prompt user to set script variable
   \i FILE                           execute commands from file
   \ir FILE                          as \i, but relative to location of current script
   \if EXPR                          begin conditional block
   \elif EXPR                        alternative within current conditional block
   \else                             final alternative within current conditional block
   \endif                            end conditional block
+  \restrict RESTRICT_KEY            enter restricted mode with provided key
+  \unrestrict RESTRICT_KEY          exit restricted mode if key matches
 
 Transaction
   \begin [-read-only [ISOLATION]]   begin transaction, with optional isolation level
@@ -919,7 +933,8 @@ Operating System/Environment
   \! [COMMAND]                      execute command in shell or start interactive shell
   \cd [DIR]                         change the current working directory
   \getenv VARNAME ENVVAR            fetch environment variable
-  \setenv NAME [VALUE]              set or unset environment variable
+  \setenv NAME [VALUE]              set or unset environment variable of the commands that usql
+                                    runs
 (not connected)=>
 ```
 
@@ -933,6 +948,7 @@ An overview of `usql`'s features, functionality, and compatibility with `psql`:
 - [Variables][variables]
 - [Backticks][backticks]
 - [Copying Between Databases][copying]
+- [Dumping a Database][dumping]
 - [Syntax Highlighting][highlighting]
 - [Time Formatting][timefmt]
 - [Context Completion][completion]
@@ -946,28 +962,74 @@ always appreciated][contributing]!
 
 #### Configuration
 
-During its initialization phase, `usql` reads a standard [YAML configuration][yaml]
-file [`config.yaml`](_samples/config.yaml). It reads the first of these:
+Every setting of `usql` has a name with a section in front of it, as in
+`print.border`. The sections are:
+
+| Section       | What it holds                                                          | Command    |
+| ------------- | ---------------------------------------------------------------------- | ---------- |
+| `usql`        | the [settings][settings] of `usql`, such as the pager and the prompts | `\uset`    |
+| `print`       | the [display formatting settings][print-vars]                          | `\pset`    |
+| `vars`        | the [script variables][runtime-vars]                                   | `\set`     |
+| `charts`      | the settings of `\chart`: `charts.path` names the directory of charts | `\config`  |
+| `env`         | variables of the environment of the commands that `usql` runs          | `\setenv`  |
+| `connections` | the [named connections][connection-vars]                               | `\cset`    |
+| `aliases`     | meta commands of the user, set only in `config.yaml`                   |            |
+
+The `\config` [meta command][commands] shows and sets any setting by its full
+name. Each command in the table sets only its own section. On the command
+line, `--option NAME=VALUE`, or `-O NAME=VALUE`, sets a setting by its full
+name. `-v`, `-U`, `-N` and `-P` set the sections `vars`,
+`usql`, `connections` and `print`.
+
+<!-- EXAMPLE config -->
+```sh
+(not connected)=> \config print.border 2
+Border style is 2.
+(not connected)=> \config print.border
+print.border 2
+(not connected)=> \config vars
+vars.FOO 'bar'
+(not connected)=>
+```
+
+`\config` with no arguments shows the sections `usql` and `print`.
+`\config -all` shows every section, and `\config SECTION` shows one
+section. The password of a connection URL shows as `xxxxx`, unless
+`-password` is given. Nothing that `\config` sets is saved.
+
+##### The `config.yaml` File
+
+`usql` reads its settings from a [YAML][yaml] file,
+[`config.yaml`](_samples/config.yaml), when it starts. It reads the first of
+these:
 
 1. The file that `--config` names.
 2. The file that the `USQL_CONFIG` environment variable names.
-3. `usql/config.yaml` in the configuration directory of the system:
-   `%AppData%/usql/config.yaml` on Windows,
+3. `usql/config.yaml`, or `usql/config.yml`, in the configuration directory of
+   the system: `%AppData%\usql\config.yaml` on Windows,
    `$HOME/Library/Application Support/usql/config.yaml` on macOS, and
    `$XDG_CONFIG_HOME/usql/config.yaml` on Linux and other Unix systems, which
    is `$HOME/.config/usql/config.yaml` when `XDG_CONFIG_HOME` is not set.
    macOS does not read `XDG_CONFIG_HOME`. Set `USQL_CONFIG` to use another
    file there.
 
-##### `connections:`
-
-[Named connection DSNs][connecting] can be defined under `connections:` as a string
-or as a map:
+Each section of the file is a map of names and values:
 
 ```yaml
+usql:
+  pager: less -S
+  on_error_stop: on
+print:
+  border: 2
+  null: (null)
+vars:
+  SCHEMA: public
+charts:
+  path: charts
+env:
+  PGAPPNAME: usql
 connections:
   my_couchbase_conn: couchbase://Administrator:P4ssw0rd@localhost
-  my_clickhouse_conn: clickhouse://clickhouse:P4ssw0rd@localhost
   my_oracle_conn:
     protocol: oracle
     username: system
@@ -975,10 +1037,34 @@ connections:
     hostname: localhost
     port: 1521
     database: free
+aliases:
+  tables: '\dt+'
 ```
 
-Defined `connections:` can be used on the command-line with `\connect`, `\c`,
-`\copy`, and [other commands][commands]:
+A value keeps the text that it is written with, so `on` stays `on` and `0123`
+keeps its zero. Loading the file prints nothing. A setting that `usql` cannot
+set is an error that names the file, the line and the setting, and `usql` goes
+on with the other settings. A key at the top of the file that is not a section
+is an error that names the section where it belongs.
+
+The settings apply in this order, and a later one wins over an earlier one:
+
+1. The defaults of `usql`, which read `PAGER`, `EDITOR`, `VISUAL`, `SSLMODE`
+   and `NO_COLOR`, and `TERM_GRAPHICS` at a terminal.
+2. `config.yaml`.
+3. The `USQL_PAGER`, `USQL_EDITOR`, `USQL_SSLMODE`,
+   `USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS` environment
+   variables.
+4. The command line, in the order of its options.
+5. [`init.sql`][init].
+6. The commands of the session.
+
+##### `connections:`
+
+[Named connection DSNs][connecting] are defined under `connections:` as a URL,
+as a list of a driver and its parameters, or as a map of the parts of a URL,
+as above. A named connection can be used on the command-line, and with
+`\connect`, `\c`, `\copy`, and [other commands][commands]:
 
 ```sh
 $ usql my_oracle_conn
@@ -988,18 +1074,33 @@ Type "help" for help.
 or:system@localhost/free=>
 ```
 
-##### Other Options
+##### `env:`
 
-Please see [`_samples/config.yaml`](_samples/config.yaml) for an overview of
-available configuration options.
+The settings of `env` are added to the environment of each command that `usql`
+runs: a shell command of `\!`, a backtick, `\g |command`, `\o |command`, the
+pager and the editor. They do not change the environment of `usql` itself, so
+`env.USQL_PAGER` does not set the pager. `\setenv NAME VALUE` sets
+`env.NAME`, and `\setenv NAME` removes `NAME` from the environment of the
+commands.
+
+##### `aliases:`
+
+An alias is a meta command of the user. With the alias `tables: '\dt+'`, the
+input `\tables` runs `\dt+`. The text of an alias can be meta commands, SQL,
+or several lines, and runs as the text of `-c` does. A statement that it leaves
+in the query buffer stays there. An alias takes no arguments, and cannot take
+the name of a meta command of `usql`. Only `config.yaml` sets an alias.
+`\? commands` lists the aliases after the meta commands.
 
 #### Variables
 
 `usql` has [script][runtime-vars] variables, [connection][connection-vars]
 variables, [display formatting][print-vars] variables, and [settings][settings]
 of its own. They are set with `\set`, `\cset`, `\pset` and `\uset`
-respectively, and `\set` is only for scripts: a setting such as `pager` is not
-a variable, and `\set pager less` is an error that says to use `\uset`.
+respectively, or with [`\config`][config] by their full names, such as
+`vars.FOO` and `print.border`. `\set` is only for scripts: a setting such as
+`pager` is not a variable, and `\set pager less` is an error that says to use
+`\uset`.
 
 ##### Runtime Variables
 
@@ -1106,7 +1207,7 @@ Connection variables can be displayed with `\cset`:
 <!-- EXAMPLE cset-show -->
 ```sh
 (not connected)=> \cset
-my_conn = 'postgres://user:pass@localhost'
+my_conn 'postgres://user:xxxxx@localhost'
 (not connected)=>
 ```
 
@@ -1155,6 +1256,7 @@ tuples_only              off
 unicode_border_linestyle single
 unicode_column_linestyle single
 unicode_header_linestyle single
+xheader_width            full
 (not connected)=>
 ```
 
@@ -1194,10 +1296,11 @@ term_graphics
 ```
 
 A setting can also be given on the command line with `--uset NAME=VALUE`, or
-`-U NAME=VALUE`, and `-q` is `--uset quiet=on`. The environment variables
-`USQL_PAGER`, `PAGER`, `USQL_EDITOR`, `EDITOR`, `VISUAL`, `USQL_SSLMODE`,
-`USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS` give the first value of
-their settings.
+`-U NAME=VALUE`, or `-O usql.NAME=VALUE`, and `-q` is `--uset quiet=on`. The
+environment variables `PAGER`, `EDITOR` and `VISUAL` give the default value of
+their settings, which [`config.yaml`][config] can change. The environment
+variables `USQL_PAGER`, `USQL_EDITOR`, `USQL_SSLMODE`,
+`USQL_SHOW_HOST_INFORMATION` and `USQL_TERM_GRAPHICS` win over `config.yaml`.
 
 A script read with `-f`, `\i`, `\ir`, `init.sql` or from a pipe is UTF-8 unless
 it starts with the byte order mark of UTF-16 or UTF-32, as a file that Windows
@@ -1231,8 +1334,9 @@ Welcome user -- running on: ( Linux )
 (not connected)=>
 ```
 
-Backticked parameters will be passed to the user's `SHELL`, exactly as written,
-and can be combined with `\set`:
+`usql` passes a backticked parameter, exactly as written, to the shell that
+`USQL_SHELL` or else `SHELL` names. A backticked parameter can be combined with
+`\set`:
 
 <!-- EXAMPLE backticks-set -->
 ```sh
@@ -1259,7 +1363,7 @@ As demonstrated above, the `\copy` command does not require being connected to
 a database, and will not modify or change the current open database connection
 or state.
 
-Any valid URL or DSN name maybe used for the source and destination database:
+Any valid URL or DSN name can be used for the source and destination database:
 
 ```sh
 (not connected)=> \cset MYDSN mysql://user:pass@localhost
@@ -1305,7 +1409,7 @@ The usual rules for [variables, interpolation, and quoting][variables] apply to
 
 ```sh
 $ usql
-(not connected)=> echo :SOURCE_DSN :DESTINATION_DSN
+(not connected)=> \echo :SOURCE_DSN :DESTINATION_DSN
 pg://postgres:P4ssw0rd@localhost/ mysql://localhost
 (not connected)=> \copy :SOURCE_DSN :DESTINATION_DSN 'select * from mySourceTable' 'myDestination(colA, colB)'
 COPY 2
@@ -1433,6 +1537,51 @@ Type "help" for help.
 COPY 18
 ```
 
+#### Dumping a Database
+
+`usql` writes a database as a `usql` script, which `usql -f` runs to make the
+database again. The script holds the schema and the rows, in the order that
+pg_dump writes them. `--target` writes it for another database, such as
+DuckDB.
+
+On the command line, `--dump`, or `-D`, writes the dump to standard output, or
+to the file that `-o` names, and then exits. Inside `usql`, `\dump` writes it
+to the output, to a file, or to a command after `|`:
+
+```sh
+$ usql pg://localhost/app --dump -o app.sql
+$ usql pg://localhost/app --dump --target duckdb --exclude-table 'audit%'
+(not connected)=> \c pg://localhost/app
+pg:user@localhost/app=> \dump -schema-only schema.sql
+pg:user@localhost/app=> \dump -table 'app.%' |gzip > app.sql.gz
+```
+
+`--dump` and `\dump` take the same options. The command line writes them as
+`--NAME`, and `\dump` as `-NAME`:
+
+| Option                   | What it does                                                         |
+| ------------------------ | -------------------------------------------------------------------- |
+| `target DRIVER`          | write the dump for another database, such as `duckdb`                |
+| `schema-only`            | dump the schema and no rows                                          |
+| `data-only`              | dump the rows and no schema                                          |
+| `schema PATTERN`         | dump the schemas that match the pattern, which can repeat            |
+| `exclude-schema PATTERN` | do not dump the schemas that match the pattern, which can repeat     |
+| `table PATTERN`          | dump the tables that match the pattern, which can repeat             |
+| `exclude-table PATTERN`  | do not dump the tables that match the pattern, which can repeat      |
+| `allow-lossy`            | allow a type of the target that holds less than the source type      |
+| `allow-text`             | allow the string type of the target for a type that it does not have |
+| `restrict-key KEY`       | the key of the `\restrict` line of the dump, random by default       |
+
+A pattern is a pattern of SQL `LIKE`. A table pattern with a dot, such as
+`app.%`, matches the schema and the table together.
+
+The dump reads the schema and the rows in one transaction, so that they agree.
+Inside a transaction that `\begin` started, `\dump` reads in that
+transaction, and so it includes the changes that are not committed yet. A file
+is written whole or not at all, and only its owner can read it. `--dump` runs
+no `init.sql`. Neither form reads its options from `config.yaml`, `-O` or a
+`USQL_` variable, so that a setting cannot change what a dump writes.
+
 #### Syntax Highlighting
 
 Interactive input is highlighted as you type it. `usql` parses the input with
@@ -1448,7 +1597,8 @@ highlighting are:
 | `syntax_hl_override_bg` | `true`                          | `true` or `false`                                | keeps the background of the terminal, and not the style's |
 | `syntax_hl_style`       | `monokai`                       | style name                                       | the [name of a style][styles]                            |
 
-They are set with `\uset`. A terminal with no color, or a `NO_COLOR` variable,
+They are set with `\uset`. `\? styles` lists the names of the styles, and
+names the style in use. A terminal with no color, or a `NO_COLOR` variable,
 turns highlighting off by default:
 
 <!-- EXAMPLE syntax-highlighting -->
@@ -1618,14 +1768,14 @@ interactive session:
 
 ##### Charts and Graphs
 
-The [`\chart` command][chart-command] can be used to display a chart
+The [`\chart` command][commands] can be used to display a chart
 directly in the terminal:
 
 <div style="padding-left: 20px;">
   <img src="https://raw.githubusercontent.com/xo/usql-logo/main/chart-example.png" height="120">
 </div>
 
-See [the section on the `\chart` meta command][chart-command] for details.
+At a terminal with graphics, `\chart help` lists the charts and their options.
 
 The renderer runs Apache ECharts in a JavaScript engine and rasterizes the
 result with an SVG renderer, which together add about 12 MiB to the binary.
@@ -1646,9 +1796,14 @@ $ USQL_TERM_GRAPHICS=none usql
 $ TERM_GRAPHICS=iterm usql
 ```
 
-| Variable        | Default | Values                                | Description                    |
-| --------------- | ------- | ------------------------------------- | ------------------------------ |
-| `TERM_GRAPHICS` | ``      | ``, `kitty`, `iterm`, `sixel`, `none` | enables/disables term graphics |
+| Name                                       | Default                                        | Values                                  |
+| ------------------------------------------ | ---------------------------------------------- | --------------------------------------- |
+| `USQL_TERM_GRAPHICS`, `TERM_GRAPHICS`      | found out at a terminal, and `none` otherwise  | empty, `kitty`, `iterm`, `sixel`, `none` |
+| the setting `usql.term_graphics`           | the value of the variables                      | the same                                 |
+
+`USQL_TERM_GRAPHICS` wins over `TERM_GRAPHICS`. An empty value finds out what
+the terminal draws. Outside a terminal, only the command line can turn the
+graphics on, as in `-O usql.term_graphics=kitty`.
 
 ##### Terminals with Graphics Support
 
@@ -1692,7 +1847,7 @@ $ cat $HOME/.config/usql/init.sql
 \echo WELCOME TO THE JUNGLE `date`
 \uset syntax_hl_style paraiso-dark
 
--- set color prompt (default is prompt is "%S%m%/%R%#" )
+-- set a color prompt (the default prompt is "%S%N%m%/%R%# ")
 \uset prompt1 "\033[32m%S%m%/%R%#\033[0m"
 $ usql
 WELCOME TO THE JUNGLE Thu Jun 14 02:36:53 WIB 2018
@@ -1802,8 +1957,9 @@ checked against PostgreSQL 18.
 
 The server could not meet the durability that the transaction asked for. By
 default a transaction asks for `majority`, which a single-node server cannot
-meet. `usql` does not change the durability unless you ask it to. Set `durability_level=none` in the URL for a single-node server,
-such as a local development server:
+meet. `usql` does not change the durability unless you ask it to. Set
+`durability_level=none` in the URL for a single-node server, such as a local
+development server:
 
 ```sh
 $ usql "couchbase://user:pass@localhost/?durability_level=none"
@@ -1861,6 +2017,7 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [connecting]: #connecting-to-databases "Connecting to Databases"
 [contributing]: #contributing "Contributing"
 [copying]: #copying-between-databases "Copying Between Databases"
+[dumping]: #dumping-a-database "Dumping a Database"
 [highlighting]: #syntax-highlighting "Syntax Highlighting"
 [transit]: https://github.com/xo/transit "transit"
 [styles]: https://github.com/xo/transit/tree/master/styles/chroma "Styles of transit"
@@ -1873,7 +2030,7 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [settings]: #settings "Settings"
 [runtime-vars]: #runtime-variables "Runtime Variables"
 [connection-vars]: #connection-variables "Connection Variables"
-[print-vars]: #display-formatting-(print)-variables "Display Formatting (print) Variables"
+[print-vars]: #display-formatting-print-variables "Display Formatting (Print) Variables"
 [kitty-graphics]: https://sw.kovidgoyal.net/kitty/graphics-protocol.html
 [iterm-graphics]: https://iterm2.com/documentation-images.html
 [sixel-graphics]: https://saitoha.github.io/libsixel/
@@ -1883,6 +2040,6 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [foot]: https://codeberg.org/dnkl/foot
 [kitty]: https://sw.kovidgoyal.net/kitty/
 [arewesixelyet]: https://www.arewesixelyet.com
-[chart-command]: #chart-command "\\chart meta command"
+[chart-command]: #charts-and-graphs "Charts and Graphs"
 [yaml]: https://yaml.org
 [rline]: https://github.com/xo/rline

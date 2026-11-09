@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -138,6 +139,14 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 	d, ok := drivers[u.SchemeName]
 	if !ok {
 		return nil, WrapErr(u.SchemeName, text.ErrDriverNotAvailable)
+	}
+	// a caller with no terminal, such as a test, passes nil, and a driver
+	// writes a notice of the server to standard error
+	if stdout == nil {
+		stdout = func() io.Writer { return os.Stdout }
+	}
+	if stderr == nil {
+		stderr = func() io.Writer { return os.Stderr }
 	}
 	f := sql.Open
 	if d.Open != nil {

@@ -6,15 +6,15 @@ stops can be picked up again. It is about W36 in
 
 ## Work modes
 
-Ken's machine has crashed from resource exhaustion. Work in a low-resource
-mode:
+The development machine crashed from resource exhaustion. Work in a
+low-resource mode:
 
 - Build one package at a time. Do not run the whole test suite, and run no
   more than one test package at once.
-- Start no containers and no background jobs unless Ken asks.
-- Commit a checkpoint before a long step, on `main`, as a commit with a
-  proper message. Ken wants no work branches and no WIP commits. Do not
-  push.
+- Start no containers and no background jobs unless a maintainer asks.
+- When a maintainer asks for a checkpoint before a long step, commit it on
+  `main` with a proper message. The project takes no work branches and no WIP
+  commits. Do not push unless a maintainer says so.
 
 ## What W36 changes
 
@@ -75,15 +75,16 @@ Open points that are known:
   already reads every line of such a file. usql warns at start when it
   cannot read the file.
 - dbmeta gives the version of every database that it has a model for, and the
-  Version hooks that remain are InfluxDB's (by Ken's decision, dbmeta's D166)
+  Version hooks that remain are InfluxDB's (by the maintainer's decision, dbmeta's D166)
   and csvq's, for which dbmeta has no model. The describe commands read dbmeta
   through `metacmd/describe` (W46 holds what still differs from psql).
 
 ## How to build
 
-usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit v0.7.5 with its usql
-grammar v0.7.5, and rline v0.8.0 in `go.mod`. It builds with plain modules and no `go.work`, and
-`go mod tidy` leaves `go.mod` as it is. A workspace is still how to build
+usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.24.0,
+transit v0.7.6 with its usql grammar v0.7.6, and rline v0.8.1 in `go.mod`. It
+builds with plain modules and no `go.work`, and `go mod tidy` leaves `go.mod`
+as it is. A workspace is still how to build
 against a local checkout of a sibling that has not tagged a change yet: write a
 `go.work` that uses `.` and the checkouts, and do not commit it. If the workspace
 loads two modules that provide `github.com/google/flatbuffers/go`, a `replace`

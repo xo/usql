@@ -33,7 +33,7 @@ yours. Report what you found and wait.
 
 ## Step 1. The pre-flight gate
 
-Answer four questions before you add the driver. Record the answers in the
+Answer five questions before you add the driver. Record the answers in the
 comment above its entry in `plainDrivers` in `gen.go`, or in its package
 comment, and in the commit message, so that a later reader can see what was
 checked and when.
@@ -48,7 +48,8 @@ Record the date of the last tagged release and the date of the last commit.
 Record whether open issues are being answered. Write dates, not impressions.
 
 A driver whose upstream stops being maintained is dropped from usql. See
-"When a driver is broken" in [CONTRIBUTING.md](../CONTRIBUTING.md).
+["When a driver is broken"](../CONTRIBUTING.md#when-a-driver-is-broken-and-what-to-do-about-it)
+in CONTRIBUTING.md.
 
 ### Does it touch global process state?
 
@@ -77,8 +78,8 @@ in it. So a driver that needs cgo, ships a prebuilt native library, or requires
 a client install changes every build. It also costs far more binary size than
 a pure Go driver.
 
-A release build was 178.6 MiB, and DuckDB was 72.8 MiB of it (W32). Two known causes are worth
-recognizing, because both survive `-s -w` stripping: `-rdynamic` in cgo
+A release build was 178.6 MiB, and DuckDB was 72.8 MiB of it (W32). Two
+known causes of a large binary survive `-s -w` stripping: `-rdynamic` in cgo
 LDFLAGS, and any use of Go's `plugin` package. Both force dynamic symbol
 export.
 
@@ -206,10 +207,11 @@ It writes `internal/mydb.go`, which imports the package, with the comment
 tools in the family find a driver by searching for that comment.
 
 A driver of [dbimp](https://github.com/xo/dbimp) is exactly this, and nothing
-more. dbimp's errors print as they are, an error that matches
-`dbimp.ErrAuthentication` is a wrong password, a statement with no count of rows
-changed is a count of zero, and `\copy` takes each insert alone when `BeginTx`
-fails with `dbimp.ErrNotSupported`. Set a hook only for a fact that none of these
+more. dbimp's errors print as they are, an error whose
+`AuthenticationRefused` method returns true, as `dbimp.ErrAuthentication`
+does, is a wrong password, a statement with no count of rows changed is a
+count of zero, and `\copy` takes each insert alone when `BeginTx` fails with
+`dbimp.ErrNotSupported`. Set a hook only for a fact that none of these
 cover, and put a fact about the database in dbmeta and a default of the DSN in
 dburl.
 
@@ -309,7 +311,8 @@ These files are generated. Do not edit them by hand:
 1. `internal/<tag>.go`, which carries the build constraints, and for a driver
    in `plainDrivers` the import and the registration.
 2. The driver tables in `README.md`.
-3. The bundled license files.
+3. The blocks of `README.md` that have an `<!-- EXAMPLE name -->` marker.
+4. The bundled license files.
 
 The description, the package, the link, the aliases and the markers of a
 README row come from dburl's registry. Only the `Scheme / Tag` column comes
@@ -323,9 +326,9 @@ Then add the module and tidy:
 
 ## Step 5. Metadata goes to dbmeta
 
-Do not write a metadata reader here. All database metadata is moving into
-[dbmeta](https://github.com/xo/dbmeta), and `metacmd/describe` takes no new
-reader and no change to an existing one. See D3.
+Do not write a metadata reader here. usql reads all database metadata from
+[dbmeta](https://github.com/xo/dbmeta), and `metacmd/describe` holds no reader
+of its own. See D3 and D4.
 
 usql reads the metadata of every driver from dbmeta, by the
 dialect that dburl sets. A driver whose database dbmeta has no model for
@@ -334,8 +337,8 @@ not supported. Add it to `noModel` in `metadata_test.go` with the reason,
 because `TestEveryDriverReadsThroughDbmeta` fails until it is there.
 
 The metadata for a new database is added in `dbmeta`, which models each
-product and says what it can answer. Ask there, or ask Ken. W21 in
-[BACKLOG.md](BACKLOG.md) holds the migration.
+product and says what it can answer. Ask in dbmeta, or ask a maintainer. W21
+in [BACKLOG.md](BACKLOG.md) holds the migration.
 
 ## Step 6. Verification
 
@@ -355,17 +358,20 @@ and a duplicate scheme or alias panics at registration time rather than at
 compile time. The build with `no_drivers` finds a driver that compiles only
 beside another.
 
-Every test must pass. No test of usql needs a database.
+Every test must pass. No test of usql starts a database. A test that needs
+one skips when `USQL_TEST_URL` is not set.
 
 ### With a database
 
-Start the database, then run each of these and keep the output:
+Start the database with dbmeta's `dbrun`, as "Command line tests" in
+[CONTRIBUTING.md](../CONTRIBUTING.md#command-line-tests) says. Then run each
+of these and keep the output:
 
     usql <dsn> -c 'select 1'
     usql <dsn> -c '\dt'
 
-The second one reports that describe commands are not supported, because a new
-driver has no metadata reader. See Step 5.
+If dbmeta has no model for the database, the second one reports that
+describe commands are not supported. See Step 5.
 
 Try every connection string form that dburl accepts for the scheme, including
 the short alias. Try one malformed connection string, and make sure that it

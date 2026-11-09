@@ -2,7 +2,7 @@
 
 Status: Decided.
 
-Ken decided on 2026-09-30 which fields of `drivers.Driver` move to dbmeta.
+The maintainer decided on 2026-09-30 which fields of `drivers.Driver` move to dbmeta.
 The rule is that a field which says something about the database, and alters
 what usql does or how it uses a dialect's queries, belongs in dbmeta, keyed by
 the dialect. A field that describes a Go driver, a URL or usql's own interface
@@ -34,7 +34,7 @@ A database that dbmeta has no model for allows only block comments. Nearly
 every such driver set that and nothing more. A wider default is not safe,
 because a hash comment would swallow a SQL Server `#temp` table over ODBC.
 
-The last item waits. Ken decided on 2026-09-30 that the `Process` hooks of
+The last item waits. The maintainer decided on 2026-09-30 that the `Process` hooks of
 ODBC, csvq, Athena and Cosmos are removed rather than kept in usql. Their
 statement handling belongs in dbmeta's syntax options, applied automatically,
 and that needs a larger design. W28 holds it, and the possible removal of
@@ -58,6 +58,6 @@ for that. It says how usql runs a statement, and it stays in usql.
 ## A rarely used database does not shape usql
 
 `BatchAsTransaction` is removed, and the ql driver with it. Only ql set the
-field, and it made usql run a batch in a transaction for that one driver. Ken
-decided that a rarely used database must not force logic or architecture into
+field, and it made usql run a batch in a transaction for that one driver. The
+maintainer decided that a rarely used database must not force logic or architecture into
 usql. ql was an unfinished experiment. dburl drops its scheme as its D42.
