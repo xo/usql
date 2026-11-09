@@ -246,8 +246,8 @@ associated database, scheme / build tag, and scheme aliases:
 | Apache Avatica       | `avatica`       | `av`, `phoenix`                                  | [github.com/xo/dbimp/avatica][d-avatica]                                                    |
 | Apache Drill         | `drill`         | `dl`                                             | [github.com/xo/dbimp/drill][d-drill]                                                        |
 | Apache Druid         | `druid`         | `dr`                                             | [github.com/xo/dbimp/druid][d-druid]                                                        |
-| Apache Hive          | `hive`          | `hi`, `hive2`                                    | [github.com/beltran/gohive/v2][d-hive]                                                      |
-| Apache Impala        | `impala`        | `im`                                             | [github.com/sclgo/impala-go][d-impala]                                                      |
+| Apache Hive          | `hive`          | `hi`, `hive2`                                    | [github.com/xo/dbimp/hive][d-hive]                                                          |
+| Apache Impala        | `impala`        | `im`                                             | [github.com/xo/dbimp/hive][d-impala]                                                        |
 | Apache Pinot         | `pinot`         | `pi`                                             | [github.com/xo/dbimp/pinot][d-pinot]                                                        |
 | Apache Solr          | `solr`          | `so`                                             | [github.com/xo/dbimp/solr][d-solr]                                                          |
 | ArangoDB             | `arangodb`      | `ar`, `arango`                                   | [github.com/xo/dbimp/arangodb][d-arangodb]                                                  |
@@ -315,8 +315,8 @@ associated database, scheme / build tag, and scheme aliases:
 [d-exasol]: https://github.com/xo/dbimp
 [d-firebird]: https://github.com/nakagami/firebirdsql
 [d-flightsql]: https://github.com/apache/arrow-go/tree/main/arrow/flight/flightsql/driver
-[d-hive]: https://github.com/beltran/gohive
-[d-impala]: https://github.com/sclgo/impala-go
+[d-hive]: https://github.com/xo/dbimp
+[d-impala]: https://github.com/xo/dbimp
 [d-influxdb]: https://github.com/xo/dbimp
 [d-influxql]: https://github.com/xo/dbimp
 [d-libpq]: https://github.com/lib/pq

@@ -18,7 +18,7 @@ Read these first. Some of them can stop the release.
   unless both input and output are a terminal.
 - ODBC no longer reads `usql_trim`, csvq's `SHOW` prints nothing, and Athena
   and Cosmos no longer strip a trailing semicolon. W28 holds them.
-- usql requires dbfwd v0.3.1, dbmeta v0.36.0, dburl v0.57.0, tblfmt v0.23.0, transit
+- usql requires dbfwd v0.3.1, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.23.0, transit
   v0.7.5 and rline v0.8.0, all in `go.mod`. It builds with no `go.work`.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
@@ -420,7 +420,18 @@ query now come from dbmeta (`EveryStatementIsAQuery`). `BatchAsTransaction` and
   - godror, which needed cgo and Oracle's client library. Use the oracle
     driver, which is pure Go.
   - Db2's ODBC setup in `contrib`
-- flightsql moves to arrow-go v18, and hive to gohive v2.
+- flightsql moves to arrow-go v18.
+- Hive and Impala move to dbimp's hive driver, pure Go, which replaces gohive
+  and impala-go. The URL is
+  `hive://user:password@host:port/database?httpPath=cliservice`, and
+  `impala://` takes the same form. The driver speaks only the HTTP transport
+  of HiveServer2. Hive needs `hive.server2.transport.mode=http`. The default
+  port is 10001 for Hive and 28000 for Impala. The binary ports, 10000 on
+  Hive and 21050 on Impala, no longer work, so every earlier URL must change.
+  `auth=`, `service=` and `transport=` in a URL now fail, and a URL with no
+  database no longer gets `default`. The driver has no transactions, and
+  writes each argument into the text of the statement. Impala does not
+  report how many rows a statement changed.
 - Oracle moves from sijms/go-ora to `github.com/xo/oracle` v0.3.0, pure Go.
   A wrong user or password now prints ORA-01017, where go-ora printed
   "message code error", and usql prompts for the password. An error no longer
@@ -728,6 +739,9 @@ one error, and a wrong password:
 - ODBC with a real driver, such as SQL Server's, PostgreSQL's and SQLite's,
   after the crash is fixed
 - Couchbase and Databend on dbimp
+- Hive and Impala on dbimp's hive driver, over HTTP: `select version()`,
+  `\conninfo`, and `\copy` into a table, which inserts each
+  row with no transaction
 
 ### Databases in Kubernetes
 

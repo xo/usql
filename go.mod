@@ -6,7 +6,6 @@ require (
 	github.com/SAP/go-hdb v1.21.0
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/apache/arrow-go/v18 v18.8.0
-	github.com/beltran/gohive/v2 v2.1.0
 	github.com/chaisql/chai v0.18.0
 	github.com/duckdb/duckdb-go/v2 v2.20000.0
 	github.com/go-git/go-billy/v5 v5.9.2
@@ -23,16 +22,15 @@ require (
 	github.com/mithrandie/csvq v1.18.1
 	github.com/mithrandie/csvq-driver v1.7.0
 	github.com/nakagami/firebirdsql v0.9.23
-	github.com/sclgo/impala-go v1.9.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/vertica/vertica-sql-go v1.3.9
 	github.com/xo/cassandra v0.2.4
 	github.com/xo/dbfwd v0.3.1
-	github.com/xo/dbimp v0.25.2
-	github.com/xo/dbmeta v0.36.0
-	github.com/xo/dburl v0.57.0
+	github.com/xo/dbimp v0.26.1
+	github.com/xo/dbmeta v0.39.0
+	github.com/xo/dburl v0.58.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.4.1
 	github.com/xo/oracle v0.4.1
@@ -74,8 +72,6 @@ require (
 	github.com/andybalholm/brotli v1.2.4 // indirect
 	github.com/apache/cassandra-gocql-driver/v2 v2.1.2 // indirect
 	github.com/apache/thrift v0.25.0 // indirect
-	github.com/beltran/gosasl v1.0.0 // indirect
-	github.com/beltran/gssapi v0.0.0-20200324152954-d86554db4bab // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.6.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -131,8 +127,6 @@ require (
 	github.com/mithrandie/go-text v1.6.0 // indirect
 	github.com/mithrandie/ternary v1.1.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/murfffi/conncheck v0.2.1 // indirect
-	github.com/murfffi/gorich v0.3.0 // indirect
 	github.com/nakagami/chacha20 v0.1.0 // indirect
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20260406063853-3bac975de715 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
@@ -149,7 +143,6 @@ require (
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
-	github.com/samber/lo v1.53.0 // indirect
 	github.com/shopspring/decimal v1.6.0 // indirect
 	github.com/soniakeys/quant v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect

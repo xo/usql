@@ -31,8 +31,8 @@ func KnownBuildTags() map[string]string {
 		"exasol":        "exasol",        // github.com/xo/dbimp/exasol
 		"firebird":      "firebirdsql",   // github.com/nakagami/firebirdsql
 		"flightsql":     "flightsql",     // github.com/apache/arrow-go/v18/arrow/flight/flightsql/driver
-		"hive":          "hive",          // github.com/beltran/gohive/v2
-		"impala":        "impala",        // github.com/sclgo/impala-go
+		"hive":          "hive",          // github.com/xo/dbimp/hive
+		"impala":        "impala",        // github.com/xo/dbimp/hive
 		"influxdb":      "influxdb",      // github.com/xo/dbimp/influxdb
 		"influxql":      "influxql",      // github.com/xo/dbimp/influxdb
 		"libpq":         "pq",            // github.com/lib/pq

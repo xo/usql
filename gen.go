@@ -485,8 +485,17 @@ var plainDrivers = []Plain{
 	{Tag: "firebird"},
 	// Apache Arrow v18.
 	{Tag: "flightsql"},
-	// gohive v2.
+	// dbimp's driver, pure Go, over the HTTP transport of HiveServer2. It
+	// serves Impala too. The URL is
+	// hive://user:password@host:port/database?httpPath=cliservice, and the
+	// default port is 10001. The binary ports, 10000 on Hive and 21050 on
+	// Impala, do not work. It has no parameters and no transactions, and it
+	// writes each argument into the text of the statement. See docs/HIVE.md
+	// in dbimp.
 	{Tag: "hive"},
+	// dbimp's hive driver. dburl writes port 28000, the HTTP port of Impala.
+	// Impala does not report the rows that a statement changed.
+	{Tag: "impala"},
 	// dbimp's driver, pure Go, over the Hrana protocol on HTTP, for sqld and
 	// Turso Cloud. TLS is on unless the URL sets tls=false. The token is the
 	// password of the URL. A transaction ends when no statement runs on it
