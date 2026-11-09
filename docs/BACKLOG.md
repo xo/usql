@@ -3970,6 +3970,12 @@ new `\copy`, and are decided with it.
      fixture does not load on SQL Server 2022, because it uses the `json`
      type of SQL Server 2025, so a load of the SQL Server dump still waits
      for a container of SQL Server 2025.
+   - The maintainer answered the question of the package on 2026-11-10.
+     transit's grammar reads a package spec, a package body and a type body
+     whole (its D144), and the dump escapes nothing. transit v0.7.7 broke a
+     spec that escapes `;` as `\;`, and v0.7.8 fixed it. With v0.7.7, the
+     dump of northwind on Oracle 21c loaded with no error, and no object was
+     invalid.
 
 ## W78. SQL*Plus's slash line on Oracle
 
@@ -4345,3 +4351,39 @@ database. It then makes four comparisons:
 Not decided yet: whether the round trip test lives in dbmeta, in usql or in
 both. usql runs it with usql as the client, because the dump is a usql
 script.
+
+### First results
+
+dbmeta built the fixture on 2026-11-10 (its D291). usql ran the round trip
+the same day, on dbmeta v0.42.1 and transit v0.7.8, with comparisons 1 to 3
+above. The rows of each table that loaded are equal. The comparison of the
+catalogs found the faults, because the two dumps agree on what both leave
+out. All faults below are reported to dbmeta, except the last.
+
+1. SQLite: AUTOINCREMENT and its `sqlite_sequence` row, WITHOUT ROWID and
+   deferred foreign keys are lost. The attached file `dump_extra.db` cannot
+   be opened alone, because a view in it names the schema `extra`.
+2. DuckDB: the dump refuses a value of a `UNION` column.
+3. PostgreSQL 17: the dump writes the constructors of a range type but not
+   the type, so each table with a column of the range type fails to load,
+   with its rows. An aggregate and an event trigger are not written, and a
+   disabled trigger loads enabled.
+4. MySQL 8.4: no stored routine is written, so a view that calls one fails.
+   A foreign key to the other database loses the name of that database.
+   INVISIBLE, the length of a prefix index, an EVENT, the order of triggers,
+   the `sql_mode` of each trigger and `WITH CASCADED CHECK OPTION` are lost.
+5. SQL Server 2022: a columnstore index fails to load. A DDL trigger, a
+   security policy and an XML schema collection are not written. The names
+   of default constraints, the order of triggers, a disabled trigger and the
+   position of a sequence are lost.
+6. Every product that has one: an INSTEAD OF trigger on a view is not
+   written. A routine that dbmeta does not write gets only a comment in the
+   dump, and no warning.
+7. Oracle 21c: the fixture does not load, because 21c refuses an index on
+   the expression of a virtual column. Oracle is not tested yet.
+8. SQL Server: usql cuts a procedure that has several statements and no
+   `BEGIN ... END` at its first `;`. The rest of the statements run as
+   queries during the load, with no error. Not decided yet: whether transit
+   reads such a body whole, or the dump escapes each `;` in it as `\;`.
+
+MariaDB is not tested yet.

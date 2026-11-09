@@ -34,12 +34,12 @@ require (
 	github.com/xo/dburl v0.58.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.4.1
-	github.com/xo/okage v0.1.1-0.20261109215206-d34a75a4b01b
+	github.com/xo/okage v0.2.0
 	github.com/xo/oracle v0.4.1
 	github.com/xo/rline v0.8.1
 	github.com/xo/tblfmt v0.24.0
 	github.com/xo/terminfo v1.3.1
-	github.com/xo/transit v0.7.6
+	github.com/xo/transit v0.7.8
 	github.com/xo/transit/grammars/clickhouse v0.7.6
 	github.com/xo/transit/grammars/cql v0.7.6
 	github.com/xo/transit/grammars/duckdb v0.7.6
@@ -52,12 +52,12 @@ require (
 	github.com/xo/transit/grammars/sqlserver v0.7.6
 	github.com/xo/transit/grammars/surrealdb v0.7.6
 	github.com/xo/transit/grammars/trino v0.7.6
-	github.com/xo/transit/grammars/usql v0.7.6
+	github.com/xo/transit/grammars/usql v0.7.8
 	github.com/xo/transit/grammars/ydb v0.7.6
 	github.com/xo/transit/styles v0.7.6
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
-	golang.org/x/text v0.43.0
+	golang.org/x/text v0.44.0
 	modernc.org/sqlite v1.62.0
 )
 
@@ -167,7 +167,7 @@ require (
 	golang.org/x/exp v0.0.0-20261106192419-47ce03d25ef0 // indirect
 	golang.org/x/image v0.47.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261104224025-d1e00e9f33ab // indirect

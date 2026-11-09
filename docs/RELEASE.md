@@ -32,16 +32,14 @@ Read these first. Some of them can stop the release.
   not dumped, with a warning. A domain loses the names of its checks, and a
   domain check that calls a function does not load. Roles and grants are not
   dumped for any database, nor a partition scheme of SQL Server, with a
-  warning, nor a subpartition of Oracle. usql splits an Oracle package at its
-  first semicolon, as transit's D138 decides, and the dump does not escape it,
-  so a package loads invalid. A database that dbmeta cannot dump is refused,
-  and the refusal names the databases that can be dumped.
+  warning, nor a subpartition of Oracle. A database that dbmeta cannot dump
+  is refused, and the refusal names the databases that can be dumped.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.42.1, dburl v0.58.0, tblfmt v0.24.0,
-transit v0.7.6 and rline v0.8.1, all in `go.mod`. It builds with no `go.work`.
-It requires okage at the commit d34a75a, until okage releases v0.2.0.
+usql requires dbfwd v0.3.2, dbmeta v0.42.1, dburl v0.58.0, okage v0.2.0,
+tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
+with no `go.work`.
 
 ### One build, with every driver
 
@@ -202,8 +200,12 @@ package and the `stmt` package (W36).
   `\uset syntax_hl_style`.
 - A line with only `/` is statement text on every database, as in psql. It
   does not end a statement as SQL*Plus ends one (transit's D138). A script
-  for Oracle ends each statement with `;`, and writes each `;` inside a
-  package, or in the declarations of a unit before its `BEGIN`, as `\;`.
+  for Oracle ends each statement with `;`.
+- On Oracle, a function, a procedure, a trigger, a package spec, a package
+  body and a type body each stay in one statement, up to the `;` after the
+  `END` that closes the unit (transit v0.7.8, its D144). A `\;` inside a unit
+  still works. A query with `WITH FUNCTION` still needs `\;` for each `;`
+  inside the function.
 - Inside a `BEGIN ... END` body, a variable such as the `:new` of an Oracle
   trigger no longer ends the body at the next `;` (transit v0.7.2).
 - Two dashes start a comment on every database except Neo4j and ArangoDB,
@@ -1084,7 +1086,6 @@ left, as in psql. This was checked on PostgreSQL 18, Oracle and SQLite on
 - `\chart` in a build with `CGO_ENABLED=0`, and the fonts of a chart on macOS,
   Windows and Linux. okage loads the fonts of the system and of the home
   directory, and reads no configuration of fontconfig.
-- `go.mod` requires a release of okage, v0.2.0 or later, and not a commit
 - `./size.sh`, compared with W32. The chart renderer is now in the build.
 - on Linux, an ODBC query through the SQLite ODBC driver in a build with
   `-tags libsqlite3`, and through the PostgreSQL Unicode driver in a build with
