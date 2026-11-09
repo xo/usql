@@ -65,3 +65,27 @@ SELECT nextval('app.ticket_seq');
 CREATE TABLE app.floats (float_id integer PRIMARY KEY, f double precision, r real);
 INSERT INTO app.floats VALUES (1, 'NaN', 'NaN'), (2, 'Infinity', 'Infinity'), (3, '-Infinity', '-Infinity'), (4, -0.0, 1.5);
 INSERT INTO public.nokey VALUES ('x', 1), (NULL, NULL), ('x', 1);
+-- A partitioned table, with rows in each partition, and a materialized view
+-- that reads it. dbmeta dumps both from v0.40.0 (W77).
+CREATE TABLE app.events (
+  event_id integer NOT NULL,
+  happened date NOT NULL,
+  kind text,
+  PRIMARY KEY (event_id, happened)
+) PARTITION BY RANGE (happened);
+CREATE TABLE app.events_2025 PARTITION OF app.events FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
+CREATE TABLE app.events_2026 PARTITION OF app.events FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
+INSERT INTO app.events VALUES (1, '2025-06-01', 'a'), (2, '2026-02-01', 'b'), (3, '2026-03-01', 'c');
+CREATE MATERIALIZED VIEW app.event_counts AS
+  SELECT kind, count(*) AS n FROM app.events GROUP BY kind;
+-- An extension, a domain with a check, and a composite type, each used by a
+-- column. dbmeta dumps them from v0.41.0 (W77).
+CREATE EXTENSION IF NOT EXISTS citext;
+CREATE DOMAIN app.email AS citext CHECK (VALUE LIKE '%@%');
+CREATE TYPE app.address AS (street text, city text, zip integer);
+CREATE TABLE app.contacts (
+  contact_id integer PRIMARY KEY,
+  email app.email NOT NULL,
+  home app.address
+);
+INSERT INTO app.contacts VALUES (1, 'Ann@Example.com', ROW('1 Main St', 'Springfield', 12345)), (2, 'b@x', NULL);

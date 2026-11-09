@@ -16,7 +16,7 @@ import (
 	"image/color"
 
 	"github.com/xo/echartsgoja"
-	"github.com/xo/resvg"
+	"github.com/xo/okage/svg"
 	"github.com/xo/usql/metacmd/charts"
 )
 
@@ -24,21 +24,23 @@ func init() {
 	charts.Register(renderer{})
 }
 
-// renderer draws charts with ECharts and resvg.
+// renderer draws charts with ECharts and rasterizes them with okage's SVG
+// renderer, which is pure Go.
 type renderer struct{}
 
 // RenderSVG satisfies the charts.Renderer interface.
 func (renderer) RenderSVG(ctx context.Context, opts string, width, height int) ([]byte, error) {
-	svg, err := echartsgoja.New(echartsgoja.WithWidthHeight(width, height)).RenderOptions(ctx, opts)
+	s, err := echartsgoja.New(echartsgoja.WithWidthHeight(width, height)).RenderOptions(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("rendering the chart: %w", err)
 	}
-	return []byte(svg), nil
+	return []byte(s), nil
 }
 
-// Rasterize satisfies the charts.Renderer interface.
-func (renderer) Rasterize(svg []byte, bg color.Color) (image.Image, error) {
-	img, err := resvg.Render(svg, resvg.WithBackground(bg))
+// Rasterize satisfies the charts.Renderer interface. Each call makes a
+// renderer, which loads the fonts of the system and of the home directory.
+func (renderer) Rasterize(data []byte, bg color.Color) (image.Image, error) {
+	img, err := svg.New(svg.WithBackground(bg)).Render(data)
 	if err != nil {
 		return nil, fmt.Errorf("rasterizing the chart: %w", err)
 	}

@@ -25,6 +25,7 @@ import (
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/kenshaw/rasterm"
+	"github.com/mattn/go-isatty"
 	"github.com/xo/dbfwd"
 	"github.com/xo/dbmeta"
 	"github.com/xo/dburl"
@@ -1272,9 +1273,12 @@ func (h *Handler) ChangePassword(user string) (string, error) {
 	return drivers.ChangePassword(h.u, h.DB(), user, newpw, oldpw)
 }
 
-// Version prints the database version information after a successful connection.
+// Version prints the database version information after a successful
+// connection. It prints only when the handler reads from the terminal and the
+// output is a terminal too, as psql prints its banner. So -c, -f, --dump and
+// output to a file or a pipe get no line that is not their output.
 func (h *Handler) Version(ctx context.Context) error {
-	if env.Setting("show_host_information") != "true" || !h.l.Interactive() {
+	if env.Setting("show_host_information") != "true" || !h.iactive || !stdoutIsTerminal() {
 		return nil
 	}
 	if h.db == nil {
@@ -1305,6 +1309,13 @@ func (h *Handler) Version(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// stdoutIsTerminal reports whether the standard output of the process is a
+// terminal. The line editor writes to it.
+func stdoutIsTerminal() bool {
+	fd := os.Stdout.Fd()
+	return isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
 }
 
 // Print formats according to a format specifier and writes to handler's standard output.

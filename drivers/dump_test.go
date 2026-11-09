@@ -161,6 +161,11 @@ func (side dumpSide) rowCounts(t *testing.T, exclude ...string) map[string]int {
 	counts := make(map[string]int)
 	for _, sc := range snap.Schemas {
 		for _, tbl := range sc.Tables {
+			// the parent of a partition counts its rows, and another dialect
+			// has only the parent
+			if tbl.IsPartition() {
+				continue
+			}
 			l, err := dbdump.NewLoader(snap, sc.Name, tbl.Name, m.Dialect(), dbdump.Policy{})
 			if err != nil {
 				t.Fatalf("reading %s.%s: %v", sc.Name, tbl.Name, err)
@@ -352,6 +357,22 @@ func TestDump(t *testing.T) {
 		})
 	}
 
+	t.Run("skipped by dbmeta", func(t *testing.T) {
+		skipped := knownSkipped[string(dialect)]
+		path := filepath.Join("testdata", "dump", string(dialect)+"-skipped.sql")
+		if len(skipped) == 0 {
+			t.Skipf("dbmeta skips no known object of %s", dialect)
+		}
+		dst := side(t, "skipped")
+		dst.load(t, path)
+		_, warnings := dst.dump(t, dump.Options{})
+		for _, warning := range skipped {
+			if !strings.Contains(warnings, "warning: "+warning+":") {
+				t.Errorf("dbmeta now dumps what it skipped (%s): move the object from %s into the fixture, and remove it from knownSkipped", warning, filepath.Base(path))
+			}
+		}
+	})
+
 	t.Run("against the dump tool", func(t *testing.T) {
 		tool := dumpTools[dialect]
 		if tool == nil {
@@ -384,6 +405,15 @@ func TestDump(t *testing.T) {
 		}
 	})
 }
+
+// knownSkipped are the objects of a fixture that dbmeta does not dump yet,
+// by the dialect, as the start of the warning that usql writes for each. The
+// objects are in testdata/dump/DIALECT-skipped.sql, apart from the fixture
+// of the dialect, so that the other subtests stay as they are. The map is
+// empty while dbmeta warns about no object of a fixture. The partitioned
+// table and the materialized view that were here moved into postgres.sql
+// with dbmeta v0.40.0 (W77).
+var knownSkipped = map[string][]string{}
 
 // knownCrossFailures are the dumps from one dialect to another that fail
 // because of a gap in dbmeta, by the source and the target, with the reason.

@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/xo/dbmeta"
@@ -117,10 +118,10 @@ func New(ctx context.Context, m *dbmeta.Meta, q dbmeta.Queryer, opts Options) (*
 		}
 	}
 	if c := dbdump.Support(source); !c.Source {
-		return nil, fmt.Errorf("%s cannot be dumped: %w", source, c.SourceWhy)
+		return nil, fmt.Errorf("%s cannot be dumped, and %s can: %w", source, supported(func(c dbdump.Capability) bool { return c.Source }), c.SourceWhy)
 	}
 	if c := dbdump.Support(target); !c.Target {
-		return nil, fmt.Errorf("a dump cannot be written for %s: %w", target, c.TargetWhy)
+		return nil, fmt.Errorf("a dump cannot be written for %s, and can be for %s: %w", target, supported(func(c dbdump.Capability) bool { return c.Target }), c.TargetWhy)
 	}
 	snap, err := dbdump.Read(ctx, m, q, dbdump.Filter{
 		Schemas:        opts.Schemas,
@@ -341,6 +342,11 @@ func (d *Dumper) rows(ctx context.Context, w *errWriter, stmts []dbdump.Statemen
 	var order [][2]string
 	for _, sc := range d.snap.Schemas {
 		for _, t := range sc.Tables {
+			// a query of the parent returns the rows of its partitions, so the
+			// rows of a partition are read only once
+			if t.IsPartition() {
+				continue
+			}
 			k := [2]string{sc.Name, t.Name}
 			tables[sc.Name+"."+t.Name] = k
 			order = append(order, k)
@@ -368,7 +374,8 @@ func (d *Dumper) rows(ctx context.Context, w *errWriter, stmts []dbdump.Statemen
 	return nil
 }
 
-// table writes the rows of one table, a batch to each INSERT.
+// table writes the rows of one table, a batch to each INSERT, between the
+// statements that the target runs before and after them.
 func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) error {
 	l, err := dbdump.NewLoader(d.snap, schema, table, d.target, d.policy)
 	if err != nil {
@@ -394,6 +401,11 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 			fmt.Fprintf(w, "\n-- Name: %s.%s; Type: data; Stage: data\n", schema, table)
 			if !l.Ordered() {
 				fmt.Fprintln(w, "-- Note: the table has no primary key, so the order of the rows is the order that the source gave")
+			}
+			// SQL Server takes a value for an identity column only after SET
+			// IDENTITY_INSERT
+			if s := l.Prologue(); s != "" {
+				fmt.Fprintln(w, terminate(s))
 			}
 			first = false
 		}
@@ -422,7 +434,13 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	return flush()
+	if err := flush(); err != nil {
+		return err
+	}
+	if s := l.Epilogue(); s != "" && !first {
+		fmt.Fprintln(w, terminate(s))
+	}
+	return w.err
 }
 
 // sourceSession runs the statements that dbmeta gives for the session of the
@@ -446,10 +464,38 @@ func (d *Dumper) sourceSession(ctx context.Context, l *dbdump.Loader) error {
 	return nil
 }
 
-// terminate ends a statement with a semicolon on its last line.
+// supported returns the dialects whose capability for a dump has ok, in a
+// sorted list such as "duckdb, mysql and postgres", so that a refusal names the
+// dialects that work.
+func supported(ok func(dbdump.Capability) bool) string {
+	var names []string
+	for _, d := range dbmeta.Dialects() {
+		if ok(dbdump.Support(d)) {
+			names = append(names, string(d))
+		}
+	}
+	slices.Sort(names)
+	switch len(names) {
+	case 0:
+		return "no other"
+	case 1:
+		return names[0]
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1]
+}
+
+// terminate ends a statement with a semicolon. The semicolon goes on a line of
+// its own when the last line holds a line comment, because a semicolon at the
+// end of the comment is part of the comment. The text of a view of SQL Server
+// can end in a comment such as "--ORDER BY City;". When the "--" is inside a
+// string instead, the extra semicolon is an empty statement, which usql skips.
 func terminate(s string) string {
 	s = strings.TrimRight(s, " \t\r\n")
-	if strings.HasSuffix(s, ";") {
+	last := s[strings.LastIndexByte(s, '\n')+1:]
+	switch {
+	case strings.Contains(last, "--"):
+		return s + "\n;"
+	case strings.HasSuffix(s, ";"):
 		return s
 	}
 	return s + ";"

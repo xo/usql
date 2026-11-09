@@ -41,3 +41,9 @@ a `D` number.
    questions of W80 on 2026-11-09, and W80 records the answers. W80 is built.
    Until this question is answered, an alias that is given an argument fails
    with "an alias takes no arguments".
+2. W77, a dump of Oracle: how does a package load? transit splits a package
+   spec, a package body and a type body at each `;`, by its D138 point 5, and
+   a dump of Oracle does not escape them, so a package loads invalid. Either
+   the dump writes each `;` inside such a unit as `\;`, or a maintainer
+   changes D138 so that the grammar reads these units whole. Found on
+   2026-11-09.

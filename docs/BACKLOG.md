@@ -660,6 +660,12 @@ by it.
 
 ## W13. Shrink the charts stack
 
+Update, 2026-11-10: okage's `svg` package rasterizes a chart in place of
+xo/resvg, so the row of `libresvg.a` below is gone, and so is the plan for a
+lean build of it. Measured on linux/amd64 with `-trimpath -ldflags "-s -w"`,
+a build with no tags is 12,114 KiB larger than a build with `-tags
+no_charts`. The embedded `echarts.min.js` below still applies.
+
 Update, 2026-11-05: usql has one build, and the chart renderer is in it, so
 this now affects every build and every release. `no_charts` leaves it out, and
 so does `no_drivers` unless the build names `charts`. The text below is from
@@ -2396,6 +2402,15 @@ details. Report it upstream.
 
 ### Confirm that the non-Windows, non-macOS, non-Linux builds now work
 
+Update, 2026-11-10: the maintainer asked for okage's `svg` package in place of
+xo/resvg. okage is pure Go, so usql links no `libresvg.a`, and the undefined
+`resvg_` symbols of issue 494 cannot happen. A build with `CGO_ENABLED=0` and
+`-tags 'no_drivers charts'` succeeds on linux/amd64, and so does a cross build
+of it for freebsd/arm64. Charts on FreeBSD, NetBSD and OmniOS are still to be
+confirmed on the machines below. A driver that
+needs cgo, such as DuckDB, can still need its `no_` tag there. The text below
+is from before the change.
+
 Update, 2026-11-05: usql has one build, and the chart renderer is in it, so a
 default build links resvg again on every platform. On a platform that resvg has
 no library for, the build needs `-tags no_charts`, or a `Build` constraint on
@@ -3870,6 +3885,92 @@ new `\copy`, and are decided with it.
    Still left for a maintainer: the format option of the snapshot, and phase
    2, the new `\copy`.
 
+7. Found on 2026-11-09, with the northwind fixture of dbrun:
+   - The banner, `Connected with driver ...`, was the first line of
+     `usql URL -D > dump.sql` at a shell, because usql wrote it whenever the
+     input was a terminal, and the dump did not load. It is now written only
+     when the input and the output are both a terminal, and never with `-c`,
+     `-f` or `-D`, as psql writes its banner. `TestNoBannerInOutput` runs usql
+     with a terminal as its input and a file as its output.
+   - dbmeta v0.39.0 does not dump a partitioned table or a materialized view
+     of PostgreSQL. It warns, and the partitions are dumped as plain tables.
+     Reported to dbmeta the same day. The objects are in
+     `drivers/testdata/dump/postgres-skipped.sql`, and the subtest `skipped
+     by dbmeta` of `TestDump` fails when dbmeta dumps them.
+   - Done on 2026-11-09 on dbmeta v0.40.0 (its D285), which dumps both. The
+     objects moved into `postgres.sql`, and `postgres-skipped.sql` is gone.
+     usql does not read the rows of a partition, because a query of its
+     parent returns them. Without that check, each row of a partition was
+     written twice, and the copy did not load. A dump of northwind now has no
+     warning, but it does not load either: dbmeta does not dump the domains,
+     composite types and extensions of PostgreSQL yet, and does not warn about
+     them. dbmeta started on them the same day.
+   - Done on 2026-11-09 on dbmeta v0.41.1 (its D286), which dumps the three.
+     v0.41.0 also wrote `COMMENT ON EXTENSION` for the extensions of DuckDB,
+     which DuckDB does not parse, and `TestDumpEmbedded` failed. Reported to
+     dbmeta, and v0.41.1 fixed it the same day. `postgres.sql` holds the
+     extension `citext`, a domain with a check, and a composite type, each
+     used by a column of `app.contacts`. A dump of northwind loads into an
+     empty database with no error, and the copy has the rows of the source.
+     dbmeta still leaves out the objects that RELEASE.md lists under "Known
+     gaps", and warns only about a foreign table, so `knownSkipped` cannot
+     track the others.
+8. Found on 2026-11-09, with the northwind fixture of dbrun on SQL Server 2025:
+   - The error of the dump was only `sqlserver: value does not fit its type`.
+     The SQL Server driver of usql cut each message that did not come from
+     the server at its last `sqlserver:`, and dbmeta's message names the
+     target there. The driver now keeps the whole message, which names the
+     table, the column and the row. `TestErrorMessage` of
+     `drivers/sqlserver` checks it.
+   - dbmeta v0.41.1 reads a `geography` value as text, and refuses it for the
+     NUL that its binary form holds. The dump of `hr.departments` stops.
+   - dbmeta v0.41.1 skips the system-versioned table `hr.prices`, with a
+     warning, and dumps its history table `hr.prices_history` as a plain
+     table. Both reported to dbmeta the same day. With `hr.departments` left
+     out, the dump finishes.
+   - Loaded into an empty database on SQL Server 2025, the dump showed two
+     faults of usql. usql did not write the `SET IDENTITY_INSERT` statements
+     that dbmeta's `Loader.Prologue` and `Loader.Epilogue` give, so each
+     table with an identity column lost its rows, and its foreign keys
+     failed. usql now writes them around the rows of the table. The text of
+     four views ended in a comment, such as `--ORDER BY City;`, and the
+     semicolon that usql added was part of the comment, so the next
+     statement joined the batch of the view. `terminate` now puts the
+     semicolon on a line of its own after a line comment. `TestTerminate`
+     checks it.
+   - The faults of dbmeta that the load showed: the alias type `hr.email`
+     and the table type `hr.code_list` are not dumped, with no warning, and
+     the column `hr.staff.email` is written with the type `email`, which
+     loses its schema. Reported to dbmeta the same day. Every other table of
+     the copy has the rows of the source.
+   - A dump of Oracle refused with `reading types of oracle: no type
+     functions`, because dbmeta has dump types for DuckDB, MySQL,
+     PostgreSQL, SQLite and SQL Server only. The refusal now names each
+     dialect that dbmeta's `Support` can dump. `TestNotSupported` checks it.
+     Asked dbmeta the same day whether a dump of Oracle is planned.
+   - dbmeta v0.42.0, the same day, dumps the `geography` column, the
+     system-versioned table, and both user types of SQL Server, and it dumps
+     Oracle. The dump of northwind on SQL Server needs no excluded table, and
+     warns only about the partition scheme of `hr.events`. It is not yet
+     loaded into an empty database, because the container belongs to another
+     owner. On Oracle 21c, the dump of northwind loaded into the server after
+     its schemas were dropped, and each of the 17 tables has the rows of the
+     source. Two faults remain. The dump writes the user `OPS$ORACLE` of the
+     Oracle image, which the load refuses, reported to dbmeta. The package
+     `HR.PAYROLL` loads invalid, because transit splits a package at its
+     first semicolon. transit's D138 point 5 decides this: the grammar does
+     not learn a package, and a script escapes each `;` inside it as `\;`.
+     The functions, procedures and triggers of the dump loaded valid. PLAN.md
+     holds the open question. `TestNotSupported` now picks a dialect that
+     dbmeta cannot dump, since Oracle can be.
+   - dbmeta v0.42.1, on 2026-11-10, leaves out of an Oracle dump each user
+     that owns no object. The same round trip on Oracle 21c writes no
+     `OPS$ORACLE`, and each of the 17 tables has the rows of the source. The
+     package `HR.PAYROLL` is the only object that is invalid. The northwind
+     fixture does not load on SQL Server 2022, because it uses the `json`
+     type of SQL Server 2025, so a load of the SQL Server dump still waits
+     for a container of SQL Server 2025.
+
 ## W78. SQL*Plus's slash line on Oracle
 
 Source: found on 2026-11-08, while checking `\errverbose` on Oracle 21c. The
@@ -4120,3 +4221,127 @@ read it, and keeps the word in lower case or the number. `\pset
 xheader_width` writes psql's messages, and Tab after it offers `full`,
 `column` and `page`. `TestXheaderWidth` compares the output of each value
 with the recordings of psql 18.6 above, for borders 0, 1 and 2.
+
+## W82. A dump fixture with the hard objects of each product
+
+Source: asked by the maintainer on 2026-11-10, for W77. The maintainer agreed
+the specification below on the same day, after a review by three other
+models, and works with dbmeta on the fixture.
+
+The northwind fixture has one or two objects of each kind, and the describe
+commands of usql compare their output with it. A dump needs objects that test
+the order of the statements, the quoting of names and the variants of each
+kind. So the hard objects go into a second fixture, and northwind and `hr`
+stay as they are.
+
+dbmeta owns every fixture (its D254), so dbmeta writes this one. usql asks
+for it and uses it.
+
+### The fixture
+
+`dbrun fixture dump <selector>` builds a database named `dump` with two
+schemas, so that an object can refer to an object in the other schema. Each
+product has one file, with one section for each area: types, routines,
+triggers, tables and indexes, dependencies, and names. The files are plain SQL
+that usql loads. They do not escape a `;` with `\;` for usql. If usql cannot
+load a statement, the statement stays, and the test records it as a known
+skip with the reason.
+
+A row in each table has values for each column, nulls and Unicode included,
+so that a comparison of the rows has something to compare.
+
+### PostgreSQL
+
+1. Types: a range type and its multirange, a domain over an enum, and an enum
+   that gains a value with `ALTER TYPE ... ADD VALUE ... BEFORE`.
+2. Routines: overloaded functions, OUT and INOUT parameters, `RETURNS TABLE`
+   and `SETOF`, default arguments, `SECURITY DEFINER`, each volatility, and a
+   SQL body with `BEGIN ATOMIC`.
+3. Triggers: a statement trigger, a `WHEN` condition, `UPDATE OF` a column,
+   `INSTEAD OF` on a view, a deferrable constraint trigger, transition
+   tables, a trigger on a partitioned table, a disabled trigger and an event
+   trigger.
+4. A user function that a check, a default, a generated column and an index
+   on an expression call.
+5. Tables and indexes: a default partition, a subpartition, an index on the
+   partitioned parent, `EXCLUDE USING gist`, an index with `INCLUDE`, and a
+   column that is dropped after the table is made.
+6. A view and a function that depend on each other in a loop.
+
+### SQL Server
+
+1. Functions: an inline and a multi-statement table-valued function, and a
+   function `WITH SCHEMABINDING` that a view in the other schema uses.
+2. A computed column that calls a user function.
+3. Triggers: `INSTEAD OF` on a view, a DDL trigger on the database, a
+   disabled trigger, and an order that `sp_settriggerorder` sets.
+4. Procedures: OUTPUT parameters, defaults for parameters, and a procedure of
+   several statements with no `BEGIN ... END` around them.
+5. Constraints and indexes: named default and check constraints, a filtered
+   index, included columns and a columnstore index.
+6. An XML schema collection, a security policy, and a default of
+   `NEXT VALUE FOR` a sequence.
+
+### Oracle
+
+1. Types: a type body with methods, inheritance with `UNDER`, a `VARRAY`, a
+   nested table column with `STORE AS`, and a `REF` column.
+2. Triggers: a compound trigger, `INSTEAD OF` on a view, a statement
+   trigger, `UPDATE OF`, `WHEN`, and a DDL trigger on the schema.
+3. Routines: overloads in a package, a pipelined table function,
+   `AUTHID CURRENT_USER`, and a deterministic function that an index and a
+   virtual column use.
+4. Tables: an index-organized table, invisible columns, a default of
+   `seq.NEXTVAL`, a deferrable foreign key and a materialized view log.
+5. A view that calls a function of a package. The spec must load before the
+   view, and the body can load after it.
+
+### MySQL and MariaDB
+
+1. The `SET` type, an `EVENT`, and two triggers on the same event in an order
+   that `FOLLOWS` and `PRECEDES` set.
+2. Routines with `DEFINER` and `SQL SECURITY INVOKER`, routines marked
+   `DETERMINISTIC` and `NO SQL`, and routines made under different values of
+   `sql_mode`.
+3. Views: one `WITH CHECK OPTION`, a view on a view, and a view that calls a
+   function.
+4. Invisible columns, a character set and a collation on one column, and a
+   spatial index.
+
+### SQLite
+
+1. Triggers: `INSTEAD OF` on a view, `WHEN` and `UPDATE OF`.
+2. Tables: `STRICT`, `WITHOUT ROWID`, `AUTOINCREMENT` with its row in
+   `sqlite_sequence`, and deferred foreign keys.
+3. An FTS5 table. FTS5 makes tables of its own, and a dump must not make them
+   again.
+
+### DuckDB
+
+The `MAP`, `UNION` and fixed `ARRAY` types, a struct that holds a list of
+maps, table macros, `nextval` defaults, and foreign keys.
+
+### Every product
+
+1. Foreign keys that refer to each other, and a foreign key to its own table.
+2. A view that calls a function that reads a table.
+3. A type in the signature of a function.
+4. Names in mixed case, with a space, a reserved word, Unicode and an
+   embedded quote.
+5. One name for a schema, a table, a column and a type at once.
+
+### The test
+
+The round trip loads the fixture, dumps it, and loads the dump into an empty
+database. It then makes four comparisons:
+
+1. dbmeta's snapshot of the copy against the snapshot of the source. This
+   compares every object that dbmeta reads.
+2. The rows of each table, by their values and not by their count.
+3. The dump of the copy against the dump of the source.
+4. What each object does: each function is called, each trigger fires, and
+   the order of each enum and the next value of each sequence are read.
+
+Not decided yet: whether the round trip test lives in dbmeta, in usql or in
+both. usql runs it with usql as the client, because the dump is a usql
+script.

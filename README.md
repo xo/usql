@@ -1779,6 +1779,7 @@ At a terminal with graphics, `\chart help` lists the charts and their options.
 
 The renderer runs Apache ECharts in a JavaScript engine and rasterizes the
 result with an SVG renderer, which together add about 12 MiB to the binary.
+Both are pure Go, so a build with `CGO_ENABLED=0` has the renderer too.
 Every build has it, unless its build tags leave it out. The tag `no_charts`
 leaves it out, and so does `no_drivers` unless the tag `charts` is also given.
 A build without it reports that it has no chart renderer.

@@ -60,11 +60,7 @@ func init() {
 			if e, ok := err.(sqlserver.Error); ok {
 				return strconv.Itoa(int(e.Number)), e.Message
 			}
-			msg := err.Error()
-			if i := strings.LastIndex(msg, "sqlserver:"); i != -1 {
-				msg = msg[i:]
-			}
-			return "", msg
+			return "", err.Error()
 		},
 		// psql's layout, with the number of the error as the code. The level,
 		// the state and the server go in DETAIL, the procedure and the line

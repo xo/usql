@@ -393,6 +393,12 @@ There are four tests:
   DuckDB and back, where the number of rows of each table must be the same.
   It makes the databases `usql_dump_src` and others like it on the server,
   and drops them at the end. It skips a database that usql cannot dump yet.
+  An object that dbmeta does not dump, and warns about, goes into
+  `drivers/testdata/dump/DIALECT-skipped.sql`, and its warning goes into
+  `knownSkipped` in `drivers/dump_test.go`. The subtest `skipped by dbmeta`
+  fails when dbmeta dumps the object. Then move the object into the fixture
+  of the dialect, and remove it from `knownSkipped`. No object is skipped
+  now.
 
 dbrun has the fixture `examples` for PostgreSQL, MySQL, MariaDB, SQL Server,
 Oracle, SQLite and DuckDB. On another database, `TestDescribe` and `TestCopy`

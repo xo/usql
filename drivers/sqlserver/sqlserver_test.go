@@ -3,9 +3,12 @@ package sqlserver
 import (
 	"bytes"
 	"database/sql"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/xo/tblfmt"
+	"github.com/xo/usql/drivers"
 )
 
 // TestUniqueIdentifier checks that a uniqueidentifier prints in lower case,
@@ -39,5 +42,18 @@ func TestUniqueIdentifier(t *testing.T) {
 	}
 	if vals[2] != nil {
 		t.Errorf("expected a null, got: %q", vals[2].Buf)
+	}
+}
+
+// TestErrorMessage checks that an error that does not come from the server
+// keeps its whole message. A dump of a geography value once printed only
+// "sqlserver: value does not fit its type", because the message was cut at
+// the last "sqlserver:", which dbmeta's text holds as the name of the target.
+func TestErrorMessage(t *testing.T) {
+	t.Parallel()
+	err := fmt.Errorf("dumping the rows of hr.departments: the column office_location of row 1: text with a NUL has no literal in sqlserver: %w", errors.New("value does not fit its type"))
+	const exp = "sqlserver: dumping the rows of hr.departments: the column office_location of row 1: text with a NUL has no literal in sqlserver: value does not fit its type"
+	if got := drivers.WrapErr("sqlserver", err).Error(); got != exp {
+		t.Errorf("expected %q, got: %q", exp, got)
 	}
 }

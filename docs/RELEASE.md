@@ -24,12 +24,24 @@ Read these first. Some of them can stop the release.
   rest, and is due before the release.
 - `--dump` has gaps in dbmeta, which W77 lists. The ones that change data: a
   MySQL `TIMESTAMP` moves when the client is not in UTC, and a JSON column of
-  MariaDB loses its check of `json_valid`.
+  MariaDB loses its check of `json_valid`. dbmeta does not dump these objects
+  of PostgreSQL yet, and writes no warning for them: range types, collations,
+  casts, operators, operator classes, roles and grants, row level security
+  policies, rules, `INHERITS`, extended statistics, publications, and the
+  view options `security_invoker` and `security_barrier`. A foreign table is
+  not dumped, with a warning. A domain loses the names of its checks, and a
+  domain check that calls a function does not load. Roles and grants are not
+  dumped for any database, nor a partition scheme of SQL Server, with a
+  warning, nor a subpartition of Oracle. usql splits an Oracle package at its
+  first semicolon, as transit's D138 decides, and the dump does not escape it,
+  so a package loads invalid. A database that dbmeta cannot dump is refused,
+  and the refusal names the databases that can be dumped.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.39.0, dburl v0.58.0, tblfmt v0.24.0,
+usql requires dbfwd v0.3.2, dbmeta v0.42.1, dburl v0.58.0, tblfmt v0.24.0,
 transit v0.7.6 and rline v0.8.1, all in `go.mod`. It builds with no `go.work`.
+It requires okage at the commit d34a75a, until okage releases v0.2.0.
 
 ### One build, with every driver
 
@@ -49,6 +61,12 @@ features of SQLite that `build.sh` adds.
   used `-tags 'no_base x y'` now uses `-tags 'no_drivers x y'`.
 - The charts renderer was only in a build with `-tags charts` or `-tags all`.
   It is now in every build, which adds about 12 MiB to the binary.
+- okage's `svg` package rasterizes a chart, in place of xo/resvg. okage is
+  pure Go, so the chart renderer needs no cgo and no prebuilt Rust library.
+  A build with `CGO_ENABLED=0` has it, and so does a platform that resvg had
+  no library for. The text of a chart can use a different system font than
+  resvg chose, because okage picks the first installed font of its own list
+  for `sans-serif`.
 - The h2 and gizmosql drivers are removed. They were the `bad` group. dburl
   v0.56.0 drops their schemes, with the aliases `gz` and `gizmo`.
 - A driver with no hooks has no package under `drivers`. `gen.go` writes its
@@ -599,6 +617,11 @@ the XDG Base Directory specification on Linux and other Unix systems.
   options write only the schema or only the rows, choose schemas and
   tables, and write for another database with `--target`. A dump to a file
   replaces the file only when it is complete.
+- The banner, `Connected with driver ...`, is written only when usql reads
+  from the terminal and writes to it, as psql writes its banner. Before, usql
+  wrote it whenever the input was a terminal, so `usql URL -D > dump.sql` at
+  a shell put it on the first line of the dump, which then did not load, and
+  `usql URL -c ... > out.txt` put it in the output.
 - `\dump [OPTIONS] [FILE]` writes the same script from inside usql, to the
   output, to a file, or to a command after `|`. It takes the options of
   `--dump`, written as `-NAME`, from the same table, so the two write the
@@ -831,7 +854,9 @@ more than a few at a time.
 ### Connecting and the banner
 
 For every driver in the build, check that it connects, and that the banner
-names the database and its release. For the new drivers, check one query and
+names the database and its release. Check that `usql URL -c 'select 1' >
+out.txt` and `usql URL -D > dump.sql`, run at a terminal, write no banner
+into the file. For the new drivers, check one query and
 one error, and a wrong password:
 
 - CockroachDB, CrateDB, Neo4j, InfluxDB and InfluxQL
@@ -1056,6 +1081,10 @@ left, as in psql. This was checked on PostgreSQL 18, Oracle and SQLite on
   table, none, only sqlite3, and moderncsqlite in place of sqlite3
 - `\chart` in a build with no tags, and the error of `\chart` in a build with
   `-tags no_charts`
+- `\chart` in a build with `CGO_ENABLED=0`, and the fonts of a chart on macOS,
+  Windows and Linux. okage loads the fonts of the system and of the home
+  directory, and reads no configuration of fontconfig.
+- `go.mod` requires a release of okage, v0.2.0 or later, and not a commit
 - `./size.sh`, compared with W32. The chart renderer is now in the build.
 - on Linux, an ODBC query through the SQLite ODBC driver in a build with
   `-tags libsqlite3`, and through the PostgreSQL Unicode driver in a build with

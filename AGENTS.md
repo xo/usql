@@ -143,7 +143,7 @@ usql belongs to a family of repositories, and requires most of them in
 | `xo/dbtpl` | Code generation from database schemas |
 | `xo/dbfwd` | Forwards to databases in Kubernetes, which usql opens from a `k8s` URL |
 | `xo/oracle` | The Oracle driver |
-| `xo/echartsgoja` and `xo/resvg` | The chart renderer of `\chart`: ECharts in a JavaScript engine, and the rasterizer of its SVG |
+| `xo/echartsgoja` and `xo/okage` | The chart renderer of `\chart`: ECharts in a JavaScript engine, and the pure Go rasterizer of its SVG, in `okage/svg` |
 | `xo/terminfo` | The color depth of the terminal |
 | `xo/ox` | A command line parser, planned to replace cobra and viper (W80) |
 

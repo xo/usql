@@ -1,6 +1,6 @@
 module github.com/xo/usql
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/SAP/go-hdb v1.21.0
@@ -30,12 +30,12 @@ require (
 	github.com/xo/cassandra v0.2.5
 	github.com/xo/dbfwd v0.3.2
 	github.com/xo/dbimp v0.26.1
-	github.com/xo/dbmeta v0.39.0
+	github.com/xo/dbmeta v0.42.1
 	github.com/xo/dburl v0.58.0
 	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.4.1
+	github.com/xo/okage v0.1.1-0.20261109215206-d34a75a4b01b
 	github.com/xo/oracle v0.4.1
-	github.com/xo/resvg v0.13.0
 	github.com/xo/rline v0.8.1
 	github.com/xo/tblfmt v0.24.0
 	github.com/xo/terminfo v1.3.1
@@ -98,6 +98,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/getsentry/sentry-go v0.50.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
+	github.com/go-text/typesetting v0.3.5 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.12.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -151,16 +152,6 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/inputrc v0.8.0 // indirect
-	github.com/xo/resvg/libresvg/darwin_amd64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/darwin_arm64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/freebsd_amd64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/linux_amd64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/linux_amd64_musl v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/linux_arm v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/linux_arm64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/linux_arm64_musl v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/windows_amd64 v0.49.0 // indirect
-	github.com/xo/resvg/libresvg/windows_arm64 v0.49.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
@@ -174,6 +165,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20261106192419-47ce03d25ef0 // indirect
+	golang.org/x/image v0.47.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
