@@ -4421,3 +4421,26 @@ that dbmeta does not write, and each table or materialized view that loses a
 part. The objects of point 4 get no warning yet, because dbmeta neither
 writes them nor lists them in `Snapshot.Skipped`. dbmeta was asked to list
 them.
+
+### Third results
+
+dbmeta v0.44.0, on 2026-11-10, fixed the new faults of the second results,
+and lists the objects of point 4 in `Snapshot.Skipped`, so usql warns about
+them. The round trip again:
+
+1. SQLite, DuckDB, PostgreSQL 17, MySQL 8.4 and MariaDB 10.6 load with no
+   error. A dump of the two MySQL databases is one script.
+2. What is still lost: the counter of AUTOINCREMENT in SQLite, the position of
+   a DuckDB sequence, MySQL's INVISIBLE, the length of a prefix index, an
+   event and the order of triggers. A second dump of MySQL can write the
+   routines in another order.
+3. SQL Server 2022 loads with no error, and the second dump equals the first.
+   It warns for the DDL trigger and the security policy. Still lost: the
+   names of the default constraints, the order of triggers, the position of
+   a sequence and an XML schema collection, which gets no warning.
+4. Oracle 21c, on a container that dbmeta lent, loaded into two other users:
+   no error, and the second dump equals the first. The DDL trigger gets a
+   warning. The log of a materialized view is lost with no warning. The data
+   length of an object column changes from 50 to 1. The column was a REF,
+   which dbmeta v0.44.1 writes as a REF column. Its values are NULL in the
+   copy, because a REF holds the identifier of a row of the source.

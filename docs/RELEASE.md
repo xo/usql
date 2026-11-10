@@ -37,7 +37,7 @@ Read these first. Some of them can stop the release.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.43.1, dburl v0.58.0, okage v0.2.0,
+usql requires dbfwd v0.3.2, dbmeta v0.44.1, dburl v0.58.0, okage v0.2.0,
 tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
 with no `go.work`.
 
@@ -629,8 +629,9 @@ the XDG Base Directory specification on Linux and other Unix systems.
 - A dump prints a warning on standard error for each object that it does not
   write, and for each table or materialized view that it writes without a
   part of it, such as its partitions. Before, only a comment in the script
-  named such an object. An object that dbmeta does not read gets no warning
-  yet, because dbmeta does not list it (W82).
+  named such an object. A MySQL event, an XML schema collection of SQL
+  Server and an Oracle materialized view log get no warning yet, because
+  dbmeta has no kind for them (W82).
 - The banner, `Connected with driver ...`, is written only when usql reads
   from the terminal and writes to it, as psql writes its banner. Before, usql
   wrote it whenever the input was a terminal, so `usql URL -D > dump.sql` at
