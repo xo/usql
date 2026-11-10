@@ -4444,3 +4444,22 @@ them. The round trip again:
    length of an object column changes from 50 to 1. The column was a REF,
    which dbmeta v0.44.1 writes as a REF column. Its values are NULL in the
    copy, because a REF holds the identifier of a row of the source.
+
+### Fourth results
+
+dbmeta v0.45.0, on 2026-11-10, writes nearly everything that the fixture
+holds, and warns for the rest. The round trip again:
+
+1. SQLite, PostgreSQL 17 and MariaDB 10.6: no error, the second dump equals
+   the first, and the catalogs are equal.
+2. DuckDB, SQL Server 2022 and MySQL 8.4: no error, and the second dump
+   equals the first. MySQL writes RESTRICT for a foreign key that has NO
+   ACTION. SQL Server rewrites the header of a module.
+3. Oracle 21c, loaded into two other users: no error, and the REF column
+   warns. On v0.45.0, the DDL trigger of a schema was not written, and the
+   names of system constraints were written. dbmeta v0.45.1 fixed both. On
+   v0.45.1, from a fresh fixture, the second dump equals the first, and the
+   catalogs differ only in the name of a system sequence.
+4. An Oracle dump that starts a few seconds after the tables were made fails
+   with ORA-01466, because the dump reads in a read-only transaction. A dump
+   a little later works. Not decided yet: whether usql waits and tries again.
