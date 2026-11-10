@@ -4486,3 +4486,29 @@ purpose. The round trip again, with the privileges compared too:
 4. Oracle 21c, loaded into two other users: no error, the second dump equals
    the first, and the catalogs and the privileges are equal. Only the REF
    column warns.
+
+The northwind fixtures of SQLite and DuckDB, dumped the same day, found three
+more faults of dbmeta, reported to it:
+
+1. A SQLite column with no type stopped the dump. dbmeta v0.46.1 fixed it.
+2. A DuckDB `INTERVAL` value has no literal, so the dump of the table stops.
+3. A SQLite `datetime` moves by the local offset on each copy when the client
+   is not in UTC, because the driver reads text as UTC and dbmeta writes the
+   local wall clock. In UTC, the text `1948-12-08` becomes
+   `1948-12-08 00:00:00`.
+
+The dump also started again for the `INTERVAL` error, which a new try cannot
+avoid. Now only an error of the database while it reads the rows starts the
+dump again.
+
+dbmeta v0.46.2, the same day, fixed the second and the third. The SQLite
+northwind round trip is clean in Asia/Jakarta, and keeps `1948-12-08` as it
+is. The DuckDB northwind dumps, but does not load: a virtual generated column
+is written as a default, which DuckDB refuses. Reported to dbmeta.
+
+dbmeta v0.46.3, on 2026-11-11, writes the generated column as one. The
+DuckDB northwind then fails on `main.employees`, which refers to itself. The
+dump writes its rows in the order of the source, and employee 1 names
+employee 2 as the one it reports to. DuckDB checks each row against the rows
+already loaded, so the row fails. Reported to dbmeta, which needs a
+parent-first order for such a table.
