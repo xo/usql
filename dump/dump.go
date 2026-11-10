@@ -428,9 +428,11 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 	if err := d.sourceSession(ctx, l); err != nil {
 		return err
 	}
+	// an error of the database while it reads is one that a new try of the
+	// dump, in a new transaction, can avoid. An error of a value is not.
 	rows, err := d.q.QueryContext(ctx, l.SelectAll())
 	if err != nil {
-		return err
+		return Retryable(err)
 	}
 	defer rows.Close()
 	n := len(l.Columns())
@@ -467,7 +469,7 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 			ptrs[i] = &vals[i]
 		}
 		if err := rows.Scan(ptrs...); err != nil {
-			return err
+			return Retryable(err)
 		}
 		if batch = append(batch, vals); len(batch) == size {
 			if err := flush(); err != nil {
@@ -476,7 +478,7 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 		}
 	}
 	if err := rows.Err(); err != nil {
-		return err
+		return Retryable(err)
 	}
 	if err := flush(); err != nil {
 		return err

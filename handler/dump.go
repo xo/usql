@@ -61,7 +61,8 @@ func (h *Handler) Dump(ctx context.Context, w io.Writer, opts dump.Options) erro
 
 // dumpIn writes the dump that q reads to w. warn says whether the warnings
 // of the dump go to standard error, so that a new try does not write them
-// again. An error of reading the rows is one that a new try can avoid.
+// again. The dump marks an error of the database while it reads the rows as
+// one that a new try can avoid.
 func (h *Handler) dumpIn(ctx context.Context, m *dbmeta.Meta, q dbmeta.Queryer, w io.Writer, opts dump.Options, warn bool) error {
 	d, err := dump.New(ctx, m, q, opts)
 	if err != nil {
@@ -73,7 +74,7 @@ func (h *Handler) dumpIn(ctx context.Context, m *dbmeta.Meta, q dbmeta.Queryer, 
 		}
 	}
 	if err := d.Write(ctx, w); err != nil {
-		return dump.Retryable(drivers.WrapErr(h.u.SchemeName, err))
+		return drivers.WrapErr(h.u.SchemeName, err)
 	}
 	return nil
 }

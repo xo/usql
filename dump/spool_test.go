@@ -2,11 +2,14 @@ package dump
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	dbdump "github.com/xo/dbmeta/dump"
 )
 
 // TestSpool checks that w gets only the script of the try that succeeded, so
@@ -76,5 +79,41 @@ func TestSpoolCanceled(t *testing.T) {
 	}, nil)
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("Spool returned %v, want %v", err, context.Canceled)
+	}
+}
+
+// failQueryer is a dbmeta.Queryer whose every query fails.
+type failQueryer struct {
+	err error
+}
+
+// QueryContext satisfies the dbmeta.Queryer interface.
+func (q failQueryer) QueryContext(context.Context, string, ...any) (*sql.Rows, error) {
+	return nil, q.err
+}
+
+// TestTableRetryable checks that a dump marks an error of the database while
+// it reads the rows as one that a new try can avoid, so that Spool starts the
+// dump again only for such an error, and not for a value that has no literal.
+func TestTableRetryable(t *testing.T) {
+	errRead := errors.New("ORA-01466: unable to read data - table definition has changed")
+	d := &Dumper{
+		q: failQueryer{errRead},
+		snap: &dbdump.Snapshot{
+			Dialect: "sqlite3",
+			Schemas: []dbdump.Schema{{
+				Name: "main",
+				Tables: []dbdump.Table{{
+					Name:    "t",
+					Columns: []dbdump.Column{{Name: "id", Type: dbdump.Type{Kind: dbdump.Integer}}},
+				}},
+			}},
+		},
+		target: "sqlite3",
+	}
+	err := d.table(context.Background(), &errWriter{w: io.Discard}, "main", "t")
+	var re retryError
+	if !errors.Is(err, errRead) || !errors.As(err, &re) {
+		t.Errorf("table returned %v, want %v marked as retryable", err, errRead)
 	}
 }

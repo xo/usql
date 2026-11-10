@@ -1580,9 +1580,9 @@ Inside a transaction that `\begin` started, `\dump` reads in that
 transaction, and so it includes the changes that are not committed yet.
 Outside such a transaction, the dump goes to a temporary file that only its
 owner can read, and its destination gets the dump only when it is complete. So
-standard output or a command gets a whole script or nothing. When reading the
-rows fails, the dump waits and starts again in a new transaction, at most three
-times. Oracle refuses to read a table that was made a few seconds before the
+standard output or a command gets a whole script or nothing. When the database
+fails to read the rows, the dump waits and starts again in a new transaction,
+at most three times. A value that the dump cannot write stops it at once. Oracle refuses to read a table that was made a few seconds before the
 transaction started, and a new try a little later reads it. A file is written
 whole or not at all, and only its owner can read it. `--dump` runs
 no `init.sql`. Neither form reads its options from `config.yaml`, `-O` or a

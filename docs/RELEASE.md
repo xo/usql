@@ -632,9 +632,9 @@ the XDG Base Directory specification on Linux and other Unix systems.
   grammar of the target decides which `;` to escape (W82).
 - A dump goes to a temporary file first, and its destination gets it only
   when it is complete, so standard output and a command after `|` get a whole
-  script or nothing. When reading the rows fails, the dump waits and starts
-  again in a new transaction, at most three times, and says so on standard
-  error. Oracle refuses with ORA-01466 to read a table that was made a few
+  script or nothing. When the database fails to read the rows, the dump waits
+  and starts again in a new transaction, at most three times, and says so on
+  standard error. A value that the dump cannot write stops it at once. Oracle refuses with ORA-01466 to read a table that was made a few
   seconds before the transaction started. Inside a transaction that `\begin`
   started, `\dump` writes as it reads, and does not start again.
 - A dump prints a warning on standard error for each object that it does not
