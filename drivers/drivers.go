@@ -172,19 +172,13 @@ func Open(ctx context.Context, u *dburl.URL, stdout, stderr func() io.Writer) (*
 // held the grammar. Allowing more is not safe: a hash comment would swallow
 // SQL Server's #temp table names over ODBC.
 func Language(u *dburl.URL) *transit.Language {
-	s := dbmeta.Syntax{DollarQuotes: true, BlockComments: true, DashComments: true}
-	var batches bool
-	if u != nil {
-		var ok bool
-		if s, ok = dbmeta.Dialect(u.Dialect).Syntax(); !ok {
-			s = dbmeta.Syntax{BlockComments: true, DashComments: true}
-		}
-		// a database that has batches, such as CQL, has them as one statement
-		if info, ok := dbmeta.Dialect(u.Dialect).Info(); ok {
-			batches = len(info.Batches) != 0
-		}
+	if u == nil {
+		return feed.Language(dbmeta.Syntax{DollarQuotes: true, BlockComments: true, DashComments: true}, false)
 	}
-	return feed.Language(s, batches)
+	if lang, ok := feed.DialectLanguage(dbmeta.Dialect(u.Dialect)); ok {
+		return lang
+	}
+	return feed.Language(dbmeta.Syntax{BlockComments: true, DashComments: true}, false)
 }
 
 // Version returns information about the database connection for a driver.

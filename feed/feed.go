@@ -10,6 +10,7 @@ package feed
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/xo/dbmeta"
@@ -45,6 +46,66 @@ func Language(s dbmeta.Syntax, batches bool) *transit.Language {
 		Brackets:         s.Brackets,
 		BackslashEscapes: s.BackslashEscapes,
 	})
+}
+
+// DialectLanguage returns the usql grammar for a dialect that dbmeta models,
+// with its lexical forms. A database that has batches, such as CQL, has each
+// batch as one statement. It returns false for a dialect with no model.
+func DialectLanguage(d dbmeta.Dialect) (*transit.Language, bool) {
+	s, ok := d.Syntax()
+	if !ok {
+		return nil, false
+	}
+	var batches bool
+	if info, ok := d.Info(); ok {
+		batches = len(info.Batches) != 0
+	}
+	return Language(s, batches), true
+}
+
+// ErrNotOneStatement is the error when a text cannot be written as one
+// statement, because it holds a meta command.
+var ErrNotOneStatement = errors.New("the text cannot be written as one statement")
+
+// OneStatement returns s with each ';' that ends a statement before the end
+// of s written as '\;', so that p reads s as one statement. A statement ends at
+// the first ';' that is not escaped, or at a meta command that runs the query
+// buffer, such as \g. So the body of a T-SQL procedure that holds statements
+// with no BEGIN and END around them needs each of its ';' escaped. Only the
+// grammar of p decides which ';' end a statement, so a ';' in a string, a
+// quoted name, a comment or a body that the grammar keeps whole stays as it
+// is. s must end with the ';' that ends it.
+func OneStatement(p *Parser, s string) (string, error) {
+	// a statement with one ';' cannot end before its end
+	if strings.Count(s, ";") < 2 {
+		return s, nil
+	}
+	items, err := p.Parse(s)
+	if err != nil {
+		return "", err
+	}
+	if len(items) < 2 {
+		return s, nil
+	}
+	var b strings.Builder
+	start := 0
+	for _, it := range items[:len(items)-1] {
+		if it.Kind != Statement || !it.Terminated || s[it.End-1] != ';' {
+			return "", ErrNotOneStatement
+		}
+		b.WriteString(s[start : it.End-1])
+		b.WriteString(`\;`)
+		start = it.End
+	}
+	b.WriteString(s[start:])
+	out := b.String()
+	if items, err = p.Parse(out); err != nil {
+		return "", err
+	}
+	if len(items) != 1 {
+		return "", ErrNotOneStatement
+	}
+	return out, nil
 }
 
 // Kind is the kind of an Item.

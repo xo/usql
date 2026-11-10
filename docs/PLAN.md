@@ -41,9 +41,3 @@ a `D` number.
    questions of W80 on 2026-11-09, and W80 records the answers. W80 is built.
    Until this question is answered, an alias that is given an argument fails
    with "an alias takes no arguments".
-2. W82, a T-SQL procedure with no `BEGIN ... END`: where does its body end?
-   usql cuts it at the first `;`, and the rest of its statements run as
-   queries when a dump loads. Either transit's grammar reads the body of a
-   `CREATE PROCEDURE`, `FUNCTION` or `TRIGGER` of SQL Server to the end of the
-   script or to a marker, or the dump writes each `;` in such a body as `\;`.
-   Found on 2026-11-10.

@@ -37,7 +37,7 @@ Read these first. Some of them can stop the release.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.42.1, dburl v0.58.0, okage v0.2.0,
+usql requires dbfwd v0.3.2, dbmeta v0.43.1, dburl v0.58.0, okage v0.2.0,
 tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
 with no `go.work`.
 
@@ -613,12 +613,24 @@ the XDG Base Directory specification on Linux and other Unix systems.
 
 - `--dump`, or `-D`, writes the connected database as a usql script, to
   standard output or to the file of `-o`, and `usql -f` loads it. It works
-  for PostgreSQL, MySQL, MariaDB, SQLite and DuckDB, and dbmeta builds every
-  statement (W77). The script stops at the first error, and its `\restrict`
-  line stops a meta command that a value could smuggle in. Hidden long
-  options write only the schema or only the rows, choose schemas and
-  tables, and write for another database with `--target`. A dump to a file
-  replaces the file only when it is complete.
+  for each database that dbmeta can dump, and dbmeta builds every statement
+  (W77). A dump of any other database is refused, and the refusal names the
+  databases that can be dumped. The script stops at the first error, and its
+  `\restrict` line stops a meta command that a value could smuggle in.
+  Hidden long options write only the schema or only the rows, choose schemas
+  and tables, and write for another database with `--target`. A dump to a
+  file replaces the file only when it is complete.
+- usql ends a statement at the first `;` that is not escaped, or at a meta
+  command that runs the query buffer, such as `\g`. So a dump writes each `;`
+  that would end a statement early as `\;`. A procedure of SQL Server with
+  several statements and no `BEGIN ... END` then loads whole. Before, it
+  loaded with only its first statement, and the others ran as queries. The
+  grammar of the target decides which `;` to escape (W82).
+- A dump prints a warning on standard error for each object that it does not
+  write, and for each table or materialized view that it writes without a
+  part of it, such as its partitions. Before, only a comment in the script
+  named such an object. An object that dbmeta does not read gets no warning
+  yet, because dbmeta does not list it (W82).
 - The banner, `Connected with driver ...`, is written only when usql reads
   from the terminal and writes to it, as psql writes its banner. Before, usql
   wrote it whenever the input was a terminal, so `usql URL -D > dump.sql` at

@@ -4383,7 +4383,41 @@ out. All faults below are reported to dbmeta, except the last.
    the expression of a virtual column. Oracle is not tested yet.
 8. SQL Server: usql cuts a procedure that has several statements and no
    `BEGIN ... END` at its first `;`. The rest of the statements run as
-   queries during the load, with no error. Not decided yet: whether transit
-   reads such a body whole, or the dump escapes each `;` in it as `\;`.
+   queries during the load, with no error. The maintainer decided on
+   2026-11-10 that a statement ends at the first `;` that is not escaped, or
+   at a meta command that runs the query buffer, such as `\g`. So the dump
+   escapes. Done the same day: `feed.OneStatement` parses each statement of
+   the schema with the grammar of the target, and writes each `;` that ends
+   it early as `\;`. On SQL Server 2022, the procedure of the fixture loads
+   whole, and returns its three results.
 
 MariaDB is not tested yet.
+
+### Second results
+
+dbmeta v0.43.0, on 2026-11-10, fixed most of the faults above, and its
+fixture loads on Oracle 21c. usql ran the round trip again on all seven
+products, with the escape of item 8:
+
+1. PostgreSQL 17 and SQL Server 2022 load with no error, and the second dump
+   equals the first. SQLite loses only the counter of AUTOINCREMENT.
+2. New faults, reported to dbmeta. A dump from DuckDB for SQLite names each
+   table with its DuckDB schema, so it does not load. v0.43.1 fixed it the
+   same day, and usql takes v0.43.1. A dump of two MySQL or MariaDB databases
+   fails while it reads the rows, and a foreign key or a view that crosses
+   them fails to load. An Oracle dump fails on the table that stores a nested
+   table column. DuckDB refuses the rows of a table that refers to itself,
+   because the rows are in one INSERT.
+3. Oracle, with that table left out: the nested table, the object table, the
+   index-organized table, the index on a virtual column, the views across
+   users and deferrable foreign keys fail or change.
+4. Still not dumped, and listed by dbmeta: a PostgreSQL aggregate and event
+   trigger, several objects of SQL Server, MySQL's INVISIBLE, events and
+   trigger order, and two DuckDB types.
+
+The maintainer decided the same day that a dump warns on standard error for
+each object that it leaves out. `Dumper.Warnings` now names each statement
+that dbmeta does not write, and each table or materialized view that loses a
+part. The objects of point 4 get no warning yet, because dbmeta neither
+writes them nor lists them in `Snapshot.Skipped`. dbmeta was asked to list
+them.

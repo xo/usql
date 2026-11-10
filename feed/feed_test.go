@@ -616,3 +616,97 @@ func TestBackslashEscapes(t *testing.T) {
 		}
 	}
 }
+
+// TestOneStatement checks that OneStatement escapes each ';' that would end a
+// statement early, and only those, so that the statement reads as one and
+// runs as written. A dump writes each statement of a schema through it.
+func TestOneStatement(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		dialect dbmeta.Dialect
+		name    string
+		src     string
+		exp     string
+	}{
+		{
+			"sqlserver", "procedure with no begin",
+			"create procedure p @min int = 0 as\n  select 1;\n  select 2;\n  select 3;",
+			"create procedure p @min int = 0 as\n  select 1\\;\n  select 2\\;\n  select 3;",
+		},
+		{
+			"sqlserver", "trigger with no begin",
+			"create trigger t on x after insert as\n  insert into a values (1);\n  insert into b values (';');",
+			"create trigger t on x after insert as\n  insert into a values (1)\\;\n  insert into b values (';');",
+		},
+		{
+			"sqlserver", "procedure with begin",
+			"create procedure p as\nbegin\n  select 1;\n  select 2;\nend;",
+			"create procedure p as\nbegin\n  select 1;\n  select 2;\nend;",
+		},
+		{
+			"postgres", "dollar quoted body",
+			"create function f() returns int language plpgsql as $$\nbegin\n  perform 1;\n  return 2;\nend\n$$;",
+			"create function f() returns int language plpgsql as $$\nbegin\n  perform 1;\n  return 2;\nend\n$$;",
+		},
+		{
+			"postgres", "semicolons in a string, a name and a comment",
+			"select 'a;b' as \"c;d\" /* e; */;",
+			"select 'a;b' as \"c;d\" /* e; */;",
+		},
+		{
+			"oracle", "package body",
+			"create package body p as\n  function f return number as\n  begin\n    return 1;\n  end;\nend p;",
+			"create package body p as\n  function f return number as\n  begin\n    return 1;\n  end;\nend p;",
+		},
+		{
+			"mysql", "backslash in a string",
+			`create procedure p() select 'a\';b';`,
+			`create procedure p() select 'a\';b';`,
+		},
+	}
+	for _, test := range tests {
+		t.Run(string(test.dialect)+" "+test.name, func(t *testing.T) {
+			lang, ok := DialectLanguage(test.dialect)
+			if !ok {
+				t.Fatalf("no language for %s", test.dialect)
+			}
+			p, err := NewParser(lang)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := OneStatement(p, test.src)
+			if err != nil {
+				t.Fatalf("OneStatement returned an error: %v", err)
+			}
+			if got != test.exp {
+				t.Fatalf("\n got: %q\nwant: %q", got, test.exp)
+			}
+			items, err := p.Parse(got + "\nselect 4;\n")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(items) != 2 {
+				t.Fatalf("expected the statement and the select, got: %s", summary(items))
+			}
+			// the statement that runs is the text as written, with its ';'
+			none := func(string) (string, bool) { return "", false }
+			if run, want := items[0].Expand(none), strings.TrimSuffix(test.src, ";"); run != want && run != test.src {
+				t.Errorf("runs\n%q\nwant\n%q", run, want)
+			}
+		})
+	}
+}
+
+// TestOneStatementMetaCommand checks that a text that holds a meta command is
+// refused, because no escape keeps it in one statement.
+func TestOneStatementMetaCommand(t *testing.T) {
+	t.Parallel()
+	lang, _ := DialectLanguage("sqlserver")
+	p, err := NewParser(lang)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OneStatement(p, "select 1;\n\\echo x\nselect 2;"); !errors.Is(err, ErrNotOneStatement) {
+		t.Errorf("OneStatement returned %v, want %v", err, ErrNotOneStatement)
+	}
+}

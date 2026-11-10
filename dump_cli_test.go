@@ -44,7 +44,7 @@ func TestDumpCLI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, line := range []string{"-- usql dump", `\uset on_error_stop on`, `\restrict k`, `\unrestrict k`, `CREATE TABLE "authors"`, `INSERT INTO "books"`} {
+	for _, line := range []string{"-- usql dump", `\uset on_error_stop on`, `\restrict k`, `\unrestrict k`, `CREATE TABLE authors`, `INSERT INTO "books"`} {
 		if !strings.Contains(string(want), line+"\n") && !strings.Contains(string(want), line+" ") {
 			t.Errorf("the dump has no line %q", line)
 		}

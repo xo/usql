@@ -3,11 +3,13 @@ package dump
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/xo/dbmeta"
 	dbdump "github.com/xo/dbmeta/dump"
+	"github.com/xo/usql/feed"
 )
 
 func TestDialect(t *testing.T) {
@@ -97,5 +99,58 @@ func TestNotSupported(t *testing.T) {
 		if !strings.Contains(msg, want) {
 			t.Errorf("New returned %q, want %q in the dialects that can be dumped", err, want)
 		}
+	}
+}
+
+// TestStatementEscapes checks that a procedure of SQL Server with no BEGIN and
+// END is written with each of its inner ';' escaped, because usql ends a
+// statement at the first ';' that is not escaped. Without the escape, the load
+// makes a procedure that holds only its first statement, and runs the others.
+func TestStatementEscapes(t *testing.T) {
+	lang, ok := feed.DialectLanguage("sqlserver")
+	if !ok {
+		t.Fatal("no language for sqlserver")
+	}
+	p, err := feed.NewParser(lang)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := &Dumper{parser: p}
+	var b strings.Builder
+	w := &errWriter{w: &b}
+	d.statement(w, dbdump.Statement{
+		Name: "core.p",
+		Kind: "routine",
+		SQL:  "create procedure core.p as\n  select 1;\n  select 2",
+	})
+	if w.err != nil {
+		t.Fatal(w.err)
+	}
+	if want := "create procedure core.p as\n  select 1\\;\n  select 2;\n"; !strings.HasSuffix(b.String(), want) {
+		t.Errorf("wrote\n%q\nwant it to end with\n%q", b.String(), want)
+	}
+}
+
+// TestWarningsNotDumped checks that an object that the script does not write
+// gets a warning, which usql prints on standard error, and not only a comment
+// in the script, which a user who does not read the script never sees.
+func TestWarningsNotDumped(t *testing.T) {
+	d := &Dumper{
+		snap: &dbdump.Snapshot{
+			Dialect: "postgres",
+			Schemas: []dbdump.Schema{{
+				Name:     "app",
+				Routines: []dbdump.Routine{{Name: "f", Kind: "function"}},
+			}},
+		},
+		target: "postgres",
+	}
+	want := "routine app.f is not dumped: the source keeps no statement that creates this function, so it is not written"
+	if lines := d.Warnings(); !slices.Contains(lines, want) {
+		t.Errorf("Warnings returned %q, want a line %q", lines, want)
+	}
+	d.opts.DataOnly = true
+	if lines := d.Warnings(); slices.Contains(lines, want) {
+		t.Errorf("Warnings of a dump of the rows only returned %q, which names a routine", lines)
 	}
 }

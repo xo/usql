@@ -20,6 +20,7 @@ import (
 	_ "github.com/xo/dbmeta/all" // every model
 	dbdump "github.com/xo/dbmeta/dump"
 	"github.com/xo/dburl"
+	"github.com/xo/usql/feed"
 )
 
 // Options says what a dump writes.
@@ -92,6 +93,11 @@ type Dumper struct {
 	policy dbdump.Policy
 	opts   Options
 
+	// parser reads each statement of the schema with the grammar of the
+	// target, so that a ';' that would end it early is escaped. It is nil for
+	// a target with no grammar.
+	parser *feed.Parser
+
 	// session is whether the statements that set the session of the source
 	// ran.
 	session bool
@@ -139,6 +145,11 @@ func New(ctx context.Context, m *dbmeta.Meta, q dbmeta.Queryer, opts Options) (*
 		policy: dbdump.Policy{Default: dbdump.Allow{Lossy: opts.Lossy, Text: opts.Text}},
 		opts:   opts,
 	}
+	if lang, ok := feed.DialectLanguage(target); ok {
+		if d.parser, err = feed.NewParser(lang); err != nil {
+			return nil, err
+		}
+	}
 	if _, err := d.Plan(); err != nil {
 		return nil, err
 	}
@@ -180,8 +191,11 @@ func (d *Dumper) Plan() (Plan, error) {
 
 // Warnings returns a line for each column whose type in the target is not
 // exact, each object that is written as the text of the source, each
-// collation that is left out, and each object that the reader skipped. The
-// lines are what a user needs to know before they load the script.
+// collation that is left out, each object that the reader skipped, each object
+// that the script does not write, and each table or materialized view that it
+// writes without a part of it. The lines are what a user needs to know before
+// they load the script. The script also names each object that it does not
+// write, in a comment.
 func (d *Dumper) Warnings() []string {
 	var lines []string
 	p, err := d.Plan()
@@ -205,6 +219,23 @@ func (d *Dumper) Warnings() []string {
 			name = s.Schema + "." + s.Name
 		}
 		lines = append(lines, fmt.Sprintf("%s %s is not dumped: %s", s.Kind, name, s.Reason))
+	}
+	for st, err := range dbdump.Script(d.snap, d.target, d.policy) {
+		if err != nil {
+			break
+		}
+		if d.skip(st) || st.Note == "" {
+			continue
+		}
+		switch {
+		// an object that dbmeta cannot write has no SQL, and the note says why
+		case st.SQL == "":
+			lines = append(lines, fmt.Sprintf("%s %s is not dumped: %s", st.Kind, st.Name, st.Note))
+		// a table or a materialized view that is written without a part of it
+		// that the target cannot hold, such as its partitions or its history
+		case st.Kind == "table", st.Kind == "materialized view":
+			lines = append(lines, fmt.Sprintf("%s %s: %s", st.Kind, st.Name, st.Note))
+		}
 	}
 	return lines
 }
@@ -308,7 +339,12 @@ func (d *Dumper) skip(st dbdump.Statement) bool {
 // statement writes one statement, with a comment that names it. A statement
 // in the dialect of the source for another dialect is written as a comment,
 // because it was not translated and would stop the script.
-func (d *Dumper) statement(w io.Writer, st dbdump.Statement) {
+//
+// usql ends a statement at the first ';' that is not escaped. The body of a
+// routine can hold statements with no BEGIN and END around them, as a T-SQL
+// procedure can, so each ';' that would end the statement early is written as
+// '\;'. The rows need no such escape, because a ';' in a value is in a string.
+func (d *Dumper) statement(w *errWriter, st dbdump.Statement) {
 	fmt.Fprintln(w)
 	name := st.Name
 	if name == "" {
@@ -326,7 +362,15 @@ func (d *Dumper) statement(w io.Writer, st dbdump.Statement) {
 			fmt.Fprintf(w, "-- %s\n", line)
 		}
 	default:
-		fmt.Fprintln(w, terminate(st.SQL))
+		s := terminate(st.SQL)
+		if d.parser != nil {
+			var err error
+			if s, err = feed.OneStatement(d.parser, s); err != nil {
+				w.err = fmt.Errorf("writing %s %s: %w", st.Kind, name, err)
+				return
+			}
+		}
+		fmt.Fprintln(w, s)
 	}
 }
 
