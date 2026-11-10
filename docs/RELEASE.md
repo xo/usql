@@ -22,22 +22,26 @@ Read these first. Some of them can stop the release.
 - `\copy` still writes its own SQL: the INSERT, and the query for the columns of
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
-- `--dump` has gaps in dbmeta, which W77 lists. The ones that change data: a
-  MySQL `TIMESTAMP` moves when the client is not in UTC, and a JSON column of
-  MariaDB loses its check of `json_valid`. dbmeta does not dump these objects
-  of PostgreSQL yet, and writes no warning for them: range types, collations,
-  casts, operators, operator classes, roles and grants, row level security
-  policies, rules, `INHERITS`, extended statistics, publications, and the
-  view options `security_invoker` and `security_barrier`. A foreign table is
-  not dumped, with a warning. A domain loses the names of its checks, and a
-  domain check that calls a function does not load. Roles and grants are not
-  dumped for any database, nor a partition scheme of SQL Server, with a
-  warning, nor a subpartition of Oracle. A database that dbmeta cannot dump
-  is refused, and the refusal names the databases that can be dumped.
+- `--dump` has gaps in dbmeta, which W77 and W82 list. The ones that change
+  data: a MySQL `TIMESTAMP` moves when the client is not in UTC, a JSON column
+  of MariaDB loses its check of `json_valid`, and the values of an Oracle REF
+  or object column are not moved, with a warning. These objects of PostgreSQL
+  are not tested on the dump fixture yet: collations, casts, operators,
+  operator classes, rules, `INHERITS`, extended statistics, publications, and
+  the view options `security_invoker` and `security_barrier`. A foreign table
+  is not dumped, with a warning. A domain loses the names of its checks, and a
+  domain check that calls a function does not load. dbmeta's D298 and D299
+  record what a dump leaves out on purpose. The owner of an object is not
+  written, so the copy belongs to the user that loads it. A role or an account
+  that a grant names is made with no password, so that nobody can log in with
+  it. PostgreSQL's default privileges and privileges on the database, and the
+  default of a parameter of a DuckDB macro, are not written. A database that
+  dbmeta cannot dump is refused, and the refusal names the databases that can
+  be dumped.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.45.1, dburl v0.58.0, okage v0.2.0,
+usql requires dbfwd v0.3.2, dbmeta v0.46.0, dburl v0.58.0, okage v0.2.0,
 tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
 with no `go.work`.
 

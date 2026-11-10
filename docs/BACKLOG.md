@@ -4467,3 +4467,22 @@ holds, and warns for the rest. The round trip again:
    the handler starts the dump again in a new transaction after 1, 2 and 4
    seconds, when reading the rows fails. On Oracle 21c, a dump right after
    the fixture failed once, started again and wrote one complete script.
+
+### Fifth results
+
+dbmeta v0.46.0, on 2026-11-10, writes the privileges, roles and accounts of
+PostgreSQL, SQL Server, MySQL, MariaDB and Oracle, Oracle subpartitions and
+DuckDB struct types. Its D298 and D299 record what a dump leaves out on
+purpose. The round trip again, with the privileges compared too:
+
+1. SQLite, DuckDB, PostgreSQL 17 and MariaDB 10.6: no error, the second dump
+   equals the first, and the catalogs are equal.
+2. MySQL 8.4: the same, except that a foreign key with NO ACTION has RESTRICT
+   in the copy, which dbmeta does on purpose. A dropped MySQL database keeps
+   its grants, so this round trip shows that the GRANT statements load, and
+   not that they make the grants again.
+3. SQL Server 2022: no error, and the second dump equals the first. The
+   catalogs differ only in the header of a module that the dump rewrites.
+4. Oracle 21c, loaded into two other users: no error, the second dump equals
+   the first, and the catalogs and the privileges are equal. Only the REF
+   column warns.
