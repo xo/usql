@@ -23,9 +23,7 @@ Read these first. Some of them can stop the release.
   the target. The placeholder of each database comes from dbmeta. W29 moves the
   rest, and is due before the release.
 - `--dump` has gaps in dbmeta, which W77 and W82 list. The ones that change
-  data: a MySQL `TIMESTAMP` moves when the client is not in UTC, a DuckDB table
-  that refers to itself does not load when a row names a later row, a JSON
-  column
+  data: a MySQL `TIMESTAMP` moves when the client is not in UTC, a JSON column
   of MariaDB loses its check of `json_valid`, and the values of an Oracle REF
   or object column are not moved, with a warning. These objects of PostgreSQL
   are not tested on the dump fixture yet: collations, casts, operators,
@@ -43,7 +41,7 @@ Read these first. Some of them can stop the release.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.46.3, dburl v0.58.0, okage v0.2.0,
+usql requires dbfwd v0.3.2, dbmeta v0.46.4, dburl v0.58.0, okage v0.2.0,
 tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
 with no `go.work`.
 

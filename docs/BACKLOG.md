@@ -4512,3 +4512,7 @@ dump writes its rows in the order of the source, and employee 1 names
 employee 2 as the one it reports to. DuckDB checks each row against the rows
 already loaded, so the row fails. Reported to dbmeta, which needs a
 parent-first order for such a table.
+
+dbmeta v0.46.4, the same day, loads the parent of a row before the row. The
+SQLite and DuckDB northwind round trips are clean: no error, the second dump
+equals the first, and the catalogs are equal. So is the dump fixture on both.
