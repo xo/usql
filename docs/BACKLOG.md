@@ -4462,4 +4462,8 @@ holds, and warns for the rest. The round trip again:
    catalogs differ only in the name of a system sequence.
 4. An Oracle dump that starts a few seconds after the tables were made fails
    with ORA-01466, because the dump reads in a read-only transaction. A dump
-   a little later works. Not decided yet: whether usql waits and tries again.
+   a little later works. The maintainer decided the same day that the dump
+   tries again. Done: `dump.Spool` writes each try to a temporary file, and
+   the handler starts the dump again in a new transaction after 1, 2 and 4
+   seconds, when reading the rows fails. On Oracle 21c, a dump right after
+   the fixture failed once, started again and wrote one complete script.

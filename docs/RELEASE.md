@@ -626,6 +626,13 @@ the XDG Base Directory specification on Linux and other Unix systems.
   several statements and no `BEGIN ... END` then loads whole. Before, it
   loaded with only its first statement, and the others ran as queries. The
   grammar of the target decides which `;` to escape (W82).
+- A dump goes to a temporary file first, and its destination gets it only
+  when it is complete, so standard output and a command after `|` get a whole
+  script or nothing. When reading the rows fails, the dump waits and starts
+  again in a new transaction, at most three times, and says so on standard
+  error. Oracle refuses with ORA-01466 to read a table that was made a few
+  seconds before the transaction started. Inside a transaction that `\begin`
+  started, `\dump` writes as it reads, and does not start again.
 - A dump prints a warning on standard error for each object that it does not
   write, and for each table or materialized view that it writes without a
   part of it, such as its partitions. Before, only a comment in the script
