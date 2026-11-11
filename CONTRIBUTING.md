@@ -468,8 +468,9 @@ Run it after a change to a PostgreSQL driver or to `drivers/pgwire/pgshared`, an
 after an update of tblfmt.
 
 `contrib/` keeps only the scripts that usql runs against a database and the
-client setup for a few drivers. A sample `config.yaml` and a sample `init.sql`
-are in `_samples/`.
+client setup for a few drivers. A sample `config.yaml`, a sample `init.sql`,
+and `chart.sql`, which draws a table of PostgreSQL with `\chart`, are in
+`_samples/`.
 
 # Metadata introspection
 

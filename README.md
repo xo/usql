@@ -1782,6 +1782,8 @@ directly in the terminal:
 </div>
 
 At a terminal with graphics, `\chart help` lists the charts and their options.
+See [`_samples/chart.sql`](_samples/chart.sql) for a sample that makes a
+PostgreSQL table and draws it.
 
 The renderer is [zuzu][zuzu], which draws charts in pure Go, so a build with
 `CGO_ENABLED=0` has the renderer too. The text of a chart uses the IBM Plex
