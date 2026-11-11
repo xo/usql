@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/xo/usql/env"
@@ -54,7 +55,8 @@ func TestXheaderWidth(t *testing.T) {
 		if err := h.RunCommand(query); err != nil {
 			t.Fatalf("%v\n%s", err, stderr)
 		}
-		if got := stdout.String(); got != test.want+"\n" {
+		// tblfmt ends each line with "\r\n" on Windows
+		if got := strings.ReplaceAll(stdout.String(), "\r\n", "\n"); got != test.want+"\n" {
 			t.Errorf("border %s, xheader_width %s, columns %s:\n%s\nwant:\n%s", test.border, test.width, test.columns, got, test.want)
 		}
 	}

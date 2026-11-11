@@ -4516,3 +4516,12 @@ parent-first order for such a table.
 dbmeta v0.46.4, the same day, loads the parent of a row before the row. The
 SQLite and DuckDB northwind round trips are clean: no error, the second dump
 equals the first, and the catalogs are equal. So is the dump fixture on both.
+
+dbmeta v0.46.5, on 2026-11-11, fixes two faults that usql's CI found. The
+package `dump` compiled on no 32-bit platform, so the release build for
+linux/arm failed from dbmeta v0.39.0. From dbmeta v0.45.1, a dump from
+PostgreSQL to PostgreSQL wrote an array as a list, such as `["a", "b c"]`,
+which PostgreSQL refuses. Only a load into DuckDB now gets a list. A dump
+from PostgreSQL to DuckDB still failed, because dbmeta wrote no literal for
+NaN or an infinity in DuckDB. dbmeta v0.46.6, the same day, writes them, and
+every subtest of `TestDump` passes on postgres-17 with no known failure.

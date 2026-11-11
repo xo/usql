@@ -418,9 +418,7 @@ var knownSkipped = map[string][]string{}
 // knownCrossFailures are the dumps from one dialect to another that fail
 // because of a gap in dbmeta, by the source and the target, with the reason.
 // A dump to another dialect is phase 3 of W77.
-var knownCrossFailures = map[string]string{
-	"postgres to duckdb": "dbmeta writes an array in the text form of PostgreSQL, which DuckDB does not read as a list. Reported to dbmeta on 2026-11-08",
-}
+var knownCrossFailures = map[string]string{}
 
 // crossExclude are the tables that a dump from one dialect to another leaves
 // out, by the source and the target, because the target cannot hold their
