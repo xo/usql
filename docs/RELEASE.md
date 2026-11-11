@@ -41,9 +41,9 @@ Read these first. Some of them can stop the release.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.46.6, dburl v0.58.0, okage v0.3.0,
-tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
-with no `go.work`.
+usql requires dbfwd v0.3.2, dbmeta v0.46.6, dburl v0.58.0, tblfmt v0.24.0,
+transit v0.7.8, rline v0.8.1 and zuzu at commit 2dd7312, all in `go.mod`. zuzu
+has no release yet. It builds with no `go.work`.
 
 ### One build, with every driver
 
@@ -62,13 +62,15 @@ features of SQLite that `build.sh` adds.
   A build that used `-tags most` or `-tags all` now uses no tags. A build that
   used `-tags 'no_base x y'` now uses `-tags 'no_drivers x y'`.
 - The charts renderer was only in a build with `-tags charts` or `-tags all`.
-  It is now in every build, which adds about 12 MiB to the binary.
-- okage's `svg` package rasterizes a chart, in place of xo/resvg. okage is
-  pure Go, so the chart renderer needs no cgo and no prebuilt Rust library.
-  A build with `CGO_ENABLED=0` has it, and so does a platform that resvg had
-  no library for. The text of a chart can use a different system font than
-  resvg chose, because okage picks the first installed font of its own list
-  for `sans-serif`.
+  It is now in every build.
+- zuzu draws a chart, in place of ECharts in a JavaScript engine and the
+  rasterizer xo/resvg. `\chart` writes a Vega-Lite spec of the result, and
+  zuzu draws it in pure Go, with okage for the image. The chart renderer needs
+  no cgo and no prebuilt Rust library, so a build with `CGO_ENABLED=0` has it.
+  The renderer is 4.3 MiB smaller than ECharts with goja was (W13). The text
+  of a chart uses the IBM Plex Sans font that zuzu holds, and no font of the
+  system. A chart looks the same on every machine, and a character that the
+  font lacks is not drawn.
 - The h2 and gizmosql drivers are removed. They were the `bad` group. dburl
   v0.56.0 drops their schemes, with the aliases `gz` and `gizmo`.
 - A driver with no hooks has no package under `drivers`. `gen.go` writes its
@@ -1106,9 +1108,8 @@ left, as in psql. This was checked on PostgreSQL 18, Oracle and SQLite on
   table, none, only sqlite3, and moderncsqlite in place of sqlite3
 - `\chart` in a build with no tags, and the error of `\chart` in a build with
   `-tags no_charts`
-- `\chart` in a build with `CGO_ENABLED=0`, and the fonts of a chart on macOS,
-  Windows and Linux. okage loads the fonts of the system and of the home
-  directory, and reads no configuration of fontconfig.
+- `\chart` in a build with `CGO_ENABLED=0`, on macOS, Windows and Linux, with
+  `type=bar`, `type=line`, `file`, `bg` and `size`
 - `./size.sh`, compared with W32. The chart renderer is now in the build.
 - on Linux, an ODBC query through the SQLite ODBC driver in a build with
   `-tags libsqlite3`, and through the PostgreSQL Unicode driver in a build with

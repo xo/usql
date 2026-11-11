@@ -581,12 +581,11 @@ type Feature struct {
 // features are the features that a build tag can leave out.
 var features = []Feature{
 	{
-		// The renderer runs ECharts in a JavaScript engine and rasterizes the
-		// result with an SVG renderer. The two together are about 12 MiB of
-		// any binary they are linked into, so no_charts leaves them out.
+		// The renderer draws a Vega-Lite spec with zuzu, which is pure Go.
+		// no_charts leaves it out.
 		Tag:  "charts",
-		Pkg:  "github.com/xo/usql/metacmd/charts/echarts",
-		Desc: "ECharts chart renderer",
+		Pkg:  "github.com/xo/usql/metacmd/charts/zuzu",
+		Desc: "zuzu chart renderer",
 	},
 }
 

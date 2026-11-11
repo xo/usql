@@ -148,68 +148,111 @@ func MakeChart(cfg ChartConfig, cols []string, transposed [][]string) (*Chart, e
 	return c, nil
 }
 
-/* echarts */
-
-type echarts struct {
-	Title  *echartsTitle  `json:"title,omitempty"`
-	Legend *echartsLegend `json:"legend,omitempty"`
-	XAxis  *echartsAxis   `json:"xAxis,omitempty"`
-	YAxis  *echartsAxis   `json:"yAxis,omitempty"`
-	Series []echartsAxis  `json:"series,omitempty"`
-}
-
-type echartsTitle struct {
-	Title   string `json:"text,omitempty"`
-	Subtext string `json:"subtext,omitempty"`
-}
-
-type echartsLegend struct {
-	Data []string `json:"data,omitempty"`
-}
-
-type echartsAxis struct {
-	Name string `json:"name,omitempty"`
-	Type string `json:"type,omitempty"`
-	Data any    `json:"data,omitempty"`
-}
-
-func (c Chart) ToEcharts() (string, error) {
-	ec := echarts{}
-	if c.Title != "" || c.Subtitle != "" {
-		ec.Title = &echartsTitle{c.Title, c.Subtitle}
-	}
-	if len(c.Legend) > 0 {
-		ec.Legend = &echartsLegend{c.Legend}
-	}
-	if c.XAxis.Data != nil || c.YAxis.Type != "" {
-		ec.XAxis = &echartsAxis{
-			Name: c.XAxis.Name,
-			Type: c.XAxis.Type,
-			Data: c.XAxis.Data,
+// ToVegaLite returns the chart as a Vega-Lite spec of width by height pixels,
+// with the axes, the title and the legend inside that size. The rows are in
+// the spec, one for each value of each series, in the order of the result. A
+// bar chart of more than one series puts the bars of each category side by
+// side.
+func (c Chart) ToVegaLite(width, height int) ([]byte, error) {
+	categories, _ := c.XAxis.Data.([]string)
+	var values []vegaLiteRow
+	var series []string
+	for _, s := range c.Series {
+		data, ok := s.Data.([]float64)
+		if !ok {
+			continue
+		}
+		series = append(series, s.Name)
+		for i, v := range data {
+			if i < len(categories) {
+				values = append(values, vegaLiteRow{X: categories[i], Series: s.Name, Value: v})
+			}
 		}
 	}
-	if c.YAxis.Data != nil || c.YAxis.Type != "" {
-		ec.YAxis = &echartsAxis{
-			Name: c.YAxis.Name,
-			Type: c.YAxis.Type,
-			Data: c.YAxis.Data,
-		}
-	}
+	mark := "line"
 	if len(c.Series) > 0 {
-		ec.Series = make([]echartsAxis, 0, len(c.Series))
-		for _, s := range c.Series {
-			ec.Series = append(ec.Series, echartsAxis{
-				Name: s.Name,
-				Type: s.Type,
-				Data: s.Data,
-			})
-		}
+		mark = c.Series[0].Type
 	}
-	buf, err := json.Marshal(ec)
-	if err != nil {
-		return "", err
+	spec := vegaLite{
+		Schema:   "https://vega.github.io/schema/vega-lite/v5.json",
+		Width:    width,
+		Height:   height,
+		Padding:  padding,
+		Autosize: vegaLiteAutosize{Type: "fit", Contains: "padding"},
+		Data:     vegaLiteData{Values: values},
+		Mark:     mark,
+		Encoding: vegaLiteEncoding{
+			// a sort of null keeps the order of the rows
+			X:     &vegaLiteChannel{Field: "x", Type: "nominal", Title: c.XAxis.Name, Sort: json.RawMessage("null")},
+			Y:     &vegaLiteChannel{Field: "value", Type: "quantitative", Title: c.YAxis.Name},
+			Color: &vegaLiteChannel{Field: "series", Type: "nominal", Sort: series},
+		},
 	}
-	return string(buf), nil
+	if mark == "bar" && len(series) > 1 {
+		spec.Encoding.XOffset = &vegaLiteChannel{Field: "series", Sort: series}
+	}
+	if c.Title != "" || c.Subtitle != "" {
+		spec.Title = &vegaLiteTitle{Text: c.Title, Subtitle: c.Subtitle}
+	}
+	return json.Marshal(spec)
+}
+
+// padding is the space around the chart, in pixels, inside its width and
+// height.
+const padding = 5
+
+// vegaLite is the part of a Vega-Lite spec that ToVegaLite writes.
+type vegaLite struct {
+	Schema   string           `json:"$schema"`
+	Width    int              `json:"width"`
+	Height   int              `json:"height"`
+	Padding  int              `json:"padding"`
+	Autosize vegaLiteAutosize `json:"autosize"`
+	Title    *vegaLiteTitle   `json:"title,omitempty"`
+	Data     vegaLiteData     `json:"data"`
+	Mark     string           `json:"mark"`
+	Encoding vegaLiteEncoding `json:"encoding"`
+}
+
+// vegaLiteAutosize says how the chart fits its width and height.
+type vegaLiteAutosize struct {
+	Type     string `json:"type"`
+	Contains string `json:"contains"`
+}
+
+// vegaLiteTitle is the title of a Vega-Lite spec.
+type vegaLiteTitle struct {
+	Text     string `json:"text"`
+	Subtitle string `json:"subtitle,omitempty"`
+}
+
+// vegaLiteData holds the rows of a Vega-Lite spec.
+type vegaLiteData struct {
+	Values []vegaLiteRow `json:"values"`
+}
+
+// vegaLiteRow is one value of one series.
+type vegaLiteRow struct {
+	X      string  `json:"x"`
+	Series string  `json:"series"`
+	Value  float64 `json:"value"`
+}
+
+// vegaLiteEncoding maps the fields of a row to the channels of the mark.
+type vegaLiteEncoding struct {
+	X       *vegaLiteChannel `json:"x,omitempty"`
+	Y       *vegaLiteChannel `json:"y,omitempty"`
+	Color   *vegaLiteChannel `json:"color,omitempty"`
+	XOffset *vegaLiteChannel `json:"xOffset,omitempty"`
+}
+
+// vegaLiteChannel is one channel of an encoding. Sort is the order of the
+// values, or null for the order of the rows.
+type vegaLiteChannel struct {
+	Field string `json:"field"`
+	Type  string `json:"type,omitempty"`
+	Title string `json:"title,omitempty"`
+	Sort  any    `json:"sort,omitempty"`
 }
 
 func parseFloat(v string, prec int) (f float64, err error) {
@@ -220,81 +263,3 @@ func parseFloat(v string, prec int) (f float64, err error) {
 	r := math.Pow(10, float64(prec))
 	return math.Round(f*r) / r, nil
 }
-
-const basicBarTemplate = `
-{
-  "title": {
-    "text": {{ printf "%q" .Title }},
-    "subtext": {{ printf "%q" .Subtitle }}
-  },
-  {{- if .Legend }}
-  "legend": {
-    "data": [
-      {{ range .Legend }}{{ printf "%q" . }}{{ end }}
-    ]
-  },
-  {{- end }}
-  "xAxis": [
-    {
-      "type": "category",
-      "data": [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec"
-      ]
-    }
-  ],
-  "yAxis": [
-    {
-      "type": "value"
-    }
-  ],
-  "series": [
-    {
-      "name": "Rainfall",
-      "type": "bar",
-      "data": [
-        2,
-        4.9,
-        7,
-        23.2,
-        25.6,
-        76.7,
-        135.6,
-        162.2,
-        32.6,
-        20,
-        6.4,
-        3.3
-      ],
-    },
-    {
-      "name": "Evaporation",
-      "type": "bar",
-      "data": [
-        2.6,
-        5.9,
-        9,
-        26.4,
-        28.7,
-        70.7,
-        175.6,
-        182.2,
-        48.7,
-        18.8,
-        6,
-        2.3
-      ],
-    }
-  ]
-}
-`

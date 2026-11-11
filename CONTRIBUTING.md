@@ -241,9 +241,9 @@ you started when you finish.
 ## Putting a feature behind a build tag
 
 A package that is not a driver can still be a large part of the size of the
-binary. The charts renderer is one: it runs Apache ECharts in a JavaScript
-engine and rasterizes the result with an SVG renderer, which together add about
-12 MiB to every binary they are linked into.
+binary. The chart renderer is one: zuzu, its fonts and okage, which draws the
+image, add several MiB to every binary they are linked into. W13 in
+`docs/BACKLOG.md` holds the last measurement.
 
 The only way to leave such a package out is a build tag that reaches the import
 itself, so these are gated the same way the drivers are. Add an entry to the
@@ -252,8 +252,8 @@ itself, so these are gated the same way the drivers are. Add an entry to the
 ```go
 {
     Tag:  "charts",
-    Pkg:  "github.com/xo/usql/metacmd/charts/echarts",
-    Desc: "ECharts chart renderer",
+    Pkg:  "github.com/xo/usql/metacmd/charts/zuzu",
+    Desc: "zuzu chart renderer",
 }
 ```
 
@@ -270,7 +270,7 @@ The rest of usql must not import the package directly. Give it a registry in a
 package that costs nothing, have the gated package register itself from its
 `init`, and have the caller ask the registry whether the feature is there. See
 `metacmd/charts/renderer.go` for the registry and
-`metacmd/charts/echarts/echarts.go` for the implementation. Without that, the
+`metacmd/charts/zuzu/zuzu.go` for the implementation. Without that, the
 import in the caller links the package back in and the tag does nothing.
 
 Run `go run gen.go` after editing `gen.go`. It reads dburl from the version

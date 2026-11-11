@@ -3,25 +3,22 @@ package charts
 import (
 	"context"
 	"image"
-	"image/color"
 
 	"github.com/xo/usql/text"
 )
 
-// Renderer turns a chart into something that can be displayed.
+// Renderer draws a chart.
 //
-// A renderer is not part of every usql build. The implementation draws the
-// chart with a JavaScript engine and rasterizes the result with an SVG
-// renderer, and those two together are a large part of the size of the binary,
-// so the build tag no_charts leaves them out. Register is called from the init
-// of the implementation package, which the generated file internal/charts.go
-// imports unless the build leaves it out.
+// A renderer is not part of every usql build. The build tag no_charts leaves
+// it out. Register is called from the init of the implementation package,
+// which the generated file internal/charts.go imports unless the build leaves
+// it out.
 type Renderer interface {
-	// RenderSVG draws the ECharts option document opts as an SVG document.
-	RenderSVG(ctx context.Context, opts string, width, height int) ([]byte, error)
+	// SVG draws the Vega-Lite spec as an SVG document.
+	SVG(ctx context.Context, spec []byte) ([]byte, error)
 
-	// Rasterize draws the SVG document svg as an image, on background bg.
-	Rasterize(svg []byte, bg color.Color) (image.Image, error)
+	// Image draws the Vega-Lite spec as an image.
+	Image(ctx context.Context, spec []byte) (image.Image, error)
 }
 
 // renderer is the registered renderer. It is nil when the build left the
@@ -46,20 +43,20 @@ func Available() bool {
 	return renderer != nil
 }
 
-// RenderSVG draws the ECharts option document opts as an SVG document. It
-// returns text.ErrChartsNotSupported when usql was built without a renderer.
-func RenderSVG(ctx context.Context, opts string, width, height int) ([]byte, error) {
+// SVG draws the Vega-Lite spec as an SVG document. It returns
+// text.ErrChartsNotSupported when usql was built without a renderer.
+func SVG(ctx context.Context, spec []byte) ([]byte, error) {
 	if renderer == nil {
 		return nil, text.ErrChartsNotSupported
 	}
-	return renderer.RenderSVG(ctx, opts, width, height)
+	return renderer.SVG(ctx, spec)
 }
 
-// Rasterize draws the SVG document svg as an image, on background bg. It
-// returns text.ErrChartsNotSupported when usql was built without a renderer.
-func Rasterize(svg []byte, bg color.Color) (image.Image, error) {
+// Image draws the Vega-Lite spec as an image. It returns
+// text.ErrChartsNotSupported when usql was built without a renderer.
+func Image(ctx context.Context, spec []byte) (image.Image, error) {
 	if renderer == nil {
 		return nil, text.ErrChartsNotSupported
 	}
-	return renderer.Rasterize(svg, bg)
+	return renderer.Image(ctx, spec)
 }

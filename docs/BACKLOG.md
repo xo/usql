@@ -660,6 +660,24 @@ by it.
 
 ## W13. Shrink the charts stack
 
+Update, 2026-11-11: zuzu draws a chart, in place of ECharts in goja, so
+echartsgoja, goja and the embedded `echarts.min.js` below are gone. `\chart`
+writes a Vega-Lite spec, and zuzu draws it in pure Go with okage. Measured on
+linux/amd64 with `-trimpath -ldflags "-s -w"` and the tags of `build.sh -T`:
+
+| build | bytes |
+|---|---:|
+| ECharts in goja, with okage | 199,261,576 |
+| zuzu, with okage | 194,793,864 |
+| `-tags no_charts` | 186,844,008 |
+
+The change saves 4,467,712 bytes, 4.3 MiB. The renderer cost 12,417,568
+bytes, 11.8 MiB, and now costs 7,949,856 bytes, 7.6 MiB. Of the code, okage's
+`svg` package is the largest part at 0.57 MB, then zuzu's `vegalite` at
+0.50 MB, the font tables and the shaping of go-text at 0.77 MB, and zuzu's
+`dataflow` at 0.29 MB. The three IBM Plex Sans fonts that zuzu embeds are
+0.61 MB. The rest is the tables of the runtime for that code.
+
 Update, 2026-11-10: okage's `svg` package rasterizes a chart in place of
 xo/resvg, so the row of `libresvg.a` below is gone, and so is the plan for a
 lean build of it. Measured on linux/amd64 with `-trimpath -ldflags "-s -w"`,

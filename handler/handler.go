@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"image"
+	"image/draw"
 	"io"
 	"log"
 	"maps"
@@ -1424,23 +1426,27 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	if err != nil {
 		return err
 	}
-	data, err := c.ToEcharts()
-	if err != nil {
-		return err
-	}
-	res, err := charts.RenderSVG(ctx, data, cfg.W, cfg.H)
+	spec, err := c.ToVegaLite(cfg.W, cfg.H)
 	if err != nil {
 		return err
 	}
 	if cfg.File != "" {
+		res, err := charts.SVG(ctx, spec)
+		if err != nil {
+			return err
+		}
 		fmt.Println("writing to", cfg.File)
 		return os.WriteFile(cfg.File, res, 0o644)
 	}
-	img, err := charts.Rasterize(res, cfg.Background)
+	img, err := charts.Image(ctx, spec)
 	if err != nil {
 		return err
 	}
-	if err := typ.Encode(stdout, img); err != nil {
+	// the chart is drawn over the background
+	bg := image.NewRGBA(img.Bounds())
+	draw.Draw(bg, bg.Bounds(), image.NewUniform(cfg.Background), image.Point{}, draw.Src)
+	draw.Draw(bg, bg.Bounds(), img, img.Bounds().Min, draw.Over)
+	if err := typ.Encode(stdout, bg); err != nil {
 		return err
 	}
 	if h.timing {

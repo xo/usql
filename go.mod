@@ -32,9 +32,7 @@ require (
 	github.com/xo/dbimp v0.26.1
 	github.com/xo/dbmeta v0.46.6
 	github.com/xo/dburl v0.58.0
-	github.com/xo/echartsgoja v0.1.1
 	github.com/xo/odbc v0.4.1
-	github.com/xo/okage v0.3.0
 	github.com/xo/oracle v0.4.1
 	github.com/xo/rline v0.8.1
 	github.com/xo/tblfmt v0.24.0
@@ -55,6 +53,7 @@ require (
 	github.com/xo/transit/grammars/usql v0.7.8
 	github.com/xo/transit/grammars/ydb v0.7.8
 	github.com/xo/transit/styles v0.7.8
+	github.com/xo/zuzu v0.0.0-20261111012708-2dd7312abc20
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/text v0.44.0
@@ -86,9 +85,6 @@ require (
 	github.com/cockroachdb/swiss v0.0.0-20260820225851-333444432258 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
-	github.com/dlclark/regexp2/v2 v2.12.0 // indirect
-	github.com/dop251/goja v0.0.0-20261105002551-2413f2132ac8 // indirect
-	github.com/dop251/goja_nodejs v0.0.0-20260918173711-b481721df8a2 // indirect
 	github.com/dromara/carbon/v2 v2.7.1 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.20000.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
@@ -97,7 +93,6 @@ require (
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/getsentry/sentry-go v0.50.0 // indirect
-	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/go-text/typesetting v0.3.5 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.12.0 // indirect
@@ -152,6 +147,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/inputrc v0.8.0 // indirect
+	github.com/xo/okage v0.3.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect

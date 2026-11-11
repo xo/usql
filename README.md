@@ -1783,9 +1783,9 @@ directly in the terminal:
 
 At a terminal with graphics, `\chart help` lists the charts and their options.
 
-The renderer runs Apache ECharts in a JavaScript engine and rasterizes the
-result with an SVG renderer, which together add about 12 MiB to the binary.
-Both are pure Go, so a build with `CGO_ENABLED=0` has the renderer too.
+The renderer is [zuzu][zuzu], which draws charts in pure Go, so a build with
+`CGO_ENABLED=0` has the renderer too. The text of a chart uses the IBM Plex
+Sans font that zuzu holds, so a chart looks the same on every machine.
 Every build has it, unless its build tags leave it out. The tag `no_charts`
 leaves it out, and so does `no_drivers` unless the tag `charts` is also given.
 A build without it reports that it has no chart renderer.
@@ -2020,6 +2020,7 @@ requests. For [technical details, see CONTRIBUTING.md](CONTRIBUTING.md).
 [backticks]: #backticks "Backticks"
 [config]: #configuration "Configuration"
 [commands]: #backslash-commands "Backslash Commands"
+[zuzu]: https://github.com/xo/zuzu "zuzu"
 [completion]: #context-completion "Context Completion"
 [connecting]: #connecting-to-databases "Connecting to Databases"
 [contributing]: #contributing "Contributing"
