@@ -41,7 +41,7 @@ Read these first. Some of them can stop the release.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.46.4, dburl v0.58.0, okage v0.2.0,
+usql requires dbfwd v0.3.2, dbmeta v0.46.4, dburl v0.58.0, okage v0.3.0,
 tblfmt v0.24.0, transit v0.7.8 and rline v0.8.1, all in `go.mod`. It builds
 with no `go.work`.
 
