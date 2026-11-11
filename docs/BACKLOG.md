@@ -3995,6 +3995,22 @@ new `\copy`, and are decided with it.
      dump of northwind on Oracle 21c loaded with no error, and no object was
      invalid.
 
+9. dbmeta v0.48.0 and v0.49.0 dump ClickHouse, Spanner, SAP HANA, Firebird,
+   Exasol, Vertica, Databend, Avatica and Cassandra. dbmeta v0.50.0, on
+   2026-11-11, reads a dump from Trino, Presto, Athena, Hive, Impala,
+   Elasticsearch, OpenSearch, Solr, Druid, Drill, InfluxDB, InfluxQL,
+   MaxCompute, Tablestore, SurrealDB and ArangoDB, and writes a dump for none
+   of them (its D305). A dump of one of them needs `--target`.
+   - The InfluxQL driver gives the name of the series before the columns of
+     each row, and dbmeta's `Loader.LeadingColumns` says how many such values
+     a row has. usql scanned only the columns, and a fake driver that gives
+     such rows failed with `sql: expected 3 destination arguments in Scan,
+     not 2`. usql now scans the leading values and drops them.
+     `TestTableLeadingColumns` checks it with that fake driver, because no
+     test starts a database.
+   - None of the new databases has run through a usql dump yet. RELEASE.md
+     holds the check for Trino and InfluxQL.
+
 ## W78. SQL*Plus's slash line on Oracle
 
 Source: found on 2026-11-08, while checking `\errverbose` on Oracle 21c. The

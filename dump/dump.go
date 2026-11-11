@@ -435,7 +435,10 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 		return Retryable(err)
 	}
 	defer rows.Close()
-	n := len(l.Columns())
+	// the InfluxQL driver puts the name of the series before the columns of
+	// each row. The loader takes the columns only.
+	lead := l.LeadingColumns()
+	n := lead + len(l.Columns())
 	size := max(l.BatchSize(), 1)
 	batch := make([][]any, 0, size)
 	first := true
@@ -471,7 +474,7 @@ func (d *Dumper) table(ctx context.Context, w *errWriter, schema, table string) 
 		if err := rows.Scan(ptrs...); err != nil {
 			return Retryable(err)
 		}
-		if batch = append(batch, vals); len(batch) == size {
+		if batch = append(batch, vals[lead:]); len(batch) == size {
 			if err := flush(); err != nil {
 				return err
 			}

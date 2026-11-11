@@ -37,11 +37,13 @@ Read these first. Some of them can stop the release.
   it. PostgreSQL's default privileges and privileges on the database, and the
   default of a parameter of a DuckDB macro, are not written. A database that
   dbmeta cannot dump is refused, and the refusal names the databases that can
-  be dumped.
+  be dumped. A dump of Athena, MaxCompute or Tablestore has not run against a
+  service, and dbmeta's D305 holds the limits of the databases that it reads
+  but does not write.
 
 ## What changed
 
-usql requires dbfwd v0.3.2, dbmeta v0.46.6, dburl v0.58.0, tblfmt v0.24.0,
+usql requires dbfwd v0.3.2, dbmeta v0.50.0, dburl v0.58.0, tblfmt v0.24.0,
 transit v0.7.8, rline v0.8.1 and zuzu at commit 2dd7312, all in `go.mod`. zuzu
 has no release yet. It builds with no `go.work`.
 
@@ -626,6 +628,12 @@ the XDG Base Directory specification on Linux and other Unix systems.
   Hidden long options write only the schema or only the rows, choose schemas
   and tables, and write for another database with `--target`. A dump to a
   file replaces the file only when it is complete.
+- dbmeta reads some databases for a dump but does not write them, such as
+  Trino, Elasticsearch and InfluxQL. A dump of one of them must name another
+  database with `--target`. Without it, the dump is refused, and the refusal
+  names the databases that a dump can be written for. The InfluxQL driver
+  gives the name of the series before the columns of each row, and the dump
+  drops it.
 - usql ends a statement at the first `;` that is not escaped, or at a meta
   command that runs the query buffer, such as `\g`. So a dump writes each `;`
   that would end a statement early as `\;`. A procedure of SQL Server with
@@ -1003,6 +1011,16 @@ tables with keys, indexes, views and rows of several types:
       `\dump -` offers the options.
 - [ ] `\begin`, an INSERT, then `\dump`, includes the new row, and
       `\rollback` leaves the database as it was.
+
+On Trino, and on InfluxDB through an `influxql://` URL, which dbmeta reads for
+a dump but does not write:
+
+- [ ] `usql URL --dump` is refused, and the refusal names the databases that
+      a dump can be written for.
+- [ ] `usql URL --dump --target postgres -o dump.sql`, then
+      `usql NEWURL -f dump.sql` into an empty PostgreSQL database, gives the
+      same rows. On InfluxDB, no row holds the name of the series as an extra
+      value.
 
 ### The line editor
 

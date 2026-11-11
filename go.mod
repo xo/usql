@@ -30,7 +30,7 @@ require (
 	github.com/xo/cassandra v0.2.5
 	github.com/xo/dbfwd v0.3.2
 	github.com/xo/dbimp v0.26.1
-	github.com/xo/dbmeta v0.46.6
+	github.com/xo/dbmeta v0.50.0
 	github.com/xo/dburl v0.58.0
 	github.com/xo/odbc v0.4.1
 	github.com/xo/oracle v0.4.1
