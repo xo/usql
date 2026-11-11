@@ -53,7 +53,7 @@ require (
 	github.com/xo/transit/grammars/usql v0.7.8
 	github.com/xo/transit/grammars/ydb v0.7.8
 	github.com/xo/transit/styles v0.7.8
-	github.com/xo/zuzu v0.0.0-20261111012708-2dd7312abc20
+	github.com/xo/zuzu v0.2.0
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/text v0.44.0
@@ -147,7 +147,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/inputrc v0.8.0 // indirect
-	github.com/xo/okage v0.3.0 // indirect
+	github.com/xo/okage v0.4.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
