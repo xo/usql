@@ -47,8 +47,8 @@ func Quit(p *Params) error {
 func Copyright(p *Params) error {
 	// the logo goes straight to the terminal, because a pager shows its
 	// escape codes as text
-	if typ := env.TermGraphics(); typ.Available() {
-		typ.Encode(p.Handler.IO(), text.Logo)
+	if enc := env.TermGraphics().Encoder(); enc != nil {
+		enc.Encode(p.Handler.IO(), text.Logo)
 	}
 	fmt.Fprintln(p.Handler.Stdout(), text.Copyright)
 	return nil

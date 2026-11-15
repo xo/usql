@@ -3,7 +3,7 @@ module github.com/xo/usql
 go 1.27.3
 
 require (
-	github.com/SAP/go-hdb v1.21.0
+	github.com/SAP/go-hdb v1.22.1
 	github.com/VoltDB/voltdb-client-go v1.0.18
 	github.com/apache/arrow-go/v18 v18.8.0
 	github.com/chaisql/chai v0.18.0
@@ -11,10 +11,10 @@ require (
 	github.com/go-git/go-billy/v5 v5.9.2
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/goccy/go-yaml v1.19.2
-	github.com/jackc/pgx/v5 v5.12.0
+	github.com/jackc/pgx/v5 v5.13.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/kenshaw/colors v0.2.4
-	github.com/kenshaw/rasterm v0.1.23
+	github.com/kenshaw/rasterm v0.3.1
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-runewidth v0.0.31
@@ -53,8 +53,8 @@ require (
 	github.com/xo/transit/grammars/usql v0.7.8
 	github.com/xo/transit/grammars/ydb v0.7.8
 	github.com/xo/transit/styles v0.7.8
-	github.com/xo/zuzu v0.2.0
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.156.1
+	github.com/xo/zuzu v0.7.1
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.157.0
 	github.com/yookoala/realpath v1.0.0
 	golang.org/x/text v0.44.0
 	modernc.org/sqlite v1.62.0
@@ -111,14 +111,14 @@ require (
 	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/klauspost/compress v1.20.3 // indirect
+	github.com/klauspost/compress v1.20.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-sixel v0.0.14 // indirect
-	github.com/minio/minlz v1.2.3 // indirect
+	github.com/minio/minlz v1.2.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mithrandie/go-file/v2 v2.1.0 // indirect
 	github.com/mithrandie/go-text v1.6.0 // indirect
@@ -134,7 +134,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.25.0 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.73.1 // indirect
+	github.com/prometheus/common v0.74.0 // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
@@ -147,7 +147,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xo/inputrc v0.8.0 // indirect
-	github.com/xo/okage v0.4.0 // indirect
+	github.com/xo/okage v0.7.1 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
@@ -159,19 +159,19 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
-	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/exp v0.0.0-20261106192419-47ce03d25ef0 // indirect
-	golang.org/x/image v0.47.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
+	golang.org/x/exp v0.0.0-20261113113407-e3970619a1a4 // indirect
+	golang.org/x/image v0.48.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/term v0.47.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261104224025-d1e00e9f33ab // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/term v0.48.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261110000943-09e21b237f2c // indirect
 	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/libc v1.80.1 // indirect
+	modernc.org/libc v1.81.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )

@@ -4,6 +4,7 @@ package env
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -432,13 +433,41 @@ func Quote(s string) string {
 	return "'" + s[1:len(s)-1] + "'"
 }
 
-// TermGraphics returns the [rasterm.TermType] based on TERM_GRAPHICS
-// environment variable.
-func TermGraphics() rasterm.TermType {
-	var typ rasterm.TermType
-	s, _ := vars.Setting("term_graphics")
-	_ = typ.UnmarshalText([]byte(s))
-	return typ
+// terminal is what rasterm found out about the terminal when usql started.
+// It is empty when usql did not start at a terminal.
+var terminal rasterm.Terminal
+
+// DetectTerminal asks the terminal which graphics it draws, and keeps the
+// answer for [TermGraphics]. The term_graphics setting takes the place of
+// TERM_GRAPHICS, so a setting that names a protocol, or none, sends no query.
+//
+// It returns the keys that the user typed while it waited for the answer, which
+// the line editor must read first. Call it once, before the line editor reads
+// the terminal.
+func DetectTerminal(ctx context.Context) ([]byte, error) {
+	t, pending, err := rasterm.Detect(ctx, rasterm.WithGetenv(func(key string) string {
+		if key == "TERM_GRAPHICS" {
+			s, _ := vars.Setting("term_graphics")
+			return s
+		}
+		s, _ := Getenv(key)
+		return s
+	}))
+	terminal = t
+	return pending, err
+}
+
+// TermGraphics returns the terminal that usql draws images on. The
+// term_graphics setting chooses its protocol: empty is the protocol that
+// [DetectTerminal] found, none is no graphics, and a name such as kitty is that
+// protocol, on any output. The protocol is none when the setting names no
+// protocol.
+func TermGraphics() rasterm.Terminal {
+	t := terminal
+	if s, _ := vars.Setting("term_graphics"); s != "" {
+		t.Protocol, _ = rasterm.ParseProtocol(s)
+	}
+	return t
 }
 
 // ValidIdentifier returns an error when n is not a valid identifier.

@@ -44,8 +44,8 @@ Read these first. Some of them can stop the release.
 ## What changed
 
 usql requires dbfwd v0.3.2, dbmeta v0.50.0, dburl v0.58.0, tblfmt v0.24.0,
-transit v0.7.8, rline v0.8.1 and zuzu v0.2.0, all in `go.mod`. It builds with
-no `go.work`.
+transit v0.7.8, rline v0.8.1, rasterm v0.3.1 and zuzu v0.7.1, all in `go.mod`.
+It builds with no `go.work`.
 
 ### One build, with every driver
 
@@ -760,7 +760,14 @@ the XDG Base Directory specification on Linux and other Unix systems.
   console (rasterm v0.1.22). Keys typed while usql asks the terminal whether
   it draws images are no longer lost: rasterm v0.1.23 keeps them, and rline
   v0.8.0 reads them first. Before, `select 1;` typed at once ran as `elect
-  1;`. The
+  1;`. usql asks the terminal once, when it starts, and before the line
+  editor reads the terminal (rasterm v0.3.1). One write asks for Kitty, the
+  name of the terminal, Sixel and the size of a cell. When the terminal has
+  more than one protocol, usql uses Kitty, then iTerm, then Sixel. In tmux, usql
+  asks tmux for the terminal of its client. Before, usql asked only when it
+  drew the logo or a chart, and it read the environment variables first.
+  `-O usql.term_graphics=kitty` now draws a chart outside a terminal, as
+  the README says. Before, rasterm also needed `TERM_GRAPHICS`. The
   prompt starts after output that did not end its row, as after `\echo -n`,
   and a `[x]` in a prompt stays as it is written.
 - An `INSERT`, `UPDATE` or `DELETE` with `RETURNING` prints its rows, as in

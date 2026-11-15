@@ -1757,13 +1757,17 @@ ms:sa@localhost/master=>
 
 `usql` supports terminal graphics for [Kitty][kitty-graphics], [iTerm][iterm-graphics],
 and [Sixel][sixel-graphics] enabled terminals using the [`github.com/kenshaw/rasterm` package][rasterm].
-Terminal graphics are only available when using the interactive shell.
+Terminal graphics are on only in an interactive session, unless the command
+line turns them on, as described below.
 
 ##### Detection and Support
 
-`usql` will attempt to detect when terminal graphics support is available using
-the `USQL_TERM_GRAPHICS`, `TERM_GRAPHICS` and other environment variables
-unique to various terminals.
+When it starts at a terminal, `usql` asks the terminal which graphics it
+draws, and waits up to 250 ms for the answer. In tmux, it asks tmux for the
+terminal of its client. When the terminal does not answer, `usql` reads
+`TERM`, `TERM_PROGRAM` and the other environment variables of the terminal.
+`USQL_TERM_GRAPHICS` and `TERM_GRAPHICS` choose the graphics with no query.
+Keys typed while `usql` waits for the answer go to the line editor.
 
 When support is available, the logo will be displayed at the start of an
 interactive session:

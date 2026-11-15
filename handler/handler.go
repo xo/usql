@@ -26,7 +26,6 @@ import (
 	"unicode"
 
 	"github.com/go-git/go-billy/v5"
-	"github.com/kenshaw/rasterm"
 	"github.com/mattn/go-isatty"
 	"github.com/xo/dbfwd"
 	"github.com/xo/dbmeta"
@@ -236,8 +235,8 @@ func (h *Handler) Run() error {
 	// display welcome info
 	if h.iactive && env.Setting("quiet") == "off" {
 		// logo
-		if typ := env.TermGraphics(); typ.Available() {
-			if err := typ.Encode(h.l, text.Logo); err != nil {
+		if enc := env.TermGraphics().Encoder(); enc != nil {
+			if err := enc.Encode(h.l, text.Logo); err != nil {
 				return err
 			}
 		}
@@ -260,11 +259,6 @@ func (h *Handler) loop() error {
 		// the pager of the last entry must exit before the next line is read
 		h.endPage()
 		h.checkHistory(stderr)
-		// the keys typed while rasterm asked the terminal whether it draws
-		// images go to the line editor, before the terminal
-		if b := rasterm.PendingInput(); h.iactive && len(b) != 0 {
-			h.l.PushInput(b)
-		}
 		it, err := h.src.Next()
 		switch {
 		case errors.Is(err, rline.ErrInterrupted):
@@ -1385,8 +1379,8 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	if !charts.Available() {
 		return text.ErrChartsNotSupported
 	}
-	typ := env.TermGraphics()
-	if !typ.Available() {
+	enc := env.TermGraphics().Encoder()
+	if enc == nil {
 		return text.ErrGraphicsNotSupported
 	}
 	if _, ok := opt.Params["help"]; ok {
@@ -1446,7 +1440,7 @@ func (h *Handler) doExecChart(ctx context.Context, w io.Writer, opt metacmd.Opti
 	bg := image.NewRGBA(img.Bounds())
 	draw.Draw(bg, bg.Bounds(), image.NewUniform(cfg.Background), image.Point{}, draw.Src)
 	draw.Draw(bg, bg.Bounds(), img, img.Bounds().Min, draw.Over)
-	if err := typ.Encode(stdout, bg); err != nil {
+	if err := enc.Encode(stdout, bg); err != nil {
 		return err
 	}
 	if h.timing {

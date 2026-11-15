@@ -263,6 +263,14 @@ func Run(ctx context.Context, args *Args) error {
 	if args.Charts, err = chartsFS(configFile); err != nil {
 		return err
 	}
+	// at a terminal, ask once which graphics it draws, before the line
+	// editor reads it. The keys typed during the query go to the line editor.
+	var pending []byte
+	if interactive && !forceNonInteractive {
+		if pending, err = env.DetectTerminal(ctx); err != nil {
+			fmt.Fprintln(os.Stderr, "error: finding out the terminal graphics:", err)
+		}
+	}
 	// the history is kept at a terminal, in a directory that may not be there
 	// yet
 	history := env.HistoryFile(u)
@@ -304,6 +312,9 @@ func Run(ctx context.Context, args *Args) error {
 		return err
 	}
 	defer l.Close()
+	if len(pending) != 0 {
+		l.PushInput(pending)
+	}
 	// with -c or -f the commands and files are the input, and the terminal
 	// is not read
 	var r feed.LineReader = l

@@ -8,9 +8,9 @@ size: 80x24
 send:
 
 recv:
-\e[mConnected with driver sqlite3 (VERSION)\r
+\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e_Ga=q,i=32,e=a\e\\\e[>0q\e[?1;1;0S\e[16t\e[c\e[mConnected with driver sqlite3 (VERSION)\r
 \n
-\e[0cType "help" for help.\r
+Type "help" for help.\r
 \n
 \r
 \n
