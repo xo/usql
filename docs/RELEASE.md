@@ -44,7 +44,7 @@ Read these first. Some of them can stop the release.
 ## What changed
 
 usql requires dbfwd v0.3.2, dbmeta v0.50.0, dburl v0.58.0, tblfmt v0.24.0,
-transit v0.7.8, rline v0.8.1, rasterm v0.3.1 and zuzu v0.7.1, all in `go.mod`.
+transit v0.7.8, rline v0.8.1, rasterm v0.3.1 and zuzu v0.7.3, all in `go.mod`.
 It builds with no `go.work`.
 
 ### One build, with every driver
